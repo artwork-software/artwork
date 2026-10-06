@@ -737,6 +737,7 @@
                     :label="$t('Capacity')"
                     :min="0"
                     :step="1"
+                    :error="newRoomForm.errors.capacity"
                 />
                 <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
                 <div class="w-full items-center text-center">
@@ -800,7 +801,7 @@
                     />
                     <RoomPropertyCheckboxGroup
                         :label="$t('Adjoining rooms')"
-                        :items="adjoiningRoomItems"
+                        :items="editAdjoiningRoomItems"
                         v-model="editRoomForm.adjoining_rooms"
                         :empty-text="$t('No rooms created yet')"
                     />
@@ -881,6 +882,7 @@
                     :label="$t('Capacity')"
                     :min="0"
                     :step="1"
+                    :error="editRoomForm.errors.capacity"
                 />
                 <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
 
@@ -1116,6 +1118,10 @@ export default defineComponent({
             return this.computedAreasAndRooms.flatMap((area) =>
                 area.rooms.map((room) => ({id: room.id, name: room.name, hint: area.name}))
             );
+        },
+        editAdjoiningRoomItems() {
+            // ein Raum kann nicht sein eigener Nebenraum sein
+            return this.adjoiningRoomItems.filter((room) => room.id !== this.editRoomForm.id);
         },
         hasActiveRoomFilters() {
             return this.roomFilterCategoryIds.length > 0 || this.roomFilterAttributeIds.length > 0;
@@ -1358,18 +1364,16 @@ export default defineComponent({
             this.editRoomForm.adjoining_rooms = room.adjoining_rooms.map((adjoining_room) => adjoining_room.id);
             this.editRoomForm.room_categories = room.room_categories.map((room_category) => room_category.id);
             this.editRoomForm.room_attributes = room.room_attributes.map((room_attribute) => room_attribute.id);
-
-            if (room.temporary === true) {
-                this.editRoomForm.temporary = true;
-            }
+            this.editRoomForm.temporary = room.temporary === true;
+            this.editRoomForm.everyone_can_book = room.everyone_can_book === true;
+            this.editRoomForm.relevant_for_disposition = room.relevant_for_disposition === true;
+            this.editRoomForm.capacity = room.capacity ?? null;
             this.showEditRoomModal = true;
-            this.editRoomForm.everyone_can_book = room.everyone_can_book
-            this.editRoomForm.relevant_for_disposition = room.relevant_for_disposition
-            this.editRoomForm.capacity = room.capacity
         },
         closeEditRoomModal() {
             this.showEditRoomModal = false;
             this.editRoomForm.reset();
+            this.editRoomForm.clearErrors();
         },
         openSoftDeleteRoomModal(room) {
             this.roomToSoftDelete = room;
@@ -1395,8 +1399,12 @@ export default defineComponent({
             }
         },
         editRoom() {
-            this.editRoomForm.start_date = this.editRoomForm.start_date_dt_local;
-            this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
+            // Zeitraum nur für temporäre Räume mitschicken
+            this.editRoomForm.start_date = this.editRoomForm.temporary ? (this.editRoomForm.start_date_dt_local || null) : null;
+            this.editRoomForm.end_date = this.editRoomForm.temporary ? (this.editRoomForm.end_date_dt_local || null) : null;
+            if (this.editRoomForm.capacity === '') {
+                this.editRoomForm.capacity = null;
+            }
 
             if (this.editRoomInheritColor) {
                 // null = Farbe des Areals erben

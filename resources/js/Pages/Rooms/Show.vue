@@ -91,6 +91,21 @@
                                 id="descriptionEdit"
                             />
                         </div>
+                        <div class="rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
+                            <div class="text-sm text-text mb-1">{{ $t('Color') }}</div>
+                            <div class="flex items-center mb-3">
+                                <input v-model="editRoomInheritColor" id="inheritRoomColor" type="checkbox" class="input-checklist"/>
+                                <label for="inheritRoomColor"
+                                       :class="[editRoomInheritColor ? 'text-text font-black' : 'text-text-subtle']"
+                                       class="ml-4 my-auto text-sm cursor-pointer">
+                                    {{ $t('Inherit color from area') }}
+                                </label>
+                            </div>
+                            <div v-if="!editRoomInheritColor">
+                                <ColorPickerComponent @updateColor="(color) => editRoomForm.color = color" :color="editRoomForm.color ?? editRoomAreaColor"/>
+                            </div>
+                            <jet-input-error :message="editRoomForm.errors.color" class="mt-2"/>
+                        </div>
                         <div class="flex items-center">
                             <input v-model="editRoomForm.temporary"
                                    type="checkbox"
@@ -153,6 +168,7 @@
                                 :label="$t('Capacity')"
                                 :min="0"
                                 :step="1"
+                                :error="editRoomForm.errors.capacity"
                             />
                             <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
                         </div>
@@ -192,7 +208,7 @@
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-text">
                                         {{ requestToApprove.event_type.name }}
-                                        <PropertyIcon name="AdjustmentsIcon" v-if="requestToApprove.occupancy_option"
+                                        <IconAdjustmentsAlt v-if="requestToApprove.occupancy_option" stroke-width="1.5"
                                                          class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToApprove.audience"
                                              class="h-5 w-5 ml-2 my-auto"/>
@@ -281,7 +297,7 @@
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-text">
                                         {{ requestToDecline.event_type.name }}
-                                        <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
+                                        <IconAdjustmentsAlt v-if="requestToDecline.occupancy_option" stroke-width="1.5"
                                                          class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
                                              class="h-5 w-5 ml-2 my-auto"/>
@@ -385,7 +401,7 @@
 </template>
 
 <script>
-import {IconCheck, IconChevronDown, IconChevronRight, IconCircleX, IconCopy, IconDotsVertical, IconEdit, IconFileText, IconMinus, IconPlus, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconAdjustmentsAlt, IconCheck, IconChevronDown, IconChevronRight, IconCircleX, IconCopy, IconDotsVertical, IconEdit, IconFileText, IconMinus, IconPlus, IconTrash, IconX} from "@tabler/icons-vue";
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
@@ -429,6 +445,7 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 
 export default {
     mixins: [Permissions],
@@ -447,6 +464,8 @@ export default {
         'adjoiningRooms',
     ],
     components: {
+        ColorPickerComponent,
+        IconAdjustmentsAlt,
         PropertyIcon,
         ArtworkBaseModal,
         BaseUIButton,
@@ -543,24 +562,23 @@ export default {
                 room_attributes: this.roomAttributeIds,
                 adjoining_rooms: this.adjoiningRoomIds
             }),
+            // Kategorien, Eigenschaften, Nebenräume und Admins pflegt die Seitenleiste; das Modal schickt
+            // sie bewusst nicht mit, sonst überschrieben veraltete Werte vom Seitenaufruf dortige Änderungen
+            editRoomInheritColor: true,
+            editRoomAreaColor: '#000000',
             editRoomForm: useForm({
                 id: null,
                 name: '',
+                color: null,
                 description: '',
                 temporary: false,
-                room_admins: this.room.room_admins,
-                room_categories: this.roomCategoryIds,
-                room_attributes: this.roomAttributeIds,
-                adjoining_rooms: this.adjoiningRoomIds,
                 start_date: null,
                 start_date_dt_local: null,
                 end_date: null,
                 end_date_dt_local: null,
-                area_id: null,
-                user_id: null,
-                everyone_can_book: this.room.everyone_can_book,
-                relevant_for_disposition: this.room.relevant_for_disposition,
-                capacity: this.room.capacity,
+                everyone_can_book: false,
+                relevant_for_disposition: false,
+                capacity: null,
             }),
             documentForm: useForm({
                 file: null
@@ -732,27 +750,28 @@ export default {
             this.$inertia.post(`/rooms/${room.id}/duplicate`);
         },
         openEditRoomModal(room) {
+            // bei jedem Öffnen aus dem aktuellen Raum befüllen, damit verworfene Eingaben nicht hängen bleiben
             this.editRoomForm.id = room.id;
             this.editRoomForm.name = room.name;
-            this.editRoomForm.description = room.description;
+            this.editRoomForm.description = room.description ?? '';
+            this.editRoomForm.color = room.color ?? null;
+            this.editRoomInheritColor = !room.color;
+            this.editRoomAreaColor = room.area?.color ?? '#000000';
+            this.editRoomForm.temporary = room.temporary === true;
             this.editRoomForm.start_date = room.start_date;
             this.editRoomForm.end_date = room.end_date;
             this.editRoomForm.start_date_dt_local = room.start_date_dt_local;
             this.editRoomForm.end_date_dt_local = room.end_date_dt_local;
-            if (room.temporary === true) {
-                this.editRoomForm.temporary = true;
-            }
+            this.editRoomForm.everyone_can_book = room.everyone_can_book === true;
+            this.editRoomForm.relevant_for_disposition = room.relevant_for_disposition === true;
+            this.editRoomForm.capacity = room.capacity ?? null;
+            this.editRoomForm.clearErrors();
             this.showEditRoomModal = true;
         },
         closeEditRoomModal() {
             this.showEditRoomModal = false;
-            this.editRoomForm.id = null;
-            this.editRoomForm.name = null;
-            this.editRoomForm.description = null;
-            this.editRoomForm.start_date = null;
-            this.editRoomForm.end_date = null;
-            this.editRoomForm.start_date_dt_local = null;
-            this.editRoomForm.end_date_dt_local = null;
+            this.editRoomForm.reset();
+            this.editRoomForm.clearErrors();
         },
         openSoftDeleteRoomModal(room) {
             this.roomToSoftDelete = room;
@@ -771,8 +790,19 @@ export default {
             setTimeout(() => this.closeSuccessModal(), 2000);
         },
         editRoom() {
-            this.editRoomForm.start_date = this.editRoomForm.start_date_dt_local;
-            this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
+            // Zeitraum nur für temporäre Räume mitschicken
+            this.editRoomForm.start_date = this.editRoomForm.temporary ? (this.editRoomForm.start_date_dt_local || null) : null;
+            this.editRoomForm.end_date = this.editRoomForm.temporary ? (this.editRoomForm.end_date_dt_local || null) : null;
+            if (this.editRoomForm.capacity === '') {
+                this.editRoomForm.capacity = null;
+            }
+            if (this.editRoomInheritColor) {
+                // null = Farbe des Areals erben
+                this.editRoomForm.color = null;
+            } else if (!this.editRoomForm.color) {
+                // Erben abgewählt, aber keine Farbe gewählt → aktuelle Areal-Farbe übernehmen
+                this.editRoomForm.color = this.editRoomAreaColor;
+            }
             // erst nach Erfolg schließen: bei Validierungsfehlern (z. B. temporär ohne Enddatum)
             // gingen sonst alle Änderungen still verloren
             this.editRoomForm.patch(route('rooms.update', {room: this.editRoomForm.id}), {

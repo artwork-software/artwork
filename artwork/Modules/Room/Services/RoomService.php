@@ -11,12 +11,9 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Models\UserCalendarFilter;
-use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Throwable;
@@ -124,93 +121,6 @@ readonly class RoomService
     }
 
     /**
-     * @return array<int, mixed>
-     */
-    //@todo: fix phpcs error - complexity too high
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    private function collectEventsForRoomShift(
-        Room $room,
-        CarbonPeriod $calendarPeriod,
-        ?UserShiftCalendarFilter $calendarFilter,
-        ?Carbon $desiredDay = null
-    ): array {
-        $isLoud = $calendarFilter->is_loud ?? false;
-        $isNotLoud = $calendarFilter->is_not_loud ?? false;
-        $hasAudience = $calendarFilter->has_audience ?? false;
-        $hasNoAudience = $calendarFilter->has_no_audience ?? false;
-        $showAdjoiningRooms = $calendarFilter->show_adjoining_rooms ?? false;
-        $eventTypeIds = $calendarFilter->event_types ?? null;
-        $roomIds = $calendarFilter->rooms ?? null;
-        $areaIds = $calendarFilter->areas ?? null;
-        $roomAttributeIds = $calendarFilter->room_attributes ?? null;
-        $roomCategoryIds = $calendarFilter->room_categories ?? null;
-
-        $roomEvents = $room
-            ->events()
-            ->with(
-                [
-                    'room',
-                    'creator',
-                    'project',
-                    'project.managerUsers',
-                    'project.status',
-                    'project.shiftRelevantEventTypes',
-                    'shifts',
-                    'shifts.craft',
-                    'shifts.users',
-                    'shifts.freelancer',
-                    'shifts.serviceProvider',
-                    'shifts.shiftsQualifications',
-                    'subEvents.event',
-                    'subEvents.event.room',
-                ]
-            )
-            ->without([
-                'created_by',
-                'shift_relevant_event_types',
-                'shifts.users.calendar_settings',
-                'shifts.users.calendarAbo',
-                'shifts.users.shiftCalendarAbo',
-            ])
-            ->unless(
-                empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
-                fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
-                    ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('id', $roomIds))
-                    ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
-                    ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
-                    ->when($roomAttributeIds, fn(Builder $roomBuilder) => $roomBuilder
-                        ->whereHas('attributes', fn(Builder $roomAttributeBuilder) => $roomAttributeBuilder
-                            ->whereIn('room_attributes.id', $roomAttributeIds)))
-                    ->when($roomCategoryIds, fn(Builder $roomBuilder) => $roomBuilder
-                        ->whereHas('categories', fn(Builder $roomCategoryBuilder) => $roomCategoryBuilder
-                            ->whereIn('room_categories.id', $roomCategoryIds)))
-                    ->without(['admins']))
-            )
-            ->unless(empty($eventTypeIds), function ($builder) use ($eventTypeIds) {
-                return $builder->where(function ($builder) use ($eventTypeIds): void {
-                    $builder->whereIn('event_type_id', $eventTypeIds)
-                        ->orWhereHas('subEvents', function ($builder) use ($eventTypeIds): void {
-                            $builder->whereIn('event_type_id', $eventTypeIds);
-                        });
-                });
-            })
-            ->unless(!$hasAudience, fn(Builder $builder) => $builder->where('audience', true))
-            ->unless(!$hasNoAudience, fn(Builder $builder) => $builder->where('audience', false))
-            ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
-            ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
-            ->when(
-                $desiredDay,
-                fn(Builder $builder) => $builder->startAndEndTimeOverlap(
-                    $desiredDay->startOfDay(),
-                    $desiredDay->clone()->endOfDay()
-                ),
-                fn(Builder $builder) => $builder->startAndEndTimeOverlap($calendarPeriod->start, $calendarPeriod->end)
-            )->get();
-
-        return $this->convertEventsForFrontend($room, $roomEvents, $calendarPeriod);
-    }
-
-    /**
      * @return array<string, array<int, array<int, Event>>>
      */
     public function convertEventsForFrontend(
@@ -265,44 +175,6 @@ readonly class RoomService
             $calendarFilter,
             $project
         );
-    }
-
-    /**
-     * @return array<string, array<int, array<int, Event>>>
-     */
-    public function collectEventsForRoomsShiftOnSpecificDays(
-        RoomService $roomService,
-        UserService $userService,
-        array $desiredRooms,
-        array $desiredDays,
-        ?UserShiftCalendarFilter $userShiftCalendarFilter,
-    ): array {
-        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
-        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
-        $collectedEvents = [];
-
-        foreach ($desiredDays as $desiredDay) {
-            foreach ($desiredRooms as $roomId) {
-                $room = $this->roomRepository->findOrFail($roomId);
-                foreach (
-                    array_filter(
-                        $roomService->collectEventsForRoomShift(
-                            $room,
-                            $calendarPeriod,
-                            $userShiftCalendarFilter,
-                            Carbon::parse($desiredDay)
-                        ),
-                        function ($collectedEventsForRoom): bool {
-                            return !empty($collectedEventsForRoom['events']);
-                        }
-                    ) as $collectedEventsForRoom
-                ) {
-                    $collectedEvents[$desiredDay][$roomId] = $collectedEventsForRoom['events'];
-                }
-            }
-        }
-
-        return $collectedEvents;
     }
 
     public function collectEventsForRoomsShift(

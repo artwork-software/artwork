@@ -247,23 +247,19 @@ export default  {
             if (visit.method === 'get' || !visit.completed || visit.cancelled || !this.showSection) {
                 return;
             }
-            if (this.unread.page > 0) {
-                this.fetchUnread(1);
-            }
-            if (this.archived?.page > 0) {
-                this.fetchArchived(1);
-            }
+            this.scheduleRefresh();
         });
     },
     beforeUnmount() {
         this.removeFinishListener?.();
+        clearTimeout(this.refreshTimer);
     },
     watch: {
         // After a single archive/delete inside a NotificationBlock the whole page is reloaded via
         // Inertia, refreshing these count props. Re-fetch the visible lists so they stay in sync.
         unreadCount() {
             if (this.showSection) {
-                this.fetchUnread(1);
+                this.scheduleRefresh();
             }
         },
         showSection(open) {
@@ -273,6 +269,28 @@ export default  {
         },
     },
     methods: {
+        /**
+         * Eine Aktion löst mehrere Auslöser aus (Absage-PUT, Benachrichtigung löschen, geänderte
+         * Anzahl) – kurz sammeln und einmal neu laden, statt die Liste bis zu dreimal zu holen.
+         */
+        scheduleRefresh() {
+            clearTimeout(this.refreshTimer);
+            this.refreshTimer = setTimeout(() => this.refreshLoadedLists(), 150);
+        },
+        /** Geladene Listen neu holen und dabei per „Mehr anzeigen“ nachgeladene Seiten behalten */
+        async refreshLoadedLists() {
+            const reload = async (fetchPage, loadedPages) => {
+                for (let page = 1; page <= loadedPages; page++) {
+                    await fetchPage(page);
+                }
+            };
+            await Promise.all([
+                reload((page) => this.fetchUnread(page), Math.max(1, this.unread.page)),
+                this.archived.page > 0
+                    ? reload((page) => this.fetchArchived(page), this.archived.page)
+                    : Promise.resolve(),
+            ]);
+        },
         async fetchUnread(page = 1) {
             this.unread.loading = true;
             try {

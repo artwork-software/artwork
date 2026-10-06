@@ -113,8 +113,9 @@
         :project_history="historyObjects"
         @closed="showEventHistory = false" />
     <DeclineEventModal
-        :request-to-decline="event"
+        :request-to-decline="eventToDecline"
         :event-types="eventTypes"
+        preserve-state
         @closed="closeDeclineEventModal"
         @declined="finishDeclineEvent"
         v-if="showDeclineEventModal"
@@ -243,6 +244,9 @@ export default {
             showDeclineModal: false,
             showProjectHistory: false,
             showDeclineEventModal: false,
+            // Stand beim Öffnen: die Seiten-Prop `event` teilen sich alle Blöcke – lädt ein anderer
+            // Block nach, darf die Absage nicht plötzlich dessen Termin treffen
+            eventToDecline: null,
             createEventComponentIsVisible: false,
             showDeleteConfirmModal: false,
             showEventWithoutRoomComponent: false,
@@ -313,7 +317,7 @@ export default {
                 only: ['event', 'historyObjects', 'wantedSplit'],
                 preserveScroll: true,
                 onSuccess: () => {
-                    if (data.eventId && !this.event?.id) {
+                    if (data.eventId && String(this.event?.id ?? '') !== String(data.eventId)) {
                         this.$toast.error(this.$t('The entry no longer exists. Please reload the page.'));
                         return;
                     }
@@ -335,7 +339,10 @@ export default {
         loadEventDataForDecline() {
             this.loadDialogData(
                 {openDeclineEvent: true, eventId: this.notification.data?.eventId},
-                () => { this.showDeclineEventModal = true; }
+                () => {
+                    this.eventToDecline = this.event;
+                    this.showDeclineEventModal = true;
+                }
             );
         },
         closeDeclineEventModal() {

@@ -211,14 +211,16 @@ onBeforeMount(() => {
     reloadRolesAndPermissions()
 })
 
-const notificationChannel = () => `notifications.${usePage().props.auth.user.id}`
+// Beim Mounten festhalten: in onUnmounted stehen schon die Props der neuen Seite (Logout: auth.user = null)
+let notificationChannel = null
 
 onMounted(() => {
     // Vollständiger Seitenaufruf nach Redirect (kein Inertia-'success'-Event): Flash einmalig zeigen
     showFlashFromPage(usePage())
     document.documentElement.lang = usePage().props.auth.user.language
     locale.value = usePage().props.auth.user.language
-    window.Echo.private(notificationChannel())
+    notificationChannel = `notifications.${usePage().props.auth.user.id}`
+    window.Echo.private(notificationChannel)
         .listen('.incoming-notification', (notification) => {
             const message = { id: notification.message.id ?? `${Date.now()}`, ...notification.message }
             pushNotifications.value.push(message);
@@ -231,7 +233,9 @@ onMounted(() => {
 
 // Layout wird je Seite neu gemountet – ohne Abmelden kam bei jeder Navigation ein Listener dazu
 onUnmounted(() => {
-    window.Echo?.private(notificationChannel()).stopListening('.incoming-notification')
+    if (notificationChannel) {
+        window.Echo?.private(notificationChannel).stopListening('.incoming-notification')
+    }
 })
 
 </script>

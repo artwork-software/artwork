@@ -63,7 +63,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
-import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useBiSaveFeedback, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     fields: { type: Array, default: () => [] },
@@ -125,7 +125,7 @@ async function saveValue(componentId, data) {
                 project: props.projectId,
                 component: componentId,
             }),
-            { data }
+            { data }, BI_REQUEST_CONFIG
         )
     );
     if (ok) {

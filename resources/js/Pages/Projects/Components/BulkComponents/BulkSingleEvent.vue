@@ -578,8 +578,10 @@ const draftDescription = computed({
 const descriptionTextarea = ref(null);
 
 // Zeigt diese Komponente (wieder) den Termin, dessen Feld den Fokus hatte: Fokus zurückholen
+// – aber nur, wenn gerade nichts anderes den Fokus hat (sonst nähme es einem anderen Feld den Fokus weg)
 watch(descriptionTextarea, (textarea) => {
-    if (textarea && focusedDescriptionKey.value === eventKey.value && document.activeElement !== textarea) {
+    const focusIsFree = !document.activeElement || document.activeElement === document.body;
+    if (textarea && focusedDescriptionKey.value === eventKey.value && focusIsFree) {
         textarea.focus({preventScroll: true});
     }
 });
@@ -603,8 +605,15 @@ const onDescriptionFocus = () => {
     descriptionFocusedAt = performance.now();
     focusedDescriptionKey.value = eventKey.value;
 };
-const onDescriptionFocusOut = () => {
+const onDescriptionFocusOut = (focusEvent) => {
     if (!document.hasFocus()) {
+        return;
+    }
+    // Fokus ging an ein anderes Element (Tab/Shift+Tab, Klick in ein Feld): die Person ist fertig.
+    // Der Tab-keydown hat die Textarea selbst als Ziel und zählt für die Interaktionsprüfung nicht.
+    const nextFocus = focusEvent?.relatedTarget;
+    if (nextFocus && !descriptionTextarea.value?.contains(nextFocus)) {
+        saveDescription();
         return;
     }
     if (!hasUserInteractedSince(descriptionFocusedAt, descriptionTextarea.value)) {
@@ -624,14 +633,24 @@ const saveDescription = async () => {
     if (focusedDescriptionKey.value === key) {
         focusedDescriptionKey.value = null;
     }
-    if (draft !== (event.description || '')) {
-        if (event.id) {
-            const {data} = await axios.patch(route('event.update.description', event.id), {
-                description: draft
-            });
-            markRowEdited(event.id, data?.event?.updated_at);
-        }
-        event.description = draft;
+    if (draft === (event.description || '')) {
+        return;
+    }
+    // Sofort anzeigen statt bis zur Antwort den alten Text
+    const previousDescription = event.description;
+    event.description = draft;
+    if (!event.id) {
+        return;
+    }
+    try {
+        const {data} = await axios.patch(route('event.update.description', event.id), {
+            description: draft
+        });
+        markRowEdited(event.id, data?.event?.updated_at);
+    } catch {
+        // Fehlermeldung zeigt der axios-Interceptor; Entwurf nicht verlieren, Feld wieder öffnen
+        event.description = previousDescription;
+        openDescriptionEdits.set(key, {draft});
     }
 };
 

@@ -474,6 +474,7 @@ import VueVirtualScroller, {DynamicScroller} from 'vue-virtual-scroller';
 import BulkScrollerItem from '@/Pages/Projects/Components/BulkComponents/BulkScrollerItem.vue';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import axios from 'axios';
+import {rekeyDescriptionEdit, resetDescriptionEdits} from '@/Pages/Projects/Components/BulkComponents/bulkDescriptionEdits.js';
 
 // Bibliotheks-Bug (vue-virtual-scroller 2.0.1): DynamicScroller betreibt intern eine
 // zweite Scroller-Engine, reicht `page-mode` aber nur an die sichtbare weiter. Die interne
@@ -765,6 +766,7 @@ const persistNewEventRow = (base) => {
             if (data?.event?.id) {
                 bumpCreateStamp(data.event.created_at);
                 const row = {...mapPayloadToBulkRow(data.event), isNew: true};
+                rekeyDescriptionEdit(base.localUid, row.id);
                 if (idx !== -1) {
                     events.value[idx] = row;
                 } else {
@@ -1487,6 +1489,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+    resetDescriptionEdits();
     window.removeEventListener('resize', updateBulkFunctionBarHeight);
     window.removeEventListener('scroll', onScrollOrResize);
     window.removeEventListener('resize', onScrollOrResize);

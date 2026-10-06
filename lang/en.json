@@ -8677,5 +8677,6 @@
     "Funding source: :name": "Funding source: :name",
     "Funding source running out": "Funding source running out",
     "The source \":name\" has only :percent% of its budget left.": "The source \":name\" has only :percent% of its budget left.",
-    "View shift": "View shift"
+    "View shift": "View shift",
+    "This room request has already been answered.": "This room request has already been answered."
 }

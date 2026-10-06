@@ -78,98 +78,11 @@ export function useEvent() {
                 receivedEventsWithoutRoom,
                 handleReload
             };
-        },
-        reloadRoomsAndDaysAndWorkersForShiftPlanWithoutWorkers = async(
-            desiredRoomIdsToReload,
-            desiredDaysToReload,
-        ) => {
-            let roomData = null;
-
-            await axios.get(
-                route('shifts.events.for-rooms-by-days-and-project-no-workers'),
-                {
-                    params: {
-                        rooms: desiredRoomIdsToReload,
-                        days: desiredDaysToReload,
-                    }
-                }
-            ).then((response) => {
-                roomData = response.data.roomData;
-            });
-
-            return {roomData};
-        },
-        reloadRoomsAndDaysAndWorkersForShiftPlan = async (
-            desiredRoomIdsToReload,
-            desiredDaysToReload,
-            desiredWorkersToReload,
-        ) => {
-            let roomData = null;
-            let workerData = null;
-
-            await axios.get(
-                route('shifts.events.for-rooms-by-days-and-project'),
-                {
-                    params: {
-                        rooms: desiredRoomIdsToReload,
-                        days: desiredDaysToReload,
-                        workers: desiredWorkersToReload
-                    }
-                }
-            ).then((response) => {
-                roomData = response.data.roomData;
-                workerData = response.data.workerData;
-            });
-
-            return {roomData, workerData};
-        },
-        useShiftPlanReload = () => {
-            const showReceivesNewDataOverlay = ref(false),
-                hasReceivedNewShiftPlanData = ref(false),
-                hasReceivedNewShiftPlanWorkerData = ref(false),
-                receivedRoomData = ref([]),
-                receivedWorkerData = ref([]),
-                handleReload = async (
-                    desiredRoomIdsToReload,
-                    desiredDaysToReload,
-                    desiredWorkersToReload
-                ) => {
-                    showReceivesNewDataOverlay.value = true;
-                    if (desiredWorkersToReload.length === 0) {
-                        const  {roomData} = await reloadRoomsAndDaysAndWorkersForShiftPlanWithoutWorkers(
-                            desiredRoomIdsToReload,
-                            desiredDaysToReload
-                        );
-                        receivedRoomData.value = roomData;
-                        hasReceivedNewShiftPlanData.value = true;
-                        return;
-                    }
-                    const {roomData, workerData} = await reloadRoomsAndDaysAndWorkersForShiftPlan(
-                        desiredRoomIdsToReload,
-                        desiredDaysToReload,
-                        desiredWorkersToReload
-                    );
-
-                    receivedRoomData.value = roomData;
-                    receivedWorkerData.value = workerData;
-                    hasReceivedNewShiftPlanData.value = true;
-                    hasReceivedNewShiftPlanWorkerData.value = true;
-                };
-
-            return {
-                showReceivesNewDataOverlay,
-                hasReceivedNewShiftPlanData,
-                hasReceivedNewShiftPlanWorkerData,
-                receivedRoomData,
-                receivedWorkerData,
-                handleReload
-            };
         };
 
     return {
         getDaysOfEvent,
         formatEventDateByDayJs,
-        useCalendarReload,
-        useShiftPlanReload
+        useCalendarReload
     };
 }

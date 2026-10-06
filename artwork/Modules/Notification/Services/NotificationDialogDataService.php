@@ -81,9 +81,18 @@ class NotificationDialogDataService
      */
     private function eventPayload(Event $event, User $viewer): array
     {
+        $gate = Gate::forUser($viewer);
+        $canEdit = $gate->allows('update', $event);
+        // Rückfragen zwischen Raumadmin und Anfragender: nur für Beteiligte – sehen darf den Termin
+        // (EventPolicy::view) sonst jede eingeloggte Person
+        $mayReadComments = $canEdit
+            || $event->user_id === $viewer->id
+            || $gate->allows('answerRoomRequest', $event)
+            || $gate->allows('declineEvent', $event);
+
         return (new CalendarEventResource($event))->resolve() + [
-            'canEdit' => Gate::forUser($viewer)->allows('update', $event),
-            'comments' => $event->comments()->with('user')->get()
+            'canEdit' => $canEdit,
+            'comments' => !$mayReadComments ? [] : $event->comments()->with('user')->get()
                 ->map(fn (EventComment $comment): array => [
                     'id' => $comment->id,
                     'comment' => $comment->comment,

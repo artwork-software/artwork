@@ -340,8 +340,6 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
         yield 'shift.plan.meta' => ['shift.plan.meta'];
         yield 'shift.plan.room' => ['shift.plan.room'];
         yield 'shift.plan.rooms.batch' => ['shift.plan.rooms.batch'];
-        yield 'events-and-workers' => ['shifts.events.for-rooms-by-days-and-project'];
-        yield 'events-and-no-workers' => ['shifts.events.for-rooms-by-days-and-project-no-workers'];
     }
 
     #[Test]

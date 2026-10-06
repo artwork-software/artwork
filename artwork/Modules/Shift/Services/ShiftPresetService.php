@@ -49,11 +49,6 @@ readonly class ShiftPresetService
         return $shiftPresets;
     }
 
-    public function findByName(string $name): Collection
-    {
-        return $this->shiftPresetRepository->findByName($name);
-    }
-
     public function duplicateShiftPreset(
         ShiftPreset $shiftPreset,
         PresetShiftService $presetShiftService,

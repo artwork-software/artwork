@@ -12,7 +12,6 @@ use Artwork\Modules\Shift\Models\ShiftPreset;
 use Artwork\Modules\Shift\Services\ShiftPresetService;
 use Artwork\Modules\Shift\Services\ShiftPresetTimelineService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -63,13 +62,6 @@ class ShiftPresetController extends Controller
     public function storeEmpty(Request $request): void
     {
         $this->shiftPresetService->createFromRequest($request);
-    }
-
-    public function search(Request $request): Collection
-    {
-        return $this->shiftPresetService->findByName(
-            $request->get('query')
-        );
     }
 
     public function updateDescription(UpdateShiftPresetNoteRequest $request, PresetShift $presetShift): void

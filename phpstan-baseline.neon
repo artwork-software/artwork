@@ -37,12 +37,6 @@ parameters:
 			path: app/Http/Controllers/EventController.php
 
 		-
-			message: '#^Call to an undefined method Artwork\\Modules\\Shift\\Services\\ShiftWorkerService\:\:getResolvedWorkerShiftPlanResourcesByIdsAndTypesWithPlannedWorkingHours\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/EventController.php
-
-		-
 			message: '#^Call to an undefined method Carbon\\Carbon\:\:diffInRealMinutes\(\)\.$#'
 			identifier: method.notFound
 			count: 2

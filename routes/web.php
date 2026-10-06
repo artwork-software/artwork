@@ -1364,12 +1364,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->name('shift-worker.confirmation.update');
 
 
-    Route::get('/shifts/view/events-and-workers', [EventController::class, 'getEventsForRoomsByDaysWithUser'])
-        ->name('shifts.events.for-rooms-by-days-and-project')
-        ->can('can view shift plan');
-    Route::get('/shifts/view/events-and-no-workers', [EventController::class, 'getEventsForRoomsByDaysWithoutUser'])
-        ->name('shifts.events.for-rooms-by-days-and-project-no-workers')
-        ->can('can view shift plan');
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])
         ->middleware('shift-settings-area:shift-templates,view')
         ->name('shifts.presets');
@@ -2661,10 +2655,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::patch('/shift/preset/{shiftPreset}/update', [ShiftPresetController::class, 'update'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('update.shift.preset');
-    Route::get('/shift/template/search', [
-        ShiftPresetController::class,
-        'search',
-    ])->middleware('shift-settings-area:shift-templates,view')->name('shift.template.search');
     Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.delete.timeline.row');

@@ -84,7 +84,6 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
-use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Services\SubEventService;
@@ -1196,45 +1195,6 @@ class EventController extends Controller
         );
     }
 
-
-    /**
-     * @return array<string, array<int, mixed>>
-     * @throws Throwable
-     */
-    public function getEventsForRoomsByDaysWithUser(
-        Request $request,
-        ShiftWorkerService $shiftWorkerService,
-        UserService $userService
-    ): array {
-        return [
-            'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
-                $this->roomService,
-                $userService,
-                $request->collect('rooms')->all(),
-                $request->collect('days')->all(),
-                $userService->getAuthUser()?->userFilters()->shiftFilter()->first()
-            ),
-            'workerData' => $shiftWorkerService
-                ->getResolvedWorkerShiftPlanResourcesByIdsAndTypesWithPlannedWorkingHours(
-                    $request->collect('workers')->all()
-                )
-        ];
-    }
-
-    public function getEventsForRoomsByDaysWithoutUser(
-        Request $request,
-        UserService $userService
-    ): array {
-        return [
-            'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
-                $this->roomService,
-                $userService,
-                $request->collect('rooms')->all(),
-                $request->collect('days')->all(),
-                $userService->getAuthUser()?->userFilters()->shiftFilter()->first()
-            ),
-        ];
-    }
 
     //@todo: fix phpcs error - fix complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh

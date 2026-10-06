@@ -1398,12 +1398,10 @@ class EventController extends Controller
     {
         $this->authorize('create', Event::class);
 
-        if ($request->filled('projectId')) {
-            $this->authorize('view', Project::query()->findOrFail($request->integer('projectId')));
-        }
-        if ($request->filled('projectName')) {
-            $this->authorize('create', Project::class);
-        }
+        // Bewusst KEINE Projekt-Prüfung (Entscheidung 06.10.2026): wer Termine anlegen darf, darf jedes
+        // Projekt zuordnen bzw. im Termin-Dialog ein neues anlegen – die Projektsuche im Dialog bietet
+        // alle Projekte an. Die frühere Prüfung lief über filled('projectId'), das bei diesem Request
+        // nie anschlug (data() ist überschrieben), war also nie aktiv.
 
         // Server-side enforcement: verify the user can actually book or request for this room
         $user = auth()->user();
@@ -1819,9 +1817,7 @@ class EventController extends Controller
         if ($shouldAcceptRoomRequest) {
             $this->authorize('answerRoomRequest', $event);
         }
-        if ($request->filled('projectId') && $request->integer('projectId') !== $event->project_id) {
-            $this->authorize('view', Project::query()->findOrFail($request->integer('projectId')));
-        }
+        // Projektzuordnung bewusst ohne eigene Prüfung, siehe storeEvent()
         if (!$request->noNotifications) {
             $projectManagers = [];
             $this->notificationService->setNotificationKey(Str::random(15));

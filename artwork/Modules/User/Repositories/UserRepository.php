@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection as SupportCollection;
@@ -203,11 +204,30 @@ class UserRepository extends BaseRepository
         User $user,
         string $notificationConstValue
     ): Collection {
+        return $this->pendingSummaryNotificationsQuery($user, [$notificationConstValue])->get();
+    }
+
+    /**
+     * Ungelesene, noch nicht zusammengefasste Benachrichtigungen der Typen für die Sammelmail,
+     * neueste zuerst (latest() der notifications()-Relation). JSON_VALID vorab: eine einzige ungültige
+     * Zeile ließe JSON_CONTAINS sonst die ganze Abfrage abbrechen.
+     *
+     * @param array<int, string> $notificationTypeValues
+     * @return MorphMany<DatabaseNotification, User>
+     */
+    public function pendingSummaryNotificationsQuery(User $user, array $notificationTypeValues): MorphMany
+    {
         return $user->notifications()
-            ->whereNull("read_at")
-            ->whereJsonContains("data->type", $notificationConstValue)
-            ->where("sent_in_summary", false)
-            ->get();
+            ->whereNull('read_at')
+            ->where('sent_in_summary', false)
+            ->whereRaw('JSON_VALID(data)')
+            // ohne Typen fiele die leere Klammer weg und die Abfrage träfe alle Typen
+            ->when($notificationTypeValues === [], static fn ($query) => $query->whereRaw('1 = 0'))
+            ->where(function ($query) use ($notificationTypeValues): void {
+                foreach ($notificationTypeValues as $notificationTypeValue) {
+                    $query->orWhereJsonContains('data->type', $notificationTypeValue);
+                }
+            });
     }
 
     public function syncDepartments(User $user, array $departmentIds): User

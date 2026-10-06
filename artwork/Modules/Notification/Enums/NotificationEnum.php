@@ -257,14 +257,17 @@ enum NotificationEnum: string
     }
 
     /**
-     * Geht nur an Personen, die fremde Dienstpläne sehen/planen (UserPolicy::canViewForeignRoster).
+     * Geht an Planende: Personen, die fremde Dienstpläne sehen/planen (UserPolicy::canViewForeignRoster),
+     * und Rolleninhaber*innen ohne dieses Recht (Gewerke-Planer*innen, Projektleitungen …) – wer sie
+     * außerdem sehen darf, entscheidet NotificationSettingsPresenter am tatsächlichen Empfängerkreis.
+     * NOTIFICATION_SHIFT_CONFLICT gehört nicht dazu: Den Konflikthinweis bekommt die eingeplante
+     * Person selbst (VacationConflictService, AvailabilityConflictService).
      */
     public function isForShiftPlanners(): bool
     {
         return in_array($this, [
             self::NOTIFICATION_SHIFT_INFRINGEMENT,
             self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION,
-            self::NOTIFICATION_SHIFT_CONFLICT,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,

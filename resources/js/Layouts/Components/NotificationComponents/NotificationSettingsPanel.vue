@@ -129,6 +129,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseToggle from "@/Artwork/Toggles/ArtworkBaseToggle.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import { showAppToast } from "@/Helper/appToast.js";
+import { extractSaveErrorMessage } from "@/Composeables/BiSaveFeedback.js";
 import { filterNotificationGroups, groupChannelState } from "@/Layouts/Components/NotificationComponents/notificationSettings.js";
 
 const props = defineProps({
@@ -162,7 +163,17 @@ const groupLabel = (group, channel, label) => groupState(group, channel) === 'so
 
 const saved = () => showAppToast('success', t('Notification settings saved'));
 
-/** Optimistisch speichern, bei Fehler zurückdrehen (Fehlermeldung kommt vom globalen Handler) */
+/**
+ * Verbindungsfehler/403/404/5xx meldet der globale axios-Fehler-Toast; für 422 hat er keine
+ * Meldung – dann die erste Validierungsmeldung selbst als Fehler-Toast zeigen.
+ */
+const showValidationError = (error) => {
+    if (error?.response?.status === 422) {
+        showAppToast('error', extractSaveErrorMessage(error) ?? t('An error has occurred'));
+    }
+};
+
+/** Optimistisch speichern, bei Fehler zurückdrehen und melden */
 const update = async (setting, changes) => {
     const previous = { ...setting };
     Object.assign(setting, changes);
@@ -171,6 +182,7 @@ const update = async (setting, changes) => {
         saved();
     } catch (error) {
         Object.assign(setting, previous);
+        showValidationError(error);
     }
 };
 
@@ -183,6 +195,9 @@ const bulk = async (changes) => {
     try {
         replaceGroups(await axios.patch(route('notifications.settings.bulk'), changes));
         saved();
+    } catch (error) {
+        // 403/404/5xx/Verbindung: globaler axios-Fehler-Toast; 422 melden wir selbst
+        showValidationError(error);
     } finally {
         busy.value = false;
     }
@@ -194,6 +209,9 @@ const resetDefaults = async () => {
         replaceGroups(await axios.post(route('notifications.settings.reset')));
         confirmReset.value = false;
         saved();
+    } catch (error) {
+        // 403/404/5xx/Verbindung: globaler axios-Fehler-Toast; 422 melden wir selbst
+        showValidationError(error);
     } finally {
         busy.value = false;
     }

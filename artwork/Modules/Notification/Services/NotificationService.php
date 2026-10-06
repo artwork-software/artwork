@@ -15,7 +15,7 @@ use Artwork\Modules\User\Services\UserService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Broadcasting\BroadcastException;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Support\Facades\Notification;
 use stdClass;
 
@@ -471,13 +471,11 @@ class NotificationService
         }
 
         // Wie bei den Sofort-Mails: ist der WebSocket-Server nicht erreichbar, fällt nur der
-        // Live-Hinweis aus – nicht die bereits gespeicherte Aktion (vorher 500 nach dem Speichern)
-        try {
-            // delivered: nur dann setzt das Frontend den Glocken-Punkt (Rückmeldung an Handelnde ohne Eintrag)
-            broadcast(new NewNotificationBroadcast($user, $broadcastMessage + ['delivered' => $delivered]));
-        } catch (BroadcastException $exception) {
-            report($exception);
-        }
+        // Live-Hinweis aus – nicht die bereits gespeicherte Aktion (vorher 500 nach dem Speichern).
+        // SafeBroadcast: gemeinsamer Kurzschluss mit den Termin-/Schicht-Broadcasts (kein Timeout je Hinweis
+        // bei hängendem Server) und in Transaktionen erst nach dem Commit (kein Hinweis zu zurückgerollten Daten).
+        // delivered: nur dann setzt das Frontend den Glocken-Punkt (Rückmeldung an Handelnde ohne Eintrag)
+        SafeBroadcast::send(new NewNotificationBroadcast($user, $broadcastMessage + ['delivered' => $delivered]));
     }
 
     public function checkIfUserInMoreThanTenShifts(User $user, Shift $shift): stdClass
@@ -642,6 +640,56 @@ class NotificationService
             DB::table('notifications')
                 ->where('id', $notification->id)
                 ->update(['data' => json_encode($data)]);
+        }
+    }
+
+    /**
+     * Massenvariante von markOpenRoomRequestsHandled() + deleteUpsertRoomRequestNotificationByEventId() für
+     * Bulk-/Projektlöschungen: data->eventId hat keinen Index, je Termin zwei Abfragen bedeuteten je Termin zwei
+     * Full-Scans auf notifications. Hier ein Scan je 500 Termine.
+     * JSON_VALID zuerst: im Strict-Mode bricht JSON_EXTRACT (auch im DELETE) sonst an einer ungültigen Zeile ab.
+     *
+     * @param array<int, int> $eventIds
+     */
+    public function closeRoomRequestNotificationsForDeletedEvents(
+        array $eventIds,
+        string $status,
+        ?User $handledBy = null
+    ): void {
+        $eventIds = array_values(array_unique(array_map('intval', $eventIds)));
+        if ($eventIds === []) {
+            return;
+        }
+
+        foreach (array_chunk($eventIds, 500) as $eventIdChunk) {
+            $eventIdStrings = array_map('strval', $eventIdChunk);
+
+            DB::table('notifications')
+                ->whereRaw('JSON_VALID(data)')
+                ->where('type', RoomRequestNotification::class)
+                ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST->value)
+                ->whereIn('data->eventId', $eventIdStrings)
+                ->delete();
+
+            $openNotifications = DB::table('notifications')
+                ->whereRaw('JSON_VALID(data)')
+                ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+                ->whereIn('data->eventId', $eventIdStrings)
+                ->whereNull('data->handledStatus')
+                ->get(['id', 'data']);
+
+            foreach ($openNotifications as $notification) {
+                $data = json_decode($notification->data, true);
+                $data['handledStatus'] = $status;
+                $data['handledBy'] = $handledBy
+                    ? ['id' => $handledBy->id, 'name' => $handledBy->display_name]
+                    : null;
+                $data['handledAt'] = now()->translatedFormat('d.m.Y H:i');
+                $data['buttons'] = [];
+                DB::table('notifications')
+                    ->where('id', $notification->id)
+                    ->update(['data' => json_encode($data)]);
+            }
         }
     }
 

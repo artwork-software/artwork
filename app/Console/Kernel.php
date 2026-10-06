@@ -54,7 +54,10 @@ class Kernel extends ConsoleKernel
                 \Artwork\Modules\Webhook\Models\WebhookDelivery::class,
             ],
         ])->daily();
-        $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
+        // Sperre wie bei der Sammelmail: ein langer Lauf darf nicht doppelt starten (sonst Doppelmeldungen)
+        $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes()
+            ->withoutOverlapping(30)
+            ->onOneServer();
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
         $schedule->command(SendExternalIssueReturnDueNotificationsCommand::class)->dailyAt('08:00')->runInBackground();
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
@@ -72,7 +75,12 @@ class Kernel extends ConsoleKernel
         // Papierkorb: nach 30 Tagen endgültig löschen (so kündigt es die Papierkorb-Seite an) —
         // über dieselben Wege wie "Endgültig löschen", nicht per Modell-Pruning
         $schedule->command(PurgeTrashCommand::class)->dailyAt('03:15')->withoutOverlapping()->runInBackground();
-        $schedule->command(CalculateDailyWorkingHoursOfUsers::class)->dailyAt('23:59')->runInBackground();
+        $schedule->command(CalculateDailyWorkingHoursOfUsers::class)
+            ->dailyAt('23:59')
+            // kurze Sperre: ein abgebrochener Lauf darf den Lauf am Folgetag nicht blockieren
+            ->withoutOverlapping(120)
+            ->onOneServer()
+            ->runInBackground();
         // DP-18: spielzeitbezogene Kennzahlen nach der Arbeitszeitberechnung tracken (Tag ist dann abgeschlossen)
         $schedule->command(TrackShiftKpisCommand::class)->dailyAt('00:30')->runInBackground();
         // DP-18 Stufe 2: überfällige Überstunden als auszuzahlend markieren

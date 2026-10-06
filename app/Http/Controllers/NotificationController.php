@@ -251,9 +251,9 @@ class NotificationController extends Controller
             'frequency' => ['sometimes', Rule::enum(NotificationFrequencyEnum::class)],
         ]);
         $settingService = app(NotificationSettingService::class);
-        $immediateBefore = $settingService->immediateMailTypes(Auth::user());
+        $mailStateBefore = $settingService->mailStateOf(Auth::user());
         $setting->update($validated);
-        $settingService->summariseTypesNoLongerImmediate(Auth::user(), $immediateBefore);
+        $settingService->summariseBacklogAfterSettingsChange(Auth::user(), $mailStateBefore);
 
         return $request->expectsJson() && !$request->header('X-Inertia')
             ? response()->json(['setting' => $setting->fresh()])
@@ -280,7 +280,7 @@ class NotificationController extends Controller
 
         $user = Auth::user();
         $settingService = app(NotificationSettingService::class);
-        $immediateBefore = $settingService->immediateMailTypes($user);
+        $mailStateBefore = $settingService->mailStateOf($user);
         $user->notificationSettings()
             ->whereIn('type', app(NotificationSettingsPresenter::class)->visibleTypeValuesFor($user))
             ->when(
@@ -288,7 +288,7 @@ class NotificationController extends Controller
                 static fn ($query, string $groupType) => $query->where('group_type', $groupType)
             )
             ->update($values);
-        $settingService->summariseTypesNoLongerImmediate($user, $immediateBefore);
+        $settingService->summariseBacklogAfterSettingsChange($user, $mailStateBefore);
 
         return $this->settingsResponse($request, $user);
     }
@@ -300,7 +300,7 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         $settingService = app(NotificationSettingService::class);
-        $immediateBefore = $settingService->immediateMailTypes($user);
+        $mailStateBefore = $settingService->mailStateOf($user);
         foreach (NotificationEnum::configurableCases() as $type) {
             $user->notificationSettings()->where('type', $type->value)->update([
                 'enabled_email' => true,
@@ -308,7 +308,7 @@ class NotificationController extends Controller
                 'frequency' => $type->defaultFrequency()->value,
             ]);
         }
-        $settingService->summariseTypesNoLongerImmediate($user, $immediateBefore);
+        $settingService->summariseBacklogAfterSettingsChange($user, $mailStateBefore);
 
         return $this->settingsResponse($request, $user);
     }

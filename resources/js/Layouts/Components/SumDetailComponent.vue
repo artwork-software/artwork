@@ -417,6 +417,8 @@ export default {
                         commentable_type: this.selectedSumDetail.class
                     },
                     {
+                        // Fehler meldet die Komponente selbst (alert)
+                        skipErrorToast: true,
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json'
@@ -455,6 +457,7 @@ export default {
                 await axios.delete(
                     route('sum.comments.delete', { comment: comment.id }),
                     {
+                        skipErrorToast: true,
                         headers: {
                             'Accept': 'application/json'
                         }
@@ -520,6 +523,7 @@ export default {
                             money_source_id: this.selectedMoneySource.id
                         },
                         {
+                            skipErrorToast: true,
                             headers: {
                                 'Accept': 'application/json',
                                 'Content-Type': 'application/json'
@@ -535,6 +539,7 @@ export default {
                             money_source_id: this.selectedMoneySource.id
                         },
                         {
+                            skipErrorToast: true,
                             headers: {
                                 'Accept': 'application/json',
                                 'Content-Type': 'application/json'
@@ -560,6 +565,7 @@ export default {
                 await axios.delete(
                     route('project.sum.money.source.destroy', { sumMoneySource: this.selectedSumDetail.sum_money_source.id }),
                     {
+                        skipErrorToast: true,
                         headers: {
                             'Accept': 'application/json'
                         }

@@ -63,6 +63,9 @@ import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
 import { useForm } from '@inertiajs/vue3'
 import dayjs from 'dayjs'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import { useTranslation } from "@/Composeables/Translation.js";
+
+const $t = useTranslation()
 
 const props = defineProps({
     user: { type: Object, required: true },

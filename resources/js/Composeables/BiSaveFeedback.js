@@ -1,4 +1,5 @@
 import { inject, provide, ref } from 'vue';
+import { messageForFailedRequest, t } from '@/Helper/appToast.js';
 
 const BI_SAVE_FEEDBACK_KEY = Symbol('biSaveFeedback');
 
@@ -15,17 +16,23 @@ export const BI_REQUEST_CONFIG = Object.freeze({ skipErrorToast: true });
  * optimistische UI-Änderungen bei Fehlern zurückrollen können.
  */
 /**
- * Lesbarer Grund aus einem Axios-Fehler: bei 422 die erste Validierungsmeldung,
- * sonst die Server-Message, sonst null (der Indikator zeigt dann den Standardtext).
+ * Lesbarer Grund aus einem Axios-Fehler: bei 422 die erste Validierungsmeldung, bei
+ * Verbindungsfehler/403/404/5xx der übersetzte Standardgrund (wie der globale Fehler-Toast,
+ * den BI_REQUEST_CONFIG unterdrückt – die Server-Texte dort sind englisch), sonst die
+ * Server-Message, sonst null (der Indikator zeigt dann den Standardtext).
  */
 export function extractSaveErrorMessage(error) {
+    if (error?.code === 'ERR_CANCELED') return null;
     const data = error?.response?.data;
-    if (!data) return null;
-    if (data.errors && typeof data.errors === 'object') {
+    if (data?.errors && typeof data.errors === 'object') {
         const first = Object.values(data.errors).flat().find(Boolean);
         if (first) return String(first);
     }
-    if (typeof data.message === 'string' && data.message.trim() !== '') {
+    // Nur echte Request-Fehler: ein Programmfehler im Speicherablauf ist kein Verbindungsfehler
+    const isRequestError = Boolean(error?.isAxiosError || error?.response || error?.request);
+    const reason = isRequestError ? messageForFailedRequest(error?.response?.status) : null;
+    if (reason) return t(reason);
+    if (typeof data?.message === 'string' && data.message.trim() !== '') {
         return data.message;
     }
     return null;

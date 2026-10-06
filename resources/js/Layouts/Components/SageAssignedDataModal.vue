@@ -26,7 +26,7 @@
                             <div v-show="currentIndex > 0"
                                  @click="currentIndex--"
                                  class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-text-subtle hover:border-border hover:text-text-muted cursor-pointer">
-                                <IconChevronLeft class="h-4 w-4 text-text-subtle" aria-hidden="true" />
+                                <PropertyIcon name="IconChevronLeft" class="h-4 w-4 text-text-subtle" aria-hidden="true" />
                                 <span>{{ $t('Previous') }}</span>
                             </div>
                         </div>
@@ -50,7 +50,7 @@
                                  @click="currentIndex++"
                                  class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-text-subtle hover:border-border hover:text-text-muted cursor-pointer">
                                 <span>{{ $t('Next')}}</span>
-                                <IconChevronRight class="h-4 w-4 text-text-subtle" aria-hidden="true"/>
+                                <PropertyIcon name="IconChevronRight" class="h-4 w-4 text-text-subtle" aria-hidden="true"/>
                             </div>
                         </div>
                     </nav>
@@ -72,18 +72,16 @@
                                   <span class="font-medium">
                                     {{ $t('single booking') }} {{ index + 1 }}
                                   </span>
-                                    <template>
-                                        <PropertyIcon
-                                            name="IconChevronUp"
-                                            v-if="isOpen(childBooking.id)"
-                                            class="w-5 h-5 text-text-subtle"
-                                        />
-                                        <PropertyIcon
-                                            name="IconChevronDown"
-                                            v-else
-                                            class="w-5 h-5 text-text-subtle"
-                                        />
-                                    </template>
+                                    <PropertyIcon
+                                        name="IconChevronUp"
+                                        v-if="isOpen(childBooking.id)"
+                                        class="w-5 h-5 text-text-subtle"
+                                    />
+                                    <PropertyIcon
+                                        name="IconChevronDown"
+                                        v-else
+                                        class="w-5 h-5 text-text-subtle"
+                                    />
                                 </div>
                                 <transition name="fade">
                                     <div v-show="isOpen(childBooking.id)" class="mt-2">

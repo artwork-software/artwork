@@ -360,8 +360,8 @@ const writeUsers = computed(() => (props.users ?? []).filter(u => u.pivot?.write
 
 /** Helpers */
 function formatDate(date: string) {
-    const d = new Date(date)
-    return d.toLocaleString('de-DE', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    // Datumsformat der Instanz plus Uhrzeit; nicht lesbare Werte unverändert anzeigen
+    return instanceFormat.formatDateTime(date) || date
 }
 function isOverdue(date: string) {
     try {

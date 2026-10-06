@@ -92,6 +92,9 @@ import { useForm, usePage, router } from '@inertiajs/vue3'
 import JetInputError from '@/Jetstream/InputError.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { IconDownload, IconEdit, IconX } from '@tabler/icons-vue'
+import { useTranslation } from '@/Composeables/Translation.js'
+
+const $t = useTranslation()
 
 const props = defineProps({
     project: {

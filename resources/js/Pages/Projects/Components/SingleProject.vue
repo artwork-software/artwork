@@ -174,7 +174,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
-import {IconCalendarMonth} from "@tabler/icons-vue";
+import {IconCalendarMonth, IconPinned} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
@@ -182,6 +182,7 @@ export default {
     components: {
         PropertyIcon,
         IconCalendarMonth,
+        IconPinned,
         ProjectCreateModal,
         ProjectDataEditModal,
         BaseModal, Link, BaseMenu, Menu,

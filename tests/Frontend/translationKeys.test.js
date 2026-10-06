@@ -94,3 +94,37 @@ test('craft modal uses "Gewerkleitung" consistently in German', () => {
     assert.equal(de['Add department management'], 'Gewerkleitung hinzufügen');
     assert.equal(de['Delete department management'], 'Gewerkleitung löschen');
 });
+
+test('deleting a restricted project tab warns that its contents become admin-only', () => {
+    const hint = 'Comments, checklists and documents from this tab will then only be visible to admins.';
+    assert.equal(de[hint], 'Kommentare, Checklisten und Dokumente aus diesem Tab sehen danach nur noch Admins.');
+    assert.equal(en[hint], hint);
+    assert.equal(de['Delete tab'], 'Tab löschen');
+    assert.ok(de['Are you sure you want to delete the tab {0}?'] && en['Are you sure you want to delete the tab {0}?']);
+
+    const source = read('resources/js/Pages/Settings/Components/SingleTabComponent.vue');
+    assert.match(source, /if \(!isRestricted\.value\) \{\s*return question;/);
+    assert.ok(source.includes(`$t("${hint}")`));
+    // Löschen erst nach Bestätigung
+    assert.match(source, /function removeTab\(\) \{[\s\S]*?showDeleteTabModal\.value = true;[\s\S]*?\}/);
+});
+
+test('the regional formats page does not promise the date format in PDFs and exports', () => {
+    const source = read('resources/js/Pages/ToolSettings/Formats/Index.vue');
+    assert.doesNotMatch(source, /in the interface, in PDFs and in exports/);
+
+    const key = 'Number and currency formats apply in the interface and in many PDFs and exports. The date format is currently only used in individual places of the interface (e.g. budget comments, sources of funding, document requests and BI snapshots); PDFs and exports keep their own date format.';
+    assert.ok(source.includes(key));
+    assert.ok(de[key]?.startsWith('Zahlen- und Währungsformat'));
+    assert.equal(en[key], key);
+});
+
+test('inventory quick-edit errors shown in the modal are translated', () => {
+    const controller = read('artwork/Modules/Inventory/Http/Controllers/InventoryArticleController.php');
+    for (const key of ['Invalid field.', 'Quantity is derived from the individual inventory items.']) {
+        assert.ok(controller.includes(`__('${key}')`), key);
+        assert.ok(!controller.includes(`=> '${key}'`), key);
+        assert.ok(de[key] && de[key] !== key, `de.json: ${key}`);
+        assert.equal(en[key], key);
+    }
+});

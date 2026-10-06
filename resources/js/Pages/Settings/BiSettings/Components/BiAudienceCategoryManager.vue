@@ -115,6 +115,7 @@ import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
+import { BI_REQUEST_CONFIG, extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
 
 const t = useTranslation();
 
@@ -175,14 +176,15 @@ const submitEdit = async () => {
     const payload = { name: form.name.trim(), pricing_type: form.pricingTypeItem?.id ?? 'full' };
     try {
         if (editing.value?.id) {
-            await axios.patch(route('bi.audience-categories.update', editing.value.id), payload);
+            await axios.patch(route('bi.audience-categories.update', editing.value.id), payload, BI_REQUEST_CONFIG);
         } else {
-            await axios.post(route('bi.audience-categories.store'), payload);
+            await axios.post(route('bi.audience-categories.store'), payload, BI_REQUEST_CONFIG);
         }
         await load();
         closeEdit();
     } catch (error) {
-        formError.value = error?.response?.data?.message ?? t('Saving failed. Please try again.');
+        // Fehler steht im Formular (BI_REQUEST_CONFIG unterdrückt den globalen Toast)
+        formError.value = extractSaveErrorMessage(error) ?? t('Saving failed. Please try again.');
     } finally {
         saving.value = false;
     }
@@ -207,12 +209,12 @@ const askDelete = (category) => {
 
 const deleteCategory = async () => {
     try {
-        await axios.delete(route('bi.audience-categories.destroy', toDelete.value.id));
+        await axios.delete(route('bi.audience-categories.destroy', toDelete.value.id), BI_REQUEST_CONFIG);
         toDelete.value = null;
         await load();
     } catch (error) {
         // 422 = Werte vorhanden → Kategorie kann nur deaktiviert werden
-        pageError.value = error?.response?.data?.message ?? t('Saving failed. Please try again.');
+        pageError.value = extractSaveErrorMessage(error) ?? t('Saving failed. Please try again.');
     } finally {
         showDeleteModal.value = false;
     }

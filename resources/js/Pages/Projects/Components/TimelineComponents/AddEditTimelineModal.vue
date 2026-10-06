@@ -30,7 +30,6 @@
                         id="rawText"
                         label="Enter your times here. Each line is interpreted as a separate entry."
                         rows="15"
-                        :max-length="100000"
                     />
                 </div>
             </div>

@@ -5,7 +5,7 @@
             storage-key="settings-guide.tool.formats"
             title="How does this area work?"
             :paragraphs="[
-                'These formats apply to numbers, amounts and dates throughout the instance – in the interface, in PDFs and in exports.',
+                'Number and currency formats apply in the interface and in many PDFs and exports. The date format is currently only used in individual places of the interface (e.g. budget comments, sources of funding, document requests and BI snapshots); PDFs and exports keep their own date format.',
                 'Changes are saved immediately.',
             ]"
         />

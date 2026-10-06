@@ -20,12 +20,20 @@ class EventUpdated implements ShouldBroadcastNow
     public $event;
     public $roomId;
 
+    /**
+     * @param int|null $roomId Kanal des Raums; Termine ohne Raum haben keinen Raumkanal
+     */
     public function __construct(
         Event $event,
-        int $roomId
+        ?int $roomId
     ) {
         $this->event = $event;
         $this->roomId = $roomId;
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return $this->roomId !== null;
     }
 
     public function broadcastAs()

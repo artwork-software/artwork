@@ -23,10 +23,18 @@ class RemoveEvent implements ShouldBroadcastNow
     public $event;
     public $roomId;
 
-    public function __construct(Event $event, int $roomId)
+    /**
+     * @param int|null $roomId Kanal des Raums; Termine ohne Raum haben keinen Raumkanal
+     */
+    public function __construct(Event $event, ?int $roomId)
     {
         $this->event = $event;
         $this->roomId = $roomId;
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return $this->roomId !== null;
     }
 
     public function broadcastAs()

@@ -7,10 +7,15 @@ use Artwork\Modules\Project\Models\Comment;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class NewCommentInProject implements ShouldBroadcastNow
+/**
+ * Erst nach dem Commit senden: Clients laden auf das Event hin über geprüfte Endpunkte nach und
+ * würden sonst den Stand vor der Änderung lesen.
+ */
+class NewCommentInProject implements ShouldBroadcastNow, ShouldDispatchAfterCommit
 {
     use Dispatchable;
     use InteractsWithSockets;
@@ -35,10 +40,22 @@ class NewCommentInProject implements ShouldBroadcastNow
         return new PrivateChannel('project.' . $this->projectId);
     }
 
+    /**
+     * Nur Kennungen: Der Kanal project.{id} prüft nur das Projekt-Sichtrecht, nicht die
+     * Tab-Sichtbarkeit. Die Clients laden die betroffene Kommentarliste über die geprüften
+     * Endpunkte (projects.tabs.all-comments / projects.tabs.comments) nach – vorher lagen
+     * Text und Autor:in jedes neuen Kommentars bei allen Projektsichtigen.
+     *
+     * @return array{comment: array{id: int, project_id: int|null, tab_id: int|null}}
+     */
     public function broadcastWith(): array
     {
         return [
-            'comment' => $this->comment,
+            'comment' => [
+                'id' => $this->comment->id,
+                'project_id' => $this->comment->project_id,
+                'tab_id' => $this->comment->tab_id,
+            ],
         ];
     }
 }

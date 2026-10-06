@@ -12,6 +12,7 @@ import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import Tooltip from 'primevue/tooltip'
 import {messageForFailedRequest, setAppToastTranslator, showAppToast, t} from './Helper/appToast'
+import { hasInlineFeedback } from './Helper/sequentialUpload.js'
 
 async function loadLocaleMessages(locale) {
     // Vite macht daraus separate Chunks pro Sprache
@@ -111,6 +112,9 @@ createInertiaApp({
             // und werden von Inertia selbst behandelt, bevor 'invalid' feuert.
             alert(t('The action could not be completed because the data has changed in the meantime. The page will reload.'))
             window.location.reload()
+        } else if (hasInlineFeedback(event.detail.response)) {
+            // Upload-Modals (submitInertiaForm) zeigen 413/403/5xx selbst an – sonst käme je Datei ein alert/Toast
+            return
         } else if (status === 413) {
             // Server (nginx client_max_body_size / PHP post_max_size) hat den
             // Request abgelehnt, weil die Dateien zusammen zu groß sind.

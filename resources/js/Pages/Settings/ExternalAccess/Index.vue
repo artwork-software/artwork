@@ -268,6 +268,7 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
+import { createSaveSnapshot, createQueuedSave } from '@/Helper/saveSnapshot.js'
 
 const $t = useTranslation()
 const page = usePage()
@@ -313,25 +314,32 @@ function showSavedBanner() {
 onBeforeUnmount(() => clearTimeout(savedBannerTimeout))
 
 /** Zuletzt gespeicherter Stand – Fokusverlust ohne Änderung löst keinen Request aus. */
-let lastSavedSnapshot = JSON.stringify(form.data())
+const savedSnapshot = createSaveSnapshot(() => form.data())
 
-function save() {
+/**
+ * Speichert nacheinander (siehe createQueuedSave). async: ein Speichern bricht andere Aktionen der
+ * Seite nicht ab. Empfänger-Aktionen (eigene URL) können ein laufendes Speichern aber im Client
+ * abbrechen – der Stand bleibt dann ungespeichert markiert und geht beim nächsten Verlassen raus.
+ */
+const saveIfChanged = createQueuedSave((done) => {
+    if (!savedSnapshot.hasChanges()) {
+        done()
+        return
+    }
+    const sent = savedSnapshot.capture()
     form.patch(route('settings.external-access.update'), {
         preserveScroll: true,
         preserveState: true,
+        async: true,
         onSuccess: () => {
-            lastSavedSnapshot = JSON.stringify(form.data())
+            savedSnapshot.markSaved(sent)
             showSavedBanner()
         },
+        onFinish: done,
     })
-}
+})
 
-function saveIfChanged() {
-    if (JSON.stringify(form.data()) === lastSavedSnapshot) {
-        return
-    }
-    save()
-}
+const save = saveIfChanged
 
 const addOpen = ref(false)
 const addForm = ref({ option: null, types: [] })

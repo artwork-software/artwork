@@ -74,8 +74,31 @@ export function shouldToastAxiosError(error) {
     if (config.skipErrorToast || error?.code === 'ERR_CANCELED') {
         return false
     }
-    if (config.headers?.['X-Inertia']) {
+    if (isInertiaRequest(error)) {
         return false
     }
     return MUTATING_METHODS.includes(String(config.method ?? '').toLowerCase())
+}
+
+/** Inertia-Requests (Header X-Inertia) behandelt das 'invalid'-Event in app.js */
+export function isInertiaRequest(error) {
+    const headers = error?.config?.headers
+    if (!headers) {
+        return false
+    }
+
+    return Boolean(headers['X-Inertia'] ?? headers.get?.('X-Inertia'))
+}
+
+/**
+ * Für den axios-Interceptor: abgelaufene Sitzung (401/419) melden. Inertia-Requests nicht –
+ * deren 'invalid'-Handler in app.js meldet sich selbst, sonst kämen zwei Alerts.
+ */
+export function shouldHandleSessionExpiry(error) {
+    const status = error?.response?.status
+    if (status !== 401 && status !== 419) {
+        return false
+    }
+
+    return !isInertiaRequest(error)
 }

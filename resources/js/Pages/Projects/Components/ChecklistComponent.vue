@@ -226,6 +226,7 @@
 </template>
 
 <script setup>
+import { stopListeningOnPrivateChannel } from "@/Composeables/Listener/echoChannel.js";
 import {ref, computed, nextTick, watch, onMounted, onUnmounted} from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -558,21 +559,24 @@ function sortTo(type) {
 
 // Echo listener for real-time checklist updates
 let echoChannel = null;
+const handleChecklistUpdated = () => {
+    fetchChecklists();
+};
 
 onMounted(() => {
     syncOpenedChecklists();
 
     if (props.project?.id) {
-        echoChannel = Echo.private('project.' + props.project.id)
-            .listen('.checklist.updated', () => {
-                fetchChecklists();
-            });
+        echoChannel = 'project.' + props.project.id;
+        Echo.private(echoChannel).listen('.checklist.updated', handleChecklistUpdated);
     }
 });
 
+// Nur den eigenen Handler abmelden – Echo.leave entfernte alle Listener des geteilten Projektkanals
 onUnmounted(() => {
-    if (echoChannel && props.project?.id) {
-        Echo.leave('project.' + props.project.id);
+    if (echoChannel) {
+        stopListeningOnPrivateChannel(echoChannel, '.checklist.updated', handleChecklistUpdated);
+        echoChannel = null;
     }
 });
 

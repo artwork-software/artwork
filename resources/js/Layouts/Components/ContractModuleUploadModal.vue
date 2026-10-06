@@ -53,7 +53,7 @@
                 <div class="justify-center flex w-full my-6">
                     <FormButton
                         :text="$t('Upload document')"
-                        :disabled="files.length < 1"
+                        :disabled="files.length < 1 || isUploading"
                         @click="storeFiles"
                     />
                 </div>
@@ -69,7 +69,13 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
+import {
+    inertiaUploadErrorMessage,
+    isInvalidResponse,
+    submitInertiaForm,
+    uploadSequentially,
+} from "@/Helper/sequentialUpload.js";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {IconCircleX, IconX} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -102,7 +108,8 @@ export default {
                 description: ""
             }),
             errorsAtUpload: [],
-            closeModalIfUploaded: false
+            closeModalIfUploaded: false,
+            isUploading: false,
         }
     },
     methods: {
@@ -118,17 +125,11 @@ export default {
         },
         storeFile(file) {
             this.contractModuleForm.file = file;
-            this.contractModuleForm.post(route('contracts.module.store'), {
-                onSuccess: () => {
-                    this.contractModuleForm.file = null;
-                    this.files.splice(this.files.indexOf(file), 1);
-                },
-                onError: () => {
-                    this.errorsAtUpload.push(this.contractModuleForm.errors);
-                }
-            })
 
-
+            return submitInertiaForm(this.contractModuleForm, 'post', route('contracts.module.store'), {
+                preserveState: true,
+                preserveScroll: true,
+            }, { router });
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";
@@ -136,16 +137,40 @@ export default {
               this.files.push(file)
             }
         },
-        storeFiles() {
+        /**
+         * Nacheinander hochladen: mehrere .post() derselben useForm brachen sich gegenseitig ab. Hochgeladene
+         * Dateien verschwinden aus der Liste, fehlgeschlagene bleiben mit Meldung stehen.
+         */
+        async storeFiles() {
+            // Doppelklick: eine zweite Kette über dieselbe useForm bräche die erste ab
+            if (this.isUploading || this.files.length < 1) {
+                return;
+            }
+            this.isUploading = true;
             this.errorsAtUpload = [];
-            for (let file of this.files) {
-                this.storeFile(file)
+            this.uploadDocumentFeedback = '';
+
+            const { failed, skipped } = await uploadSequentially(
+                [...this.files],
+                (file) => this.storeFile(file),
+                { stopOnError: isInvalidResponse }
+            );
+
+            this.isUploading = false;
+            this.contractModuleForm.file = null;
+            this.files = [...failed.map(({ file }) => file), ...skipped];
+            this.errorsAtUpload = failed.map(({ error }) => error?.errors ?? {});
+
+            if (failed.length > 0) {
+                const translate = (key, params) => this.$t(key, params);
+                this.uploadDocumentFeedback = failed
+                    .map(({ file, error }) => `${file.name}: ${inertiaUploadErrorMessage(error, translate)}`)
+                    .join(' ');
+                return;
             }
 
-            if(!this.errorsAtUpload.length > 0) {
-                this.closeModalIfUploaded = true;
-                this.closeModal();
-            }
+            this.closeModalIfUploaded = true;
+            this.closeModal();
         }
     }
 }

@@ -58,6 +58,7 @@
 </template>
 
 <script setup>
+import { publishComponentValue } from "@/Composeables/Listener/projectComponentValueSync.js";
 import { reactive } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
@@ -119,16 +120,22 @@ async function saveDropdown(fieldId, item) {
 const biSave = useBiSaveFeedback();
 
 async function saveValue(componentId, data) {
-    const ok = await biSave.run(
-        () => axios.patch(
+    let response = null;
+    const ok = await biSave.run(async () => {
+        response = await axios.patch(
             route('project.tab.component.update', {
                 project: props.projectId,
                 component: componentId,
             }),
             { data }, BI_REQUEST_CONFIG
-        )
-    );
+        );
+    });
     if (ok) {
+        // Der Broadcast geht toOthers – Instanzen derselben Komponente auf dieser Seite lokal abgleichen
+        const savedValue = response?.data?.project_value;
+        if (savedValue) {
+            publishComponentValue(props.projectId, componentId, savedValue);
+        }
         emit('updated');
     }
 }

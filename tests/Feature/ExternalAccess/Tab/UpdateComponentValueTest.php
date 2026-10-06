@@ -211,6 +211,21 @@ final class UpdateComponentValueTest extends TestCase
     }
 
     #[Test]
+    public function unchanged_values_are_not_broadcast_again(): void
+    {
+        ['external' => $external, 'project' => $project, 'tab' => $tab, 'component' => $component] = $this->context();
+
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => 'gleich']);
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => 'gleich']);
+
+        // Jeder Broadcast löst bei allen internen Betrachtern ein Nachladen aus – nur echte Änderungen senden
+        Event::assertDispatchedTimes(UpdateProjectComponentData::class, 1);
+
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => 'anders']);
+        Event::assertDispatchedTimes(UpdateProjectComponentData::class, 2);
+    }
+
+    #[Test]
     public function concurrent_updates_use_lock_for_update(): void
     {
         // True row-locking concurrency cannot be simulated deterministically in a

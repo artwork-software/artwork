@@ -10,7 +10,11 @@ import MultiAlertComponent from '@/Components/Alerts/MultiAlertComponent.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import InfoButtonComponent from '@/Pages/Projects/Tab/Components/InfoButtonComponent.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import { useProjectDocumentListener } from '@/Composeables/Listener/useProjectDocumentListener.js'
+import {
+    createLatestRequestTracker,
+    isDocumentInScope,
+    useProjectDocumentListener,
+} from '@/Composeables/Listener/useProjectDocumentListener.js'
 import { isInlinePrintableFile, useInlineFilePrinter } from '@/Composeables/useInlineFilePrinter'
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
 import FilePreview from '@/Artwork/Files/FilePreview.vue'
@@ -86,9 +90,17 @@ const canEditFull = computed(() =>
 const isLoadingDocuments = ref(false)
 const loadDocumentsError = ref('')
 
+// Broadcasts tragen nur Ids: die Liste wird über den geprüften Endpunkt neu geladen – gebündelt und
+// nur für Events aus der Tab-Auswahl dieser Platzierung.
+let documentListener: ReturnType<typeof useProjectDocumentListener> | null = null
+const documentRequests = createLatestRequestTracker()
+
 onMounted(() => {
     if (props.project?.id) {
-        useProjectDocumentListener(documents.value, props.project.id).init()
+        documentListener = useProjectDocumentListener(props.project.id, () => fetchDocuments(), {
+            isRelevant: (document) => isDocumentInScope(props.component?.scope)(document),
+        })
+        documentListener.init()
     }
 
     window.addEventListener('keydown', onKey);
@@ -120,6 +132,7 @@ async function fetchDocuments() {
         return
     }
 
+    const requestId = documentRequests.begin()
     isLoadingDocuments.value = true
     loadDocumentsError.value = ''
 
@@ -127,6 +140,8 @@ async function fetchDocuments() {
         const { data } = await axios.get(
             route('projects.tabs.documents', { project: projectId, componentInTab: componentInTabId, ...placementQuery() })
         )
+        // Eine neuere Anfrage läuft schon: deren Antwort zählt
+        if (!documentRequests.isLatest(requestId)) return
         const fetchedDocuments = data?.documents ?? []
         documents.value.splice(0, documents.value.length, ...fetchedDocuments)
 
@@ -138,11 +153,12 @@ async function fetchDocuments() {
             remoteProjectManagerIds.value = data.projectManagerIds
         }
     } catch (error) {
+        if (!documentRequests.isLatest(requestId)) return
         console.error(error)
         loadDocumentsError.value = (page.props as any)?.errors?.documents
             ?? 'Unable to load project documents.'
     } finally {
-        isLoadingDocuments.value = false
+        if (documentRequests.isLatest(requestId)) isLoadingDocuments.value = false
     }
 }
 
@@ -280,6 +296,7 @@ function onKey(e: KeyboardEvent) {
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKey)
     destroyPrintFrame()
+    documentListener?.stop()
 })
 
 function openPreview(file: ProjectFile) {

@@ -106,6 +106,7 @@ import axios from 'axios';
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import {IconChevronDown , IconX} from "@tabler/icons-vue";
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
+import {createSerializedSaver} from "@/Helper/serializedSave.js";
 
 
 defineOptions({
@@ -163,38 +164,62 @@ function onClearLeave() {
     window.removeEventListener('resize', positionClearTooltip);
 }
 
+// Getter: Inertia-Besuche mit preserveState ersetzen props.data, die Komponente bleibt gemountet
+const dataListener = useProjectDataListener(() => props.data, props.projectId);
 onMounted(() => {
-    useProjectDataListener(projectData.value, props.projectId).init();
+    dataListener.init();
 });
 
 onBeforeUnmount(() => {
     onClearLeave();
+    dataListener.stop();
 });
 
 
+function storedSelected() {
+    return normalizeSelected(props.data.project_value ? props.data.project_value.data.selected : props.data.data.selected);
+}
+
+// Nacheinander speichern: bei schnellem Umwählen gewinnt sonst ggf. eine ältere Antwort
+const selectionSaver = createSerializedSaver({
+    send: (value) => axios.patch(
+        route("project.tab.component.update", {
+            project: props.projectId,
+            component: props.data.id,
+        }),
+        { data: { selected: value } }
+    ),
+    onSaved: (response) => {
+        // Broadcast geht an die anderen – hier und in weiteren Instanzen den gespeicherten Wert übernehmen
+        dataListener.saved(response?.data?.project_value);
+        // Angezeigt wird, was gespeichert ist (ggf. ein neuerer fremder Stand)
+        selected.value = storedSelected();
+    },
+    // Zwischenstand steht schon in der DB: übernehmen, Auswahl (neuerer Wert folgt) nicht anfassen
+    onIntermediateSaved: (response) => {
+        dataListener.saved(response?.data?.project_value);
+    },
+    onFailed: (error) => {
+        console.error('Fehler beim Aktualisieren:', error);
+        // Auf den zuletzt ERFOLGREICH gespeicherten Stand zurück (Zwischenerfolge sind übernommen)
+        selected.value = storedSelected();
+    },
+});
+
 watch(
     () => props.data,
-    (newVal) => {
-        selected.value = normalizeSelected(newVal.project_value ? newVal.project_value.data.selected : newVal.data.selected);
+    () => {
+        // Laufende eigene Speicherung: optimistische Auswahl nicht durch Live-Updates zurücksetzen
+        if (selectionSaver.isSaving()) return;
+        selected.value = storedSelected();
     },
     { deep: true }
 );
 
-async function updateTextData(value) {
-    // Optimistisches UI-Update (Broadcast synchronisiert final)
+function updateTextData(value) {
+    // Optimistisches UI-Update (Antwort/Broadcast synchronisiert final)
     selected.value = normalizeSelected(value);
-    try {
-        await axios.patch(
-            route("project.tab.component.update", {
-                project: props.projectId,
-                component: props.data.id,
-            }),
-            { data: { selected: value } }
-        );
-        // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
-    } catch (error) {
-        console.error('Fehler beim Aktualisieren:', error);
-    }
+    selectionSaver.save(value);
 }
 </script>
 

@@ -6,7 +6,12 @@ use Artwork\Modules\Project\Events\UpdateProjectComponentData;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectComponentValueController extends Controller
 {
@@ -43,6 +48,30 @@ class ProjectComponentValueController extends Controller
     }
 
     /**
+     * Aktueller Wert einer Komponente im Projekt – für den Broadcast-Listener, der nach data.updated
+     * nur Kennungen bekommt. Gleiche Sichtregel wie die Tab-Ausgabe: Projekt sehen und die Komponente
+     * in einem sichtbaren Tab sehen dürfen (Komponenten-Sichtbeschränkung + Tab-Sichtbarkeit).
+     */
+    public function value(
+        Project $project,
+        Component $component,
+        ProjectComponentVisibilityService $visibilityService,
+    ): JsonResponse {
+        $this->authorize('view', $project);
+
+        /** @var User $user */
+        $user = Auth::user();
+        abort_unless($visibilityService->canSeeInProject($user, $component), 403);
+
+        return response()->json([
+            'project_value' => ProjectComponentValue::query()
+                ->where('project_id', $project->id)
+                ->where('component_id', $component->id)
+                ->first(),
+        ]);
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(ProjectComponentValue $projectComponentValue): void
@@ -53,7 +82,11 @@ class ProjectComponentValueController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Project $project, Component $component): void
+    /**
+     * Gibt den gespeicherten Wert im Format von project_value zurück: der Speichernde übernimmt ihn
+     * lokal (der Broadcast geht toOthers und trägt nur Kennungen).
+     */
+    public function update(Request $request, Project $project, Component $component): JsonResponse
     {
         /** @var \Artwork\Modules\User\Models\User $user */
         $user = $request->user();
@@ -82,7 +115,16 @@ class ProjectComponentValueController extends Controller
             ['data' => $valueInput]
         );
 
-        broadcast(new UpdateProjectComponentData($value, $project->id));
+        // Nur bei echter Änderung senden (Fokuswechsel ohne Änderung erzeugten sonst je Feld einen
+        // Broadcast und bei jedem Betrachter einen Nachlade-Request). toOthers: der Speichernde
+        // übernimmt die Antwort; ein eigenes Nachladen könnte inzwischen weiter Getipptes überschreiben.
+        if ($value->wasRecentlyCreated || $value->wasChanged('data')) {
+            // SafeBroadcast: ein WebSocket-Ausfall macht den bereits gespeicherten Wert nicht zur 500
+            // (Checkbox/DropDown würden sonst zurückspringen und Nutzer:innen wiederholen)
+            SafeBroadcast::send(new UpdateProjectComponentData($value, $project->id), toOthers: true);
+        }
+
+        return response()->json(['project_value' => $value]);
     }
 
     /**

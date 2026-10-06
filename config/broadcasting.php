@@ -43,9 +43,16 @@ return [
                 'port' => env('REVERB_PORT', 443),
                 'scheme' => env('REVERB_SCHEME', 'https'),
                 'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                // Pusher-Client setzt diesen Wert je Anfrage als Guzzle-"timeout" (Standard 30 s). Live-Hinweise
+                // gehen synchron raus (ShouldBroadcastNow) – ein hängender Reverb blockierte sonst den Request
+                // bis zu 30 s je Empfänger*in. Fehlschläge fängt NotificationService ab (BroadcastException).
+                'timeout' => (float) (env('REVERB_HTTP_TIMEOUT') ?: 3),
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                // Laravel-Standard 10 s für den Verbindungsaufbau, den der Pusher-Client nicht überschreibt
+                'connect_timeout' => (float) (env('REVERB_HTTP_CONNECT_TIMEOUT') ?: 2),
+                'timeout' => (float) (env('REVERB_HTTP_TIMEOUT') ?: 3),
             ],
         ],
 

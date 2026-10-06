@@ -8733,6 +8733,7 @@
     "At most {n} days can be rebooked at once – please narrow the period.": "At most {n} days can be rebooked at once – please narrow the period.",
     "Manual bookings on this day: {diff}. Check whether they already cover the same work before rebooking.": "Manual bookings on this day: {diff}. Check whether they already cover the same work before rebooking.",
     "artwork tickets": "artwork tickets",
+    "Artwork-Tickets": "Artwork-Tickets",
     "artwork tickets is not configured for this installation. Ask your Caldero contact to set it up.": "artwork tickets is not configured for this installation. Ask your Caldero contact to set it up.",
     "Connecting…": "Connecting…",
     "Connect artwork tickets": "Connect artwork tickets",

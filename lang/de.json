@@ -8742,6 +8742,7 @@
     "At most {n} days can be rebooked at once – please narrow the period.": "Es können höchstens {n} Tage auf einmal neu gebucht werden – bitte den Zeitraum verkleinern.",
     "Manual bookings on this day: {diff}. Check whether they already cover the same work before rebooking.": "Manuelle Buchungen an diesem Tag: {diff}. Vor dem Neu buchen prüfen, ob sie dieselbe Arbeit schon abdecken.",
     "artwork tickets": "artwork tickets",
+    "Artwork-Tickets": "Artwork-Tickets",
     "artwork tickets is not configured for this installation. Ask your Caldero contact to set it up.": "artwork tickets ist für diese Installation nicht eingerichtet. Wende dich an deinen Caldero-Kontakt.",
     "Connecting…": "Verbinde…",
     "Connect artwork tickets": "artwork tickets verbinden",

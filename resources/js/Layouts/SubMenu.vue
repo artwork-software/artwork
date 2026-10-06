@@ -920,7 +920,7 @@ const navigation = ref([
                 has_permission: can('change budget settings') || is('artwork admin')
             },
             {
-                name: 'artwork tickets',
+                name: 'Artwork-Tickets',
                 href: route('settings.tickets'),
                 icon: 'IconBuildingStore',
                 current: route().current('settings.tickets*'),

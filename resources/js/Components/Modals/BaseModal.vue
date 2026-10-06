@@ -1,6 +1,6 @@
 <template>
     <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': zIndex }" @close="closeModal">
+        <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': zIndex }" @close="onDialogClose">
             <TransitionChild as="template" enter="ease-out duration-200 motion-reduce:transition-none" enter-from="opacity-0" enter-to="opacity-100"
                              leave="ease-in duration-150 motion-reduce:transition-none" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 transition-opacity" :class="showBackdrop ? 'bg-[#1C1F24]/45' : ''"/>
@@ -60,6 +60,7 @@ import axios from 'axios';
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
 import Permissions from "@/Mixins/Permissions.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { overlayAbove } from "@/Composeables/useOverlayStack.js";
 
 export default {
     name: "BaseModal",
@@ -104,6 +105,10 @@ export default {
     methods: {
         closeModal(bool) {
             this.$emit('closed', bool)
+        },
+        // A click on a dialog open above this modal is not a click outside it.
+        onDialogClose() {
+            if (!overlayAbove.value) this.closeModal(false)
         },
         toggleBackdrop() {
             this.showBackdrop = !this.showBackdrop

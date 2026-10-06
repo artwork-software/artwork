@@ -23,7 +23,7 @@ class UpdateContainerCommand extends Command
 
     protected $description = 'Updates the container';
 
-    public function handle(): void
+    public function handle(): int
     {
         // Muss vor dem Nullen gelesen werden — danach liefert die Config null.
         $database = config('database.connections.mysql.database');
@@ -42,7 +42,22 @@ class UpdateContainerCommand extends Command
         config(['database.connections.mysql.database' => $database]);
 
         $this->line('Migrating');
-        Artisan::call('migrate --force');
+        // Ausgabe und Ergebnis sichtbar machen: der Entrypoint ruft den Befehl mit `|| true` auf, ein
+        // Migrationsfehler soll trotzdem eindeutig im Container-Log stehen und die Folgeschritte stoppen
+        try {
+            $migrateExitCode = Artisan::call('migrate', ['--force' => true]);
+            $this->output->write(Artisan::output());
+        } catch (\Throwable $exception) {
+            $this->output->write(Artisan::output());
+            $this->error('MIGRATION FAILED – container update aborted: ' . $exception->getMessage());
+
+            throw $exception;
+        }
+        if ($migrateExitCode !== self::SUCCESS) {
+            $this->error('MIGRATION FAILED (exit code ' . $migrateExitCode . ') – container update aborted');
+
+            return self::FAILURE;
+        }
 
         $this->line('Adding meili-indexes');
         foreach (
@@ -74,5 +89,7 @@ class UpdateContainerCommand extends Command
         Artisan::call('queue:restart');
 
         $this->line('Container update finished');
+
+        return self::SUCCESS;
     }
 }

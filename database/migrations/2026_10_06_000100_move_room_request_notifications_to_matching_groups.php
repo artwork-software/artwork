@@ -25,7 +25,9 @@ return new class extends Migration
 
     private function move(string $type, string $group): void
     {
+        // JSON_VALID zuerst: im Strict-Mode bricht JSON_EXTRACT sonst an einer ungültigen Zeile ab
         DB::table('notifications')
+            ->whereRaw('JSON_VALID(data)')
             ->where('data->type', $type)
             ->update(['data' => DB::raw("JSON_SET(data, '$.groupType', '" . $group . "')")]);
     }

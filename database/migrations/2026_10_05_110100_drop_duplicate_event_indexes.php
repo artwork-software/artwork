@@ -34,11 +34,19 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('events', function (Blueprint $table): void {
-            $table->index('start_time', 'idx_events_start');
-            $table->index('end_time', 'idx_events_end');
-            $table->index('event_type_id', 'idx_events_type');
-            $table->index('event_status_id', 'idx_events_status');
-        });
+        $columns = [
+            'idx_events_start' => 'start_time',
+            'idx_events_end' => 'end_time',
+            'idx_events_type' => 'event_type_id',
+            'idx_events_status' => 'event_status_id',
+        ];
+        // up() überspringt Indizes ohne Zwilling – nur wiederherstellen, was fehlt
+        foreach ($columns as $index => $column) {
+            if (!Schema::hasIndex('events', $index)) {
+                Schema::table('events', function (Blueprint $table) use ($column, $index): void {
+                    $table->index($column, $index);
+                });
+            }
+        }
     }
 };

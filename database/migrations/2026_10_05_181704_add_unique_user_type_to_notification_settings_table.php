@@ -28,10 +28,19 @@ return new class extends Migration
             })
             ->delete();
 
-        Schema::table('notification_settings', function (Blueprint $table): void {
-            $table->unique(['user_id', 'type']);
-            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-        });
+        // Index und Fremdschlüssel einzeln prüfen: wiederholbar, falls ein früherer Lauf nach dem Index abbrach
+        if (!Schema::hasIndex('notification_settings', ['user_id', 'type'], 'unique')) {
+            Schema::table('notification_settings', function (Blueprint $table): void {
+                $table->unique(['user_id', 'type']);
+            });
+        }
+        $hasUserForeignKey = collect(Schema::getForeignKeys('notification_settings'))
+            ->contains(fn (array $foreignKey): bool => $foreignKey['columns'] === ['user_id']);
+        if (!$hasUserForeignKey) {
+            Schema::table('notification_settings', function (Blueprint $table): void {
+                $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            });
+        }
     }
 
     public function down(): void

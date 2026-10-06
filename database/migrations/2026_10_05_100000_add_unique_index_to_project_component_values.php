@@ -32,9 +32,11 @@ return new class extends Migration
                 ->delete();
         }
 
-        Schema::table('project_component_values', function (Blueprint $table): void {
-            $table->unique(['project_id', 'component_id'], 'project_component_values_project_component_unique');
-        });
+        if (!Schema::hasIndex('project_component_values', 'project_component_values_project_component_unique')) {
+            Schema::table('project_component_values', function (Blueprint $table): void {
+                $table->unique(['project_id', 'component_id'], 'project_component_values_project_component_unique');
+            });
+        }
     }
 
     public function down(): void

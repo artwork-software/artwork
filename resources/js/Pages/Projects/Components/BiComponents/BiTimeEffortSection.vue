@@ -62,7 +62,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue';
-import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useBiSaveFeedback, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     timeEfforts: { type: Array, default: () => [] },
@@ -96,7 +96,7 @@ const addEffort = async () => {
         () => axios.post(route('projects.bi.time-efforts.store', props.projectId), {
             label: newLabel.value,
             effort_bucket: newBucket.value.value,
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         newLabel.value = '';
@@ -110,7 +110,7 @@ const deleteEffort = async () => {
     effortToDelete.value = null;
     if (!effortId) return;
     const ok = await biSave.run(
-        () => axios.delete(route('projects.bi.time-efforts.destroy', [props.projectId, effortId]))
+        () => axios.delete(route('projects.bi.time-efforts.destroy', [props.projectId, effortId]), BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');

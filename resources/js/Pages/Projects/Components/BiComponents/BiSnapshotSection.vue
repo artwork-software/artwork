@@ -139,7 +139,7 @@ import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue';
 import BiChart from '@/Artwork/Charts/BiChart.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
-import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useBiSaveFeedback, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
 import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
 
 const instanceFormat = useInstanceFormat();
@@ -333,7 +333,7 @@ const createSnapshot = async () => {
             name: newName.value,
             snapshot_date: newDate.value,
             scope: newScope.value,
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         newName.value = '';
@@ -347,7 +347,7 @@ const deleteSnapshot = async () => {
     snapshotToDelete.value = null;
     if (!snapshotId) return;
     const ok = await biSave.run(
-        () => axios.delete(route('projects.bi.snapshots.destroy', [props.projectId, snapshotId]))
+        () => axios.delete(route('projects.bi.snapshots.destroy', [props.projectId, snapshotId]), BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');

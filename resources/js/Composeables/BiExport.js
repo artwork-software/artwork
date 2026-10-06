@@ -1,5 +1,5 @@
 import { ref, computed, onBeforeUnmount, getCurrentInstance } from 'vue';
-import { extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
+import { extractSaveErrorMessage, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
 
 /**
  * Gemeinsamer BI-Export-Ablauf: Konfiguration cachen, Job-Status pollen,
@@ -118,7 +118,7 @@ export function useBiExport(routes = {}) {
         phase.value = 'pending';
         clockTimer = setInterval(() => { elapsedSeconds.value++; }, 1000);
         try {
-            const response = await axios.post(route(routeNames.cache), config);
+            const response = await axios.post(route(routeNames.cache), config, BI_REQUEST_CONFIG);
             if (run !== runId) {
                 return false;
             }

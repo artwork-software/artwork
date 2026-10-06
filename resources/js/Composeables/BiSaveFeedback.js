@@ -3,6 +3,12 @@ import { inject, provide, ref } from 'vue';
 const BI_SAVE_FEEDBACK_KEY = Symbol('biSaveFeedback');
 
 /**
+ * axios-Config für BI-Speichervorgänge: Fehler zeigt der BI-Speicherindikator bzw. das Formular selbst,
+ * der globale Fehler-Toast käme sonst doppelt dazu.
+ */
+export const BI_REQUEST_CONFIG = Object.freeze({ skipErrorToast: true });
+
+/**
  * Zentrales Speicher-Feedback für den BI-Projekt-Tab: alle Sektionen wickeln
  * ihre Axios-Saves über run() ab, der Tab zeigt EINEN Statusindikator
  * (BiSaveIndicator). run() liefert true/false statt zu werfen, damit Aufrufer

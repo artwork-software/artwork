@@ -342,6 +342,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue"
 import axios from "axios"
+import { useI18n } from "vue-i18n"
 import draggable from "vuedraggable"
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js"
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue"
@@ -364,6 +365,7 @@ const projectData = computed(() => props.data)
 const showEditor = ref(false)
 const saving = ref(false)
 const error = ref(null)
+const { t } = useI18n()
 const dragging = ref(false)
 
 // Template state
@@ -468,13 +470,15 @@ async function saveLinks() {
                 project: props.projectId,
                 component: props.data.id,
             }),
-            { data: payload }
+            { data: payload },
+            // Fehler steht direkt am Editor – kein zusätzlicher globaler Toast
+            { skipErrorToast: true }
         )
 
         showEditor.value = false
     } catch (e) {
         console.error("Fehler beim Aktualisieren:", e)
-        error.value = "Speichern fehlgeschlagen."
+        error.value = t("Saving failed. Please try again.")
     } finally {
         saving.value = false
     }

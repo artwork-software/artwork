@@ -326,7 +326,7 @@ import {
     IconCircleCheck,
 } from '@tabler/icons-vue';
 import { usePermission } from "@/Composeables/Permission.js";
-import { provideBiSaveFeedback } from "@/Composeables/BiSaveFeedback.js";
+import { provideBiSaveFeedback, BI_REQUEST_CONFIG } from "@/Composeables/BiSaveFeedback.js";
 import BiSaveIndicator from "@/Pages/Projects/Components/BiComponents/BiSaveIndicator.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BiKpiHeader from "@/Pages/Projects/Components/BiComponents/BiKpiHeader.vue";
@@ -414,7 +414,7 @@ const initializePlan = async (mode, sourceProjectId = null) => {
         () => axios.post(route('projects.bi.plan.initialize', props.project.id), {
             mode,
             source_project_id: sourceProjectId,
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         showPlanCopySearch.value = false;

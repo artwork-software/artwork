@@ -72,6 +72,7 @@
         </main>
 
         <PopupChat v-if="$page.props.auth.user.use_chat"/>
+        <TicketingMoveDialog />
     </div>
 </template>
 
@@ -93,6 +94,7 @@ import {useI18n} from "vue-i18n";
 import PopupChat from "@/Components/Chat/PopupChat.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import SubMenu from "@/Layouts/SubMenu.vue";
+import TicketingMoveDialog from "@/Layouts/Components/TicketingMoveDialog.vue";
 const { locale } = useI18n();
 
 const props = defineProps({

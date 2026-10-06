@@ -26,6 +26,7 @@ class TicketingRoomLink extends Model
         'venue_id',
     ];
 
+    /** @return BelongsTo<Room, $this> */
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class, 'room_id', 'id', 'room');

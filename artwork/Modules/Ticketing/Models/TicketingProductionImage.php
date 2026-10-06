@@ -21,6 +21,7 @@ class TicketingProductionImage extends Model
         'remote_id',
     ];
 
+    /** @return BelongsTo<TicketingProduction, $this> */
     public function production(): BelongsTo
     {
         return $this->belongsTo(TicketingProduction::class, 'ticketing_production_id');

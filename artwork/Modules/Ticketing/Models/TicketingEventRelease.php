@@ -39,11 +39,13 @@ class TicketingEventRelease extends Model
         'released_at' => 'datetime',
     ];
 
+    /** @return BelongsTo<Event, $this> */
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function releasedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'released_by_user_id');

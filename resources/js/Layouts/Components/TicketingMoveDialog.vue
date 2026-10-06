@@ -1,15 +1,19 @@
 <template>
     <!-- The question before dates on sale move; asked by ticketingMoveHeaders, mounted once in AppLayout.
-         Without a backdrop, like the series question. -->
+         It usually opens over the event modal, so a light dim (no blur) and a narrower panel set it apart. -->
     <TransitionRoot as="template" :show="question !== null">
         <Dialog as="div" class="artwork relative z-[130]" @close="answer(false)">
+            <TransitionChild as="template" enter="ease-out duration-200 motion-reduce:transition-none" enter-from="opacity-0" enter-to="opacity-100"
+                             leave="ease-in duration-150 motion-reduce:transition-none" leave-from="opacity-100" leave-to="opacity-0">
+                <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
+            </TransitionChild>
             <div class="fixed inset-0 overflow-y-auto">
-                <div class="flex min-h-full items-start justify-center p-4 sm:pt-16">
+                <div class="flex min-h-full items-center justify-center p-4">
                     <TransitionChild as="template" enter="ease-out duration-200 motion-reduce:transition-none"
-                                     enter-from="opacity-0 -translate-y-2" enter-to="opacity-100 translate-y-0"
+                                     enter-from="opacity-0 scale-95" enter-to="opacity-100 scale-100"
                                      leave="ease-in duration-150 motion-reduce:transition-none"
-                                     leave-from="opacity-100 translate-y-0" leave-to="opacity-0 -translate-y-2">
-                        <DialogPanel v-if="question" class="flex w-full max-w-2xl flex-col gap-3 rounded-lg border border-border-subtle bg-surface px-5 py-4 text-left shadow-overlay ring-1 ring-black/5">
+                                     leave-from="opacity-100 scale-100" leave-to="opacity-0 scale-95">
+                        <DialogPanel v-if="question" class="flex w-full max-w-lg flex-col gap-4 rounded-lg border border-border-subtle bg-surface p-5 text-left shadow-overlay ring-1 ring-black/5">
                             <div class="flex items-start gap-3">
                                 <span class="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent-100 text-accent-700">
                                     <IconTicket class="size-4" stroke-width="1.75" aria-hidden="true" />
@@ -69,6 +73,7 @@ const summary = computed(() => {
 })
 
 function answer(confirmed) {
-    question.value.resolve(confirmed && question.value.mayMove)
+    // Escape during the leave transition closes a question that is already answered.
+    question.value?.resolve(confirmed && question.value.mayMove)
 }
 </script>

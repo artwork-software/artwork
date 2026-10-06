@@ -5,16 +5,20 @@ namespace Tests\Feature\Ticketing;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Ticketing\Exceptions\TicketingLockedException;
 use Artwork\Modules\Ticketing\Jobs\SyncTicketingEventJob;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -456,15 +460,15 @@ final class TicketingReleaseTest extends FeatureTestCase
     }
 
     #[Test]
-    public function opening_the_shop_settings_asks_for_a_login_link_to_them(): void
+    public function opening_the_shop_appearance_asks_for_a_login_link_to_its_tab(): void
     {
         $this->fakeTickets();
 
-        $this->get(route('ticketing.open', ['to' => 'settings']))
+        $this->get(route('ticketing.open', ['to' => 'settings', 'tab' => 'appearance']))
             ->assertRedirect(self::TICKETS_URL . '/api/auth/core-login/verify?token=t0k3n');
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/login-links')
-            && $request['destination'] === ['type' => 'houseSettings']);
+            && $request['destination'] === ['type' => 'houseSettings', 'tab' => 'appearance']);
     }
 
     #[Test]
@@ -525,7 +529,7 @@ final class TicketingReleaseTest extends FeatureTestCase
         ]);
         $this->postJson(route('projects.tabs.ticketing.release', $this->project), ['event_ids' => [$event->id]])->assertOk();
 
-        $event->update(['start_time' => '2027-02-02 20:00:00']);
+        $this->moveConfirmed($event, ['start_time' => '2027-02-02 20:00:00']);
         $this->runTicketingSync();
 
         $this->assertCount(2, Http::recorded(fn (Request $request): bool => $request->method() === 'PUT'
@@ -624,7 +628,7 @@ final class TicketingReleaseTest extends FeatureTestCase
         $this->fakeTickets([self::TICKETS_URL . '/api/integration/v1/dates' => Http::failedConnection()]);
         $event = $this->releasedEvent();
 
-        $event->update(['start_time' => '2027-02-02 20:00:00']);
+        $this->moveConfirmed($event, ['start_time' => '2027-02-02 20:00:00']);
         $this->runTicketingSync();
 
         $this->assertSame('2027-02-02 20:00:00', $event->fresh()->start_time->format('Y-m-d H:i:s'));
@@ -640,7 +644,7 @@ final class TicketingReleaseTest extends FeatureTestCase
         ], 409)]);
         $event = $this->releasedEvent();
 
-        $event->update(['start_time' => '2027-02-02 20:00:00']);
+        $this->moveConfirmed($event, ['start_time' => '2027-02-02 20:00:00']);
         $this->runTicketingSync();
 
         $this->assertSame($message, $event->fresh()->ticketingRelease->sync_error);
@@ -654,7 +658,7 @@ final class TicketingReleaseTest extends FeatureTestCase
         $this->fakeTickets();
         $event = $this->releasedEvent(['sync_error' => 'artwork tickets could not be reached.']);
 
-        $event->update(['start_time' => '2027-02-02 20:00:00']);
+        $this->moveConfirmed($event, ['start_time' => '2027-02-02 20:00:00']);
         $this->runTicketingSync();
 
         $this->assertNull($event->fresh()->ticketingRelease->sync_error);
@@ -673,6 +677,114 @@ final class TicketingReleaseTest extends FeatureTestCase
         Bus::assertNotDispatched(SyncTicketingEventJob::class);
         Http::assertNothingSent();
         $this->assertSoftDeleted('events', ['id' => $event->id]);
+    }
+
+    #[Test]
+    public function a_date_on_sale_moves_only_once_the_move_is_confirmed(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+        $move = ['events' => [$event->id], 'cell' => ['day' => '2027-02-03', 'room_id' => $this->room->id]];
+
+        $this->postJson(route('events.multi-cell.move'), $move)->assertStatus(422);
+        $this->assertSame('2027-02-01', $event->fresh()->start_time->format('Y-m-d'));
+
+        $this->postJson(route('events.multi-cell.move'), $move, [TicketingLock::MOVE_CONFIRMED_HEADER => '1'])->assertOk();
+        $this->assertSame('2027-02-03', $event->fresh()->start_time->format('Y-m-d'));
+    }
+
+    #[Test]
+    public function a_date_on_sale_does_not_move_without_the_permission(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+        $this->actingAsUserWith([]);
+
+        $this->expectException(TicketingLockedException::class);
+        $this->moveConfirmed($event, ['start_time' => '2027-02-02 20:00:00']);
+    }
+
+    #[Test]
+    public function the_permission_lets_someone_other_than_an_admin_move_a_date_on_sale(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+        $this->actingAsUserWith([PermissionEnum::TICKETING_MOVE_ON_SALE->value]);
+
+        $this->moveConfirmed($event, ['start_time' => '2027-02-02 20:00:00']);
+
+        $this->assertSame('2027-02-02 20:00:00', $event->fresh()->start_time->format('Y-m-d H:i:s'));
+    }
+
+    #[Test]
+    public function a_date_on_sale_only_moves_to_a_room_of_the_same_venue(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+        $sameVenue = Room::factory()->create();
+        TicketingRoomLink::query()->create(['room_id' => $sameVenue->id, 'venue_id' => self::VENUE_ID]);
+
+        $this->moveConfirmed($event, ['room_id' => $sameVenue->id]);
+        $this->assertSame($sameVenue->id, $event->fresh()->room_id);
+
+        $this->expectException(TicketingLockedException::class);
+        $this->moveConfirmed($event, ['room_id' => Room::factory()->create()->id]);
+    }
+
+    #[Test]
+    public function without_a_person_a_date_on_sale_moves_unasked(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+        Auth::forgetUser();
+
+        $event->update(['start_time' => '2027-02-02 20:00:00']);
+
+        $this->assertSame('2027-02-02 20:00:00', $event->fresh()->start_time->format('Y-m-d H:i:s'));
+    }
+
+    #[Test]
+    public function the_move_check_names_the_dates_on_sale_of_the_series_with_their_sales(): void
+    {
+        $this->fakeTickets();
+        [$first, $second] = $this->series();
+        TicketingEventRelease::query()->create([
+            'event_id' => $second->id, 'state' => 'released', 'tickets_date_id' => self::DATE_ID, 'classes' => [],
+        ]);
+
+        $this->getJson(route('ticketing.move-check', ['event_ids' => [$first->id]]))
+            ->assertOk()
+            ->assertExactJson(['may_move' => true, 'dates' => []]);
+
+        $this->getJson(route('ticketing.move-check', ['event_ids' => [$first->id], 'with_series' => 1]))
+            ->assertOk()
+            ->assertJsonPath('may_move', true)
+            ->assertJsonCount(1, 'dates')
+            ->assertJsonPath('dates.0.id', $second->id)
+            ->assertJsonPath('dates.0.sold', 84);
+    }
+
+    #[Test]
+    public function the_move_check_still_asks_when_tickets_is_unreachable(): void
+    {
+        $this->fakeTickets([self::TICKETS_URL . '/api/integration/v1/dates?ids=*' => Http::failedConnection()]);
+        $event = $this->releasedEvent();
+
+        $this->getJson(route('ticketing.move-check', ['event_ids' => [$event->id]]))
+            ->assertOk()
+            ->assertJsonPath('dates.0.id', $event->id)
+            ->assertJsonPath('dates.0.sold', null);
+    }
+
+    /**
+     * Verschieben wie aus dem Kalender, nachdem die Person es bestätigt hat.
+     *
+     * @param array<string, mixed> $attributes
+     */
+    private function moveConfirmed(Event $event, array $attributes): void
+    {
+        request()->headers->set(TicketingLock::MOVE_CONFIRMED_HEADER, '1');
+        $event->update($attributes);
     }
 
     /** Die Warteschlange ist im Test gefälscht; der Abgleich läuft hier von Hand. */

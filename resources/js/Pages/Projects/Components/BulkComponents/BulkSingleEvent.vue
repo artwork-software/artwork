@@ -433,6 +433,7 @@ import {focusedDescriptionKey, openDescriptionEdits} from "@/Pages/Projects/Comp
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
 import axios from "axios";
+import {ticketingMoveHeaders} from "@/Composeables/useTicketingMove.js";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
@@ -752,6 +753,20 @@ const getComparableEvent = (ev) => ({
 });
 const isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+// Felder, deren Änderung einen Termin im Verkauf verschiebt
+const MOVE_FIELDS = ['roomId', 'day', 'end_day', 'start_time', 'end_time', 'admission_time'];
+const movesTheDate = (current, last) => !last || MOVE_FIELDS.some((field) => current[field] !== last[field]);
+
+/** Zeiten der Zeile zurück auf den gespeicherten Stand, wenn das Verschieben abgebrochen wurde. */
+const restoreTimes = (snapshot) => {
+    props.event.start_time = snapshot.start_time;
+    props.event.end_time = snapshot.end_time;
+    props.event.admission_time = snapshot.admission_time;
+    draftStartTime.value = snapshot.start_time || '';
+    draftEndTime.value = snapshot.end_time || '';
+    draftAdmissionTime.value = snapshot.admission_time?.slice(0, 5) || '';
+};
+
 const isUpdating = ref(false);
 
 // Raum der Zeile auf den zuletzt gespeicherten Stand zurücksetzen – aus dem AKTUELLEN Snapshot (ein parallel
@@ -809,13 +824,21 @@ const updateEventInDatabase = async () => {
     isUpdating.value = true;
 
     try {
+        const headers = movesTheDate(currentComparable, lastComparable)
+            ? await ticketingMoveHeaders([event.id])
+            : {};
+        if (!headers) {
+            if (lastComparable) restoreTimes(lastComparable);
+            return;
+        }
+
         // Payload normalisieren
         const payload = JSON.parse(JSON.stringify(event));
         if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
         if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
-        const {data} = await axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload });
+        const {data} = await axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers });
         markRowEdited(event.id, data?.event?.updated_at);
 
         // Snapshot nach erfolgreichem Patch aktualisieren
@@ -890,6 +913,12 @@ const onStartDateFocusOut = async () => {
 
     // Prepare payload BEFORE reactive changes to avoid component unmount issues during sorting
     if (event.id) {
+        const headers = await ticketingMoveHeaders([event.id]);
+        if (!headers) {
+            draftStartDate.value = oldStart;
+            return;
+        }
+
         const payload = JSON.parse(JSON.stringify(event));
         payload.day = newStart;
         payload.end_day = newEndDay;
@@ -899,7 +928,7 @@ const onStartDateFocusOut = async () => {
 
         // Send API request before reactive update
         const previousEndDay = event.end_day;
-        axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload })
+        axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers })
             .then(({data}) => {
                 markRowEdited(event.id, data?.event?.updated_at);
                 // Update snapshot after successful patch
@@ -956,18 +985,24 @@ let typeBeforeChange = props.event.type;
 watch(() => props.event.room, (_newRoom, oldRoom) => { roomBeforeChange = oldRoom; }, {flush: 'sync'});
 watch(() => props.event.type, (_newType, oldType) => { typeBeforeChange = oldType; }, {flush: 'sync'});
 
-const onRoomChange = (newRoom) => {
+const onRoomChange = async (newRoom) => {
     const previousRoom = roomBeforeChange;
     // Termin festhalten: Umsortieren kann diese Komponente für einen anderen Termin recyceln
     const event = props.event;
     // Send API request BEFORE reactive change to avoid component unmount during sort by room
     if (event.id) {
+        const headers = await ticketingMoveHeaders([event.id]);
+        if (!headers) {
+            event.room = previousRoom;
+            return;
+        }
+
         const payload = JSON.parse(JSON.stringify(event));
         payload.room = newRoom ? { id: newRoom.id } : null;
         if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
-        axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload })
+        axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers })
             .then(({data}) => {
                 markRowEdited(event.id, data?.event?.updated_at);
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};

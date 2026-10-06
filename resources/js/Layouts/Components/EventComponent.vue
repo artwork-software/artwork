@@ -640,7 +640,7 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <span v-if="ticketsReleased" class="text-xs text-secondary">{{ $t('On sale: time and room changes reach the shop and the buyers.') }}</span>
+                            <span v-if="ticketsReleased" class="text-xs text-secondary">{{ $t('On sale: time and room changes reach the shop. Buyers are not notified automatically.') }}</span>
                             <BaseUIButton v-if="ticketsReleased" type="button" hide-icon @click="showTicketDetails = true">
                                 <IconTicket class="size-4" />
                                 {{ $t('Ticket details') }}
@@ -940,6 +940,7 @@ import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 import { IconAlertTriangle, IconArrowsMoveHorizontal, IconCheck, IconChevronUp, IconCircleX, IconRepeat, IconTicket, IconTrash } from '@tabler/icons-vue'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import { useEvent } from '@/Composeables/Event.js'
+import { ticketingMoveHeaders } from '@/Composeables/useTicketingMove.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -1969,7 +1970,19 @@ function timingSnapshot() {
         start: formatDate(startDate.value, allDayEvent.value ? '00:00' : startTime.value),
         end: formatDate(endDate.value, allDayEvent.value ? '23:59' : endTime.value),
         projectId: showProjectInfo.value ? (selectedProject.value?.id ?? null) : null,
+        roomId: selectedRoom.value?.id ?? null,
+        admissionTime: admissionTime.value || null,
     }
+}
+
+/** Zeit oder Raum geändert: das, was einen Termin im Verkauf betrifft. */
+function movesTheDate(data) {
+    const before = initialTiming.value
+    return !before ||
+        before.start !== data.start ||
+        before.end !== data.end ||
+        before.roomId !== (data.roomId ?? null) ||
+        before.admissionTime !== data.admissionTime
 }
 
 async function checkProjectAssignmentImpact(data) {
@@ -2031,6 +2044,14 @@ async function doSaveEvent() {
         isLoading.value = false
         return
     }
+    let headers = {}
+    if (props.event?.id && movesTheDate(data)) {
+        headers = await ticketingMoveHeaders([props.event.id], { withSeries: data.seriesScope !== 'single' })
+        if (!headers) {
+            isLoading.value = false
+            return
+        }
+    }
     seriesImpactConfirmed = false
     // Bestätigung gilt nur für genau diesen Speichervorgang — sonst überspringt
     // ein späteres erneutes Verschieben im selben Modal den Precheck stumm
@@ -2054,6 +2075,7 @@ async function doSaveEvent() {
             })
         } else {
             router.put(route('events.update', { event: props.event.id }), data, {
+                headers,
                 preserveScroll: true,
                 preserveState: (pg) => typeof pg?.component === 'undefined',
                 onSuccess: () => {
@@ -2070,7 +2092,7 @@ async function doSaveEvent() {
 
     try {
         if (!props.event?.id) await axios.post('/events', data)
-        else await axios.put(`/events/${props.event.id}`, data)
+        else await axios.put(`/events/${props.event.id}`, data, { headers })
         handleSuccessfulSave()
     } catch (e) {
         isLoading.value = false

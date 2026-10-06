@@ -1,7 +1,7 @@
 <template>
     <TicketsSettingsHeader :description="$t('Connect this artwork to its ticket house and manage everything ticketing.')">
         <template #actions>
-            <a v-if="connection.connected" :href="route('ticketing.open', { to: 'settings' })" target="_blank" rel="noopener" class="ui-button">
+            <a v-if="connection.connected" :href="route('ticketing.open', { to: 'settings', tab: 'appearance' })" target="_blank" rel="noopener" class="ui-button">
                 <IconPalette class="size-3.5" />{{ $t('Edit shop appearance') }}
             </a>
             <a v-if="connection.connected" :href="route('ticketing.open')" target="_blank" rel="noopener" class="ui-button">

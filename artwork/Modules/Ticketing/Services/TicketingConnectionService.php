@@ -50,7 +50,7 @@ class TicketingConnectionService
      * allen anderen die Anmeldung mit ihrer Adresse. Ist tickets nicht erreichbar, bleibt der
      * gewöhnliche Link zum Dashboard.
      *
-     * @param array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings'} $destination
+     * @param array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings', tab?: string} $destination
      */
     public function loginUrl(TicketingConnection $connection, User $user, array $destination): string
     {

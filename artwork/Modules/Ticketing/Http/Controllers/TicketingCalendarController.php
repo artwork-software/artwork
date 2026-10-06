@@ -84,7 +84,10 @@ class TicketingCalendarController extends Controller
         ]);
     }
 
-    /** Weiter ins Ticket-Dashboard, mit ?event= gleich zu diesem Termin, mit ?to=settings zu den Haus-Einstellungen. */
+    /**
+     * Weiter ins Ticket-Dashboard, mit ?event= gleich zu diesem Termin, mit ?to=settings zu den
+     * Haus-Einstellungen und mit &tab= dort gleich zum richtigen Reiter (prüft tickets).
+     */
     public function open(Request $request): RedirectResponse
     {
         $connection = $this->connections->current();
@@ -93,11 +96,13 @@ class TicketingCalendarController extends Controller
         return redirect()->away($this->connections->loginUrl($connection, $request->user(), $this->destination($request)));
     }
 
-    /** @return array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings'} */
+    /** @return array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings', tab?: string} */
     private function destination(Request $request): array
     {
         if ($request->query('to') === 'settings') {
-            return ['type' => 'houseSettings'];
+            return $request->filled('tab')
+                ? ['type' => 'houseSettings', 'tab' => $request->string('tab')->value()]
+                : ['type' => 'houseSettings'];
         }
 
         if ($request->filled('event')) {

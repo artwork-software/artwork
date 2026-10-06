@@ -246,7 +246,8 @@ const checkIfStatusOrHasAnySpecialItem = computed(() => {
 });
 
 const isOverdue = computed(() => {
-    if (props.externMaterialIssue.received_by || !props.externMaterialIssue.return_date) {
+    // counts_as_returned: dieselbe Regel wie Verfügbarkeit und Filter (Status, „Erhalten von“, Altbestand)
+    if (props.externMaterialIssue.counts_as_returned || props.externMaterialIssue.received_by || !props.externMaterialIssue.return_date) {
         return false;
     }
 

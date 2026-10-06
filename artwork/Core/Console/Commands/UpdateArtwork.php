@@ -202,9 +202,22 @@ class UpdateArtwork extends Command
         $this->call('artwork:update-service-provider-contacts');
     }
 
+    /**
+     * Inventar-Status nur bei leerer Tabelle (Erstinstallation) anlegen. Der Seeder arbeitet mit
+     * updateOrCreate über den Namen: bei jedem Update ausgeführt, setzte er Reihenfolge, Farbe und
+     * default-Flag zurück und legte einen umbenannten Status (z. B. „Einsatzbereit“) als
+     * Phantom-Status neu an.
+     */
     private function addInventoryArticleStatus(): void
     {
         $this->section('Inventory Article Status');
+
+        if (InventoryArticleStatus::query()->exists()) {
+            $this->info('Inventory article statuses already exist, skipping seeder.');
+
+            return;
+        }
+
         $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
     }
 
@@ -307,63 +320,15 @@ class UpdateArtwork extends Command
         });
     }
 
+    /**
+     * Die Status selbst legt addInventoryArticleStatus() nur bei leerer Tabelle an. Hier wird
+     * lediglich sichergestellt, dass genau ein Status das default-Flag trägt – frühere Updates
+     * haben über den Seeder (updateOrCreate per Name) einen zweiten Standard-Status angelegt.
+     */
     private function addOrderInInventoryStatus(): void
     {
         $this->section('Add Order in Inventory Status');
-
-        $dataSet = [
-            [
-                'name' => 'Einsatzbereit',
-                'default' => true,
-                'deletable' => false,
-                'color' => '#16A34A',
-                'order' => 1,
-            ],
-            [
-                'name' => 'Defekt',
-                'deletable' => false,
-                'color' => '#EF4444',
-                'order' => 2,
-            ],
-            [
-                'name' => 'Ausgesondert',
-                'deletable' => false,
-                'color' => '#F59E0B',
-                'order' => 4,
-            ],
-            [
-                'name' => 'Nicht auffindbar',
-                'deletable' => false,
-                'color' => '#6B7280',
-                'order' => 3,
-            ],
-            [
-                'name' => 'fest verbaut',
-                'deletable' => false,
-                'color' => '#3B82F6',
-                'order' => 5,
-            ],
-        ];
-
-        // Nur bei Erstinstallation anlegen. Vorher lief updateOrCreate per Name bei jedem Update:
-        // Reihenfolge/Farbe wurden zurückgesetzt und ein umbenannter Status (z. B. „Einsatzbereit“)
-        // wurde als zweiter Standard-Status neu angelegt.
-        if (InventoryArticleStatus::query()->exists()) {
-            $this->ensureSingleDefaultInventoryStatus();
-
-            return;
-        }
-
-        foreach ($dataSet as $data) {
-            $status = new InventoryArticleStatus([
-                'name' => $data['name'],
-                'color' => $data['color'] ?? null,
-                'order' => $data['order'] ?? 1,
-            ]);
-            $status->default = $data['default'] ?? false;
-            $status->deletable = $data['deletable'] ?? true;
-            $status->save();
-        }
+        $this->ensureSingleDefaultInventoryStatus();
     }
 
     /**

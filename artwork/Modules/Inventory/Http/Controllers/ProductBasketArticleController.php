@@ -91,10 +91,18 @@ class ProductBasketArticleController extends Controller
 
         // 4) Atomar aktualisieren (Race-Condition-sicher)
         DB::transaction(function () use (&$basketArticle, $delta): void {
-            /** @var ProductBasketArticle $fresh */
+            /** @var ProductBasketArticle|null $fresh */
             $fresh = ProductBasketArticle::whereKey($basketArticle->id)
                 ->lockForUpdate()
                 ->first();
+
+            // Schneller Doppelklick auf „−“ bei Menge 1: der erste Request hat die Position schon
+            // entfernt – wie „entfernt“ antworten statt mit einem TypeError (500)
+            if ($fresh === null) {
+                $basketArticle->quantity = 0;
+
+                return;
+            }
 
             $newQty = max(0, ($fresh->quantity ?? 0) + $delta);
             $this->storeQuantityOrRemove($fresh, $newQty);

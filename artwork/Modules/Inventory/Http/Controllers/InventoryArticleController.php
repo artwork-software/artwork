@@ -225,8 +225,9 @@ class InventoryArticleController extends Controller
             : \Carbon\Carbon::parse($startDate)->startOfDay();
 
         $endAt = $hasTime
-            // inkl. :59, um "bis 10:00" als einschließend zu behandeln
-            ? \Carbon\Carbon::parse("{$endDate} {$endTime}:59")
+            // Ende exklusiv: „bis 14:00“ überschneidet sich nicht mit einer Ausgabe ab 14:00 (vorher
+            // :59 + 1 s im Modell → 14:01 und eine falsche „überbucht“-Anzeige)
+            ? \Carbon\Carbon::parse("{$endDate} {$endTime}:00")
             : \Carbon\Carbon::parse($endDate)->endOfDay();
 
         // Hilfs-Raws: TIMESTAMP(date, time) – fällt auf 00:00:00 bzw. 23:59:59 zurück, wenn time NULL ist
@@ -263,8 +264,9 @@ class InventoryArticleController extends Controller
             if (isset($articles[$id])) {
                 // Passe ggf. die Signatur deiner Model-Methode an (siehe Kommentar unten)
                 $results[$id] = $articles[$id]->getAvailableStock(
-                    $startAt,   // exakter Startzeitpunkt (Carbon)
-                    $endAt,     // exakter Endzeitpunkt (Carbon)
+                    $startAt->toDateTimeString(),
+                    // ganztägig: reines Datum → Fenster bis Tagesende einschließlich
+                    $hasTime ? $endAt->toDateTimeString() : $endAt->toDateString(),
                     $issueId,
                     $type
                 );
@@ -350,7 +352,7 @@ class InventoryArticleController extends Controller
         $value = $request->input('value');
 
         if (!is_string($field) || !array_key_exists($field, $fieldRules)) {
-            return response()->json(['error' => 'Invalid field.'], 422);
+            return response()->json(['error' => __('Invalid field.')], 422);
         }
 
         $validator = Validator::make(['value' => $value], ['value' => $fieldRules[$field]]);
@@ -363,7 +365,7 @@ class InventoryArticleController extends Controller
         // Store/Update erzwungene Ableitung umgehen.
         if ($field === 'quantity' && $inventoryArticle->is_detailed_quantity) {
             return response()->json(
-                ['error' => 'Quantity is derived from the individual inventory items.'],
+                ['error' => __('Quantity is derived from the individual inventory items.')],
                 422
             );
         }
@@ -399,6 +401,22 @@ class InventoryArticleController extends Controller
         }
 
         $inventoryArticle->update($data);
+
+        // Statusmengen nach dem Ausgleich mitliefern: das Bearbeiten-Modal zieht damit den
+        // Standard-Status nach, sonst überschreibt „Speichern“ den Ausgleich mit den alten Werten
+        if ($field === 'quantity') {
+            return response()->json([
+                'success' => true,
+                'status_values' => $inventoryArticle->statusValues()->get()
+                    ->map(fn (InventoryArticleStatus $status): array => [
+                        'id' => $status->id,
+                        'value' => (int) $status->getRelation('pivot')->getAttribute('value'),
+                        // derselbe Standard-Status, über den der Server ausgleicht (genau einer)
+                        'default' => $status->id === InventoryArticleStatus::defaultStatusId(),
+                    ])
+                    ->values(),
+            ]);
+        }
 
         return response()->json(['success' => true]);
     }
@@ -448,7 +466,7 @@ class InventoryArticleController extends Controller
         $value = $request->input('value');
 
         if (!is_string($field) || !array_key_exists($field, $fieldRules)) {
-            return response()->json(['error' => 'Invalid field.'], 422);
+            return response()->json(['error' => __('Invalid field.')], 422);
         }
 
         $validator = Validator::make(['value' => $value], ['value' => $fieldRules[$field]]);

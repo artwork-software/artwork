@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Modules\Inventory;
 
+use Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\ProductBasketArticle;
+use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -45,6 +47,26 @@ final class ProductBasketQuantityTest extends FeatureTestCase
         $this->postJson(route('inventory.product_basket.update_quantity.single', $basketArticle), ['quantity' => 0])
             ->assertOk();
 
+        $this->assertModelMissing($basketArticle);
+    }
+
+    #[Test]
+    public function decreasing_a_position_removed_by_a_parallel_request_answers_as_removed(): void
+    {
+        $basketArticle = $this->basketArticle(1);
+        // Doppelklick: beide Requests haben die Position gebunden, der erste hat sie schon entfernt
+        ProductBasketArticle::query()->whereKey($basketArticle->id)->delete();
+
+        $response = app(ProductBasketArticleController::class)->updateQuantity(
+            $basketArticle,
+            Request::create('/', 'POST', ['delta' => -1])
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame(
+            ['basket_article_id' => $basketArticle->id, 'quantity' => 0],
+            $response->getData(true)
+        );
         $this->assertModelMissing($basketArticle);
     }
 

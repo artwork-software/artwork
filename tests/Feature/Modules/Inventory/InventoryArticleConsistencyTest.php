@@ -106,6 +106,37 @@ final class InventoryArticleConsistencyTest extends FeatureTestCase
     }
 
     #[Test]
+    public function inline_quantity_changes_return_the_balanced_status_values_and_a_readable_error(): void
+    {
+        $article = $this->articleWithStatusValues(7, 3);
+
+        // Das Modal zieht den Standard-Status aus der Antwort nach – sonst überschreibt
+        // „Speichern“ den Ausgleich wieder mit den alten Statusmengen
+        $statusValues = $this->patchJson(route('inventory-management.articles.update-field', $article), [
+            'field' => 'quantity',
+            'value' => 15,
+        ])->assertSuccessful()->json('status_values');
+
+        $this->assertSame(
+            collect([$this->ready->id => 12, $this->broken->id => 3])->sortKeys()->all(),
+            collect($statusValues)->pluck('value', 'id')->sortKeys()->all()
+        );
+        // nur der Standard-Status ist markiert – das Modal übernimmt nur ihn
+        $this->assertSame(
+            [$this->ready->id],
+            collect($statusValues)->where('default', true)->pluck('id')->all()
+        );
+
+        // Die Ablehnung nennt den Grund (das Modal zeigte sonst „Dieses Feld darf nicht leer sein“)
+        $this->patchJson(route('inventory-management.articles.update-field', $article), [
+            'field' => 'quantity',
+            'value' => 2,
+        ])
+            ->assertUnprocessable()
+            ->assertJsonPath('error', __('The total quantity cannot be lower than the quantities in the other statuses.'));
+    }
+
+    #[Test]
     public function an_update_without_status_values_or_tags_keeps_them(): void
     {
         $article = $this->articleWithStatusValues(4, 1);

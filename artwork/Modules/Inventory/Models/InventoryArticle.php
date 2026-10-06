@@ -423,11 +423,7 @@ class InventoryArticle extends Model
                 ->get();
         }
 
-        // Fenster: reines Datum = ganzer Tag, mit Uhrzeit (Batch-Endpunkt, inkl. :59) bis einschließlich
-        $windowStart = Carbon::parse($startDate)->timestamp;
-        $windowEnd = strlen(trim((string) $endDate)) <= 10
-            ? Carbon::parse($endDate)->endOfDay()->timestamp + 1
-            : Carbon::parse($endDate)->timestamp + 1;
+        [$windowStart, $windowEnd] = self::availabilityWindow($startDate, $endDate);
 
         $usedQuantity = self::calculatePeakConcurrentUsage(
             collect($internalIssues),
@@ -448,6 +444,26 @@ class InventoryArticle extends Model
     }
 
     /**
+     * Abfragefenster [Start, Ende) als Timestamps. Reines Datum (bis 10 Zeichen) und „23:59:59“
+     * reichen bis Tagesende einschließlich. Mit Uhrzeit endet das Fenster exklusiv zur angegebenen
+     * Zeit – „bis 14:00“ überschneidet sich nicht mit einer Ausgabe ab 14:00. Vorher kam hier
+     * +1 s hinzu, mit dem :59 des Batch-Endpunkts wurde daraus 14:01 und direkt anschließende
+     * Ausgaben galten als überlappend.
+     *
+     * @return array{0: int, 1: int}
+     */
+    public static function availabilityWindow(string $startDate, string $endDate): array
+    {
+        $end = Carbon::parse($endDate);
+        $untilEndOfDay = strlen(trim($endDate)) <= 10 || $end->format('H:i:s') === '23:59:59';
+
+        return [
+            Carbon::parse($startDate)->timestamp,
+            $untilEndOfDay ? $end->copy()->endOfDay()->timestamp + 1 : $end->timestamp,
+        ];
+    }
+
+    /**
      * Sweep-line algorithm to calculate peak concurrent usage across all issues.
      * Instead of summing all quantities (which overcounts non-overlapping issues),
      * this finds the maximum quantity in use at any single point in time.
@@ -462,7 +478,24 @@ class InventoryArticle extends Model
         ?int $windowStart = null,
         ?int $windowEnd = null
     ): int {
-        $events = [];
+        return self::peakUsageOfIntervals(
+            self::usageIntervals($internalIssues, $externalIssues),
+            $windowStart,
+            $windowEnd
+        );
+    }
+
+    /**
+     * Belegungsintervalle der Ausgaben (Pivot-Menge dieses Artikels). Einmal berechnet, lassen
+     * sie sich für viele Zeitfenster wiederverwenden (Überbuchungsprüfung je Ausgabe).
+     *
+     * @param Collection $internalIssues Issues with start_date, start_time, end_date, end_time
+     * @param Collection $externalIssues Issues with issue_date, return_date
+     * @return list<array{0: int, 1: int, 2: int}> [Start, Ende exklusiv, Menge]
+     */
+    public static function usageIntervals(Collection $internalIssues, Collection $externalIssues): array
+    {
+        $intervals = [];
 
         foreach ($internalIssues as $issue) {
             $qty = (int) ($issue->pivot->quantity ?? 0);
@@ -481,7 +514,7 @@ class InventoryArticle extends Model
             // machte genau diese Fälle zu Überschneidungen.
             $end = Carbon::parse("{$endDateStr} {$endTime}")->timestamp;
 
-            self::addClippedUsage($events, $start, $end, $qty, $windowStart, $windowEnd);
+            $intervals[] = [$start, $end, $qty];
         }
 
         foreach ($externalIssues as $issue) {
@@ -499,7 +532,22 @@ class InventoryArticle extends Model
             $start = Carbon::parse("{$issueDateStr} 00:00:00")->timestamp;
             $end = Carbon::parse("{$returnDateStr} 23:59:59")->timestamp + 1; // ganzer Rückgabetag
 
-            self::addClippedUsage($events, $start, $end, $qty, $windowStart, $windowEnd);
+            $intervals[] = [$start, $end, $qty];
+        }
+
+        return $intervals;
+    }
+
+    /**
+     * Höchste gleichzeitige Nutzung der Intervalle innerhalb des Fensters (Sweep-Line).
+     *
+     * @param list<array{0: int, 1: int, 2: int}> $intervals [Start, Ende exklusiv, Menge]
+     */
+    public static function peakUsageOfIntervals(array $intervals, ?int $windowStart = null, ?int $windowEnd = null): int
+    {
+        $events = [];
+        foreach ($intervals as [$start, $end, $quantity]) {
+            self::addClippedUsage($events, $start, $end, $quantity, $windowStart, $windowEnd);
         }
 
         if (empty($events)) {

@@ -378,6 +378,7 @@
 
 <script setup>
 import {ref, computed, watch, defineAsyncComponent, onMounted, reactive, inject} from "vue";
+import { toYmd } from "@/Helper/IsoWeek.js";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -762,7 +763,7 @@ const checkShiftCollision = async (shiftQualificationId, forceRefresh = false) =
         }
 
         // Use current date as fallback if date parameters are missing
-        const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+        const today = toYmd(new Date()); // Format: YYYY-MM-DD (lokal)
 
         const people = getAssignablePeople(shiftQualificationId);
         // Don't make the request if there are no people to check

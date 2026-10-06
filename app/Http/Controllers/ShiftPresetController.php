@@ -66,8 +66,9 @@ class ShiftPresetController extends Controller
 
     public function updateDescription(UpdateShiftPresetNoteRequest $request, PresetShift $presetShift): void
     {
+        // leere Notiz als NULL speichern (wie bei Schichten), nicht als ''
         $this->presetShiftService->updateDescription(
-            $request->string('description'),
+            $request->filled('description') ? (string) $request->input('description') : null,
             $presetShift
         );
     }

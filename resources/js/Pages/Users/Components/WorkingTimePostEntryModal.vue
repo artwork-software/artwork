@@ -78,6 +78,7 @@
 <script setup>
 
 import {computed, reactive, watch} from "vue";
+import { toYmd } from "@/Helper/IsoWeek.js";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {useForm} from "@inertiajs/vue3";
@@ -103,7 +104,7 @@ const bookingForm = useForm({
     nightly_working_hours: '0:00',
     plus_minus: '+',
     comment: '',
-    date: new Date().toISOString().split('T')[0] // Default to today
+    date: toYmd(new Date()) // Default to today (lokal)
 })
 
 // Stunden und Minuten getrennt statt type="time": ein Zeitfeld endet bei 23:59,

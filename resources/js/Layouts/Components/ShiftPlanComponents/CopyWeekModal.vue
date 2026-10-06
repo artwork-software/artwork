@@ -224,6 +224,7 @@
 <script setup>
 import { computed, ref, watch, onMounted } from 'vue'
 import axios from 'axios'
+import { extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js'
 import { router } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -442,12 +443,7 @@ const submitDisabledReason = computed(() => {
 })
 
 function extractError(error) {
-    const data = error?.response?.data
-    if (data?.errors && typeof data.errors === 'object') {
-        const first = Object.values(data.errors).flat().find(Boolean)
-        if (first) return String(first)
-    }
-    return data?.message ?? $t('An error has occurred')
+    return extractSaveErrorMessage(error) ?? $t('An error has occurred')
 }
 
 async function submit() {
@@ -460,7 +456,7 @@ async function submit() {
             source_year: sourceYear.value,
             targets: selectedTargets.value.map((target) => ({ week: target.week, year: target.year })),
             craft_ids: craftIdsPayload.value ?? [],
-        })
+        }, { skipErrorToast: true }) // Fehler steht im Modal
         result.value = data
     } catch (error) {
         requestError.value = extractError(error)

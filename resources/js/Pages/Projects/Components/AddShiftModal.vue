@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, toRef, nextTick, defineAsyncComponent } from 'vue'
+import { parseYmd, toYmd } from '@/Helper/IsoWeek.js'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useI18n } from 'vue-i18n'
@@ -646,9 +647,9 @@ watch([() => shiftForm.start, () => shiftForm.end], ([startTime, endTime]) => {
         shiftForm.end_date = shiftForm.start_date
     } else {
         // Endzeit < Startzeit bedeutet Schicht geht über Mitternacht
-        const startDate = new Date(shiftForm.start_date)
+        const startDate = parseYmd(shiftForm.start_date) ?? new Date(shiftForm.start_date)
         startDate.setDate(startDate.getDate() + 1)
-        shiftForm.end_date = startDate.toISOString().slice(0, 10)
+        shiftForm.end_date = toYmd(startDate)
     }
 })
 
@@ -1819,10 +1820,10 @@ const lockOrUnlockShift = (commit = false) => {
                             rows="2"
                             name="comment"
                             id="comment"
-                            maxlength="250"
+                            maxlength="10000"
                         />
                         <div class="text-xs text-end mt-1 text-text-muted">
-                            {{ shiftForm.description?.length ?? 0 }} / 250
+                            {{ shiftForm.description?.length ?? 0 }} / 10000
                         </div>
                     </div>
                 </div>

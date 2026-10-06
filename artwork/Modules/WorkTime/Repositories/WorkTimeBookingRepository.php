@@ -83,16 +83,14 @@ class WorkTimeBookingRepository
     }
 
     /**
-     * Update a user's work time balance by a delta.
-     *
-     * @param User $user
-     * @param int $delta
-     * @return bool
+     * Atomar in der Datenbank (work_time_balance = work_time_balance + delta): Nächtliche Buchung, manuelle
+     * Buchung und Auszahlung arbeiten mit unterschiedlich alten User-Models und überschrieben sich sonst.
      */
     public function updateUserBalance(User $user, int $delta): bool
     {
-        $user->work_time_balance += $delta;
-        return $user->save();
+        $user->increment('work_time_balance', $delta);
+
+        return true;
     }
 
     /**

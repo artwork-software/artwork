@@ -714,6 +714,7 @@
 
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
+import { toYmd } from "@/Helper/IsoWeek.js";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef, defineAsyncComponent } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
@@ -2161,7 +2162,7 @@ const changeDailyViewModeValue = (newValue: boolean, onSuccessCallback?: () => v
  * Shortcuts
  */
 const jumpToToday = () => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = toYmd(new Date())
     const patchDates = () => {
         router.patch(
             route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
@@ -2193,8 +2194,8 @@ const jumpToCurrentWeek = () => {
     router.patch(
         route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
         {
-            start_date: currentWeekStart.toISOString().slice(0, 10),
-            end_date: currentWeekEnd.toISOString().slice(0, 10),
+            start_date: toYmd(currentWeekStart),
+            end_date: toYmd(currentWeekEnd),
             isDailyView: true,
         },
         { preserveScroll: true, preserveState: false }
@@ -2210,8 +2211,8 @@ const jumpToCurrentMonth = () => {
         router.patch(
             route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
             {
-                start_date: monthStart.toISOString().slice(0, 10),
-                end_date: monthEnd.toISOString().slice(0, 10),
+                start_date: toYmd(monthStart),
+                end_date: toYmd(monthEnd),
                 isDailyView: true,
             },
             { preserveScroll: true, preserveState: false }

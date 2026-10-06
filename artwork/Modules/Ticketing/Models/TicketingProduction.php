@@ -4,7 +4,9 @@ namespace Artwork\Modules\Ticketing\Models;
 
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Wie ein Projekt im Ticketshop auftritt. Leere Felder fallen auf das Projekt zurück
@@ -18,10 +20,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property list<string>|null $reduction_type_ids
  * @property string|null $hero_path
  * @property \Carbon\Carbon|null $hero_synced_at
+ * @property-read Collection<int, TicketingProductionImage> $images
  */
 class TicketingProduction extends Model
 {
     public const HERO_DIRECTORY = 'public/ticketing';
+
+    /** So viele weitere Bilder nimmt tickets je Produktion an. */
+    public const MAX_IMAGES = 12;
 
     protected $fillable = [
         'project_id',
@@ -41,6 +47,12 @@ class TicketingProduction extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /** @return HasMany<TicketingProductionImage, $this> */
+    public function images(): HasMany
+    {
+        return $this->hasMany(TicketingProductionImage::class)->orderBy('id');
     }
 
     public function heroUrl(): ?string

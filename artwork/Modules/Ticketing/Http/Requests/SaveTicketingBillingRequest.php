@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Der Tab "Angaben & Bankverbindung": jedes Feld darf leer bleiben, wie in den Einstellungen von
+ * Der Tab "Angaben & Auszahlung": jedes Feld darf leer bleiben, wie in den Einstellungen von
  * tickets selbst — ob die Blöcke vollständig sind, sagt tickets nach dem Speichern.
  */
 class SaveTicketingBillingRequest extends FormRequest
@@ -36,8 +36,12 @@ class SaveTicketingBillingRequest extends FormRequest
             'contact_name' => 'present|nullable|string|max:160',
             'contact_phone' => 'present|nullable|string|max:40',
             'website' => 'present|nullable|url|max:200',
-            'account_holder' => 'present|nullable|string|max:160',
-            'iban' => ['present', 'nullable', 'string', TicketingDraftRules::ibanRule()],
+            'terms_url' => 'present|nullable|url|max:500',
+            'privacy_url' => 'present|nullable|url|max:500',
+            'imprint_url' => 'present|nullable|url|max:500',
+            'terms_file' => TicketingDraftRules::LEGAL_PDF,
+            'privacy_file' => TicketingDraftRules::LEGAL_PDF,
+            'imprint_file' => TicketingDraftRules::LEGAL_PDF,
         ];
     }
 }

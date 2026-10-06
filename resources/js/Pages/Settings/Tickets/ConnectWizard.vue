@@ -52,12 +52,12 @@
 
         <!-- 2 · Details -->
         <section v-else-if="step === 1" class="max-w-[900px]">
-            <BillingFieldsEditor :billing="form.billing" :countries="countries" :legal-forms="legalForms" />
+            <BillingFieldsEditor :billing="form.billing" :countries="countries" :legal-forms="legalForms" :missing="showMissing && !skipBilling ? missingDetails(form.billing) : []" />
             <label class="mt-6 flex items-start gap-3 rounded-md border px-3.5 py-3 cursor-pointer" :class="skipBilling ? 'border-warning-border bg-warning-surface' : 'border-border-subtle bg-surface-sunken'">
                 <input v-model="skipBilling" type="checkbox" class="aw-checklist-input mt-0.5 cursor-pointer" />
                 <span class="text-[13px] leading-5 text-text">
                     <strong class="font-lexend block font-medium">{{ $t('Add the details later') }}</strong>
-                    {{ $t('The house is connected without them. Until they are filled in — here under "Details & bank account" or in artwork tickets — no date can be released for sale and nothing is paid out.') }}
+                    {{ $t('The house is connected without them. Until they are filled in — here under "Details & payouts" or in artwork tickets — no date can be released for sale.') }}
                 </span>
             </label>
         </section>
@@ -74,8 +74,8 @@
             </ReductionsEditor>
         </section>
 
-        <!-- 5 · Summary -->
-        <section v-else class="max-w-[1040px] text-[13px]">
+        <!-- 5 · Review & connect -->
+        <section v-else-if="step === CONNECT" class="max-w-[1040px] text-[13px]">
             <div class="grid gap-4 sm:grid-cols-2">
                 <SummaryCard :title="$t('House')" @edit="step = 0">
                     <dl class="grid grid-cols-[120px_minmax(0,1fr)] gap-x-3 gap-y-2">
@@ -95,7 +95,7 @@
                 </SummaryCard>
             </div>
             <div class="mt-4">
-                <SummaryCard :title="$t('Legal details and bank account')" @edit="step = 1">
+                <SummaryCard :title="$t('Legal details')" @edit="step = 1">
                     <p v-if="skipBilling" class="flex items-start gap-2 text-warning-ink">
                         <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
                         <span>{{ $t('Left for later. The house cannot release dates for sale until the details are filled in.') }}</span>
@@ -105,7 +105,10 @@
                         <dt class="text-text-subtle">{{ $t('Address') }}</dt><dd>{{ form.billing.street }}, {{ form.billing.postal_code }} {{ form.billing.city }}</dd>
                         <dt class="text-text-subtle">{{ $t('Tax') }}</dt><dd>{{ [form.billing.vat_id, form.billing.tax_number].filter(Boolean).join(' · ') }}</dd>
                         <dt class="text-text-subtle">{{ $t('Responsible person') }}</dt><dd>{{ form.billing.contact_name }} <span class="text-text-subtle">· {{ form.billing.contact_phone }}</span></dd>
-                        <dt class="text-text-subtle">{{ $t('Bank account') }}</dt><dd>{{ form.billing.account_holder }} <span class="font-mono text-xs text-text-subtle">· {{ form.billing.iban }}</span></dd>
+                        <dt class="text-text-subtle">{{ $t('Legal pages') }}</dt>
+                        <dd class="flex min-w-0 flex-col gap-0.5 text-xs">
+                            <span v-for="page in LEGAL_PAGES" :key="page" class="truncate">{{ form.billing[`${page}_file`]?.name ?? form.billing[`${page}_url`] }}</span>
+                        </dd>
                     </dl>
                 </SummaryCard>
             </div>
@@ -132,23 +135,36 @@
                 <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
                 <span>{{ $t('This installation can only be connected to one house. Rooms and reductions can be synced again afterwards; house and address are changed in artwork tickets.') }}</span>
             </div>
+            <PlatformTermsConsent v-if="platformTerms" v-model="form.accept_platform_terms" :terms-url="platformTerms.termsUrl" :dpa-url="platformTerms.dpaUrl"
+                                  class="mt-4 rounded-md border border-border-subtle bg-surface-sunken px-3.5 py-3" />
             <ul v-if="Object.keys(form.errors).length" class="mt-4 rounded-md border border-danger-border bg-danger-surface p-3 text-danger">
                 <li v-for="(message, key) in form.errors" :key="key">{{ message }}</li>
             </ul>
         </section>
 
+        <!-- 6 · Payouts: the house exists now, so Stripe can verify it -->
+        <section v-else class="max-w-[1040px]">
+            <PayoutAccount v-if="payout" :state="payout.state" :stripe-key="payout.stripe_key" />
+            <p v-else class="text-[13px] text-text-subtle">{{ $t('artwork tickets is not answering right now. The payout account can be set up later under "Details & payouts".') }}</p>
+        </section>
+
         <!-- Footer -->
-        <div class="mt-7 flex items-center justify-between border-t border-border-hairline pt-4">
-            <button type="button" class="text-[13px] text-text-subtle hover:text-text" :disabled="form.processing" @click="$emit('cancel')">{{ $t('Cancel') }}</button>
+        <div class="mt-7 flex items-center justify-between gap-4 border-t border-border-hairline pt-4">
+            <button v-if="step < PAYOUTS" type="button" class="text-[13px] text-text-subtle hover:text-text" :disabled="form.processing" @click="$emit('close')">{{ $t('Cancel') }}</button>
+            <span v-else></span>
             <div class="flex items-center gap-2">
-                <button type="button" class="ui-button" :disabled="step === 0 || form.processing" @click="step--">
+                <span v-if="showMissing && !stepValid" class="mr-2 text-xs text-danger">{{ missingHint }}</span>
+                <button v-if="step < PAYOUTS" type="button" class="ui-button" :disabled="step === 0 || form.processing" @click="step--">
                     <IconArrowLeft class="size-3.5" />{{ $t('Back') }}
                 </button>
-                <button v-if="step < steps.length - 1" type="button" class="ui-button-add" :disabled="!stepValid" @click="step++">
+                <button v-if="step < CONNECT" type="button" class="ui-button-add" @click="next">
                     {{ $t('Continue') }}<IconArrowRight class="size-3.5" />
                 </button>
-                <button v-else type="button" class="ui-button-add" :disabled="form.processing" @click="submit">
+                <button v-else-if="step === CONNECT" type="button" class="ui-button-add" :disabled="form.processing || !form.accept_platform_terms" @click="submit">
                     <IconPlugConnected class="size-[15px]" />{{ form.processing ? $t('Connecting…') : $t('Connect now') }}
+                </button>
+                <button v-else type="button" class="ui-button-add" @click="$emit('close')">
+                    {{ payout?.state === 'open' ? $t('Finish later') : $t('Finish') }}
                 </button>
             </div>
         </div>
@@ -165,7 +181,9 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import RoomSyncEditor from '@/Pages/Settings/Tickets/RoomSyncEditor.vue'
 import ReductionsEditor from '@/Pages/Settings/Tickets/ReductionsEditor.vue'
 import BillingFieldsEditor from '@/Pages/Settings/Tickets/BillingFieldsEditor.vue'
-import { billingValid, formatEuro, legalFormNames, reductionPayload, reductionsValid, roomDraft, roomPayload, roomsValid, toCents, zonePlaces } from '@/Pages/Settings/Tickets/drafts.js'
+import PlatformTermsConsent from '@/Pages/Settings/Tickets/PlatformTermsConsent.vue'
+import PayoutAccount from '@/Pages/Settings/Tickets/PayoutAccount.vue'
+import { formatEuro, LEGAL_PAGES, missingDetails, noLegalFiles, legalFormNames, reductionPayload, reductionsValid, roomDraft, roomPayload, roomsValid, toCents, zonePlaces } from '@/Pages/Settings/Tickets/drafts.js'
 
 const props = defineProps({
     rooms: { type: Array, default: () => [] },
@@ -174,19 +192,24 @@ const props = defineProps({
     legalForms: { type: Array, required: true },
     userEmail: { type: String, required: true },
     ticketsUrl: { type: String, default: '' },
+    /** The house's Stripe state once connected — `{ state, stripe_key }`, null before. */
+    payout: { type: Object, default: null },
 })
 
-defineEmits(['cancel'])
+defineEmits(['close'])
 
 const { t } = useI18n()
 
-const steps = [t('House'), t('Details'), t('Rooms'), t('Reductions'), t('Summary')]
+const steps = [t('House'), t('Details'), t('Rooms'), t('Reductions'), t('Review & connect'), t('Payouts')]
+const CONNECT = 4
+const PAYOUTS = 5
 const intros = [
     t('This is how the house appears in artwork tickets. Both can be changed there later.'),
-    t('Who stands behind the house and where it is paid out. artwork tickets needs this for the credit notes on its fee and for payouts. You can leave it for later, but until it is filled in no date can be released for sale.'),
+    t('Who stands behind the house and what its buyers read. artwork tickets needs this for the credit notes on its fee, Stripe to verify the house. The bank account follows right after connecting, in Stripe\'s form. You can leave the details for later, but until they are filled in no date can be released for sale.'),
     t('Which rooms sell tickets? Each becomes a venue in artwork tickets with its address and the price classes you define here. Rooms can be synced again later.'),
     t('Reductions apply house-wide; which ones a production grants is decided per production. Percent of the ticket price or a fixed amount off.'),
     t('Check what will be created. Only "Connect now" creates anything in artwork tickets.'),
+    t('The house is connected. Stripe now confirms who stands behind it and takes the bank account; this usually takes a few minutes. It can also be finished later under "Details & payouts".'),
 ]
 const step = ref(0)
 
@@ -235,9 +258,10 @@ function slugify(value) {
 
 const form = useForm({
     house: { name: props.houseDefaults.name, slug: props.houseDefaults.slug },
-    billing: { ...props.houseDefaults.billing },
+    billing: { ...props.houseDefaults.billing, ...noLegalFiles() },
     rooms: [],
     reductions: [],
+    accept_platform_terms: false,
 })
 
 const legalFormLabel = (form) => legalFormNames(t)[form] ?? form
@@ -256,6 +280,8 @@ watch(() => form.house.name, (name) => {
 const slugState = ref('idle')
 const nameState = ref('idle')
 const ownerState = ref('idle')
+/** Where the platform's papers are read; tickets names them with its first answer. */
+const platformTerms = ref(null)
 let checkTimer = null
 
 function localSlugProblem(slug) {
@@ -275,6 +301,7 @@ watch(() => [form.house.name, form.house.slug], ([name, slug]) => {
             if (slugState.value === 'checking') slugState.value = data.slug.available ? 'available' : data.slug.reason
             if (nameState.value === 'checking') nameState.value = data.name.available ? 'available' : 'taken'
             ownerState.value = data.owner.available ? 'available' : 'taken'
+            platformTerms.value = data.platformTerms
         } catch {
             if (slugState.value === 'checking') slugState.value = 'unreachable'
             if (nameState.value === 'checking') nameState.value = 'unreachable'
@@ -321,15 +348,39 @@ function reductionSummary(r) {
 
 const stepValid = computed(() => {
     if (step.value === 0) return nameState.value === 'available' && slugState.value === 'available' && ownerState.value === 'available'
-    if (step.value === 1) return skipBilling.value || billingValid(form.billing)
+    if (step.value === 1) return skipBilling.value || missingDetails(form.billing).length === 0
     if (step.value === 2) return roomsValid(selectedRooms.value)
     if (step.value === 3) return reductionsValid(reductionDrafts.value)
     return true
 })
 
+/* "Continue" never just sits there greyed out: pressed too early, it marks what is missing. */
+const showMissing = ref(false)
+
+function next() {
+    showMissing.value = !stepValid.value
+    if (stepValid.value) step.value++
+}
+
+const missingHint = computed(() => [
+    t('Choose a name and an address that are still free.'),
+    t('{count} required fields are still missing — marked in red.', { count: missingDetails(form.billing).length }),
+    t('Every price class needs a name.'),
+    t('Every reduction needs a name and a value above zero.'),
+][step.value] ?? '')
+
+watch(step, () => { showMissing.value = false })
+
+/* The page comes back connected; the wizard stays open for Stripe's form. */
 function submit() {
     form.rooms = selectedRooms.value.map(roomPayload)
     form.reductions = reductionDrafts.value.map(reductionPayload)
-    form.post(route('settings.tickets.connect'), { preserveScroll: true })
+    form.post(route('settings.tickets.connect'), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            if (props.payout) step.value = PAYOUTS
+        },
+    })
 }
 </script>

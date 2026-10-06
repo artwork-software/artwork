@@ -13,7 +13,6 @@ use Artwork\Modules\Ticketing\Services\TicketingProductionService;
 use Artwork\Modules\Ticketing\Services\TicketingProjectService;
 use Artwork\Modules\Ticketing\Services\TicketingReleaseService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
@@ -46,27 +45,10 @@ class TicketingProjectController extends Controller
                 ],
                 $request->file('hero'),
                 $request->boolean('remove_hero'),
+                $request->file('images', []),
+                $request->removeImageIds(),
             );
         });
-    }
-
-    /**
-     * Verkaufsstand und Gästeliste eines Termins aus tickets; ohne Freigabe nur "nicht freigegeben".
-     * Mit only_state bleibt es bei der Frage, ob er freigegeben ist — die kostet keinen Aufruf nach tickets.
-     */
-    public function sales(Project $project, Event $event, Request $request): JsonResponse
-    {
-        $this->assertInProject($project, $event);
-
-        if ($request->boolean('only_state')) {
-            return response()->json(['released' => $this->releases->isReleased($event)]);
-        }
-
-        try {
-            return response()->json($this->releases->sales($event));
-        } catch (TicketingConnectionException $exception) {
-            return response()->json(['message' => $exception->getMessage()], 422);
-        }
     }
 
     public function saveDraft(Project $project, SaveTicketingDraftRequest $request): JsonResponse
@@ -88,11 +70,6 @@ class TicketingProjectController extends Controller
         $events = $this->eventsOf($project, $request->eventIds());
 
         return $this->respond($project, fn () => $this->releases->withdraw($events));
-    }
-
-    private function assertInProject(Project $project, Event $event): void
-    {
-        abort_unless($event->project_id === $project->id, 404);
     }
 
     /**

@@ -45,7 +45,18 @@ export function seriesOf(event, events) {
     return event.seriesId ? events.filter((other) => other.seriesId === event.seriesId) : [event]
 }
 
-/** Whether a date can go on sale: synced room, at least one price class, not over yet. */
+export function isPast(event) {
+    return dayjs(event.start).isBefore(dayjs())
+}
+
+/** Why a date cannot go on sale, as a translation key; null when it can. */
+export function releaseBlocker(event) {
+    if (!event.venue) return 'Room not synced'
+    if (classesOf(event).length === 0) return 'No price classes. Sync the room in the ticketing settings first.'
+    if (isPast(event)) return 'Already over'
+    return null
+}
+
 export function isReleasable(event) {
-    return Boolean(event.venue) && classesOf(event).length > 0 && !dayjs(event.start).isBefore(dayjs())
+    return releaseBlocker(event) === null
 }

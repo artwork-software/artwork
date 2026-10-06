@@ -23,6 +23,7 @@
         "@inertiajs/vue3": "^2.2.19",
         "@primeuix/themes": "^1.2.5",
         "@sentry/vue": "^7.40.0",
+        "@stripe/connect-js": "^3.4.6",
         "@tabler/icons": "^3.35.0",
         "@tabler/icons-vue": "^3.35.0",
         "@tailwindcss/vite": "^4.1.16",

@@ -640,6 +640,7 @@
                         </div>
 
                         <div class="flex items-center gap-2">
+                            <span v-if="ticketsReleased" class="text-xs text-secondary">{{ $t('On sale: time and room changes reach the shop and the buyers.') }}</span>
                             <BaseUIButton v-if="ticketsReleased" type="button" hide-icon @click="showTicketDetails = true">
                                 <IconTicket class="size-4" />
                                 {{ $t('Ticket details') }}
@@ -851,7 +852,6 @@
 
     <TicketingSalesModal
         v-if="showTicketDetails"
-        :project-id="props.event.projectId"
         :event-id="props.event.id"
         :description="props.event.eventName || props.event.title || ''"
         @close="showTicketDetails = false"
@@ -1007,9 +1007,9 @@ const showTicketDetails = ref(false)
 const ticketsReleased = ref(false)
 watch(() => props.event?.id, async (eventId) => {
     ticketsReleased.value = false
-    if (!eventId || !props.event?.projectId) return
+    if (!eventId) return
     try {
-        const { data } = await axios.get(route('projects.tabs.ticketing.sales', { project: props.event.projectId, event: eventId }), { params: { only_state: 1 } })
+        const { data } = await axios.get(route('ticketing.sales', eventId), { params: { only_state: 1 } })
         ticketsReleased.value = data.released === true
     } catch {
         ticketsReleased.value = false

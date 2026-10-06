@@ -27,7 +27,15 @@ class ConnectTicketingRequest extends FormRequest
             ...($this->input('billing') === null ? [] : TicketingDraftRules::billing()),
             ...TicketingDraftRules::rooms(),
             ...TicketingDraftRules::reductions(),
+            // Verbinden heißt unterschreiben: die Nutzungsbedingungen und der AVV von tickets.
+            'accept_platform_terms' => 'accepted',
         ];
+    }
+
+    /** Mit PDFs kommt der Entwurf als Formulardaten, und darin fehlen leere Listen ganz. */
+    protected function prepareForValidation(): void
+    {
+        $this->mergeIfMissing(['rooms' => [], 'reductions' => []]);
     }
 
     public function withValidator(Validator $validator): void

@@ -8,7 +8,7 @@
             :search-enabled="false"
         >
             <template #actions>
-                <a v-if="payload?.connection.dashboardUrl" :href="payload.connection.dashboardUrl" target="_blank" rel="noopener" class="ui-button">
+                <a v-if="payload?.connection.connected" :href="route('ticketing.open')" target="_blank" rel="noopener" class="ui-button">
                     <IconExternalLink class="size-3.5" />{{ $t('Open artwork tickets') }}
                 </a>
             </template>
@@ -43,7 +43,7 @@
                 <div v-if="payload.connection.billingComplete === false" class="mb-4 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
                     <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
                     <span>
-                        {{ $t('The legal details or the bank account of the ticket house are still missing in artwork tickets. Until they are filled in, no date can be released for sale.') }}
+                        {{ $t('Details of the ticket house are still missing in artwork tickets: legal details, legal pages, payout account or the accepted terms. Until they are complete, no date can be released for sale.') }}
                         <Link v-if="canManageTicketing" :href="route('settings.tickets.billing')" class="font-medium text-accent-600 hover:underline">{{ $t('Fill in now') }}</Link>
                     </span>
                 </div>
@@ -65,8 +65,8 @@
                             <button type="button" class="ui-button-small" @click="editing = selectedEvents">
                                 <IconPencil class="size-3.5" stroke-width="1.75" />{{ $t('Places and prices') }}
                             </button>
-                            <button v-if="selectedUnreleased.length" type="button" class="ui-button-add-small" @click="confirming = { events: selectedEvents, withdrawing: false }">
-                                <IconTicket class="size-3.5" stroke-width="1.75" />{{ $t('Release {count}', { count: selectedUnreleased.length }) }}
+                            <button v-if="selectedReleasable.length" type="button" class="ui-button-add-small" @click="confirming = { events: selectedReleasable, withdrawing: false }">
+                                <IconTicket class="size-3.5" stroke-width="1.75" />{{ $t('Release {count}', { count: selectedReleasable.length }) }}
                             </button>
                             <button v-if="selectedReleased.length" type="button" class="ui-button-small" @click="confirming = { events: selectedEvents, withdrawing: true }">
                                 <IconTicketOff class="size-3.5" stroke-width="1.75" />{{ $t('Withdraw {count}', { count: selectedReleased.length }) }}
@@ -194,9 +194,13 @@
                                         </ul>
                                     </td>
                                     <td class="px-5 py-4 align-top whitespace-nowrap">
-                                        <span class="flex h-6 items-center">
+                                        <span class="flex h-6 items-center gap-1.5">
                                             <BaseChip v-if="isReleased(event)" variant="success" :title="releasedTitle(event)">{{ $t('On sale') }}</BaseChip>
+                                            <BaseChip v-else-if="isPast(event)" variant="neutral">{{ $t('Already over') }}</BaseChip>
                                             <BaseChip v-else variant="neutral">{{ $t('Not released') }}</BaseChip>
+                                            <span v-if="event.release?.syncError" role="img" :title="`${$t('Not up to date in tickets')}: ${event.release.syncError}`" :aria-label="$t('Not up to date in tickets')">
+                                                <IconAlertTriangle class="size-4 shrink-0 text-warning" />
+                                            </span>
                                         </span>
                                     </td>
                                     <td class="px-4 py-4 align-top">
@@ -211,7 +215,7 @@
                                                 <button v-if="isReleased(event)" type="button" class="ui-button h-8 w-[140px] whitespace-nowrap" @click="confirming = { events: [event], withdrawing: true }">
                                                     <IconTicketOff class="size-[18px] shrink-0" stroke-width="1.75" />{{ $t('Withdraw') }}
                                                 </button>
-                                                <button v-else type="button" class="ui-button-add h-8 w-[140px] whitespace-nowrap" :disabled="!event.venue" :title="event.venue ? '' : $t('Room not synced')" @click="confirming = { events: [event], withdrawing: false }">
+                                                <button v-else type="button" class="ui-button-add h-8 w-[140px] whitespace-nowrap" :disabled="!isReleasable(event)" :title="releaseBlocker(event) ? $t(releaseBlocker(event)) : ''" @click="confirming = { events: [event], withdrawing: false }">
                                                     <IconTicket class="size-[18px] shrink-0" stroke-width="1.75" />{{ $t('Release') }}
                                                 </button>
                                             </template>
@@ -232,7 +236,7 @@
         </div>
 
         <TicketingDateModal v-if="editing" :project-id="project.id" :events="editing" :all-events="payload.events" @close="editing = null" @saved="applyPayload" />
-        <TicketingSalesModal v-if="viewingSales" :project-id="project.id" :event-id="viewingSales.id" :description="`${viewingSales.name} · ${formatDay(viewingSales.start, locale)}`" @close="viewingSales = null" />
+        <TicketingSalesModal v-if="viewingSales" :event-id="viewingSales.id" :description="`${viewingSales.name} · ${formatDay(viewingSales.start, locale)}`" @close="viewingSales = null" />
         <TicketingReleaseModal v-if="confirming" :project-id="project.id" :events="confirming.events" :all-events="payload.events" :withdrawing="confirming.withdrawing"
                                @close="confirming = null" @done="applyPayload" />
     </div>
@@ -255,7 +259,7 @@ import TicketingFilterMenu from '@/Pages/Projects/Tab/Components/Ticketing/Ticke
 import TicketingReleaseModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingReleaseModal.vue'
 import TicketingSalesModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue'
 import TicketingProductionCard from '@/Pages/Projects/Tab/Components/Ticketing/TicketingProductionCard.vue'
-import { capacityOf, classesOf, formatDay, formatEuro, formatTime, isReleasable, isReleased } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { capacityOf, classesOf, formatDay, formatEuro, formatTime, isPast, isReleasable, isReleased, releaseBlocker } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 
 const props = defineProps({
     project: { type: Object, required: true },
@@ -395,7 +399,7 @@ const totalPlaces = computed(() => visible.value.reduce((sum, event) => sum + (c
 const unreleased = computed(() => visible.value.filter((event) => !isReleased(event) && isReleasable(event)))
 const selectedEvents = computed(() => events.value.filter((event) => selected.value.has(event.id)))
 const selectedReleased = computed(() => selectedEvents.value.filter(isReleased))
-const selectedUnreleased = computed(() => selectedEvents.value.filter((event) => !isReleased(event)))
+const selectedReleasable = computed(() => selectedEvents.value.filter((event) => !isReleased(event) && isReleasable(event)))
 const allVisibleSelected = computed(() => visible.value.length > 0 && visible.value.every(isSelected))
 
 function isSelected(event) {

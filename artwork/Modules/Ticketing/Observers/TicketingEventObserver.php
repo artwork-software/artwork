@@ -3,24 +3,54 @@
 namespace Artwork\Modules\Ticketing\Observers;
 
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Ticketing\Services\TicketingReleaseService;
+use Artwork\Modules\Ticketing\Jobs\SyncTicketingEventJob;
+use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
+use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 
-/** Ein freigegebener Termin bleibt in tickets auf dem Stand des Kalenders: verschoben heißt neu geschickt, gelöscht heißt zurückgezogen. */
+/**
+ * Ein freigegebener Termin bleibt in tickets auf dem Stand des Kalenders: verschoben heißt neu geschickt,
+ * und zwar aus der Warteschlange, damit der Kalender nie auf tickets wartet. Verschieben braucht Recht und
+ * Bestätigung; gelöscht wird er nicht, das geht nur über das Zurückziehen in der Ticketing-Komponente.
+ * Ohne konfiguriertes tickets passiert nichts.
+ */
 class TicketingEventObserver
 {
-    public function __construct(private readonly TicketingReleaseService $releases)
+    private const MOVED = ['start_time', 'end_time', 'admission_time', 'room_id'];
+
+    public function __construct(
+        private readonly TicketingConnectionService $connections,
+        private readonly TicketingLock $lock,
+    ) {
+    }
+
+    public function updating(Event $event): void
     {
+        if ($event->isDirty(self::MOVED)) {
+            $this->lock->assertEventMovable($event);
+        }
     }
 
     public function updated(Event $event): void
     {
-        if ($event->wasChanged(['start_time', 'end_time', 'admission_time', 'room_id'])) {
-            $this->releases->refresh($event);
+        $moved = $event->wasChanged(self::MOVED);
+
+        if (!$moved || !$this->connections->isConfigured()) {
+            return;
+        }
+
+        $released = TicketingEventRelease::query()
+            ->where('event_id', $event->id)
+            ->where('state', TicketingEventRelease::STATE_RELEASED)
+            ->exists();
+
+        if ($released) {
+            SyncTicketingEventJob::dispatch($event->id)->afterCommit();
         }
     }
 
     public function deleting(Event $event): void
     {
-        $this->releases->withdraw(collect([$event]));
+        $this->lock->assertEventDeletable($event);
     }
 }

@@ -6,13 +6,15 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\ActsAsRole;
 use Tests\Feature\FeatureTestCase;
 
 /**
- * Tab "Angaben & Bankverbindung": was der Assistent offen lassen durfte, wird hier nachgetragen — in tickets.
+ * Tab "Angaben & Auszahlung": was der Assistent offen lassen durfte, wird hier nachgetragen — in tickets;
+ * das Auszahlungskonto prüft Stripe in seinem Formular, dessen Sitzung tickets ausstellt.
  */
 final class TicketingBillingTest extends FeatureTestCase
 {
@@ -42,17 +44,29 @@ final class TicketingBillingTest extends FeatureTestCase
     }
 
     /** @return array<string, mixed> */
-    private static function ticketsAnswer(bool $legal, bool $bank): array
+    private static function ticketsAnswer(bool $legal, string $payoutAccount, bool $termsAccepted = true): array
     {
         return [
             'profile' => [
                 'legalName' => 'Theater Süd gGmbH', 'legalForm' => 'ggmbh', 'street' => 'Theaterstraße 1', 'postalCode' => '20095',
                 'city' => 'Hamburg', 'country' => 'DE', 'registerNumber' => null, 'registerCourt' => null, 'vatId' => 'DE123456789',
                 'taxNumber' => null, 'contactName' => 'Erika Muster', 'contactPhone' => '+49 40 123456', 'website' => null,
-                'accountHolder' => $bank ? 'Theater Süd gGmbH' : null, 'ibanLast4' => $bank ? '3000' : null,
+                'termsUrl' => null, 'privacyUrl' => 'https://theater-sued.de/datenschutz', 'imprintUrl' => 'https://theater-sued.de/impressum',
             ],
             'legalComplete' => $legal,
-            'bankComplete' => $bank,
+            'shopLegalFiles' => [
+                'terms' => ['fileName' => 'agb.pdf', 'url' => 'https://tickets.test/de/theater-sued/legal/terms'],
+                'privacy' => null,
+                'imprint' => null,
+            ],
+            'shopLegalComplete' => true,
+            'payoutAccount' => $payoutAccount,
+            'stripePublishableKey' => 'pk_test_tickets',
+            'platformTerms' => [
+                'accepted' => $termsAccepted,
+                'termsUrl' => 'https://artwork-tickets.de/agb',
+                'dpaUrl' => 'https://artwork-tickets.de/avv',
+            ],
         ];
     }
 
@@ -61,7 +75,7 @@ final class TicketingBillingTest extends FeatureTestCase
     {
         $this->connect();
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
-        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(self::ticketsAnswer(true, false))]);
+        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(self::ticketsAnswer(true, 'review'))]);
 
         $this->get(route('settings.tickets.billing'))
             ->assertOk()
@@ -70,15 +84,52 @@ final class TicketingBillingTest extends FeatureTestCase
                 ->where('connection.connected', true)
                 ->where('billing.profile.legal_name', 'Theater Süd gGmbH')
                 ->where('billing.profile.register_number', '')
-                ->where('billing.profile.iban', '')
-                ->where('billing.iban_last4', null)
                 ->where('billing.legal_complete', true)
-                ->where('billing.bank_complete', false)
+                ->where('billing.payout_account', 'review')
+                ->where('billing.stripe_key', 'pk_test_tickets')
+                ->where('billing.profile.terms_url', '')
+                ->where('billing.profile.imprint_url', 'https://theater-sued.de/impressum')
+                ->where('billing.shop_legal_files.terms.file_name', 'agb.pdf')
+                ->where('billing.shop_legal_files.privacy', null)
+                ->where('billing.platform_terms.accepted', true)
+                ->where('billing.platform_terms.dpa_url', 'https://artwork-tickets.de/avv')
                 ->where('ticketsError', null));
 
         Http::assertSent(static fn (Request $request): bool => $request->method() === 'GET'
             && $request->url() === self::TICKETS_URL . '/api/integration/v1/house/billing'
             && $request->header('x-api-key') === ['tk_plain']);
+    }
+
+    #[Test]
+    public function the_details_count_as_complete_only_once_verified_and_signed(): void
+    {
+        $this->connect();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        Http::fakeSequence(self::TICKETS_URL . '/api/integration/v1/house/billing')
+            ->push(self::ticketsAnswer(true, 'review'))
+            ->push(self::ticketsAnswer(true, 'verified', termsAccepted: false))
+            ->push(self::ticketsAnswer(true, 'verified'));
+
+        $this->get(route('settings.tickets'))->assertInertia(fn ($page) => $page->where('connection.billingComplete', false));
+        $this->get(route('settings.tickets'))->assertInertia(fn ($page) => $page->where('connection.billingComplete', false));
+        $this->get(route('settings.tickets'))->assertInertia(fn ($page) => $page->where('connection.billingComplete', true));
+    }
+
+    #[Test]
+    public function new_terms_are_accepted_by_the_user_who_ticks_the_box(): void
+    {
+        $this->connect();
+        $user = $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/platform-terms' => Http::response(self::ticketsAnswer(true, 'verified'))]);
+
+        $this->from(route('settings.tickets.billing'))
+            ->post(route('settings.tickets.billing.platform-terms'))
+            ->assertRedirect(route('settings.tickets.billing'))
+            ->assertSessionHas('success');
+
+        Http::assertSent(static fn (Request $request): bool => $request->method() === 'POST'
+            && $request->header('x-api-key') === ['tk_plain']
+            && $request['acceptedBy'] === ['email' => $user->email, 'name' => $user->full_name]);
     }
 
     #[Test]
@@ -100,14 +151,14 @@ final class TicketingBillingTest extends FeatureTestCase
     {
         $this->connect();
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
-        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(self::ticketsAnswer(true, true))]);
+        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(self::ticketsAnswer(true, 'open'))]);
 
         $this->from(route('settings.tickets.billing'))
-            ->put(route('settings.tickets.billing.save'), [
+            ->post(route('settings.tickets.billing.save'), [
                 'legal_name' => 'Theater Süd gGmbH', 'legal_form' => 'ggmbh', 'street' => 'Theaterstraße 1', 'postal_code' => '20095',
                 'city' => 'Hamburg', 'country' => 'DE', 'register_number' => '', 'register_court' => '', 'vat_id' => 'DE123456789',
                 'tax_number' => '', 'contact_name' => 'Erika Muster', 'contact_phone' => '+49 40 123456', 'website' => '',
-                'account_holder' => 'Theater Süd gGmbH', 'iban' => 'DE89 3704 0044 0532 0130 00',
+                'terms_url' => '', 'privacy_url' => 'https://theater-sued.de/datenschutz', 'imprint_url' => 'https://theater-sued.de/impressum',
             ])
             ->assertRedirect(route('settings.tickets.billing'))
             ->assertSessionHas('success');
@@ -117,30 +168,86 @@ final class TicketingBillingTest extends FeatureTestCase
             && $request['registerNumber'] === ''
             && $request['taxNumber'] === ''
             && $request['website'] === ''
-            && $request['iban'] === 'DE89370400440532013000');
+            && $request['termsUrl'] === ''
+            && $request['imprintUrl'] === 'https://theater-sued.de/impressum');
     }
 
     #[Test]
-    public function an_empty_iban_keeps_the_stored_one_and_a_wrong_one_is_refused(): void
+    public function a_picked_pdf_goes_to_tickets_before_the_fields(): void
     {
         $this->connect();
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
-        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(self::ticketsAnswer(false, true))]);
+        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/*' => Http::response(self::ticketsAnswer(true, 'open'))]);
 
-        $draft = ['legal_name' => '', 'legal_form' => '', 'street' => '', 'postal_code' => '', 'city' => '', 'country' => 'DE',
-            'register_number' => '', 'register_court' => '', 'vat_id' => '', 'tax_number' => '', 'contact_name' => '',
-            'contact_phone' => '', 'website' => '', 'account_holder' => 'Theater Süd gGmbH'];
+        $draft = array_fill_keys(['legal_name', 'legal_form', 'street', 'postal_code', 'city', 'register_number', 'register_court',
+            'vat_id', 'tax_number', 'contact_name', 'contact_phone', 'website', 'terms_url', 'privacy_url', 'imprint_url'], '');
 
         $this->from(route('settings.tickets.billing'))
-            ->put(route('settings.tickets.billing.save'), $draft + ['iban' => 'DE88 3704 0044 0532 0130 00'])
-            ->assertSessionHasErrors(['iban']);
-
-        Http::assertNothingSent();
-
-        $this->put(route('settings.tickets.billing.save'), $draft + ['iban' => ''])
+            ->post(route('settings.tickets.billing.save'), $draft + [
+                'country' => 'DE',
+                'terms_file' => UploadedFile::fake()->create('agb.pdf', 120, 'application/pdf'),
+            ])
             ->assertSessionHas('success');
 
-        Http::assertSent(static fn (Request $request): bool => $request['iban'] === '' && $request['legalName'] === '');
+        $sent = Http::recorded()->map(fn (array $pair): string => $pair[0]->method() . ' ' . $pair[0]->url())->all();
+        $this->assertSame([
+            'PUT ' . self::TICKETS_URL . '/api/integration/v1/house/legal-documents/terms',
+            'PUT ' . self::TICKETS_URL . '/api/integration/v1/house/billing',
+        ], $sent);
+        Http::assertSent(static fn (Request $request): bool => str_ends_with($request->url(), '/legal-documents/terms')
+            && $request->header('x-file-name') === ['agb.pdf']
+            && $request->header('Content-Type') === ['application/pdf']);
+    }
+
+    #[Test]
+    public function a_stored_pdf_can_be_removed_and_only_a_pdf_is_accepted(): void
+    {
+        $this->connect();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/*' => Http::response(self::ticketsAnswer(true, 'open'))]);
+
+        $this->from(route('settings.tickets.billing'))
+            ->delete(route('settings.tickets.billing.documents.remove', 'privacy'))
+            ->assertSessionHas('success');
+
+        Http::assertSent(static fn (Request $request): bool => $request->method() === 'DELETE'
+            && str_ends_with($request->url(), '/house/legal-documents/privacy'));
+
+        $this->delete('/settings/tickets/billing/documents/contract')->assertNotFound();
+
+        $this->from(route('settings.tickets.billing'))
+            ->post(route('settings.tickets.billing.save'), ['country' => 'DE', 'imprint_file' => UploadedFile::fake()->image('impressum.png')])
+            ->assertSessionHasErrors(['imprint_file']);
+    }
+
+    #[Test]
+    public function stripes_form_gets_its_session_from_tickets_with_the_user_as_contact(): void
+    {
+        $this->connect();
+        $user = $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/stripe-session' => Http::response(['clientSecret' => 'accs_secret'])]);
+
+        $this->postJson(route('settings.tickets.billing.stripe-session'))
+            ->assertOk()
+            ->assertExactJson(['clientSecret' => 'accs_secret']);
+
+        Http::assertSent(static fn (Request $request): bool => $request->method() === 'POST'
+            && $request->header('x-api-key') === ['tk_plain']
+            && $request['email'] === $user->email);
+    }
+
+    #[Test]
+    public function without_tickets_stripes_form_gets_no_session(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/stripe-session' => Http::response(null, 503)]);
+
+        $this->postJson(route('settings.tickets.billing.stripe-session'))->assertStatus(409);
+        Http::assertNothingSent();
+
+        $this->connect();
+
+        $this->postJson(route('settings.tickets.billing.stripe-session'))->assertStatus(502);
     }
 
     #[Test]
@@ -154,9 +261,9 @@ final class TicketingBillingTest extends FeatureTestCase
             ->assertInertia(fn ($page) => $page->where('connection.connected', false)->where('billing', null));
 
         $empty = array_fill_keys(['legal_name', 'legal_form', 'street', 'postal_code', 'city', 'register_number', 'register_court',
-            'vat_id', 'tax_number', 'contact_name', 'contact_phone', 'website', 'account_holder', 'iban'], '');
+            'vat_id', 'tax_number', 'contact_name', 'contact_phone', 'website', 'terms_url', 'privacy_url', 'imprint_url'], '');
 
-        $this->put(route('settings.tickets.billing.save'), $empty + ['country' => 'DE'])
+        $this->post(route('settings.tickets.billing.save'), $empty + ['country' => 'DE'])
             ->assertSessionHas('error');
 
         Http::assertNothingSent();

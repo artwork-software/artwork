@@ -38,7 +38,6 @@ class TicketingTeamController extends Controller
         return Inertia::render('Settings/Tickets/Team', [
             'connection' => [
                 'connected' => $connection !== null,
-                'dashboardUrl' => $connection?->dashboard_url,
             ],
             'people' => $people,
             'presets' => TicketingDraftRules::TEAM_PRESETS,

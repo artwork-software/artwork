@@ -122,9 +122,11 @@ use App\Http\Controllers\ToolSettingsFormatsController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingProjectController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingTeamController;
+use Artwork\Modules\Ticketing\Services\TicketingBillingService;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use Artwork\Modules\Mail\Http\Controllers\MailSettingsController;
@@ -412,7 +414,15 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::post('/connection', [TicketingConnectionController::class, 'store'])->name('settings.tickets.connect');
         Route::delete('/connection', [TicketingConnectionController::class, 'destroy'])->name('settings.tickets.disconnect');
         Route::get('/billing', [TicketingBillingController::class, 'index'])->name('settings.tickets.billing');
-        Route::put('/billing', [TicketingBillingController::class, 'update'])->name('settings.tickets.billing.save');
+        // POST: mit PDFs kommt das Formular als multipart, und das liest PHP nur bei POST.
+        Route::post('/billing', [TicketingBillingController::class, 'update'])->name('settings.tickets.billing.save');
+        Route::delete('/billing/documents/{document}', [TicketingBillingController::class, 'removeLegalDocument'])
+            ->whereIn('document', TicketingBillingService::LEGAL_DOCUMENTS)
+            ->name('settings.tickets.billing.documents.remove');
+        Route::post('/billing/stripe-session', [TicketingBillingController::class, 'stripeSession'])
+            ->name('settings.tickets.billing.stripe-session');
+        Route::post('/billing/platform-terms', [TicketingBillingController::class, 'acceptPlatformTerms'])
+            ->name('settings.tickets.billing.platform-terms');
         Route::get('/rooms', [TicketingConnectionController::class, 'rooms'])->name('settings.tickets.rooms');
         Route::post('/rooms', [TicketingConnectionController::class, 'syncRooms'])->name('settings.tickets.rooms.sync');
         Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');
@@ -931,9 +941,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/ticketing', [TicketingProjectController::class, 'show'])
             ->name('projects.tabs.ticketing')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::TICKETING));
-        Route::get('/ticketing/events/{event}/sales', [TicketingProjectController::class, 'sales'])
-            ->name('projects.tabs.ticketing.sales')
-            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::TICKETING));
         Route::post('/ticketing/production', [TicketingProjectController::class, 'saveProduction'])
             ->middleware(CanEditProject::class)
             ->name('projects.tabs.ticketing.production');
@@ -1234,6 +1241,13 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::get('/calendar/redirect/day/{day}', [EventController::class, 'redirectToCalendarByDay'])
         ->name('calendar.redirect-by-day');
     Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
+    Route::get('/ticketing/calendar-summary', [TicketingCalendarController::class, 'summary'])
+        ->name('ticketing.calendar-summary');
+    Route::get('/ticketing/open', [TicketingCalendarController::class, 'open'])->name('ticketing.open');
+    Route::get('/ticketing/events/{event}/sales', [TicketingCalendarController::class, 'sales'])
+        ->name('ticketing.sales');
+    Route::get('/ticketing/move-check', [TicketingCalendarController::class, 'moveCheck'])
+        ->name('ticketing.move-check');
     Route::get('/response/all/shift-plan-events', [
         EventController::class,
         'shiftPlanEventAPI',

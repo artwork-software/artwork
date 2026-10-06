@@ -7,12 +7,17 @@ use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Ticketing\Jobs\SyncTicketingEventJob;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Artwork\Modules\Ticketing\Models\TicketingProduction;
+use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\ActsAsRole;
 use Tests\Feature\FeatureTestCase;
@@ -60,7 +65,7 @@ final class TicketingReleaseTest extends FeatureTestCase
     private function fakeTickets(array $stubs = []): void
     {
         Http::fake($stubs + [
-            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => [], 'legalComplete' => true, 'bankComplete' => true]),
+            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => [], 'legalComplete' => true, 'shopLegalComplete' => true, 'payoutAccount' => 'verified', 'platformTerms' => ['accepted' => true]]),
             self::TICKETS_URL . '/api/integration/v1/venues' => Http::response(['venues' => [[
                 'id' => self::VENUE_ID,
                 'name' => 'Großer Saal',
@@ -75,9 +80,13 @@ final class TicketingReleaseTest extends FeatureTestCase
             ]),
             self::TICKETS_URL . '/api/integration/v1/dates/' . self::DATE_ID => Http::response([
                 'id' => self::DATE_ID, 'status' => 'scheduled', 'capacity' => 300, 'sold' => 2, 'ticketCount' => 2, 'checkedInCount' => 0,
-                'dashboardUrl' => self::TICKETS_URL . '/de/dashboard/events/x/dates/y',
-                'tickets' => [['code' => 'ABCD1234', 'status' => 'valid', 'holderName' => 'Ada Lovelace', 'email' => 'ada@example.org', 'categoryName' => 'Parkett', 'checkedInAt' => null]],
+                'revenueCents' => 5800,
+                'tickets' => [['code' => 'ABCD1234', 'status' => 'valid', 'holderName' => 'Ada Lovelace', 'email' => 'ada@example.org', 'categoryName' => 'Parkett', 'reductionName' => null, 'priceCents' => 2900, 'checkedInAt' => null]],
             ]),
+            self::TICKETS_URL . '/api/integration/v1/dates?ids=*' => Http::response([
+                ['id' => self::DATE_ID, 'status' => 'scheduled', 'capacity' => 300, 'sold' => 84],
+            ]),
+            self::TICKETS_URL . '/api/integration/v1/login-links' => Http::response(['url' => self::TICKETS_URL . '/api/auth/core-login/verify?token=t0k3n']),
             self::TICKETS_URL . '/api/integration/v1/productions/*/publish' => Http::response(['id' => self::PRODUCTION_ID, 'status' => 'published']),
             self::TICKETS_URL . '/api/integration/v1/dates' => Http::response(['id' => self::DATE_ID, 'status' => 'scheduled']),
             self::TICKETS_URL . '/api/integration/v1/dates/*' => Http::response(['id' => self::DATE_ID, 'status' => 'cancelled', 'outcome' => 'deleted']),
@@ -275,6 +284,65 @@ final class TicketingReleaseTest extends FeatureTestCase
     }
 
     #[Test]
+    public function further_pictures_are_pushed_once_and_removed_in_tickets_too(): void
+    {
+        Storage::fake();
+        $imageId = '8b3f4e5d-6c7a-4b82-8c93-1d4e5f6a7b82';
+        $this->fakeTickets([
+            self::TICKETS_URL . '/api/integration/v1/productions/*/images/*' => Http::response(['removed' => true]),
+            self::TICKETS_URL . '/api/integration/v1/productions/*/images' => Http::response(['id' => $imageId, 'url' => 'https://cdn.test/a.jpg', 'alt' => null]),
+        ]);
+        TicketingProduction::query()->create(['project_id' => $this->project->id, 'production_id' => self::PRODUCTION_ID]);
+
+        $this->post(route('projects.tabs.ticketing.production', $this->project), [
+            'images' => [UploadedFile::fake()->image('foyer.jpg'), UploadedFile::fake()->image('probe.jpg')],
+        ], ['Accept' => 'application/json'])->assertOk()->assertJsonCount(2, 'production.images');
+
+        $this->assertSame(2, $this->imagesPosted());
+        $this->assertSame(2, TicketingProductionImage::query()->where('remote_id', $imageId)->count());
+
+        // Ein Speichern ohne neue Bilder schickt keines noch einmal.
+        $this->post(route('projects.tabs.ticketing.production', $this->project), ['title' => 'Hamlet'], ['Accept' => 'application/json'])->assertOk();
+        $this->assertSame(2, $this->imagesPosted());
+
+        $first = TicketingProductionImage::query()->orderBy('id')->firstOrFail();
+        $this->post(route('projects.tabs.ticketing.production', $this->project), [
+            'remove_image_ids' => [$first->id],
+        ], ['Accept' => 'application/json'])->assertOk()->assertJsonCount(1, 'production.images');
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
+            && str_ends_with($request->url(), '/productions/' . self::PRODUCTION_ID . '/images/' . $imageId));
+        Storage::assertMissing($first->storagePath());
+    }
+
+    #[Test]
+    public function further_pictures_stop_at_the_limit_of_tickets(): void
+    {
+        Storage::fake();
+        $this->fakeTickets();
+        $production = TicketingProduction::query()->create(['project_id' => $this->project->id]);
+        foreach (range(1, TicketingProduction::MAX_IMAGES) as $index) {
+            $production->images()->create(['path' => "picture-{$index}.jpg"]);
+        }
+
+        $this->post(route('projects.tabs.ticketing.production', $this->project), [
+            'images' => [UploadedFile::fake()->image('one-too-many.jpg')],
+        ], ['Accept' => 'application/json'])->assertUnprocessable()->assertJsonValidationErrors('images');
+
+        $kept = $production->images()->firstOrFail();
+        $this->post(route('projects.tabs.ticketing.production', $this->project), [
+            'images' => [UploadedFile::fake()->image('replacement.jpg')],
+            'remove_image_ids' => [$kept->id],
+        ], ['Accept' => 'application/json'])->assertOk()->assertJsonCount(TicketingProduction::MAX_IMAGES, 'production.images');
+    }
+
+    private function imagesPosted(): int
+    {
+        return Http::recorded(fn (Request $request): bool => $request->method() === 'POST'
+            && str_ends_with($request->url(), '/images'))->count();
+    }
+
+    #[Test]
     public function releasing_uses_the_production_draft(): void
     {
         $this->fakeTickets();
@@ -302,15 +370,111 @@ final class TicketingReleaseTest extends FeatureTestCase
             'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 2900, 'quota' => 300]],
         ]);
 
-        $this->getJson(route('projects.tabs.ticketing.sales', [$this->project, $event]))
+        $this->getJson(route('ticketing.sales', $event))
             ->assertOk()
             ->assertJsonPath('released', true)
             ->assertJsonPath('sold', 2)
-            ->assertJsonPath('tickets.0.holderName', 'Ada Lovelace');
+            ->assertJsonPath('revenueCents', 5800)
+            ->assertJsonPath('tickets.0.holderName', 'Ada Lovelace')
+            ->assertJsonPath('tickets.0.priceCents', 2900);
 
-        $this->getJson(route('projects.tabs.ticketing.sales', [$this->project, $unreleased]))
+        $this->getJson(route('ticketing.sales', $unreleased))
             ->assertOk()
             ->assertJsonPath('released', false);
+    }
+
+    #[Test]
+    public function the_sales_need_the_project_to_be_visible(): void
+    {
+        $this->fakeTickets();
+        $event = Event::factory()->create(['project_id' => $this->project->id, 'event_type_id' => $this->type->id]);
+        $this->actingAsUserWith([]);
+
+        $this->getJson(route('ticketing.sales', $event))->assertForbidden();
+        Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function the_calendar_hint_counts_released_dates_in_one_call(): void
+    {
+        $this->fakeTickets();
+        $released = Event::factory()->create([
+            'project_id' => $this->project->id, 'event_type_id' => $this->type->id,
+            'start_time' => '2027-01-10 19:30:00', 'end_time' => '2027-01-10 22:00:00',
+        ]);
+        Event::factory()->create([
+            'project_id' => $this->project->id, 'event_type_id' => $this->type->id,
+            'start_time' => '2027-01-11 19:30:00', 'end_time' => '2027-01-11 22:00:00',
+        ]);
+        TicketingEventRelease::query()->create([
+            'event_id' => $released->id, 'state' => 'released', 'tickets_date_id' => self::DATE_ID, 'classes' => [],
+        ]);
+
+        $this->getJson(route('ticketing.calendar-summary', ['start_date' => '2027-01-01', 'end_date' => '2027-01-31']))
+            ->assertOk()
+            ->assertExactJson([(string) $released->id => ['sold' => 84, 'capacity' => 300, 'cancelled' => false]]);
+
+        Http::assertSentCount(1);
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/dates?ids=' . self::DATE_ID));
+    }
+
+    #[Test]
+    public function the_calendar_hint_leaves_out_projects_the_person_cannot_see(): void
+    {
+        $this->fakeTickets();
+        $event = Event::factory()->create([
+            'project_id' => $this->project->id, 'event_type_id' => $this->type->id,
+            'start_time' => '2027-01-10 19:30:00', 'end_time' => '2027-01-10 22:00:00',
+        ]);
+        TicketingEventRelease::query()->create([
+            'event_id' => $event->id, 'state' => 'released', 'tickets_date_id' => self::DATE_ID, 'classes' => [],
+        ]);
+        $this->actingAsUserWith([]);
+
+        $this->getJson(route('ticketing.calendar-summary', ['start_date' => '2027-01-01', 'end_date' => '2027-01-31']))
+            ->assertOk()
+            ->assertExactJson([]);
+
+        Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function opening_tickets_from_a_date_asks_for_a_login_link_to_it(): void
+    {
+        $this->fakeTickets();
+        $event = Event::factory()->create(['project_id' => $this->project->id, 'event_type_id' => $this->type->id]);
+        TicketingEventRelease::query()->create([
+            'event_id' => $event->id, 'state' => 'released', 'tickets_date_id' => self::DATE_ID, 'classes' => [],
+        ]);
+
+        $this->get(route('ticketing.open', ['event' => $event->id]))
+            ->assertRedirect(self::TICKETS_URL . '/api/auth/core-login/verify?token=t0k3n');
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/login-links')
+            && $request['email'] === auth()->user()->email
+            && $request['destination'] === ['type' => 'date', 'dateId' => self::DATE_ID]);
+    }
+
+    #[Test]
+    public function opening_the_shop_settings_asks_for_a_login_link_to_them(): void
+    {
+        $this->fakeTickets();
+
+        $this->get(route('ticketing.open', ['to' => 'settings']))
+            ->assertRedirect(self::TICKETS_URL . '/api/auth/core-login/verify?token=t0k3n');
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/login-links')
+            && $request['destination'] === ['type' => 'houseSettings']);
+    }
+
+    #[Test]
+    public function opening_tickets_falls_back_to_the_dashboard_when_tickets_is_down(): void
+    {
+        $this->fakeTickets([
+            self::TICKETS_URL . '/api/integration/v1/login-links' => Http::response([], 503),
+        ]);
+
+        $this->get(route('ticketing.open'))->assertRedirect(self::TICKETS_URL . '/dashboard');
     }
 
     #[Test]
@@ -352,7 +516,7 @@ final class TicketingReleaseTest extends FeatureTestCase
     }
 
     #[Test]
-    public function a_released_date_follows_its_event_when_it_moves_and_leaves_when_it_is_deleted(): void
+    public function a_released_date_follows_its_event_when_it_moves(): void
     {
         $this->fakeTickets();
         $event = Event::factory()->create([
@@ -362,15 +526,26 @@ final class TicketingReleaseTest extends FeatureTestCase
         $this->postJson(route('projects.tabs.ticketing.release', $this->project), ['event_ids' => [$event->id]])->assertOk();
 
         $event->update(['start_time' => '2027-02-02 20:00:00']);
+        $this->runTicketingSync();
 
         $this->assertCount(2, Http::recorded(fn (Request $request): bool => $request->method() === 'PUT'
             && str_ends_with($request->url(), '/dates')));
         $this->assertStringContainsString('2027-02-02T20:00', Http::recorded()->last()[0]->data()['startsAt']);
+    }
 
-        $event->delete();
+    #[Test]
+    public function a_released_date_cannot_be_deleted_from_the_calendar(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
 
-        Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
-            && str_ends_with($request->url(), '/dates/' . self::DATE_ID));
+        $this->delete(route('events.delete', $event))->assertRedirect()->assertSessionHas('error');
+        $this->deleteJson(route('events.delete', $event))->assertStatus(422);
+        $this->delete(route('projects.destroy', $this->project))->assertRedirect()->assertSessionHas('error');
+
+        $this->assertNull($event->fresh()->deleted_at);
+        $this->assertNull($this->project->fresh()->deleted_at);
+        Http::assertNothingSent();
     }
 
     #[Test]
@@ -441,5 +616,88 @@ final class TicketingReleaseTest extends FeatureTestCase
         ])->assertNotFound();
 
         $this->assertDatabaseMissing('ticketing_event_releases', ['event_id' => $own->id]);
+    }
+
+    #[Test]
+    public function a_calendar_change_goes_through_when_tickets_is_unreachable(): void
+    {
+        $this->fakeTickets([self::TICKETS_URL . '/api/integration/v1/dates' => Http::failedConnection()]);
+        $event = $this->releasedEvent();
+
+        $event->update(['start_time' => '2027-02-02 20:00:00']);
+        $this->runTicketingSync();
+
+        $this->assertSame('2027-02-02 20:00:00', $event->fresh()->start_time->format('Y-m-d H:i:s'));
+        $this->assertNotNull($event->fresh()->ticketingRelease->sync_error);
+    }
+
+    #[Test]
+    public function a_rejection_by_tickets_is_kept_on_the_date(): void
+    {
+        $message = 'The production sells in one room; this date lies in another one.';
+        $this->fakeTickets([self::TICKETS_URL . '/api/integration/v1/dates' => Http::response([
+            'error' => ['code' => 'CONFLICT', 'message' => $message],
+        ], 409)]);
+        $event = $this->releasedEvent();
+
+        $event->update(['start_time' => '2027-02-02 20:00:00']);
+        $this->runTicketingSync();
+
+        $this->assertSame($message, $event->fresh()->ticketingRelease->sync_error);
+        $this->getJson(route('projects.tabs.ticketing', $this->project))
+            ->assertJsonPath('events.0.release.syncError', $message);
+    }
+
+    #[Test]
+    public function a_successful_sync_clears_the_error(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent(['sync_error' => 'artwork tickets could not be reached.']);
+
+        $event->update(['start_time' => '2027-02-02 20:00:00']);
+        $this->runTicketingSync();
+
+        $this->assertNull($event->fresh()->ticketingRelease->sync_error);
+    }
+
+    #[Test]
+    public function nothing_is_sent_when_tickets_is_not_configured(): void
+    {
+        config()->set('services.tickets.url', null);
+        Http::fake();
+        $event = $this->releasedEvent();
+
+        $event->update(['start_time' => '2027-02-02 20:00:00']);
+        $event->delete();
+
+        Bus::assertNotDispatched(SyncTicketingEventJob::class);
+        Http::assertNothingSent();
+        $this->assertSoftDeleted('events', ['id' => $event->id]);
+    }
+
+    /** Die Warteschlange ist im Test gefälscht; der Abgleich läuft hier von Hand. */
+    private function runTicketingSync(): void
+    {
+        foreach (Bus::dispatched(SyncTicketingEventJob::class) as $job) {
+            app()->call([$job, 'handle']);
+        }
+    }
+
+    /** @param array<string, mixed> $release */
+    private function releasedEvent(array $release = []): Event
+    {
+        $event = Event::factory()->create([
+            'project_id' => $this->project->id, 'event_type_id' => $this->type->id, 'room_id' => $this->room->id,
+            'start_time' => '2027-02-01 20:00:00', 'end_time' => '2027-02-01 22:00:00',
+        ]);
+        TicketingProduction::query()->create([
+            'project_id' => $this->project->id, 'production_id' => self::PRODUCTION_ID,
+        ]);
+        TicketingEventRelease::query()->create($release + [
+            'event_id' => $event->id, 'state' => 'released', 'tickets_date_id' => self::DATE_ID,
+            'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 2900, 'quota' => 300]],
+        ]);
+
+        return $event;
     }
 }

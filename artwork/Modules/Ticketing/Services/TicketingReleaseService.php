@@ -8,6 +8,7 @@ use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Artwork\Modules\User\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -55,7 +56,9 @@ class TicketingReleaseService
             $productionId = $this->productionIdOf($released->first(), $connection);
 
             foreach ($released as $target) {
-                $this->pushDate($connection, $productionId, $target->fresh(['room', 'ticketingRelease']));
+                $target = $target->fresh(['room', 'ticketingRelease']);
+                $this->pushDate($connection, $productionId, $target);
+                $target->ticketingRelease->update(['sync_error' => null]);
             }
         }
     }
@@ -101,6 +104,7 @@ class TicketingReleaseService
                     'tickets_date_id' => $pushed[$target->id],
                     'released_at' => now(),
                     'released_by_user_id' => $user->id,
+                    'sync_error' => null,
                 ],
             );
         }
@@ -129,11 +133,12 @@ class TicketingReleaseService
                 'tickets_date_id' => null,
                 'released_at' => null,
                 'released_by_user_id' => null,
+                'sync_error' => null,
             ]);
         }
     }
 
-    /** Ein geänderter Termin (Zeit, Raum) soll im Shop sofort stimmen; ohne Freigabe gibt es nichts zu tun. */
+    /** Ein geänderter Termin (Zeit, Raum) soll im Shop stimmen; ohne Freigabe gibt es nichts zu tun. */
     public function refresh(Event $event): void
     {
         if (!$this->isReleased($event)) {
@@ -142,6 +147,7 @@ class TicketingReleaseService
 
         $connection = $this->requireConnection();
         $this->pushDate($connection, $this->productionIdOf($event, $connection), $event);
+        $event->ticketingRelease->update(['sync_error' => null]);
     }
 
     /**
@@ -157,6 +163,98 @@ class TicketingReleaseService
         }
 
         return ['released' => true] + $this->tickets->get($connection, "/dates/{$release->tickets_date_id}");
+    }
+
+    /**
+     * Verkauft und Plätze der freigegebenen Termine im Zeitraum, für den Hinweis im Kalender:
+     * ein Aufruf nach tickets für alle statt einer je Kachel. Nur Termine aus Projekten, die die
+     * Person sehen darf — dieselbe Grenze wie bei den Ticketdetails.
+     *
+     * @return array<int, array{sold: int, capacity: int, cancelled: bool}> nach Termin-ID
+     */
+    public function calendarSummary(User $user, Carbon $start, Carbon $end): array
+    {
+        $connection = $this->connections->current();
+
+        if (!$connection) {
+            return [];
+        }
+
+        $visibleProjects = [];
+        $events = Event::query()
+            ->where('start_time', '<=', $end)
+            ->where('end_time', '>=', $start)
+            ->whereHas('ticketingRelease', static fn ($query) => $query
+                ->where('state', TicketingEventRelease::STATE_RELEASED)
+                ->whereNotNull('tickets_date_id'))
+            ->with(['ticketingRelease', 'project'])
+            ->get()
+            ->filter(static function (Event $event) use ($user, &$visibleProjects): bool {
+                if (!$event->project) {
+                    return false;
+                }
+
+                return $visibleProjects[$event->project_id] ??= $user->can('view', $event->project);
+            });
+
+        return $this->summaryOf($connection, $events);
+    }
+
+    /**
+     * Die freigegebenen unter den Terminen mit ihrem Verkaufsstand — für die Rückfrage vor dem Verschieben.
+     * Der Stand ist Beiwerk: ist tickets nicht erreichbar, fehlt er, die Rückfrage bleibt.
+     *
+     * @param Collection<int, Event> $events
+     * @return list<array{id: int, name: string, start: string, sold: int|null}>
+     */
+    public function onSale(Collection $events): array
+    {
+        $connection = $this->connections->current();
+        $released = $events->filter(fn (Event $event): bool => $this->isReleased($event)
+            && $event->ticketingRelease->tickets_date_id !== null);
+
+        if (!$connection || $released->isEmpty()) {
+            return [];
+        }
+
+        try {
+            $summary = $this->summaryOf($connection, $released);
+        } catch (TicketingConnectionException) {
+            $summary = [];
+        }
+
+        return $released->map(static fn (Event $event): array => [
+            'id' => $event->id,
+            'name' => $event->eventName ?: ($event->project?->name ?? ''),
+            'start' => $event->start_time->toIso8601String(),
+            'sold' => $summary[$event->id]['sold'] ?? null,
+        ])->values()->all();
+    }
+
+    /**
+     * Ein Aufruf nach tickets je 500 Termine.
+     *
+     * @param Collection<int, Event> $events freigegeben, mit ticketingRelease
+     * @return array<int, array{sold: int, capacity: int, cancelled: bool}> nach Termin-ID
+     */
+    private function summaryOf(TicketingConnection $connection, Collection $events): array
+    {
+        $eventIdsByDate = $events->mapWithKeys(
+            static fn (Event $event): array => [$event->ticketingRelease->tickets_date_id => $event->id]
+        );
+        $summary = [];
+
+        foreach ($eventIdsByDate->keys()->chunk(500) as $dateIds) {
+            foreach ($this->tickets->get($connection, '/dates?ids=' . $dateIds->implode(',')) as $date) {
+                $summary[$eventIdsByDate[$date['id']]] = [
+                    'sold' => (int) $date['sold'],
+                    'capacity' => (int) $date['capacity'],
+                    'cancelled' => $date['status'] === 'cancelled',
+                ];
+            }
+        }
+
+        return $summary;
     }
 
     /**

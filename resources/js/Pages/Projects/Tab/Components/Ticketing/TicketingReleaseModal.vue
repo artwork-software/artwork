@@ -73,12 +73,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 import axios from 'axios'
-import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
 import { IconAlertTriangle, IconInfoCircle, IconTicket } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
-import { capacityOf, classesOf, formatEuro, formatWhen, isReleasable, isReleased, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { capacityOf, classesOf, formatEuro, formatWhen, isPast, isReleasable, isReleased, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 
 const props = defineProps({
     projectId: { type: Number, required: true },
@@ -109,10 +108,6 @@ const scopeOptions = computed(() => [
 const candidates = computed(() => (scope.value === 'series' ? seriesEvents.value : props.events))
 const targets = computed(() => candidates.value.filter((event) => isReleased(event) === props.withdrawing))
 const skipped = computed(() => candidates.value.length - targets.value.length)
-
-function isPast(event) {
-    return dayjs(event.start).isBefore(dayjs())
-}
 
 const releasable = computed(() => targets.value.every(isReleasable))
 

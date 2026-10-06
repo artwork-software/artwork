@@ -9,6 +9,7 @@ use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Laravel\Passport\Client;
@@ -34,6 +35,7 @@ final class TicketingConnectionTest extends FeatureTestCase
             'billing' => $billing + self::billing(),
             'rooms' => $rooms,
             'reductions' => $reductions,
+            'accept_platform_terms' => true,
         ];
     }
 
@@ -54,8 +56,9 @@ final class TicketingConnectionTest extends FeatureTestCase
             'contact_name' => 'Erika Muster',
             'contact_phone' => '+49 40 123456',
             'website' => null,
-            'account_holder' => 'Theater Süd gGmbH',
-            'iban' => 'DE89 3704 0044 0532 0130 00',
+            'terms_url' => 'https://theater-sued.de/agb',
+            'privacy_url' => 'https://theater-sued.de/datenschutz',
+            'imprint_url' => 'https://theater-sued.de/impressum',
         ];
     }
 
@@ -112,8 +115,9 @@ final class TicketingConnectionTest extends FeatureTestCase
                 && $request['coreUrl'] === config('app.url')
                 && $request['billing']['legalName'] === 'Theater Süd gGmbH'
                 && $request['billing']['legalForm'] === 'ggmbh'
-                && $request['billing']['iban'] === 'DE89370400440532013000'
                 && $request['billing']['taxNumber'] === null
+                && $request['billing']['termsUrl'] === 'https://theater-sued.de/agb'
+                && $request['acceptPlatformTerms'] === true
                 && (string) $request['coreClientId'] === (string) DB::table('oauth_clients')->value('id')
                 && is_string($request['coreClientSecret']) && $request['coreClientSecret'] !== '';
         });
@@ -292,7 +296,7 @@ final class TicketingConnectionTest extends FeatureTestCase
     }
 
     #[Test]
-    public function a_draft_without_the_details_or_with_a_wrong_iban_is_refused_before_any_call(): void
+    public function a_draft_with_incomplete_details_is_refused_before_any_call(): void
     {
         Http::fake();
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
@@ -302,9 +306,46 @@ final class TicketingConnectionTest extends FeatureTestCase
                 'legal_form' => 'ag',
                 'vat_id' => null,
                 'tax_number' => null,
-                'iban' => 'DE88 3704 0044 0532 0130 00',
+                'imprint_url' => 'keine-url',
             ]))
-            ->assertSessionHasErrors(['billing.legal_form', 'billing.vat_id', 'billing.tax_number', 'billing.iban']);
+            ->assertSessionHasErrors(['billing.legal_form', 'billing.vat_id', 'billing.tax_number', 'billing.imprint_url']);
+
+        Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function a_pdf_instead_of_a_link_follows_once_the_house_exists(): void
+    {
+        $this->fakeHappyTickets([
+            self::TICKETS_URL . '/api/integration/v1/house/legal-documents/*' => Http::response(['profile' => []]),
+        ]);
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+
+        $this->from(route('settings.tickets'))
+            ->post(route('settings.tickets.connect'), $this->draft(billing: [
+                'terms_url' => null,
+                'terms_file' => UploadedFile::fake()->create('agb.pdf', 80, 'application/pdf'),
+            ]))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success');
+
+        Http::assertSent(static fn (Request $request): bool => str_ends_with($request->url(), '/houses')
+            && $request['billing']['termsUrl'] === null
+            && $request['billing']['privacyUrl'] === 'https://theater-sued.de/datenschutz');
+        Http::assertSent(static fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/house/legal-documents/terms')
+            && $request->hasHeader('x-api-key', 'tk_plain'));
+    }
+
+    #[Test]
+    public function connecting_without_accepting_the_terms_is_refused_before_any_call(): void
+    {
+        Http::fake();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+
+        $this->from(route('settings.tickets'))
+            ->post(route('settings.tickets.connect'), ['accept_platform_terms' => false] + $this->draft())
+            ->assertSessionHasErrors(['accept_platform_terms']);
 
         Http::assertNothingSent();
     }
@@ -313,7 +354,7 @@ final class TicketingConnectionTest extends FeatureTestCase
     public function the_details_may_be_left_for_later_and_the_overview_then_warns(): void
     {
         $this->fakeHappyTickets([
-            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => [], 'legalComplete' => false, 'bankComplete' => false]),
+            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => [], 'legalComplete' => false, 'payoutAccount' => 'open']),
         ]);
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
 
@@ -329,7 +370,8 @@ final class TicketingConnectionTest extends FeatureTestCase
         $this->get(route('settings.tickets'))
             ->assertInertia(fn ($page) => $page
                 ->where('connection.connected', true)
-                ->where('connection.billingComplete', false));
+                ->where('connection.billingComplete', false)
+                ->where('connection.payout.state', 'open'));
     }
 
     #[Test]
@@ -348,10 +390,9 @@ final class TicketingConnectionTest extends FeatureTestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Settings/Tickets/Index')
                 ->where('houseDefaults.billing.legal_name', 'Theater Süd gGmbH')
-                ->where('houseDefaults.billing.account_holder', 'Theater Süd gGmbH')
                 ->where('houseDefaults.billing.street', 'Theaterstraße 1')
                 ->where('houseDefaults.billing.contact_name', $user->full_name)
-                ->where('houseDefaults.billing.iban', ''));
+                ->where('houseDefaults.billing.terms_url', ''));
     }
 
     #[Test]

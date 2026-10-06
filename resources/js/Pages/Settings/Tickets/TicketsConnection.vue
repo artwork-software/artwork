@@ -6,9 +6,9 @@
 
         <ConnectStart v-else-if="!connection.connected && !wizardOpen" :user-email="userEmail" @start="wizardOpen = true" />
 
-        <ConnectWizard v-else-if="!connection.connected"
+        <ConnectWizard v-else-if="wizardOpen"
                        :rooms="rooms" :house-defaults="houseDefaults" :countries="countries" :legal-forms="legalForms" :user-email="userEmail" :tickets-url="connection.url"
-                       @cancel="wizardOpen = false" />
+                       :payout="connection.payout" @close="wizardOpen = false" />
 
         <!-- Connected: the house on the left, the state of each tab on the right. -->
         <div v-else>
@@ -98,10 +98,10 @@ const shopHost = computed(() => String(props.connection.url ?? '').replace(/^htt
 const setup = computed(() => [
     {
         href: route('settings.tickets.billing'),
-        title: t('Details & bank account'),
+        title: t('Details & payouts'),
         text: props.connection.billingComplete === false
-            ? t('Without them no date can be released for sale and nothing is paid out.')
-            : t('Who stands behind the house and where it is paid out.'),
+            ? t('Without them and Stripe\'s verification no date can be released for sale.')
+            : t('Who stands behind the house, what its buyers read and where it is paid out.'),
         state: props.connection.billingComplete === null ? null
             : props.connection.billingComplete ? { variant: 'success', label: t('Complete') } : { variant: 'warning', label: t('Missing') },
     },

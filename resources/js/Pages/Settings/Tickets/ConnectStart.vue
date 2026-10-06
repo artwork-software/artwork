@@ -52,9 +52,10 @@ const { t } = useI18n()
 
 const steps = [
     { title: t('House'), text: t('Name and address in the ticket shop') },
-    { title: t('Details'), text: t('Legal details and bank account — can be added later') },
+    { title: t('Details'), text: t('Legal details and legal pages — can be added later; Stripe verifies the house after connecting') },
     { title: t('Rooms'), text: t('Which rooms sell, with address, price classes and default prices') },
     { title: t('Reductions'), text: t('House-wide reductions, e.g. 50 % with proof') },
     { title: t('Review & connect'), text: t('Everything at a glance, then one click') },
+    { title: t('Payouts'), text: t('Stripe verifies the house and takes the bank account — can be finished later') },
 ]
 </script>

@@ -103,6 +103,7 @@ enum PermissionEnum : string
 
     case WEBHOOKS_MANAGE = 'manage webhooks';
     case TICKETING_MANAGE = 'manage ticketing';
+    case TICKETING_MOVE_ON_SALE = 'move dates on sale';
 
     // Eigene Rechte für bisher admin-only Bereiche (Konzept Nutzerrechte, Entscheidung 8)
     case TRASH_ACCESS = 'can access trash';

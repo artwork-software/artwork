@@ -38,6 +38,22 @@
                         <button v-if="previewUrl" type="button" class="text-xs text-text-subtle hover:text-danger" @click="removeHero">{{ $t('Remove') }}</button>
                     </div>
                     <p class="mt-2 text-xs leading-[18px] text-text-subtle">{{ $t('Shown on the shop page and in link previews. JPG or PNG, up to 8 MB.') }}</p>
+
+                    <!-- Further pictures: shown on the shop page next to the main one. -->
+                    <span class="font-lexend mt-5 mb-1.5 block text-xs font-medium text-[#3F424A]">{{ $t('Further pictures') }}</span>
+                    <ul v-if="galleryItems.length" class="grid grid-cols-3 gap-2">
+                        <li v-for="item in galleryItems" :key="item.key" class="relative aspect-[3/2] overflow-hidden rounded-md border border-border-subtle bg-surface-sunken">
+                            <img :src="item.url" alt="" class="h-full w-full object-cover" />
+                            <button type="button" class="absolute top-1 right-1 flex size-6 items-center justify-center rounded-md bg-surface/90 text-text-subtle hover:text-danger" :aria-label="$t('Remove')" @click="item.remove">
+                                <IconX class="size-3.5" />
+                            </button>
+                        </li>
+                    </ul>
+                    <label v-if="galleryRoom > 0" class="ui-button-small mt-2.5 cursor-pointer">
+                        <IconUpload class="size-3.5" />{{ $t('Add pictures') }}
+                        <input type="file" accept="image/*" multiple class="sr-only" @change="pickImages" />
+                    </label>
+                    <p class="mt-2 text-xs leading-[18px] text-text-subtle">{{ $t('Up to {max}, shown on the shop page next to the main picture.', { max: production.maxImages }) }}</p>
                 </div>
 
                 <div class="flex flex-col gap-4">
@@ -75,7 +91,7 @@
 import { computed, ref, watch } from 'vue'
 import axios from 'axios'
 import { useI18n } from 'vue-i18n'
-import { IconCheck, IconChevronRight, IconExternalLink, IconPhoto, IconPlus, IconUpload } from '@tabler/icons-vue'
+import { IconCheck, IconChevronRight, IconExternalLink, IconPhoto, IconPlus, IconUpload, IconX } from '@tabler/icons-vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
@@ -107,11 +123,28 @@ const localPreview = ref(null)
 
 const previewUrl = computed(() => localPreview.value ?? (heroRemoved.value ? null : props.production.heroUrl))
 
+/* Pictures already saved, minus those marked for removal, then the ones picked since. */
+const newImages = ref([])
+const removedImageIds = ref([])
+const galleryItems = computed(() => [
+    ...props.production.images
+        .filter((image) => !removedImageIds.value.includes(image.id))
+        .map((image) => ({ key: `saved-${image.id}`, url: image.url, remove: () => removedImageIds.value.push(image.id) })),
+    ...newImages.value.map((image) => ({
+        key: image.url,
+        url: image.url,
+        remove: () => { newImages.value = newImages.value.filter((picked) => picked !== image) },
+    })),
+])
+const galleryRoom = computed(() => props.production.maxImages - galleryItems.value.length)
+
 const dirty = computed(() => form.value.title !== (props.production.title ?? '')
     || form.value.description !== (props.production.description ?? '')
     || JSON.stringify([...grantedIds.value].sort()) !== JSON.stringify([...(props.production.reductionTypeIds ?? defaultIds.value)].sort())
     || heroFile.value !== null
-    || heroRemoved.value)
+    || heroRemoved.value
+    || newImages.value.length > 0
+    || removedImageIds.value.length > 0)
 
 watch(() => props.production, (production) => {
     form.value = { title: production.title ?? '', description: production.description ?? '' }
@@ -119,6 +152,8 @@ watch(() => props.production, (production) => {
     heroFile.value = null
     heroRemoved.value = false
     localPreview.value = null
+    newImages.value = []
+    removedImageIds.value = []
 })
 
 function reductionValue(reduction) {
@@ -135,6 +170,12 @@ function pickHero(changeEvent) {
     heroFile.value = file
     heroRemoved.value = false
     localPreview.value = URL.createObjectURL(file)
+}
+
+function pickImages(changeEvent) {
+    const files = Array.from(changeEvent.target.files ?? []).slice(0, galleryRoom.value)
+    newImages.value = [...newImages.value, ...files.map((file) => ({ file, url: URL.createObjectURL(file) }))]
+    changeEvent.target.value = ''
 }
 
 /* The project's key visual, fetched from this installation and sent like an upload. */
@@ -161,6 +202,8 @@ async function save() {
     body.append('reduction_type_ids', JSON.stringify(grantedIds.value))
     if (heroFile.value) body.append('hero', heroFile.value)
     if (heroRemoved.value) body.append('remove_hero', '1')
+    newImages.value.forEach((image) => body.append('images[]', image.file))
+    removedImageIds.value.forEach((id) => body.append('remove_image_ids[]', id))
     try {
         const { data } = await axios.post(route('projects.tabs.ticketing.production', { project: props.projectId }), body)
         emit('saved', data)

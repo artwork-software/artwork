@@ -295,6 +295,29 @@
                             </span>
                         </div>
 
+                        <!-- Ticketverkauf (artwork tickets, nur freigegebene Termine, nur Starttag); Klick öffnet die Gästeliste -->
+                        <button
+                            v-if="ticketSales && !project && zoom_factor >= 0.8"
+                            type="button"
+                            class="mt-0.5 flex items-center gap-1.5 rounded text-xs/5 hover:underline underline-offset-2"
+                            :title="ticketSalesLabel"
+                            @click.stop="showTicketDetails = true"
+                        >
+                            <component
+                                :is="IconTicket"
+                                class="size-3.5 shrink-0"
+                                stroke-width="2"
+                                :style="{ color: eventTextColor }"
+                            />
+                            <span
+                                class="text-xs/[18px] subpixel-antialiased tabular-nums whitespace-nowrap"
+                                :class="ticketSales.cancelled ? 'line-through' : ''"
+                                :style="{ color: eventTypeTextColor }"
+                            >
+                                {{ ticketSales.sold }} / {{ ticketSales.capacity }}
+                            </span>
+                        </button>
+
                         <!-- Zeit/Optionen Zeile -->
                         <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 @max-[10rem]/tile:flex-wrap!" :class="[isSameDay && !project && !atAGlance ? 'flex-nowrap' : 'flex-wrap']">
                             <component
@@ -677,6 +700,21 @@
                                             <span class="subpixel-antialiased">{{ $t('Admission') }} {{ event.admission_time }}</span>
                                         </div>
 
+                                        <!-- Ticketverkauf (artwork tickets) -->
+                                        <button
+                                            v-if="ticketSales"
+                                            type="button"
+                                            class="mt-0.5 flex items-center gap-1.5 text-xs/5 hover:underline underline-offset-2"
+                                            @click.stop="showTicketDetails = true"
+                                        >
+                                            <component
+                                                :is="IconTicket"
+                                                class="size-3.5 shrink-0"
+                                                stroke-width="2"
+                                            />
+                                            <span class="subpixel-antialiased">{{ ticketSalesLabel }}</span>
+                                        </button>
+
                                         <!-- Zeit -->
                                         <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 flex-wrap">
                                             <component
@@ -933,11 +971,18 @@
             :event="event"
             @close="showSearchTimelinePresetModal = false"
         />
+
+        <TicketingSalesModal
+            v-if="showTicketDetails"
+            :event-id="event.id"
+            :description="eventNameLabel"
+            @close="showTicketDetails = false"
+        />
     </div>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue";
+import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import axios from "axios";
 import {
@@ -955,6 +1000,7 @@ import {
     IconLockOpen,
     IconRepeat,
     IconSquareCheckFilled,
+    IconTicket,
     IconTimeline,
     IconTrash,
     IconUsersGroup,
@@ -1037,6 +1083,12 @@ const CreateTimelinePresetFormEvent = defineAsyncComponent({
 
 const SearchTimelinePresetModal = defineAsyncComponent({
     loader: () => import("@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue"),
+    delay: 200,
+    timeout: 3000,
+});
+
+const TicketingSalesModal = defineAsyncComponent({
+    loader: () => import("@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue"),
     delay: 200,
     timeout: 3000,
 });
@@ -1136,6 +1188,19 @@ const showAdmissionTime = computed(() =>
     && Boolean(props.event.admission_time)
     && isStartDayCell.value
 );
+
+// Verkauft/Plätze aus artwork tickets; BaseCalendar stellt sie bereit, andere Kalender nicht.
+const calendarTicketSales = inject('calendarTicketSales', null);
+const ticketSales = computed(() =>
+    isStartDayCell.value ? calendarTicketSales?.get(props.event.id) ?? null : null
+);
+const showTicketDetails = ref(false);
+const ticketSalesLabel = computed(() => {
+    if (!ticketSales.value) return '';
+    return ticketSales.value.cancelled
+        ? $t('Cancelled in artwork tickets')
+        : $t('{sold} of {capacity} tickets sold', { sold: ticketSales.value.sold, capacity: ticketSales.value.capacity });
+});
 
 // Terminstatus ausgeschrieben: eigene Zeile unter dem Terminnamen (Anzeigeeinstellung, Default AUS)
 const showEventStatusName = computed(() =>

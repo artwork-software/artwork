@@ -35,11 +35,25 @@ class TicketingConnectionController extends Controller
     public function index(Request $request): Response
     {
         $connection = $this->connections->current();
+        $billing = null;
+
+        // Ohne Antwort von tickets keine Warnung und kein Stripe-Formular, die Seite selbst bleibt.
+        if ($connection) {
+            try {
+                $billing = $this->billing->status($connection);
+            } catch (TicketingConnectionException) {
+            }
+        }
 
         return Inertia::render('Settings/Tickets/Index', [
             'connection' => [
                 ...$this->connectionProps(),
-                'billingComplete' => $connection ? $this->billing->completeness($connection) : null,
+                'billingComplete' => $billing === null ? null : TicketingBillingService::complete($billing),
+                // Für den letzten Schritt des Assistenten: das Auszahlungskonto, gleich nach dem Verbinden.
+                'payout' => $billing === null ? null : [
+                    'state' => $billing['payout_account'],
+                    'stripe_key' => $billing['stripe_key'],
+                ],
             ],
             'houseDefaults' => $this->connections->houseDefaults($request->user()),
             'countries' => TicketingDraftRules::COUNTRIES,
@@ -120,6 +134,7 @@ class TicketingConnectionController extends Controller
             return back()->with('error', $exception->getMessage());
         }
 
+        // Zurück in den Assistenten: sein letzter Schritt ist Stripes Formular, das erst das Haus braucht.
         return back()->with('success', __('Connected to artwork tickets.'));
     }
 
@@ -166,7 +181,6 @@ class TicketingConnectionController extends Controller
             'url' => config('services.tickets.url'),
             'connected' => $connection !== null,
             'organizationSlug' => $connection?->organization_slug,
-            'dashboardUrl' => $connection?->dashboard_url,
             'connectedAt' => $connection?->created_at,
             'connectedBy' => $connection?->connectedBy?->full_name,
         ];

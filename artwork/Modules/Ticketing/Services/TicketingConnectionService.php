@@ -8,6 +8,7 @@ use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Http\UploadedFile;
 use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 
@@ -28,6 +29,7 @@ class TicketingConnectionService
     public function __construct(
         private readonly GeneralSettings $generalSettings,
         private readonly ClientRepository $clients,
+        private readonly TicketingBillingService $billing,
         private readonly TicketsClient $tickets,
     ) {
     }
@@ -40,6 +42,28 @@ class TicketingConnectionService
     public function current(): ?TicketingConnection
     {
         return TicketingConnection::query()->with('connectedBy')->first();
+    }
+
+    /**
+     * Der Weg aus artwork ins Ticket-Dashboard, auf Wunsch gleich zu einem Termin oder zu den
+     * Haus-Einstellungen (Shop-Darstellung): tickets gibt Mitgliedern des Hauses einen Einmal-Link,
+     * allen anderen die Anmeldung mit ihrer Adresse. Ist tickets nicht erreichbar, bleibt der
+     * gewöhnliche Link zum Dashboard.
+     *
+     * @param array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings'} $destination
+     */
+    public function loginUrl(TicketingConnection $connection, User $user, array $destination): string
+    {
+        try {
+            return (string) $this->tickets->post($connection, '/login-links', [
+                'email' => $user->email,
+                'destination' => $destination,
+            ])['url'];
+        } catch (TicketingConnectionException $exception) {
+            report($exception);
+
+            return $connection->dashboard_url;
+        }
     }
 
     /**
@@ -82,8 +106,9 @@ class TicketingConnectionService
                 'contact_name' => $user->full_name,
                 'contact_phone' => (string) ($user->phone_number ?? ''),
                 'website' => '',
-                'account_holder' => $this->generalSettings->letterhead_name ?: $name,
-                'iban' => '',
+                'terms_url' => '',
+                'privacy_url' => '',
+                'imprint_url' => '',
             ],
         ];
     }
@@ -108,9 +133,10 @@ class TicketingConnectionService
     /**
      * @param array{
      *     house: array{name: string, slug: string},
-     *     billing: array<string, string|null>|null,
+     *     billing: array<string, string|UploadedFile|null>|null,
      *     rooms: list<array<string, mixed>>,
-     *     reductions: list<array<string, mixed>>
+     *     reductions: list<array<string, mixed>>,
+     *     accept_platform_terms: bool
      * } $draft
      */
     public function connect(User $user, array $draft): TicketingConnection
@@ -130,6 +156,8 @@ class TicketingConnectionService
                 'ownerEmail' => $user->email,
                 'ownerName' => $user->full_name,
                 'billing' => $draft['billing'] === null ? null : TicketingBillingService::payload($draft['billing']),
+                // Die Anfrage lässt ohne den Haken nicht durch.
+                'acceptPlatformTerms' => true,
                 'coreUrl' => config('app.url'),
                 // Als String: je nach Installation ist der Client-Schlüssel numerisch oder eine UUID.
                 'coreClientId' => (string) $client->getKey(),
@@ -155,6 +183,7 @@ class TicketingConnectionService
         try {
             $this->syncRooms($connection, $draft['rooms']);
             $this->syncReductions($connection, $draft['reductions']);
+            $this->billing->uploadLegalDocuments($connection, $draft['billing'] ?? []);
         } catch (TicketingConnectionException $exception) {
             throw new TicketingConnectionException(__(
                 'Connected to artwork tickets, but the sync failed: :message',
@@ -217,7 +246,7 @@ class TicketingConnectionService
                 'zones' => array_map(static fn (array $zone): array => [
                     'name' => $zone['name'],
                     'capacity' => (int) $zone['capacity'],
-                    'defaultPriceCents' => $zone['default_price_cents'],
+                    'defaultPriceCents' => $zone['default_price_cents'] === null ? null : (int) $zone['default_price_cents'],
                 ], $room['zones']),
             ], $rooms),
         ]);

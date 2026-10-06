@@ -1,7 +1,10 @@
 <template>
     <TicketsSettingsHeader :description="$t('Connect this artwork to its ticket house and manage everything ticketing.')">
         <template #actions>
-            <a v-if="connection.connected" :href="connection.dashboardUrl" target="_blank" rel="noopener" class="ui-button">
+            <a v-if="connection.connected" :href="route('ticketing.open', { to: 'settings' })" target="_blank" rel="noopener" class="ui-button">
+                <IconPalette class="size-3.5" />{{ $t('Edit shop appearance') }}
+            </a>
+            <a v-if="connection.connected" :href="route('ticketing.open')" target="_blank" rel="noopener" class="ui-button">
                 <IconExternalLink class="size-3.5" />{{ $t('Open artwork tickets') }}
             </a>
         </template>
@@ -22,7 +25,7 @@
 </template>
 
 <script setup>
-import { IconExternalLink } from '@tabler/icons-vue'
+import { IconExternalLink, IconPalette } from '@tabler/icons-vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import TicketsSettingsHeader from '@/Pages/Settings/Tickets/TicketsSettingsHeader.vue'
 import TicketsConnection from '@/Pages/Settings/Tickets/TicketsConnection.vue'

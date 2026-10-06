@@ -95,6 +95,7 @@ use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Events\UpdateBudget;
 use Artwork\Modules\Project\Jobs\ForceDeleteProjectJob;
 use Artwork\Modules\Project\Jobs\SoftDeleteProjectJob;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Exports\DetailedBudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
@@ -4098,9 +4099,11 @@ class ProjectController extends Controller
 
     public function destroy(
         Project $project,
-        Request $request
+        Request $request,
+        TicketingLock $ticketingLock
     ): RedirectResponse {
         $this->authorize('delete', $project);
+        $ticketingLock->assertProjectDeletable($project);
         // Single, consolidated notification instead of one per deleted event.
         $eventCount = $project->events()->count();
 
@@ -4140,7 +4143,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function bulkDestroy(Request $request): RedirectResponse
+    public function bulkDestroy(Request $request, TicketingLock $ticketingLock): RedirectResponse
     {
         $validated = $request->validate([
             'project_ids' => 'required|array|min:1',
@@ -4148,6 +4151,7 @@ class ProjectController extends Controller
         ]);
 
         $projects = Project::whereIn('id', $validated['project_ids'])->get();
+        $projects->each(fn (Project $project) => $ticketingLock->assertProjectDeletable($project));
 
         foreach ($projects as $project) {
             // Skip projects the user is not allowed to delete instead of failing the whole batch.

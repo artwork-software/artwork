@@ -6,6 +6,8 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
+use Artwork\Modules\Ticketing\Models\TicketingProduction;
+use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Illuminate\Support\Collection;
 
@@ -50,7 +52,6 @@ class TicketingProjectService
         return [
             'connection' => [
                 'connected' => $connection !== null,
-                'dashboardUrl' => $connection?->dashboard_url,
                 'billingComplete' => $billingComplete,
             ],
             'ticketsError' => $ticketsError,
@@ -60,6 +61,11 @@ class TicketingProjectService
                 'description' => $production->description,
                 'reductionTypeIds' => $production->reduction_type_ids,
                 'heroUrl' => $production->heroUrl(),
+                'images' => $production->images->map(static fn (TicketingProductionImage $image): array => [
+                    'id' => $image->id,
+                    'url' => $image->url(),
+                ])->all(),
+                'maxImages' => TicketingProduction::MAX_IMAGES,
                 'linked' => $production->production_id !== null,
                 'status' => $detail['status'] ?? null,
                 'shopUrl' => $detail['shopUrl'] ?? null,
@@ -129,6 +135,7 @@ class TicketingProjectService
                 'classes' => $release->classes,
                 'releasedAt' => $release->released_at?->toIso8601String(),
                 'releasedBy' => $release->releasedBy?->full_name,
+                'syncError' => $release->sync_error,
             ] : null,
         ];
     }

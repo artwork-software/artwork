@@ -71,10 +71,22 @@ class TicketsClient
         string $contentType,
         string $fileName,
     ): array {
-        return $this->send(fn (): Response => $this->house($connection)
-            ->withHeaders(['x-file-name' => $fileName])
-            ->withBody($contents, $contentType)
-            ->put($this->url($path)));
+        return $this->sendFile('PUT', $connection, $path, $contents, $contentType, $fileName);
+    }
+
+    /**
+     * Wie putFile, legt aber ein weiteres an statt eines zu ersetzen.
+     *
+     * @return array<string, mixed>
+     */
+    public function postFile(
+        TicketingConnection $connection,
+        string $path,
+        string $contents,
+        string $contentType,
+        string $fileName,
+    ): array {
+        return $this->sendFile('POST', $connection, $path, $contents, $contentType, $fileName);
     }
 
     /** @return array<string, mixed> */
@@ -95,7 +107,7 @@ class TicketsClient
 
     private function request(): PendingRequest
     {
-        return Http::acceptJson()->timeout(30);
+        return Http::acceptJson()->connectTimeout(3)->timeout(10);
     }
 
     private function url(string $path): string
@@ -112,18 +124,24 @@ class TicketsClient
         try {
             $response = $send();
         } catch (ConnectionException $exception) {
-            throw new TicketingConnectionException(__('artwork tickets could not be reached.'), 0, $exception);
+            throw TicketingConnectionException::transient(__('artwork tickets could not be reached.'), $exception);
         }
 
         if ($response->successful()) {
             return (array) $response->json();
         }
 
+        if ($response->serverError()) {
+            throw TicketingConnectionException::transient(
+                __('artwork tickets rejected the request.') . " (HTTP {$response->status()})"
+            );
+        }
+
         // Die Geschäftsregeln kommen als Code; die beiden, an denen eine Freigabe scheitern kann, in Worten.
         $message = match ($response->json('error.code')) {
-            'HOUSE_DETAILS_MISSING' => __('artwork tickets is still missing the legal details or the bank account of the house. Until they are filled in, nothing can be released for sale.'),
+            'HOUSE_DETAILS_MISSING' => __('artwork tickets is still missing details of the house: the legal details, the payout account verified by Stripe or the legal pages of the shop. Until they are complete, nothing can be released for sale.'),
             'HOUSE_IN_REVIEW' => __('artwork tickets is still reviewing the house. Until it is approved, nothing can be released for sale.'),
-            'HOUSE_DETAILS_LOCKED' => __('artwork tickets keeps the legal details and the bank account once they are complete. They can be changed, but not removed.'),
+            'HOUSE_DETAILS_LOCKED' => __('artwork tickets keeps the legal details once they are complete. They can be changed, but not removed.'),
             default => $response->json('error.message')
                 ?? __('artwork tickets rejected the request.') . " (HTTP {$response->status()})",
         };
@@ -134,5 +152,23 @@ class TicketsClient
         }
 
         throw new TicketingConnectionException($message);
+    }
+
+    /**
+     * @param 'PUT'|'POST' $method
+     * @return array<string, mixed>
+     */
+    private function sendFile(
+        string $method,
+        TicketingConnection $connection,
+        string $path,
+        string $contents,
+        string $contentType,
+        string $fileName,
+    ): array {
+        return $this->send(fn (): Response => $this->house($connection)
+            ->withHeaders(['x-file-name' => $fileName])
+            ->withBody($contents, $contentType)
+            ->send($method, $this->url($path)));
     }
 }

@@ -388,7 +388,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, triggerRef, watch} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, provide, reactive, ref, shallowRef, triggerRef, watch} from "vue";
 import { toYmd } from "@/Helper/IsoWeek.js";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
@@ -507,6 +507,10 @@ const multiEdit = ref(false);
 // im Klick-Handler (nicht im Render) — so re-rendern beim Multi-Edit-Toggle
 // nicht tausende gemountete Kompakt-Kacheln, deren Optik sich gar nicht ändert.
 provide('calendarMultiEdit', multiEdit);
+// Verkauft/Plätze der in artwork tickets freigegebenen Termine, je Termin-ID. Eine reaktive Map,
+// damit eine Antwort nur die Kacheln der betroffenen Termine neu rendert.
+const ticketSales = reactive(new Map());
+provide('calendarTicketSales', ticketSales);
 const isFullscreen = ref(false);
 const showMultiEditModal = ref(false);
 const editEvents = ref([]);
@@ -896,6 +900,7 @@ async function loadMonth(key: string, epoch: number) {
         if (monthEpoch.get(key) !== epoch) return;
         if (controller.signal.aborted) return;
         setCalendarMonthData(key, data?.calendar ?? []);
+        if (!props.isPlanning) loadTicketSales(rec);
 
         loadedMonths.value.add(key);
         failedMonths.value.delete(key);
@@ -915,6 +920,17 @@ async function loadMonth(key: string, epoch: number) {
             loadingMonths.value.delete(key);
         }
     }
+}
+
+// Der Ticket-Hinweis ist Beiwerk: ist tickets nicht erreichbar, bleiben die Kacheln ohne ihn.
+function loadTicketSales(rec: { start: string; end: string }) {
+    axios.get(route("ticketing.calendar-summary"), { params: { start_date: rec.start, end_date: rec.end } })
+        .then(({ data }) => {
+            for (const [eventId, sales] of Object.entries(data)) {
+                ticketSales.set(Number(eventId), sales);
+            }
+        })
+        .catch(() => {});
 }
 
 // Laufenden Request eines Monats verwerfen, damit ein Refetch nicht am

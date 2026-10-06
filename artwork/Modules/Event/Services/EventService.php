@@ -62,6 +62,7 @@ use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Enums\UserFilterTypes;
@@ -94,7 +95,8 @@ readonly class EventService
         private CollectionService $collectionService,
         private EventCollectionService $eventCollectionService,
         private EventTypeService $eventTypeService,
-        private readonly AuthManager $authManager
+        private readonly AuthManager $authManager,
+        private readonly TicketingLock $ticketingLock,
     ) {
         $this->cachedData = null;
     }
@@ -113,6 +115,8 @@ readonly class EventService
         NotificationService $notificationService,
         ProjectTabService $projectTabService,
     ): void {
+        $this->ticketingLock->assertEventDeletable($event);
+
         if (!empty($event->project_id)) {
             $changeService->saveFromBuilder(
                 $changeService
@@ -163,6 +167,10 @@ readonly class EventService
         ProjectTabService $projectTabService,
         bool $sendPerEventNotifications = true,
     ): void {
+        foreach ($events as $event) {
+            $this->ticketingLock->assertEventDeletable($event);
+        }
+
         $deletedEventIds = [];
         try {
             /** @var Event $event */

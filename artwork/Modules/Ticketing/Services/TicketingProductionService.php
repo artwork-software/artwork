@@ -7,6 +7,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingProduction;
+use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -30,9 +31,17 @@ class TicketingProductionService
 
     /**
      * @param array{title: string|null, description: string|null, reduction_type_ids: list<string>|null} $data
+     * @param list<UploadedFile> $images weitere Bilder, hinten angefügt
+     * @param list<int> $removeImageIds weitere Bilder, die herausfallen
      */
-    public function save(Project $project, array $data, ?UploadedFile $hero, bool $removeHero): TicketingProduction
-    {
+    public function save(
+        Project $project,
+        array $data,
+        ?UploadedFile $hero,
+        bool $removeHero,
+        array $images = [],
+        array $removeImageIds = [],
+    ): TicketingProduction {
         $production = $this->for($project);
         $production->fill($data);
 
@@ -52,11 +61,37 @@ class TicketingProductionService
 
         $production->save();
 
+        $removedRemoteIds = $this->removeImages($production, $removeImageIds);
+
+        foreach ($images as $image) {
+            $path = StoredFileName::forUpload($image);
+            Storage::putFileAs(TicketingProduction::HERO_DIRECTORY, $image, $path);
+            $production->images()->create(['path' => $path]);
+        }
+
         if ($production->production_id && ($connection = $this->connections->current())) {
-            $this->push($production, $connection, $removeHero);
+            $this->push($production, $connection, $removeHero, $removedRemoteIds);
         }
 
         return $production;
+    }
+
+    /**
+     * Löscht die Bilder hier und gibt zurück, welche davon tickets schon kennt.
+     *
+     * @param list<int> $ids
+     * @return list<string>
+     */
+    private function removeImages(TicketingProduction $production, array $ids): array
+    {
+        $removed = $production->images()->whereIn('id', $ids)->get();
+
+        foreach ($removed as $image) {
+            Storage::delete($image->storagePath());
+            $image->delete();
+        }
+
+        return $removed->pluck('remote_id')->filter()->values()->all();
     }
 
     /**
@@ -72,6 +107,7 @@ class TicketingProductionService
         $production->production_id = $response['id'];
         $production->save();
         $this->pushHero($production, $connection, false);
+        $this->pushImages($production, $connection, []);
 
         return $production;
     }
@@ -92,10 +128,16 @@ class TicketingProductionService
         return $this->tickets->get($connection, "/productions/{$production->production_id}");
     }
 
-    private function push(TicketingProduction $production, TicketingConnection $connection, bool $removeHero): void
-    {
+    /** @param list<string> $removedRemoteIds */
+    private function push(
+        TicketingProduction $production,
+        TicketingConnection $connection,
+        bool $removeHero,
+        array $removedRemoteIds,
+    ): void {
         $this->tickets->put($connection, '/productions', $this->payload($production, null));
         $this->pushHero($production, $connection, $removeHero);
+        $this->pushImages($production, $connection, $removedRemoteIds);
     }
 
     private function pushHero(TicketingProduction $production, TicketingConnection $connection, bool $remove): void
@@ -116,11 +158,44 @@ class TicketingProductionService
         $this->tickets->putFile(
             $connection,
             $path,
-            Storage::get($file) ?? throw new TicketingConnectionException(__('The picture could not be read.')),
+            $this->read($file),
             Storage::mimeType($file) ?: 'application/octet-stream',
             $production->hero_path,
         );
         $production->update(['hero_synced_at' => now()]);
+    }
+
+    /**
+     * Nimmt in tickets heraus, was hier gelöscht wurde, und reicht nach, was dort noch fehlt.
+     *
+     * @param list<string> $removedRemoteIds
+     */
+    private function pushImages(
+        TicketingProduction $production,
+        TicketingConnection $connection,
+        array $removedRemoteIds,
+    ): void {
+        $base = "/productions/{$production->production_id}/images";
+
+        foreach ($removedRemoteIds as $remoteId) {
+            $this->tickets->delete($connection, "{$base}/{$remoteId}");
+        }
+
+        foreach ($production->images()->whereNull('remote_id')->get() as $image) {
+            $response = $this->tickets->postFile(
+                $connection,
+                $base,
+                $this->read($image->storagePath()),
+                Storage::mimeType($image->storagePath()) ?: 'application/octet-stream',
+                $image->path,
+            );
+            $image->update(['remote_id' => $response['id']]);
+        }
+    }
+
+    private function read(string $file): string
+    {
+        return Storage::get($file) ?? throw new TicketingConnectionException(__('The picture could not be read.'));
     }
 
     /** @return array<string, mixed> */

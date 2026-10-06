@@ -31,6 +31,7 @@ class TicketingEventRelease extends Model
         'tickets_date_id',
         'released_at',
         'released_by_user_id',
+        'sync_error',
     ];
 
     protected $casts = [

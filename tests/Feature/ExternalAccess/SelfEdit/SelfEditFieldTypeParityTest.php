@@ -241,4 +241,51 @@ final class SelfEditFieldTypeParityTest extends TestCase
             'crm_property_id' => $property->id,
         ]);
     }
+
+    #[Test]
+    public function link_with_executable_target_is_rejected(): void
+    {
+        $property = $this->property(CrmPropertyTypeEnum::LINK);
+
+        $this->expectException(ValidationException::class);
+
+        $this->submit($this->external(), ['crm_property:' . $property->id => 'javascript:alert(1)']);
+    }
+
+    #[Test]
+    public function groups_and_properties_follow_the_contact_type_order_like_internally(): void
+    {
+        $groups = [];
+        foreach ([2, 10] as $suffix) {
+            $groups[$suffix] = CrmPropertyGroup::query()->create(['name' => 'Gruppe ' . $suffix, 'is_confidential' => false]);
+        }
+        // Maßgeblich ist die Sortierung im Kontakttyp, nicht die Anlage-Reihenfolge der Gruppen
+        $create = function (CrmPropertyGroup $group, string $name, int $typeOrder): void {
+            $property = CrmProperty::query()->create([
+                'crm_property_group_id' => $group->id,
+                'name' => $name,
+                'type' => CrmPropertyTypeEnum::TEXT->value,
+            ]);
+            $property->contactTypes()->attach($this->type->id, ['is_required' => false, 'sort_order' => $typeOrder]);
+        };
+        $create($groups[10], 'Zuerst B', 3);
+        $create($groups[10], 'Zuerst A', 1);
+        $create($groups[2], 'Danach', 5);
+        $create($this->group, 'Zuletzt', 9);
+
+        $schema = app(ExternalSelfEditFieldResolver::class)->resolveFor($this->external());
+        $propertySections = array_values(array_filter(
+            $schema->sections,
+            static fn ($section) => str_starts_with($section->key, 'crm_group_'),
+        ));
+
+        $this->assertSame(
+            ['Gruppe 10', 'Gruppe 2', 'Allgemein'],
+            array_map(static fn ($section) => $section->label, $propertySections),
+        );
+        $this->assertSame(
+            ['Zuerst A', 'Zuerst B'],
+            array_map(static fn ($field) => $field->label, $propertySections[0]->fields),
+        );
+    }
 }

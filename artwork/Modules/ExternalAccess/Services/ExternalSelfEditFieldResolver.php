@@ -218,12 +218,16 @@ class ExternalSelfEditFieldResolver
                 'contactTypes' => fn ($ct) => $ct->where('crm_contact_types.id', $contactTypeId),
                 'values' => fn ($v) => $v->where('crm_contact_id', $contact->id),
             ])
-            ->orderBy('sort_order')
             ->get()
             ->filter(fn (CrmProperty $property) => $property->type !== null
-                && self::inputTypeFor($property->type) !== null);
+                && self::inputTypeFor($property->type) !== null)
+            // Reihenfolge wie intern (CrmContactController): Sortierung des Kontakttyps
+            ->sortBy(fn (CrmProperty $property) => $this->typeSortOrder($property));
 
-        $byGroup = $properties->groupBy(fn (CrmProperty $p) => $p->group->id);
+        // Gruppen nach der kleinsten Typ-Sortierung ihrer Eigenschaften, wie in der internen Kontaktansicht
+        $byGroup = $properties
+            ->groupBy(fn (CrmProperty $p) => $p->group->id)
+            ->sortBy(fn ($groupProperties) => $groupProperties->min(fn (CrmProperty $p) => $this->typeSortOrder($p)));
 
         $sections = [];
         foreach ($byGroup as $groupProperties) {
@@ -248,10 +252,12 @@ class ExternalSelfEditFieldResolver
             );
         }
 
-        // Stable ordering by the group's own sort order.
-        usort($sections, fn (SelfEditSection $a, SelfEditSection $b) => $a->key <=> $b->key);
-
         return $sections;
+    }
+
+    private function typeSortOrder(CrmProperty $property): int
+    {
+        return (int) ($property->contactTypes->first()?->getRelationValue('pivot')?->getAttribute('sort_order') ?? 0);
     }
 
     /**

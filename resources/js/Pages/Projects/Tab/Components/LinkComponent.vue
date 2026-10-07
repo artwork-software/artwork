@@ -35,8 +35,9 @@
 
             <div v-else>
                 <a
-                    :href="text"
+                    :href="safeLinkHref(text)"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="text-accent-600 hover:underline"
                     v-if="text && text.length > 0"
                 >
@@ -58,6 +59,7 @@ import { createComponentTextSave } from "@/Composeables/componentTextSave.js";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import { IconEdit } from "@tabler/icons-vue";
+import { safeLinkHref } from "@/Helper/SafeUrl.js";
 
 // Für DevTools
 defineOptions({ name: "LinkComponent" });

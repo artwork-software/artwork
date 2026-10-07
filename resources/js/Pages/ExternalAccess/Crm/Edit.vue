@@ -50,10 +50,12 @@
                                 <option value="">{{ $t('Please select') }}</option>
                                 <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
                             </select>
+                            <!-- url als Textfeld wie intern: type="url" lehnt Adressen ohne https:// ab -->
                             <input
                                 v-else
                                 :id="`${section.key}-${field.key}`"
-                                :type="field.inputType"
+                                :type="field.inputType === 'url' ? 'text' : field.inputType"
+                                :inputmode="field.inputType === 'url' ? 'url' : undefined"
                                 v-model="form.values[section.key][field.key]"
                                 class="mt-1 block w-full rounded-lg border-border text-sm"
                             />

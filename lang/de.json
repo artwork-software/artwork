@@ -3277,6 +3277,7 @@
     "Delete sets/stocks to trash": "Sets/Bestand in Papierkorb löschen",
     "Allows deleting sets or stock to trash": "Erlaubt das Löschen von Sets oder Bestand in den Papierkorb",
     "Please select": "Bitte auswählen",
+    "This component has no editable value.": "Diese Komponente hat keinen bearbeitbaren Wert.",
     "All articles": "Alle Artikel",
     "The new project status is no longer marked as planned. Do you want to request verification for all planning events of the project?": "Der neu ausgewählte Projektstatus ist nicht mehr als 'in Planung' markiert. Möchtest du für alle Planungstermine des Projekts eine Überprüfung anfordern?",
     "Request appointments verification": "Überprüfung der Termine anfordern",

@@ -10,6 +10,7 @@ use Artwork\Modules\ExternalAccess\Enums\SelfEditSectionMode;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingFieldChange;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
+use Artwork\Modules\Project\Services\ProjectComponentValueNormalizer;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -199,6 +200,11 @@ class ExternalSelfEditSubmissionService
     {
         if ($value === null || $value === '') {
             return;
+        }
+
+        // Link-Ziele: wie bei Tab-Links keine ausführbaren Schemata (javascript:, data: …)
+        if ($field->inputType === 'url' && ProjectComponentValueNormalizer::isDangerousLinkTarget((string) $value)) {
+            throw ValidationException::withMessages([$errorKey => __('validation.url', ['attribute' => $field->label])]);
         }
 
         $rules = match ($field->inputType) {

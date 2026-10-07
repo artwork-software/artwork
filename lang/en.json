@@ -3266,6 +3266,7 @@
     "Delete sets/stocks to trash": "Delete sets/stocks to trash",
     "Allows deleting sets or stock to trash": "Allows deleting sets or stock to trash",
     "Please select": "Please select",
+    "This component has no editable value.": "This component has no editable value.",
     "All articles": "All articles",
     "The new project status is no longer marked as planned. Do you want to request verification for all planning events of the project?": "The new project status is no longer marked as planned. Do you want to request verification for all planning events of the project?",
     "Request appointments verification": "Request event verification",

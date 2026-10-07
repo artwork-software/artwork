@@ -11,6 +11,7 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Services\ProjectComponentValueNormalizer;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Database\DatabaseManager;
 
@@ -19,6 +20,7 @@ class ExternalComponentValueService
     public function __construct(
         private readonly ExternalScopeResolver $scopeResolver,
         private readonly DatabaseManager $db,
+        private readonly ProjectComponentValueNormalizer $normalizer,
     ) {
     }
 
@@ -42,8 +44,11 @@ class ExternalComponentValueService
             throw new ComponentNotInTabException($component, $tab);
         }
 
+        // Gleiche Typprüfung wie intern (ProjectComponentValueController)
+        $newData = $this->normalizer->normalize($component, $data);
+
         $valueChanged = false;
-        $value = $this->db->transaction(function () use ($external, $project, $component, $data, &$valueChanged) {
+        $value = $this->db->transaction(function () use ($external, $project, $component, $newData, &$valueChanged) {
             $previousValue = ProjectComponentValue::query()
                 ->where('project_id', $project->id)
                 ->where('component_id', $component->id)
@@ -51,7 +56,6 @@ class ExternalComponentValueService
                 ->first();
 
             $oldData = $previousValue?->data;
-            $newData = $this->normalizeData($data);
 
             if ($previousValue === null) {
                 $value = ProjectComponentValue::create([
@@ -86,22 +90,6 @@ class ExternalComponentValueService
         // Keine Benachrichtigung pro Feld: Einladende werden erst beim expliziten
         // "Daten absenden" (ExternalTabSubmissionService) gesammelt informiert.
         return $value;
-    }
-
-    /**
-     * Mirrors ProjectComponentValueController: when a 'text' key is present only that key is kept,
-     * as raw text (the frontend renders line breaks with white-space: pre-line).
-     *
-     * @param array<string, mixed> $data
-     * @return array<string, mixed>
-     */
-    private function normalizeData(array $data): array
-    {
-        if (array_key_exists('text', $data)) {
-            return ['text' => (string) $data['text']];
-        }
-
-        return $data;
     }
 
     private function logExternalEdit(

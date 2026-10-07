@@ -144,7 +144,7 @@
                         <!-- Link with URL -->
                         <a
                             v-if="l.url && l.url.length > 0"
-                            :href="safeHref(l.url)"
+                            :href="safeLinkHref(l.url)"
                             target="_blank"
                             rel="noopener noreferrer nofollow"
                             class="block hover:underline cursor-pointer"
@@ -345,6 +345,7 @@ import axios from "axios"
 import { useI18n } from "vue-i18n"
 import draggable from "vuedraggable"
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js"
+import { safeLinkHref } from "@/Helper/SafeUrl.js"
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue"
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue"
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"
@@ -449,12 +450,7 @@ function normalizeUrl(url) {
     return u
 }
 
-function safeHref(url) {
-    const u = normalizeUrl(url)
-    // nur http(s)
-    if (!/^https?:\/\//i.test(u)) return "#"
-    return u
-}
+
 
 function cleanLinks(rows) {
     return (rows ?? [])

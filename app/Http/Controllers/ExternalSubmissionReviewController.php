@@ -48,6 +48,14 @@ class ExternalSubmissionReviewController extends Controller
 
         $submission->load('fieldChanges', 'externalAccess.crmContact');
 
+        $propertiesById = CrmProperty::query()
+            ->whereIn('id', $submission->fieldChanges
+                ->map(fn (ExternalPendingFieldChange $c) => $this->crmPropertyIdOf($c))
+                ->filter()
+                ->all())
+            ->get()
+            ->keyBy('id');
+
         return Inertia::render('CRM/ExternalSubmissionReview', [
             'contact' => [
                 'id' => $contact->id,
@@ -65,7 +73,9 @@ class ExternalSubmissionReviewController extends Controller
                 'field_changes' => $submission->fieldChanges->map(fn (ExternalPendingFieldChange $c) => [
                     'id' => $c->id,
                     'field_key' => $c->field_key,
-                    'field_label' => $this->resolveFieldLabel($c),
+                    'field_label' => $this->resolveFieldLabel($c, $propertiesById->get($this->crmPropertyIdOf($c))),
+                    // Typ der CRM-Eigenschaft (Checkbox-Werte '1'/'0' zeigt die Seite als Ja/Nein)
+                    'field_type' => $propertiesById->get($this->crmPropertyIdOf($c))?->type?->value,
                     'target_type' => class_basename($c->target_type),
                     'old_value' => $c->old_value,
                     'new_value' => $c->new_value,
@@ -171,15 +181,27 @@ class ExternalSubmissionReviewController extends Controller
         }
     }
 
-    private function resolveFieldLabel(ExternalPendingFieldChange $change): string
+    private function crmPropertyIdOf(ExternalPendingFieldChange $change): ?int
     {
-        if (str_starts_with($change->field_key, 'crm_property:')) {
-            $propertyId = (int) substr($change->field_key, strlen('crm_property:'));
+        return str_starts_with($change->field_key, 'crm_property:')
+            ? (int) substr($change->field_key, strlen('crm_property:'))
+            : null;
+    }
 
-            return CrmProperty::query()->find($propertyId)?->name ?? $change->field_key;
+    private function resolveFieldLabel(ExternalPendingFieldChange $change, ?CrmProperty $property): string
+    {
+        if ($this->crmPropertyIdOf($change) !== null) {
+            return $property?->name ?? $change->field_key;
         }
 
+        // Gleiche Bezeichnungen wie die externe Maske (ExternalSelfEditFieldResolver)
         return match ($change->field_key) {
+            'display_name', 'name' => __('Name'),
+            'contact_person' => __('Contact person'),
+            'phone' => __('Phone'),
+            'website' => __('Website'),
+            'address' => __('Address'),
+            'position' => __('Position'),
             'first_name' => __('First name'),
             'last_name' => __('Last name'),
             'provider_name' => __('Provider name'),

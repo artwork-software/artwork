@@ -37,6 +37,7 @@
             v-else
             :id="inputId"
             :type="inputType"
+            :inputmode="property.type === 'link' ? 'url' : undefined"
             :value="modelValue ?? ''"
             class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
             @input="$emit('update:modelValue', $event.target.value)"
@@ -57,6 +58,7 @@ const props = defineProps({
 defineEmits(['update:modelValue'])
 
 const inputId = computed(() => `crm-prop-${props.property.id}`)
-const inputType = computed(() => ({ number: 'number', date: 'date', link: 'url' })[props.property.type] ?? 'text')
+// Link wie intern als Textfeld: type="url" würde Adressen ohne https:// („www.beispiel.de“) ablehnen
+const inputType = computed(() => ({ number: 'number', date: 'date' })[props.property.type] ?? 'text')
 const selectOptions = computed(() => (props.property.select_values ?? []).filter((value) => value !== '' && value != null))
 </script>

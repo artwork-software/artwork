@@ -7,7 +7,8 @@
         <input
             :id="inputId"
             v-model="url"
-            type="url"
+            type="text"
+            inputmode="url"
             :placeholder="schema.placeholder || 'https://…'"
             :disabled="!editable"
             class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600 disabled:bg-surface-sunken disabled:text-text-subtle"
@@ -16,7 +17,7 @@
 
         <a
             v-if="!editable && url"
-            :href="url"
+            :href="safeLinkHref(url)"
             target="_blank"
             rel="noopener noreferrer"
             class="mt-2 inline-block text-sm text-accent-600 underline break-all"
@@ -32,6 +33,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useExternalComponentSave } from '../useExternalComponentSave.js'
+import { safeLinkHref } from '@/Helper/SafeUrl.js'
 
 const props = defineProps({
     component: { type: Object, required: true },

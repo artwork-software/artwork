@@ -6,6 +6,7 @@ use Artwork\Modules\Project\Events\UpdateProjectComponentData;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
+use Artwork\Modules\Project\Services\ProjectComponentValueNormalizer;
 use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
@@ -91,6 +92,7 @@ class ProjectComponentValueController extends Controller
         Project $project,
         Component $component,
         ProjectComponentVisibilityService $visibilityService,
+        ProjectComponentValueNormalizer $normalizer,
     ): JsonResponse {
         /** @var \Artwork\Modules\User\Models\User $user */
         $user = $request->user();
@@ -101,20 +103,10 @@ class ProjectComponentValueController extends Controller
         // beschreibbar, auch wenn Projekt-Schreibrecht besteht.
         abort_unless($visibilityService->canSeeInProject($user, $component), 403);
 
-        // Fehlendes data oder ein Array als text führten vorher zu TypeError/ErrorException (500).
-        $request->validate([
-            'data' => ['present', 'nullable', 'array'],
-            // Zahlen aus Zahlenfeldern bleiben erlaubt (werden zu Text), nur Listen/Objekte nicht.
-            'data.text' => ['sometimes', 'nullable', function (string $attribute, mixed $value, \Closure $fail): void {
-                if (is_array($value)) {
-                    $fail(__('validation.string', ['attribute' => $attribute]));
-                }
-            }],
-        ]);
+        $request->validate(['data' => ['present', 'nullable', 'array']]);
 
-        $data = $request->input('data') ?? [];
-        // Rohtext; Umbrüche rendert das Frontend per white-space: pre-line.
-        $valueInput = array_key_exists('text', $data) ? ['text' => (string) $data['text']] : $data;
+        // Gleiche Typprüfung wie beim externen Zugriff (ExternalComponentValueService)
+        $valueInput = $normalizer->normalize($component, $request->input('data'));
 
         // Unique-Index (project_id, component_id): parallele Autosaves erzeugen keine Duplikate mehr.
         $value = ProjectComponentValue::query()->updateOrCreate(

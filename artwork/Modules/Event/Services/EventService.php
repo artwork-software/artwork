@@ -43,6 +43,7 @@ use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -245,6 +246,8 @@ readonly class EventService
             $shiftsQualificationsService
         );
         $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+        // Beim Löschen wurde die offene Raumanfrage geschlossen – wiederhergestellt ist sie wieder offen
+        app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents([(int) $event->id]);
 
         SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
     }
@@ -293,29 +296,40 @@ readonly class EventService
         ShiftService $shiftService,
         SubEventService $subEventService,
     ): void {
-        /** @var Event $event */
-        foreach ($events as $event) {
-            $eventDeletedAt = $event->deleted_at?->copy();
-            $this->eventRepository->restore($event);
-            if (!empty($event->project_id)) {
-                $changeService->saveFromBuilder(
-                    $changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($event->project_id)
-                        ->setTranslationKey('Schedule restored')
+        $restoredEventIds = [];
+        try {
+            /** @var Event $event */
+            foreach ($events as $event) {
+                $eventDeletedAt = $event->deleted_at?->copy();
+                $this->eventRepository->restore($event);
+                $restoredEventIds[] = (int) $event->id;
+                if (!empty($event->project_id)) {
+                    $changeService->saveFromBuilder(
+                        $changeService
+                            ->createBuilder()
+                            ->setModelClass(Project::class)
+                            ->setModelId($event->project_id)
+                            ->setTranslationKey('Schedule restored')
+                    );
+                }
+
+                $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
+                $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
+                $shiftService->restoreShifts(
+                    $shiftService->trashedWithEvent($event, $eventDeletedAt),
+                    $shiftsQualificationsService,
                 );
+                $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+
+                SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
             }
-
-            $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
-            $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-            $shiftService->restoreShifts(
-                $shiftService->trashedWithEvent($event, $eventDeletedAt),
-                $shiftsQualificationsService,
-            );
-            $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
-
-            SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
+        } finally {
+            // Gegenstück zu deleteAll: beim Löschen geschlossene Raumanfragen wieder öffnen (Projekt, Serie) – auch
+            // für die bis zu einem Fehler bereits wiederhergestellten Termine. Bestehende Meldungen werden an Ort
+            // und Stelle geöffnet, daher auch bei vielen Terminen keine Mail-/Toast-Flut.
+            if ($restoredEventIds !== []) {
+                app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents($restoredEventIds);
+            }
         }
     }
 
@@ -2455,17 +2469,14 @@ readonly class EventService
                 ->distinct()
                 ->pluck('project_id');
 
-            // Offene Raumanfragen wie beim Einzel-Löschen als erledigt markieren – sonst blieben
-            // Annehmen/Ablehnen stehen und führten auf einen Termin im Papierkorb (404)
-            $openRequestIds = Event::query()
-                ->whereIn('id', $eventIds)
-                ->where('occupancy_option', true)
-                ->pluck('id');
-
             $this->eventRepository->deleteEvents($eventIds);
 
+            // Raumanfrage-Meldungen wie beim Einzel-Löschen schließen – sonst blieben Annehmen/Ablehnen bzw. bei
+            // abgelehnten Terminen (ohne Raum, keine Anfrage mehr) Änderungsanfrage/Löschen stehen und führten auf
+            // einen Termin im Papierkorb (404). Alle Termine übergeben: die Funktion schließt nur offene Anfragen
+            // und entfernt die Absage-Meldungen (UPSERT)
             app(NotificationService::class)->closeRoomRequestNotificationsForDeletedEvents(
-                $openRequestIds->map(static fn ($id): int => (int) $id)->all(),
+                $eventIds->map(static fn ($id): int => (int) $id)->all(),
                 'deleted',
                 $this->deletingUser()
             );

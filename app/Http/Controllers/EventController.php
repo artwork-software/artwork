@@ -3011,28 +3011,58 @@ class EventController extends Controller
             return;
         }
 
-        // Läuft im finally: ein Fehler hier darf den ursprünglichen Fehler nicht überdecken und die übrigen
-        // Termine nicht um ihre Meldung bringen – je Termin abgesichert
-        try {
-            $stillRequestedEvents = Event::query()
-                ->whereIn('id', $eventIds)
-                ->where('occupancy_option', true)
-                ->where('is_planning', false)
-                ->whereNotNull('room_id')
-                ->get();
-        } catch (Throwable $exception) {
-            report($exception);
+        // Läuft im finally: die Hilfsmethode sichert Abfrage und jeden Termin einzeln ab, ein Fehler hier
+        // überdeckt den ursprünglichen nicht und kostet die übrigen Termine nicht ihre Meldung
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests($eventIds);
+    }
 
+    /**
+     * Stand der offenen Raumanfragen vor einer Massenänderung: Raum (Empfängerkreis) und alles, was in der
+     * Anfrage-Meldung steht. Dient notifyRoomAdminsOfChangedOpenRequests() als Vergleich.
+     *
+     * @param array<int, int|string> $eventIds
+     * @return array<int, string>
+     */
+    private function openRoomRequestSnapshot(array $eventIds): array
+    {
+        if ($eventIds === []) {
+            return [];
+        }
+
+        return Event::query()
+            ->whereIn('id', $eventIds)
+            ->where('occupancy_option', true)
+            ->get(['id', 'room_id', 'start_time', 'end_time', 'eventName', 'event_type_id', 'project_id'])
+            ->mapWithKeys(static fn (Event $event): array => [
+                (int) $event->getKey() => (string) json_encode($event->getAttributes()),
+            ])
+            ->all();
+    }
+
+    /**
+     * Nach Serien-/Multi-Edit-/Bulk-Änderungen wie updateEvent bzw. moveEventsToCell: geänderte offene Anfragen
+     * melden bzw. aktualisieren – bei Raumwechsel bekommen die Admins des neuen Raums die Anfrage, die des alten
+     * verlieren sie. Unveränderte Anfragen (z. B. nur Status geändert) bleiben unberührt.
+     *
+     * @param array<int, string> $openRoomRequestsBefore
+     */
+    private function notifyRoomAdminsOfChangedOpenRequests(array $openRoomRequestsBefore): void
+    {
+        if ($openRoomRequestsBefore === []) {
             return;
         }
 
-        foreach ($stillRequestedEvents as $stillRequestedEvent) {
-            try {
-                $this->roomRequestNotificationService->notifyRoomAdmins($stillRequestedEvent);
-            } catch (Throwable $exception) {
-                report($exception);
-            }
+        $openRoomRequestsAfter = $this->openRoomRequestSnapshot(array_keys($openRoomRequestsBefore));
+        $changedEventIds = array_keys(array_filter(
+            $openRoomRequestsAfter,
+            static fn (string $after, int $eventId): bool => $openRoomRequestsBefore[$eventId] !== $after,
+            ARRAY_FILTER_USE_BOTH
+        ));
+        if ($changedEventIds === []) {
+            return;
         }
+
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests($changedEventIds);
     }
 
     /**
@@ -3374,6 +3404,8 @@ class EventController extends Controller
             }
         }
 
+        $openRoomRequestsBefore = $this->openRoomRequestSnapshot($seriesEvents->modelKeys());
+
         // Alles oder nichts: ein Fehler mitten in der Serie darf sie nicht halb verschoben zurücklassen.
         DB::transaction(function () use ($seriesEvents, $request): void {
             foreach ($seriesEvents as $seriesEvent) {
@@ -3533,6 +3565,8 @@ class EventController extends Controller
             }
         });
 
+        $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
+
         foreach ($seriesEvents as $seriesEvent) {
             $freshSeriesEvent = $seriesEvent->fresh();
             SafeBroadcast::send(new EventCreated($freshSeriesEvent, $freshSeriesEvent->room_id));
@@ -3612,7 +3646,8 @@ class EventController extends Controller
 
         // Über den Service wiederherstellen, damit auch die mitgetrashten
         // Schichten (inkl. shift_workers), Timelines, Kommentare und SubEvents
-        // zurückkommen — nicht nur das Event selbst.
+        // zurückkommen — nicht nur das Event selbst. Die beim Löschen geschlossene
+        // Raumanfrage öffnet der Service wieder (wie bei Projekt-/Serien-Wiederherstellung).
         $this->eventService->restore(
             $event,
             $shiftsQualificationsService,
@@ -3622,13 +3657,6 @@ class EventController extends Controller
             $shiftService,
             $subEventService
         );
-
-        // Beim Löschen wurde die offene Raumanfrage als erledigt markiert – wiederhergestellt ist sie
-        // wieder offen, die Raumadmins brauchen Annehmen/Ablehnen zurück
-        $event->refresh();
-        if ($event->occupancy_option && $event->room_id !== null) {
-            $this->roomRequestNotificationService->notifyRoomAdmins($event);
-        }
 
         return Redirect::route('events.trashed');
     }
@@ -3871,6 +3899,9 @@ class EventController extends Controller
 
         $eventIds = $request->collect('events');
         $events = $this->authorizedMultiEditEvents($eventIds, $this->multiEditTargetRoom($request), false);
+        $openRoomRequestsBefore = $this->openRoomRequestSnapshot(
+            array_map(static fn (Event $event): int => (int) $event->getKey(), $events)
+        );
 
         foreach ($events as $event) {
             $desiredRoomIds[] = $event->getAttribute('room_id');
@@ -4030,6 +4061,7 @@ class EventController extends Controller
             SafeBroadcast::send(new EventCreated($freshEvent, $freshEvent->room_id));
         }
 
+        $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
 
         /*return new JsonResponse([
             'desiredRoomIds' => array_values(array_unique($desiredRoomIds)),
@@ -4446,10 +4478,12 @@ class EventController extends Controller
             );
         }
 
+        $openRoomRequestsBefore = $this->openRoomRequestSnapshot([(int) $event->id]);
         $this->eventService->updateBulkEvent(
             $data,
             $event
         );
+        $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
 
         $freshEvent = $event->fresh();
         // Broadcasts nach der Response — hängender Websocket-Server darf den Patch nicht bremsen
@@ -4554,6 +4588,9 @@ class EventController extends Controller
             }
         }
 
+        $openRoomRequestsBefore = $this->openRoomRequestSnapshot(
+            $eventIds->map(static fn ($id): int => (int) $id)->all()
+        );
         $this->eventService->bulkMultiEditEvent(
             $eventIds,
             $request->only([
@@ -4566,6 +4603,8 @@ class EventController extends Controller
                 'selectedEndTime'
             ])
         );
+
+        $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
 
         // Broadcasts nach der Response (hängender Websocket-Server bremst sonst den Client) – einzige Stelle,
         // das Repository sendet nicht mehr selbst (vorher doppelt)

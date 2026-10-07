@@ -578,21 +578,38 @@ class NotificationService
             return false;
         }
 
-        $data = json_decode($existingNotification->data, true);
+        $this->markRoomRequestNotificationModified(
+            (string) $existingNotification->id,
+            json_decode($existingNotification->data, true),
+            $newDescription
+        );
+
+        return true;
+    }
+
+    /**
+     * Offene Raumanfrage als „geändert“ kennzeichnen und neu als ungelesen zeigen (Update über den Primärschlüssel).
+     *
+     * @param array<string, mixed> $data
+     * @param array<int, array<string, mixed>> $newDescription
+     */
+    public function markRoomRequestNotificationModified(
+        string $notificationId,
+        array $data,
+        array $newDescription
+    ): void {
         $data['isModified'] = true;
         $data['modifiedAt'] = now()->translatedFormat('d.m.Y H:i');
         $data['modifiedCount'] = ($data['modifiedCount'] ?? 0) + 1;
         $data['description'] = $newDescription;
 
         DB::table('notifications')
-            ->where('id', $existingNotification->id)
+            ->where('id', $notificationId)
             ->update([
                 'data' => json_encode($data),
                 'updated_at' => now(),
                 'read_at' => null,
             ]);
-
-        return true;
     }
 
     public function updateRoomRequestNotificationStatus(int $eventId, string $status, ?User $handledBy = null): void
@@ -690,6 +707,77 @@ class NotificationService
                     ->where('id', $notification->id)
                     ->update(['data' => json_encode($data)]);
             }
+        }
+    }
+
+    /**
+     * Raumanfrage-Meldungen mehrerer Termine in einem Scan je 500 Termine (data->eventId hat keinen Index), nach
+     * Termin gruppiert, jüngste zuerst. Ohne $includeHandled nur offene Anfragen.
+     *
+     * @param array<int, int> $eventIds
+     * @return array<int, list<array{id: string, notifiable_id: int, data: array<string, mixed>}>>
+     */
+    public function roomRequestNotificationsByEvent(array $eventIds, bool $includeHandled): array
+    {
+        $eventIds = array_values(array_unique(array_map('intval', $eventIds)));
+        $notificationsByEvent = [];
+
+        foreach (array_chunk($eventIds, 500) as $eventIdChunk) {
+            $query = DB::table('notifications')
+                ->whereRaw('JSON_VALID(data)')
+                ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+                ->whereIn('data->eventId', array_map('strval', $eventIdChunk));
+            if (!$includeHandled) {
+                $query->whereNull('data->handledStatus');
+            }
+
+            $notifications = $query
+                ->orderByDesc('updated_at')
+                ->orderByDesc('created_at')
+                ->get(['id', 'notifiable_id', 'data']);
+
+            foreach ($notifications as $notification) {
+                $data = json_decode($notification->data, true);
+                $notificationsByEvent[(int) ($data['eventId'] ?? 0)][] = [
+                    'id' => (string) $notification->id,
+                    'notifiable_id' => (int) $notification->notifiable_id,
+                    'data' => $data,
+                ];
+            }
+        }
+
+        return $notificationsByEvent;
+    }
+
+    /**
+     * Gegenstück zu closeRoomRequestNotificationsForDeletedEvents() beim Wiederherstellen: Annehmen/Ablehnen
+     * zurück, Erledigt-Vermerk entfernen, wieder ungelesen – ein Update je 500 Meldungen.
+     *
+     * @param array<int, string> $notificationIds
+     */
+    public function reopenRoomRequestNotificationsByIds(array $notificationIds): void
+    {
+        foreach (array_chunk(array_values(array_unique($notificationIds)), 500) as $notificationIdChunk) {
+            DB::table('notifications')
+                ->whereIn('id', $notificationIdChunk)
+                ->update([
+                    'data' => DB::raw(
+                        "JSON_SET(JSON_REMOVE(data, '$.handledStatus', '$.handledBy', '$.handledAt'), "
+                        . "'$.buttons', JSON_ARRAY('show_in_calendar', 'accept', 'decline'))"
+                    ),
+                    'updated_at' => now(),
+                    'read_at' => null,
+                ]);
+        }
+    }
+
+    /**
+     * @param array<int, string> $notificationIds
+     */
+    public function deleteRoomRequestNotificationsByIds(array $notificationIds): void
+    {
+        foreach (array_chunk(array_values(array_unique($notificationIds)), 500) as $notificationIdChunk) {
+            DB::table('notifications')->whereIn('id', $notificationIdChunk)->delete();
         }
     }
 

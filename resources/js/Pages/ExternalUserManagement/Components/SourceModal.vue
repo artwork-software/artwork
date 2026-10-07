@@ -673,7 +673,8 @@ export default defineComponent({
                     {
                         type: this.form.type,
                         config: this.buildConfigForType(),
-                    }
+                    },
+                    { skipErrorToast: true } // Ergebnis steht im Modal
                 );
 
                 this.testResult = {

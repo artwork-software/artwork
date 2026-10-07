@@ -96,3 +96,20 @@ test('budget, funding sources, document requests and BI snapshots use the instan
         assert.doesNotMatch(source, /toLocaleString\('de-DE'|`\$\{day\}\.\$\{month\}\.\$\{year\}`/, file)
     }
 })
+
+test('budget sums, booking amounts, residency costs and BI percentages use the instance number format', async () => {
+    const { readFileSync } = await import('node:fs')
+    const files = {
+        'resources/js/Pages/Projects/Components/Budget/RelevantBudgetDataSumModal.vue': /formatNumber\(value \?\? 0, 2\)/,
+        'resources/js/Pages/Projects/Components/ArtistResidenciesComponents/AddEditArtistResidenciesModal.vue': /:locale="numberLocale"/,
+        'resources/js/Pages/Projects/Components/BiComponents/BiKpiHeader.vue': /instanceFormat\.formatNumber\(v, 1\)/,
+        'resources/js/Layouts/Components/Budget/BookingModalContents.vue': /toCurrencyString\(booking\.buchungsbetrag\)/,
+        'resources/js/Layouts/Components/SageAssignedDataModal.vue': /this\.toCurrencyString\(value\)/,
+        'resources/js/Pages/Projects/Tab/Components/BudgetInformations.vue': /formatCurrency\(amount \|\| 0\)/,
+    }
+    for (const [file, usage] of Object.entries(files)) {
+        const source = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8')
+        assert.match(source, usage, file)
+        assert.doesNotMatch(source, /['"]de-DE['"]|replace\('\.', ','\)/, file)
+    }
+})

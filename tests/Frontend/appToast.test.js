@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+    failedRequestMessage,
     isInertiaRequest,
     messageForFailedRequest,
     onAppToast,
@@ -20,6 +21,18 @@ test('maps failed request statuses to a user message', () => {
     // Validierung zeigt das Formular selbst, 200 ist z. B. ein OAuth-Redirect
     assert.equal(messageForFailedRequest(422), null)
     assert.equal(messageForFailedRequest(200), null)
+})
+
+test('dialogs that skip the global toast still name the reason', () => {
+    // Validierung vor Servermeldung vor allgemeiner Toast-Meldung vor Fallback
+    assert.equal(failedRequestMessage({isAxiosError: true, response: {status: 422, data: {errors: {name: ['Name fehlt']}, message: 'x'}}}), 'Name fehlt')
+    assert.equal(failedRequestMessage({isAxiosError: true, response: {status: 409, data: {message: 'Schon vergeben'}}}), 'Schon vergeben')
+    assert.equal(failedRequestMessage({isAxiosError: true}), 'The connection to the server failed. Please check your network and try again.')
+    assert.equal(failedRequestMessage({isAxiosError: true, response: {status: 403, data: {}}}), 'You are not allowed to perform this action.')
+    assert.equal(failedRequestMessage({isAxiosError: true, response: {status: 422, data: {}}}), 'Failed to save')
+    // Kein axios-Fehler (z. B. Inertia-Feldmap ohne Einträge): nie „Verbindung fehlgeschlagen“
+    assert.equal(failedRequestMessage({}, 'Saving failed'), 'Saving failed')
+    assert.equal(failedRequestMessage(new Error('boom')), 'Failed to save')
 })
 
 test('only failed mutations outside Inertia raise a global toast', () => {
@@ -99,6 +112,39 @@ test('components that show request errors themselves opt out of the global toast
         'Pages/Settings/EventType/Components/Modals/AddEditBiTagModal.vue': 2,
         'Pages/Settings/EventType/Components/Modals/AssignBiTagEventTypesModal.vue': 1,
         'Pages/Settings/BiSettings/Components/BiAudienceCategoryManager.vue': 3,
+        // Modals/Panels mit eigener Fehlermeldung bzw. Lesezugriffe per POST im Hintergrund
+        'Components/Crm/CreateCrmArtistModal.vue': 1,
+        'Components/SearchBars/ProjectSearch.vue': 3,
+        'Components/SearchBars/RoomSearch.vue': 1,
+        'Layouts/Components/EventComponent.vue': 3,
+        'Layouts/Components/RoomRequestDialogComponent.vue': 1,
+        'Pages/CRM/Components/InviteExternalModal.vue': 1,
+        'Pages/ExternalAccess/Project/Components/Types/ExternalCrmContactList.vue': 1,
+        'Pages/ExternalAccess/Project/Components/Types/ExternalCrmContactModal.vue': 2,
+        'Pages/ExternalAccess/Project/Components/Types/ExternalDocuments.vue': 2,
+        'Pages/ExternalUserManagement/Components/SourceModal.vue': 1,
+        'Pages/ExternalUserManagement/Index.vue': 2,
+        'Pages/Inventory/Components/Article/PropertyFileCell.vue': 1,
+        'Pages/Inventory/LayoutComponents/InventoryFilterComponent.vue': 1,
+        'Pages/Projects/Components/AddShiftModal.vue': 3,
+        'Pages/Projects/Components/BulkComponents/BulkMultiEditModal.vue': 1,
+        'Pages/Projects/Components/ProjectAllDocumentsComponent.vue': 1,
+        'Pages/Projects/Components/ProjectDocumentsComponent.vue': 1,
+        'Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue': 1,
+        'Pages/Projects/Tab/Components/CrmContactFormModal.vue': 1,
+        'Pages/Projects/Tab/Components/CrmContactListComponent.vue': 2,
+        'Pages/Projects/Tab/Components/ExternalTabStatus.vue': 2,
+        'Pages/Shifts/Components/ProjectAssignPersonModal.vue': 1,
+        'Pages/Shifts/Components/ProjectAssignmentModal.vue': 1,
+        'Pages/Shifts/Components/ShiftReplacementModal.vue': 1,
+        'Pages/Shifts/Components/ShowUserShiftsModal.vue': 2,
+        'Pages/Shifts/Components/UserOvertimePanel.vue': 1,
+        'Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue': 3,
+        'Pages/Shifts/ShiftPlan.vue': 5,
+        'Pages/Shifts/ShiftPlanDailyView.vue': 4,
+        'Pages/Shifts/ShiftPlanListView.vue': 2,
+        'Pages/Shifts/WeekStatus/WeekStatusDetailModal.vue': 1,
+        'Pages/ToolSettings/Mail/Index.vue': 1,
     }
     for (const [file, count] of Object.entries(expected)) {
         assert.equal(optOuts(read(file)), count, file)

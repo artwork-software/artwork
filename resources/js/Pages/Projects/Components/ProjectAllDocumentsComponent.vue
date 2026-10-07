@@ -195,6 +195,7 @@ async function uploadDocumentToProject(file: File) {
     try {
         await axios.post(route('project_files.store', { project: props.project.id }), formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
+            skipErrorToast: true, // Fehler steht am Upload-Feld
         })
         // Erfolgreich: Liste wird vom Listener aktualisiert
     } catch (error: any) {

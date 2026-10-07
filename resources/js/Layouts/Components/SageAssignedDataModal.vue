@@ -226,9 +226,7 @@ export default defineComponent({
         formatBookingDataDate,
         formatDateTime,
         formattedAmount(value) {
-            return Number(String(value).replace(',', '.')).toLocaleString('de-DE', {
-                minimumFractionDigits: 2
-            });
+            return this.toCurrencyString(value);
         },
         saveComment(sageAssignedData) {
             this.bookingDataCommentForm.sageAssignedDataId = sageAssignedData.id;

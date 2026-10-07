@@ -124,8 +124,9 @@ async function save() {
             ? await axios.patch(
                 route('external.project.tab.crm-contacts.update', { ...props.routeParams, crmContact: props.contact.id }),
                 payload,
+                { skipErrorToast: true }, // Fehler steht im Modal
             )
-            : await axios.post(route('external.project.tab.crm-contacts.store', props.routeParams), payload)
+            : await axios.post(route('external.project.tab.crm-contacts.store', props.routeParams), payload, { skipErrorToast: true })
         emit('saved', data.contact)
         emit('close')
     } catch (e) {

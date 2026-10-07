@@ -122,6 +122,7 @@ async function onFilesChosen(event) {
         try {
             await axios.post(route('external.project.tab.documents.store', routeParams()), formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
+                skipErrorToast: true, // Fehler steht am Upload
             })
             uploadedCount.value++
         } catch (error) {
@@ -138,7 +139,7 @@ async function onFilesChosen(event) {
 async function removeFile(file) {
     if (!window.confirm($t('Remove') + ` „${file.name}“?`)) return
     try {
-        await axios.delete(route('external.project.tab.documents.destroy', { project: props.projectId, tab: props.tabId, file: file.id }))
+        await axios.delete(route('external.project.tab.documents.destroy', { project: props.projectId, tab: props.tabId, file: file.id }), { skipErrorToast: true }) // Fehler steht am Upload
         documents.value = documents.value.filter((d) => d.id !== file.id)
     } catch (e) {
         uploadError.value = $t('Could not save. Try again.')

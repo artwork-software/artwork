@@ -64,6 +64,27 @@ export function messageForFailedRequest(status) {
 }
 
 /**
+ * Meldung für einen Request, dessen Fehler ein Dialog selbst anzeigt (skipErrorToast):
+ * erste Validierungsmeldung, sonst Servermeldung, sonst dieselbe Meldung wie der globale
+ * Toast (Netzwerk, 403, 404, 5xx), sonst der übersetzte Fallback.
+ */
+export function failedRequestMessage(error, fallback = 'Failed to save') {
+    const fieldErrors = error?.response?.data?.errors
+    const firstFieldError = fieldErrors && typeof fieldErrors === 'object'
+        ? Object.values(fieldErrors).flat().find(Boolean)
+        : null
+    if (firstFieldError) {
+        return firstFieldError
+    }
+    const serverMessage = error?.response?.data?.message
+    if (serverMessage) {
+        return serverMessage
+    }
+    const requestMessage = error?.isAxiosError ? messageForFailedRequest(error?.response?.status) : null
+    return t(requestMessage ?? fallback)
+}
+
+/**
  * Für axios: nur schreibende Requests melden – Lesezugriffe im Hintergrund (Tooltips,
  * Nachladen) haben eigene Zustände und würden sonst zu viele Meldungen erzeugen.
  * Requests mit `skipErrorToast: true` in der Config zeigen ihren Fehler selbst an;

@@ -191,7 +191,7 @@ async function remove(contact) {
     if (!window.confirm($t('Remove {name} from the list?', { name: contact.display_name }))) return
     actionError.value = ''
     try {
-        await axios.delete(route('external.project.tab.crm-contacts.destroy', { ...routeParams.value, crmContact: contact.id }))
+        await axios.delete(route('external.project.tab.crm-contacts.destroy', { ...routeParams.value, crmContact: contact.id }), { skipErrorToast: true }) // Fehler steht unter der Liste
         contacts.value = contacts.value.filter((c) => c.id !== contact.id)
     } catch (e) {
         actionError.value = e?.response?.data?.message ?? $t('Could not save. Try again.')

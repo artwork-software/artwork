@@ -120,9 +120,11 @@ async function save() {
         property_values: values.value,
     }
     try {
+        // Fehler steht im Modal – kein zusätzlicher globaler Toast
+        const requestConfig = { skipErrorToast: true }
         const { data } = isEdit.value
-            ? await axios.patch(route('projects.components.crm-contacts.update', { ...routeParams.value, crmContact: props.contact.id }), payload)
-            : await axios.post(route('projects.components.crm-contacts.store', routeParams.value), payload)
+            ? await axios.patch(route('projects.components.crm-contacts.update', { ...routeParams.value, crmContact: props.contact.id }), payload, requestConfig)
+            : await axios.post(route('projects.components.crm-contacts.store', routeParams.value), payload, requestConfig)
         emit('saved', data.contact)
         emit('close')
     } catch (e) {

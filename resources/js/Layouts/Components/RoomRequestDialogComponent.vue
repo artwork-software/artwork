@@ -705,7 +705,9 @@ export default {
                         end: endFull,
                         currentEventId: this.event.id
                     }
-                }).then(response => this.roomCollisionArray = response.data);
+                }, { skipErrorToast: true }) // Lesezugriff im Hintergrund
+                    .then(response => this.roomCollisionArray = response.data)
+                    .catch(() => { /* Kollisionsanzeige ist best effort */ });
             }
         },
         updateTimes() {

@@ -284,17 +284,19 @@ const updateOrCreate = async () => {
 
     try {
         const payload = { dataset: dataset.value };
+        // Fehler steht im Modal – kein zusätzlicher globaler Toast
+        const requestConfig = { skipErrorToast: true };
 
         if (props.preset) {
             // Preset-Modus: Update des Timeline-Presets
             await axios.patch(route('timeline-presets.update', {shiftPresetTimeline: props.preset.id}), {
                 name: presetName.value,
                 dataset: dataset.value
-            });
+            }, requestConfig);
         } else if(props.timelineToEdit){
-            await axios.post(route('edit.timeline.event', {event: props.event.id}), payload);
+            await axios.post(route('edit.timeline.event', {event: props.event.id}), payload, requestConfig);
         } else {
-            await axios.post(route('create.timeline.event', {event: props.event.id}), payload);
+            await axios.post(route('create.timeline.event', {event: props.event.id}), payload, requestConfig);
         }
 
         emit('close');

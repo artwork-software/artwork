@@ -357,6 +357,7 @@
                                             <CountUp
                                                 :value="Number(calculateTotalNights())"
                                                 :decimals="0"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -368,7 +369,7 @@
                                                 :value="Number(artistResidency.cost_per_night)"
                                                 :decimals="2"
                                                 :suffix="' ' + $currencySymbol()"
-                                                locale="de-DE"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -380,7 +381,7 @@
                                                 :value="Number(calculateTotalCost)"
                                                 :decimals="2"
                                                 :suffix="' ' + $currencySymbol()"
-                                                locale="de-DE"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -398,6 +399,7 @@
                                             <CountUp
                                                 :value="Number(calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance))"
                                                 :decimals="0"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -409,7 +411,7 @@
                                                 :value="Number(artistResidency.daily_allowance)"
                                                 :decimals="2"
                                                 :suffix="' ' + $currencySymbol()"
-                                                locale="de-DE"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -421,7 +423,7 @@
                                                 :value="Number(calculateTotalDailyAllowance)"
                                                 :decimals="2"
                                                 :suffix="' ' + $currencySymbol()"
-                                                locale="de-DE"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -433,7 +435,7 @@
                                                 :value="Number(calculateBreakfastDeduction)"
                                                 :decimals="2"
                                                 :suffix="' ' + $currencySymbol()"
-                                                locale="de-DE"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-danger"
                                             />
                                         </dd>
@@ -445,7 +447,7 @@
                                                 :value="Number(calculatePayoutPerDiem)"
                                                 :decimals="2"
                                                 :suffix="' ' + $currencySymbol()"
-                                                locale="de-DE"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -461,7 +463,7 @@
                                         :value="Number(calculateTotalCost) + Number(calculatePayoutPerDiem)"
                                         :decimals="2"
                                         :suffix="' ' + $currencySymbol()"
-                                        locale="de-DE"
+                                        :locale="numberLocale"
                                         class="tabular-nums text-sm font-bold text-text"
                                     />
                                 </dd>
@@ -537,7 +539,10 @@ import VueDatePicker from "@vuepic/vue-datepicker";
 import CrmPropertyValueInput from "@/Pages/CRM/Components/CrmPropertyValueInput.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {usePermission} from "@/Composeables/Permission.js";
+import {useInstanceFormat} from "@/Composeables/InstanceFormat.js";
 const $t = useTranslation()
+// Zahlen im Format der Instanz (Einstellungen → Regionale Formate)
+const { numberLocale } = useInstanceFormat()
 const { can, hasAdminRole } = usePermission(usePage().props)
 const canManageCrm = computed(() => can('crm manager') || hasAdminRole())
 

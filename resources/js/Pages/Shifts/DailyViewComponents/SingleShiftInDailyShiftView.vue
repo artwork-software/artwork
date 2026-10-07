@@ -787,7 +787,7 @@ const checkShiftCollision = async (shiftQualificationId, forceRefresh = false) =
             shift_id: props.shift.id
         };
 
-        const response = await axios.post(route('shift.check-collisions'), requestParams);
+        const response = await axios.post(route('shift.check-collisions'), requestParams, { skipErrorToast: true }); // Lesezugriff, Fallback ohne Kollisionen
 
         assignablePeopleCache.value[shiftQualificationId] = people.map(person => {
             const collisionData = response.data.find(d =>
@@ -1056,7 +1056,7 @@ const runPreflightThenAssign = async (user, shiftQualificationId, isOverbooked) 
             shift_id: props.shift.id,
             employable_type: user.type === 'freelancer' || user.type === 'service_provider' ? user.type : 'user',
             employable_id: user.id,
-        });
+        }, { skipErrorToast: true }); // Vorabprüfung, bei Fehler direkt zuweisen
         preflight = data;
     } catch {
         preflight = null;
@@ -1135,7 +1135,7 @@ const handleConfirmDelete = (confirmed) => {
     if (!confirmed) return;
     // axios statt router.delete: Fehler (z.B. fehlende Gewerksplanung) werden angezeigt statt
     // verschluckt, und die Antwort nimmt die Schicht sofort aus dem Raster (nicht nur per WebSocket)
-    axios.delete(route('shifts.destroy', { shift: props.shift.id }))
+    axios.delete(route('shifts.destroy', { shift: props.shift.id }), { skipErrorToast: true }) // Fehler zeigt der eigene Toast
         .then(({ data }) => {
             if (data?.shift) applySavedShift?.(data)
         })

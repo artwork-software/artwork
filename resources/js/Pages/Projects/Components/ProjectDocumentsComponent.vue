@@ -196,7 +196,8 @@ async function uploadDocumentToProject(file: File) {
     if (props.tab_id) formData.append('tabId', String(props.tab_id))
     try {
         await axios.post(route('project_files.store', { project: props.project.id }), formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+            headers: { 'Content-Type': 'multipart/form-data' },
+            skipErrorToast: true, // Fehler steht am Upload-Feld
         })
     } catch (error: any) {
         if (error?.response?.data?.errors) documentForm.errors = error.response.data.errors

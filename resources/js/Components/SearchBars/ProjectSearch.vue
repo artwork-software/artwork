@@ -187,7 +187,7 @@ async function loadRecentProjects() {
         .filter((id) => Number.isInteger(id) && id > 0)
     if (ids.length === 0) return
     try {
-        const { data } = await axios.post(route('project.filterExistingIds'), { ids })
+        const { data } = await axios.post(route('project.filterExistingIds'), { ids }, { skipErrorToast: true }) // Lesezugriff, best effort
         const existing = new Set((Array.isArray(data) ? data : []).map((id: any) => Number(id)))
         recentProjects.value = recentProjects.value.filter((p) => existing.has(Number(p.id)))
     } catch {
@@ -209,7 +209,7 @@ async function fetchProjects(q: string) {
                 get_first_last_event: !!props.getFirstLastEvent,
                 wantsJson: true,
             },
-            { signal: controller.signal }
+            { signal: controller.signal, skipErrorToast: true } // Fehler steht im Dropdown
         )
         projects.value = Array.isArray(data) ? data : []
     } catch (e: any) {
@@ -298,7 +298,7 @@ async function selectProject(project: Project) {
                 project_search: project.name,
                 get_first_last_event: true,
                 wantsJson: true,
-            })
+            }, { skipErrorToast: true }) // Lesezugriff, Fallback auf Schnellauswahl-Daten
             const match = Array.isArray(data)
                 ? data.find((p: any) => Number(p.id) === Number(project.id))
                 : null

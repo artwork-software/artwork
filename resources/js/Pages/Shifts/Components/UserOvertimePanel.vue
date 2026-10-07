@@ -134,6 +134,7 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import axios from 'axios'
+import { failedRequestMessage } from '@/Helper/appToast.js'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
@@ -162,13 +163,13 @@ const submitPayout = async () => {
         const res = await axios.post(route('user.overtime.payout', { user: props.userId }), {
             minutes: totalMinutes.value,
             comment: form.comment || null,
-        })
+        }, { skipErrorToast: true }) // Fehler steht im Panel
         local.value = res.data
         form.hours = 0
         form.minutes = 0
         form.comment = ''
     } catch (e) {
-        error.value = e?.response?.data?.message || 'Error'
+        error.value = failedRequestMessage(e)
     } finally {
         submitting.value = false
     }

@@ -550,7 +550,7 @@ const submit = () => {
     serverError.value = ''
     form.clearErrors()
     submitting.value = true
-    axios.post(route('crm.externals.invitations.store'), payload)
+    axios.post(route('crm.externals.invitations.store'), payload, { skipErrorToast: true }) // Fehler steht im Modal
         .then(() => {
             emit('success')
             emit('close')

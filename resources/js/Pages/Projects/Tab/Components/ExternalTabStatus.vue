@@ -161,7 +161,7 @@ async function confirm(external) {
     busy.value = true
     error.value = ''
     try {
-        const { data } = await axios.post(route('projects.tabs.externals.confirm', { project: props.projectId, projectTab: props.tabId, scope: external.scope_id }))
+        const { data } = await axios.post(route('projects.tabs.externals.confirm', { project: props.projectId, projectTab: props.tabId, scope: external.scope_id }), {}, { skipErrorToast: true }) // Fehler steht in der Komponente
         replace(data.external)
         emit('reviewed')
     } catch (e) {
@@ -183,6 +183,7 @@ async function submitReturn(external) {
         const { data } = await axios.post(
             route('projects.tabs.externals.return', { project: props.projectId, projectTab: props.tabId, scope: external.scope_id }),
             { comment: returnComment.value },
+            { skipErrorToast: true }, // Fehler steht in der Komponente
         )
         replace(data.external)
         emit('reviewed')

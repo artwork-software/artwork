@@ -1196,7 +1196,7 @@ const showBulkActionError = (error) => {
 const deleteSelectedShifts = () => {
     axios.post(route('shifts.multi.delete'), {
         shift_ids: selectedShiftIds.value,
-    }).then(() => {
+    }, { skipErrorToast: true }).then(() => { // Fehler zeigt showBulkActionError
         selectedShiftIds.value = [];
         router.reload({ only: ['groupedShifts'], preserveScroll: true });
     }).catch(showBulkActionError).finally(() => {
@@ -1213,7 +1213,7 @@ const duplicateSelectedShifts = () => {
     duplicateInFlight.value = true;
     axios.post(route('shifts.multi.duplicate'), {
         shift_ids: selectedShiftIds.value,
-    }).then(() => {
+    }, { skipErrorToast: true }).then(() => { // Fehler zeigt showBulkActionError
         selectedShiftIds.value = [];
         router.reload({ only: ['groupedShifts'], preserveScroll: true });
     }).catch(showBulkActionError).finally(() => {

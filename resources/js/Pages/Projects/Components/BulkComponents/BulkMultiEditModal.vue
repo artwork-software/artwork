@@ -291,7 +291,7 @@ const submit = () => {
         }
     });*/
 
-    axios.post(route('events.bulk-multi-edit'), multiEditForm)
+    axios.post(route('events.bulk-multi-edit'), multiEditForm, { skipErrorToast: true }) // Fehler steht im Modal
         .then(response => {
             emits('close');
         })

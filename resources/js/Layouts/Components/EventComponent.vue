@@ -1186,7 +1186,7 @@ async function fetchSeriesPreview() {
             end,
             roomId: selectedRoom.value?.id ?? null,
             ...seriesDefinitionPayload(),
-        })
+        }, { skipErrorToast: true }) // Lesezugriff im Hintergrund (Vorschau beim Tippen)
         seriesPreview.value = data
     } catch {
         seriesPreview.value = null
@@ -1253,7 +1253,7 @@ async function checkSeriesImpact() {
     if (!isSeriesEvent.value || seriesScope.value === 'single' || !series.value || seriesImpactConfirmed) return true
     if (!seriesDefinitionValid.value || !seriesDefinitionChanged()) return true
     try {
-        const { data } = await axios.post(route('events.series.impact', { event: props.event.id }), seriesDefinitionPayload())
+        const { data } = await axios.post(route('events.series.impact', { event: props.event.id }), seriesDefinitionPayload(), { skipErrorToast: true }) // Dry-Run, Speichern meldet selbst
         if (data?.changed && (data.trash > 0 || data.create > 0 || data.rebuild)) {
             seriesImpact.value = data
             showSeriesImpactModal.value = true
@@ -1722,7 +1722,7 @@ async function checkCollisions() {
         const startFull = formatDate(startDate.value, startTime.value ?? '00:00')
         const endFull = formatDate(endDate.value, endTime.value ?? '23:59')
         try {
-            const { data } = await axios.post('/collision/room', { params: { start: startFull, end: endFull, currentEventId: props.event?.id ?? null } })
+            const { data } = await axios.post('/collision/room', { params: { start: startFull, end: endFull, currentEventId: props.event?.id ?? null } }, { skipErrorToast: true }) // Lesezugriff im Hintergrund
             roomCollisionArray.value = data
         } catch { /* ignore */ }
     }

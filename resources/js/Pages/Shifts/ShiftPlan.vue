@@ -3279,7 +3279,7 @@ async function toggleCraftStaffingFilter(craftId: number) {
             is_shift_plan: true,
             is_daily_view: false,
             show_only_not_fully_staffed_shifts: activate,
-        })
+        }, { skipErrorToast: true }) // Fehler zeigt dropFeedback
     } catch {
         dropFeedback.value = $t('Saving failed')
         return

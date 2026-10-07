@@ -186,6 +186,7 @@
 
 <script>
 import {IconChevronDown, IconCircleX, IconDownload, IconEdit, IconUpload} from "@tabler/icons-vue";
+import {createInstanceFormatter} from "@/Helper/instanceFormat.js";
 import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal.vue";
 import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal.vue";
 import ProjectFileUploadModal from "@/Layouts/Components/ProjectFileUploadModal.vue";
@@ -328,16 +329,13 @@ export default {
                 (user) => user.id === this.$page.props.auth.user.id
             ).length > 0;
         },
+        // Betrag und Zeitraum im Format der Instanz (Einstellungen → Regionale Formate)
         formatMoneySourceAmount(amount) {
-            return new Intl.NumberFormat(this.$page.props.locale || 'de-DE', {
-                style: 'currency',
-                currency: this.$page.props.currency || 'EUR'
-            }).format(Number(amount || 0));
+            return createInstanceFormatter(this.$page.props.instanceFormat).formatCurrency(amount || 0);
         },
         formatMoneySourcePeriod(moneySource) {
-            const format = (date) => date
-                ? new Intl.DateTimeFormat(this.$page.props.locale || 'de-DE').format(new Date(date))
-                : '…';
+            const instanceFormat = createInstanceFormatter(this.$page.props.instanceFormat);
+            const format = (date) => date ? instanceFormat.formatDate(date) : '…';
 
             return `${format(moneySource.start_date)} – ${format(moneySource.end_date)}`;
         },

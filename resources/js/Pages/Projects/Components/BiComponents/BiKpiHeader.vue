@@ -86,7 +86,7 @@ const currencyFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { style: 
 
 const formatInt = (v) => (v === null || v === undefined) ? null : numberFmt.format(v);
 const formatCurrency = (v) => (v === null || v === undefined) ? null : currencyFmt.format(v);
-const formatPercent = (v) => (v === null || v === undefined) ? null : `${Number(v).toFixed(1).replace('.', ',')} %`;
+const formatPercent = (v) => (v === null || v === undefined) ? null : `${instanceFormat.formatNumber(v, 1)} %`;
 
 const kpiTiles = computed(() => {
     const s = props.summary;

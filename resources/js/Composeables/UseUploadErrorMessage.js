@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/vue3';
+import { messageForFailedRequest } from '@/Helper/appToast.js';
 
 // Zentrale, verständliche Fehlermeldung für fehlgeschlagene Datei-Uploads (Abnahme RG-04).
 // Wichtigster Fall: HTTP 413 — nginx/PHP lehnen die Datei ab, BEVOR die App-Validierung
@@ -31,6 +32,12 @@ export function uploadErrorMessage(error, t) {
         if (first) {
             return first;
         }
+    }
+
+    // Ohne Recht, Eintrag weg, Serverfehler, Netzwerk: Grund nennen (der globale Toast ist hier aus)
+    const requestMessage = error?.isAxiosError ? messageForFailedRequest(error?.response?.status) : null;
+    if (requestMessage) {
+        return t(requestMessage);
     }
 
     return t('Upload failed');

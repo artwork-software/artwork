@@ -250,7 +250,9 @@ export default defineComponent({
                 const response = await axios.post(
                     route('tool.external-user-management.sources.sync', {
                         externalUserSource: source.id
-                    })
+                    }),
+                    {},
+                    { skipErrorToast: true } // Fehler steht an der Quelle
                 );
 
                 this.syncResult[source.id] = {
@@ -309,7 +311,9 @@ export default defineComponent({
                 const response = await axios.post(
                     route('tool.external-user-management.sources.test-connection', {
                         externalUserSource: source.id
-                    })
+                    }),
+                    {},
+                    { skipErrorToast: true } // Ergebnis steht an der Quelle
                 );
 
                 this.connectionTestResult[source.id] = {

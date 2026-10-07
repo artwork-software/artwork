@@ -742,6 +742,7 @@ import ShiftPlanOpenViolationsFilterNotice from "@/Layouts/Components/ShiftPlanC
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import ShiftPlanViewSwitch from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanViewSwitch.vue";
 import axios from "axios";
+import { failedRequestMessage } from "@/Helper/appToast.js";
 import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
 import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
@@ -830,7 +831,7 @@ const loadProjectDayAssignments = async () => {
         projectDayAssignments.value = data.assignments ?? []
         projectAssignmentError.value = ''
     } catch (error: any) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+        projectAssignmentError.value = failedRequestMessage(error)
     }
 }
 
@@ -926,11 +927,11 @@ const acceptProjectWishBundle = async (bundle: any) => {
     projectAssignmentError.value = ''
     try {
         for (const repId of bundle.groupRepIds.values()) {
-            await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: repId }))
+            await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: repId }), {}, { skipErrorToast: true }) // Fehler steht über den Zuordnungen
         }
         await loadProjectDayAssignments()
     } catch (error: any) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+        projectAssignmentError.value = failedRequestMessage(error)
     } finally {
         projectAssignmentActionKey.value = null
     }
@@ -1038,24 +1039,25 @@ const onAssignmentRemovalConfirmed = async (confirmed: boolean) => {
                     project_id: props.project.id,
                     group_id: candidate.group.group_id,
                 },
+                skipErrorToast: true, // Fehler steht über den Zuordnungen
             })
         } else if (candidate.kind === 'single_day') {
             await axios.delete(
                 route('project-day-assignments.destroy', { projectDayAssignment: candidate.day.id }),
-                { params: { whole_group: false } }
+                { params: { whole_group: false }, skipErrorToast: true }
             )
         } else {
             // Personen-Bündel: alle Anlage-Gruppen der Person entfernen
             for (const repId of candidate.group.groupRepIds.values()) {
                 await axios.delete(
                     route('project-day-assignments.destroy', { projectDayAssignment: repId }),
-                    { params: { whole_group: true } }
+                    { params: { whole_group: true }, skipErrorToast: true }
                 )
             }
         }
         await loadProjectDayAssignments()
     } catch (error: any) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+        projectAssignmentError.value = failedRequestMessage(error)
     }
 }
 

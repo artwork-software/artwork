@@ -16,6 +16,7 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+.*.sw[a-p]
 /.agents
 /.codex
 /data.ms

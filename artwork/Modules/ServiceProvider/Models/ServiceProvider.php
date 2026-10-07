@@ -7,6 +7,7 @@ use Artwork\Modules\Contacts\Models\Traits\HasContacts;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\DeletesMirroredCrmContact;
 use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
@@ -52,6 +53,7 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
     use HasProfilePhotoCustom;
     use HasCrmContact;
     use HasCrmFields;
+    use DeletesMirroredCrmContact;
 
     protected $fillable = [
         'profile_image',

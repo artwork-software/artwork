@@ -14,6 +14,7 @@ use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\Shift\Models\Traits\HasShifts;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\DeletesMirroredCrmContact;
 use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
@@ -68,6 +69,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable,
     use HasProfilePhotoCustom;
     use HasCrmContact;
     use HasCrmFields;
+    use DeletesMirroredCrmContact;
 
     /**
      * @var string[]

@@ -643,6 +643,8 @@ class UpdateArtwork extends Command
                         ->whereNull('crm_contacts.deleted_at')
                         ->whereColumn('crm_contacts.entity_id', "$table.id");
                 })
+                // Platzhalter „Deleted user“ ist keine echte Person und gehört nicht ins CRM
+                ->when($class === User::class, fn ($query) => $query->excludeDeletedPlaceholder())
                 ->get();
 
             foreach ($missing as $entity) {

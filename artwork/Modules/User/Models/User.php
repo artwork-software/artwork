@@ -48,6 +48,7 @@ use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\DeletesMirroredCrmContact;
 use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\Workflow\Traits\HasWorkflows;
 use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
@@ -218,6 +219,7 @@ class User extends Model implements
     use HasProfilePhotoCustom;
     use HasCrmContact;
     use HasCrmFields;
+    use DeletesMirroredCrmContact;
 
     protected $fillable = [
         'first_name',

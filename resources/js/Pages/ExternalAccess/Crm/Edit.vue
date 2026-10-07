@@ -31,14 +31,25 @@
                                 class="mt-1 block w-full rounded-lg border-border text-sm"
                                 rows="3"
                             />
+                            <!-- Wie intern (CrmPropertyValueInput): gespeichert als '1'/'0' -->
                             <label v-else-if="field.inputType === 'checkbox'" class="mt-1 inline-flex items-center gap-2">
                                 <input
                                     :id="`${section.key}-${field.key}`"
                                     type="checkbox"
-                                    v-model="form.values[section.key][field.key]"
+                                    :checked="form.values[section.key][field.key] === '1'"
                                     class="rounded border-border"
+                                    @change="form.values[section.key][field.key] = $event.target.checked ? '1' : '0'"
                                 />
                             </label>
+                            <select
+                                v-else-if="field.inputType === 'select'"
+                                :id="`${section.key}-${field.key}`"
+                                v-model="form.values[section.key][field.key]"
+                                class="mt-1 block w-full rounded-lg border-border text-sm"
+                            >
+                                <option value="">{{ $t('Please select') }}</option>
+                                <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
+                            </select>
                             <input
                                 v-else
                                 :id="`${section.key}-${field.key}`"

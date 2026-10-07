@@ -39,7 +39,7 @@
                 <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3">
                     <template v-for="property in group.properties" :key="property.id">
                         <dt class="text-sm font-medium text-text-muted">{{ property.name }}</dt>
-                        <dd class="text-sm text-text">{{ property.value ?? '—' }}</dd>
+                        <dd class="text-sm text-text">{{ displayValue(property) }}</dd>
                     </template>
                 </dl>
             </section>
@@ -55,6 +55,9 @@
 import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import ExternalAppLayout from '@/Pages/ExternalAccess/Layouts/ExternalAppLayout.vue'
+import { useTranslation } from '@/Composeables/Translation.js'
+
+const $t = useTranslation()
 
 const page = usePage()
 const flashStatus = computed(() => page.props.flash?.status ?? null)
@@ -63,4 +66,13 @@ defineProps({
     groups: { type: Array, required: true },
     submissionStatus: { type: Object, default: null },
 })
+
+// Checkboxen werden wie intern als '1'/'0' gespeichert
+function displayValue(property) {
+    if (property.input_type === 'checkbox') {
+        return property.value === '1' ? $t('Yes') : $t('No')
+    }
+
+    return property.value === null || property.value === '' ? '—' : property.value
+}
 </script>

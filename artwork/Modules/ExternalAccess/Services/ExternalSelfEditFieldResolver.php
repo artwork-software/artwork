@@ -5,6 +5,7 @@ namespace Artwork\Modules\ExternalAccess\Services;
 use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\ExternalAccess\DTOs\SelfEditField;
@@ -218,7 +219,9 @@ class ExternalSelfEditFieldResolver
                 'values' => fn ($v) => $v->where('crm_contact_id', $contact->id),
             ])
             ->orderBy('sort_order')
-            ->get();
+            ->get()
+            ->filter(fn (CrmProperty $property) => $property->type !== null
+                && self::inputTypeFor($property->type) !== null);
 
         $byGroup = $properties->groupBy(fn (CrmProperty $p) => $p->group->id);
 
@@ -229,9 +232,10 @@ class ExternalSelfEditFieldResolver
             $fields = $groupProperties->map(fn (CrmProperty $property) => new SelfEditField(
                 key: 'crm_property:' . $property->id,
                 label: $property->name,
-                inputType: $this->mapCrmPropertyType($property->type?->value),
+                inputType: self::inputTypeFor($property->type),
                 required: (bool) ($property->contactTypes->first()?->pivot->is_required ?? false),
                 value: $property->values->first()?->value,
+                options: $property->type === CrmPropertyTypeEnum::SELECT ? self::selectOptionsOf($property) : [],
             ))->values()->all();
 
             $sections[] = new SelfEditSection(
@@ -250,15 +254,36 @@ class ExternalSelfEditFieldResolver
         return $sections;
     }
 
-    private function mapCrmPropertyType(?string $crmType): string
+    /**
+     * Eingabetyp der externen Maske je CRM-Eigenschaftstyp; muss dem internen CrmPropertyValueInput
+     * entsprechen. Bewusst ohne default-Zweig: ein neuer Enum-Fall fällt hier sofort auf, statt still
+     * als Freitextfeld zu erscheinen. null = extern nicht bearbeitbar (Uploads brauchen einen eigenen
+     * Datei-Endpunkt; die CRM-Kontaktliste im Tab blendet sie ebenso aus).
+     */
+    public static function inputTypeFor(CrmPropertyTypeEnum $type): ?string
     {
-        return match ($crmType) {
-            'textarea' => 'textarea',
-            'checkbox' => 'checkbox',
-            'date' => 'date',
-            'number' => 'number',
-            'link' => 'url',
-            default => 'text',
+        return match ($type) {
+            CrmPropertyTypeEnum::TEXT => 'text',
+            CrmPropertyTypeEnum::TEXTAREA => 'textarea',
+            CrmPropertyTypeEnum::CHECKBOX => 'checkbox',
+            CrmPropertyTypeEnum::DATE => 'date',
+            CrmPropertyTypeEnum::NUMBER => 'number',
+            CrmPropertyTypeEnum::LINK => 'url',
+            CrmPropertyTypeEnum::SELECT => 'select',
+            CrmPropertyTypeEnum::UPLOAD => null,
         };
+    }
+
+    /**
+     * Auswahlwerte wie im internen Dropdown (leere Einträge aus den Einstellungen fallen weg).
+     *
+     * @return list<string>
+     */
+    public static function selectOptionsOf(CrmProperty $property): array
+    {
+        return array_values(array_filter(
+            array_map(static fn ($option): string => (string) $option, $property->select_values ?? []),
+            static fn (string $option): bool => $option !== '',
+        ));
     }
 }

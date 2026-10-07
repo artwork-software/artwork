@@ -42,6 +42,7 @@ class ExternalCrmController extends Controller
             'properties' => array_map(static fn ($field) => [
                 'id' => $field['key'],
                 'name' => $field['label'],
+                'input_type' => $field['inputType'],
                 'value' => $field['value'],
             ], $section['fields']),
         ], $schema->toArray()['sections']);

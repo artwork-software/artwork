@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalAccess\Services;
 
+use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Models\CrmPropertyValue;
@@ -148,6 +149,10 @@ class ExternalSubmissionApprovalService
             $property = CrmProperty::with('group')->findOrFail($propertyId);
             if ($property->group->is_confidential) {
                 throw new \DomainException('Refuse to apply confidential property change');
+            }
+            // Upload-Werte sind Dateipfade; extern gibt es keinen Datei-Endpunkt (Altbestand vor dem Typ-Fix)
+            if ($property->type === CrmPropertyTypeEnum::UPLOAD) {
+                throw new \DomainException('Refuse to apply upload property change');
             }
             CrmPropertyValue::updateOrCreate(
                 ['crm_contact_id' => $target->id, 'crm_property_id' => $propertyId],

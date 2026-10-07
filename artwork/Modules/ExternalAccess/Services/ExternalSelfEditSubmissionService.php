@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalAccess\Services;
 
+use Artwork\Modules\ExternalAccess\DTOs\SelfEditField;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionContext;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionStatus;
 use Artwork\Modules\ExternalAccess\Enums\FieldApprovalStatus;
@@ -10,6 +11,8 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingFieldChange;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Illuminate\Database\DatabaseManager;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ExternalSelfEditSubmissionService
@@ -50,7 +53,7 @@ class ExternalSelfEditSubmissionService
                         continue;
                     }
 
-                    $newValue = $submittedValues[$section->key][$field->key];
+                    $newValue = $this->normalizeForInputType($field, $submittedValues[$section->key][$field->key]);
 
                     if ($field->required && ($newValue === null || $newValue === '')) {
                         throw ValidationException::withMessages([
@@ -58,9 +61,14 @@ class ExternalSelfEditSubmissionService
                         ]);
                     }
 
-                    if ($this->normalizeValue($newValue) === $this->normalizeValue($field->value)) {
+                    if (
+                        $this->normalizeValue($newValue)
+                        === $this->normalizeValue($this->normalizeForInputType($field, $field->value))
+                    ) {
                         continue; // unchanged
                     }
+
+                    $this->validateForInputType($field, $newValue, "values.{$section->key}.{$field->key}");
 
                     $change = [
                         'target_type' => $section->targetType,
@@ -163,6 +171,58 @@ class ExternalSelfEditSubmissionService
             ->log('submission_created');
 
         return $submission;
+    }
+
+    /**
+     * Gleiche Speicherform wie intern: Checkboxen als '1'/'0' (CrmPropertyValueInput).
+     */
+    private function normalizeForInputType(SelfEditField $field, mixed $value): mixed
+    {
+        if ($field->inputType !== 'checkbox') {
+            return $value;
+        }
+
+        if ($value === null || $value === '') {
+            return '0';
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? '1' : '0';
+    }
+
+    /**
+     * Nur geänderte Werte werden geprüft: ein inzwischen aus der Auswahl entfernter Altwert
+     * blockiert das Absenden anderer Felder nicht.
+     *
+     * @throws ValidationException
+     */
+    private function validateForInputType(SelfEditField $field, mixed $value, string $errorKey): void
+    {
+        if ($value === null || $value === '') {
+            return;
+        }
+
+        $rules = match ($field->inputType) {
+            'select' => [Rule::in($field->options)],
+            'number' => ['numeric'],
+            'date' => ['date_format:Y-m-d'],
+            'email' => ['email'],
+            default => [],
+        };
+
+        if ($rules === []) {
+            return;
+        }
+
+        $validator = Validator::make(
+            ['value' => $value],
+            ['value' => $rules],
+            [],
+            ['value' => $field->label],
+        );
+
+        if ($validator->fails()) {
+            throw ValidationException::withMessages([$errorKey => $validator->errors()->first('value')]);
+        }
     }
 
     private function normalizeValue(mixed $value): ?string

@@ -310,6 +310,36 @@ final class WorkTimeBookingServiceTest extends TestCase
         Carbon::setTestNow();
     }
 
+    #[Test]
+    public function the_nightly_booking_leaves_a_manual_booking_of_the_same_day_untouched(): void
+    {
+        // Regression: Die Tagesbuchung wurde nur über booking_day gesucht und übernahm die manuelle Buchung
+        // desselben Tages (Betrag verrechnet, Zeile überschrieben).
+        Carbon::setTestNow(Carbon::parse('2026-07-21 23:59:00')); // Dienstag
+
+        $user = $this->workShiftUserWithDailyTarget('08:00');
+        $user->workTimeBookings()->create([
+            'name' => 'manual_booking',
+            'booking_day' => '2026-07-21',
+            'booking_weekday' => 2,
+            'worked_hours' => 90,
+            'work_time_balance_change' => 90,
+        ]);
+        $user->update(['work_time_balance' => 90]);
+
+        $this->service->calculateDailyWorkingHours();
+        $this->service->calculateDailyWorkingHours();
+
+        $this->assertSame(90 - 480, (int) $user->fresh()->work_time_balance);
+        $this->assertSame(
+            ['daily_work_time_booking_2026-07-21' => -480, 'manual_booking' => 90],
+            $user->workTimeBookings()->orderBy('name')->pluck('work_time_balance_change', 'name')
+                ->map(fn ($change): int => (int) $change)->all()
+        );
+
+        Carbon::setTestNow();
+    }
+
     private function specialDayContract(User $user): void
     {
         $template = UserContract::create([

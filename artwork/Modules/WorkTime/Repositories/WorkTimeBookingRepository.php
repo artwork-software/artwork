@@ -24,16 +24,19 @@ class WorkTimeBookingRepository
     }
 
     /**
-     * Perform user booking + balance update in a transaction.
-     *
-     * @param User $user
-     * @param Carbon $date
-     * @param int $weekdayIndex
-     * @param array<string, mixed> $bookingData
-     * @param int|null $balanceDelta
-     * @return void
+     * Eindeutiger Name der nächtlichen Tagesbuchung (seit Einführung unverändert).
      */
-    public function storeBookingAndUpdateBalanceInTransaction(
+    public static function dailyBookingName(Carbon $date): string
+    {
+        return 'daily_work_time_booking_' . $date->toDateString();
+    }
+
+    /**
+     * Tagesbuchung + Saldo-Delta atomar in einer Transaktion.
+     *
+     * @param array<string, mixed> $bookingData
+     */
+    public function storeDailyBookingAndUpdateBalanceInTransaction(
         User $user,
         Carbon $date,
         int $weekdayIndex,
@@ -41,7 +44,7 @@ class WorkTimeBookingRepository
         ?int $balanceDelta = null
     ): void {
         DB::transaction(function () use ($user, $date, $weekdayIndex, $bookingData, $balanceDelta): void {
-            $this->storeOrUpdateBooking($user, $date, $weekdayIndex, $bookingData);
+            $this->storeOrUpdateDailyBooking($user, $date, $weekdayIndex, $bookingData);
 
             if ($balanceDelta !== null && $balanceDelta !== 0) {
                 $this->updateUserBalance($user, $balanceDelta);
@@ -50,36 +53,54 @@ class WorkTimeBookingRepository
     }
 
     /**
-     * Fetch the work time booking entry for a specific user on a specific day.
-     *
-     * @param User $user
-     * @param Carbon $date
-     * @param int $weekdayIndex
-     * @return WorkTimeBooking|null
+     * Nächtliche Tagesbuchung einer Person für einen Tag. Gesucht wird über den Namen: Korrektur- und
+     * manuelle Buchungen desselben Tages sind eigene Zeilen und dürfen hier nicht gefunden werden
+     * (sonst verrechnet der Re-Run ihren Betrag und überschreibt die Zeile).
      */
-    public function getPreviousBooking(User $user, Carbon $date, int $weekdayIndex): ?WorkTimeBooking
+    public function getPreviousBooking(User $user, Carbon $date): ?WorkTimeBooking
     {
         return $user->workTimeBookings()
             ->where('booking_day', $date->toDateString())
-            ->where('booking_weekday', $weekdayIndex)
+            ->where('name', self::dailyBookingName($date))
             ->first();
     }
 
     /**
-     * Store or update a daily work time booking for a user.
+     * Legt die nächtliche Tagesbuchung an oder aktualisiert sie (Re-Run), Treffer nur über den Namen.
      *
-     * @param User $user
-     * @param Carbon $date
-     * @param int $weekdayIndex
      * @param array<string, mixed> $data
-     * @return WorkTimeBooking
      */
-    public function storeOrUpdateBooking(User $user, Carbon $date, int $weekdayIndex, array $data): WorkTimeBooking
-    {
+    public function storeOrUpdateDailyBooking(
+        User $user,
+        Carbon $date,
+        int $weekdayIndex,
+        array $data
+    ): WorkTimeBooking {
         return $user->workTimeBookings()->updateOrCreate(
-            ['booking_day' => $date->toDateString(), 'booking_weekday' => $weekdayIndex],
-            $data
+            ['booking_day' => $date->toDateString(), 'name' => self::dailyBookingName($date)],
+            array_merge($data, ['booking_weekday' => $weekdayIndex])
         );
+    }
+
+    /**
+     * Korrektur-/Einzelbuchung immer als eigene Zeile, inkl. Saldo-Delta, atomar.
+     *
+     * @param array<string, mixed> $data
+     */
+    public function createBookingAndUpdateBalanceInTransaction(
+        User $user,
+        array $data,
+        int $balanceDelta
+    ): WorkTimeBooking {
+        return DB::transaction(function () use ($user, $data, $balanceDelta): WorkTimeBooking {
+            $booking = $user->workTimeBookings()->create($data);
+
+            if ($balanceDelta !== 0) {
+                $this->updateUserBalance($user, $balanceDelta);
+            }
+
+            return $booking;
+        });
     }
 
     /**

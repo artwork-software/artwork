@@ -324,8 +324,9 @@ class WorkTimeChangeRequestController extends Controller
             // keine Korrekturbuchung aufs Stundenkonto
             $applyIndividualTime();
         } else {
-            // For past shifts, create an adjustment booking to reflect the time change
-            $repository->storeOrUpdateBooking($user, now(), now()->dayOfWeek, [
+            // Vergangene Schicht: Korrekturbuchung als eigene Zeile (nie mit Tages- oder anderer
+            // Korrekturbuchung desselben Tages zusammenlegen), Saldo-Delta atomar mitbuchen
+            $repository->createBookingAndUpdateBalanceInTransaction($user, [
                 'name' => 'adjustment_work_time_change_request_' . $shift->id,
                 'comment' => 'Zeitkorrektur: ' . $oldDuration . 'min → ' . $newDuration . 'min',
                 'booking_day' => now()->toDateString(),
@@ -337,11 +338,7 @@ class WorkTimeChangeRequestController extends Controller
                 'work_time_balance_change' => $balanceDelta,
                 'user_id' => $user->id,
                 'booker_id' => auth()->id(),
-            ]);
-
-            if ($balanceDelta !== 0) {
-                $repository->updateUserBalance($user, $balanceDelta);
-            }
+            ], $balanceDelta);
 
             $applyIndividualTime();
         }

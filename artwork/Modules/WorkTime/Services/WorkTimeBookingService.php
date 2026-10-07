@@ -81,7 +81,9 @@ class WorkTimeBookingService
 
         $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange($workedMinutes, $wantedMinutes);
 
-        $previousBooking = $this->repository->getPreviousBooking($user, $today, $weekdayIndex);
+        // Nur die eigene Tagesbuchung (über den Namen): Korrektur-/manuelle Buchungen
+        // desselben Tages bleiben unberührt
+        $previousBooking = $this->repository->getPreviousBooking($user, $today);
         $delta = $previousBooking
             ? $workTimeBalanceChange - $previousBooking->work_time_balance_change
             : $workTimeBalanceChange;
@@ -89,8 +91,8 @@ class WorkTimeBookingService
         // Buchung UND Saldo-Anpassung atomar in einer Transaktion (vorher war das
         // Balance-Update separat danach -> bei Worker-Crash dazwischen blieb der Saldo
         // dauerhaft falsch, da der Re-Run wegen vorhandener Buchung delta=0 errechnet).
-        $this->repository->storeBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
-            'name' => "daily_work_time_booking_{$today->toDateString()}",
+        $this->repository->storeDailyBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
+            'name' => WorkTimeBookingRepository::dailyBookingName($today),
             'wanted_working_hours' => $wantedMinutes,
             'worked_hours' => $workedMinutes,
             'nightly_working_hours' => $nightMinutes,

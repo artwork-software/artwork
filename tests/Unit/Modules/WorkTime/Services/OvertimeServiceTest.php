@@ -66,6 +66,52 @@ final class OvertimeServiceTest extends TestCase
     }
 
     #[Test]
+    public function bookings_of_the_same_day_are_summed_into_one_overtime_entry(): void
+    {
+        // Regression: Tages- und Korrekturbuchung desselben Tages sind eigene Zeilen; die Überstunde
+        // nahm nur eine davon (je nach Reihenfolge) statt der Summe wie im Saldo.
+        $user = $this->userWithContract(period: 30);
+        $day = Carbon::now()->startOfDay()->subDay();
+        $this->booking($user, $day, 30);
+        $this->booking($user, $day, 60);
+
+        $this->service->recomputeForUser($user);
+
+        $entry = UserOvertime::where('user_id', $user->id)->sole();
+        $this->assertSame($day->toDateString(), $entry->date->toDateString());
+        $this->assertSame(90, $entry->minutes);
+        $this->assertSame(90, $entry->remaining_minutes);
+    }
+
+    #[Test]
+    public function mixed_signs_on_the_same_day_are_netted(): void
+    {
+        $user = $this->userWithContract(period: 30);
+        $older = Carbon::now()->startOfDay()->subDays(3);
+        $mixedPositive = Carbon::now()->startOfDay()->subDays(2);
+        $mixedNegative = Carbon::now()->startOfDay()->subDay();
+        $this->booking($user, $older, 60);
+        // +120 und −30 am selben Tag -> Überstunde 90, die ältere bleibt unangetastet
+        $this->booking($user, $mixedPositive, 120);
+        $this->booking($user, $mixedPositive, -30);
+        // +20 und −50 am selben Tag -> netto −30 baut FIFO die älteste Überstunde ab
+        $this->booking($user, $mixedNegative, 20);
+        $this->booking($user, $mixedNegative, -50);
+
+        $this->service->recomputeForUser($user);
+
+        $entries = UserOvertime::where('user_id', $user->id)->orderBy('date')->get()
+            ->mapWithKeys(fn (UserOvertime $e): array => [
+                $e->date->toDateString() => [$e->minutes, $e->remaining_minutes],
+            ])
+            ->all();
+        $this->assertSame([
+            $older->toDateString() => [60, 30],
+            $mixedPositive->toDateString() => [90, 90],
+        ], $entries);
+    }
+
+    #[Test]
     public function negative_day_fifo_consumes_overtime_until_compensated(): void
     {
         $user = $this->userWithContract(period: 30);

@@ -51,24 +51,32 @@ class OvertimeService
             ->orderBy('booking_day')
             ->get();
 
+        // Netto je Buchungstag: Tages-, Korrektur- und manuelle Buchungen desselben Tages sind eigene
+        // Zeilen und zählen zusammen – sonst gewinnt eine beliebige Zeile und Saldo und Überstunden
+        // laufen auseinander.
+        $netChangeByDay = []; // date(string) => int
+        foreach ($bookings as $booking) {
+            $dateStr = $booking->booking_day->toDateString();
+            $netChangeByDay[$dateStr] = ($netChangeByDay[$dateStr] ?? 0) + (int) $booking->work_time_balance_change;
+        }
+        ksort($netChangeByDay);
+
         $existing = UserOvertime::forUser($user->id)->get()
             ->keyBy(fn (UserOvertime $e): string => $e->date->toDateString());
 
         // 1) Build overtime entries for every positive day whose contract period has the rule active.
         $entries = []; // date(string) => ['minutes','remaining','deadline'(Carbon)]
-        foreach ($bookings as $booking) {
-            $change = (int) $booking->work_time_balance_change;
+        foreach ($netChangeByDay as $dateStr => $change) {
             if ($change <= 0) {
                 continue;
             }
 
-            $day = $booking->booking_day->copy()->startOfDay();
+            $day = Carbon::parse($dateStr)->startOfDay();
             $period = $this->compensationPeriodOn($user, $day);
             if ($period === null) {
                 continue; // an diesem Tag keine aktive Überstundenregel / keine Frist
             }
 
-            $dateStr = $day->toDateString();
             $entries[$dateStr] = [
                 'minutes' => $change,
                 'remaining' => $change,
@@ -77,20 +85,19 @@ class OvertimeService
         }
 
         // 2) FIFO: apply negative-balance days (under target) to the oldest open entries.
-        foreach ($bookings as $booking) {
-            $change = (int) $booking->work_time_balance_change;
+        foreach ($netChangeByDay as $creditDateStr => $change) {
             if ($change >= 0) {
                 continue;
             }
 
             $credit = -$change;
-            $creditDate = $booking->booking_day;
+            $creditDate = Carbon::parse($creditDateStr)->startOfDay();
 
             foreach ($entries as $dateStr => &$entry) {
                 if ($credit <= 0) {
                     break;
                 }
-                if ($dateStr > $creditDate->toDateString()) {
+                if ($dateStr > $creditDateStr) {
                     continue; // overtime accrued after this credit day
                 }
                 if ($entry['deadline']->lt($creditDate)) {

@@ -61,7 +61,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
         $schedule->command(SendExternalIssueReturnDueNotificationsCommand::class)->dailyAt('08:00')->runInBackground();
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
-        $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00');
+        $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00')->runInBackground();
         $schedule->command(NotifyShiftPlanRequestDeadlineReached::class)->dailyAt('07:15')->runInBackground();
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
         // Zusammenfassungen: täglich um 9 Uhr, Wochentage je Häufigkeit (NotificationFrequencyEnum::isDueOn)

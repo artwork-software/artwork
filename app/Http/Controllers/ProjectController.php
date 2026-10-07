@@ -304,8 +304,28 @@ class ProjectController extends Controller
             $request->string('query')->toString()
         );
 
-        $pinnedProjectsComponents = $this->mapProjectsToComponents($pinnedProjects, $components, $componentData);
-        $projectComponents = $this->mapProjectsToComponents($projects, $components, $componentData);
+        // Sichtbarkeit hängt an Komponente und Tab, nicht am Projekt: einmal je Person bestimmen
+        $visibleComponentIds = app(ProjectComponentVisibilityService::class)
+            ->visibleInProjectComponentIds($user, $componentData)
+            ->flip();
+        // Gleiche Regel wie der Budget-Informationen-Endpunkt (unabhängig von der Übersichts-Konfiguration)
+        $canSeeBudgetInformations = app(ProjectComponentVisibilityService::class)
+            ->canSeeComponentTypeInProject($user, [ProjectTabComponentEnum::BUDGET_INFORMATIONS->value]);
+
+        $pinnedProjectsComponents = $this->mapProjectsToComponents(
+            $pinnedProjects,
+            $components,
+            $componentData,
+            $visibleComponentIds,
+            $canSeeBudgetInformations
+        );
+        $projectComponents = $this->mapProjectsToComponents(
+            $projects,
+            $components,
+            $componentData,
+            $visibleComponentIds,
+            $canSeeBudgetInformations
+        );
 
         return inertia('Projects/NewProjectManagement', [
             'projects' => $projects,
@@ -342,9 +362,20 @@ class ProjectController extends Controller
 
     /**
      * Hilfsfunktion zur Vermeidung von Code-Duplikation
+     *
+     * Komponentenwerte und Budget-Informationen gehen nur für betretbare Projekte und für Komponenten
+     * raus, die die Person sehen darf (Komponenten-Berechtigung + Tab-Sichtbarkeit). Ausgeblendete
+     * Spalten listet hiddenComponentIds je Projekt; das Frontend lässt die Zelle leer.
+     *
+     * @param Collection<int, int> $visibleComponentIds Komponenten-ID => Index (geflippt)
      */
-    private function mapProjectsToComponents($projects, $components, $componentData)
-    {
+    private function mapProjectsToComponents(
+        $projects,
+        $components,
+        $componentData,
+        Collection $visibleComponentIds,
+        bool $canSeeBudgetInformations
+    ) {
         // Cache these values outside the loop to avoid N+1 queries
         $firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
         $projectStates = ProjectState::all()->keyBy('id');
@@ -354,20 +385,14 @@ class ProjectController extends Controller
 
         $projectPeriods = $this->prepareProjectsForComponentMapping($projects, $components);
 
-        // Komponentenwerte einmal für alle Projekte laden (statt einer Query pro Projekt × Komponente)
-        $componentValues = ProjectComponentValue::query()
-            ->whereIn('project_id', $projects->pluck('id'))
-            ->whereIn('component_id', collect($componentData)->keys())
-            ->get()
-            ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
-
         // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
         // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
         // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
         // Rechteliste kommt aus der Policy (eine Quelle); Admins passieren via Gate::before.
         $authUser = Auth::user();
         $canEnterAll = $authUser->canAny(ProjectPolicy::GLOBAL_ENTER_PERMISSIONS);
-        $enterableProjectIds = $canEnterAll ? [] : Project::query()
+        $canWriteAll = $authUser->can(PermissionEnum::WRITE_PROJECTS->value);
+        $enterableProjectIds = $canEnterAll ? collect() : Project::query()
             ->whereIn('id', $projects->pluck('id'))
             ->where(function (Builder $query) use ($authUser): void {
                 $query
@@ -380,6 +405,14 @@ class ProjectController extends Controller
             ->pluck('id')
             ->flip();
 
+        // Komponentenwerte einmal für alle Projekte laden (statt einer Query pro Projekt × Komponente) –
+        // nur betretbare Projekte und sichtbare Komponenten
+        $componentValues = ProjectComponentValue::query()
+            ->whereIn('project_id', $canEnterAll ? $projects->pluck('id') : $enterableProjectIds->keys())
+            ->whereIn('component_id', $visibleComponentIds->keys())
+            ->get()
+            ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
+
         $mapped = $projects->map(function ($project) use (
             $components,
             $componentData,
@@ -388,7 +421,11 @@ class ProjectController extends Controller
             $projectStates,
             $projectPeriods,
             $canEnterAll,
-            $enterableProjectIds
+            $enterableProjectIds,
+            $visibleComponentIds,
+            $canSeeBudgetInformations,
+            $canWriteAll,
+            $authUser
         ) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
@@ -396,12 +433,35 @@ class ProjectController extends Controller
             $projectData->updated_at = $project->updated_at;
             $projectData->firstTabId = $firstTabId;
             $projectData->canEnter = $canEnterAll || isset($enterableProjectIds[$project->id]);
+            $hiddenComponentIds = [];
+            if (
+                !$projectData->canEnter ||
+                (!$canSeeBudgetInformations && !$this->mayEditProjectInOverview($project, $authUser, $canWriteAll))
+            ) {
+                $this->hideBudgetInformationOfProject($project);
+            }
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
 
             foreach ($components as $component) {
                 $componentFullData = $componentData[$component->component_id] ?? null;
+                // Projektinhalte (Komponentenwerte, Budget-Informationen): nur mit Zutritt und Sicht
+                $isProjectContent = $componentFullData !== null && (
+                    !$componentFullData->special ||
+                    $component->type === ProjectTabComponentEnum::BUDGET_INFORMATIONS->value
+                );
+                if (
+                    $isProjectContent &&
+                    (!$projectData->canEnter || !isset($visibleComponentIds[$componentFullData->id]))
+                ) {
+                    $hiddenComponentIds[] = $componentFullData->id;
+                    if (!$componentFullData->special) {
+                        // Schlüssel bleibt erhalten: die Builder-Zellen lesen project[Typ][Id]
+                        $projectData->{$component->type}[$componentFullData->id] = null;
+                    }
+                    continue;
+                }
 
                 switch ($component->type) {
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
@@ -475,6 +535,7 @@ class ProjectController extends Controller
                         $componentValues->get($componentFullData->id . ':' . $project->id);
                 }
             }
+            $projectData->hiddenComponentIds = array_values(array_unique($hiddenComponentIds));
 
             return $projectData;
         });
@@ -482,6 +543,30 @@ class ProjectController extends Controller
         $this->unsetHeavyProjectRelations($projects);
 
         return $mapped;
+    }
+
+    /**
+     * Die Projekt-Modelle gehen zusätzlich roh an Inertia (`projects`/`pinnedProjectsAll`): ohne Zutritt
+     * oder ohne Sicht auf die Budget-Informationen keine Kostenträger, GEMA, Beschreibung. Ausnahme:
+     * das Bearbeiten-Modal der Übersicht liest sie und braucht sie bei Schreibrecht (immer mit Zutritt).
+     */
+    private function hideBudgetInformationOfProject(Project $project): void
+    {
+        $project->makeHidden(['cost_center_id', 'gema', 'cost_center_description']);
+        $project->unsetRelation('costCenter');
+    }
+
+    /**
+     * Schreibrecht wie ProjectPolicy::update, aber nur aus den bereits geladenen Relationen (keine Query
+     * pro Projekt). Abteilungen fehlen bewusst: das Frontend bietet "Edit basic data" nur globalen
+     * Schreibrechten und write_auth an (SingleProjectInManagement checkPermission 'edit').
+     */
+    private function mayEditProjectInOverview(Project $project, User $user, bool $canWriteAll): bool
+    {
+        return $canWriteAll ||
+            $project->writeUsers->contains('id', $user->id) ||
+            $project->managerUsers->contains('id', $user->id) ||
+            $project->user_id === $user->id;
     }
 
     /**

@@ -16,6 +16,8 @@ use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Artwork\Modules\Project\Services\ComponentUsageService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
@@ -33,12 +35,23 @@ class ProjectTabController extends Controller
     private const CACHE_KEY_COMPONENTS = 'settings_components_not_special_tab_palette';
     private const CACHE_KEY_COMPONENTS_SPECIAL = 'settings_components_special';
 
-    public function list()
+    /**
+     * Tab-Auswahl im To-do-Listen-Modal (AddEditChecklistModal, einziger Aufrufer): nur Tabs, die die
+     * Person sehen darf – in andere lehnt ChecklistController das Anlegen ab (Admins sehen alle).
+     */
+    public function list(Request $request): JsonResponse
     {
-        // Minimal list for client-side selection when creating checklists
-        return response()->json(\Artwork\Modules\Project\Models\ProjectTab::query()
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json(ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
+            ->visibleForUser($user)
             ->orderBy('order')
-            ->get(['id','name']));
+            ->get(['id', 'name'])
+            // ohne Appends (hasSidebarTabs lüde sonst die Seitenleisten je Tab nach)
+            ->map(fn (ProjectTab $tab): array => $tab->only(['id', 'name']))
+            ->values());
     }
 
     public function index(ComponentUsageService $componentUsageService): ResponseFactory|Response

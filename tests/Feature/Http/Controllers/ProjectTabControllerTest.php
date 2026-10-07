@@ -7,6 +7,7 @@ use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -34,6 +35,28 @@ final class ProjectTabControllerTest extends FeatureTestCase
         $this->actingAsAdmin();
 
         $this->get(route('tab.list'))->assertOk();
+    }
+
+    /**
+     * Tab-Auswahl im To-do-Listen-Modal: nur sichtbare Tabs (in andere lehnt das Anlegen ab), Admins alle.
+     */
+    #[Test]
+    public function tab_list_only_offers_tabs_the_user_may_see(): void
+    {
+        $visibleTab = ProjectTab::factory()->create(['visible_for_all' => true]);
+        $hiddenTab = ProjectTab::factory()->create(['visible_for_all' => false]);
+        $sharedTab = ProjectTab::factory()->create(['visible_for_all' => false]);
+        $user = User::factory()->create();
+        $sharedTab->visibleUsers()->attach($user->id);
+
+        $listedIds = $this->actingAs($user)->getJson(route('tab.list'))->assertOk()->json('*.id');
+        $this->assertContains($visibleTab->id, $listedIds);
+        $this->assertContains($sharedTab->id, $listedIds);
+        $this->assertNotContains($hiddenTab->id, $listedIds);
+        $this->assertSame(['id', 'name'], array_keys($this->getJson(route('tab.list'))->json('0')));
+
+        $this->actingAsAdmin();
+        $this->assertContains($hiddenTab->id, $this->getJson(route('tab.list'))->json('*.id'));
     }
 
     #[Test]

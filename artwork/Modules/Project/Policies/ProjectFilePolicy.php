@@ -76,16 +76,40 @@ class ProjectFilePolicy
 
     public function update(User $user, ProjectFile $projectFile): bool
     {
-        return $this->view($user, $projectFile);
+        return $this->view($user, $projectFile) && $this->canManage($user, $projectFile);
     }
 
     public function delete(User $user, ProjectFile $projectFile): bool
     {
-        return $this->view($user, $projectFile);
+        return $this->view($user, $projectFile) && $this->canManage($user, $projectFile);
     }
 
     public function forceDelete(User $user, ProjectFile $projectFile): bool
     {
-        return $this->view($user, $projectFile);
+        return $this->view($user, $projectFile) && $this->canManage($user, $projectFile);
+    }
+
+    /**
+     * Ersetzen, Löschen und Freigabeliste ändern setzt Schreibrecht im Projekt voraus (ProjectPolicy::update –
+     * dieselbe Basis wie die Löschen-Buttons der Dokumente-Komponenten). Leserecht oder eine Freigabe allein
+     * reichen nicht. Budget-Dokumente pflegen zusätzlich die Personen mit Budget-Rolle (globale Budget-
+     * Verwaltung, Budgetzugriff im Projekt): die Budget-Informationen bieten ihnen Bearbeiten/Löschen an.
+     * Die Sicht auf das Budget-Dokument selbst (canSeeBudgetDocument) prüft view().
+     */
+    private function canManage(User $user, ProjectFile $projectFile): bool
+    {
+        $project = $projectFile->project;
+        if ($project === null) {
+            return false;
+        }
+
+        if ($user->can('update', $project)) {
+            return true;
+        }
+
+        return $projectFile->is_budget_document && (
+            $user->can(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value) ||
+            $project->access_budget->contains('id', $user->id)
+        );
     }
 }

@@ -86,13 +86,20 @@ class ProjectComponentValueController extends Controller
      * Gibt den gespeicherten Wert im Format von project_value zurück: der Speichernde übernimmt ihn
      * lokal (der Broadcast geht toOthers und trägt nur Kennungen).
      */
-    public function update(Request $request, Project $project, Component $component): JsonResponse
-    {
+    public function update(
+        Request $request,
+        Project $project,
+        Component $component,
+        ProjectComponentVisibilityService $visibilityService,
+    ): JsonResponse {
         /** @var \Artwork\Modules\User\Models\User $user */
         $user = $request->user();
 
         // Schreibrecht im Projekt + Komponenten-Einstellung (Spiegel von canEditComponent() im Frontend).
         abort_unless($user->can('writeComponent', [$project, $component]), 403);
+        // Gleiche Sichtregel wie value(): Komponenten in für die Person unsichtbaren Tabs sind nicht
+        // beschreibbar, auch wenn Projekt-Schreibrecht besteht.
+        abort_unless($visibilityService->canSeeInProject($user, $component), 403);
 
         // Fehlendes data oder ein Array als text führten vorher zu TypeError/ErrorException (500).
         $request->validate([

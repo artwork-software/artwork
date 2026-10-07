@@ -413,13 +413,11 @@ class ProjectPrintLayoutController extends Controller
      */
     private function removeComponentsHiddenFromUser(ProjectPrintLayout $projectPrintLayout, User $user): void
     {
-        $visibleComponentIds = $projectPrintLayout->components
-            ->pluck('component')
-            ->filter()
-            ->unique('id')
-            ->filter(fn (Component $component) => $this->projectComponentVisibilityService
-                ->canSeeInProject($user, $component))
-            ->pluck('id');
+        // Gesammelt geprüft: canSeeInProject je Komponente kostete ~5 Abfragen pro Baustein
+        $visibleComponentIds = $this->projectComponentVisibilityService->visibleInProjectComponentIds(
+            $user,
+            $projectPrintLayout->components->pluck('component')
+        );
 
         foreach (['components', 'headerComponents', 'bodyComponents', 'footerComponents'] as $relation) {
             $projectPrintLayout->setRelation(

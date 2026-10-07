@@ -242,6 +242,16 @@ class InventoryArticleService
     }
 
     /**
+     * Volltextsuche für die Artikelauswahl; fällt auf SQL zurück, solange der Meilisearch-Index fehlt.
+     *
+     * @return Collection<int, InventoryArticle>
+     */
+    public function searchArticles(string $term, int $limit): Collection
+    {
+        return $this->articleRepository->search($term, $limit);
+    }
+
+    /**
      * Summiert Status-Zähler:
      * - Haupt-Artikel:  pivot->value
      * - Detail-Artikel: detailedArticleQuantities.quantity (gruppiert nach deren Status)

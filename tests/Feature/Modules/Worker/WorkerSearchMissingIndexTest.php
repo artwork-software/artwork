@@ -2,17 +2,18 @@
 
 namespace Tests\Feature\Modules\Worker;
 
+use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Repositories\FreelancerRepository;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Repositories\ServiceProviderRepository;
-use Artwork\Modules\User\Models\User;
-use GuzzleHttp\Psr7\Response;
-use Laravel\Scout\Builder;
-use Laravel\Scout\EngineManager;
-use Laravel\Scout\Engines\NullEngine;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Laravel\Scout\Builder as ScoutBuilder;
+use LogicException;
 use Meilisearch\Exceptions\ApiException;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Concerns\FakesMeilisearchErrors;
 use Tests\Feature\FeatureTestCase;
 
 /**
@@ -22,6 +23,8 @@ use Tests\Feature\FeatureTestCase;
  */
 final class WorkerSearchMissingIndexTest extends FeatureTestCase
 {
+    use FakesMeilisearchErrors;
+
     #[Test]
     public function service_provider_search_falls_back_to_sql_when_index_is_missing(): void
     {
@@ -79,33 +82,65 @@ final class WorkerSearchMissingIndexTest extends FeatureTestCase
         $this->assertContains($serviceProvider->id, collect($response->json())->pluck('id')->all());
     }
 
-    /**
-     * Registriert eine Scout-Engine, die für alle Modelle außer User wie Meilisearch mit dem
-     * angegebenen Fehlercode antwortet (der users-Index existiert auf jeder Instanz).
-     */
-    private function useMeilisearchEngineFailingWith(string $errorCode): void
+    #[Test]
+    public function sql_fallback_returns_at_most_twenty_hits_like_meilisearch(): void
     {
-        app(EngineManager::class)->extend('failing-meilisearch', fn() => new class ($errorCode) extends NullEngine {
-            public function __construct(private readonly string $errorCode)
+        $this->useMeilisearchEngineFailingWith('index_not_found');
+        ServiceProvider::factory()->count(25)->sequence(
+            fn($sequence) => ['provider_name' => 'Lichttechnik ' . $sequence->index]
+        )->create();
+
+        $this->assertCount(20, app(ServiceProviderRepository::class)->scoutSearch('Lichttechnik'));
+    }
+
+    #[Test]
+    public function sql_fallback_respects_the_limit_and_query_callback_of_the_scout_builder(): void
+    {
+        $this->useMeilisearchEngineFailingWith('index_not_found');
+        $providers = ServiceProvider::factory()->count(4)->sequence(
+            fn($sequence) => ['provider_name' => 'Tontechnik ' . $sequence->index]
+        )->create();
+        $excluded = $providers->first();
+
+        $results = $this->fallbackSearch(
+            ServiceProvider::search('Tontechnik')
+                ->take(2)
+                ->query(fn(Builder $query) => $query->whereKeyNot($excluded->id)),
+            'Tontechnik'
+        );
+
+        $this->assertCount(2, $results);
+        $this->assertNotContains($excluded->id, $results->pluck('id')->all());
+    }
+
+    #[Test]
+    public function sql_fallback_refuses_index_filters_instead_of_ignoring_them(): void
+    {
+        $this->useMeilisearchEngineFailingWith('index_not_found');
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('where');
+
+        $this->fallbackSearch(ServiceProvider::search('Lichttechnik')->where('type', 'extern'), 'Lichttechnik');
+    }
+
+    /**
+     * Ruft den geschützten Fallback über ein minimales Repository auf.
+     *
+     * @return EloquentCollection<int, ServiceProvider>
+     */
+    private function fallbackSearch(ScoutBuilder $scoutBuilder, string $search): EloquentCollection
+    {
+        $repository = new class extends BaseRepository {
+            /**
+             * @return EloquentCollection<int, ServiceProvider>
+             */
+            public function search(ScoutBuilder $scoutBuilder, string $search): EloquentCollection
             {
+                return $this->getScoutResultsOrSqlFallback($scoutBuilder, $search, ['provider_name']);
             }
+        };
 
-            public function search(Builder $builder): mixed
-            {
-                if ($builder->model instanceof User) {
-                    return parent::search($builder);
-                }
-
-                throw new ApiException(new Response(404), [
-                    'message' => 'Index `' . $builder->model->searchableAs() . '` not found.',
-                    'code' => $this->errorCode,
-                    'type' => 'invalid_request',
-                    'link' => 'https://docs.meilisearch.com/errors#' . $this->errorCode,
-                ]);
-            }
-        });
-
-        config(['scout.driver' => 'failing-meilisearch']);
-        app(EngineManager::class)->forgetDrivers();
+        return $repository->search($scoutBuilder, $search);
     }
 }

@@ -410,7 +410,8 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating users...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::USER->value];
 
-        User::all()->each(function (User $user) use ($type): void {
+        // Der Platzhalter „Deleted user“ ist keine Person und bekommt keinen Kontakt
+        User::query()->excludeDeletedPlaceholder()->get()->each(function (User $user) use ($type): void {
             $this->migrateEntity($user, $type, $user->profile_photo_path);
         });
     }

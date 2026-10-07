@@ -284,9 +284,7 @@ class InventoryArticleController extends Controller
             return response()->json([], 200); // Oder returniere eine sinnvolle Fehlermeldung
         }
 
-        $articles = InventoryArticle::search($search)
-            ->take(50)
-            ->get()
+        $articles = $this->inventoryArticleService->searchArticles((string) $search, 50)
             ->load([
                 'category',
                 'subCategory',

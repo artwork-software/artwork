@@ -23,6 +23,21 @@ class UpdateContainerCommand extends Command
 
     protected $description = 'Updates the container';
 
+    /**
+     * Modelle, deren Meilisearch-Index beim Container-Update angelegt und befüllt wird.
+     *
+     * @var array<int, class-string<\Illuminate\Database\Eloquent\Model>>
+     */
+    public const SEARCHABLE_MODELS = [
+        Department::class,
+        MoneySource::class,
+        Project::class,
+        User::class,
+        Freelancer::class,
+        ServiceProvider::class,
+        InventoryArticle::class,
+    ];
+
     public function handle(): int
     {
         // Muss vor dem Nullen gelesen werden — danach liefert die Config null.
@@ -60,20 +75,8 @@ class UpdateContainerCommand extends Command
         }
 
         $this->line('Adding meili-indexes');
-        foreach (
-            [
-                'departments' => Department::class,
-                'moneysources' => MoneySource::class,
-                'projects' => Project::class,
-                'users' => User::class,
-                'freelancers' => Freelancer::class,
-                'serviceproviders' => ServiceProvider::class,
-                'inventoryarticles' => InventoryArticle::class
-            ] as $key => $model
-        ) {
-            Artisan::call(sprintf('scout:index %s', $key));
-            Artisan::call(sprintf('scout:import %s', str_replace('\\', '\\\\', $model)));
-        }
+        $this->syncMeilisearchIndexes();
+
         if (!Permission::first()) {
             $this->line('Seeding initial data');
             Artisan::call('db:seed:production');
@@ -91,5 +94,18 @@ class UpdateContainerCommand extends Command
         $this->line('Container update finished');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Legt die Meilisearch-Indizes an und importiert die Datensätze. scout:index bekommt die Modellklasse,
+     * damit der Index genau so heißt, wie Scout ihn beim Suchen anspricht (searchableAs() inkl.
+     * scout.prefix) und modellbezogene index-settings greifen.
+     */
+    private function syncMeilisearchIndexes(): void
+    {
+        foreach (self::SEARCHABLE_MODELS as $model) {
+            Artisan::call('scout:index', ['name' => $model]);
+            Artisan::call('scout:import', ['model' => $model]);
+        }
     }
 }

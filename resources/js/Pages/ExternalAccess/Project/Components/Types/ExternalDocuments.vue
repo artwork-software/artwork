@@ -30,9 +30,9 @@
             {{ $t('No files available') }}
         </div>
         <ul v-else class="divide-y divide-border-subtle rounded-xl border border-border-subtle">
-            <li v-for="file in documents" :key="file.id" class="flex items-center justify-between gap-3 px-3 py-2">
+            <li v-for="file in documents" :key="file.id" class="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-2">
                 <div class="min-w-0">
-                    <div class="truncate text-sm font-medium text-text">{{ file.name }}</div>
+                    <div class="break-all text-sm font-medium text-text sm:truncate sm:break-normal">{{ file.name }}</div>
                     <div class="text-xs text-text-subtle">
                         <span v-if="file.file_size">{{ file.file_size }}</span>
                         <span v-if="file.created_at"> · {{ formatDate(file.created_at) }}</span>
@@ -45,14 +45,14 @@
                         :href="downloadUrl(file)"
                         target="_blank"
                         rel="noopener"
-                        class="rounded-lg px-2 py-1 text-xs font-medium text-text ring-1 ring-inset ring-border"
+                        class="rounded-lg px-3 py-2 text-xs font-medium text-text ring-1 ring-inset ring-border sm:px-2 sm:py-1"
                     >
                         {{ $t('Download') }}
                     </a>
                     <button
                         v-if="editable && file.uploaded_by_me"
                         type="button"
-                        class="rounded-lg px-2 py-1 text-xs font-medium text-danger ring-1 ring-inset ring-danger-border"
+                        class="rounded-lg px-3 py-2 text-xs font-medium text-danger ring-1 ring-inset ring-danger-border sm:px-2 sm:py-1"
                         @click="removeFile(file)"
                     >
                         {{ $t('Remove') }}

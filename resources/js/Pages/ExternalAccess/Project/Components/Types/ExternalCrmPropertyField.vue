@@ -10,15 +10,15 @@
             :id="inputId"
             :value="modelValue ?? ''"
             rows="3"
-            class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
+            class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
             @input="$emit('update:modelValue', $event.target.value)"
         />
-        <label v-else-if="property.type === 'checkbox'" class="mt-1 inline-flex items-center gap-2 text-sm text-text-muted">
+        <label v-else-if="property.type === 'checkbox'" class="mt-1 inline-flex items-start gap-2 py-1 text-sm text-text-muted">
             <input
                 :id="inputId"
                 type="checkbox"
                 :checked="modelValue === '1'"
-                class="rounded border-border"
+                class="mt-px size-5 shrink-0 rounded border-border sm:mt-0.5 sm:size-4"
                 @change="$emit('update:modelValue', $event.target.checked ? '1' : '0')"
             />
             {{ property.name }}<span v-if="property.is_required" class="text-danger">*</span>
@@ -27,7 +27,7 @@
             v-else-if="property.type === 'select'"
             :id="inputId"
             :value="modelValue ?? ''"
-            class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
+            class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
             @change="$emit('update:modelValue', $event.target.value)"
         >
             <option value="">{{ $t('Please select') }}</option>
@@ -39,7 +39,7 @@
             :type="inputType"
             :inputmode="property.type === 'link' ? 'url' : undefined"
             :value="modelValue ?? ''"
-            class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
+            class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
             @input="$emit('update:modelValue', $event.target.value)"
         />
 

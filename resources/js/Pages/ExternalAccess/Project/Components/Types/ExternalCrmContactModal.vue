@@ -16,7 +16,7 @@
                     v-model="displayName"
                     type="text"
                     maxlength="255"
-                    class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
+                    class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
                 />
                 <p v-if="errors.display_name" class="mt-1 text-xs text-danger">{{ errors.display_name }}</p>
             </div>

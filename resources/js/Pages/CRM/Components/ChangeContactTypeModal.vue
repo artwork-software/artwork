@@ -47,6 +47,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
+import { isMirroredContactType } from '@/Pages/CRM/mirroredContactTypes.js'
 
 const $t = useTranslation()
 
@@ -57,11 +58,9 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-const mirroredSlugs = ['user', 'freelancer', 'service_provider']
-
 const selectableTypes = computed(() =>
     props.contactTypes.filter(t =>
-        t.id !== props.contact.crm_contact_type_id && !mirroredSlugs.includes(t.slug)
+        t.id !== props.contact.crm_contact_type_id && !isMirroredContactType(t.slug)
     )
 )
 

@@ -10,6 +10,7 @@
             "relevant_for_inventory": ".",
             "relevant_for_project_period": ".",
             "relevant_for_shift": ".",
+            "relevant_for_ticketing": ".",
             "resource": ".",
             "specific_verifier_id": ".",
             "users": {

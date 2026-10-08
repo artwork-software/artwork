@@ -333,6 +333,9 @@ class Shift extends Model
         )->without(['components', 'users']);
     }
 
+    /**
+     * @return MorphToMany<User, $this, ShiftWorker>
+     */
     public function users(): MorphToMany
     {
         return $this
@@ -361,6 +364,9 @@ class Shift extends Model
             ->without('calendar_settings');
     }
 
+    /**
+     * @return MorphToMany<Freelancer, $this, ShiftWorker>
+     */
     public function freelancer(): MorphToMany
     {
         return $this
@@ -388,6 +394,9 @@ class Shift extends Model
             ]);
     }
 
+    /**
+     * @return MorphToMany<ServiceProvider, $this, ShiftWorker>
+     */
     public function serviceProvider(): MorphToMany
     {
         return $this

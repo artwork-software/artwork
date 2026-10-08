@@ -165,7 +165,7 @@ class ProjectFileController extends Controller
     {
         $this->authorize('view', $projectFile);
 
-        $path = 'project_files/' . $projectFile->basename;
+        $path = $projectFile->storagePath();
 
         if ($request->boolean('inline') && $this->canDisplayInline($path)) {
             return Storage::response($path, $projectFile->name);
@@ -205,7 +205,7 @@ class ProjectFileController extends Controller
         if ($request->file('file')) {
             $file = $request->file('file');
             $this->handleFile(ArtworkFileTypes::PROJECT, $file);
-            Storage::delete('project_files/' . $projectFile->basename);
+            Storage::delete($projectFile->storagePath());
             $original_name = $file->getClientOriginalName();
             $basename = StoredFileName::forUpload($file);
 
@@ -345,7 +345,7 @@ class ProjectFileController extends Controller
         $projectFile = ProjectFile::onlyTrashed()->findOrFail($id);
         $this->authorize('forceDelete', $projectFile);
 
-        Storage::delete('project_files/' . $projectFile->basename);
+        Storage::delete($projectFile->storagePath());
 
         $projectFile->forceDelete();
         return Redirect::back();

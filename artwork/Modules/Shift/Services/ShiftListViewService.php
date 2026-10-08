@@ -6,6 +6,8 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Holidays\Services\HolidayService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Serializers\ShiftListViewSerializer;
+use Artwork\Modules\User\Enums\UserFilterTypes;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Models\UserShiftListViewSettings;
 use Carbon\Carbon;
@@ -18,6 +20,26 @@ readonly class ShiftListViewService
         private HolidayService $holidayService,
     ) {
     }
+    /**
+     * Der persistierte Zeitraum-Filter der Listenansicht, beim ersten Aufruf mit dem laufenden
+     * Monat angelegt — Web und App lesen dieselbe Zeile.
+     */
+    public function filterFor(User $user): UserFilter
+    {
+        return $user->userFilters()->firstOrCreate(
+            ['filter_type' => UserFilterTypes::SHIFT_LIST_VIEW_FILTER->value],
+            [
+                'start_date' => Carbon::now()->startOfMonth()->format('Y-m-d'),
+                'end_date' => Carbon::now()->endOfMonth()->format('Y-m-d'),
+            ],
+        );
+    }
+
+    public function settingsFor(User $user): UserShiftListViewSettings
+    {
+        return $user->shift_list_view_settings ?? $user->shift_list_view_settings()->create();
+    }
+
     public function getGroupedShifts(
         Carbon $startDate,
         Carbon $endDate,

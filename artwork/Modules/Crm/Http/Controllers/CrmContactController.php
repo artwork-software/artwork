@@ -32,15 +32,6 @@ class CrmContactController extends Controller
     // Gespeicherte Pfade: StoredFileName (32 hex) oder Laravel-hashName (40 alnum) aus dem Altbestand.
     private const PROPERTY_FILE_PATH_PATTERN = '#^crm-property-files/[A-Za-z0-9]{1,64}(\.[A-Za-z0-9]{1,16})?$#';
 
-    // Kontakte dieser Typen werden aus User-/Freelancer-/Dienstleister-Profilen
-    // gespiegelt und sind im CRM read-only — Schreibzugriffe würden sonst in die
-    // Quell-Entität zurückgeschrieben.
-    private const MIRRORED_SLUGS = [
-        CrmSystemContactTypeEnum::USER->value,
-        CrmSystemContactTypeEnum::FREELANCER->value,
-        CrmSystemContactTypeEnum::SERVICE_PROVIDER->value,
-    ];
-
     public function __construct(
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
@@ -49,7 +40,7 @@ class CrmContactController extends Controller
 
     private function abortIfMirrored(CrmContact $crmContact): void
     {
-        if (in_array($crmContact->contactType?->slug, self::MIRRORED_SLUGS, true)) {
+        if (CrmSystemContactTypeEnum::isMirrored($crmContact->contactType?->slug)) {
             abort(403, 'Gespiegelte Kontakte können nur über das jeweilige Profil geändert werden.');
         }
     }
@@ -304,7 +295,7 @@ class CrmContactController extends Controller
 
         $newType = CrmContactType::findOrFail($validated['crm_contact_type_id']);
 
-        if (in_array($newType->slug, self::MIRRORED_SLUGS, true)) {
+        if (CrmSystemContactTypeEnum::isMirrored($newType->slug)) {
             abort(422, 'Kontakte können nicht in einen system-verwalteten Typ umgewandelt werden.');
         }
 
@@ -333,7 +324,7 @@ class CrmContactController extends Controller
 
         foreach ($contacts as $contact) {
             // Gespiegelte Kontakte werden übersprungen statt die ganze Auswahl zu blocken
-            if (in_array($contact->contactType?->slug, self::MIRRORED_SLUGS, true)) {
+            if (CrmSystemContactTypeEnum::isMirrored($contact->contactType?->slug)) {
                 continue;
             }
 

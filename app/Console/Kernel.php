@@ -26,6 +26,8 @@ use Artwork\Modules\ExternalAccess\Console\Commands\CleanupExpiredLoginTokensCom
 use Artwork\Modules\ExternalAccess\Console\Commands\SendExternalAccessExpiryRemindersCommand;
 use Artwork\Modules\ExternalUserManagement\Console\Commands\SyncExternalUsersCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Ticketing\Jobs\SyncTicketingCustomersJob;
+use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Command;
 use Illuminate\Console\Scheduling\Schedule;
@@ -126,6 +128,10 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(180)
             ->onOneServer()
             ->runInBackground();
+        $schedule->job(new SyncTicketingCustomersJob())
+            ->dailyAt('02:30')
+            ->when(static fn (): bool => app(TicketingConnectionService::class)->isActive())
+            ->onOneServer();
     }
 
     /**

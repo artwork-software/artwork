@@ -14,6 +14,7 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
+use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Artwork\Modules\User\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
@@ -124,6 +125,7 @@ class HandleInertiaRequests extends Middleware
             $failSave++;
         }
         $sageApiEnabled = app(SageApiSettingsService::class)->isEnabled();
+        $ticketingConnections = app(TicketingConnectionService::class);
 
         $shiftCommitWorkflowEnabled = (bool) $generalSettings->shift_commit_workflow_enabled;
 
@@ -285,6 +287,11 @@ class HandleInertiaRequests extends Middleware
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,
+                // Artwork-Tickets: configured = Einstellungen zum Verbinden, active = alles Übrige (Kalender, Termine, Terminarten)
+                'ticketing' => [
+                    'configured' => $ticketingConnections->isConfigured(),
+                    'active' => $ticketingConnections->isActive(),
+                ],
                 // Externe Zugänge: gated Einladen-Buttons und CRM-Verwaltungslinks im Frontend
                 'externalAccessEnabled' => app(ExternalAccessSettingsResolver::class)->isEnabled(),
                 'calendar_settings' => $calendarSettings,

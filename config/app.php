@@ -2,6 +2,7 @@
 
 use Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider;
 use Artwork\Modules\Shift\Providers\ShiftChangeServiceProvider;
+use Artwork\Modules\Ticketing\Providers\TicketingServiceProvider;
 use Illuminate\Support\Facades\Facade;
 
 return [
@@ -238,6 +239,7 @@ return [
         Artwork\Modules\Webhook\Providers\WebhookServiceProvider::class,
 
         ShiftChangeServiceProvider::class,
+        TicketingServiceProvider::class,
         Clockwork\Support\Laravel\ClockworkServiceProvider::class
     ],
 

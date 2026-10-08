@@ -3,14 +3,21 @@
 namespace Artwork\Modules\Project\Policies;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProjectPolicy
 {
     use HandlesAuthorization;
+
+    public function __construct(
+        private readonly ProjectComponentVisibilityService $projectComponentVisibilityService,
+    ) {
+    }
 
     // Globale Rechte, die den Zutritt zu jedem Projekt erlauben (write inklusive: wer alle
     // Projekte bearbeiten darf, muss sie auch öffnen können). "management projects" gehört
@@ -112,6 +119,16 @@ class ProjectPolicy
     }
 
     /**
+     * Sehen einer Tab-Komponente (die App-API baut die Tab-Payload serverseitig); Admins und
+     * "write projects" sehen alle Komponenten, wie im Web.
+     */
+    public function viewComponent(User $user, Project $project, Component $component): bool
+    {
+        return $this->view($user, $project)
+            && $this->projectComponentVisibilityService->canSeeComponent($user, $component);
+    }
+
+    /**
      * Schreiben in eine Tab-Komponente: Schreibrecht im Projekt (update) ist Grundvoraussetzung,
      * die Komponenten-Einstellung kann es nur weiter einschränken, nie erweitern. Globales
      * "write projects" übersteuert die Komponenten-Einstellung; Admins passieren via Gate::before.
@@ -123,6 +140,19 @@ class ProjectPolicy
         }
 
         return $this->update($user, $project) && $component->isEditableBy($user);
+    }
+
+    /**
+     * writeComponent für Inhalte eines Komponenten-Typs, die nicht als Komponentenwert gespeichert werden.
+     * Ohne Komponenten-Datensatz greift die Projekt-Bearbeitungsregel allein.
+     */
+    public function writeComponentType(User $user, Project $project, ProjectTabComponentEnum $type): bool
+    {
+        $component = Component::query()->where('type', $type->value)->first();
+
+        return $component !== null
+            ? $this->writeComponent($user, $project, $component)
+            : $this->update($user, $project);
     }
 
     public function delete(User $user, Project $project): bool

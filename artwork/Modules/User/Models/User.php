@@ -221,6 +221,12 @@ class User extends Model implements
     use HasCrmFields;
     use DeletesMirroredCrmContact;
 
+    // All permissions/roles live on the web guard. Without this pin, spatie
+    // resolves the guard from auth.defaults.guard, which Authenticate/shouldUse
+    // switches to 'api' for Passport requests (app API) — every permission
+    // check would then silently fail there.
+    protected string $guard_name = 'web';
+
     protected $fillable = [
         'first_name',
         'last_name',

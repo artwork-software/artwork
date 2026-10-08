@@ -62,6 +62,7 @@ use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Enums\UserFilterTypes;
@@ -94,7 +95,8 @@ readonly class EventService
         private CollectionService $collectionService,
         private EventCollectionService $eventCollectionService,
         private EventTypeService $eventTypeService,
-        private readonly AuthManager $authManager
+        private readonly AuthManager $authManager,
+        private readonly TicketingLock $ticketingLock,
     ) {
         $this->cachedData = null;
     }
@@ -113,6 +115,8 @@ readonly class EventService
         NotificationService $notificationService,
         ProjectTabService $projectTabService,
     ): void {
+        $this->ticketingLock->assertEventDeletable($event);
+
         if (!empty($event->project_id)) {
             $changeService->saveFromBuilder(
                 $changeService
@@ -163,6 +167,10 @@ readonly class EventService
         ProjectTabService $projectTabService,
         bool $sendPerEventNotifications = true,
     ): void {
+        foreach ($events as $event) {
+            $this->ticketingLock->assertEventDeletable($event);
+        }
+
         $deletedEventIds = [];
         try {
             /** @var Event $event */
@@ -888,17 +896,22 @@ readonly class EventService
                     'shifts.shiftsQualifications',
                 ]
             )
-            ->whereHas(
-                'shifts.' . $relationToFind,
-                function (Builder $builder) use ($modelId): void {
+            // Nach Schichtdatum filtern, nicht nach Terminzeit: Die Schicht zählt zum
+            // Tag ihres Beginns, auch wenn der Termin selbst außerhalb des Zeitraums
+            // liegt oder über Mitternacht hinausläuft.
+            ->whereHas('shifts', function (Builder $query) use (
+                $relationToFind,
+                $modelId,
+                $startDate,
+                $endDate,
+            ): void {
+                $query->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
                     $builder->whereKey($modelId);
-                }
-            )
-            // Überlappung statt vollständiger Enthaltung: Termine, die über
-            // Mitternacht (und damit über das Zeitraum-Ende) hinauslaufen,
-            // dürfen nicht komplett herausfallen.
-            ->where('start_time', '<=', $endDate->copy()->endOfDay())
-            ->where('end_time', '>=', $startDate->copy()->startOfDay())
+                })->whereBetween('start_date', [
+                    $startDate->toDateString(),
+                    $endDate->toDateString(),
+                ]);
+            })
             ->orderBy('start_time')
             ->orderBy('end_time')
             ->get();

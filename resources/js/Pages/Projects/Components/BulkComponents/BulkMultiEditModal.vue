@@ -219,6 +219,7 @@ import {onMounted, ref} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useI18n} from "vue-i18n";
+import {ticketingMoveHeaders} from "@/Composeables/useTicketingMove.js";
 
 const props = defineProps({
     eventIds: {
@@ -255,7 +256,7 @@ const multiEditForm = useForm({
     selectedEndTime: '',
 })
 
-const submit = () => {
+const submit = async () => {
     // Clear previous validation errors
     validationErrors.value = [];
 
@@ -291,7 +292,11 @@ const submit = () => {
         }
     });*/
 
-    axios.post(route('events.bulk-multi-edit'), multiEditForm, { skipErrorToast: true }) // Fehler steht im Modal
+    const moves = multiEditForm.selectedRoom || multiEditForm.selectedDay || multiEditForm.selectedStartTime || multiEditForm.selectedEndTime;
+    const headers = moves ? await ticketingMoveHeaders(multiEditForm.eventIds) : {};
+    if (!headers) return;
+
+    axios.post(route('events.bulk-multi-edit'), multiEditForm, { headers, skipErrorToast: true }) // Fehler steht im Modal
         .then(response => {
             emits('close');
         })

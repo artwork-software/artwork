@@ -277,12 +277,6 @@ parameters:
 			path: app/Http/Controllers/ServiceProviderController.php
 
 		-
-			message: '#^Access to an undefined property Artwork\\Core\\Database\\Models\\Model\:\:\$shift_uuid\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/ShiftController.php
-
-		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\GlobalQualification\:\:\$pivot\.$#'
 			identifier: property.notFound
 			count: 1
@@ -303,25 +297,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 4
-			path: app/Http/Controllers/ShiftController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$language\.$#'
-			identifier: property.notFound
-			count: 8
-			path: app/Http/Controllers/ShiftController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:availabilities\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/ShiftController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:vacations\(\)\.$#'
-			identifier: method.notFound
-			count: 1
+			count: 2
 			path: app/Http/Controllers/ShiftController.php
 
 		-
@@ -359,6 +335,18 @@ parameters:
 			identifier: varTag.differentVariable
 			count: 1
 			path: artwork/Core/Notifications/BaseNotification.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/AppApi/Services/AppProjectService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Freelancer\\Models\\Freelancer\|Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider\|Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/AppApi/Services/AppSystemComponentService.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:rooms\(\)\.$#'
@@ -1573,12 +1561,6 @@ parameters:
 			path: artwork/Modules/ExternalAccess/Services/ExternalAccessService.php
 
 		-
-			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: artwork/Modules/ExternalAccess/Services/ExternalProjectFileService.php
-
-		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Crm\\Models\\CrmContactType\:\:\$pivot\.$#'
 			identifier: property.notFound
 			count: 1
@@ -1928,12 +1910,6 @@ parameters:
 			identifier: staticClassAccess.privateMethod
 			count: 4
 			path: artwork/Modules/Project/Cache/ProjectTabArrayCache.php
-
-		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: artwork/Modules/Project/Http/Resources/CommentResource.php
 
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Department\\Models\\Department\:\:\$pivot\.$#'
@@ -2326,12 +2302,6 @@ parameters:
 			path: artwork/Modules/Shift/Services/DailyShiftPlanPdfBuilder.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Shift/Services/ShiftDeletionService.php
-
-		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Freelancer\\Models\\Freelancer\:\:\$pivot\.$#'
 			identifier: property.notFound
 			count: 1
@@ -2668,12 +2638,6 @@ parameters:
 			path: artwork/Modules/User/Http/Controllers/UserCalenderAboController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserContractAssign\>\:\:\$overtime_compensation_period\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/User/Http/Controllers/UserController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserContractAssign\>\:\:\$overtime_rule_active\.$#'
 			identifier: property.notFound
 			count: 1
@@ -2870,24 +2834,6 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: artwork/Modules/Webhook/Jobs/SendWebhookJob.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$end_time\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$start_date\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$start_time\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
 
 		-
 			message: '#^Cannot call method pluck\(\) on array\<Artwork\\Modules\\User\\Models\\User\>\.$#'

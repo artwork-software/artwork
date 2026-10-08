@@ -45,6 +45,7 @@ class EventType extends Model
         'relevant_for_shift',
         'relevant_for_inventory',
         'relevant_for_project_period',
+        'relevant_for_ticketing',
         'specific_verifier_id',
         'verification_mode',
     ];
@@ -55,7 +56,8 @@ class EventType extends Model
         'relevant_for_shift' => 'boolean',
         'fallback_type' => 'boolean',
         'relevant_for_inventory' => 'boolean',
-        'relevant_for_project_period' => 'boolean'
+        'relevant_for_project_period' => 'boolean',
+        'relevant_for_ticketing' => 'boolean',
     ];
 
     /**

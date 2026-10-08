@@ -45,9 +45,24 @@ final class CrmSystemContactTypeEnumTest extends UnitTestCase
     }
 
     #[Test]
-    public function it_has_six_cases(): void
+    public function it_has_ticketing_case(): void
     {
-        $this->assertCount(6, CrmSystemContactTypeEnum::cases());
+        $this->assertSame('ticketing', CrmSystemContactTypeEnum::TICKETING->value);
+    }
+
+    #[Test]
+    public function it_has_seven_cases(): void
+    {
+        $this->assertCount(7, CrmSystemContactTypeEnum::cases());
+    }
+
+    #[Test]
+    public function only_types_kept_by_another_source_are_mirrored(): void
+    {
+        $this->assertTrue(CrmSystemContactTypeEnum::isMirrored('ticketing'));
+        $this->assertTrue(CrmSystemContactTypeEnum::isMirrored('user'));
+        $this->assertFalse(CrmSystemContactTypeEnum::isMirrored('artist'));
+        $this->assertFalse(CrmSystemContactTypeEnum::isMirrored(null));
     }
 
     #[Test]

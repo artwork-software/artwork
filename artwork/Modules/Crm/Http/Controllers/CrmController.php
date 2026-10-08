@@ -4,6 +4,7 @@ namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmContactTypeService;
@@ -12,6 +13,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Services\ProjectTabService;
+use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,6 +24,7 @@ class CrmController extends Controller
         private readonly CrmContactTypeService $contactTypeService,
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
+        private readonly TicketingConnectionService $ticketingConnections,
     ) {
     }
 
@@ -82,6 +85,9 @@ class CrmController extends Controller
             'canImport' => $isCrmManager,
             'importResult' => session('importResult'),
             'importError' => session('error'),
+            'ticketingSync' => $activeType?->getAttribute('slug') === CrmSystemContactTypeEnum::TICKETING->value
+                ? $this->ticketingSyncState()
+                : null,
         ]);
     }
 
@@ -106,6 +112,9 @@ class CrmController extends Controller
         // Protokoll der Projekte, mit denen dieser Kontakt verknüpft ist — über die
         // Künstler*innen-Verknüpfung, das Projektteam oder Künstler*innenaufenthalte
         $linkedProjects = $this->buildLinkedProjects($crmContact);
+        $canChangeType = $isCrmManager
+            && $crmContact->entity_type === null
+            && !CrmSystemContactTypeEnum::isMirrored($crmContact->contactType?->slug);
 
         return Inertia::render('CRM/Show', [
             'contact' => $crmContact,
@@ -117,10 +126,8 @@ class CrmController extends Controller
                 : null,
             'sourceProfileUrl' => $this->resolveSourceProfileUrl($crmContact),
             // Für den Typ-Wechsel: alle aktiven Typen inkl. zugewiesener Property-IDs
-            'contactTypes' => $isCrmManager && $crmContact->entity_type === null
-                ? $this->contactTypeService->getAllWithProperties()
-                : [],
-            'canChangeType' => $isCrmManager && $crmContact->entity_type === null,
+            'contactTypes' => $canChangeType ? $this->contactTypeService->getAllWithProperties() : [],
+            'canChangeType' => $canChangeType,
         ]);
     }
 
@@ -201,6 +208,24 @@ class CrmController extends Controller
         }
 
         return collect($entries)->values();
+    }
+
+    /**
+     * Stand des Käufer-Abgleichs aus Artwork-Tickets für den Kopf des Typs "Ticketing-Kunde".
+     *
+     * @return array{connected: bool, synced_at: string|null, running: bool, error: string|null}
+     */
+    private function ticketingSyncState(): array
+    {
+        $connection = $this->ticketingConnections->current();
+
+        return [
+            'connected' => $connection !== null,
+            'synced_at' => $connection?->customers_synced_at?->toIso8601String(),
+            // Ein aufgegebener Lauf behält seine Stelle für den nächsten, darf den Knopf aber nicht sperren.
+            'running' => $connection?->customers_sync_started_at !== null && $connection->customers_sync_error === null,
+            'error' => $connection?->customers_sync_error,
+        ];
     }
 
     /**

@@ -2638,12 +2638,6 @@ parameters:
 			path: artwork/Modules/User/Http/Controllers/UserCalenderAboController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserContractAssign\>\:\:\$overtime_compensation_period\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/User/Http/Controllers/UserController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserContractAssign\>\:\:\$overtime_rule_active\.$#'
 			identifier: property.notFound
 			count: 1
@@ -2840,24 +2834,6 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: artwork/Modules/Webhook/Jobs/SendWebhookJob.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$end_time\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$start_date\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$start_time\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
 
 		-
 			message: '#^Cannot call method pluck\(\) on array\<Artwork\\Modules\\User\\Models\\User\>\.$#'

@@ -23,7 +23,7 @@
                         'whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium'
                     ]"
                 >
-                    {{ $t(tab.label) }}<span v-if="tab.key === 'overtime' && overtimeRuleInactive"> ({{ $t('inactive') }})</span>
+                    {{ $t(tab.label) }}
                 </button>
             </nav>
         </div>
@@ -241,6 +241,11 @@
                     <PropertyIcon name="IconAlertTriangle" class="size-4 shrink-0" />
                     {{ worktimesTargetUnknownTooltip }}
                 </p>
+                <!-- Vergangene Tage, die vom Zeitkonto abweichen (nie gebucht / nachträglich geändert) -->
+                <p v-if="data.worktimes.totals?.rebook_days > 0" class="flex items-start gap-1.5 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
+                    <PropertyIcon name="IconAlertTriangle" class="size-4 shrink-0" />
+                    {{ $t('{n} past day(s) in this period differ from the time account: never booked (e.g. work time pattern created later) or changed afterwards (e.g. sick note, shift time). Rebooking changes the time account by {diff}.', { n: data.worktimes.totals.rebook_days, diff: data.worktimes.totals.rebook_difference_signed }) }}
+                </p>
 
                 <div v-for="(days, weekKey) in (data.worktimes.workTimes ?? {})" :key="weekKey"
                      class="rounded-lg border border-border-subtle">
@@ -271,6 +276,10 @@
                                             />
                                             <span v-if="day.is_special_day" class="rounded bg-warning-surface text-warning border border-warning-border px-1 text-[9px] font-semibold uppercase">
                                                 {{ $t('Special Day') }}
+                                            </span>
+                                            <span v-if="day.needs_rebooking" class="rounded bg-warning-surface text-warning border border-warning-border px-1 text-[9px] font-semibold uppercase"
+                                                  :title="$t('Rebooking changes the time account by {diff}.', { diff: day.rebook_difference_signed })">
+                                                {{ day.rebook_reason === 'not_booked' ? $t('Not in time account') : $t('Differs from time account') }}
                                             </span>
                                         </div>
                                     </td>
@@ -569,13 +578,6 @@ const toggleInactiveKpis = () => {
         // Speicherung ist nur Komfort – ohne localStorage gilt der Zustand für dieses Fenster
     }
 }
-
-// Überstunden-Tab: Regel inaktiv -> Label "(inaktiv)"; Season-Payload liefert das Flag vorab, der Overtime-Payload bestätigt es
-const overtimeRuleInactive = computed(() => {
-    if (data.value.overtime && typeof data.value.overtime.rule_active === 'boolean') return !data.value.overtime.rule_active
-    if (data.value.season && typeof data.value.season.overtime_rule_active === 'boolean') return !data.value.season.overtime_rule_active
-    return false
-})
 
 const seasonRows = computed(() => {
     const d = data.value.season

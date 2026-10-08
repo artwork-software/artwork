@@ -165,7 +165,7 @@ final class WorkTimeBookingServiceTest extends TestCase
             'title' => 'Feiertagsdienst',
             'start_date' => '2026-07-21',
             'end_date' => '2026-07-21',
-            'full_day' => true,
+            'full_day' => false, // Dauer ohne Uhrzeit (ganztägig zählt das Tagessoll)
             'working_time_minutes' => 480,
         ]);
 
@@ -261,7 +261,7 @@ final class WorkTimeBookingServiceTest extends TestCase
             'title' => 'Kurzfristiger Einsatz',
             'start_date' => '2026-07-21',
             'end_date' => '2026-07-21',
-            'full_day' => true,
+            'full_day' => false, // Dauer ohne Uhrzeit (ganztägig zählt das Tagessoll)
             'working_time_minutes' => 120,
         ]);
 

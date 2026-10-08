@@ -201,61 +201,112 @@ final class WorkTimeChangeRequestDecisionTest extends FeatureTestCase
     }
 
     #[Test]
-    public function adjustment_booking_survives_the_nightly_booking_of_the_same_day(): void
+    public function approval_rebooks_the_booked_shift_day_instead_of_the_approval_day(): void
     {
-        // Regression: Die nächtliche Buchung fand die Korrekturbuchung desselben Tages (Treffer nur über
-        // booking_day), verrechnete deren Betrag und überschrieb die Zeile -> Korrektur aus dem Saldo verschwunden.
+        // Vorher: Korrekturzeile am Genehmigungstag mit worked_hours 0 -> Delta im falschen Tag/Monat,
+        // in keiner Ist-Anzeige sichtbar. Jetzt: der bereits gebuchte Schichttag wird neu gebucht.
         Event::fake([UpdateShiftInShiftPlan::class]);
-        Carbon::setTestNow(Carbon::parse('2026-07-21 14:00:00')); // Dienstag
         [$craft, $planner] = $this->plannerForAllCrafts();
         $worker = $this->workShiftUserWithTuesdayTarget('08:00');
+        $request = $this->requestForPastShift($craft, $worker, '2026-07-14', '10:00', '20:00'); // Dienstag
 
-        // Vergangene Schicht 10–18 Uhr, genehmigt 10–20 Uhr -> +120 Minuten Korrektur
-        $request = $this->requestForPastShift($craft, $worker, '2026-07-18', '10:00', '20:00');
+        Carbon::setTestNow(Carbon::parse('2026-07-14 23:59:00'));
+        app(WorkTimeBookingService::class)->calculateDailyWorkingHours();
+        $this->assertSame(0, (int) $worker->fresh()->work_time_balance); // 8 h gearbeitet, Soll 8 h
+
+        Carbon::setTestNow(Carbon::parse('2026-07-21 14:00:00'));
         $this->actingAs($planner)
             ->post(route('worktime.change-request.approve', $request))
             ->assertRedirect();
-        $this->assertSame(120, (int) $worker->fresh()->work_time_balance);
 
+        $this->assertSame(120, (int) $worker->fresh()->work_time_balance);
+        $this->assertBookings($worker, ['daily_work_time_booking_2026-07-14' => 120]);
+
+        // Nachtlauf am Genehmigungstag bucht nur den eigenen Tag (keine Arbeit, Soll 8 h)
         Carbon::setTestNow(Carbon::parse('2026-07-21 23:59:00'));
         app(WorkTimeBookingService::class)->calculateDailyWorkingHours();
+        app(WorkTimeBookingService::class)->calculateDailyWorkingHours(); // idempotent
 
-        // Tag ohne Arbeit, Soll 8 h -> -480; Korrektur bleibt erhalten
         $this->assertSame(120 - 480, (int) $worker->fresh()->work_time_balance);
         $this->assertBookings($worker, [
-            'adjustment_work_time_change_request_' . $request->shift_id => 120,
+            'daily_work_time_booking_2026-07-14' => 120,
             'daily_work_time_booking_2026-07-21' => -480,
         ]);
-
-        // Re-Run der Nachtbuchung bleibt idempotent
-        app(WorkTimeBookingService::class)->calculateDailyWorkingHours();
-
-        $this->assertSame(120 - 480, (int) $worker->fresh()->work_time_balance);
-        $this->assertSame(2, $worker->workTimeBookings()->count());
 
         Carbon::setTestNow();
     }
 
     #[Test]
-    public function two_approvals_on_the_same_day_create_two_adjustment_bookings(): void
+    public function approval_for_a_never_booked_day_does_not_touch_the_balance(): void
     {
-        // Regression: Die zweite Genehmigung desselben Tages überschrieb die erste Korrekturbuchung.
+        // Entscheidung: nie gebuchte Tage nur per „Tag neu buchen“ – die Genehmigung ändert dort nur die Zeit
         Event::fake([UpdateShiftInShiftPlan::class]);
         Carbon::setTestNow(Carbon::parse('2026-07-21 14:00:00'));
         [$craft, $planner] = $this->plannerForAllCrafts();
         $worker = $this->workShiftUserWithTuesdayTarget('08:00');
+        $request = $this->requestForPastShift($craft, $worker, '2026-07-17', '10:00', '19:00');
 
-        $first = $this->requestForPastShift($craft, $worker, '2026-07-17', '10:00', '19:00'); // +60
-        $second = $this->requestForPastShift($craft, $worker, '2026-07-18', '10:00', '17:30'); // -30
+        $this->actingAs($planner)->post(route('worktime.change-request.approve', $request))->assertRedirect();
 
-        $this->actingAs($planner)->post(route('worktime.change-request.approve', $first))->assertRedirect();
-        $this->actingAs($planner)->post(route('worktime.change-request.approve', $second))->assertRedirect();
+        $this->assertSame(0, (int) $worker->fresh()->work_time_balance);
+        $this->assertSame(0, $worker->workTimeBookings()->count());
+        $this->assertDatabaseHas('shift_workers', ['employable_id' => $worker->id, 'end_time' => '19:00:00']);
 
-        $this->assertSame(30, (int) $worker->fresh()->work_time_balance);
-        $this->assertBookings($worker, [
-            'adjustment_work_time_change_request_' . $first->shift_id => 60,
-            'adjustment_work_time_change_request_' . $second->shift_id => -30,
+        Carbon::setTestNow();
+    }
+
+    #[Test]
+    public function extending_a_night_shift_is_not_booked_twice(): void
+    {
+        // Vorher: Schicht Mo 22:00 – Di 02:00, am Dienstag auf 04:00 verlängert -> Korrektur +120 UND der
+        // Nachtlauf am Dienstag zählte 00–04 Uhr erneut. Jetzt: Montag bleibt, Dienstag bucht der Nachtlauf.
+        Event::fake([UpdateShiftInShiftPlan::class]);
+        [$craft, $planner] = $this->plannerForAllCrafts();
+        $worker = $this->workShiftUserWithTuesdayTarget('08:00'); // Montag Soll 0
+        $shift = Shift::factory()->create([
+            'event_id' => null,
+            'room_id' => Room::factory()->create()->id,
+            'craft_id' => $craft->id,
+            'start_date' => '2026-07-20',
+            'end_date' => '2026-07-21',
+            'start' => '22:00:00',
+            'end' => '02:00:00',
         ]);
+        ShiftWorker::create([
+            'shift_id' => $shift->id,
+            'employable_type' => User::class,
+            'employable_id' => $worker->id,
+            'shift_qualification_id' => ShiftQualification::factory()->create()->id,
+            'craft_abbreviation' => 'X',
+            'start_date' => '2026-07-20',
+            'end_date' => '2026-07-21',
+            'start_time' => '22:00',
+            'end_time' => '02:00',
+        ]);
+        $request = WorkTimeChangeRequest::create([
+            'user_id' => $worker->id,
+            'shift_id' => $shift->id,
+            'request_start_time' => '22:00',
+            'request_end_time' => '04:00',
+            'request_end_date' => '2026-07-21',
+            'craft_id' => $craft->id,
+            'status' => 'pending',
+            'requested_by' => $worker->id,
+        ]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-20 23:59:00'));
+        app(WorkTimeBookingService::class)->calculateDailyWorkingHours();
+        $this->assertSame(120, (int) $worker->fresh()->work_time_balance); // 22–24 Uhr, Soll 0
+
+        Carbon::setTestNow(Carbon::parse('2026-07-21 10:00:00'));
+        $this->actingAs($planner)->post(route('worktime.change-request.approve', $request))->assertRedirect();
+        $this->assertSame(120, (int) $worker->fresh()->work_time_balance); // Montag unverändert
+
+        Carbon::setTestNow(Carbon::parse('2026-07-21 23:59:00'));
+        app(WorkTimeBookingService::class)->calculateDailyWorkingHours();
+
+        // Montag 2 h + Dienstag 4 h gegen 8 h Soll = 120 + (240 − 480)
+        $this->assertSame(-120, (int) $worker->fresh()->work_time_balance);
 
         Carbon::setTestNow();
     }

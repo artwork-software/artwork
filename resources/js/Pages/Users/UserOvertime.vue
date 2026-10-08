@@ -4,7 +4,7 @@
             <div>
                 <h2 class="text-lg font-semibold mb-1">{{ $t('Overtime') }}</h2>
                 <p class="text-sm text-text-muted">
-                    {{ $t('Overtime account, deadlines and payouts for this user.') }}
+                    {{ $t('Overtime account: when overtime and minus hours accrued and how they were compensated.') }}
                 </p>
             </div>
 

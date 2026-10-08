@@ -86,7 +86,7 @@ final class OvertimeServiceContractHistoryTest extends TestCase
 
         $this->booking($user, '2026-08-10', 120);
         $this->booking($user, '2026-08-20', 60);
-        $this->booking($user, '2026-09-05', 90); // Lücke: keine Regel → kein Eintrag
+        $this->booking($user, '2026-09-05', 90); // Lücke: keine Regel → Eintrag ohne Frist
 
         // Heute (07.09.) gilt kein Zeitraum – früher brach recomputeForUser hier ab
         $this->assertNull($user->fresh()->contract);
@@ -97,12 +97,13 @@ final class OvertimeServiceContractHistoryTest extends TestCase
         $this->assertSame([
             '2026-08-10',
             '2026-08-20',
+            '2026-09-05',
         ], $entries->map(fn (UserOvertime $e) => $e->date->toDateString())->all());
         $this->assertSame('2026-09-09', $entries[0]->deadline->toDateString());
         $this->assertSame('2026-09-19', $entries[1]->deadline->toDateString());
+        $this->assertNull($entries[2]->deadline);
         $this->assertSame(120, $entries[0]->minutes);
         $this->assertSame(60, $entries[1]->minutes);
-        $this->assertSame(0, UserOvertime::where('user_id', $user->id)->whereDate('date', '2026-09-05')->count());
     }
 
     #[Test]
@@ -136,7 +137,7 @@ final class OvertimeServiceContractHistoryTest extends TestCase
     }
 
     #[Test]
-    public function days_in_a_period_without_active_rule_create_no_entries_but_other_periods_do(): void
+    public function days_in_a_period_without_active_rule_get_no_deadline_but_other_periods_do(): void
     {
         $user = User::factory()->create();
         $template = $this->template();
@@ -156,13 +157,10 @@ final class OvertimeServiceContractHistoryTest extends TestCase
 
         $this->service->recomputeForUser($user->fresh());
 
-        $this->assertSame(
-            ['2026-06-20'],
-            UserOvertime::where(
-                'user_id',
-                $user->id
-            )->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
-        );
+        $entries = UserOvertime::where('user_id', $user->id)->orderBy('date')->get()
+            ->mapWithKeys(fn (UserOvertime $e): array => [$e->date->toDateString() => $e->deadline?->toDateString()])
+            ->all();
+        $this->assertSame(['2026-05-20' => null, '2026-06-20' => '2026-07-20'], $entries);
     }
 
     #[Test]
@@ -186,22 +184,24 @@ final class OvertimeServiceContractHistoryTest extends TestCase
     }
 
     #[Test]
-    public function without_any_contract_assignment_nothing_is_written(): void
+    public function without_any_contract_assignment_overtime_is_tracked_without_deadline(): void
     {
         $user = User::factory()->create();
         $this->booking($user, '2026-09-01', 30);
 
         $this->service->recomputeForUser($user->fresh());
 
-        $this->assertSame(0, UserOvertime::where('user_id', $user->id)->count());
+        $entry = UserOvertime::where('user_id', $user->id)->sole();
+        $this->assertNull($entry->deadline);
+        $this->assertSame(UserOvertime::STATUS_OPEN, $entry->status);
     }
 
     #[Test]
-    public function stale_entries_are_only_removed_on_days_the_replay_actually_judged(): void
+    public function entries_are_rebuilt_from_bookings_and_never_frozen(): void
     {
+        // Vorher blieben Einträge im regel-inaktiven Zeitraum eingefroren stehen; jetzt zählt nur der Replay
         $user = User::factory()->create();
         $template = $this->template();
-        // Bis 31.05. Regel inaktiv, ab 01.06. aktiv
         $this->assign($user, $template, [
             'valid_from' => null,
             'valid_until' => '2026-05-31',
@@ -212,35 +212,21 @@ final class OvertimeServiceContractHistoryTest extends TestCase
             'valid_until' => null,
             'overtime_rule_active' => true,
         ]);
-
-        // Alte Einträge ohne (positive) Buchung: im inaktiven Zeitraum bleibt er, im aktiven ist er veraltet
-        $keptEntry = UserOvertime::create([
+        UserOvertime::create([
             'user_id' => $user->id,
             'date' => '2026-05-20',
             'minutes' => 45,
             'remaining_minutes' => 45,
             'deadline' => '2026-06-19',
-            'status' => UserOvertime::STATUS_OPEN,
-        ]);
-        UserOvertime::create([
-            'user_id' => $user->id,
-            'date' => '2026-06-10',
-            'minutes' => 45,
-            'remaining_minutes' => 45,
-            'deadline' => '2026-07-10',
-            'status' => UserOvertime::STATUS_OPEN,
+            'status' => UserOvertime::STATUS_PAYABLE,
         ]);
         $this->booking($user, '2026-06-20', 45);
 
         $this->service->recomputeForUser($user->fresh());
 
-        $this->assertNotNull($keptEntry->fresh());
         $this->assertSame(
-            ['2026-05-20', '2026-06-20'],
-            UserOvertime::where(
-                'user_id',
-                $user->id
-            )->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
+            ['2026-06-20'],
+            UserOvertime::where('user_id', $user->id)->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
         );
     }
 }

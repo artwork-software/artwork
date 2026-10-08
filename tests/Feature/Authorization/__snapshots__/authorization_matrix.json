@@ -1147,6 +1147,7 @@
     "POST users/invitations": "forbidden",
     "POST users/invitations/accept": "not_found",
     "POST users/reset-password": "validation",
+    "POST users/worktimes/rebook/{user}": "forbidden",
     "POST users/worktimes/store/{user}": "forbidden",
     "POST users/{user}/overtime/payout": "forbidden",
     "POST users/{user}/photo": "forbidden",

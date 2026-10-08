@@ -2676,7 +2676,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserContractAssign\>\:\:\$overtime_rule_active\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: artwork/Modules/User/Http/Controllers/UserController.php
 
 		-
@@ -2880,7 +2880,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$start_date\.$#'
 			identifier: property.notFound
-			count: 3
+			count: 1
 			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
 
 		-

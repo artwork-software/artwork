@@ -52,8 +52,8 @@ use Artwork\Modules\User\Http\Resources\MinimalUserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\WorkTime\Models\OvertimePayout;
-use Artwork\Modules\WorkTime\Models\UserOvertime;
-use Artwork\Modules\WorkTime\Repositories\UserOvertimeRepository;
+use Artwork\Modules\WorkTime\Http\Requests\RebookWorkTimeRequest;
+use Artwork\Modules\WorkTime\Support\OvertimeLedger;
 use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
@@ -638,6 +638,8 @@ class UserController extends Controller
                 'end' => $end->toDateString(),
             ],
             'totals' => $this->scheduleTotals($workTimes),
+            'canRebook' => (auth()->user()?->can('can manage workers') ?? false) && $user->can_work_shifts,
+            'maxRebookDays' => RebookWorkTimeRequest::MAX_DAYS,
         ]);
     }
 
@@ -820,6 +822,11 @@ class UserController extends Controller
         $targetUnknown = $daysWithoutPattern > 0;
         $totalWantedMinutes = $targetUnknown ? null : (int) $flatDays->sum('wantedHours');
         $difference = $targetUnknown ? null : $totalWorkedMinutes - $totalWantedMinutes;
+        $rebookDays = $flatDays->filter(static fn (array $d): bool => !empty($d['needs_rebooking']));
+        $rebookDifference = (int) $rebookDays->sum('rebook_difference_minutes');
+        $payoutMinutes = (int) $flatDays->sum(
+            static fn (array $d): int => (int) collect($d['payouts'] ?? [])->sum('minutes')
+        );
 
         return [
             'worked' => $this->convertMinutesToHoursAndMinutes($totalWorkedMinutes),
@@ -831,6 +838,13 @@ class UserController extends Controller
             'difference_signed' => $targetUnknown ? null : WorkTimeCalculationService::formatSignedHours($difference),
             'target_unknown' => $targetUnknown,
             'days_without_pattern' => $daysWithoutPattern,
+            'rebook_days' => $rebookDays->count(),
+            'rebook_not_booked_days' => $rebookDays->where('rebook_reason', 'not_booked')->count(),
+            'rebook_dates' => $rebookDays->pluck('date')->values()->all(),
+            'rebook_difference_minutes' => $rebookDifference,
+            'rebook_difference_signed' => WorkTimeCalculationService::formatSignedHours($rebookDifference),
+            'payout_minutes' => $payoutMinutes,
+            'payout_signed' => WorkTimeCalculationService::formatSignedHours(-$payoutMinutes),
         ];
     }
 
@@ -881,36 +895,144 @@ class UserController extends Controller
     }
 
     /**
-     * DP-18 Stufe 2: Überstunden-Daten (Tab im Info-Modal + User-Detailseite).
+     * Überstunden-Tab (User-Detailseite + Info-Modal) nach Kontoprinzip: Verlauf je Monat, wann Plus- und
+     * Minusstunden entstanden und womit sie ausgeglichen wurden. Kontostand = offene Überstunden −
+     * Minusstunden = Zeitkonto. Frist/auszahlbar/Auszahlung nur bei heute aktiver Überstundenregel.
+     *
+     * @return array<string, mixed>
      */
     private function buildOvertimePayload(User $user): array
     {
-        $repository = app(UserOvertimeRepository::class);
-        $assign = $user->contract;
-        $stats = $repository->getDashboardStats($user->id);
+        $service = app(OvertimeService::class);
+        $ledger = $service->ledgerFor($user);
+        $rule = $service->ruleSettingsToday($user);
+        $locale = session('locale', config('app.fallback_locale'));
 
-        $entries = $repository->getForUser($user->id)
-            ->map(fn (UserOvertime $e) => [
-                'id' => $e->id,
-                'date' => $e->date->toDateString(),
-                'minutes' => $e->minutes,
-                'minutes_formatted' => $this->convertMinutesToHoursAndMinutes($e->minutes),
-                'remaining_minutes' => $e->remaining_minutes,
-                'remaining_formatted' => $this->convertMinutesToHoursAndMinutes($e->remaining_minutes),
-                'paid_out_minutes' => $e->paid_out_minutes,
-                'deadline' => $e->deadline->toDateString(),
-                'status' => $e->status,
-                'paid_out_by' => $e->paidOutByUser
-                    ? $e->paidOutByUser->first_name . ' ' . $e->paidOutByUser->last_name
-                    : null,
-            ])->values()->toArray();
-
-        $payouts = OvertimePayout::query()
+        $payoutModels = OvertimePayout::query()
             ->where('user_id', $user->id)
             ->with('createdBy:id,first_name,last_name')
-            ->orderByDesc('payout_date')
             ->get()
-            ->map(fn (OvertimePayout $p) => [
+            ->keyBy('id');
+        $accruals = collect($ledger->accruals())->keyBy('date');
+        $debts = collect($ledger->debts())->where('source', 'day')->keyBy('date');
+        $payoutDebts = collect($ledger->debts())->where('source', 'payout')->keyBy('payout_id');
+
+        $signed = static fn (int $minutes): string => WorkTimeCalculationService::formatSignedHours($minutes);
+        $parts = fn (array $items): array => array_map(fn (array $item): array => [
+            'date' => $item['date'],
+            'minutes' => (int) $item['minutes'],
+            'formatted' => $this->convertMinutesToHoursAndMinutes((int) $item['minutes']),
+            'type' => $item['type'] ?? null,
+        ], $items);
+
+        $months = [];
+        foreach ($ledger->timeline() as $event) {
+            $row = [
+                'type' => $event['type'],
+                'date' => $event['date'],
+                'change' => (int) $event['change'],
+                'change_formatted' => $signed((int) $event['change']),
+                'balance_after' => (int) $event['balance_after'],
+                'balance_after_formatted' => $signed((int) $event['balance_after']),
+            ];
+
+            if ($event['type'] === 'plus') {
+                $accrual = $event['overtime'] > 0 ? $accruals->get($event['date']) : null;
+                $remaining = (int) ($accrual['remaining'] ?? 0);
+                $row += [
+                    'repaid_debts' => $parts($event['repaid_debts']),
+                    'overtime' => (int) $event['overtime'],
+                    'overtime_formatted' => $this->convertMinutesToHoursAndMinutes((int) $event['overtime']),
+                    'remaining' => $remaining,
+                    'remaining_formatted' => $this->convertMinutesToHoursAndMinutes($remaining),
+                    'deadline' => $accrual['deadline'] ?? null,
+                    'status' => $accrual['status'] ?? OvertimeLedger::STATUS_COMPENSATED,
+                    'used_by' => $parts($accrual['used_by'] ?? []),
+                ];
+            } elseif ($event['type'] === 'minus') {
+                $debt = $event['debt_created'] > 0 ? $debts->get($event['date']) : null;
+                $debtRemaining = (int) ($debt['remaining'] ?? 0);
+                $row += [
+                    'compensated' => $parts($event['compensated']),
+                    'debt_created' => (int) $event['debt_created'],
+                    'debt_created_formatted' => $this->convertMinutesToHoursAndMinutes((int) $event['debt_created']),
+                    'debt_remaining' => $debtRemaining,
+                    'debt_remaining_formatted' => $this->convertMinutesToHoursAndMinutes($debtRemaining),
+                    'repaid_by' => $parts($debt['repaid_by'] ?? []),
+                ];
+            } else {
+                $payout = $payoutModels->get($event['payout_id']);
+                // Auszahlung über das Verfügbare hinaus (rückwirkende Korrektur danach) -> Minusstunden
+                $payoutDebt = $payoutDebts->get($event['payout_id']);
+                $row += [
+                    'payout_id' => $event['payout_id'],
+                    'used' => $parts($event['used']),
+                    'debt_created' => (int) $event['debt_created'],
+                    'debt_created_formatted' => $this->convertMinutesToHoursAndMinutes((int) $event['debt_created']),
+                    'debt_remaining' => (int) ($payoutDebt['remaining'] ?? 0),
+                    'repaid_by' => $parts($payoutDebt['repaid_by'] ?? []),
+                    'comment' => $payout?->comment,
+                    'created_by' => $payout?->createdBy
+                        ? $payout->createdBy->first_name . ' ' . $payout->createdBy->last_name
+                        : null,
+                ];
+            }
+
+            $monthKey = substr($event['date'], 0, 7);
+            $months[$monthKey] ??= [
+                'key' => $monthKey,
+                'label' => Carbon::parse($monthKey . '-01')->locale($locale)->isoFormat('MMMM YYYY'),
+                'plus' => 0,
+                'minus' => 0,
+                'payouts' => 0,
+                'rows' => [],
+            ];
+            if ($row['type'] === 'payout') {
+                $months[$monthKey]['payouts'] += -$row['change'];
+            } elseif ($row['change'] > 0) {
+                $months[$monthKey]['plus'] += $row['change'];
+            } else {
+                $months[$monthKey]['minus'] += -$row['change'];
+            }
+            $months[$monthKey]['end_balance'] = $row['balance_after'];
+            $months[$monthKey]['rows'][] = $row;
+        }
+
+        $months = array_map(fn (array $month): array => array_merge($month, [
+            'plus_formatted' => $signed($month['plus']),
+            'minus_formatted' => $signed(-$month['minus']),
+            'payouts_formatted' => $signed(-$month['payouts']),
+            'end_balance_formatted' => $signed($month['end_balance']),
+            'rows' => array_reverse($month['rows']),
+        ]), array_reverse(array_values($months)));
+
+        $balance = $ledger->balanceMinutes();
+        $accountMinutes = (int) User::query()->whereKey($user->id)->value('work_time_balance');
+
+        return [
+            'rule_active' => $rule['rule_active'],
+            'compensation_period' => $rule['compensation_period'],
+            'rule_without_period' => $rule['rule_active'] && $rule['compensation_period'] === null,
+            'balance_minutes' => $balance,
+            'balance_formatted' => $signed($balance),
+            // Gespeicherter Kontostand (Badge) vs. Summe aus Buchungen und Auszahlungen: Abweichung = Altdaten
+            'account_minutes' => $accountMinutes,
+            'account_difference_minutes' => $accountMinutes - $balance,
+            'account_difference_formatted' => $signed($accountMinutes - $balance),
+            'overtime_minutes' => $ledger->overtimeMinutes(),
+            'overtime_formatted' => $this->convertMinutesToHoursAndMinutes($ledger->overtimeMinutes()),
+            'open_minutes' => $ledger->openMinutes(),
+            'open_formatted' => $this->convertMinutesToHoursAndMinutes($ledger->openMinutes()),
+            'payable_minutes' => $ledger->payableMinutes(),
+            'payable_formatted' => $this->convertMinutesToHoursAndMinutes($ledger->payableMinutes()),
+            'payable_now_minutes' => $ledger->payableNowMinutes(),
+            'payable_now_formatted' => $this->convertMinutesToHoursAndMinutes($ledger->payableNowMinutes()),
+            'debt_minutes' => $ledger->debtMinutes(),
+            'debt_formatted' => $this->convertMinutesToHoursAndMinutes($ledger->debtMinutes()),
+            'paid_out_minutes' => $ledger->paidOutMinutes(),
+            'paid_out_formatted' => $this->convertMinutesToHoursAndMinutes($ledger->paidOutMinutes()),
+            'months' => $months,
+            'payouts' => $payoutModels->sortByDesc('payout_date')->map(fn (OvertimePayout $p): array => [
                 'id' => $p->id,
                 'minutes' => $p->minutes,
                 'hours_formatted' => $this->convertMinutesToHoursAndMinutes($p->minutes),
@@ -919,20 +1041,8 @@ class UserController extends Controller
                 'created_by' => $p->createdBy
                     ? $p->createdBy->first_name . ' ' . $p->createdBy->last_name
                     : null,
-            ])->values()->toArray();
-
-        return [
-            'rule_active' => (bool) $assign?->overtime_rule_active,
-            'compensation_period' => $assign?->overtime_compensation_period,
-            'open_minutes' => $stats['open_minutes'],
-            'open_formatted' => $this->convertMinutesToHoursAndMinutes($stats['open_minutes']),
-            'payable_minutes' => $stats['payable_minutes'],
-            'payable_formatted' => $this->convertMinutesToHoursAndMinutes($stats['payable_minutes']),
-            'paid_out_minutes' => $stats['paid_out_minutes'],
-            'paid_out_formatted' => $this->convertMinutesToHoursAndMinutes($stats['paid_out_minutes']),
-            'entries' => $entries,
-            'payouts' => $payouts,
-            'can_pay_out' => auth()->user()?->can('can pay out overtime') ?? false,
+            ])->values()->toArray(),
+            'can_pay_out' => $rule['rule_active'] && (auth()->user()?->can('can pay out overtime') ?? false),
         ];
     }
 
@@ -1026,7 +1136,12 @@ class UserController extends Controller
             'shifts',
             $user->shifts()
                 ->where('shifts.start_date', '<=', $end->toDateString())
-                ->where('shifts.end_date', '>=', $start->toDateString())
+                ->where(function ($query) use ($start): void {
+                    // wie WorkTimeCalculationService::shiftsFor: Pivot-Ende und ein Tag Puffer (über Mitternacht)
+                    $earliestEnd = $start->copy()->subDay()->toDateString();
+                    $query->where('shifts.end_date', '>=', $earliestEnd)
+                        ->orWhere('shift_workers.end_date', '>=', $earliestEnd);
+                })
                 ->get()
         );
         $breakdowns = $this->workTimeCalculationService->breakdownForRange($user, $start, $end, [
@@ -1034,13 +1149,24 @@ class UserController extends Controller
         ]);
         $user->unsetRelation('shifts');
 
+        // Auszahlungen senken das Zeitkonto ohne Buchungszeile: am Tag sichtbar machen
+        $payouts = OvertimePayout::query()
+            ->where('user_id', $user->id)
+            ->whereBetween('payout_date', [$start->toDateString(), $end->toDateString()])
+            ->get()
+            ->groupBy(fn (OvertimePayout $payout): string => $payout->payout_date->toDateString());
+
         $current = $start->copy()->startOfDay();
         $last = $end->copy()->startOfDay();
+        $today = Carbon::today();
+        // KW-Schlüssel mit Jahr, sobald der Zeitraum mehrere ISO-Jahre berührt (sonst landen KW1/2025 und
+        // KW1/2026 in einem Block)
+        $spansIsoYears = $current->isoWeekYear() !== $last->isoWeekYear();
 
         while ($current->lte($last)) {
             $dateKey = $current->toDateString();
             $weekday = strtolower($current->format('l'));
-            $weekKey = "KW" . $current->isoWeek();
+            $weekKey = 'KW' . $current->isoWeek() . ($spansIsoYears ? ' ' . $current->isoWeekYear() : '');
             $day = $breakdowns[$dateKey];
 
             $compensationInfo = null;
@@ -1077,6 +1203,15 @@ class UserController extends Controller
             $balanceChange = $targetUnknown ? null : (int) $day['balance'];
             $nightlyMinutes = (int) $day['nightly_minutes'];
 
+            // Weicht die aktuelle Rechnung vom Gebuchten ab (nie gebucht, oder rückwirkend Krank/Muster/
+            // Schicht geändert), steht die Differenz hier; „Tag neu buchen“ bucht genau sie. Heute und
+            // künftige Tage bucht der Nachtlauf – dort nie markieren.
+            // Nur für Personen im Dienstplan: andere bucht der Nachtlauf nie, für sie gibt es kein Zeitkonto
+            $rebookDifference = $current->lt($today) && $user->can_work_shifts
+                ? (int) ($day['rebook_difference'] ?? 0)
+                : 0;
+            $dayPayouts = $payouts[$dateKey] ?? collect();
+
             $entry = [
                 'weekday' => $weekday,
                 'date' => $dateKey,
@@ -1094,6 +1229,21 @@ class UserController extends Controller
                 'nightly_working_hours' => $nightlyMinutes,
                 'work_time_balance_change' => $balanceChange,
                 'has_booking' => (bool) $day['has_booking'],
+                'is_booked' => (bool) $day['is_booked'],
+                'needs_rebooking' => $rebookDifference !== 0,
+                'rebook_reason' => $rebookDifference === 0 ? null : ($day['is_booked'] ? 'deviates' : 'not_booked'),
+                'rebook_difference_minutes' => $rebookDifference,
+                'rebook_difference_signed' => WorkTimeCalculationService::formatSignedHours($rebookDifference),
+                // Manuelle/Korrekturbuchungen des Tages: beim Neu buchen prüfen, ob sie dieselbe Arbeit abdecken
+                'manual_change_minutes' => (int) ($day['booking']['extra_change'] ?? 0),
+                'manual_change_signed' => WorkTimeCalculationService::formatSignedHours(
+                    (int) ($day['booking']['extra_change'] ?? 0)
+                ),
+                'payouts' => $dayPayouts->map(fn (OvertimePayout $payout): array => [
+                    'minutes' => (int) $payout->minutes,
+                    'formatted' => WorkTimeCalculationService::formatSignedHours(-(int) $payout->minutes),
+                    'comment' => $payout->comment,
+                ])->values()->all(),
                 'is_special_day' => (bool) $day['is_special_day'],
                 'special_day_name' => $day['special_day_name'],
                 'special_day_counts' => (bool) $day['special_day_counts'],

@@ -109,6 +109,9 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             }
             if (!empty($it->end_time)) {
                 $itEnd->setTimeFromTimeString((string) $it->end_time);
+                if ($itEnd->lessThanOrEqualTo($itStart) && $itEnd->isSameDay($itStart)) {
+                    $itEnd->addDay(); // über Mitternacht ohne Folgedatum gespeichert (wie WorkTimeCalculationService)
+                }
             } else {
                 $itEnd->addDay();
             }
@@ -119,12 +122,18 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
                 continue;
             }
 
-            $firstDay = $dayStart->isSameDay(Carbon::parse((string) $it->start_date));
+            // Pause wie in der Arbeitszeitrechnung: am ersten Tag, was dort keinen Platz hat, am Folgetag
+            $break = max(0, (int) ($it->break_minutes ?? 0));
+            $firstDayEnd = $itStart->copy()->startOfDay()->addDay();
+            $firstDayMinutes = (int) $itStart->diffInMinutes($itEnd->lessThan($firstDayEnd) ? $itEnd : $firstDayEnd);
+            $firstDay = $dayStart->isSameDay($itStart);
             $segments[] = [
                 'start' => $segStart,
                 'end' => $segEnd,
                 'individual_time' => $it,
-                'break_minutes' => $firstDay ? (int) ($it->break_minutes ?? 0) : 0,
+                'break_minutes' => $firstDay
+                    ? min($break, $firstDayMinutes)
+                    : ($dayStart->isSameDay($firstDayEnd) ? max(0, $break - $firstDayMinutes) : 0),
                 'first_day' => $firstDay,
             ];
         }
@@ -173,22 +182,23 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
                 $intervalEnd = Carbon::parse($interval['end_key'])->startOfDay()->addDay();
             }
 
-            $firstDayKey = $interval['start_key'];
+            // Pause ab dem ersten Tag abziehen, Rest auf den Folgetag (wie WorkTimeCalculationService)
+            $remainingBreak = max(0, (int) $interval['break_minutes']);
             $day = $intervalStart->copy()->startOfDay();
             while ($day->lt($intervalEnd) && $day->lt($rangeEnd)) {
                 $dayKey = $day->toDateString();
                 $dayStart = $day->copy();
                 $dayEnd = $day->copy()->addDay();
 
-                if (isset($minutesPerDay[$dayKey]) && $dayEnd->gt($rangeStart)) {
-                    $segStart = $intervalStart->greaterThan($dayStart) ? $intervalStart : $dayStart;
-                    $segEnd = $intervalEnd->lessThan($dayEnd) ? $intervalEnd : $dayEnd;
-                    if ($segStart->lt($segEnd)) {
-                        $minutes = $segStart->diffInMinutes($segEnd);
-                        if ($dayKey === $firstDayKey) {
-                            $minutes -= $interval['break_minutes'];
-                        }
-                        $minutesPerDay[$dayKey] += max(0, $minutes);
+                $segStart = $intervalStart->greaterThan($dayStart) ? $intervalStart : $dayStart;
+                $segEnd = $intervalEnd->lessThan($dayEnd) ? $intervalEnd : $dayEnd;
+                if ($segStart->lt($segEnd)) {
+                    $minutes = (int) $segStart->diffInMinutes($segEnd);
+                    $deducted = min($remainingBreak, $minutes);
+                    $minutes -= $deducted;
+                    $remainingBreak -= $deducted;
+                    if (isset($minutesPerDay[$dayKey]) && $dayEnd->gt($rangeStart)) {
+                        $minutesPerDay[$dayKey] += $minutes;
                     }
                 }
 

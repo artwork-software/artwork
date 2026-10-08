@@ -76,7 +76,8 @@ class ShiftService
         $end = Carbon::parse($data['end']);
 
         $startDate = Carbon::parse($day)->format('Y-m-d');
-        $endDate = $end->isBefore($start)
+        // Ende ≤ Beginn = über Mitternacht (08:00–08:00 = 24 h), wie Schichtvorlagen und individuelle Zeit
+        $endDate = $end->lte($start)
             ? Carbon::parse($day)->copy()->addDay()->format('Y-m-d')
             : $startDate;
 
@@ -120,7 +121,8 @@ class ShiftService
         $end = Carbon::parse($data['end']);
         $startDate = Carbon::parse($data['start_date']);
 
-        $endDate = $end->isBefore($start)
+        // Ende ≤ Beginn = über Mitternacht (08:00–08:00 = 24 h), wie Schichtvorlagen und individuelle Zeit
+        $endDate = $end->lte($start)
             ? $startDate->copy()->addDay()->format('Y-m-d')
             : $startDate->format('Y-m-d');
 

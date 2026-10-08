@@ -54,7 +54,7 @@
                 </div>
             </div>
 
-            <BaseInput id="booking_date" label="Date" type="date" v-model="bookingForm.date" required :error="bookingForm.errors.date" />
+            <BaseInput id="booking_date" label="Date" type="date" v-model="bookingForm.date" required :max="toYmd(new Date())" :error="bookingForm.errors.date" />
 
             <BaseTextarea id="booking_comment" v-model="bookingForm.comment" label="Comment" placeholder="Enter comment" required />
 

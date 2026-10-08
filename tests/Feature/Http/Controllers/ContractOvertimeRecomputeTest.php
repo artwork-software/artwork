@@ -58,7 +58,7 @@ final class ContractOvertimeRecomputeTest extends FeatureTestCase
     }
 
     #[Test]
-    public function leaving_the_overtime_rule_inactive_creates_no_entries(): void
+    public function an_inactive_overtime_rule_tracks_overtime_without_deadline(): void
     {
         $user = $this->userWithOvertimeBooking();
         $this->actingAs($user);
@@ -69,6 +69,8 @@ final class ContractOvertimeRecomputeTest extends FeatureTestCase
         ]);
 
         $response->assertStatus(302);
-        $this->assertSame(0, UserOvertime::where('user_id', $user->id)->count());
+        $entry = UserOvertime::where('user_id', $user->id)->sole();
+        $this->assertNull($entry->deadline);
+        $this->assertSame(UserOvertime::STATUS_OPEN, $entry->status);
     }
 }

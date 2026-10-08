@@ -3960,6 +3960,12 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeBookingController::class, 'store']
     )->middleware('can:can manage workers')->name('users.worktimes.store');
 
+    // users.worktimes.rebook – vergangene Tage nach aktueller Rechnung (neu) buchen
+    Route::post(
+        '/users/worktimes/rebook/{user}',
+        [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeBookingController::class, 'rebook']
+    )->middleware('can:can manage workers')->name('users.worktimes.rebook');
+
     // shifts.requestWorkTimeChange
     Route::post(
         '/shifts/requestWorkTimeChange',

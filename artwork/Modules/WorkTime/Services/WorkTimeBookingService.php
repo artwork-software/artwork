@@ -40,70 +40,114 @@ class WorkTimeBookingService
 
         $users = $this->repository->getWorkShiftUsers();
         $today = now()->startOfDay();
-        $weekdayIndex = $today->dayOfWeek;
 
         foreach ($users as $user) {
             // Ein fehlerhafter Datensatz (z. B. kaputtes Muster) darf die Buchung der
             // übrigen Personen nicht verhindern: melden und mit der nächsten weitermachen.
             try {
-                $this->bookDailyWorkTimeForUser($user, $today, $weekdayIndex);
+                if ($this->bookDay($user, $today) !== null) {
+                    $this->workingHourCacheService->forgetForEntity('user', $user->id);
+                    // Rebuild overtime entries + deadlines (flips expired open entries to "payable").
+                    app(OvertimeService::class)->recomputeForUser($user);
+                }
             } catch (Throwable $exception) {
                 report($exception);
             }
         }
     }
 
-    private function bookDailyWorkTimeForUser(User $user, Carbon $today, int $weekdayIndex): void
+    /**
+     * Bucht vergangene Tage einer Person neu bzw. erstmals („Tag neu buchen“ in den Arbeitszeiten):
+     * gleiche Rechnung wie die nächtliche Buchung, Delta gegen die vorhandene Tagesbuchung. Heute und
+     * künftige Tage werden übersprungen – die bucht der Nachtlauf. Liefert die neu gebuchten Tage.
+     *
+     * @param iterable<Carbon|string> $days
+     * @return array<string, int> Tag (Y-m-d) => Saldo-Delta
+     */
+    public function rebookPastDays(User $user, iterable $days): array
     {
-        $workTimeEntry = $this->getActiveUserWorkTime($user);
-
-        if (!$workTimeEntry) {
-            return;
+        if (!WorkTimeAccounting::isEnabled()) {
+            return [];
         }
 
-        // Bestehende Buchung des Tages (Re-Run) darf nicht als Ist zurückfließen -> use_bookings=false
-        $context = $this->workTimeCalculationService->buildContext($user, $today, $today, [
+        $today = now()->startOfDay();
+        // Frisch laden: Aufrufer ändern direkt davor Schichtzeiten (Zeitänderungsantrag)
+        $user->load(['shifts', 'individualTimes']);
+
+        $pastDays = collect($days)
+            ->map(fn ($day): Carbon => Carbon::parse($day)->startOfDay())
+            ->filter(fn (Carbon $day): bool => $day->lt($today))
+            ->sortBy(fn (Carbon $day): int => $day->getTimestamp())
+            ->values();
+        if ($pastDays->isEmpty()) {
+            return [];
+        }
+        // Ein Kontext für den ganzen Zeitraum statt je Tag (Schichten, Muster, Abwesenheiten einmal laden)
+        $context = $this->workTimeCalculationService->buildContext($user, $pastDays->first(), $pastDays->last(), [
             'use_bookings' => false,
         ]);
-        $breakdown = $this->workTimeCalculationService->dayBreakdown($user, $today, $context);
+
+        $deltas = [];
+        foreach ($pastDays as $day) {
+            $delta = $this->bookDay($user, $day, $context);
+            if ($delta !== null) {
+                $deltas[$day->toDateString()] = $delta;
+            }
+        }
+
+        if ($deltas !== []) {
+            $this->workingHourCacheService->forgetForEntity('user', $user->id);
+            app(OvertimeService::class)->recomputeForUser($user);
+        }
+
+        return $deltas;
+    }
+
+    /**
+     * Tagesbuchung für genau einen Tag anlegen oder aktualisieren (Re-Run): Soll/Ist aus dem
+     * WorkTimeCalculationService ohne vorhandene Buchungen, Saldo-Delta gegen die eigene Tageszeile.
+     * Manuelle und Korrekturbuchungen desselben Tages bleiben unberührt. Null = nicht buchbar
+     * (an diesem Tag kein gültiges Arbeitszeitmuster → Soll unbekannt). $context: vorab mit use_bookings=false
+     * für einen Zeitraum gebaut, der den Tag enthält.
+     *
+     * @param array<string, mixed>|null $context
+     */
+    public function bookDay(User $user, Carbon $day, ?array $context = null): ?int
+    {
+        $day = $day->copy()->startOfDay();
+
+        // Bestehende Buchung des Tages darf nicht als Ist zurückfließen -> use_bookings=false
+        $context ??= $this->workTimeCalculationService->buildContext($user, $day, $day, [
+            'use_bookings' => false,
+        ]);
+        $breakdown = $this->workTimeCalculationService->dayBreakdown($user, $day, $context);
 
         // Ohne gültiges Muster ist das Soll unbekannt: keine Buchung (kein Fallback auf 0 Soll,
         // sonst würde jede Arbeit als Überstunde verbucht)
         if ($breakdown['target'] === null || !empty($breakdown['target_unknown'])) {
-            return;
+            return null;
         }
 
         $wantedMinutes = (int) $breakdown['target'];
         $workedMinutes = (int) $breakdown['actual'];
         $nightMinutes = $breakdown['is_sick'] && $breakdown['sick_factor'] >= 1.0
             ? 0 // Krankheit zählt keine Nachtzeit
-            : $this->calculateNightMinutes($today, $user);
+            : $this->calculateNightMinutes($day, $user);
 
         $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange($workedMinutes, $wantedMinutes);
 
-        // Nur die eigene Tagesbuchung (über den Namen): Korrektur-/manuelle Buchungen
-        // desselben Tages bleiben unberührt
-        $previousBooking = $this->repository->getPreviousBooking($user, $today);
-        $delta = $previousBooking
-            ? $workTimeBalanceChange - $previousBooking->work_time_balance_change
-            : $workTimeBalanceChange;
-
-        // Buchung UND Saldo-Anpassung atomar in einer Transaktion (vorher war das
-        // Balance-Update separat danach -> bei Worker-Crash dazwischen blieb der Saldo
-        // dauerhaft falsch, da der Re-Run wegen vorhandener Buchung delta=0 errechnet).
-        $this->repository->storeDailyBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
-            'name' => WorkTimeBookingRepository::dailyBookingName($today),
+        // Nur die eigene Tagesbuchung (über den Namen): Korrektur-/manuelle Buchungen desselben Tages bleiben
+        // unberührt. Buchung, Delta und Saldo atomar unter Sperre der User-Zeile (siehe Repository).
+        $delta = $this->repository->bookDailyWithLockedBalance($user, $day, [
+            'name' => WorkTimeBookingRepository::dailyBookingName($day),
             'wanted_working_hours' => $wantedMinutes,
             'worked_hours' => $workedMinutes,
             'nightly_working_hours' => $nightMinutes,
             'is_special_day' => (bool) $breakdown['is_special_day'],
             'work_time_balance_change' => $workTimeBalanceChange,
-        ], $delta);
+        ]);
 
-        $this->workingHourCacheService->forgetForEntity('user', $user->id);
-
-        // Rebuild overtime entries + deadlines (flips expired open entries to "payable").
-        app(OvertimeService::class)->recomputeForUser($user);
+        return $delta;
     }
 
     /**
@@ -134,17 +178,27 @@ class WorkTimeBookingService
 
             $start = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
             $end = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
+            if ($end->lte($start) && $end->isSameDay($start)) {
+                $end->addDay(); // Ende ohne Folgedatum gespeichert (wie WorkTimeCalculationService)
+            }
             $night += $window->minutesWithin($start, $end);
         }
 
         foreach ($user->individualTimes as $individualTime) {
-            if (!in_array($dayKey, $individualTime->days_of_individual_time ?? [], true)) {
-                continue;
-            }
             if ($individualTime->start_time && $individualTime->end_time && !$individualTime->full_day) {
-                // Individuelle Zeiten werden je Kalendertag zugeschnitten (der Folgetag zählt seinen Anteil selbst)
-                $start = Carbon::parse($individualTime->start_date . ' ' . $individualTime->start_time);
-                $end = Carbon::parse($individualTime->end_date . ' ' . $individualTime->end_time);
+                // Individuelle Zeiten werden je Kalendertag zugeschnitten (der Folgetag zählt seinen Anteil selbst).
+                // Über Datum+Uhrzeit statt days_of_individual_time: dort fehlt bei Zeiten über Mitternacht der
+                // Folgetag, dessen Nachtanteil sonst nie gezählt würde.
+                $startDate = Carbon::parse($individualTime->start_date)->toDateString();
+                $endDate = Carbon::parse($individualTime->end_date ?? $individualTime->start_date)->toDateString();
+                $start = Carbon::parse($startDate . ' ' . $individualTime->start_time);
+                $end = Carbon::parse($endDate . ' ' . $individualTime->end_time);
+                if ($end->lte($start) && $end->isSameDay($start)) {
+                    $end->addDay(); // Ende ohne Folgedatum gespeichert
+                }
+                if ($end->lte($dayStart) || $start->gte($nextDayStart)) {
+                    continue;
+                }
                 $night += $window->minutesWithin(
                     $start->greaterThan($dayStart) ? $start : $dayStart,
                     $end->lessThan($nextDayStart) ? $end : $nextDayStart,
@@ -160,17 +214,13 @@ class WorkTimeBookingService
         return $workedHours - $wantedWorkHours;
     }
 
-    private function getActiveUserWorkTime(User $user): ?UserWorkTime
-    {
-        return $user->getCurrentWorkTime(); // oder ->getValidWorkTime();
-    }
-
     public function refreshWorkTimeActivations(): void
     {
         UserWorkTime::query()
             ->whereDate('valid_from', '<=', now())
             ->where(function ($q): void {
-                $q->whereNull('valid_until')->orWhere('valid_until', '>=', now());
+                // DATE-Spalte gegen Datum vergleichen: gegen now() (23:59) fiele der letzte Gültigkeitstag raus
+                $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', now());
             })
             ->update(['is_active' => true]);
 

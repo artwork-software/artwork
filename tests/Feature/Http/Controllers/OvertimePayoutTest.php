@@ -3,27 +3,41 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\WorkTime\Models\UserOvertime;
+use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 final class OvertimePayoutTest extends FeatureTestCase
 {
+    /**
+     * Person mit aktiver Überstundenregel (Frist 5 Tage) und einem Plustag vor 20 Tagen → auszahlbar.
+     * Einträge entstehen aus Buchungen (Kontoprinzip), Zeitkonto passend zur Buchung.
+     */
     private function userWithPayableEntry(int $minutes = 60): User
     {
-        $user = User::factory()->create();
-
-        UserOvertime::create([
+        $user = User::factory()->create(['work_time_balance' => $minutes]);
+        UserContractAssign::factory()->create([
             'user_id' => $user->id,
-            'date' => Carbon::now()->subDays(20)->toDateString(),
-            'minutes' => $minutes,
-            'remaining_minutes' => $minutes,
-            'deadline' => Carbon::now()->subDay()->toDateString(),
-            'status' => UserOvertime::STATUS_PAYABLE,
+            'overtime_rule_active' => true,
+            'overtime_compensation_period' => 5,
         ]);
+        $day = Carbon::now()->subDays(20)->startOfDay();
+        WorkTimeBooking::create([
+            'user_id' => $user->id,
+            'name' => 'manual_booking',
+            'booking_day' => $day->toDateString(),
+            'booking_weekday' => $day->dayOfWeek,
+            'wanted_working_hours' => 0,
+            'worked_hours' => $minutes,
+            'work_time_balance_change' => $minutes,
+        ]);
+        app(OvertimeService::class)->recomputeForUser($user);
 
-        return $user;
+        return $user->fresh();
     }
 
     #[Test]
@@ -51,7 +65,10 @@ final class OvertimePayoutTest extends FeatureTestCase
             'created_by' => $hr->id,
             'comment' => 'Paid out with payroll',
         ]);
-        $this->assertSame(-60, (int) $user->fresh()->work_time_balance);
+        $this->assertSame(0, (int) $user->fresh()->work_time_balance);
+        $response->assertJsonPath('balance_minutes', 0)
+            ->assertJsonPath('payable_now_minutes', 0)
+            ->assertJsonPath('account_difference_minutes', 0);
     }
 
     #[Test]

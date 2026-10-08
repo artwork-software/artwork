@@ -5,18 +5,20 @@ namespace Artwork\Modules\AppApi\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\AppApi\Http\Requests\AppLoginRequest;
 use Artwork\Modules\AppApi\Services\AppTwoFactorAuthenticationService;
+use Artwork\Modules\ExternalUserManagement\Service\CredentialLoginService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Laravel\Passport\AccessToken;
 
 class AppAuthController extends Controller
 {
     public function __construct(
         private readonly AppTwoFactorAuthenticationService $twoFactorAuthenticationService,
+        private readonly CredentialLoginService $credentialLoginService,
     ) {
     }
 
@@ -24,10 +26,15 @@ class AppAuthController extends Controller
     {
         $validated = $request->validated();
 
-        /** @var User|null $user */
-        $user = User::query()->where('email', $validated['email'])->first();
+        // Same credential path as the web login form: LDAP bind, OIDC lockout, timing-safe local hash.
+        try {
+            $user = $this->credentialLoginService->attempt($validated['email'], $validated['password']);
+        } catch (ValidationException $exception) {
+            // OIDC accounts sign in via SSO only; the app has no SSO flow yet.
+            return response()->json(['message' => collect($exception->errors())->flatten()->first()], 401);
+        }
 
-        if ($user === null || !Hash::check($validated['password'], $user->password)) {
+        if ($user === null) {
             // Uniform message — never reveal whether the email exists. Failed logins are
             // routine here: the app probes every known instance during discovery.
             return response()->json(['message' => __('These credentials do not match our records.')], 401);

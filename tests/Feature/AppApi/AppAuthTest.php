@@ -92,6 +92,18 @@ final class AppAuthTest extends TestCase
     }
 
     #[Test]
+    public function loginRefusesOidcAccountsEvenWithACorrectLocalPassword(): void
+    {
+        $this->createUser()->forceFill(['auth_provider' => 'oidc'])->save();
+
+        $this->login()
+            ->assertUnauthorized()
+            ->assertJson(['message' => __('flash-messages.oidc.error.password_login_disabled')]);
+
+        $this->assertSame(0, Token::query()->count());
+    }
+
+    #[Test]
     public function loginWithMissingFieldsReturns422(): void
     {
         $this->postJson(route('app.v1.auth.login'), [])

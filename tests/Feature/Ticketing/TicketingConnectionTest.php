@@ -5,9 +5,12 @@ namespace Tests\Feature\Ticketing;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
+use Artwork\Modules\Ticketing\Models\TicketingProduction;
+use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\Client\Request;
@@ -186,6 +189,33 @@ final class TicketingConnectionTest extends FeatureTestCase
 
         $this->assertDatabaseCount('ticketing_connections', 0);
         $this->assertDatabaseHas('oauth_clients', ['id' => $clientId, 'revoked' => true]);
+    }
+
+    #[Test]
+    public function disconnecting_forgets_the_ids_of_the_old_house(): void
+    {
+        $this->fakeHappyTickets();
+
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), $this->draft());
+        TicketingRoomLink::query()->create(['room_id' => Room::factory()->create()->id, 'venue_id' => '0355e5ad-e8aa-405b-9550-038a557dc897']);
+        $production = TicketingProduction::query()->create([
+            'project_id' => Project::factory()->create()->id,
+            'production_id' => '6f1d2c3b-4a5e-4f60-8a71-9b2c3d4e5f60',
+            'hero_path' => 'ticketing/hero.jpg',
+            'hero_synced_at' => now(),
+        ]);
+        $image = TicketingProductionImage::query()->create([
+            'ticketing_production_id' => $production->id, 'path' => 'ticketing/a.jpg', 'remote_id' => '7a2e3d4c-5b6f-4a71-9b82-0c3d4e5f6a71',
+        ]);
+
+        $this->delete(route('settings.tickets.disconnect'))->assertRedirect();
+
+        $this->assertDatabaseCount('ticketing_room_links', 0);
+        $this->assertNull($production->fresh()->production_id);
+        $this->assertNull($production->fresh()->hero_synced_at);
+        $this->assertSame('ticketing/hero.jpg', $production->fresh()->hero_path);
+        $this->assertNull($image->fresh()->remote_id);
     }
 
     #[Test]

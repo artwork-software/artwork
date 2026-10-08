@@ -91,7 +91,8 @@ class TicketingReleaseService
             $this->tickets->post($connection, "/productions/{$productionId}/publish");
         } catch (TicketingConnectionException $exception) {
             foreach ($pushed as $dateId) {
-                $this->tickets->delete($connection, "/dates/{$dateId}");
+                // Das Aufräumen darf den eigentlichen Fehler nicht verdecken; was liegen bleibt, steht im Log.
+                rescue(fn () => $this->tickets->delete($connection, "/dates/{$dateId}"));
             }
 
             throw $exception;

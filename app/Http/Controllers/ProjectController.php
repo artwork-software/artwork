@@ -4624,22 +4624,11 @@ class ProjectController extends Controller
 
     /**
      * Bearbeitungsregel für Inhalte, deren Edit-UI über die Komponenten-Einstellung
-     * (canEditComponent) gegated ist: Schreibrecht im Projekt + Komponenten-Einstellung
-     * (ProjectPolicy::writeComponent). Ohne Komponenten-Datensatz greift die
-     * Projekt-Bearbeitungsregel allein.
+     * (canEditComponent) gegated ist (ProjectPolicy::writeComponentType).
      */
     private function authorizeProjectComponentEdit(Project $project, ProjectTabComponentEnum $componentType): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $component = Component::query()->where('type', $componentType->value)->first();
-        abort_unless(
-            $component !== null
-                ? $user->can('writeComponent', [$project, $component])
-                : $user->can('update', $project),
-            403
-        );
+        abort_unless(Auth::user()->can('writeComponentType', [$project, $componentType]), 403);
     }
 
     public function updateShiftDescription(Request $request, Project $project): void

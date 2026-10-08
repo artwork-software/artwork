@@ -29,6 +29,23 @@ class TicketingProductionService
         return TicketingProduction::query()->firstOrNew(['project_id' => $project->id]);
     }
 
+    /** Die Bilddateien eines endgültig gelöschten Projekts; die Zeilen nimmt die Kaskade der Datenbank mit. */
+    public function deleteFilesOf(Project $project): void
+    {
+        $production = TicketingProduction::query()->with('images')->where('project_id', $project->id)->first();
+
+        if ($production === null) {
+            return;
+        }
+
+        $paths = $production->images->map(static fn (TicketingProductionImage $image): string => $image->storagePath());
+        if ($production->hero_path) {
+            $paths->push(TicketingProduction::HERO_DIRECTORY . '/' . $production->hero_path);
+        }
+
+        Storage::delete($paths->unique()->all());
+    }
+
     /**
      * @param array{title: string|null, description: string|null, reduction_type_ids: list<string>|null} $data
      * Ein neues Titelbild ($hero oder das weitere Bild $coverImageId) schiebt das bisherige zu den

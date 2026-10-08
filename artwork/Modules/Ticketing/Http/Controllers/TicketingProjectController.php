@@ -4,6 +4,8 @@ namespace Artwork\Modules\Ticketing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Http\Requests\SaveTicketingDraftRequest;
@@ -14,10 +16,12 @@ use Artwork\Modules\Ticketing\Services\TicketingProjectService;
 use Artwork\Modules\Ticketing\Services\TicketingReleaseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 
 /**
- * Die Ticketing-Komponente im Projekt. Lesen darf, wer das Projekt sieht; schreiben, wer es
- * bearbeiten darf — beides prüfen die Routen. Jede Änderung antwortet mit dem frischen Stand.
+ * Die Ticketing-Komponente im Projekt. Lesen darf, wer die Komponente sieht (Route); schreiben, wer
+ * sie bearbeiten darf; zurückziehen nur mit dem Recht für Termine im Verkauf — Käufer*innen hängen daran.
+ * Jede Änderung antwortet mit dem frischen Stand.
  */
 class TicketingProjectController extends Controller
 {
@@ -35,6 +39,8 @@ class TicketingProjectController extends Controller
 
     public function saveProduction(Project $project, SaveTicketingProductionRequest $request): JsonResponse
     {
+        $this->authorizeEdit($project);
+
         return $this->respond($project, function () use ($project, $request): void {
             $this->productions->save(
                 $project,
@@ -54,6 +60,7 @@ class TicketingProjectController extends Controller
 
     public function saveDraft(Project $project, SaveTicketingDraftRequest $request): JsonResponse
     {
+        $this->authorizeEdit($project);
         $events = $this->eventsOf($project, $request->eventIds());
 
         return $this->respond($project, fn () => $this->releases->saveDraft($events, $request->draft()));
@@ -61,6 +68,7 @@ class TicketingProjectController extends Controller
 
     public function release(Project $project, TicketingEventsRequest $request): JsonResponse
     {
+        $this->authorizeEdit($project);
         $events = $this->eventsOf($project, $request->eventIds());
 
         return $this->respond($project, fn () => $this->releases->release($events, $request->user()));
@@ -68,9 +76,20 @@ class TicketingProjectController extends Controller
 
     public function withdraw(Project $project, TicketingEventsRequest $request): JsonResponse
     {
+        $this->authorizeEdit($project);
+        abort_unless(
+            Gate::allows(PermissionEnum::TICKETING_MOVE_ON_SALE->value),
+            403,
+            __('Only people with the permission "Change dates on sale" can withdraw dates on sale.'),
+        );
         $events = $this->eventsOf($project, $request->eventIds());
 
         return $this->respond($project, fn () => $this->releases->withdraw($events));
+    }
+
+    private function authorizeEdit(Project $project): void
+    {
+        $this->authorize('writeComponentType', [$project, ProjectTabComponentEnum::TICKETING]);
     }
 
     /**

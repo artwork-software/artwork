@@ -47,7 +47,7 @@ class TicketingLock
 
         if (Gate::denies(PermissionEnum::TICKETING_MOVE_ON_SALE->value)) {
             throw new TicketingLockedException(
-                __('This date is on sale. Only people with the permission "Move dates on sale" can change its time or room.')
+                __('This date is on sale. Only people with the permission "Change dates on sale" can change its time or room.')
             );
         }
 

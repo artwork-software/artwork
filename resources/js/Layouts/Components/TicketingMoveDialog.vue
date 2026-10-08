@@ -24,7 +24,7 @@
                                     <p class="mt-1 text-[13px] leading-5 text-text-muted">
                                         {{ shown.mayMove
                                             ? $t('The shop shows the new time and room right away. Buyers are not notified automatically; their tickets point out the change.')
-                                            : $t('Only people with the permission "Move dates on sale" can change the time or room of a date on sale. Ask an admin.') }}
+                                            : $t('Only people with the permission "Change dates on sale" can change the time or room of a date on sale. Ask an admin.') }}
                                     </p>
                                 </div>
                             </div>

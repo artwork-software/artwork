@@ -8,9 +8,12 @@ use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Jobs\SyncTicketingCustomersJob;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
+use Artwork\Modules\Ticketing\Models\TicketingProduction;
+use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 
@@ -327,7 +330,13 @@ class TicketingConnectionService
             $this->clients->delete($client);
         }
 
-        $connection->delete();
+        DB::transaction(function () use ($connection): void {
+            // Diese Kennungen gehören zum bisherigen Haus; ein neu verbundenes Haus kennt sie nicht.
+            TicketingRoomLink::query()->delete();
+            TicketingProduction::query()->update(['production_id' => null, 'hero_synced_at' => null]);
+            TicketingProductionImage::query()->update(['remote_id' => null]);
+            $connection->delete();
+        });
     }
 
     /** Dieselben Regeln wie die Hausadresse in tickets (Umlaute ausgeschrieben, nur a-z, 0-9 und Bindestrich). */

@@ -4,12 +4,14 @@ namespace Artwork\Modules\Ticketing\Services;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Die Ticketing-Komponente eines Projekts: alle Termine, deren Terminart Tickets verkaufen darf,
@@ -55,6 +57,7 @@ class TicketingProjectService
                 'billingComplete' => $billingComplete,
             ],
             'ticketsError' => $ticketsError,
+            'mayWithdraw' => Gate::allows(PermissionEnum::TICKETING_MOVE_ON_SALE->value),
             'hasSellingEventTypes' => EventType::query()->where('relevant_for_ticketing', true)->exists(),
             'production' => [
                 'title' => $production->title,

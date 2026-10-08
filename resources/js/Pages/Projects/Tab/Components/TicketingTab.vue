@@ -68,7 +68,7 @@
                             <button v-if="selectedReleasable.length" type="button" class="ui-button-add-small" @click="confirming = { events: selectedReleasable, withdrawing: false }">
                                 <IconTicket class="size-3.5" stroke-width="1.75" />{{ $t('Release {count}', { count: selectedReleasable.length }) }}
                             </button>
-                            <button v-if="selectedReleased.length" type="button" class="ui-button-small" @click="confirming = { events: selectedEvents, withdrawing: true }">
+                            <button v-if="selectedReleased.length && payload.mayWithdraw" type="button" class="ui-button-small" @click="confirming = { events: selectedEvents, withdrawing: true }">
                                 <IconTicketOff class="size-3.5" stroke-width="1.75" />{{ $t('Withdraw {count}', { count: selectedReleased.length }) }}
                             </button>
                             <button type="button" class="ml-auto text-xs text-text-subtle hover:text-text" @click="selected = new Set()">{{ $t('Clear selection') }}</button>
@@ -213,7 +213,7 @@
                                                 <button type="button" class="ui-button h-8 px-2" :title="$t('Edit sale')" :aria-label="$t('Edit sale')" @click="editing = [event]">
                                                     <IconPencil class="size-[18px] shrink-0" stroke-width="1.75" />
                                                 </button>
-                                                <button v-if="isReleased(event)" type="button" class="ui-button h-8 w-[140px] whitespace-nowrap" @click="confirming = { events: [event], withdrawing: true }">
+                                                <button v-if="isReleased(event)" type="button" class="ui-button h-8 w-[140px] whitespace-nowrap" :disabled="!payload.mayWithdraw" :title="payload.mayWithdraw ? '' : withdrawDeniedHint" @click="confirming = { events: [event], withdrawing: true }">
                                                     <IconTicketOff class="size-[18px] shrink-0" stroke-width="1.75" />{{ $t('Withdraw') }}
                                                 </button>
                                                 <button v-else type="button" class="ui-button-add h-8 w-[140px] whitespace-nowrap" :disabled="!isReleasable(event)" :title="releaseBlocker(event) ? $t(releaseBlocker(event)) : ''" @click="confirming = { events: [event], withdrawing: false }">
@@ -271,6 +271,7 @@ const props = defineProps({
 })
 
 const { t, locale } = useI18n()
+const withdrawDeniedHint = computed(() => t('Only people with the permission "Change dates on sale" can withdraw dates on sale.'))
 
 const payload = ref(null)
 const loading = ref(true)

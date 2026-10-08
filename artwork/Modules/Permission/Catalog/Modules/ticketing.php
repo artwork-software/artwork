@@ -24,13 +24,14 @@ return new PermissionModuleDefinition(
         ),
         new PermissionDefinition(
             name: PermissionEnum::TICKETING_MOVE_ON_SALE,
-            title: 'Move dates on sale',
-            effect: 'Changes time or room of dates on sale',
+            title: 'Change dates on sale',
+            effect: 'Moves or withdraws dates on sale',
             allows: [
                 'Move a date on sale after confirming it',
+                'Withdraw a date on sale; sold tickets are cancelled',
             ],
             personas: [Persona::SYSADMIN],
-            note: 'Without it, the time and room of a date on sale are locked',
+            note: 'Without it, dates on sale can neither be moved nor withdrawn',
         ),
     ],
 );

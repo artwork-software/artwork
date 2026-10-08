@@ -6,6 +6,9 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentPermissionEnum;
+use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Exceptions\TicketingLockedException;
@@ -310,6 +313,45 @@ final class TicketingReleaseTest extends FeatureTestCase
         Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
             && str_ends_with($request->url(), '/dates/' . self::DATE_ID));
         $this->assertNull(TicketingEventRelease::query()->where('event_id', $event->id)->value('tickets_date_id'));
+    }
+
+    #[Test]
+    public function withdrawing_needs_the_permission_for_dates_on_sale(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+        $writer = $this->actingAsUserWith([]);
+        $this->project->users()->attach($writer->id, ['can_write' => true]);
+
+        $this->deleteJson(route('projects.tabs.ticketing.withdraw', $this->project), ['event_ids' => [$event->id]])
+            ->assertForbidden();
+        $this->assertSame('released', $event->ticketingRelease()->value('state'));
+        Http::assertNotSent(fn (Request $request): bool => $request->method() === 'DELETE');
+
+        $writer->givePermissionTo(PermissionEnum::TICKETING_MOVE_ON_SALE->value);
+        $this->deleteJson(route('projects.tabs.ticketing.withdraw', $this->project), ['event_ids' => [$event->id]])
+            ->assertOk()
+            ->assertJsonPath('mayWithdraw', true);
+    }
+
+    #[Test]
+    public function releasing_follows_the_edit_setting_of_the_ticketing_component(): void
+    {
+        $this->fakeTickets();
+        $event = Event::factory()->create([
+            'project_id' => $this->project->id, 'event_type_id' => $this->type->id, 'room_id' => $this->room->id,
+            'start_time' => '2027-02-01 20:00:00', 'end_time' => '2027-02-01 22:00:00',
+        ]);
+        Component::query()->firstOrCreate(
+            ['type' => ProjectTabComponentEnum::TICKETING->value],
+            ['name' => 'Artwork-Tickets', 'special' => true, 'data' => []],
+        )->update(['permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_SOME_EDIT->value]);
+        $writer = $this->actingAsUserWith([]);
+        $this->project->users()->attach($writer->id, ['can_write' => true]);
+
+        $this->postJson(route('projects.tabs.ticketing.release', $this->project), ['event_ids' => [$event->id]])
+            ->assertForbidden();
+        Http::assertNothingSent();
     }
 
     #[Test]
@@ -635,6 +677,25 @@ final class TicketingReleaseTest extends FeatureTestCase
     }
 
     #[Test]
+    public function a_failed_cleanup_still_reports_why_the_release_failed(): void
+    {
+        $this->fakeTickets([
+            self::TICKETS_URL . '/api/integration/v1/productions/*/publish' => Http::response([
+                'error' => ['code' => 'EVENT_NOT_READY', 'message' => 'The production cannot go on sale yet: no date lies in the future.'],
+            ], 409),
+            self::TICKETS_URL . '/api/integration/v1/dates/*' => Http::response([], 503),
+        ]);
+        $event = Event::factory()->create([
+            'project_id' => $this->project->id, 'event_type_id' => $this->type->id, 'room_id' => $this->room->id,
+            'start_time' => '2027-02-01 20:00:00', 'end_time' => '2027-02-01 22:00:00',
+        ]);
+
+        $this->postJson(route('projects.tabs.ticketing.release', $this->project), ['event_ids' => [$event->id]])
+            ->assertStatus(422)
+            ->assertJsonFragment(['message' => 'The production cannot go on sale yet: no date lies in the future.']);
+    }
+
+    #[Test]
     public function a_released_date_follows_its_event_when_it_moves(): void
     {
         $this->fakeTickets();
@@ -828,6 +889,20 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->postJson(route('events.multi-cell.move'), $move, [TicketingLock::MOVE_CONFIRMED_HEADER => '1'])->assertOk();
         $this->assertSame('2027-02-03', $event->fresh()->start_time->format('Y-m-d'));
+    }
+
+    #[Test]
+    public function the_admission_time_as_sent_by_forms_does_not_count_as_a_move(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+        Event::query()->whereKey($event->id)->update(['admission_time' => '19:30:00']);
+        $this->actingAsUserWith([]);
+
+        $event->fresh()->update(['admission_time' => '19:30', 'description' => 'Neuer Text']);
+
+        $this->assertSame('Neuer Text', $event->fresh()->description);
+        $this->assertSame('19:30:00', $event->fresh()->admission_time);
     }
 
     #[Test]

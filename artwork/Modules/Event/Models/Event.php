@@ -291,6 +291,15 @@ class Event extends Model
         return $this->belongsToMany(EventProperty::class);
     }
 
+    /**
+     * Die Spalte ist TIME und liest sich als "19:00:00"; Formulare schicken "19:00". Ohne Angleichen
+     * gälte der Termin als geändert (isDirty), und ein Termin im Verkauf ließe sich nicht mehr speichern.
+     */
+    public function setAdmissionTimeAttribute(?string $value): void
+    {
+        $this->attributes['admission_time'] = $value ? Carbon::parse($value)->format('H:i:s') : null;
+    }
+
     public function getStartTimeWithoutDayAttribute(): string
     {
         return Carbon::parse($this->start_time)->format('H:i');

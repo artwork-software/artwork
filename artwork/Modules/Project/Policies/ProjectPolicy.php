@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Project\Policies;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
@@ -139,6 +140,19 @@ class ProjectPolicy
         }
 
         return $this->update($user, $project) && $component->isEditableBy($user);
+    }
+
+    /**
+     * writeComponent für Inhalte eines Komponenten-Typs, die nicht als Komponentenwert gespeichert werden.
+     * Ohne Komponenten-Datensatz greift die Projekt-Bearbeitungsregel allein.
+     */
+    public function writeComponentType(User $user, Project $project, ProjectTabComponentEnum $type): bool
+    {
+        $component = Component::query()->where('type', $type->value)->first();
+
+        return $component !== null
+            ? $this->writeComponent($user, $project, $component)
+            : $this->update($user, $project);
     }
 
     public function delete(User $user, Project $project): bool

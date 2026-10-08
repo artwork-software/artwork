@@ -9,18 +9,18 @@
         <TeamInviteModal v-if="inviting" v-model="form.preset" :people="pickedPeople" :options="roleOptions" :processing="form.processing"
                          @close="inviting = false" @submit="submit" />
 
-        <NotConnected v-if="!connection.connected" :message="$t('People can be invited once this installation is connected to artwork tickets.')" />
+        <NotConnected v-if="!connection.connected" :message="$t('People can be invited once this installation is connected to Artwork-Tickets.')" />
 
         <div v-else class="rounded-lg border border-border-subtle/70 bg-surface shadow-raised px-3 py-4 sm:px-5 sm:py-5">
             <div v-if="ticketsError" class="mb-4 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
                 <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
-                <span>{{ $t('The team could not be loaded from artwork tickets: {message}', { message: ticketsError }) }}</span>
+                <span>{{ $t('The team could not be loaded from Artwork-Tickets: {message}', { message: ticketsError }) }}</span>
             </div>
 
             <div class="mb-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
                 <p class="max-w-[560px] text-[13px] leading-5 text-text-muted">
                     <span class="block font-medium text-text">{{ $t('{members} of {total} people are in the ticket house, {invited} invited.', { members: counts.member, total: people.length, invited: counts.invited }) }}</span>
-                    {{ $t('Pick the others; artwork tickets sends each an e-mail with a link and you choose their role before it goes out.') }}
+                    {{ $t('Pick the others; Artwork-Tickets sends each an e-mail with a link and you choose their role before it goes out.') }}
                 </p>
             </div>
 
@@ -39,7 +39,7 @@
                             <BaseCheckbox id="tickets-team-all" :model-value="allShownState" :disabled="shownPickable.length === 0" @update:model-value="toggleAll" />
                         </th>
                         <th class="py-2.5 font-medium">{{ $t('Person') }}</th>
-                        <th class="py-2.5 font-medium">{{ $t('In artwork tickets') }}</th>
+                        <th class="py-2.5 font-medium">{{ $t('In Artwork-Tickets') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -93,7 +93,7 @@ const props = defineProps({
 
 const { t } = useI18n()
 
-/* The same words as the team page of artwork tickets, so a role means one thing in both. */
+/* The same words as the team page of Artwork-Tickets, so a role means one thing in both. */
 const presetNames = { owner: t('Owner'), admin: t('Admin'), staff: t('Staff'), door: t('Door'), custom: t('Custom rights') }
 const presetHints = {
     admin: t('Everything in operations and settings, except payouts and the bank account.'),

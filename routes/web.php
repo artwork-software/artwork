@@ -124,6 +124,7 @@ use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingCustomerController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingProjectController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingTeamController;
 use Artwork\Modules\Ticketing\Services\TicketingBillingService;
@@ -403,7 +404,7 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ])->name('compensation-day-offs.week-schedule');
     });
 
-    // artwork tickets: eigene Einstellungskategorie mit eigener Berechtigung, ein Tab je Bereich
+    // Artwork-Tickets: eigene Einstellungskategorie mit eigener Berechtigung, ein Tab je Bereich
     Route::group([
         'prefix' => 'settings/tickets',
         'middleware' => 'can:' . PermissionEnum::TICKETING_MANAGE->value,
@@ -3379,6 +3380,10 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             CrmContactController::class,
             'tooltipInfo',
         ])->middleware('can:crm.contacts.lookup,crmContact')->name('crm.contacts.tooltip');
+        Route::get('/contacts/{crmContact}/ticketing', [TicketingCustomerController::class, 'show'])
+            ->middleware('can:can view crm')->name('crm.contacts.ticketing');
+        Route::post('/ticketing-customers/sync', [TicketingCustomerController::class, 'sync'])
+            ->middleware('can:crm manager')->name('crm.ticketing-customers.sync');
         Route::get('/contacts/{crmContact}', [
             CrmController::class,
             'show',

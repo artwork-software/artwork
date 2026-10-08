@@ -46,7 +46,7 @@
                  :class="ownerState === 'taken' ? 'bg-danger-surface border-danger-border' : 'bg-info-surface border-info-border'">
                 <IconAlertTriangle v-if="ownerState === 'taken'" class="size-4 shrink-0 mt-0.5 text-danger" />
                 <IconInfoCircle v-else class="size-4 shrink-0 mt-0.5 text-info" />
-                <span><strong class="font-medium">{{ userEmail }}</strong> {{ ownerState === 'taken' ? $t('already owns a house in artwork tickets. An account can only found one house; connect with a different account or attach the existing house later.') : $t('becomes the owner of the house and can sign in to artwork tickets with an e-mail code afterwards.') }}</span>
+                <span><strong class="font-medium">{{ userEmail }}</strong> {{ ownerState === 'taken' ? $t('already owns a house in Artwork-Tickets. An account can only found one house; connect with a different account or attach the existing house later.') : $t('becomes the owner of the house and can sign in to Artwork-Tickets with an e-mail code afterwards.') }}</span>
             </div>
         </section>
 
@@ -57,7 +57,7 @@
                 <input v-model="skipBilling" type="checkbox" class="aw-checklist-input mt-0.5 cursor-pointer" />
                 <span class="text-[13px] leading-5 text-text">
                     <strong class="font-lexend block font-medium">{{ $t('Add the details later') }}</strong>
-                    {{ $t('The house is connected without them. Until they are filled in — here under "Details & payouts" or in artwork tickets — no date can be released for sale.') }}
+                    {{ $t('The house is connected without them. Until they are filled in — here under "Details & payouts" or in Artwork-Tickets — no date can be released for sale.') }}
                 </span>
             </label>
         </section>
@@ -70,7 +70,7 @@
         <!-- 4 · Reductions -->
         <section v-else-if="step === 3" class="max-w-[1040px]">
             <ReductionsEditor :reductions="reductionDrafts">
-                <template #hint>{{ $t('Optional. Without reductions everyone pays the price of the price class; you can add them in artwork tickets at any time.') }}</template>
+                <template #hint>{{ $t('Optional. Without reductions everyone pays the price of the price class; you can add them in Artwork-Tickets at any time.') }}</template>
             </ReductionsEditor>
         </section>
 
@@ -133,7 +133,7 @@
             </div>
             <div class="mt-5 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 leading-5 text-text">
                 <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
-                <span>{{ $t('This installation can only be connected to one house. Rooms and reductions can be synced again afterwards; house and address are changed in artwork tickets.') }}</span>
+                <span>{{ $t('This installation can only be connected to one house. Rooms and reductions can be synced again afterwards; house and address are changed in Artwork-Tickets.') }}</span>
             </div>
             <PlatformTermsConsent v-if="platformTerms" v-model="form.accept_platform_terms" :terms-url="platformTerms.termsUrl" :dpa-url="platformTerms.dpaUrl"
                                   class="mt-4 rounded-md border border-border-subtle bg-surface-sunken px-3.5 py-3" />
@@ -145,7 +145,7 @@
         <!-- 6 · Payouts: the house exists now, so Stripe can verify it -->
         <section v-else class="max-w-[1040px]">
             <PayoutAccount v-if="payout" :state="payout.state" :stripe-key="payout.stripe_key" />
-            <p v-else class="text-[13px] text-text-subtle">{{ $t('artwork tickets is not answering right now. The payout account can be set up later under "Details & payouts".') }}</p>
+            <p v-else class="text-[13px] text-text-subtle">{{ $t('Artwork-Tickets is not answering right now. The payout account can be set up later under "Details & payouts".') }}</p>
         </section>
 
         <!-- Footer -->
@@ -204,12 +204,12 @@ const steps = [t('House'), t('Details'), t('Rooms'), t('Reductions'), t('Review 
 const CONNECT = 4
 const PAYOUTS = 5
 const intros = [
-    t('This is how the house appears in artwork tickets. Both can be changed there later.'),
-    t('Who stands behind the house and what its buyers read. artwork tickets needs this for the credit notes on its fee, Stripe to verify the house. The bank account follows right after connecting, in Stripe\'s form. You can leave the details for later, but until they are filled in no date can be released for sale.'),
-    t('Which rooms sell tickets? Each becomes a venue in artwork tickets with its address and the price classes you define here. Rooms can be synced again later.'),
+    t('This is how the house appears in Artwork-Tickets. Both can be changed there later.'),
+    t('Who stands behind the house and what its buyers read. Artwork-Tickets needs this for the credit notes on its fee, the payment provider to verify the house. The bank account follows right after connecting, in the form of the payment provider. You can leave the details for later, but until they are filled in no date can be released for sale.'),
+    t('Which rooms sell tickets? Each becomes a venue in Artwork-Tickets with its address and the price classes you define here. Rooms can be synced again later.'),
     t('Reductions apply house-wide; which ones a production grants is decided per production. Percent of the ticket price or a fixed amount off.'),
-    t('Check what will be created. Only "Connect now" creates anything in artwork tickets.'),
-    t('The house is connected. Stripe now confirms who stands behind it and takes the bank account; this usually takes a few minutes. It can also be finished later under "Details & payouts".'),
+    t('Check what will be created. Only "Connect now" creates anything in Artwork-Tickets.'),
+    t('The house is connected. The payment provider now confirms who stands behind it and takes the bank account; this usually takes a few minutes. It can also be finished later under "Details & payouts".'),
 ]
 const step = ref(0)
 
@@ -245,7 +245,7 @@ const SummaryCard = defineComponent({
     },
 })
 
-/* Mirrors the address rules of artwork tickets (umlauts spelled out, a–z, 0–9, hyphen). */
+/* Mirrors the address rules of Artwork-Tickets (umlauts spelled out, a–z, 0–9, hyphen). */
 function slugify(value) {
     return value
         .toLowerCase()
@@ -322,7 +322,7 @@ const nameMessage = computed(() => ({
     checking: t('Checking…'),
     available: t('Available'),
     short: t('At least 2 characters.'),
-    taken: t('A house with this name already exists in artwork tickets.'),
+    taken: t('A house with this name already exists in Artwork-Tickets.'),
     unreachable: t('The name could not be checked.'),
 }[nameState.value] ?? ''))
 

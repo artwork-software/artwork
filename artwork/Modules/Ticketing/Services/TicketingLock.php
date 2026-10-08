@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Termine im Verkauf werden nicht gelöscht und nur mit Recht und Bestätigung verschoben; Käufer*innen
- * hängen daran. Ohne konfiguriertes tickets prüft das nichts.
+ * hängen daran. Ohne aktive Verbindung prüft das nichts.
  */
 class TicketingLock
 {
@@ -53,7 +53,7 @@ class TicketingLock
 
         if ($event->isDirty('room_id') && $this->venueOf($event->room_id) !== $this->venueOf($event->getOriginal('room_id'))) {
             throw new TicketingLockedException(
-                __('This date is on sale. It can only move to a room that sells as the same venue in artwork tickets.')
+                __('This date is on sale. It can only move to a room that sells as the same venue in Artwork-Tickets.')
             );
         }
 
@@ -81,7 +81,7 @@ class TicketingLock
     /** @param Builder<TicketingEventRelease> $releases */
     private function anyReleased(Builder $releases): bool
     {
-        return $this->connections->isConfigured()
+        return $this->connections->isActive()
             && $releases->where('state', TicketingEventRelease::STATE_RELEASED)->exists();
     }
 }

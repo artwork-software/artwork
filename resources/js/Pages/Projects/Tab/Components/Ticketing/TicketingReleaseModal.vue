@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal :title="withdrawing ? $t('Take off sale') : $t('Release for sale')" :description="single ? single.name : $t('{count} dates selected', { count: events.length })" modal-size="sm:max-w-2xl" @close="$emit('close')">
+    <ArtworkBaseModal :title="withdrawing ? $t('Take off sale') : $t('Release for sale')" :description="single ? single.name : $t('{count} dates selected', { count: events.length })" modal-size="sm:max-w-4xl" @close="$emit('close')">
         <div class="flex flex-col gap-5 text-[13px]">
             <div v-if="seriesEvents.length > 1" class="inline-flex self-start p-0.5 rounded-md bg-surface-sunken border border-border-subtle" role="radiogroup">
                 <button v-for="option in scopeOptions" :key="option.value" type="button" role="radio" :aria-checked="scope === option.value"
@@ -14,7 +14,7 @@
                 {{ withdrawing ? $t('{count} of the selected dates are not on sale and are left out.', { count: skipped }) : $t('{count} of the selected dates are already on sale and are left out.', { count: skipped }) }}
             </p>
 
-            <div class="rounded-lg border border-border-subtle bg-surface">
+            <div class="overflow-x-auto rounded-lg border border-border-subtle bg-surface">
                 <table class="w-full border-collapse">
                     <thead>
                         <tr class="font-lexend text-xs font-medium text-text-subtle">
@@ -22,28 +22,38 @@
                             <th class="px-4 py-2.5 text-left font-medium">{{ $t('Room') }}</th>
                             <th class="px-4 py-2.5 text-right font-medium">{{ $t('Places') }}</th>
                             <th class="px-4 py-2.5 text-left font-medium">{{ $t('Prices') }}</th>
+                            <th class="px-4 py-2.5 text-left font-medium">{{ $t('Reductions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="target in targets" :key="target.id" class="border-t border-border-hairline">
                             <td class="px-4 py-2.5 whitespace-nowrap tabular-nums">
-                                {{ formatWhen(target, locale) }}
-                                <BaseChip v-if="!withdrawing && isPast(target)" variant="warning" class="ml-2">{{ $t('Already over') }}</BaseChip>
+                                <span class="flex items-center gap-2">
+                                    {{ formatWhen(target, locale) }}
+                                    <TicketingSaleMarks :event="target" :production="production" :reductions="reductions" />
+                                    <BaseChip v-if="!withdrawing && isPast(target)" variant="warning">{{ $t('Already over') }}</BaseChip>
+                                </span>
                             </td>
-                            <td class="px-4 py-2.5">
+                            <td class="px-4 py-2.5 whitespace-nowrap">
                                 <span v-if="target.venue">{{ target.venue.name }}</span>
                                 <span v-else class="text-danger">{{ target.room ? $t('Room not synced') : $t('No room') }}</span>
                             </td>
                             <td class="px-4 py-2.5 text-right tabular-nums">{{ capacityOf(target) ?? '–' }}</td>
                             <td class="px-4 py-2.5">
                                 <span v-if="classesOf(target).length === 0" class="text-text-subtle">–</span>
-                                <span v-else class="flex flex-wrap gap-x-3 gap-y-1">
+                                <span v-else class="flex flex-col gap-1">
                                     <span v-for="cls in classesOf(target)" :key="cls.zone_key ?? cls.name" class="whitespace-nowrap">{{ cls.name }} <span class="text-text-subtle tabular-nums">{{ cls.quota }} ·</span> <span class="tabular-nums">{{ formatEuro(cls.price_cents) }}</span></span>
+                                </span>
+                            </td>
+                            <td class="px-4 py-2.5">
+                                <span v-if="reductionNamesOf(target).length === 0" class="text-text-subtle">{{ $t('None') }}</span>
+                                <span v-else class="flex flex-col gap-1">
+                                    <span v-for="name in reductionNamesOf(target)" :key="name" class="whitespace-nowrap">{{ name }}</span>
                                 </span>
                             </td>
                         </tr>
                         <tr v-if="targets.length === 0" class="border-t border-border-hairline">
-                            <td colspan="4" class="px-4 py-4 text-center text-text-subtle">{{ withdrawing ? $t('None of these dates is on sale.') : $t('All of these dates are on sale already.') }}</td>
+                            <td colspan="5" class="px-4 py-4 text-center text-text-subtle">{{ withdrawing ? $t('None of these dates is on sale.') : $t('All of these dates are on sale already.') }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -53,8 +63,8 @@
                  :class="withdrawing ? 'border-warning-border bg-warning-surface' : 'border-info-border bg-info-surface'">
                 <IconAlertTriangle v-if="withdrawing" class="size-4 shrink-0 mt-0.5 text-warning" />
                 <IconInfoCircle v-else class="size-4 shrink-0 mt-0.5 text-info" />
-                <span v-if="withdrawing">{{ $t('The dates disappear from the shop. Tickets already sold stay valid and refundable; such a date is marked cancelled in artwork tickets instead of removed.') }}</span>
-                <span v-else>{{ $t('The dates go on sale in artwork tickets with these places and prices. Places and prices can still be changed afterwards; the production is created from this project on the first release.') }}</span>
+                <span v-if="withdrawing">{{ $t('The dates disappear from the shop. Tickets already sold stay valid and refundable; such a date is marked cancelled in Artwork-Tickets instead of removed.') }}</span>
+                <span v-else>{{ $t('The dates go on sale in Artwork-Tickets with these places and prices. Places and prices can still be changed afterwards; the production is created from this project on the first release.') }}</span>
             </div>
 
             <p v-if="error" class="text-sm text-danger">{{ error }}</p>
@@ -64,7 +74,7 @@
             <button type="button" class="ui-button" :disabled="submitting" @click="$emit('close')">{{ $t('Cancel') }}</button>
             <button type="button" class="ui-button-add" :disabled="submitting || targets.length === 0 || (!withdrawing && !releasable)" @click="submit">
                 <IconTicket class="size-4" />
-                {{ submitting ? $t('Please wait…') : withdrawing ? $t('Take {count} dates off sale', { count: targets.length }) : $t('Release {count} dates now', { count: targets.length }) }}
+                {{ submitting ? $t('Please wait…') : submitLabel }}
             </button>
         </template>
     </ArtworkBaseModal>
@@ -77,7 +87,8 @@ import { useI18n } from 'vue-i18n'
 import { IconAlertTriangle, IconInfoCircle, IconTicket } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
-import { capacityOf, classesOf, formatEuro, formatWhen, isPast, isReleasable, isReleased, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import TicketingSaleMarks from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSaleMarks.vue'
+import { capacityOf, classesOf, formatEuro, formatWhen, isPast, isReleasable, isReleased, offeredIdsOf, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 
 const props = defineProps({
     projectId: { type: Number, required: true },
@@ -86,6 +97,9 @@ const props = defineProps({
     /** All dates of the component, to find the rest of a series. */
     allEvents: { type: Array, required: true },
     withdrawing: { type: Boolean, default: false },
+    production: { type: Object, required: true },
+    /** The house reductions. */
+    reductions: { type: Array, required: true },
 })
 
 const emit = defineEmits(['close', 'done'])
@@ -110,6 +124,19 @@ const targets = computed(() => candidates.value.filter((event) => isReleased(eve
 const skipped = computed(() => candidates.value.length - targets.value.length)
 
 const releasable = computed(() => targets.value.every(isReleasable))
+
+const submitLabel = computed(() => {
+    const count = targets.value.length
+    if (props.withdrawing) {
+        return count === 1 ? t('Take this date off sale') : t('Take {count} dates off sale', { count })
+    }
+    return count === 1 ? t('Release this date now') : t('Release {count} dates now', { count })
+})
+
+function reductionNamesOf(event) {
+    const offered = offeredIdsOf(event, props.production, props.reductions)
+    return props.reductions.filter((reduction) => offered.includes(reduction.id)).map((reduction) => reduction.name)
+}
 
 async function submit() {
     submitting.value = true

@@ -7,16 +7,16 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 
 return new PermissionModuleDefinition(
     key: 'ticketing',
-    title: 'artwork tickets',
+    title: 'Artwork-Tickets',
     icon: 'IconBuildingStore',
     navOrder: 125,
     moduleSetting: null,
     extras: [
         new PermissionDefinition(
             name: PermissionEnum::TICKETING_MANAGE,
-            title: 'Manage artwork tickets',
-            effect: 'Can connect this artwork to artwork tickets and change the ticketing settings',
-            unlocks: ['"artwork tickets" in the settings'],
+            title: 'Manage Artwork-Tickets',
+            effect: 'Can connect this artwork to Artwork-Tickets and change the ticketing settings',
+            unlocks: ['"Artwork-Tickets" in the settings'],
             allows: [
                 'Connect and disconnect the ticket house',
             ],

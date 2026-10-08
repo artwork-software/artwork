@@ -2,30 +2,30 @@
     <TicketsSettingsHeader :description="$t('Who stands behind the house, what its buyers read and where it is paid out.')">
         <template #actions>
             <button v-if="connection.connected && billing" type="button" class="ui-button-add relative" :disabled="!canSave" @click="submit">
-                <IconDeviceFloppy class="size-4" />{{ form.processing ? $t('Saving…') : $t('Save in artwork tickets') }}
+                <IconDeviceFloppy class="size-4" />{{ form.processing ? $t('Saving…') : $t('Save in Artwork-Tickets') }}
                 <span v-if="form.isDirty" class="absolute -top-1 -right-1 size-2.5 rounded-full bg-warning ring-2 ring-surface"></span>
             </button>
         </template>
 
-        <PendingChangesBar :visible="connection.connected && form.isDirty" :message="$t('Changes not yet in artwork tickets')" :submit-label="$t('Save in artwork tickets')"
+        <PendingChangesBar :visible="connection.connected && form.isDirty" :message="$t('Changes not yet in Artwork-Tickets')" :submit-label="$t('Save in Artwork-Tickets')"
                            :icon="IconDeviceFloppy" :processing-label="$t('Saving…')" :can-submit="canSave" :processing="form.processing" @discard="form.reset()" @submit="submit" />
 
-        <NotConnected v-if="!connection.connected" :message="$t('The details can be filled in once this installation is connected to artwork tickets.')" />
+        <NotConnected v-if="!connection.connected" :message="$t('The details can be filled in once this installation is connected to Artwork-Tickets.')" />
 
         <div v-else class="rounded-lg border border-border-subtle/70 bg-surface shadow-raised px-3 py-4 sm:px-5 sm:py-5">
             <p class="mb-4 max-w-[760px] text-[13px] leading-5 text-text-subtle">
-                {{ $t('artwork tickets needs this for the credit notes on its fee and for payouts. Everything is stored there, not here; the same fields are in the settings of artwork tickets.') }}
+                {{ $t('Artwork-Tickets needs this for the credit notes on its fee and for payouts. Everything is stored there, not here; the same fields are in the settings of Artwork-Tickets.') }}
             </p>
 
             <div v-if="ticketsError" class="mb-4 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
                 <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
-                <span>{{ $t('The details could not be loaded from artwork tickets: {message}', { message: ticketsError }) }}</span>
+                <span>{{ $t('The details could not be loaded from Artwork-Tickets: {message}', { message: ticketsError }) }}</span>
             </div>
 
             <template v-if="billing">
                 <div v-if="!billing.platform_terms.accepted" class="mb-5 max-w-[900px] rounded-md border border-warning-border bg-warning-surface px-3.5 py-3">
                     <span class="font-lexend mb-2 flex items-center gap-2 text-[13px] font-medium text-text">
-                        <IconAlertTriangle class="size-4 shrink-0 text-warning" />{{ $t('The house has not accepted the current terms of artwork tickets yet') }}
+                        <IconAlertTriangle class="size-4 shrink-0 text-warning" />{{ $t('The house has not accepted the current terms of Artwork-Tickets yet') }}
                     </span>
                     <div class="flex flex-wrap items-end justify-between gap-3">
                         <PlatformTermsConsent v-model="termsChecked" :terms-url="billing.platform_terms.terms_url" :dpa-url="billing.platform_terms.dpa_url" />
@@ -41,7 +41,7 @@
 
                 <div v-if="!billing.legal_complete || !billing.shop_legal_complete || billing.payout_account !== 'verified'" class="mb-5 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text max-w-[900px]">
                     <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
-                    <span>{{ $t('Until everything here is complete and Stripe has verified the house, no date can be released for sale.') }}</span>
+                    <span>{{ $t('Until everything here is complete and the payment provider has verified the house, no date can be released for sale.') }}</span>
                 </div>
 
                 <div class="max-w-[900px]">
@@ -57,7 +57,7 @@
 
                 <div class="mt-8 max-w-[900px] border-t border-border-hairline pt-6">
                     <h3 class="font-lexend text-[13px] font-semibold text-text mb-1">{{ $t('Payout account') }}</h3>
-                    <p class="text-[13px] leading-5 text-text-subtle mb-4">{{ $t('So that the house can sell tickets, the payment provider Stripe confirms who stands behind it and takes the bank account. No Stripe account of its own is needed.') }}</p>
+                    <p class="text-[13px] leading-5 text-text-subtle mb-4">{{ $t('So that the house can sell tickets, the payment provider confirms who stands behind it and takes the bank account. No account of its own with the payment provider is needed.') }}</p>
                     <PayoutAccount :state="billing.payout_account" :stripe-key="billing.stripe_key" />
                 </div>
             </template>
@@ -92,7 +92,7 @@ const { t } = useI18n()
 
 const form = useForm({ ...(props.billing?.profile ?? {}), ...noLegalFiles() })
 
-/* Half-filled is fine, as in the settings of artwork tickets. */
+/* Half-filled is fine, as in the settings of Artwork-Tickets. */
 const canSave = computed(() => !form.processing && form.isDirty)
 
 const payoutLabel = computed(() => ({ open: t('incomplete'), review: t('in review'), verified: t('verified') }[props.billing.payout_account]))

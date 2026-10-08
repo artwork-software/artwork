@@ -11,7 +11,7 @@ use Illuminate\Validation\Validator;
  */
 final class TicketingDraftRules
 {
-    /** Dieselbe Liste wie in artwork tickets: die Nachbarländer, die ein Haus tatsächlich bespielt. */
+    /** Dieselbe Liste wie in Artwork-Tickets: die Nachbarländer, die ein Haus tatsächlich bespielt. */
     public const COUNTRIES = ['DE', 'AT', 'CH', 'LI', 'LU', 'NL', 'BE', 'FR', 'DK', 'PL', 'CZ', 'IT'];
 
     /** Die Rollen-Vorlagen, die tickets kennt — ohne Inhaber: den vergibt nur ein Inhaber dort. */

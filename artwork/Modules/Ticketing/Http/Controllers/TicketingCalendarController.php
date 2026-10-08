@@ -7,6 +7,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Http\Requests\TicketingEventsRequest;
+use Artwork\Modules\Ticketing\Models\TicketingCustomer;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Artwork\Modules\Ticketing\Services\TicketingReleaseService;
 use Carbon\Carbon;
@@ -96,13 +97,26 @@ class TicketingCalendarController extends Controller
         return redirect()->away($this->connections->loginUrl($connection, $request->user(), $this->destination($request)));
     }
 
-    /** @return array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings', tab?: string} */
+    /**
+     * @return array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings', tab?: string}
+     *     |array{type: 'customer', customerId: string}
+     */
     private function destination(Request $request): array
     {
         if ($request->query('to') === 'settings') {
             return $request->filled('tab')
                 ? ['type' => 'houseSettings', 'tab' => $request->string('tab')->value()]
                 : ['type' => 'houseSettings'];
+        }
+
+        if ($request->filled('customer')) {
+            abort_unless($request->user()->can(PermissionEnum::CRM_VIEW->value), 403);
+            $customerId = TicketingCustomer::query()
+                ->where('crm_contact_id', $request->integer('customer'))
+                ->value('customer_id');
+            abort_if($customerId === null, 404);
+
+            return ['type' => 'customer', 'customerId' => $customerId];
         }
 
         if ($request->filled('event')) {

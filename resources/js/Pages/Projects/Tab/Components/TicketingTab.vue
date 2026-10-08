@@ -2,14 +2,14 @@
     <div class="mt-5 pb-20">
         <ToolbarHeader
             :icon="IconBuildingStore"
-            :title="$t('artwork tickets')"
+            :title="$t('Artwork-Tickets')"
             icon-bg-class="bg-accent-50 text-accent-700"
             :description="$t('Dates of this project that sell tickets: prices, places and release for sale.')"
             :search-enabled="false"
         >
             <template #actions>
                 <a v-if="payload?.connection.connected" :href="route('ticketing.open')" target="_blank" rel="noopener" class="ui-button">
-                    <IconExternalLink class="size-3.5" />{{ $t('Open artwork tickets') }}
+                    <IconExternalLink class="size-3.5" />{{ $t('Open Artwork-Tickets') }}
                 </a>
             </template>
         </ToolbarHeader>
@@ -23,9 +23,9 @@
 
             <!-- Not connected -->
             <EmptyState v-else-if="!payload.connection.connected" :icon="IconPlugConnectedX" :title="$t('Not connected yet')"
-                        :text="$t('Dates can be released for sale once this installation is connected to artwork tickets.')">
+                        :text="$t('Dates can be released for sale once this installation is connected to Artwork-Tickets.')">
                 <Link v-if="canManageTicketing" :href="route('settings.tickets')" class="ui-button-add mt-5 inline-flex">
-                    <IconPlugConnected class="size-4" />{{ $t('Connect artwork tickets') }}
+                    <IconPlugConnected class="size-4" />{{ $t('Connect Artwork-Tickets') }}
                 </Link>
             </EmptyState>
 
@@ -43,14 +43,14 @@
                 <div v-if="payload.connection.billingComplete === false" class="mb-4 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
                     <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
                     <span>
-                        {{ $t('Details of the ticket house are still missing in artwork tickets: legal details, legal pages, payout account or the accepted terms. Until they are complete, no date can be released for sale.') }}
+                        {{ $t('Details of the ticket house are still missing in Artwork-Tickets: legal details, legal pages, payout account or the accepted terms. Until they are complete, no date can be released for sale.') }}
                         <Link v-if="canManageTicketing" :href="route('settings.tickets.billing')" class="font-medium text-accent-600 hover:underline">{{ $t('Fill in now') }}</Link>
                     </span>
                 </div>
 
                 <div v-if="payload.ticketsError" class="mb-4 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
                     <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
-                    <span>{{ $t('artwork tickets could not be reached: {message} Venue defaults are missing until it is back.', { message: payload.ticketsError }) }}</span>
+                    <span>{{ $t('Artwork-Tickets could not be reached: {message} Venue defaults are missing until it is back.', { message: payload.ticketsError }) }}</span>
                 </div>
 
                 <TicketingProductionCard v-if="canEditComponent || payload.production.linked" class="mb-5" :project-id="project.id" :production="payload.production" :reductions="payload.reductions" :can-edit="canEditComponent" @saved="applyPayload" />
@@ -63,7 +63,7 @@
                             <span class="font-medium tabular-nums text-text">{{ $t('{count} dates selected', { count: selectedEvents.length }) }}</span>
                             <span class="h-4 w-px bg-accent-200" aria-hidden="true"></span>
                             <button type="button" class="ui-button-small" @click="editing = selectedEvents">
-                                <IconPencil class="size-3.5" stroke-width="1.75" />{{ $t('Places and prices') }}
+                                <IconPencil class="size-3.5" stroke-width="1.75" />{{ $t('Edit sale') }}
                             </button>
                             <button v-if="selectedReleasable.length" type="button" class="ui-button-add-small" @click="confirming = { events: selectedReleasable, withdrawing: false }">
                                 <IconTicket class="size-3.5" stroke-width="1.75" />{{ $t('Release {count}', { count: selectedReleasable.length }) }}
@@ -170,13 +170,14 @@
                                         <span class="flex items-center gap-2 min-w-0 leading-6">
                                             <span class="size-2 shrink-0 rounded-full" :style="{ backgroundColor: event.eventType?.hexCode ?? '#999' }"></span>
                                             <span class="truncate text-text">{{ event.name }}</span>
+                                            <TicketingSaleMarks :event="event" :production="payload.production" :reductions="payload.reductions" />
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 align-top">
                                         <span v-if="!event.room" class="block leading-6 text-text-subtle">{{ $t('No room') }}</span>
                                         <span v-else class="flex items-center gap-2 min-w-0 leading-6">
                                             <span class="truncate">{{ event.room.name }}</span>
-                                            <IconCheck v-if="event.venue" class="size-3.5 shrink-0 text-success" :title="$t('In artwork tickets')" />
+                                            <IconCheck v-if="event.venue" class="size-3.5 shrink-0 text-success" :title="$t('In Artwork-Tickets')" />
                                             <BaseChip v-else variant="warning" class="whitespace-nowrap">{{ $t('Room not synced') }}</BaseChip>
                                         </span>
                                     </td>
@@ -209,7 +210,7 @@
                                                 <IconUsers class="size-[18px] shrink-0" stroke-width="1.75" />
                                             </button>
                                             <template v-if="canEditComponent">
-                                                <button type="button" class="ui-button h-8 px-2" :title="$t('Places and prices')" :aria-label="$t('Places and prices')" @click="editing = [event]">
+                                                <button type="button" class="ui-button h-8 px-2" :title="$t('Edit sale')" :aria-label="$t('Edit sale')" @click="editing = [event]">
                                                     <IconPencil class="size-[18px] shrink-0" stroke-width="1.75" />
                                                 </button>
                                                 <button v-if="isReleased(event)" type="button" class="ui-button h-8 w-[140px] whitespace-nowrap" @click="confirming = { events: [event], withdrawing: true }">
@@ -235,9 +236,11 @@
             </template>
         </div>
 
-        <TicketingDateModal v-if="editing" :project-id="project.id" :events="editing" :all-events="payload.events" @close="editing = null" @saved="applyPayload" />
+        <TicketingDateModal v-if="editing" :project-id="project.id" :events="editing" :all-events="payload.events" :production="payload.production" :reductions="payload.reductions"
+                            @close="editing = null" @saved="applyPayload" />
         <TicketingSalesModal v-if="viewingSales" :event-id="viewingSales.id" :description="`${viewingSales.name} · ${formatDay(viewingSales.start, locale)}`" @close="viewingSales = null" />
         <TicketingReleaseModal v-if="confirming" :project-id="project.id" :events="confirming.events" :all-events="payload.events" :withdrawing="confirming.withdrawing"
+                               :production="payload.production" :reductions="payload.reductions"
                                @close="confirming = null" @done="applyPayload" />
     </div>
 </template>
@@ -257,6 +260,7 @@ import DateRangeControl from '@/Artwork/DateRange/DateRangeControl.vue'
 import TicketingDateModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingDateModal.vue'
 import TicketingFilterMenu from '@/Pages/Projects/Tab/Components/Ticketing/TicketingFilterMenu.vue'
 import TicketingReleaseModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingReleaseModal.vue'
+import TicketingSaleMarks from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSaleMarks.vue'
 import TicketingSalesModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue'
 import TicketingProductionCard from '@/Pages/Projects/Tab/Components/Ticketing/TicketingProductionCard.vue'
 import { capacityOf, classesOf, formatDay, formatEuro, formatTime, isPast, isReleasable, isReleased, releaseBlocker } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'

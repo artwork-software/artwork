@@ -72,7 +72,7 @@
         </main>
 
         <PopupChat v-if="$page.props.auth.user.use_chat"/>
-        <TicketingMoveDialog />
+        <TicketingMoveDialog v-if="$page.props.ticketing?.active" />
     </div>
 </template>
 

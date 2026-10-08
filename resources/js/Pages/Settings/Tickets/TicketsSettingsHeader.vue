@@ -1,9 +1,9 @@
 <template>
-    <AppLayout :title="$t('artwork tickets')">
+    <AppLayout :title="$t('Artwork-Tickets')">
         <div class="artwork-container">
             <ToolbarHeader
                 :icon="IconBuildingStore"
-                :title="$t('artwork tickets')"
+                :title="$t('Artwork-Tickets')"
                 icon-bg-class="bg-accent-50 text-accent-700"
                 :description="description"
                 :search-enabled="false"

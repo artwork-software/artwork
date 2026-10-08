@@ -10,7 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 /**
- * Auftritt des Projekts im Ticketshop; das Bild kommt als Datei mit, remove_hero nimmt es weg.
+ * Auftritt des Projekts im Ticketshop; das Titelbild kommt als Datei mit (hero) oder ist ein
+ * vorhandenes weiteres Bild (cover_image_id), remove_hero nimmt das bisherige weg.
  * Weitere Bilder kommen als images[], remove_image_ids[] nimmt vorhandene heraus.
  */
 class SaveTicketingProductionRequest extends FormRequest
@@ -40,6 +41,7 @@ class SaveTicketingProductionRequest extends FormRequest
             'reduction_type_ids.*' => 'required|uuid',
             'hero' => 'nullable|image|max:8192',
             'remove_hero' => 'sometimes|boolean',
+            'cover_image_id' => 'nullable|integer|prohibits:hero',
             'images' => 'nullable|array|max:' . TicketingProduction::MAX_IMAGES,
             'images.*' => 'required|image|max:8192',
             'remove_image_ids' => 'nullable|array',
@@ -60,9 +62,23 @@ class SaveTicketingProductionRequest extends FormRequest
                     return;
                 }
 
-                $kept = $this->existingImages()->whereNotIn('id', $this->input('remove_image_ids', []))->count();
+                $kept = $this->existingImages()->whereNotIn('id', $this->input('remove_image_ids', []));
+                $coverImageId = $this->input('cover_image_id');
 
-                if ($kept + count($this->file('images', [])) > TicketingProduction::MAX_IMAGES) {
+                if ($coverImageId !== null && !(clone $kept)->whereKey($coverImageId)->exists()) {
+                    $validator->errors()->add('cover_image_id', __('The chosen cover picture no longer exists.'));
+
+                    return;
+                }
+
+                // Ein neues Titelbild schiebt das bisherige zu den weiteren Bildern, ein befördertes verlässt sie.
+                $hasHero = $this->existingProduction()?->hero_path !== null;
+                $newCover = $this->hasFile('hero') || $coverImageId !== null;
+                $demoted = $hasHero && $newCover && !$this->boolean('remove_hero') ? 1 : 0;
+                $promoted = $coverImageId !== null ? 1 : 0;
+                $total = $kept->count() + count($this->file('images', [])) + $demoted - $promoted;
+
+                if ($total > TicketingProduction::MAX_IMAGES) {
                     $validator->errors()->add(
                         'images',
                         __('At most :max further pictures per production.', ['max' => TicketingProduction::MAX_IMAGES]),
@@ -78,13 +94,30 @@ class SaveTicketingProductionRequest extends FormRequest
         return array_map('intval', $this->validated('remove_image_ids') ?? []);
     }
 
+    public function coverImageId(): ?int
+    {
+        $id = $this->validated('cover_image_id');
+
+        return $id === null ? null : (int) $id;
+    }
+
+    private function existingProduction(): ?TicketingProduction
+    {
+        return TicketingProduction::query()->where('project_id', $this->project()->id)->first();
+    }
+
     /** @return Builder<TicketingProductionImage> */
     private function existingImages(): Builder
+    {
+        return TicketingProductionImage::query()
+            ->whereHas('production', fn (Builder $query): Builder => $query->where('project_id', $this->project()->id));
+    }
+
+    private function project(): Project
     {
         /** @var Project $project */
         $project = $this->route('project');
 
-        return TicketingProductionImage::query()
-            ->whereHas('production', fn (Builder $query): Builder => $query->where('project_id', $project->id));
+        return $project;
     }
 }

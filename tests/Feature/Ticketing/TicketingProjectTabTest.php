@@ -4,6 +4,9 @@ namespace Tests\Feature\Ticketing;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentPermissionEnum;
+use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
@@ -11,6 +14,7 @@ use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\Fluent\AssertableJson;
+use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\ActsAsRole;
 use Tests\Feature\FeatureTestCase;
@@ -56,7 +60,7 @@ final class TicketingProjectTabTest extends FeatureTestCase
             self::TICKETS_URL . '/api/integration/v1/venues' => Http::response(['venues' => [[
                 'id' => self::VENUE_ID,
                 'name' => 'Großer Saal',
-                'street' => '', 'postalCode' => '', 'city' => '', 'country' => 'DE',
+                'street' => '', 'postalCode' => '', 'city' => '', 'country' => 'DE', 'seated' => true,
                 'zones' => [
                     ['name' => 'Parkett', 'capacity' => 300, 'defaultPriceCents' => 2900],
                     ['name' => 'Rang', 'capacity' => 80, 'defaultPriceCents' => null],
@@ -90,10 +94,37 @@ final class TicketingProjectTabTest extends FeatureTestCase
             ->assertJsonCount(1, 'events')
             ->assertJsonPath('events.0.name', 'Premiere')
             ->assertJsonPath('events.0.venue.capacity', 380)
+            ->assertJsonPath('events.0.venue.seated', true)
             ->assertJsonPath('events.0.venue.zones.0.defaultPriceCents', 2900)
             ->assertJsonPath('events.0.release.classes.0.quota', 250)
             ->assertJsonPath('events.0.release.classes.0.price_cents', 3500)
             ->assertJsonPath('events.0.release.state', 'draft');
+    }
+
+    #[Test]
+    public function the_component_and_the_ticketing_ui_appear_only_once_connected(): void
+    {
+        $this->actingAsAdmin();
+        Component::query()->create([
+            'name' => 'Artwork-Tickets',
+            'type' => ProjectTabComponentEnum::TICKETING,
+            'data' => ['icon' => 'IconBuildingStore'],
+            'special' => true,
+            'sidebar_enabled' => false,
+            'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value,
+        ]);
+        $offered = static fn ($components): bool => collect($components)
+            ->contains('type', ProjectTabComponentEnum::TICKETING->value);
+
+        $this->get(route('tab.index'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('ticketing.active', false)
+            ->where('componentsSpecial', fn ($components): bool => !$offered($components)));
+
+        $this->connect();
+
+        $this->get(route('tab.index'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('ticketing.active', true)
+            ->where('componentsSpecial', $offered));
     }
 
     #[Test]

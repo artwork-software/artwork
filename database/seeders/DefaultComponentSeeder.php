@@ -230,7 +230,7 @@ class DefaultComponentSeeder extends Seeder
 
         if (!Component::query()->where('type', ProjectTabComponentEnum::TICKETING)->first()) {
             Component::create([
-                'name' => 'artwork tickets',
+                'name' => 'Artwork-Tickets',
                 'type' => ProjectTabComponentEnum::TICKETING,
                 'data' => ['icon' => 'IconBuildingStore'],
                 'special' => true,

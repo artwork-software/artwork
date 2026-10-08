@@ -1,11 +1,15 @@
 import axios from 'axios'
 import { ref } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 
 /* Before the time or room of dates changes, the person is asked about those on sale in
-   artwork tickets. The dialog sits once in AppLayout; the server refuses the move of a date on
+   Artwork-Tickets. The dialog sits once in AppLayout; the server refuses the move of a date on
    sale without the header handed out here. */
 
 export const TICKETING_MOVE_CONFIRMED_HEADER = 'X-Ticketing-Move-Confirmed'
+
+/** Connected to Artwork-Tickets; without it nothing of the ticketing shows or asks. */
+export const ticketingActive = () => usePage().props.ticketing?.active === true
 
 /** The open question for TicketingMoveDialog, or null. */
 export const ticketingMoveQuestion = ref(null)
@@ -18,7 +22,7 @@ export const ticketingMoveQuestion = ref(null)
  * @param {{ withSeries?: boolean }} options withSeries: the move reaches the whole series of each date
  */
 export async function ticketingMoveHeaders(eventIds, { withSeries = false } = {}) {
-    if (!eventIds.length) return {}
+    if (!eventIds.length || !ticketingActive()) return {}
 
     let check
     try {

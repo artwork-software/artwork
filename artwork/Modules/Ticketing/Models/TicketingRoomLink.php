@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Ein artwork-Raum und seine Spielstätte in artwork tickets.
+ * Ein artwork-Raum und seine Spielstätte in Artwork-Tickets.
  *
  * @property int $id
  * @property int $room_id

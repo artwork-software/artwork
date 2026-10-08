@@ -295,11 +295,11 @@
                             </span>
                         </div>
 
-                        <!-- Ticketverkauf (artwork tickets, nur freigegebene Termine, nur Starttag); Klick öffnet die Gästeliste -->
+                        <!-- Ticketverkauf (Artwork-Tickets, nur freigegebene Termine, nur Starttag); Klick öffnet die Gästeliste -->
                         <button
                             v-if="ticketSales && !project && zoom_factor >= 0.8"
                             type="button"
-                            class="mt-0.5 flex items-center gap-1.5 rounded text-xs/5 hover:underline underline-offset-2"
+                            class="mt-0.5 flex cursor-pointer items-center gap-1.5 rounded text-xs/5 hover:underline underline-offset-2"
                             :title="ticketSalesLabel"
                             @click.stop="showTicketDetails = true"
                         >
@@ -700,11 +700,11 @@
                                             <span class="subpixel-antialiased">{{ $t('Admission') }} {{ event.admission_time }}</span>
                                         </div>
 
-                                        <!-- Ticketverkauf (artwork tickets) -->
+                                        <!-- Ticketverkauf (Artwork-Tickets) -->
                                         <button
                                             v-if="ticketSales"
                                             type="button"
-                                            class="mt-0.5 flex items-center gap-1.5 text-xs/5 hover:underline underline-offset-2"
+                                            class="mt-0.5 flex cursor-pointer items-center gap-1.5 text-xs/5 hover:underline underline-offset-2"
                                             @click.stop="showTicketDetails = true"
                                         >
                                             <component
@@ -1189,7 +1189,7 @@ const showAdmissionTime = computed(() =>
     && isStartDayCell.value
 );
 
-// Verkauft/Plätze aus artwork tickets; BaseCalendar stellt sie bereit, andere Kalender nicht.
+// Verkauft/Plätze aus Artwork-Tickets; BaseCalendar stellt sie bereit, andere Kalender nicht.
 const calendarTicketSales = inject('calendarTicketSales', null);
 const ticketSales = computed(() =>
     isStartDayCell.value ? calendarTicketSales?.get(props.event.id) ?? null : null
@@ -1198,7 +1198,7 @@ const showTicketDetails = ref(false);
 const ticketSalesLabel = computed(() => {
     if (!ticketSales.value) return '';
     return ticketSales.value.cancelled
-        ? $t('Cancelled in artwork tickets')
+        ? $t('Cancelled in Artwork-Tickets')
         : $t('{sold} of {capacity} tickets sold', { sold: ticketSales.value.sold, capacity: ticketSales.value.capacity });
 });
 

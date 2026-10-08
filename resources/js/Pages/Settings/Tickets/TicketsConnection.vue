@@ -1,7 +1,7 @@
 <template>
     <div>
         <div v-if="!connection.configured" class="text-sm text-text-subtle">
-            {{ $t('artwork tickets is not configured for this installation. Ask your Caldero contact to set it up.') }}
+            {{ $t('Artwork-Tickets is not configured for this installation. Ask your Caldero contact to set it up.') }}
         </div>
 
         <ConnectStart v-else-if="!connection.connected && !wizardOpen" :user-email="userEmail" @start="wizardOpen = true" />
@@ -27,7 +27,7 @@
                         <dt class="text-text-subtle">{{ $t('Connected by') }}</dt><dd class="text-text">{{ connection.connectedBy ?? '–' }}</dd>
                     </dl>
                     <p class="mt-6 max-w-[520px] text-[13px] leading-5 text-text-muted">
-                        {{ $t('Dates are released for sale from the ticketing tab of a project. Sales and payouts live in artwork tickets.') }}
+                        {{ $t('Dates are released for sale from the ticketing tab of a project. Sales and payouts live in Artwork-Tickets.') }}
                     </p>
                 </div>
 
@@ -49,8 +49,12 @@
             </div>
 
             <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border-hairline pt-4">
-                <p class="text-xs text-text-subtle max-w-[560px]">{{ $t('Disconnecting revokes the access of this installation; the ticket house and its data stay in artwork tickets.') }}</p>
-                <button type="button" class="ui-button text-danger hover:bg-danger-surface" @click="confirmDisconnect = true">
+                <p class="text-xs text-text-subtle max-w-[560px]">
+                    {{ connection.datesOnSale > 0
+                        ? $t('{count} dates are on sale. Withdraw them in the ticketing component of their projects before disconnecting.', { count: connection.datesOnSale })
+                        : $t('Disconnecting revokes the access of this installation; the ticket house and its data stay in Artwork-Tickets.') }}
+                </p>
+                <button type="button" class="ui-button text-danger hover:bg-danger-surface" :disabled="connection.datesOnSale > 0" @click="confirmDisconnect = true">
                     <IconPlugConnectedX class="size-4" />{{ $t('Disconnect') }}
                 </button>
             </div>
@@ -58,8 +62,8 @@
 
         <confirmation-component
             v-if="confirmDisconnect"
-            :titel="$t('Disconnect artwork tickets')"
-            :description="$t('The access of this installation is revoked; the ticket house and its data stay in artwork tickets. Continue?')"
+            :titel="$t('Disconnect Artwork-Tickets')"
+            :description="$t('The access of this installation is revoked; the ticket house and its data stay in Artwork-Tickets. Continue?')"
             :confirm="$t('Disconnect')"
             @closed="handleDisconnect"
         />
@@ -100,7 +104,7 @@ const setup = computed(() => [
         href: route('settings.tickets.billing'),
         title: t('Details & payouts'),
         text: props.connection.billingComplete === false
-            ? t('Without them and Stripe\'s verification no date can be released for sale.')
+            ? t('Without them and the verification by the payment provider no date can be released for sale.')
             : t('Who stands behind the house, what its buyers read and where it is paid out.'),
         state: props.connection.billingComplete === null ? null
             : props.connection.billingComplete ? { variant: 'success', label: t('Complete') } : { variant: 'warning', label: t('Missing') },

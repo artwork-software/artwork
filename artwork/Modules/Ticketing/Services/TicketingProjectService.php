@@ -128,11 +128,15 @@ class TicketingProjectService
                 'id' => $venue['id'],
                 'name' => $venue['name'],
                 'capacity' => array_sum(array_column($venue['zones'], 'capacity')),
+                // Mit Saalplan liegen Kategorien und Plätze fest; ein Termin ändert nur die Preise.
+                'seated' => (bool) ($venue['seated'] ?? false),
                 'zones' => $venue['zones'],
             ] : null,
             'release' => $release ? [
                 'state' => $release->state,
                 'classes' => $release->classes,
+                'description' => $release->description,
+                'reductions' => $release->reductions ?? [],
                 'releasedAt' => $release->released_at?->toIso8601String(),
                 'releasedBy' => $release->releasedBy?->full_name,
                 'syncError' => $release->sync_error,

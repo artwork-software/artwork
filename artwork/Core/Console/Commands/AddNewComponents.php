@@ -202,14 +202,14 @@ class AddNewComponents extends Command
 
         if (!Component::query()->where('type', ProjectTabComponentEnum::TICKETING)->first()) {
             Component::create([
-                'name' => 'artwork tickets',
+                'name' => 'Artwork-Tickets',
                 'type' => ProjectTabComponentEnum::TICKETING,
                 'data' => ['icon' => 'IconBuildingStore'],
                 'special' => true,
                 'sidebar_enabled' => false,
                 'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ]);
-            $this->info('Component artwork tickets added');
+            $this->info('Component Artwork-Tickets added');
         }
     }
 }

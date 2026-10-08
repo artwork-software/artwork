@@ -55,7 +55,7 @@ class SyncTicketingEventJob implements ShouldQueue
                 return;
             }
 
-            Log::warning('artwork tickets sync gave up', [
+            Log::warning('Artwork-Tickets sync gave up', [
                 'event_id' => $this->eventId,
                 'message' => $exception->getMessage(),
             ]);

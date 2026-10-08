@@ -127,7 +127,10 @@ class TicketingBillingService
      */
     public function stripeSession(TicketingConnection $connection, string $email): string
     {
-        return (string) $this->tickets->post($connection, '/house/stripe-session', ['email' => $email])['clientSecret'];
+        // Das Anlegen des Kontos fragt Stripe mehrmals hintereinander; 10 Sekunden reichen dafür nicht.
+        $session = $this->tickets->post($connection, '/house/stripe-session', ['email' => $email], timeout: 30);
+
+        return (string) $session['clientSecret'];
     }
 
     /**

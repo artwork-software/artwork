@@ -23,6 +23,29 @@ export function capacityOf(event) {
     return classes.length ? classes.reduce((sum, cls) => sum + (Number(cls.quota) || 0), 0) : null
 }
 
+/** The house reductions the production grants: its own choice once saved, else the house defaults. */
+export function grantedIdsOf(production, reductions) {
+    return production.reductionTypeIds ?? reductions.filter((reduction) => reduction.defaultEnabled).map((reduction) => reduction.id)
+}
+
+/** The ids a date offers: the production's grant with the date's own departures applied. */
+export function offeredIdsOf(event, production, reductions) {
+    const granted = grantedIdsOf(production, reductions)
+    const own = new Map((event.release?.reductions ?? []).map((reduction) => [reduction.id, reduction.offered]))
+    return reductions.filter((reduction) => own.get(reduction.id) ?? granted.includes(reduction.id)).map((reduction) => reduction.id)
+}
+
+/** Whether the date really offers something else than its production; a departure the production caught up with does not count. */
+export function hasOwnReductions(event, production, reductions) {
+    const granted = grantedIdsOf(production, reductions)
+    return (event.release?.reductions ?? []).some((reduction) => reduction.offered !== granted.includes(reduction.id)
+        && reductions.some((known) => known.id === reduction.id))
+}
+
+export function reductionValue(reduction) {
+    return reduction.kind === 'percent' ? `−${reduction.value / 100} %` : `−${formatEuro(reduction.value)}`
+}
+
 export function isReleased(event) {
     return event.release?.state === 'released'
 }

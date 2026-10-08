@@ -12,7 +12,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Die Produktion eines Projekts in artwork tickets: was der Shop zeigt und welche Ermäßigungen
+ * Die Produktion eines Projekts in Artwork-Tickets: was der Shop zeigt und welche Ermäßigungen
  * gelten. Bis zur ersten Freigabe nur ein Entwurf in artwork; danach wird jede Änderung sofort
  * nach tickets geschrieben.
  */
@@ -31,6 +31,9 @@ class TicketingProductionService
 
     /**
      * @param array{title: string|null, description: string|null, reduction_type_ids: list<string>|null} $data
+     * Ein neues Titelbild ($hero oder das weitere Bild $coverImageId) schiebt das bisherige zu den
+     * weiteren Bildern, außer $removeHero nimmt es weg.
+     *
      * @param list<UploadedFile> $images weitere Bilder, hinten angefügt
      * @param list<int> $removeImageIds weitere Bilder, die herausfallen
      */
@@ -41,16 +44,19 @@ class TicketingProductionService
         bool $removeHero,
         array $images = [],
         array $removeImageIds = [],
+        ?int $coverImageId = null,
     ): TicketingProduction {
         $production = $this->for($project);
         $production->fill($data);
+        $previousHero = $production->hero_path;
+        $cover = $coverImageId === null ? null : $production->images()->findOrFail($coverImageId);
 
-        if ($hero || $removeHero) {
-            if ($production->hero_path) {
-                Storage::delete(TicketingProduction::HERO_DIRECTORY . '/' . $production->hero_path);
+        if ($hero || $cover || $removeHero) {
+            if ($previousHero && $removeHero) {
+                Storage::delete(TicketingProduction::HERO_DIRECTORY . '/' . $previousHero);
             }
 
-            $production->hero_path = null;
+            $production->hero_path = $cover?->path;
             $production->hero_synced_at = null;
         }
 
@@ -62,6 +68,19 @@ class TicketingProductionService
         $production->save();
 
         $removedRemoteIds = $this->removeImages($production, $removeImageIds);
+
+        if ($cover) {
+            // Die Datei bleibt liegen, sie ist jetzt das Titelbild; tickets führt sie nicht mehr als weiteres Bild.
+            if ($cover->remote_id) {
+                $removedRemoteIds[] = $cover->remote_id;
+            }
+
+            $cover->delete();
+        }
+
+        if ($previousHero && !$removeHero && ($hero || $cover)) {
+            $production->images()->create(['path' => $previousHero]);
+        }
 
         foreach ($images as $image) {
             $path = StoredFileName::forUpload($image);

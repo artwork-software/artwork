@@ -1,6 +1,6 @@
 <template>
     <ArtworkBaseModal :title="$t('Invite {count} people', { count: people.length })"
-                      :description="$t('They join with the role you pick here; artwork tickets sends each of them an e-mail with a link. Rights can be refined on its team page afterwards.')"
+                      :description="$t('They join with the role you pick here; Artwork-Tickets sends each of them an e-mail with a link. Rights can be refined on its team page afterwards.')"
                       modal-size="sm:max-w-xl" @close="$emit('close')">
         <div class="flex flex-col gap-5 text-[13px]">
             <div class="flex flex-wrap gap-1.5">
@@ -41,7 +41,7 @@ import { IconMailForward } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 
 /* The second step of an invitation: who is settled, this decides as what. The role
-   cards carry the same one-line hints as the team page of artwork tickets. */
+   cards carry the same one-line hints as the team page of Artwork-Tickets. */
 const props = defineProps({
     people: { type: Array, required: true },
     /** [{ preset, label, hint }] in the order they are offered. */

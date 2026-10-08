@@ -7,19 +7,19 @@
             </button>
         </template>
 
-        <PendingChangesBar :visible="connection.connected && dirty" :message="$t('Changes not yet in artwork tickets')" :submit-label="$t('Sync rooms')"
+        <PendingChangesBar :visible="connection.connected && dirty" :message="$t('Changes not yet in Artwork-Tickets')" :submit-label="$t('Sync rooms')"
                            :can-submit="canSync" :processing="form.processing" @discard="discard" @submit="submit" />
 
-        <NotConnected v-if="!connection.connected" :message="$t('Rooms and price classes are synced once this installation is connected to artwork tickets.')" />
+        <NotConnected v-if="!connection.connected" :message="$t('Rooms and price classes are synced once this installation is connected to Artwork-Tickets.')" />
 
         <div v-else class="rounded-lg border border-border-subtle/70 bg-surface shadow-raised px-3 py-4 sm:px-5 sm:py-5">
             <p class="mb-4 max-w-[760px] text-[13px] leading-5 text-text-subtle">
-                {{ $t('Each selected room is a venue in artwork tickets. The address is printed on the tickets and starts out as the house address from the general settings. Rooms already in artwork tickets show their current state; a deselected room stays there untouched.') }}
+                {{ $t('Each selected room is a venue in Artwork-Tickets. The address is printed on the tickets and starts out as the house address from the general settings. Rooms already in Artwork-Tickets show their current state; a deselected room stays there untouched.') }}
             </p>
 
             <div v-if="ticketsError" class="mb-4 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
                 <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
-                <span>{{ $t('The current state could not be loaded from artwork tickets: {message} Syncing overwrites what is there with what you enter here.', { message: ticketsError }) }}</span>
+                <span>{{ $t('The current state could not be loaded from Artwork-Tickets: {message} Syncing overwrites what is there with what you enter here.', { message: ticketsError }) }}</span>
             </div>
 
             <RoomSyncEditor :rooms="roomDrafts" :countries="countries" />

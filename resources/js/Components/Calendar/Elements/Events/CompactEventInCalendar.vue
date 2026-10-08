@@ -79,13 +79,13 @@ const props = defineProps({
 
 const emit = defineEmits(["editEvent"]);
 
-// Verkauft/Plätze aus artwork tickets: auf der Kachel nur das Symbol, die Zahlen im Tooltip.
+// Verkauft/Plätze aus Artwork-Tickets: auf der Kachel nur das Symbol, die Zahlen im Tooltip.
 const calendarTicketSales = inject('calendarTicketSales', null);
 const ticketSales = computed(() => calendarTicketSales?.get(props.event.id) ?? null);
 const ticketSalesLabel = computed(() => {
     if (!ticketSales.value) return '';
     return ticketSales.value.cancelled
-        ? $t('Cancelled in artwork tickets')
+        ? $t('Cancelled in Artwork-Tickets')
         : $t('{sold} of {capacity} tickets sold', { sold: ticketSales.value.sold, capacity: ticketSales.value.capacity });
 });
 

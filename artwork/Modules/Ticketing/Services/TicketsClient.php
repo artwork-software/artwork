@@ -10,7 +10,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 /**
- * HTTP zu artwork tickets. Zwei Ausweise: der Provisionierungsschlüssel der Plattform darf Häuser
+ * HTTP zu Artwork-Tickets. Zwei Ausweise: der Provisionierungsschlüssel der Plattform darf Häuser
  * anlegen und Adressen prüfen, der Hausschlüssel alles innerhalb des verbundenen Hauses.
  * Nicht erreichbar oder abgelehnt heißt hier immer TicketingConnectionException mit der
  * Meldung, die tickets gibt.
@@ -35,19 +35,28 @@ class TicketsClient
         return $this->send(fn (): Response => $this->provisioning()->post($this->url($path), $payload));
     }
 
-    /** @return array<string, mixed> */
-    public function get(TicketingConnection $connection, string $path): array
+    /**
+     * @param array<string, mixed> $query
+     * @return array<string, mixed>
+     */
+    public function get(TicketingConnection $connection, string $path, array $query = []): array
     {
-        return $this->send(fn (): Response => $this->house($connection)->get($this->url($path)));
+        // Ein leeres query-Array würde die Abfrage überschreiben, die schon im Pfad steht.
+        return $this->send(fn (): Response => $query === []
+            ? $this->house($connection)->get($this->url($path))
+            : $this->house($connection)->get($this->url($path), $query));
     }
 
     /**
      * @param array<string, mixed> $payload
+     * @param int $timeout Sekunden; länger nur für Aufrufe, hinter denen tickets selbst mehrfach Stripe fragt.
      * @return array<string, mixed>
      */
-    public function post(TicketingConnection $connection, string $path, array $payload = []): array
+    public function post(TicketingConnection $connection, string $path, array $payload = [], int $timeout = 10): array
     {
-        return $this->send(fn (): Response => $this->house($connection)->post($this->url($path), $payload));
+        return $this->send(
+            fn (): Response => $this->house($connection)->timeout($timeout)->post($this->url($path), $payload)
+        );
     }
 
     /**
@@ -124,26 +133,27 @@ class TicketsClient
         try {
             $response = $send();
         } catch (ConnectionException $exception) {
-            throw TicketingConnectionException::transient(__('artwork tickets could not be reached.'), $exception);
+            throw TicketingConnectionException::transient(__('Artwork-Tickets could not be reached.'), $exception);
         }
 
         if ($response->successful()) {
             return (array) $response->json();
         }
 
-        if ($response->serverError()) {
+        // 429: der Hausschlüssel ist über seinem Minutenlimit — in einer Minute geht es wieder.
+        if ($response->serverError() || $response->tooManyRequests()) {
             throw TicketingConnectionException::transient(
-                __('artwork tickets rejected the request.') . " (HTTP {$response->status()})"
+                __('Artwork-Tickets rejected the request.') . " (HTTP {$response->status()})"
             );
         }
 
         // Die Geschäftsregeln kommen als Code; die beiden, an denen eine Freigabe scheitern kann, in Worten.
         $message = match ($response->json('error.code')) {
-            'HOUSE_DETAILS_MISSING' => __('artwork tickets is still missing details of the house: the legal details, the payout account verified by Stripe or the legal pages of the shop. Until they are complete, nothing can be released for sale.'),
-            'HOUSE_IN_REVIEW' => __('artwork tickets is still reviewing the house. Until it is approved, nothing can be released for sale.'),
-            'HOUSE_DETAILS_LOCKED' => __('artwork tickets keeps the legal details once they are complete. They can be changed, but not removed.'),
+            'HOUSE_DETAILS_MISSING' => __('Artwork-Tickets is still missing details of the house: the legal details, the payout account verified by the payment provider or the legal pages of the shop. Until they are complete, nothing can be released for sale.'),
+            'HOUSE_IN_REVIEW' => __('Artwork-Tickets is still reviewing the house. Until it is approved, nothing can be released for sale.'),
+            'HOUSE_DETAILS_LOCKED' => __('Artwork-Tickets keeps the legal details once they are complete. They can be changed, but not removed.'),
             default => $response->json('error.message')
-                ?? __('artwork tickets rejected the request.') . " (HTTP {$response->status()})",
+                ?? __('Artwork-Tickets rejected the request.') . " (HTTP {$response->status()})",
         };
 
         // Validierungsfehler nennen das Feld, sonst bleibt "The request is invalid." ein Rätsel.

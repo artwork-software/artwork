@@ -5,7 +5,7 @@
                 <IconPalette class="size-3.5" />{{ $t('Edit shop appearance') }}
             </a>
             <a v-if="connection.connected" :href="route('ticketing.open')" target="_blank" rel="noopener" class="ui-button">
-                <IconExternalLink class="size-3.5" />{{ $t('Open artwork tickets') }}
+                <IconExternalLink class="size-3.5" />{{ $t('Open Artwork-Tickets') }}
             </a>
         </template>
 
@@ -13,7 +13,7 @@
             storage-key="settings-guide.tickets"
             title="How does this area work?"
             :paragraphs="[
-                'artwork tickets is the ticket shop of the suite. Connecting creates a ticket house for this installation; the person connecting becomes its owner.',
+                'Artwork-Tickets is the ticket shop of the suite. Connecting creates a ticket house for this installation; the person connecting becomes its owner.',
                 'Once connected, artwork and tickets exchange released events, prices and sales. Rooms with their price classes and the reductions are synced from the other tabs.',
             ]"
         />
@@ -33,7 +33,7 @@ import TicketsConnection from '@/Pages/Settings/Tickets/TicketsConnection.vue'
 defineProps({
     connection: { type: Object, required: true },
     rooms: { type: Array, default: () => [] },
-    /** How many of them already are a venue in artwork tickets. */
+    /** How many of them already are a venue in Artwork-Tickets. */
     linkedRooms: { type: Number, default: 0 },
     houseDefaults: { type: Object, required: true },
     countries: { type: Array, required: true },

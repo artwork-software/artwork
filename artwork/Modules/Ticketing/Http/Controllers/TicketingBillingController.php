@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/** Einstellungen → artwork tickets → Angaben & Auszahlung: was der Assistent offen lassen durfte, und Stripes Formular. */
+/** Einstellungen → Artwork-Tickets → Angaben & Auszahlung: was der Assistent offen lassen durfte, und Stripes Formular. */
 class TicketingBillingController extends Controller
 {
     public function __construct(
@@ -53,7 +53,7 @@ class TicketingBillingController extends Controller
         $connection = $this->connections->current();
 
         if (!$connection) {
-            return back()->with('error', __('This installation is not connected to artwork tickets.'));
+            return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
         }
 
         try {
@@ -62,7 +62,7 @@ class TicketingBillingController extends Controller
             return back()->with('error', $exception->getMessage());
         }
 
-        return back()->with('success', __('Details saved in artwork tickets.'));
+        return back()->with('success', __('Details saved in Artwork-Tickets.'));
     }
 
     public function removeLegalDocument(string $document): RedirectResponse
@@ -70,7 +70,7 @@ class TicketingBillingController extends Controller
         $connection = $this->connections->current();
 
         if (!$connection) {
-            return back()->with('error', __('This installation is not connected to artwork tickets.'));
+            return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
         }
 
         try {
@@ -79,7 +79,7 @@ class TicketingBillingController extends Controller
             return back()->with('error', $exception->getMessage());
         }
 
-        return back()->with('success', __('PDF removed in artwork tickets.'));
+        return back()->with('success', __('PDF removed in Artwork-Tickets.'));
     }
 
     public function acceptPlatformTerms(Request $request): RedirectResponse
@@ -87,7 +87,7 @@ class TicketingBillingController extends Controller
         $connection = $this->connections->current();
 
         if (!$connection) {
-            return back()->with('error', __('This installation is not connected to artwork tickets.'));
+            return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
         }
 
         try {
@@ -105,7 +105,7 @@ class TicketingBillingController extends Controller
         $connection = $this->connections->current();
 
         if (!$connection) {
-            return response()->json(['message' => __('This installation is not connected to artwork tickets.')], 409);
+            return response()->json(['message' => __('This installation is not connected to Artwork-Tickets.')], 409);
         }
 
         try {

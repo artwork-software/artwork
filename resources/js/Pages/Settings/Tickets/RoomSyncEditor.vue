@@ -11,7 +11,7 @@
                     </template>
                 </BaseCheckbox>
                 <div class="ml-auto flex items-center gap-2">
-                    <BaseChip v-if="room.linked" variant="neutral">{{ $t('In artwork tickets') }}</BaseChip>
+                    <BaseChip v-if="room.linked" variant="neutral">{{ $t('In Artwork-Tickets') }}</BaseChip>
                     <BaseChip v-if="room.selected" variant="success">
                         {{ $t('{count} price classes · {places} places', { count: room.zones.length, places: zonePlaces(room) }) }}
                     </BaseChip>

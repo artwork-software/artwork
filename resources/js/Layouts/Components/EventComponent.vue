@@ -940,7 +940,7 @@ import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 import { IconAlertTriangle, IconArrowsMoveHorizontal, IconCheck, IconChevronUp, IconCircleX, IconRepeat, IconTicket, IconTrash } from '@tabler/icons-vue'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import { useEvent } from '@/Composeables/Event.js'
-import { ticketingMoveHeaders } from '@/Composeables/useTicketingMove.js'
+import { ticketingActive, ticketingMoveHeaders } from '@/Composeables/useTicketingMove.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -1008,7 +1008,7 @@ const showTicketDetails = ref(false)
 const ticketsReleased = ref(false)
 watch(() => props.event?.id, async (eventId) => {
     ticketsReleased.value = false
-    if (!eventId) return
+    if (!eventId || !ticketingActive()) return
     try {
         const { data } = await axios.get(route('ticketing.sales', eventId), { params: { only_state: 1 } })
         ticketsReleased.value = data.released === true

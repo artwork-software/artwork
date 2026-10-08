@@ -2,7 +2,7 @@
     <label class="flex items-start gap-3 cursor-pointer">
         <input v-model="accepted" type="checkbox" class="aw-checklist-input mt-0.5 cursor-pointer" />
         <span class="text-[13px] leading-5 text-text">
-            {{ $t('On behalf of the house I accept the terms of use and the data processing agreement of artwork tickets.') }}
+            {{ $t('On behalf of the house I accept the terms of use and the data processing agreement of Artwork-Tickets.') }}
             <span class="mt-1 flex flex-wrap gap-x-4 text-xs">
                 <a :href="termsUrl" target="_blank" rel="noopener" class="inline-flex items-center gap-1 font-medium text-accent-600 hover:underline">{{ $t('Terms of use') }}<IconExternalLink class="size-3" /></a>
                 <a :href="dpaUrl" target="_blank" rel="noopener" class="inline-flex items-center gap-1 font-medium text-accent-600 hover:underline">{{ $t('Data processing agreement') }}<IconExternalLink class="size-3" /></a>

@@ -16,6 +16,7 @@ use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Artwork\Modules\Project\Services\ComponentUsageService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -150,6 +151,13 @@ class ProjectTabController extends Controller
                 ->reject(
                     fn (Component $component) => $component->type === ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW->value
                 )
+                ->values();
+        }
+
+        // Artwork-Tickets nur anbieten, wenn diese Instanz verbunden ist
+        if (!app(TicketingConnectionService::class)->isActive()) {
+            $componentsSpecial = $componentsSpecial
+                ->reject(fn (Component $component) => $component->type === ProjectTabComponentEnum::TICKETING->value)
                 ->values();
         }
 

@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal :title="$t('Ticket details')" :description="description" modal-size="sm:max-w-3xl" @close="$emit('close')">
+    <ArtworkBaseModal :title="$t('Ticket details')" :description="description" modal-size="sm:max-w-4xl" @close="$emit('close')">
         <div v-if="loading" class="flex items-center gap-2 text-sm text-text-subtle">
             <IconLoader2 class="size-4 animate-spin" />{{ $t('Loading…') }}
         </div>
@@ -13,7 +13,7 @@
                 </div>
             </dl>
 
-            <BaseChip v-if="sales.status === 'cancelled'" variant="warning" class="self-start">{{ $t('Cancelled in artwork tickets') }}</BaseChip>
+            <BaseChip v-if="sales.status === 'cancelled'" variant="warning" class="self-start">{{ $t('Cancelled in Artwork-Tickets') }}</BaseChip>
 
             <div class="overflow-x-auto rounded-lg border border-border-subtle bg-surface">
                 <table class="w-full min-w-[640px] border-collapse">
@@ -38,9 +38,9 @@
                                 {{ ticket.categoryName }}
                                 <span v-if="ticket.reductionName" class="text-text-subtle">· {{ ticket.reductionName }}</span>
                             </td>
-                            <td class="px-4 py-2.5 text-right tabular-nums">{{ formatEuro(ticket.priceCents) }}</td>
-                            <td class="px-4 py-2.5 font-mono text-xs tabular-nums">{{ ticket.code }}</td>
-                            <td class="px-4 py-2.5">
+                            <td class="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">{{ formatEuro(ticket.priceCents) }}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5 font-mono text-xs tabular-nums">{{ ticket.code }}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5">
                                 <BaseChip v-if="ticket.checkedInAt" variant="success">{{ $t('Checked in {time}', { time: formatTime(ticket.checkedInAt) }) }}</BaseChip>
                                 <BaseChip v-else-if="ticket.status === 'valid'" variant="neutral">{{ $t('Valid') }}</BaseChip>
                                 <BaseChip v-else variant="warning">{{ ticket.status === 'refunded' ? $t('Refunded') : $t('Cancelled') }}</BaseChip>
@@ -53,7 +53,7 @@
 
         <template #footer>
             <a v-if="sales?.released" :href="route('ticketing.open', { event: eventId })" target="_blank" rel="noopener" class="ui-button">
-                <IconExternalLink class="size-3.5" />{{ $t('Open in artwork tickets') }}
+                <IconExternalLink class="size-3.5" />{{ $t('Open in Artwork-Tickets') }}
             </a>
             <button type="button" class="ui-button-add" @click="$emit('close')">{{ $t('Close') }}</button>
         </template>

@@ -72,7 +72,7 @@
                         ]"
                     />
                 </div>
-                <div class="col-span-full">
+                <div v-if="$page.props.ticketing?.active" class="col-span-full">
                     <div class="flex gap-x-3">
                         <div class="flex h-6 shrink-0 items-center">
                             <div class="group grid size-4 grid-cols-1">
@@ -86,9 +86,9 @@
                     <SettingsGuideBanner
                         class="mt-2"
                         variant="static"
-                        title="Effect on artwork tickets"
+                        title="Effect on Artwork-Tickets"
                         :paragraphs="[
-                            'Only events of these types appear in the ticketing component of a project, where they get their prices and are released for sale in artwork tickets.',
+                            'Only events of these types appear in the ticketing component of a project, where they get their prices and are released for sale in Artwork-Tickets.',
                             'Rehearsals, set-ups and other internal types stay out.',
                         ]"
                     />

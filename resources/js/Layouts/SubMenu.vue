@@ -924,7 +924,7 @@ const navigation = ref([
                 href: route('settings.tickets'),
                 icon: 'IconBuildingStore',
                 current: route().current('settings.tickets*'),
-                has_permission: can('manage ticketing') || is('artwork admin')
+                has_permission: usePage().props.ticketing?.configured && (can('manage ticketing') || is('artwork admin'))
             },
         ]
     },

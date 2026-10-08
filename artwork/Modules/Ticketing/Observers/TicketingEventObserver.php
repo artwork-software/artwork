@@ -12,7 +12,7 @@ use Artwork\Modules\Ticketing\Services\TicketingLock;
  * Ein freigegebener Termin bleibt in tickets auf dem Stand des Kalenders: verschoben heißt neu geschickt,
  * und zwar aus der Warteschlange, damit der Kalender nie auf tickets wartet. Verschieben braucht Recht und
  * Bestätigung; gelöscht wird er nicht, das geht nur über das Zurückziehen in der Ticketing-Komponente.
- * Ohne konfiguriertes tickets passiert nichts.
+ * Ohne aktive Verbindung passiert nichts.
  */
 class TicketingEventObserver
 {
@@ -35,7 +35,7 @@ class TicketingEventObserver
     {
         $moved = $event->wasChanged(self::MOVED);
 
-        if (!$moved || !$this->connections->isConfigured()) {
+        if (!$moved || !$this->connections->isActive()) {
             return;
         }
 

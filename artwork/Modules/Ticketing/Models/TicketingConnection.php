@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Die Verbindung dieser Instanz zu ihrem Haus in artwork tickets — es gibt höchstens eine.
+ * Die Verbindung dieser Instanz zu ihrem Haus in Artwork-Tickets — es gibt höchstens eine.
  *
  * @property int $id
  * @property string $tickets_url
@@ -18,6 +18,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $api_key
  * @property string $oauth_client_id
  * @property int|null $connected_by_user_id
+ * @property Carbon|null $customers_synced_at
+ * @property Carbon|null $customers_sync_started_at
+ * @property string|null $customers_sync_cursor
+ * @property string|null $customers_sync_error
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read User|null $connectedBy
@@ -34,10 +38,16 @@ class TicketingConnection extends Model
         'api_key',
         'oauth_client_id',
         'connected_by_user_id',
+        'customers_synced_at',
+        'customers_sync_started_at',
+        'customers_sync_cursor',
+        'customers_sync_error',
     ];
 
     protected $casts = [
         'api_key' => 'encrypted',
+        'customers_synced_at' => 'datetime',
+        'customers_sync_started_at' => 'datetime',
     ];
 
     protected $hidden = [

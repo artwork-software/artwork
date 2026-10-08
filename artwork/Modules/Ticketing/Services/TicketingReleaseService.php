@@ -13,7 +13,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Preise und Plätze eines Termins festhalten und ihn in artwork tickets zum Verkauf stellen.
+ * Preise, Plätze, Shop-Text und Ermäßigungen eines Termins festhalten und ihn in Artwork-Tickets
+ * zum Verkauf stellen.
  *
  * Jede Aktion trifft eine ausdrückliche Liste von Terminen. Serien folgen der Regel des Kalenders:
  * wer ohne den Rest seiner Serie andere Preise bekommt, verlässt sie. Freigeben und Zurückziehen
@@ -33,18 +34,19 @@ class TicketingReleaseService
 
     /**
      * @param Collection<int, Event> $targets
-     * @param list<array{zone_key: string|null, name: string, price_cents: int, quota: int}> $classes
+     * @param array{
+     *     classes: list<array{zone_key: string|null, name: string, price_cents: int, quota: int}>,
+     *     description: string|null,
+     *     reductions: list<array{id: string, offered: bool}>,
+     * } $draft
      */
-    public function saveDraft(Collection $targets, array $classes): void
+    public function saveDraft(Collection $targets, array $draft): void
     {
-        DB::transaction(function () use ($targets, $classes): void {
+        DB::transaction(function () use ($targets, $draft): void {
             $this->leaveSeriesWhenPartial($targets);
 
             foreach ($targets as $target) {
-                TicketingEventRelease::query()->updateOrCreate(
-                    ['event_id' => $target->id],
-                    ['classes' => $classes],
-                );
+                TicketingEventRelease::query()->updateOrCreate(['event_id' => $target->id], $draft);
             }
         });
 
@@ -303,7 +305,7 @@ class TicketingReleaseService
     {
         if (!$event->room_id || !TicketingRoomLink::query()->where('room_id', $event->room_id)->exists()) {
             throw new TicketingConnectionException(__(
-                'The room of :event is not synced with artwork tickets yet.',
+                'The room of :event is not synced with Artwork-Tickets yet.',
                 ['event' => $this->label($event)]
             ));
         }
@@ -325,7 +327,7 @@ class TicketingReleaseService
     {
         $venueId = $this->venueIdOf($event)
             ?? throw new TicketingConnectionException(__(
-                'The room of :event is not synced with artwork tickets yet.',
+                'The room of :event is not synced with Artwork-Tickets yet.',
                 ['event' => $this->label($event)]
             ));
 
@@ -335,7 +337,8 @@ class TicketingReleaseService
     /** @return array<string, mixed> */
     private function pushDate(TicketingConnection $connection, string $productionId, Event $event): array
     {
-        $classes = $event->ticketingRelease?->classes ?: $this->defaultClasses($event);
+        $release = $event->ticketingRelease;
+        $classes = $release?->classes ?: $this->defaultClasses($event);
 
         return $this->tickets->put($connection, '/dates', [
             'externalRef' => (string) $event->id,
@@ -353,6 +356,11 @@ class TicketingReleaseService
                 'priceCents' => (int) $class['price_cents'],
                 'quota' => (int) $class['quota'],
             ], $classes),
+            'description' => $release?->description,
+            'reductions' => array_map(static fn (array $reduction): array => [
+                'reductionTypeId' => $reduction['id'],
+                'offered' => $reduction['offered'],
+            ], $release?->reductions ?? []),
         ]);
     }
 
@@ -381,7 +389,7 @@ class TicketingReleaseService
     private function requireConnection(): TicketingConnection
     {
         return $this->connections->current()
-            ?? throw new TicketingConnectionException(__('This installation is not connected to artwork tickets yet.'));
+            ?? throw new TicketingConnectionException(__('This installation is not connected to Artwork-Tickets yet.'));
     }
 
     private function label(Event $event): string

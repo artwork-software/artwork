@@ -7,12 +7,12 @@
             </BaseChip>
             <h2 class="font-lexend text-xl font-semibold text-text mb-2">{{ $t('Sell tickets for your dates') }}</h2>
             <p class="text-sm leading-[22px] text-text-muted max-w-[560px] mb-5">
-                {{ $t('artwork tickets is the ticket shop of the suite. Connecting creates a ticket house for this installation and syncs rooms and reductions. Afterwards you release dates for sale straight from artwork.') }}
+                {{ $t('Artwork-Tickets is the ticket shop of the suite. Connecting creates a ticket house for this installation and syncs rooms and reductions. Afterwards you release dates for sale straight from artwork.') }}
             </p>
             <div class="flex items-center gap-3">
                 <button type="button" class="ui-button-add min-h-9 px-4" @click="$emit('start')">
                     <IconPlugConnected class="size-4" />
-                    {{ $t('Connect artwork tickets') }}
+                    {{ $t('Connect Artwork-Tickets') }}
                 </button>
                 <span class="text-xs text-text-subtle">{{ $t('About 5 minutes · nothing is created without confirmation') }}</span>
             </div>
@@ -52,10 +52,10 @@ const { t } = useI18n()
 
 const steps = [
     { title: t('House'), text: t('Name and address in the ticket shop') },
-    { title: t('Details'), text: t('Legal details and legal pages — can be added later; Stripe verifies the house after connecting') },
+    { title: t('Details'), text: t('Legal details and legal pages — can be added later; the payment provider verifies the house after connecting') },
     { title: t('Rooms'), text: t('Which rooms sell, with address, price classes and default prices') },
     { title: t('Reductions'), text: t('House-wide reductions, e.g. 50 % with proof') },
     { title: t('Review & connect'), text: t('Everything at a glance, then one click') },
-    { title: t('Payouts'), text: t('Stripe verifies the house and takes the bank account — can be finished later') },
+    { title: t('Payouts'), text: t('The payment provider verifies the house and takes the bank account — can be finished later') },
 ]
 </script>

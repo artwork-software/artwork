@@ -8,12 +8,12 @@
             <div class="min-w-0 flex-1">
                 <p class="font-lexend text-[13px] font-medium text-text">{{ state === 'verified' ? $t('Verified') : $t('In review') }}</p>
                 <p class="text-[13px] leading-5 text-text-subtle">
-                    {{ state === 'verified' ? $t('The house can sell tickets and is paid out.') : $t('The details are submitted. Stripe is checking them, which usually takes a few minutes.') }}
+                    {{ state === 'verified' ? $t('The house can sell tickets and is paid out.') : $t('The details are submitted. The payment provider is checking them, which usually takes a few minutes.') }}
                 </p>
             </div>
             <button v-if="stripeKey" type="button" class="ui-button" @click="editing = true">{{ $t('Change details') }}</button>
         </div>
-        <p v-else-if="!stripeKey" class="text-[13px] text-text-subtle">{{ $t('Payments are not set up in artwork tickets yet.') }}</p>
+        <p v-else-if="!stripeKey" class="text-[13px] text-text-subtle">{{ $t('Payments are not set up in Artwork-Tickets yet.') }}</p>
         <div v-else ref="container"></div>
     </div>
 </template>
@@ -34,7 +34,7 @@ import { IconCheck, IconClock } from '@tabler/icons-vue'
 const props = defineProps({
     /** open · review · verified, as tickets reads it from Stripe. */
     state: { type: String, required: true },
-    /** null while artwork tickets takes no payments yet. */
+    /** null while Artwork-Tickets takes no payments yet. */
     stripeKey: { type: String, default: null },
 })
 

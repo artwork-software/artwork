@@ -30,7 +30,7 @@ class AppAuthController extends Controller
         if ($user === null || !Hash::check($validated['password'], $user->password)) {
             // Uniform message — never reveal whether the email exists. Failed logins are
             // routine here: the app probes every known instance during discovery.
-            return response()->json(['message' => __('auth.failed')], 401);
+            return response()->json(['message' => __('These credentials do not match our records.')], 401);
         }
 
         if (

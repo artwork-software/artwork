@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Ticketing;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
+use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\Client\Request;
@@ -19,7 +21,7 @@ use Tests\Concerns\ActsAsRole;
 use Tests\Feature\FeatureTestCase;
 
 /**
- * Handshake mit artwork tickets: OAuth-Client raus, Hausschlüssel rein.
+ * Handshake mit Artwork-Tickets: OAuth-Client raus, Hausschlüssel rein.
  */
 final class TicketingConnectionTest extends FeatureTestCase
 {
@@ -184,6 +186,23 @@ final class TicketingConnectionTest extends FeatureTestCase
 
         $this->assertDatabaseCount('ticketing_connections', 0);
         $this->assertDatabaseHas('oauth_clients', ['id' => $clientId, 'revoked' => true]);
+    }
+
+    #[Test]
+    public function a_house_with_dates_on_sale_stays_connected(): void
+    {
+        $this->fakeHappyTickets();
+
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), $this->draft());
+        TicketingEventRelease::query()->create([
+            'event_id' => Event::factory()->create()->id, 'state' => TicketingEventRelease::STATE_RELEASED,
+            'tickets_date_id' => 'date_1', 'classes' => [],
+        ]);
+
+        $this->delete(route('settings.tickets.disconnect'))->assertRedirect()->assertSessionHas('error');
+
+        $this->assertDatabaseCount('ticketing_connections', 1);
     }
 
     #[Test]

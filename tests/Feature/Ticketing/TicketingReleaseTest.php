@@ -119,6 +119,8 @@ final class TicketingReleaseTest extends FeatureTestCase
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$first->id, $second->id],
             'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3500, 'quota' => 250]],
+            'description' => null,
+            'reductions' => [],
         ])->assertOk()->assertJsonPath('events.1.release.classes.0.quota', 250);
 
         $this->assertSame(3500, TicketingEventRelease::query()->where('event_id', $second->id)->first()->classes[0]['price_cents']);
@@ -138,6 +140,8 @@ final class TicketingReleaseTest extends FeatureTestCase
                 ['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3900, 'quota' => 300],
                 ['zone_key' => null, 'name' => 'Premium', 'price_cents' => 7900, 'quota' => 10],
             ],
+            'description' => null,
+            'reductions' => [],
         ])->assertOk();
 
         $this->assertFalse($first->fresh()->is_series);
@@ -218,6 +222,8 @@ final class TicketingReleaseTest extends FeatureTestCase
                 ['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3100, 'quota' => 270],
                 ['zone_key' => null, 'name' => 'Premium', 'price_cents' => 7900, 'quota' => 10],
             ],
+            'description' => null,
+            'reductions' => [],
         ])->assertOk();
 
         Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
@@ -225,6 +231,63 @@ final class TicketingReleaseTest extends FeatureTestCase
             && $request['capacity'] === 280
             && $request['categories'][0]['priceCents'] === 3100
             && $request['categories'][1] === ['zoneKey' => null, 'name' => 'Premium', 'priceCents' => 7900, 'quota' => 10]);
+    }
+
+    #[Test]
+    public function a_date_keeps_its_own_text_and_reductions_and_sends_them_to_the_shop(): void
+    {
+        $this->fakeTickets();
+        $pupils = '1b2c3d4e-5f60-4a71-8b82-9c3d4e5f6a71';
+        $members = '2c3d4e5f-6a71-4b82-9c93-0d4e5f6a7b82';
+        $event = $this->releasedEvent();
+
+        $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
+            'event_ids' => [$event->id],
+            'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 2900, 'quota' => 300]],
+            'description' => "## Premiere\nMit anschließender Feier.",
+            'reductions' => [['id' => $pupils, 'offered' => false], ['id' => $members, 'offered' => true]],
+        ])->assertOk()
+            ->assertJsonPath('events.0.release.description', "## Premiere\nMit anschließender Feier.")
+            ->assertJsonPath('events.0.release.reductions.1', ['id' => $members, 'offered' => true]);
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/dates')
+            && $request['description'] === "## Premiere\nMit anschließender Feier."
+            && $request['reductions'] === [
+                ['reductionTypeId' => $pupils, 'offered' => false],
+                ['reductionTypeId' => $members, 'offered' => true],
+            ]);
+    }
+
+    #[Test]
+    public function a_date_without_own_text_follows_the_production_in_the_shop(): void
+    {
+        $this->fakeTickets();
+        $event = Event::factory()->create([
+            'project_id' => $this->project->id, 'event_type_id' => $this->type->id, 'room_id' => $this->room->id,
+            'start_time' => '2027-02-01 20:00:00', 'end_time' => '2027-02-01 22:00:00',
+        ]);
+
+        $this->postJson(route('projects.tabs.ticketing.release', $this->project), ['event_ids' => [$event->id]])->assertOk();
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/dates')
+            && $request['description'] === null
+            && $request['reductions'] === []);
+    }
+
+    #[Test]
+    public function a_reduction_is_named_by_its_tickets_id(): void
+    {
+        $this->fakeTickets();
+        $event = Event::factory()->create(['project_id' => $this->project->id, 'event_type_id' => $this->type->id, 'room_id' => $this->room->id]);
+
+        $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
+            'event_ids' => [$event->id],
+            'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 2900, 'quota' => 300]],
+            'description' => null,
+            'reductions' => [['id' => 'students', 'offered' => false]],
+        ])->assertUnprocessable()->assertJsonValidationErrors('reductions.0.id');
     }
 
     #[Test]
@@ -338,6 +401,58 @@ final class TicketingReleaseTest extends FeatureTestCase
             'images' => [UploadedFile::fake()->image('replacement.jpg')],
             'remove_image_ids' => [$kept->id],
         ], ['Accept' => 'application/json'])->assertOk()->assertJsonCount(TicketingProduction::MAX_IMAGES, 'production.images');
+    }
+
+    #[Test]
+    public function a_further_picture_becomes_the_cover_and_the_old_cover_a_further_picture(): void
+    {
+        Storage::fake();
+        $imageId = '8b3f4e5d-6c7a-4b82-8c93-1d4e5f6a7b82';
+        $this->fakeTickets([
+            self::TICKETS_URL . '/api/integration/v1/productions/*/images/*' => Http::response(['removed' => true]),
+            self::TICKETS_URL . '/api/integration/v1/productions/*/images' => Http::response(['id' => 'new-remote', 'url' => 'https://cdn.test/b.jpg', 'alt' => null]),
+            self::TICKETS_URL . '/api/integration/v1/productions/*/hero' => Http::response(['url' => 'https://cdn.test/hero.jpg']),
+        ]);
+        Storage::put(TicketingProduction::HERO_DIRECTORY . '/old-cover.jpg', 'old');
+        Storage::put(TicketingProduction::HERO_DIRECTORY . '/foyer.jpg', 'foyer');
+        $production = TicketingProduction::query()->create([
+            'project_id' => $this->project->id,
+            'production_id' => self::PRODUCTION_ID,
+            'hero_path' => 'old-cover.jpg',
+            'hero_synced_at' => now(),
+        ]);
+        $foyer = $production->images()->create(['path' => 'foyer.jpg', 'remote_id' => $imageId]);
+
+        $this->post(route('projects.tabs.ticketing.production', $this->project), [
+            'cover_image_id' => $foyer->id,
+        ], ['Accept' => 'application/json'])->assertOk();
+
+        $production->refresh();
+        $this->assertSame('foyer.jpg', $production->hero_path);
+        $this->assertSame(['old-cover.jpg'], $production->images->pluck('path')->all());
+        Storage::assertExists(TicketingProduction::HERO_DIRECTORY . '/old-cover.jpg');
+        Storage::assertExists(TicketingProduction::HERO_DIRECTORY . '/foyer.jpg');
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
+            && str_ends_with($request->url(), '/images/' . $imageId));
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/productions/' . self::PRODUCTION_ID . '/hero'));
+        $this->assertSame(1, $this->imagesPosted());
+    }
+
+    #[Test]
+    public function the_old_cover_is_deleted_when_removed_alongside_the_new_one(): void
+    {
+        Storage::fake();
+        $this->fakeTickets();
+        Storage::put(TicketingProduction::HERO_DIRECTORY . '/old-cover.jpg', 'old');
+        TicketingProduction::query()->create(['project_id' => $this->project->id, 'hero_path' => 'old-cover.jpg']);
+
+        $this->post(route('projects.tabs.ticketing.production', $this->project), [
+            'hero' => UploadedFile::fake()->image('premiere.jpg'),
+            'remove_hero' => '1',
+        ], ['Accept' => 'application/json'])->assertOk()->assertJsonCount(0, 'production.images');
+
+        Storage::assertMissing(TicketingProduction::HERO_DIRECTORY . '/old-cover.jpg');
     }
 
     private function imagesPosted(): int
@@ -566,6 +681,8 @@ final class TicketingReleaseTest extends FeatureTestCase
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$first->id, $third->id],
             'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3400, 'quota' => 300]],
+            'description' => null,
+            'reductions' => [],
         ])->assertOk();
 
         $this->assertFalse($first->fresh()->is_series);
@@ -617,6 +734,8 @@ final class TicketingReleaseTest extends FeatureTestCase
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$own->id, $foreign->id],
             'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3400, 'quota' => 300]],
+            'description' => null,
+            'reductions' => [],
         ])->assertNotFound();
 
         $this->assertDatabaseMissing('ticketing_event_releases', ['event_id' => $own->id]);
@@ -656,7 +775,7 @@ final class TicketingReleaseTest extends FeatureTestCase
     public function a_successful_sync_clears_the_error(): void
     {
         $this->fakeTickets();
-        $event = $this->releasedEvent(['sync_error' => 'artwork tickets could not be reached.']);
+        $event = $this->releasedEvent(['sync_error' => 'Artwork-Tickets could not be reached.']);
 
         $this->moveConfirmed($event, ['start_time' => '2027-02-02 20:00:00']);
         $this->runTicketingSync();
@@ -677,6 +796,24 @@ final class TicketingReleaseTest extends FeatureTestCase
         Bus::assertNotDispatched(SyncTicketingEventJob::class);
         Http::assertNothingSent();
         $this->assertSoftDeleted('events', ['id' => $event->id]);
+    }
+
+    #[Test]
+    public function after_disconnecting_dates_once_on_sale_move_and_delete_freely(): void
+    {
+        Http::fake();
+        $event = $this->releasedEvent();
+        TicketingConnection::query()->delete();
+
+        $this->postJson(route('events.multi-cell.move'), [
+            'events' => [$event->id],
+            'cell' => ['day' => '2027-02-03', 'room_id' => $this->room->id],
+        ])->assertOk();
+        $this->delete(route('projects.destroy', $this->project))->assertSessionMissing('error');
+
+        Bus::assertNotDispatched(SyncTicketingEventJob::class);
+        Http::assertNothingSent();
+        $this->assertSoftDeleted('projects', ['id' => $this->project->id]);
     }
 
     #[Test]

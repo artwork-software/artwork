@@ -392,6 +392,7 @@ import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMou
 import { toYmd } from "@/Helper/IsoWeek.js";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
+import {ticketingActive} from "@/Composeables/useTicketingMove.js";
 import {IconAlertTriangle} from "@tabler/icons-vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
@@ -507,7 +508,7 @@ const multiEdit = ref(false);
 // im Klick-Handler (nicht im Render) — so re-rendern beim Multi-Edit-Toggle
 // nicht tausende gemountete Kompakt-Kacheln, deren Optik sich gar nicht ändert.
 provide('calendarMultiEdit', multiEdit);
-// Verkauft/Plätze der in artwork tickets freigegebenen Termine, je Termin-ID. Eine reaktive Map,
+// Verkauft/Plätze der in Artwork-Tickets freigegebenen Termine, je Termin-ID. Eine reaktive Map,
 // damit eine Antwort nur die Kacheln der betroffenen Termine neu rendert.
 const ticketSales = reactive(new Map());
 provide('calendarTicketSales', ticketSales);
@@ -900,7 +901,7 @@ async function loadMonth(key: string, epoch: number) {
         if (monthEpoch.get(key) !== epoch) return;
         if (controller.signal.aborted) return;
         setCalendarMonthData(key, data?.calendar ?? []);
-        if (!props.isPlanning) loadTicketSales(rec);
+        if (!props.isPlanning && ticketingActive()) loadTicketSales(rec);
 
         loadedMonths.value.add(key);
         failedMonths.value.delete(key);

@@ -5,7 +5,9 @@ namespace Artwork\Modules\Ticketing\Services;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
+use Artwork\Modules\Ticketing\Jobs\SyncTicketingCustomersJob;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
+use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -13,7 +15,7 @@ use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 
 /**
- * Handshake mit artwork tickets: diese Instanz legt einen OAuth-Client (client_credentials) an,
+ * Handshake mit Artwork-Tickets: diese Instanz legt einen OAuth-Client (client_credentials) an,
  * tickets legt dafür ein Haus mit dem auslösenden Account als Inhaber*in an und gibt seinen
  * eigenen Schlüssel zurück. Danach halten beide Seiten eine Zugangsberechtigung für die andere,
  * die keiner Person gehört: tickets holt sich mit dem Client Tokens, deren Scopes
@@ -24,7 +26,7 @@ use Laravel\Passport\ClientRepository;
  */
 class TicketingConnectionService
 {
-    public const CLIENT_NAME = 'artwork tickets';
+    public const CLIENT_NAME = 'Artwork-Tickets';
 
     public function __construct(
         private readonly GeneralSettings $generalSettings,
@@ -39,18 +41,24 @@ class TicketingConnectionService
         return (bool) config('services.tickets.url') && (bool) config('services.tickets.provisioning_secret');
     }
 
+    /** Konfiguriert und verbunden: erst dann zeigt und tut artwork irgendetwas vom Ticketing. */
+    public function isActive(): bool
+    {
+        return $this->isConfigured() && TicketingConnection::query()->exists();
+    }
+
     public function current(): ?TicketingConnection
     {
         return TicketingConnection::query()->with('connectedBy')->first();
     }
 
     /**
-     * Der Weg aus artwork ins Ticket-Dashboard, auf Wunsch gleich zu einem Termin oder zu den
-     * Haus-Einstellungen (Shop-Darstellung): tickets gibt Mitgliedern des Hauses einen Einmal-Link,
+     * Der Weg aus artwork ins Ticket-Dashboard, auf Wunsch gleich zu einem Termin, einer Käuferin
+     * oder zu den Haus-Einstellungen (Shop-Darstellung): tickets gibt Mitgliedern des Hauses einen Einmal-Link,
      * allen anderen die Anmeldung mit ihrer Adresse. Ist tickets nicht erreichbar, bleibt der
      * gewöhnliche Link zum Dashboard.
      *
-     * @param array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings', tab?: string} $destination
+     * @param array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings', tab?: string}|array{type: 'customer', customerId: string} $destination
      */
     public function loginUrl(TicketingConnection $connection, User $user, array $destination): string
     {
@@ -144,7 +152,7 @@ class TicketingConnectionService
         $this->assertConfigured();
 
         if ($this->current()) {
-            throw new TicketingConnectionException(__('This installation is already connected to artwork tickets.'));
+            throw new TicketingConnectionException(__('This installation is already connected to Artwork-Tickets.'));
         }
 
         $client = $this->clients->createClientCredentialsGrantClient(self::CLIENT_NAME);
@@ -179,6 +187,9 @@ class TicketingConnectionService
             'connected_by_user_id' => $user->id,
         ]);
 
+        // Legt den CRM-Typ "Ticketing-Kunde" an, damit es den Knopf für den Abgleich ab jetzt gibt.
+        SyncTicketingCustomersJob::dispatch();
+
         // Ab hier besteht die Verbindung; scheitert der Abgleich, bleibt sie und die Meldung nennt den Rest.
         try {
             $this->syncRooms($connection, $draft['rooms']);
@@ -186,7 +197,7 @@ class TicketingConnectionService
             $this->billing->uploadLegalDocuments($connection, $draft['billing'] ?? []);
         } catch (TicketingConnectionException $exception) {
             throw new TicketingConnectionException(__(
-                'Connected to artwork tickets, but the sync failed: :message',
+                'Connected to Artwork-Tickets, but the sync failed: :message',
                 ['message' => $exception->getMessage()]
             ));
         }
@@ -204,7 +215,7 @@ class TicketingConnectionService
     {
         // Ohne die Liste keine Aufräumaktion: eine fehlende Antwort darf nicht jeden Verweis löschen.
         $venues = collect($this->tickets->get($connection, '/venues')['venues']
-            ?? throw new TicketingConnectionException(__('artwork tickets sent an unexpected answer.')))->keyBy('id');
+            ?? throw new TicketingConnectionException(__('Artwork-Tickets sent an unexpected answer.')))->keyBy('id');
         TicketingRoomLink::query()->whereNotIn('venue_id', $venues->keys())->delete();
 
         return $venues->all();
@@ -281,12 +292,33 @@ class TicketingConnectionService
         ]);
     }
 
+    /** Termine, die gerade im Shop verkauft werden: solange es welche gibt, bleibt die Verbindung. */
+    public function datesOnSale(): int
+    {
+        return TicketingEventRelease::query()->where('state', TicketingEventRelease::STATE_RELEASED)->count();
+    }
+
+    /**
+     * Ohne Verbindung erreichen Verschiebungen im Kalender den Shop nicht mehr, der aber weiter verkauft —
+     * deshalb erst trennen, wenn kein Termin mehr im Verkauf ist.
+     *
+     * @throws TicketingConnectionException
+     */
     public function disconnect(): void
     {
         $connection = $this->current();
 
         if (!$connection) {
             return;
+        }
+
+        $onSale = $this->datesOnSale();
+        if ($onSale > 0) {
+            throw new TicketingConnectionException(trans_choice(
+                '{1} One date is still on sale. Withdraw it in the ticketing component of its project before disconnecting.|[2,*] :count dates are still on sale. Withdraw them in the ticketing component of their projects before disconnecting.',
+                $onSale,
+                ['count' => $onSale],
+            ));
         }
 
         $client = Client::query()->find($connection->oauth_client_id);
@@ -311,7 +343,7 @@ class TicketingConnectionService
     private function assertConfigured(): void
     {
         if (!$this->isConfigured()) {
-            throw new TicketingConnectionException(__('artwork tickets is not configured for this installation.'));
+            throw new TicketingConnectionException(__('Artwork-Tickets is not configured for this installation.'));
         }
     }
 }

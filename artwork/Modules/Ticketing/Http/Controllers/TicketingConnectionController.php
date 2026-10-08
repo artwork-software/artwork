@@ -21,7 +21,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Einstellungen → artwork tickets: Übersicht (Verbindung), Räume & Preisklassen, Ermäßigungen.
+ * Einstellungen → Artwork-Tickets: Übersicht (Verbindung), Räume & Preisklassen, Ermäßigungen.
  * Die Berechtigung "manage ticketing" liegt auf der Routengruppe.
  */
 class TicketingConnectionController extends Controller
@@ -135,7 +135,7 @@ class TicketingConnectionController extends Controller
         }
 
         // Zurück in den Assistenten: sein letzter Schritt ist Stripes Formular, das erst das Haus braucht.
-        return back()->with('success', __('Connected to artwork tickets.'));
+        return back()->with('success', __('Connected to Artwork-Tickets.'));
     }
 
     public function syncRooms(SyncRoomsRequest $request): RedirectResponse
@@ -148,7 +148,7 @@ class TicketingConnectionController extends Controller
             return back()->with('error', $exception->getMessage());
         }
 
-        return back()->with('success', __('Rooms synced with artwork tickets.'));
+        return back()->with('success', __('Rooms synced with Artwork-Tickets.'));
     }
 
     public function syncReductions(SyncReductionsRequest $request): RedirectResponse
@@ -161,14 +161,18 @@ class TicketingConnectionController extends Controller
             return back()->with('error', $exception->getMessage());
         }
 
-        return back()->with('success', __('Reductions synced with artwork tickets.'));
+        return back()->with('success', __('Reductions synced with Artwork-Tickets.'));
     }
 
     public function destroy(): RedirectResponse
     {
-        $this->connections->disconnect();
+        try {
+            $this->connections->disconnect();
+        } catch (TicketingConnectionException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
-        return back()->with('success', __('Disconnected from artwork tickets.'));
+        return back()->with('success', __('Disconnected from Artwork-Tickets.'));
     }
 
     /** @return array<string, mixed> */
@@ -183,6 +187,7 @@ class TicketingConnectionController extends Controller
             'organizationSlug' => $connection?->organization_slug,
             'connectedAt' => $connection?->created_at,
             'connectedBy' => $connection?->connectedBy?->full_name,
+            'datesOnSale' => $connection === null ? 0 : $this->connections->datesOnSale(),
         ];
     }
 
@@ -207,6 +212,6 @@ class TicketingConnectionController extends Controller
     private function requireConnection(): TicketingConnection
     {
         return $this->connections->current()
-            ?? abort(409, __('This installation is not connected to artwork tickets yet.'));
+            ?? abort(409, __('This installation is not connected to Artwork-Tickets yet.'));
     }
 }

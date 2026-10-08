@@ -47,6 +47,7 @@ class TicketingProjectController extends Controller
                 $request->boolean('remove_hero'),
                 $request->file('images', []),
                 $request->removeImageIds(),
+                $request->coverImageId(),
             );
         });
     }
@@ -55,7 +56,7 @@ class TicketingProjectController extends Controller
     {
         $events = $this->eventsOf($project, $request->eventIds());
 
-        return $this->respond($project, fn () => $this->releases->saveDraft($events, $request->validated('classes')));
+        return $this->respond($project, fn () => $this->releases->saveDraft($events, $request->draft()));
     }
 
     public function release(Project $project, TicketingEventsRequest $request): JsonResponse

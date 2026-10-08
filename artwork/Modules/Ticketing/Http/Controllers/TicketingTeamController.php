@@ -12,7 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/** Einstellungen → artwork tickets → Team: Leute von hier ins Ticket-Haus einladen. */
+/** Einstellungen → Artwork-Tickets → Team: Leute von hier ins Ticket-Haus einladen. */
 class TicketingTeamController extends Controller
 {
     public function __construct(
@@ -50,7 +50,7 @@ class TicketingTeamController extends Controller
         $connection = $this->connections->current();
 
         if (!$connection) {
-            return back()->with('error', __('This installation is not connected to artwork tickets.'));
+            return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
         }
 
         try {

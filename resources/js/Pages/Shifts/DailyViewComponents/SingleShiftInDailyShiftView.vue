@@ -1,13 +1,13 @@
 <template>
     <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
-    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border', { 'border-dashed': isUnrelatedProjectShift, 'hc-card': highContrast && !isUnrelatedProjectShift }]"
+    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border overflow-hidden', { 'border-dashed': isUnrelatedProjectShift, 'hc-card': highContrast && !isUnrelatedProjectShift }]"
          :style="cardStyle">
         <!-- Linke Spalte: Zeilenstruktur -->
-        <div class="flex flex-col w-full">
+        <div class="flex flex-col w-full min-w-0">
             <!-- Zeile 1: Zeit (niemals umbrechen) + optionale Gruppe + Gewerkname + Menü am Zeilenende -->
             <div class="flex items-center min-w-0 justify-between">
                 <div class="flex items-center min-w-0">
-                    <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
+                    <div :class="['rounded-md whitespace-nowrap shrink-0', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
                         <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </div>
                     <!-- Dienstplanfreigabe: festgeschrieben (Schloss) / angefragt (Pull-Request) -->
@@ -19,7 +19,7 @@
                         :tooltip-text="$t('Committed')"
                         direction="top"
                         black-icon
-                        classes-button="ml-1"
+                        classes-button="ml-1 shrink-0"
                     />
                     <ToolTipComponent
                         v-else-if="shift.inWorkflow ?? shift.in_workflow"
@@ -29,9 +29,9 @@
                         :tooltip-text="$t('Requested')"
                         direction="top"
                         black-icon
-                        classes-button="ml-1"
+                        classes-button="ml-1 shrink-0"
                     />
-                    <div v-if="shiftGroupResolved && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-text-muted" :class="subtitleTextClass">
+                    <div v-if="shiftGroupResolved && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-text-muted truncate min-w-0 shrink" :class="subtitleTextClass">
                         ({{ shiftGroupResolved.name }})
                     </div>
                     <span
@@ -66,10 +66,10 @@
                 </div>
             </div>
 
-            <!-- Zeile 3: Funktionen (Badges/Liste) -->
-            <div class="flex justify-between flex-wrap items-center gap-1 ml-2">
-                <div class="flex gap-x-2">
-                <div v-for="qualification in shift.shifts_qualifications" :key="qualification.shift_qualification_id">
+            <!-- Zeile 3: Funktionen (Badges/Liste) – nur Funktionen mit Bedarf/Besetzung, bricht bei schmalen Schichten um -->
+            <div class="flex justify-between flex-wrap items-center gap-1 ml-2 mr-2 min-w-0">
+                <div class="flex flex-wrap gap-x-2 min-w-0">
+                <div v-for="qualification in visibleShiftQualifications" :key="qualification.shift_qualification_id">
                     <div class="text-text-subtle text-[10px] flex items-center gap-x-1 ">
 
                         <div :class="{ 'text-warning font-semibold': getAssignedCountForQualification(qualification.shift_qualification_id) > (qualification.value ?? 0) }">
@@ -88,7 +88,7 @@
                 </div>
 
                 <!-- Globale Qualifikationen (nur Zahlen z.B. 0/2 + Icon mit Tooltip) -->
-                <div class="flex gap-x-2 pr-4">
+                <div class="flex flex-wrap gap-x-2 min-w-0">
                     <div v-for="gq in demandedGlobalQualifications" :key="'gq-' + gq.id">
                         <div class="text-text-subtle text-[10px] flex items-center gap-x-1">
                             <div>
@@ -129,7 +129,7 @@
         </div>
     </div>
 
-        <div v-if="showShiftDetails && !isFollowUpDay" class="mt-1 ml-2 space-y-1">
+        <div v-if="showShiftDetails && !isFollowUpDay" class="mt-1 ml-2 space-y-1 min-w-0">
             <!-- Shift description (im detailsOnly-Modus hier anzeigen, da Header-Card ausgeblendet) -->
             <div v-if="detailsOnly && shift.description" class="text-xs text-text-subtle italic mb-1 pl-1">
                 {{ shift.description }}
@@ -168,8 +168,8 @@
                                     <span class="truncate block">{{ drop.isOverbooked ? $t('Overbooking') : $t('Unoccupied') }}</span>
                                 </div>
                             </div>
-                            <div class="w-full gap-x-2">
-                                <p class="text-xs text-left">{{ drop.requiredDropElementsCount }} {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}<span v-if="drop.isOverbooked"> ({{ $t('Overbooking') }})</span></p>
+                            <div class="w-full min-w-0 gap-x-2">
+                                <p class="text-xs text-left break-words">{{ drop.requiredDropElementsCount }} {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}<span v-if="drop.isOverbooked"> ({{ $t('Overbooking') }})</span></p>
 
                             </div>
                         </MenuButton>
@@ -712,6 +712,16 @@ const getAssignedCountForQualification = (id) => {
     const base = workers.filter(w => w.pivot?.shift_qualification_id === id).length
     return base + (shiftQualificationDeltas.value[id] ?? 0) + (overbookedQualificationDeltas.value[id] ?? 0)
 }
+
+// Kopfzeile: nur Funktionen mit Bedarfsplatz (regulär oder Überbuchung) oder tatsächlicher Besetzung –
+// ungenutzte Funktionen des Gewerks sind sonst nur visueller Ballast
+const visibleShiftQualifications = computed(() =>
+    (props.shift.shifts_qualifications || []).filter(sq =>
+        (sq.value ?? 0) > 0
+        || (sq.overbooked_value ?? 0) > 0
+        || getAssignedCountForQualification(sq.shift_qualification_id) > 0
+    )
+)
 
 const removeOverbookedSlot = (shiftQualificationId) => {
     router.patch(route('shifts.qualifications.overbook.decrease', { shift: props.shift.id }), {

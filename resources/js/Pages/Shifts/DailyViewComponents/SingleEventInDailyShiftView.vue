@@ -9,17 +9,22 @@
         <!-- Inhalt: zweizeilig (Zeit/Typ, darunter Titel + Menü) -->
         <div class="flex justify-between font-lexend min-w-0">
             <!-- Zeile 1: Zeit + Typ -->
-            <div class="flex items-center gap-x-2 min-w-0 pr-3">
+            <div class="flex items-center gap-x-2 min-w-0 flex-1 pr-3">
                 <div :class="['rounded-md', timePillPadding, 'whitespace-nowrap']" :style="{ backgroundColor: hexColor + '90' }">
                     <span v-if="event.allDay">{{ $t('All day') }}</span>
                     <span v-else>
                         <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </span>
                 </div>
-                <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
-                <div v-if="showAdmissionTime" class="flex items-center gap-1 shrink-0 whitespace-nowrap">
+                <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag): kompakt als Icon + Uhrzeit, Label im Tooltip -->
+                <div
+                    v-if="showAdmissionTime"
+                    class="flex items-center gap-0.5 shrink-0 whitespace-nowrap"
+                    v-tooltip.bottom="{ value: `${$t('Admission')} ${event.admission_time}`, class: 'aw-tooltip' }"
+                    :aria-label="`${$t('Admission')} ${event.admission_time}`"
+                >
                     <IconDoorEnter class="size-3.5 shrink-0" stroke-width="2" />
-                    <span class="text-xs">{{ $t('Admission') }} {{ event.admission_time }}</span>
+                    <span class="text-xs">{{ event.admission_time }}</span>
                 </div>
                 <!-- Projekt-Status Punkt (Anzeigeeinstellung "Projektstatus") -->
                 <div
@@ -93,7 +98,7 @@
                     </div>
                 </div>
             </div>
-            <div v-if="!isFollowUpDay" class="flex items-center min-w-0 pr-1">
+            <div v-if="!isFollowUpDay" class="flex items-center shrink-0 pr-1">
                 <div class="flex transition-opacity duration-150">
                     <BaseMenu has-no-offset :dots-color="($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                         <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showEventComponent = true" :icon="IconEdit" title="edit" />

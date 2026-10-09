@@ -70,7 +70,9 @@ class RouteServiceProvider extends ServiceProvider
         // Login der App: nur drosseln, keine Sperren oder Alarme — die App probiert beim Login jede
         // bekannte Instanz durch, Fehlversuche gültiger Nutzer sind also normaler Verkehr.
         RateLimiter::for('app-login', function (Request $request) {
-            $email = Str::lower((string) $request->input('email'));
+            // Läuft vor der Request-Validierung: Bots posten "email" auch als Array (sonst 500)
+            $email = $request->input('email');
+            $email = Str::lower(is_string($email) ? $email : '');
             $ip = (string) $request->ip();
 
             return [

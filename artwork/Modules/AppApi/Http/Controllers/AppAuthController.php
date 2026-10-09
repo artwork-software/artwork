@@ -4,9 +4,9 @@ namespace Artwork\Modules\AppApi\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\AppApi\Http\Requests\AppLoginRequest;
+use Artwork\Modules\AppApi\Services\AppShiftPlanService;
 use Artwork\Modules\AppApi\Services\AppTwoFactorAuthenticationService;
 use Artwork\Modules\ExternalUserManagement\Service\CredentialLoginService;
-use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +19,7 @@ class AppAuthController extends Controller
     public function __construct(
         private readonly AppTwoFactorAuthenticationService $twoFactorAuthenticationService,
         private readonly CredentialLoginService $credentialLoginService,
+        private readonly AppShiftPlanService $shiftPlanService,
     ) {
     }
 
@@ -29,9 +30,10 @@ class AppAuthController extends Controller
         // Same credential path as the web login form: LDAP bind, OIDC lockout, timing-safe local hash.
         try {
             $user = $this->credentialLoginService->attempt($validated['email'], $validated['password']);
-        } catch (ValidationException $exception) {
-            // OIDC accounts sign in via SSO only; the app has no SSO flow yet.
-            return response()->json(['message' => collect($exception->errors())->flatten()->first()], 401);
+        } catch (ValidationException) {
+            // OIDC accounts sign in via SSO only (the app has no SSO flow yet). Same answer as any
+            // other failed attempt — a distinct message would reveal that the account exists.
+            $user = null;
         }
 
         if ($user === null) {
@@ -83,8 +85,9 @@ class AppAuthController extends Controller
     /**
      * The app validates this shape (id, name, email, permissions) on the
      * device — removing or renaming fields breaks logins there. The permissions
-     * block drives menu visibility in the app (e.g. hiding the Dienstplan for
-     * workers without the shift plan permission).
+     * block drives menu visibility in the app: can_view_shift_plan follows the
+     * shift-plan endpoints (own roster permission + shift plan module), so the
+     * app never shows a Dienstplan that answers 403.
      *
      * @return array{id: int, name: string, email: string, permissions: array{can_view_shift_plan: bool}}
      */
@@ -95,7 +98,7 @@ class AppAuthController extends Controller
             'name' => $user->full_name,
             'email' => $user->email,
             'permissions' => [
-                'can_view_shift_plan' => $user->can(PermissionEnum::VIEW_SHIFT_PLAN->value),
+                'can_view_shift_plan' => $this->shiftPlanService->canViewOwnShiftPlan($user),
             ],
         ];
     }

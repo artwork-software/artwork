@@ -4,6 +4,8 @@ namespace Tests\Feature\AppApi;
 
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
@@ -39,7 +41,7 @@ final class AppDashboardTest extends TestCase
     #[Test]
     public function dashboardReturnsTodaysShiftEventAndOpenTasks(): void
     {
-        $user = User::factory()->create();
+        $user = $this->actingAsApiUserWith(PermissionEnum::CAN_VIEW_OWN_ROSTER->value);
 
         $shift = $this->createShiftForUser($user, now());
 
@@ -65,6 +67,31 @@ final class AppDashboardTest extends TestCase
         $this->assertSame($projectEvent->id, $response->json('events_today.0.id'));
         $this->assertSame($project->name, $response->json('events_today.0.project.name'));
         $this->assertSame([$task->id], array_column($response->json('tasks'), 'id'));
+    }
+
+    #[Test]
+    public function dashboardShowsTodaysShiftsOnlyWithTheShiftPlanRights(): void
+    {
+        $user = User::factory()->create();
+        $this->createShiftForUser($user, now());
+        Passport::actingAs($user, ['app']);
+
+        // Ohne "Eigenen Einsatzplan sehen" bleibt der Tagesblock leer (gleiche Form)
+        $this->getJson(route('app.v1.dashboard'))
+            ->assertOk()
+            ->assertJsonPath('today.date', now()->toDateString())
+            ->assertJsonPath('today.shifts', [])
+            ->assertJsonPath('timeline', [])
+            ->assertJsonPath('next_shift', null);
+
+        $rosterUser = $this->actingAsApiUserWith(PermissionEnum::CAN_VIEW_OWN_ROSTER->value);
+        $this->createShiftForUser($rosterUser, now());
+        $modules = app(ModuleSettings::class);
+        $modules->shift_plan = false;
+        $modules->save();
+        Passport::actingAs($rosterUser, ['app']);
+
+        $this->getJson(route('app.v1.dashboard'))->assertOk()->assertJsonPath('today.shifts', []);
     }
 
     #[Test]

@@ -59,7 +59,8 @@ class WorkTimeBookingService
     /**
      * Bucht vergangene Tage einer Person neu bzw. erstmals („Tag neu buchen“ in den Arbeitszeiten):
      * gleiche Rechnung wie die nächtliche Buchung, Delta gegen die vorhandene Tagesbuchung. Heute und
-     * künftige Tage werden übersprungen – die bucht der Nachtlauf. Liefert die neu gebuchten Tage.
+     * künftige Tage werden übersprungen – die bucht der Nachtlauf –, ebenso Tage vor der ersten Tagesbuchung
+     * der Person (dort wurde noch kein Zeitkonto geführt). Liefert die neu gebuchten Tage.
      *
      * @param iterable<Carbon|string> $days
      * @return array<string, int> Tag (Y-m-d) => Saldo-Delta
@@ -71,10 +72,14 @@ class WorkTimeBookingService
         }
 
         $today = now()->startOfDay();
+        $firstBookingDay = $this->repository->firstDailyBookingDay($user);
+        if ($firstBookingDay === null) {
+            return [];
+        }
 
         $pastDays = collect($days)
             ->map(fn ($day): Carbon => Carbon::parse($day)->startOfDay())
-            ->filter(fn (Carbon $day): bool => $day->lt($today))
+            ->filter(fn (Carbon $day): bool => $day->lt($today) && $day->toDateString() >= $firstBookingDay)
             ->sortBy(fn (Carbon $day): int => $day->getTimestamp())
             ->values();
         if ($pastDays->isEmpty()) {

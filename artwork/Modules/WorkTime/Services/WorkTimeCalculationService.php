@@ -34,6 +34,8 @@ use Illuminate\Support\Facades\DB;
  *    Zeile – die Anzeige entspricht damit immer dem Zeitkonto. Weicht die aktuelle Rechnung ab
  *    (rückwirkend Krank, Muster, Schichtänderung …), steht die Differenz in rebook_difference
  *    („Tag neu buchen“), sie wird nie stillschweigend angezeigt.
+ *  - „Neu buchen“ gibt es erst ab der ersten Tagesbuchung der Person (Beginn des Zeitkontos): davor
+ *    (Muster rückwirkend gültig, Zeitkonto noch nicht geführt) gibt es keine Differenz und keinen Hinweis.
  *  - Sonst Schichtminuten (Pause ab dem ersten Schichttag, Rest geht auf den Folgetag über) plus Individualzeiten.
  *  - Manuelle/Korrekturbuchungen sind reine Saldo-Deltas und kommen in beiden Fällen zum Ist hinzu.
  *  - Krank/Urlaub sind soll-neutral: ganzer Tag -> Ist = Soll; Halbtag -> Arbeit + 0,5 · Soll.
@@ -61,6 +63,7 @@ class WorkTimeCalculationService
         private readonly SpecialDayService $specialDayService,
         private readonly ThreeMonthAverageTargetService $threeMonthAverageTargetService,
         private readonly ContractSettingsResolver $contractSettings,
+        private readonly WorkTimeBookingRepository $workTimeBookingRepository,
     ) {
     }
 
@@ -85,7 +88,9 @@ class WorkTimeCalculationService
      * Alle Tage eines Zeitraums, 'Y-m-d' => Breakdown (Vorab-Laden, kein N+1).
      *
      * Optionen: use_bookings (bool, default true), legacy_adjustments (bool, default = use_bookings),
-     * special_days (array 'Y-m-d' => Name), holiday_comp_days (iterable<CompensationDayOff> für diese Person).
+     * with_account_start (bool, default false: Beginn des Zeitkontos für rebook_difference laden – nur wo „Neu
+     * buchen“ angeboten wird, eine Query mehr je Person), special_days (array 'Y-m-d' => Name),
+     * holiday_comp_days (iterable<CompensationDayOff> für diese Person).
      *
      * @return array<string, array<string, mixed>>
      */
@@ -282,7 +287,13 @@ class WorkTimeCalculationService
         // Differenz zwischen aktueller Rechnung und Gebuchtem: „Tag neu buchen“ würde genau sie buchen. Alte
         // Korrekturzeilen aus Zeitänderungen (bis 10/2026 am Genehmigungstag gebucht) decken die Änderung dieses
         // Schichttags schon ab – abziehen, sonst würde sie ein zweites Mal gebucht (bookDay zieht sie genauso ab).
-        $rebookDifference = $liveDailyBalance === null
+        // Vor der ersten Tagesbuchung der Person wurde noch kein Zeitkonto geführt: dort keine Differenz (nur mit
+        // with_account_start geladen; ohne den Schlüssel bleibt die Grenze offen).
+        $firstBookingDay = $context['first_booking_day'] ?? null;
+        $accountStarted = $isBooked
+            || !array_key_exists('first_booking_day', $context)
+            || ($firstBookingDay !== null && $key >= $firstBookingDay);
+        $rebookDifference = $liveDailyBalance === null || !$accountStarted
             ? null
             : $liveDailyBalance - ($isBooked ? (int) $booking['daily_change'] : 0)
                 - (int) ($context['legacy_adjustments'][$key] ?? 0);
@@ -299,6 +310,7 @@ class WorkTimeCalculationService
             'live_target' => $liveTarget,
             'live_actual' => $liveActual,
             'rebook_difference' => $rebookDifference,
+            'account_started' => $accountStarted,
             'work_minutes' => $workMinutes,
             'shift_minutes' => $shiftMinutes,
             'individual_minutes' => $individualMinutes,
@@ -346,7 +358,7 @@ class WorkTimeCalculationService
             ? ($options['special_days'] ?? $this->specialDayService->specialDaysBetween($start, $end))
             : [];
 
-        return [
+        $context = [
             'start' => $start->toDateString(),
             'end' => $end->toDateString(),
             'shift_minutes' => $this->shiftMinutesPerDay($entity, $start, $end),
@@ -369,6 +381,12 @@ class WorkTimeCalculationService
                 ? $this->holidayCompensationPerDay($entity, $start, $end, $options['holiday_comp_days'] ?? null)
                 : [],
         ];
+        if ($isUser && $useBookings && !empty($options['with_account_start'])) {
+            // Beginn des Zeitkontos (erste Tagesbuchung): davor kein „nicht gebucht“-Hinweis
+            $context['first_booking_day'] = $this->workTimeBookingRepository->firstDailyBookingDay($entity);
+        }
+
+        return $context;
     }
 
     /**

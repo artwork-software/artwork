@@ -9144,5 +9144,6 @@
     "Reset to production": "Auf Produktion zurücksetzen",
     "As granted for the production. Switch a reduction off or on to depart from it.": "Wie für die Produktion gewährt. Schalte eine Ermäßigung ab oder zu, um davon abzuweichen.",
     "Own reductions: {names}": "Eigene Ermäßigungen: {names}",
-    "No reductions on this date": "Keine Ermäßigungen an diesem Termin"
+    "No reductions on this date": "Keine Ermäßigungen an diesem Termin",
+    "Days before the first booking of the time account cannot be booked.": "Tage vor der ersten Buchung des Zeitkontos können nicht gebucht werden."
 }

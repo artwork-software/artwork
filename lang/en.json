@@ -9135,5 +9135,6 @@
     "Reset to production": "Reset to production",
     "As granted for the production. Switch a reduction off or on to depart from it.": "As granted for the production. Switch a reduction off or on to depart from it.",
     "Own reductions: {names}": "Own reductions: {names}",
-    "No reductions on this date": "No reductions on this date"
+    "No reductions on this date": "No reductions on this date",
+    "Days before the first booking of the time account cannot be booked.": "Days before the first booking of the time account cannot be booked."
 }

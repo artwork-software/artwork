@@ -1146,6 +1146,8 @@ class UserController extends Controller
         );
         $breakdowns = $this->workTimeCalculationService->breakdownForRange($user, $start, $end, [
             'holiday_comp_days' => $compensationDayOffs->flatten(1)->where('for_holiday', true),
+            // „nicht gebucht“ erst ab Beginn des Zeitkontos (erste Tagesbuchung)
+            'with_account_start' => true,
         ]);
         $user->unsetRelation('shifts');
 

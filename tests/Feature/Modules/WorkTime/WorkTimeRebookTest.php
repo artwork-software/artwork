@@ -55,12 +55,13 @@ final class WorkTimeRebookTest extends FeatureTestCase
     {
         $this->travelTo(Carbon::parse('2026-09-10 12:00'));
         $user = $this->userWithDailyTarget();
+        $this->dailyBooking($user, '2026-09-01', 480, 480); // Zeitkonto läuft seit dem 01.09.
         $this->actingAsAdmin(User::factory()->create());
 
         $this->post(route('users.worktimes.rebook', $user), ['dates' => ['2026-09-08']])->assertRedirect();
 
         $this->assertSame(-480, (int) $user->fresh()->work_time_balance);
-        $this->assertSame(1, $user->workTimeBookings()->count());
+        $this->assertSame(2, $user->workTimeBookings()->count());
     }
 
     #[Test]
@@ -259,5 +260,57 @@ final class WorkTimeRebookTest extends FeatureTestCase
 
         $this->assertSame(120 + 60, (int) $user->fresh()->work_time_balance);
         $this->assertFalse($this->workTimeDays($user, '2026-09-08', '2026-09-08')['2026-09-08']['needs_rebooking']);
+    }
+
+    #[Test]
+    public function days_before_the_first_daily_booking_show_no_hint_and_cannot_be_booked(): void
+    {
+        // AZ-3: Muster gilt rückwirkend unbegrenzt – vor Beginn des Zeitkontos kein „nicht gebucht“
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $this->dailyBooking($user, '2026-09-04', 480, 480);
+        $this->actingAsAdmin(User::factory()->create());
+
+        $days = $this->workTimeDays($user, '2026-09-01', '2026-09-08');
+        $this->assertFalse($days['2026-09-02']['needs_rebooking']);
+        $this->assertSame(0, $days['2026-09-02']['rebook_difference_minutes']);
+        $this->assertTrue($days['2026-09-07']['needs_rebooking']);
+        $this->assertSame('not_booked', $days['2026-09-07']['rebook_reason']);
+
+        $this->post(route('users.worktimes.rebook', $user), ['dates' => ['2026-09-02', '2026-09-07']])
+            ->assertSessionHasErrors('dates');
+
+        $this->assertSame(1, $user->workTimeBookings()->count());
+        $this->assertSame(0, (int) $user->fresh()->work_time_balance);
+    }
+
+    #[Test]
+    public function people_without_any_daily_booking_get_no_not_booked_hint(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $this->actingAsAdmin(User::factory()->create());
+
+        $response = $this->getJson(route('shift.user-info.worktimes', [
+            'user' => $user->id, 'start' => '2026-09-01', 'end' => '2026-09-09',
+        ]));
+        $response->assertJsonPath('totals.rebook_days', 0);
+
+        $this->post(route('users.worktimes.rebook', $user), ['dates' => ['2026-09-08']])
+            ->assertSessionHasErrors('dates');
+        $this->assertSame(0, $user->workTimeBookings()->count());
+    }
+
+    #[Test]
+    public function the_service_skips_days_before_the_first_daily_booking(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $this->dailyBooking($user, '2026-09-04', 480, 480);
+
+        $deltas = app(\Artwork\Modules\WorkTime\Services\WorkTimeBookingService::class)
+            ->rebookPastDays($user, ['2026-09-03', '2026-09-07']);
+
+        $this->assertSame(['2026-09-07' => -480], $deltas);
     }
 }

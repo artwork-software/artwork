@@ -128,6 +128,8 @@ final class ShiftUserInfoEndpointsTest extends FeatureTestCase
                 'worked_hours' => $worked,
                 'work_time_balance_change' => $worked - $wanted,
             ]);
+        // Fr 28.08.: erste Tagesbuchung – ab hier läuft das Zeitkonto (davor gibt es keinen „nicht gebucht“-Hinweis)
+        $book('2026-08-28', WorkTimeBookingRepository::dailyBookingName(Carbon::parse('2026-08-28')), 0, 120);
         // Di 01.09.: nur manuelle Nachbuchung (Soll 0) -> Zeitkonto +63 h, Übersicht +61 h
         $book('2026-09-01', 'manual_booking', 63 * 60, 0);
         // Mi 02.09.: reguläre Tagesbuchung ohne Arbeit -> deckungsgleich mit der aktuellen Rechnung

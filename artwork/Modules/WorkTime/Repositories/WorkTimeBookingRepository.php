@@ -104,6 +104,22 @@ class WorkTimeBookingRepository
     }
 
     /**
+     * Beginn des Zeitkontos einer Person: Tag der ersten Tagesbuchung (Name daily_work_time_booking_… oder
+     * Altzeile ohne Namen), 'Y-m-d' oder null, wenn die Person noch nie per Tagesbuchung gebucht wurde.
+     */
+    public function firstDailyBookingDay(User $user): ?string
+    {
+        $firstDay = WorkTimeBooking::query()
+            ->where('user_id', $user->id)
+            ->where(fn ($query) => $query
+                ->whereNull('name')
+                ->orWhere('name', 'like', 'daily\\_work\\_time\\_booking\\_%'))
+            ->min('booking_day');
+
+        return $firstDay === null ? null : substr((string) $firstDay, 0, 10);
+    }
+
+    /**
      * Nächtliche Tagesbuchung einer Person für einen Tag. Gesucht wird über den Namen: Korrektur- und
      * manuelle Buchungen desselben Tages sind eigene Zeilen und dürfen hier nicht gefunden werden
      * (sonst verrechnet der Re-Run ihren Betrag und überschreibt die Zeile).

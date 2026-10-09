@@ -120,16 +120,16 @@ class AppSystemComponentService
      * Whether the user may write through a system component: create events on
      * the schedule (per-event editability is flagged on each event), edit
      * shifts, or add comments. Mirrors the web's guards (EventPolicy,
-     * ShiftController's shift-planner check, CommentPolicy).
+     * ShiftController's shift-planner check, CommentPolicy::createInProject).
      */
-    public function isWritable(User $user, ProjectTabComponentEnum $type): bool
+    public function isWritable(User $user, Project $project, ProjectTabComponentEnum $type): bool
     {
         return match ($type) {
             ProjectTabComponentEnum::CALENDAR,
             ProjectTabComponentEnum::BULK_EDIT => $user->can('create', Event::class),
             ProjectTabComponentEnum::SHIFT_TAB => $user->can('plan-shifts'),
             ProjectTabComponentEnum::COMMENT_TAB,
-            ProjectTabComponentEnum::COMMENT_ALL_TAB => true,
+            ProjectTabComponentEnum::COMMENT_ALL_TAB => $user->can('createInProject', [Comment::class, $project]),
             default => false,
         };
     }

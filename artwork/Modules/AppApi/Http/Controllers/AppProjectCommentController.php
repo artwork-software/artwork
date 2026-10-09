@@ -23,7 +23,8 @@ class AppProjectCommentController extends Controller
     public function store(AppStoreCommentRequest $request, Project $project): JsonResponse
     {
         $this->authorize('view', $project);
-        $this->authorize('create', Comment::class);
+        // Same rule as the web (CommentController): project team or admin
+        $this->authorize('createInProject', [Comment::class, $project]);
 
         // The shared write path stores the raw text and records the
         // "Comment added" history entry, exactly like a comment from the web.

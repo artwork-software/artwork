@@ -434,6 +434,38 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function updateRejectsChildrenOfFoldersTheUserMayNotSee(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id, ['can_write' => true]);
+        [$tab, $folder] = $this->createTabWithComponent('DisclosureComponent', [
+            'permission_type' => 'someSeeSomeEdit',
+        ]);
+        $child = Component::create(['name' => 'Child', 'type' => 'Checkbox', 'data' => ['label' => 'Child']]);
+        DisclosureComponents::create([
+            'disclosure_id' => $folder->id,
+            'component_id' => $child->id,
+            'order' => 0,
+        ]);
+
+        Passport::actingAs($user, ['app']);
+
+        $this->patchJson(
+            route('app.v1.projects.component.update', [$project, $tab, $child]),
+            ['data' => ['checked' => true]],
+        )->assertNotFound();
+        $this->assertSame(0, ProjectComponentValue::query()->where('component_id', $child->id)->count());
+
+        $folder->users()->attach($user->id, ['can_write' => false]);
+
+        $this->patchJson(
+            route('app.v1.projects.component.update', [$project, $tab, $child]),
+            ['data' => ['checked' => true]],
+        )->assertOk();
+    }
+
+    #[Test]
     public function calendarTabComponentContainsTheProjectsEvents(): void
     {
         $user = User::factory()->create();
@@ -1287,6 +1319,57 @@ final class AppProjectTest extends TestCase
             ->assertJsonPath('comment.author', $user->full_name);
 
         $this->assertSame(1, $project->comments()->count());
+    }
+
+    #[Test]
+    public function commentingNeedsProjectTeamMembershipLikeInTheWeb(): void
+    {
+        $project = Project::factory()->create();
+        [$tab] = $this->createTabWithComponent('CommentTab');
+        // Globales Leserecht öffnet das Projekt, erlaubt aber keine Kommentare
+        $this->actingAsApiUserWith(PermissionEnum::PROJECT_VIEW->value);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonPath('components.0.is_writable', false);
+        $this->postJson(route('app.v1.projects.comments.store', $project), ['text' => 'Hallo'])
+            ->assertForbidden();
+        $this->assertSame(0, $project->comments()->count());
+
+        $member = User::factory()->create();
+        $project->users()->attach($member->id);
+        Passport::actingAs($member, ['app']);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonPath('components.0.is_writable', true);
+    }
+
+    #[Test]
+    public function commentsCannotTargetTabsTheUserMayNotSee(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id);
+        $hiddenTab = ProjectTab::factory()->create(['visible_for_all' => false]);
+        $visibleTab = ProjectTab::factory()->create(['visible_for_all' => true]);
+
+        Passport::actingAs($user, ['app']);
+
+        $this->postJson(route('app.v1.projects.comments.store', $project), [
+            'text' => 'Geheim',
+            'tab_id' => $hiddenTab->id,
+        ])->assertUnprocessable()->assertJsonValidationErrors('tab_id');
+        $this->postJson(route('app.v1.projects.comments.store', $project), [
+            'text' => 'Gibt es nicht',
+            'tab_id' => 999999,
+        ])->assertUnprocessable()->assertJsonValidationErrors('tab_id');
+        $this->assertSame(0, $project->comments()->count());
+
+        $this->postJson(route('app.v1.projects.comments.store', $project), [
+            'text' => 'Sichtbar',
+            'tab_id' => $visibleTab->id,
+        ])->assertCreated();
     }
 
     #[Test]

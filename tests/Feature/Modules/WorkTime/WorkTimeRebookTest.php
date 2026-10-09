@@ -313,4 +313,28 @@ final class WorkTimeRebookTest extends FeatureTestCase
 
         $this->assertSame(['2026-09-07' => -480], $deltas);
     }
+
+    #[Test]
+    public function duplicate_daily_rows_are_flagged_instead_of_counting_silently_as_manual_booking(): void
+    {
+        // AZ-4: zweite Tageszeile steckt im Konto, wird angezeigt und als eigener Hinweis ausgewiesen
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $this->dailyBooking($user, '2026-09-08', 0, 480);
+        $this->dailyBooking($user, '2026-09-08', 0, 480);
+        $this->actingAsAdmin(User::factory()->create());
+
+        $response = $this->getJson(route('shift.user-info.worktimes', [
+            'user' => $user->id, 'start' => '2026-09-08', 'end' => '2026-09-08',
+        ]));
+        $day = collect($response->json('workTimes'))->flatten(1)->first();
+
+        $this->assertTrue($day['has_duplicate_daily_booking']);
+        $this->assertSame(-480, $day['duplicate_daily_booking_minutes']);
+        $this->assertSame(0, $day['manual_change_minutes']);
+        $this->assertSame(-960, $day['work_time_balance_change']); // Anzeige = Zeitkonto
+        $this->assertFalse($day['needs_rebooking']);
+        $response->assertJsonPath('totals.duplicate_daily_booking_days', 1);
+        $response->assertJsonPath('totals.duplicate_daily_booking_minutes', -480);
+    }
 }

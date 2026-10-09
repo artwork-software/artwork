@@ -247,6 +247,12 @@
                     {{ $t('{n} past day(s) in this period differ from the time account: never booked (e.g. work time pattern created later) or changed afterwards (e.g. sick note, shift time). Rebooking changes the time account by {diff}.', { n: data.worktimes.totals.rebook_days, diff: data.worktimes.totals.rebook_difference_signed }) }}
                 </p>
 
+                <!-- Doppelte Tageszeilen (Altdaten): im Zeitkonto enthalten, „Neu buchen“ korrigiert sie nicht -->
+                <p v-if="data.worktimes.totals?.duplicate_daily_booking_days > 0" class="flex items-start gap-1.5 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
+                    <PropertyIcon name="IconAlertTriangle" class="size-4 shrink-0" />
+                    {{ $t('{n} past day(s) in this period have more than one daily booking (legacy data). They are included in the time account with {diff} in total; rebooking does not correct this – please have them cleaned up.', { n: data.worktimes.totals.duplicate_daily_booking_days, diff: data.worktimes.totals.duplicate_daily_booking_signed }) }}
+                </p>
+
                 <div v-for="(days, weekKey) in (data.worktimes.workTimes ?? {})" :key="weekKey"
                      class="rounded-lg border border-border-subtle">
                     <div class="flex items-center justify-between px-3 py-2 bg-surface-sunken rounded-t-lg">
@@ -276,6 +282,10 @@
                                             />
                                             <span v-if="day.is_special_day" class="rounded bg-warning-surface text-warning border border-warning-border px-1 text-[9px] font-semibold uppercase">
                                                 {{ $t('Special Day') }}
+                                            </span>
+                                            <span v-if="day.has_duplicate_daily_booking" class="rounded bg-warning-surface text-warning border border-warning-border px-1 text-[9px] font-semibold uppercase"
+                                                  :title="$t('This day has more than one daily booking (legacy data). The additional booking ({diff}) is included in the time account and in the values shown; rebooking does not correct it.', { diff: day.duplicate_daily_booking_signed })">
+                                                {{ $t('Booked twice') }}
                                             </span>
                                             <span v-if="day.needs_rebooking" class="rounded bg-warning-surface text-warning border border-warning-border px-1 text-[9px] font-semibold uppercase"
                                                   :title="$t('Rebooking changes the time account by {diff}.', { diff: day.rebook_difference_signed })">

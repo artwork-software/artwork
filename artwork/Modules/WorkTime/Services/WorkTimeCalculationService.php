@@ -311,6 +311,10 @@ class WorkTimeCalculationService
             'live_actual' => $liveActual,
             'rebook_difference' => $rebookDifference,
             'account_started' => $accountStarted,
+            // Weitere Tageszeilen desselben Tages (Altdaten, parallele Nachtläufe): stecken im Saldo und zählen
+            // deshalb als Zusatzbuchung mit – hier getrennt ausgewiesen, damit die Anzeige darauf hinweist
+            'duplicate_daily_rows' => (int) ($booking['duplicate_daily_rows'] ?? 0),
+            'duplicate_daily_change' => (int) ($booking['duplicate_daily_change'] ?? 0),
             'work_minutes' => $workMinutes,
             'shift_minutes' => $shiftMinutes,
             'individual_minutes' => $individualMinutes,
@@ -821,7 +825,8 @@ class WorkTimeCalculationService
      *
      * @return array<string, array{
      *     worked: int, wanted: int, night: int, balance_change: int, is_special_day: bool,
-     *     has_daily: bool, daily_worked: int, daily_wanted: int, daily_change: int, extra_change: int
+     *     has_daily: bool, daily_worked: int, daily_wanted: int, daily_change: int, extra_change: int,
+     *     duplicate_daily_rows: int, duplicate_daily_change: int
      * }>
      */
     private function bookingsPerDay(User $user, Carbon $start, Carbon $end): array
@@ -859,6 +864,8 @@ class WorkTimeCalculationService
                 'daily_wanted' => 0,
                 'daily_change' => 0,
                 'extra_change' => 0,
+                'duplicate_daily_rows' => 0,
+                'duplicate_daily_change' => 0,
             ];
             $change = (int) $booking->work_time_balance_change;
             $entry['worked'] += (int) $booking->worked_hours;
@@ -866,15 +873,18 @@ class WorkTimeCalculationService
             $entry['night'] += (int) $booking->nightly_working_hours;
             $entry['balance_change'] += $change;
             $entry['is_special_day'] = $entry['is_special_day'] || (bool) $booking->is_special_day;
-            if (
-                !$entry['has_daily']
-                && $booking->name === WorkTimeBookingRepository::dailyBookingName(Carbon::parse($dayKey))
-            ) {
+            $isDailyRow = $booking->name === WorkTimeBookingRepository::dailyBookingName(Carbon::parse($dayKey));
+            if ($isDailyRow && !$entry['has_daily']) {
                 $entry['has_daily'] = true;
                 $entry['daily_worked'] = (int) $booking->worked_hours;
                 $entry['daily_wanted'] = (int) $booking->wanted_working_hours;
                 $entry['daily_change'] = $change;
             } else {
+                if ($isDailyRow) {
+                    // Doppelte Tageszeile: bleibt im Saldo (Anzeige = Zeitkonto), wird aber als Hinweis ausgewiesen
+                    $entry['duplicate_daily_rows']++;
+                    $entry['duplicate_daily_change'] += $change;
+                }
                 // Manuelle Buchung / Korrektur: reines Saldo-Delta (Soll 0) – zählt als Ist-Zuschlag
                 $entry['extra_change'] += $change;
             }

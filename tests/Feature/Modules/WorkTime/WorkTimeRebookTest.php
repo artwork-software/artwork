@@ -204,4 +204,60 @@ final class WorkTimeRebookTest extends FeatureTestCase
 
         $response->assertJsonPath('totals.difference_minutes', 0);
     }
+
+    /**
+     * @return array<string, array<string, mixed>> 'Y-m-d' => Tag aus dem Arbeitszeiten-Endpunkt
+     */
+    private function workTimeDays(User $user, string $start, string $end): array
+    {
+        return collect($this->getJson(route('shift.user-info.worktimes', [
+            'user' => $user->id, 'start' => $start, 'end' => $end,
+        ]))->assertOk()->json('workTimes'))->flatten(1)->keyBy('date')->all();
+    }
+
+    #[Test]
+    public function rebooking_a_day_with_a_legacy_correction_books_exactly_the_shown_difference(): void
+    {
+        // AZ-1: Neu buchen zog die alte Korrekturzeile nicht ab (Anzeige schon) → Änderung doppelt gezählt
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $shift = \Artwork\Modules\Shift\Models\Shift::factory()->create([
+            'start_date' => '2026-09-08', 'end_date' => '2026-09-08', 'start' => '10:00:00', 'end' => '20:00:00',
+        ]);
+        $user->shifts()->attach($shift->id, [
+            'shift_qualification_id' => \Artwork\Modules\Shift\Models\ShiftQualification::factory()->create()->id,
+            'start_date' => '2026-09-08', 'end_date' => '2026-09-08', 'start_time' => '10:00', 'end_time' => '20:00',
+        ]);
+        $this->dailyBooking($user, '2026-09-08', 480, 480); // gebucht mit alter Zeit 10–18
+        WorkTimeBooking::create([
+            'user_id' => $user->id,
+            'name' => 'adjustment_work_time_change_request_' . $shift->id,
+            'booking_day' => '2026-09-09',
+            'booking_weekday' => 3,
+            'wanted_working_hours' => 0,
+            'worked_hours' => 0,
+            'work_time_balance_change' => 120,
+        ]);
+        $user->increment('work_time_balance', 120);
+        // Später nachgetragen: 1 h individuelle Zeit am Schichttag → echte Abweichung von +1:00
+        $user->individualTimes()->create([
+            'title' => 'Nachbereitung',
+            'start_date' => '2026-09-08',
+            'end_date' => '2026-09-08',
+            'start_time' => '21:00',
+            'end_time' => '22:00',
+            'full_day' => false,
+            'working_time_minutes' => 60,
+            'break_minutes' => 0,
+        ]);
+        $this->actingAsAdmin(User::factory()->create());
+
+        $shown = $this->workTimeDays($user, '2026-09-08', '2026-09-08')['2026-09-08'];
+        $this->assertSame(60, $shown['rebook_difference_minutes']);
+
+        $this->post(route('users.worktimes.rebook', $user), ['dates' => ['2026-09-08']])->assertRedirect();
+
+        $this->assertSame(120 + 60, (int) $user->fresh()->work_time_balance);
+        $this->assertFalse($this->workTimeDays($user, '2026-09-08', '2026-09-08')['2026-09-08']['needs_rebooking']);
+    }
 }

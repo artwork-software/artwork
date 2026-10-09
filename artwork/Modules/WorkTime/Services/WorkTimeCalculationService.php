@@ -84,8 +84,8 @@ class WorkTimeCalculationService
     /**
      * Alle Tage eines Zeitraums, 'Y-m-d' => Breakdown (Vorab-Laden, kein N+1).
      *
-     * Optionen: use_bookings (bool, default true), special_days (array 'Y-m-d' => Name),
-     * holiday_comp_days (iterable<CompensationDayOff> für diese Person).
+     * Optionen: use_bookings (bool, default true), legacy_adjustments (bool, default = use_bookings),
+     * special_days (array 'Y-m-d' => Name), holiday_comp_days (iterable<CompensationDayOff> für diese Person).
      *
      * @return array<string, array<string, mixed>>
      */
@@ -281,7 +281,7 @@ class WorkTimeCalculationService
 
         // Differenz zwischen aktueller Rechnung und Gebuchtem: „Tag neu buchen“ würde genau sie buchen. Alte
         // Korrekturzeilen aus Zeitänderungen (bis 10/2026 am Genehmigungstag gebucht) decken die Änderung dieses
-        // Schichttags schon ab – abziehen, sonst würde sie ein zweites Mal gebucht.
+        // Schichttags schon ab – abziehen, sonst würde sie ein zweites Mal gebucht (bookDay zieht sie genauso ab).
         $rebookDifference = $liveDailyBalance === null
             ? null
             : $liveDailyBalance - ($isBooked ? (int) $booking['daily_change'] : 0)
@@ -338,6 +338,8 @@ class WorkTimeCalculationService
             $end = $start->copy();
         }
         $useBookings = (bool) ($options['use_bookings'] ?? true);
+        // Alte Korrekturzeilen auch ohne Buchungen: die Tagesbuchung (bookDay) zieht sie wie rebook_difference ab
+        $useLegacyAdjustments = (bool) ($options['legacy_adjustments'] ?? $useBookings);
         $isUser = $entity instanceof User;
 
         $specialDays = $isUser
@@ -353,7 +355,9 @@ class WorkTimeCalculationService
             // Nur für Sondertage relevant (Minderung entfällt nur, wenn an dem Tag Arbeit BEGINNT)
             'work_starts' => $isUser && $specialDays !== [] ? $this->workStartsPerDay($entity, $start, $end) : [],
             'bookings' => $isUser && $useBookings ? $this->bookingsPerDay($entity, $start, $end) : [],
-            'legacy_adjustments' => $isUser && $useBookings ? $this->legacyAdjustmentsPerShiftDay($entity) : [],
+            'legacy_adjustments' => $isUser && $useLegacyAdjustments
+                ? $this->legacyAdjustmentsPerShiftDay($entity)
+                : [],
             'absences' => $this->absencesPerDay($entity, $start, $end),
             'special_days' => $specialDays,
             // Sondertag-Schalter je Sondertag aus der EINMAL geladenen Vertragshistorie (kein Query je Tag,

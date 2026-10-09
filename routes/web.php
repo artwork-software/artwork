@@ -3453,6 +3453,11 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->group(function (): void {
                 Route::get('/', [ExternalSubmissionReviewController::class, 'index'])->name('index');
                 Route::get('{submission}', [ExternalSubmissionReviewController::class, 'show'])->name('show');
+                // Vorgeschlagene Datei einer Upload-Änderung (Prüfrecht im Controller)
+                Route::get('{submission}/changes/{fieldChange}/file', [
+                    ExternalSubmissionReviewController::class,
+                    'proposedFile',
+                ])->whereNumber('fieldChange')->name('proposed-file');
                 Route::post('{submission}/approve-all', [ExternalSubmissionReviewController::class, 'approveAll'])
                     ->name('approve-all');
                 Route::post('{submission}/reject-all', [ExternalSubmissionReviewController::class, 'rejectAll'])

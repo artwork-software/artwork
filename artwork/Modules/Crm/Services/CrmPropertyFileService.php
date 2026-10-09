@@ -17,6 +17,16 @@ readonly class CrmPropertyFileService
     public const DIRECTORY = 'crm-property-files';
 
     /**
+     * Erlaubte Endungen für Eigenschaftsdateien (intern und über externe Einreichungen).
+     */
+    public const ALLOWED_EXTENSIONS = 'pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt';
+
+    /**
+     * Größenlimit für Eigenschaftsdateien in Kilobyte (10 MB).
+     */
+    public const MAX_KILOBYTES = 10240;
+
+    /**
      * Gespeicherte Pfade: StoredFileName (32 hex) oder Laravel-hashName (40 alnum) aus dem Altbestand.
      */
     private const PATH_PATTERN = '#^crm-property-files/[A-Za-z0-9]{1,64}(\.[A-Za-z0-9]{1,16})?$#';

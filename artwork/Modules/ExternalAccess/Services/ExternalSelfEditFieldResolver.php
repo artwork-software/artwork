@@ -8,6 +8,7 @@ use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmProperty;
+use Artwork\Modules\Crm\Services\CrmPropertyFileService;
 use Artwork\Modules\ExternalAccess\DTOs\SelfEditField;
 use Artwork\Modules\ExternalAccess\DTOs\SelfEditSchema;
 use Artwork\Modules\ExternalAccess\DTOs\SelfEditSection;
@@ -46,6 +47,11 @@ class ExternalSelfEditFieldResolver
         Manufacturer::class => ['name', 'contact_person', 'email', 'phone', 'website', 'address'],
         Accommodation::class => ['name', 'email', 'phone_number', 'street', 'zip_code', 'location'],
     ];
+
+    public function __construct(
+        private readonly CrmPropertyFileService $propertyFileService,
+    ) {
+    }
 
     /**
      * @return list<string>
@@ -238,7 +244,7 @@ class ExternalSelfEditFieldResolver
                 label: $property->name,
                 inputType: self::inputTypeFor($property->type),
                 required: (bool) ($property->contactTypes->first()?->pivot->is_required ?? false),
-                value: $property->values->first()?->value,
+                value: $this->displayValueOf($property),
                 options: $property->type === CrmPropertyTypeEnum::SELECT ? self::selectOptionsOf($property) : [],
             ))->values()->all();
 
@@ -255,6 +261,22 @@ class ExternalSelfEditFieldResolver
         return $sections;
     }
 
+    /**
+     * Upload-Eigenschaften zeigen nur den Dateinamen, nie den Speicherpfad am Kontakt.
+     */
+    private function displayValueOf(CrmProperty $property): ?string
+    {
+        $value = $property->values->first()?->value;
+
+        if ($property->type !== CrmPropertyTypeEnum::UPLOAD) {
+            return $value;
+        }
+
+        $path = $this->propertyFileService->normalisePath($value);
+
+        return $path !== null ? basename($path) : null;
+    }
+
     private function typeSortOrder(CrmProperty $property): int
     {
         return (int) ($property->contactTypes->first()?->getRelationValue('pivot')?->getAttribute('sort_order') ?? 0);
@@ -263,8 +285,8 @@ class ExternalSelfEditFieldResolver
     /**
      * Eingabetyp der externen Maske je CRM-Eigenschaftstyp; muss dem internen CrmPropertyValueInput
      * entsprechen. Bewusst ohne default-Zweig: ein neuer Enum-Fall fällt hier sofort auf, statt still
-     * als Freitextfeld zu erscheinen. null = extern nicht bearbeitbar (Uploads brauchen einen eigenen
-     * Datei-Endpunkt; die CRM-Kontaktliste im Tab blendet sie ebenso aus).
+     * als Freitextfeld zu erscheinen. null = extern nicht bearbeitbar. Uploads sind ein Datei-Feld: die Datei
+     * geht vorläufig mit der Einreichung mit (ExternalSelfEditFileService), nie als Text-Pfad.
      */
     public static function inputTypeFor(CrmPropertyTypeEnum $type): ?string
     {
@@ -276,7 +298,7 @@ class ExternalSelfEditFieldResolver
             CrmPropertyTypeEnum::NUMBER => 'number',
             CrmPropertyTypeEnum::LINK => 'url',
             CrmPropertyTypeEnum::SELECT => 'select',
-            CrmPropertyTypeEnum::UPLOAD => null,
+            CrmPropertyTypeEnum::UPLOAD => 'file',
         };
     }
 

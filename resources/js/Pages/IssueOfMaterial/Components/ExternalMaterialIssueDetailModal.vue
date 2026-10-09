@@ -19,6 +19,15 @@
         </span>
             </div>
 
+            <!-- Überfällig und nicht zurückgegeben: Artikel bleiben reserviert -->
+            <BaseAlertComponent
+                v-if="issue.overdue_unreturned"
+                type="warning"
+                class="!mb-0"
+                :title="$t('Return open – material blocked')"
+                :message="$t('The return date has passed and no return has been entered yet. The articles stay reserved until the return is entered.')"
+            />
+
             <!-- Stammdaten -->
             <section class="rounded-2xl border border-border-subtle bg-white shadow-sm">
                 <div class="border-b border-border-subtle bg-gradient-to-r from-info-surface via-info-surface to-transparent px-5 py-3 rounded-t-2xl">
@@ -171,6 +180,7 @@ import { defineAsyncComponent, ref } from "vue";
 import { router } from '@inertiajs/vue3';
 import {IconSearch} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 const props = defineProps({
     issue: { type: Object, required: true },

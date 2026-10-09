@@ -9,6 +9,7 @@ use Artwork\Modules\ExternalAccess\Http\Requests\SubmitCrmSelfEditRequest;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Artwork\Modules\ExternalAccess\Services\ExternalSelfEditFieldResolver;
+use Artwork\Modules\ExternalAccess\Services\ExternalSelfEditFileService;
 use Artwork\Modules\ExternalAccess\Services\ExternalSelfEditSubmissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -53,7 +54,7 @@ class ExternalCrmController extends Controller
         ]);
     }
 
-    public function edit(Request $request): Response
+    public function edit(Request $request, ExternalSelfEditFileService $fileService): Response
     {
         /** @var ExternalAccess $external */
         $external = $request->user('external');
@@ -70,6 +71,11 @@ class ExternalCrmController extends Controller
                 'submitted_at' => $currentPending->submitted_at->toIso8601String(),
                 'field_count' => $currentPending->fieldChanges->count(),
             ] : null,
+            // Datei-Felder (Upload-Eigenschaften): hausweiter Schalter wie bei Dokument-Komponenten
+            'fileUpload' => [
+                'enabled' => $fileService->isUploadEnabled(),
+                ...$fileService->constraints(),
+            ],
         ]);
     }
 

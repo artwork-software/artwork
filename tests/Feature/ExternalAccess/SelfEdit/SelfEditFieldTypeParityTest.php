@@ -105,7 +105,8 @@ final class SelfEditFieldTypeParityTest extends TestCase
             $inputType = ExternalSelfEditFieldResolver::inputTypeFor($case);
 
             if ($case === CrmPropertyTypeEnum::UPLOAD) {
-                $this->assertNull($inputType);
+                // Datei-Feld: die Datei geht vorläufig mit der Einreichung mit, nie als Text-Pfad
+                $this->assertSame('file', $inputType);
                 continue;
             }
 
@@ -132,8 +133,19 @@ final class SelfEditFieldTypeParityTest extends TestCase
     public function upload_property_is_not_offered_as_text_field(): void
     {
         $property = $this->property(CrmPropertyTypeEnum::UPLOAD);
+        $external = $this->external();
+        CrmPropertyValue::query()->create([
+            'crm_contact_id' => $external->crm_contact_id,
+            'crm_property_id' => $property->id,
+            'value' => 'crm-property-files/0123456789abcdef0123456789abcdef.pdf',
+        ]);
 
-        $this->assertNull($this->fieldFor($this->external(), $property));
+        $field = $this->fieldFor($external, $property);
+
+        $this->assertNotNull($field);
+        $this->assertSame('file', $field->inputType);
+        // nur der Dateiname, nie der Speicherpfad
+        $this->assertSame('0123456789abcdef0123456789abcdef.pdf', $field->value);
     }
 
     #[Test]
@@ -229,17 +241,16 @@ final class SelfEditFieldTypeParityTest extends TestCase
             'approval_status' => FieldApprovalStatus::PENDING,
         ]);
 
-        try {
-            app(ExternalSubmissionApprovalService::class)->approveAll($submission, $external->invitedBy);
-            $this->fail('Expected upload change to be refused');
-        } catch (\DomainException) {
-            // erwartet
-        }
+        // Altbestand wird übersprungen statt die ganze Freigabe abzubrechen
+        $skipped = app(ExternalSubmissionApprovalService::class)->approveAll($submission, $external->invitedBy);
 
+        $this->assertSame(1, $skipped);
         $this->assertDatabaseMissing('crm_property_values', [
             'crm_contact_id' => $external->crm_contact_id,
             'crm_property_id' => $property->id,
         ]);
+        $this->assertSame(FieldApprovalStatus::REJECTED, $submission->fieldChanges()->first()->approval_status);
+        $this->assertSame(ExternalSubmissionStatus::REJECTED, $submission->fresh()->status);
     }
 
     #[Test]

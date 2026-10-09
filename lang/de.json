@@ -9152,5 +9152,21 @@
     "Before the start of the time account": "Vor Beginn des Zeitkontos",
     "Before the start of the time account (first daily booking): no target and no balance, only the hours actually worked count.": "Vor Beginn des Zeitkontos (erste Tagesbuchung): kein Soll und kein Saldo, es zählen nur die tatsächlich gearbeiteten Stunden.",
     "No time account is kept for this period yet (before the first daily booking): only the hours actually worked are shown, without target and balance.": "Für diesen Zeitraum wird noch kein Zeitkonto geführt (vor der ersten Tagesbuchung): angezeigt werden nur die tatsächlich gearbeiteten Stunden, ohne Soll und Saldo.",
-    "{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance.": "{n} Tag(e) in diesem Zeitraum liegen vor Beginn des Zeitkontos (erste Tagesbuchung): dort werden nur die tatsächlich gearbeiteten Stunden angezeigt, ohne Soll und Saldo."
+    "{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance.": "{n} Tag(e) in diesem Zeitraum liegen vor Beginn des Zeitkontos (erste Tagesbuchung): dort werden nur die tatsächlich gearbeiteten Stunden angezeigt, ohne Soll und Saldo.",
+    "new, will be submitted for review": "neu, wird zur Prüfung eingereicht",
+    "No file": "Keine Datei",
+    "Replace file": "Datei ersetzen",
+    "Remove file": "Datei entfernen",
+    "Undo": "Rückgängig",
+    "Allowed: {types}, up to {size} MB. The file is only saved after review.": "Erlaubt: {types}, bis {size} MB. Die Datei wird erst nach der Prüfung übernommen.",
+    "Uploading files is not enabled for external accesses. You can see the name of the current file.": "Das Hochladen von Dateien ist für externe Zugänge nicht freigeschaltet. Angezeigt wird der Name der aktuellen Datei.",
+    "The file is larger than {size} MB.": "Die Datei ist größer als {size} MB.",
+    "Not applicable (legacy entry)": "Nicht übernehmbar (Altbestand)",
+    "Not applicable (legacy entry): file paths are never taken over. \"Approve all\" skips this row.": "Nicht übernehmbar (Altbestand): Dateipfade werden nie übernommen. „Alle übernehmen“ überspringt diese Zeile.",
+    "The proposed file is no longer available. \"Approve all\" skips this row.": "Die vorgeschlagene Datei ist nicht mehr vorhanden. „Alle übernehmen“ überspringt diese Zeile.",
+    ":count change could not be applied (legacy entry or missing file) and was skipped.|:count changes could not be applied (legacy entries or missing files) and were skipped.": ":count Änderung war nicht übernehmbar (Altbestand oder fehlende Datei) und wurde übersprungen.|:count Änderungen waren nicht übernehmbar (Altbestand oder fehlende Dateien) und wurden übersprungen.",
+    "Return open – material blocked": "Rückgabe offen – Material blockiert",
+    "The articles stay reserved until the return is entered.": "Die Artikel bleiben reserviert, bis die Rückgabe eingetragen ist.",
+    "The return date has passed and no return has been entered yet. The articles stay reserved until the return is entered.": "Das Rückgabedatum ist überschritten und es ist noch keine Rückgabe eingetragen. Die Artikel bleiben reserviert, bis die Rückgabe eingetragen ist.",
+    "The articles stay reserved until the return is confirmed – even after the return date. Use “Enter return” as soon as the material is back.": "Die Artikel bleiben bis zur bestätigten Rückgabe reserviert – auch über das Rückgabedatum hinaus. Tragt die Rückgabe über „Rückgabe eingeben“ ein, sobald das Material zurück ist."
 }

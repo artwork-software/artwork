@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read bool $counts_as_returned
+ * @property-read bool $overdue_unreturned
  */
 class ExternalIssue extends Model
 {
@@ -65,6 +66,7 @@ class ExternalIssue extends Model
         'issue_date_formatted',
         'return_date_formatted',
         'counts_as_returned',
+        'overdue_unreturned',
     ];
 
     /**
@@ -201,6 +203,22 @@ class ExternalIssue extends Model
     public function getCountsAsReturnedAttribute(): bool
     {
         return $this->isReturned();
+    }
+
+    /**
+     * Rückgabedatum vorbei, Rückgabe noch nicht bestätigt: die Artikel bleiben reserviert
+     * (effectiveReturnDate), bis die Rückgabe eingetragen ist. Für den Status „Rückgabe offen – Material
+     * blockiert“ in Übersicht und Detailansicht.
+     */
+    public function getOverdueUnreturnedAttribute(): bool
+    {
+        $rawReturnDate = $this->getRawOriginal('return_date') ?? $this->getAttribute('return_date');
+        if ($rawReturnDate === null) {
+            return false;
+        }
+
+        return \Carbon\Carbon::parse($rawReturnDate)->startOfDay()->lt(\Carbon\Carbon::today())
+            && !$this->isReturned();
     }
 
     /**

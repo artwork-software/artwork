@@ -4,13 +4,22 @@ namespace Artwork\Modules\WorkTime\Services;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Holidays\Services\SpecialDayService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
+/**
+ * Arbeitszeitübersicht (Soll/Ist je Gewerk und Monat). Für User gleiche Tageswerte wie der Arbeitszeiten-Tab:
+ *  - Gebuchte Tage: Soll = Ist − Saldo der Tageszeile (wie der Tab, auch für Altzeilen mit früherer Krank-Logik),
+ *    Ist = Ist der Tageszeile; weitere Zeilen (manuell, Korrektur, doppelte Tageszeilen) zählen ihr Saldo-Delta.
+ *  - Nicht gebuchte Tage nur VOR heute (heute und künftige bucht erst der Nachtlauf): Soll und Ist nach aktueller
+ *    Rechnung (WorkTimeCalculationService), Schicht- und individuelle Minuten im Gewerk der Schicht.
+ */
 class WorkTimeOverviewExportService
 {
     /**
@@ -61,16 +70,26 @@ class WorkTimeOverviewExportService
             ->values();
         $selectedCraftIds = $crafts->pluck('id')->all();
 
-        $bookingsByUserAndMonth = $this->bookingMinutesByUserAndMonth($userIds->all(), $rangeStart, $rangeEnd);
+        $bookedDaysByUser = $this->bookedDaysByUser($userIds->all(), $rangeStart, $rangeEnd);
+        // Nicht gebuchte Tage von Usern zählen nur bis gestern – heute und künftige Tage sind noch nicht geleistet
+        $firstUncountedDay = Carbon::today()->toDateString();
+        $bookingsByUserAndMonth = $this->addUnbookedPastDays(
+            $this->bookingMinutesByUserAndMonth($userIds->all(), $rangeStart, $rangeEnd),
+            $userIds->all(),
+            $bookedDaysByUser,
+            $rangeStart,
+            $rangeEnd,
+        );
         $shiftMinutesByType = [
-            // Tage mit Tagesbuchung kommen aus der Buchung; nur die übrigen Tage zählen Schichtminuten
+            // Tage mit Tagesbuchung kommen aus der Buchung; nur die übrigen vergangenen Tage zählen Schichtminuten
             User::class => $this->shiftMinutesByWorkerAndMonth(
                 User::class,
                 $userIds->all(),
                 $selectedCraftIds,
                 $rangeStart,
                 $rangeEnd,
-                $this->bookedDaysByUser($userIds->all(), $rangeStart, $rangeEnd),
+                $bookedDaysByUser,
+                $firstUncountedDay,
             ),
             Freelancer::class => $this->shiftMinutesByWorkerAndMonth(
                 Freelancer::class,
@@ -120,7 +139,8 @@ class WorkTimeOverviewExportService
                 $crafts->flatMap(fn (Craft $craft) => $craft->users)->unique('id'),
                 $rangeStart,
                 $rangeEnd,
-                $this->bookedDaysByUser($userIds->all(), $rangeStart, $rangeEnd),
+                $bookedDaysByUser,
+                $firstUncountedDay,
             ),
             Freelancer::class => $this->individualMinutesByWorkerAndMonth(
                 $crafts->flatMap(fn (Craft $craft) => $craft->freelancers)->unique('id'),
@@ -256,9 +276,9 @@ class WorkTimeOverviewExportService
         $booking = $bookings[$user->id][$month] ?? null;
         $cell = $this->emptyCell();
 
-        // Buchungen (Soll/Ist) sind pro User, nicht pro Gewerk: sie zählen nur im
-        // Attributions-Gewerk, sonst fließen Personen in mehreren Gewerken mehrfach
-        // in Gesamt- und Jahressummen ein. Schichtminuten nicht gebuchter Tage zählen im Gewerk der Schicht.
+        // Buchungen (Soll/Ist) und das Soll nicht gebuchter vergangener Tage sind pro User, nicht pro Gewerk: sie
+        // zählen nur im Attributions-Gewerk, sonst fließen Personen in mehreren Gewerken mehrfach in Gesamt- und
+        // Jahressummen ein. Schichtminuten nicht gebuchter vergangener Tage zählen im Gewerk der Schicht.
         $countsBooking = $booking !== null && ($bookingAttribution[$user->id] ?? null) === $craftId;
         $soll = $countsBooking ? $booking['soll'] : 0;
         $actualMinutes = ($countsBooking ? $booking['ist'] : 0) + ($shiftMinutes[$user->id][$month] ?? 0);
@@ -376,6 +396,10 @@ class WorkTimeOverviewExportService
     }
 
     /**
+     * Gebuchte Minuten je User und Monat, Tag für Tag wie der Arbeitszeiten-Tab: die (älteste) Tageszeile eines
+     * Tages – Altzeilen ohne Namen zählen ebenfalls als Tageszeile – liefert Ist und Soll = Ist − Saldo; alle
+     * übrigen Zeilen (manuelle Buchung, Korrektur, doppelte Tageszeile) sind reine Saldo-Deltas aufs Ist.
+     *
      * @param array<int> $userIds
      * @return array<int, array<string, array{soll: int, ist: int}>> [userId][Y-m] => minutes
      */
@@ -386,26 +410,87 @@ class WorkTimeOverviewExportService
         }
 
         $sums = [];
+        $dailyRowSeen = [];
 
         WorkTimeBooking::query()
+            ->toBase()
             ->whereIn('user_id', $userIds)
             ->whereBetween('booking_day', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
-            // Korrekturbuchungen (Altbestand) tragen ihr Delta nur im Saldo, nicht in worked_hours
-            ->selectRaw(
-                'user_id, ' .
-                "DATE_FORMAT(booking_day, '%Y-%m') as month, " .
-                'SUM(wanted_working_hours) as soll_minutes, ' .
-                "SUM(CASE WHEN name LIKE 'adjustment\\_%' THEN work_time_balance_change ELSE worked_hours END)" .
-                ' as ist_minutes'
-            )
-            ->groupBy('user_id', 'month')
-            ->get()
-            ->each(function ($sum) use (&$sums): void {
-                $sums[(int) $sum->user_id][(string) $sum->month] = [
-                    'soll' => (int) $sum->soll_minutes,
-                    'ist' => (int) $sum->ist_minutes,
-                ];
+            ->orderBy('id')
+            ->get(['user_id', 'booking_day', 'name', 'worked_hours', 'work_time_balance_change'])
+            ->each(function (object $booking) use (&$sums, &$dailyRowSeen): void {
+                $userId = (int) $booking->user_id;
+                $day = substr((string) $booking->booking_day, 0, 10);
+                $month = substr($day, 0, 7);
+                $sum = $sums[$userId][$month] ?? ['soll' => 0, 'ist' => 0];
+                $change = (int) $booking->work_time_balance_change;
+
+                $isDailyRow = $booking->name === null
+                    || $booking->name === WorkTimeBookingRepository::dailyBookingName(Carbon::parse($day));
+                if ($isDailyRow && !isset($dailyRowSeen[$userId][$day])) {
+                    $dailyRowSeen[$userId][$day] = true;
+                    $sum['ist'] += (int) $booking->worked_hours;
+                    $sum['soll'] += (int) $booking->worked_hours - $change;
+                } else {
+                    $sum['ist'] += $change;
+                }
+
+                $sums[$userId][$month] = $sum;
             });
+
+        return $sums;
+    }
+
+    /**
+     * Vergangene, nicht gebuchte Tage der User nach aktueller Rechnung (wie der Arbeitszeiten-Tab): Soll aus dem
+     * Muster, Ist ohne die Schicht- und individuellen Minuten (die zählen getrennt im Gewerk der Schicht) – also nur
+     * der soll-neutrale Anteil (Krank/Urlaub, ganztägige individuelle Zeit).
+     *
+     * @param array<int, array<string, array{soll: int, ist: int}>> $sums
+     * @param array<int> $userIds
+     * @param array<int, array<string, true>> $bookedDaysByUser
+     * @return array<int, array<string, array{soll: int, ist: int}>>
+     */
+    private function addUnbookedPastDays(
+        array $sums,
+        array $userIds,
+        array $bookedDaysByUser,
+        Carbon $rangeStart,
+        Carbon $rangeEnd,
+    ): array {
+        $start = $rangeStart->copy()->startOfDay();
+        $lastPastDay = Carbon::yesterday();
+        if ($rangeEnd->copy()->startOfDay()->lt($lastPastDay)) {
+            $lastPastDay = $rangeEnd->copy()->startOfDay();
+        }
+        if ($userIds === [] || $lastPastDay->lt($start)) {
+            return $sums;
+        }
+
+        $calculation = app(WorkTimeCalculationService::class);
+        $specialDays = app(SpecialDayService::class)->specialDaysBetween($start, $lastPastDay);
+
+        foreach (User::query()->whereIn('id', $userIds)->get() as $user) {
+            $breakdowns = $calculation->breakdownForRange($user, $start, $lastPastDay, [
+                'use_bookings' => false,
+                'special_days' => $specialDays,
+            ]);
+            foreach ($breakdowns as $day => $breakdown) {
+                if (isset($bookedDaysByUser[$user->id][$day])) {
+                    continue;
+                }
+                $target = !empty($breakdown['target_unknown']) ? 0 : (int) $breakdown['target'];
+                $neutralMinutes = (int) $breakdown['actual'] - (int) $breakdown['work_minutes'];
+                if ($target === 0 && $neutralMinutes === 0) {
+                    continue;
+                }
+                $month = substr($day, 0, 7);
+                $sum = $sums[$user->id][$month] ?? ['soll' => 0, 'ist' => 0];
+                $sum['soll'] += $target;
+                $sum['ist'] += $neutralMinutes;
+                $sums[$user->id][$month] = $sum;
+            }
+        }
 
         return $sums;
     }
@@ -457,6 +542,7 @@ class WorkTimeOverviewExportService
     /**
      * @param iterable<User|Freelancer|ServiceProvider> $workers
      * @param array<int, array<string, true>> $skipDaysByWorker
+     * @param string|null $firstUncountedDay 'Y-m-d': ab diesem Tag nichts zählen (User: heute und künftige Tage)
      * @return array<int, array<string, int>> [workerId][Y-m] => minutes
      */
     private function individualMinutesByWorkerAndMonth(
@@ -464,13 +550,18 @@ class WorkTimeOverviewExportService
         Carbon $rangeStart,
         Carbon $rangeEnd,
         array $skipDaysByWorker = [],
+        ?string $firstUncountedDay = null,
     ): array {
         $calculation = app(WorkTimeCalculationService::class);
         $result = [];
         foreach ($workers as $worker) {
             $perDay = $calculation->individualMinutesPerDay($worker, $rangeStart->copy(), $rangeEnd->copy());
             foreach ($perDay as $day => $minutes) {
-                if ($minutes <= 0 || isset($skipDaysByWorker[$worker->id][$day])) {
+                if (
+                    $minutes <= 0
+                    || isset($skipDaysByWorker[$worker->id][$day])
+                    || ($firstUncountedDay !== null && $day >= $firstUncountedDay)
+                ) {
                     continue;
                 }
                 $month = substr($day, 0, 7);
@@ -500,8 +591,15 @@ class WorkTimeOverviewExportService
             ->where(fn ($query) => $query
                 ->whereNull('name')
                 ->orWhere('name', 'like', 'daily\\_work\\_time\\_booking\\_%'))
-            ->get(['user_id', 'booking_day'])
+            ->get(['user_id', 'booking_day', 'name'])
             ->each(function (WorkTimeBooking $booking) use (&$days): void {
+                // Nur die Tageszeile DIESES Tages (wie der Tab); Zeilen mit fremdem Datum im Namen sind Zusatzbuchungen
+                if (
+                    $booking->name !== null
+                    && $booking->name !== WorkTimeBookingRepository::dailyBookingName($booking->booking_day)
+                ) {
+                    return;
+                }
                 $days[(int) $booking->user_id][$booking->booking_day->toDateString()] = true;
             });
 
@@ -513,6 +611,7 @@ class WorkTimeOverviewExportService
      * @param array<int> $workerIds
      * @param array<int> $craftIds
      * @param array<int, array<string, true>> $skipDaysByWorker Tage, die schon aus der Buchung kommen
+     * @param string|null $firstUncountedDay 'Y-m-d': ab diesem Tag nichts zählen (User: heute und künftige Tage)
      * @return array<int, array<int, array<string, int>>> [craftId][workerId][Y-m] => minutes
      */
     private function shiftMinutesByWorkerAndMonth(
@@ -521,7 +620,8 @@ class WorkTimeOverviewExportService
         array $craftIds,
         Carbon $rangeStart,
         Carbon $rangeEnd,
-        array $skipDaysByWorker = []
+        array $skipDaysByWorker = [],
+        ?string $firstUncountedDay = null,
     ): array {
         if ($workerIds === []) {
             return [];
@@ -544,6 +644,7 @@ class WorkTimeOverviewExportService
                 $rangeStart,
                 $rangeEnd,
                 $skipDaysByWorker,
+                $firstUncountedDay,
             ): void {
                 if (!$worker->start_date || !$worker->end_date || !$worker->start_time || !$worker->end_time) {
                     return;
@@ -569,6 +670,7 @@ class WorkTimeOverviewExportService
                         $rangeStart,
                         $rangeEnd,
                         $skipDaysByWorker[$workerId] ?? [],
+                        $firstUncountedDay,
                     ) as $monthKey => $minutes
                 ) {
                     $minutesByWorker[$craftId][$workerId][$monthKey] =
@@ -594,6 +696,7 @@ class WorkTimeOverviewExportService
         Carbon $rangeStart,
         Carbon $rangeEnd,
         array $skipDays = [],
+        ?string $firstUncountedDay = null,
     ): array {
         $segments = [];
         $cursor = $start->copy();
@@ -631,7 +734,10 @@ class WorkTimeOverviewExportService
             if ($segment['start']->lessThan($exportStart) || !$segment['start']->lessThan($exportEnd)) {
                 continue;
             }
-            if (isset($skipDays[$segment['day']])) {
+            if (
+                isset($skipDays[$segment['day']])
+                || ($firstUncountedDay !== null && $segment['day'] >= $firstUncountedDay)
+            ) {
                 continue;
             }
 

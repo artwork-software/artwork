@@ -84,7 +84,9 @@ class AppProjectTeamController extends Controller
     {
         $this->authorizeTeamEditing($project);
 
-        $pivot = $request->pivot();
+        // Partial PATCH: rights the app does not send keep their current value
+        $current = $project->users()->whereKey($user->id)->firstOrFail()->pivot;
+        $pivot = $request->pivot($current);
         $this->projectTeamService->applyRosterChange(
             $project,
             static fn (Project $project) => $project->users()->updateExistingPivot($user->id, $pivot),

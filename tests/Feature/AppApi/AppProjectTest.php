@@ -1270,6 +1270,42 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function partialTeamRightsUpdateKeepsTheRightsNotSent(): void
+    {
+        $project = Project::factory()->create();
+        $user = $this->actingAsApiUserWith(PermissionEnum::PROJECT_MANAGEMENT->value);
+        $project->users()->attach($user->id, ['can_write' => true]);
+        $role = ProjectRole::create(['name' => 'Technik']);
+        $colleague = User::factory()->create();
+        $project->users()->attach($colleague->id, [
+            'can_write' => true,
+            'access_budget' => true,
+            'roles' => [$role->id],
+        ]);
+
+        $response = $this->patchJson(
+            route('app.v1.projects.team.update', [$project, $colleague]),
+            ['is_manager' => true],
+        )->assertOk();
+
+        $member = collect($response->json('team'))->firstWhere('id', $colleague->id);
+        $this->assertTrue($member['is_manager']);
+        $this->assertTrue($member['can_write']);
+        $this->assertTrue($member['access_budget']);
+        $this->assertSame([['id' => $role->id, 'name' => 'Technik']], $member['roles']);
+
+        // Ausdrücklich gesendete Werte gelten weiterhin
+        $response = $this->patchJson(
+            route('app.v1.projects.team.update', [$project, $colleague]),
+            ['is_manager' => false, 'access_budget' => false, 'roles' => []],
+        )->assertOk();
+        $member = collect($response->json('team'))->firstWhere('id', $colleague->id);
+        $this->assertFalse($member['access_budget']);
+        $this->assertTrue($member['can_write']);
+        $this->assertSame([], $member['roles']);
+    }
+
+    #[Test]
     public function teamEditingIsForbiddenForPlainMembers(): void
     {
         $user = User::factory()->create();

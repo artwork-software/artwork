@@ -5,7 +5,7 @@
             <div v-for="(link, index) in links" :key="index">
                 <a
                     v-if="link.url"
-                    :href="safeLinkHref(link.url)"
+                    :href="safeLinkTarget(link.url)"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="text-sm text-accent-600 hover:underline"
@@ -19,7 +19,7 @@
 </template>
 <script setup>
 import { computed } from 'vue'
-import { safeLinkHref } from '@/Helper/SafeUrl.js'
+import { safeLinkTarget } from '@/Helper/SafeUrl.js'
 const props = defineProps({
     project: {
         type: Object,

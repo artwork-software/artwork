@@ -17,7 +17,7 @@
 
         <a
             v-if="!editable && url"
-            :href="safeLinkHref(url)"
+            :href="safeLinkTarget(url)"
             target="_blank"
             rel="noopener noreferrer"
             class="mt-2 inline-block text-sm text-accent-600 underline break-all"
@@ -33,7 +33,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useExternalComponentSave } from '../useExternalComponentSave.js'
-import { safeLinkHref } from '@/Helper/SafeUrl.js'
+import { safeLinkTarget } from '@/Helper/SafeUrl.js'
 
 const props = defineProps({
     component: { type: Object, required: true },

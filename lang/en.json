@@ -9143,5 +9143,17 @@
     "Before the start of the time account": "Before the start of the time account",
     "Before the start of the time account (first daily booking): no target and no balance, only the hours actually worked count.": "Before the start of the time account (first daily booking): no target and no balance, only the hours actually worked count.",
     "No time account is kept for this period yet (before the first daily booking): only the hours actually worked are shown, without target and balance.": "No time account is kept for this period yet (before the first daily booking): only the hours actually worked are shown, without target and balance.",
-    "{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance.": "{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance."
+    "{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance.": "{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance.",
+    "new, will be submitted for review": "new, will be submitted for review",
+    "No file": "No file",
+    "Replace file": "Replace file",
+    "Remove file": "Remove file",
+    "Undo": "Undo",
+    "Allowed: {types}, up to {size} MB. The file is only saved after review.": "Allowed: {types}, up to {size} MB. The file is only saved after review.",
+    "Uploading files is not enabled for external accesses. You can see the name of the current file.": "Uploading files is not enabled for external accesses. You can see the name of the current file.",
+    "The file is larger than {size} MB.": "The file is larger than {size} MB.",
+    "Not applicable (legacy entry)": "Not applicable (legacy entry)",
+    "Not applicable (legacy entry): file paths are never taken over. \"Approve all\" skips this row.": "Not applicable (legacy entry): file paths are never taken over. \"Approve all\" skips this row.",
+    "The proposed file is no longer available. \"Approve all\" skips this row.": "The proposed file is no longer available. \"Approve all\" skips this row.",
+    ":count change could not be applied (legacy entry or missing file) and was skipped.|:count changes could not be applied (legacy entries or missing files) and were skipped.": ":count change could not be applied (legacy entry or missing file) and was skipped.|:count changes could not be applied (legacy entries or missing files) and were skipped."
 }

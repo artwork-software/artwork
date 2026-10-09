@@ -25,16 +25,44 @@
                         <tr v-for="change in submission.field_changes" :key="change.id" class="border-b border-border-subtle">
                             <td class="px-4 py-3 text-sm font-medium">{{ change.field_label }}</td>
                             <td class="px-4 py-3 text-sm text-text-muted">{{ displayValue(change.old_value, change.field_type) }}</td>
-                            <td class="px-4 py-3 text-sm font-medium text-text">{{ displayValue(change.new_value, change.field_type) }}</td>
+                            <td class="px-4 py-3 text-sm font-medium text-text">
+                                <!-- Upload-Eigenschaft: vorgeschlagene Datei ansehen/herunterladen -->
+                                <template v-if="change.file_change?.kind === 'upload'">
+                                    <a
+                                        v-if="change.file_change.url"
+                                        :href="change.file_change.url + '?inline=1'"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="break-all text-accent-700 hover:underline"
+                                    >
+                                        {{ change.file_change.name }}
+                                    </a>
+                                    <span v-else class="break-all">{{ change.file_change.name }}</span>
+                                </template>
+                                <span v-else-if="change.file_change?.kind === 'remove'" class="text-danger">
+                                    {{ $t('Remove file') }}
+                                </span>
+                                <template v-else>{{ displayValue(change.new_value, change.field_type) }}</template>
+                                <p v-if="change.not_applicable_reason" class="mt-1 text-xs font-normal text-warning">
+                                    {{ notApplicableLabel(change.not_applicable_reason) }}
+                                </p>
+                            </td>
                             <td class="px-4 py-3 text-sm">
                                 <div class="flex gap-2" v-if="change.approval_status === 'pending' && submission.status === 'pending'">
-                                    <button @click="setDecision(change.id, 'approved')" :class="decisionButtonClass(change.id, 'approved')">
+                                    <button
+                                        v-if="!change.not_applicable_reason"
+                                        @click="setDecision(change.id, 'approved')"
+                                        :class="decisionButtonClass(change.id, 'approved')"
+                                    >
                                         {{ $t('Accept') }}
                                     </button>
                                     <button @click="setDecision(change.id, 'rejected')" :class="decisionButtonClass(change.id, 'rejected')">
                                         {{ $t('Reject') }}
                                     </button>
                                 </div>
+                                <span v-else-if="change.not_applicable_reason === 'legacy_upload'" class="text-xs text-text-subtle">
+                                    {{ $t('Not applicable (legacy entry)') }}
+                                </span>
                                 <span v-else class="text-xs uppercase text-text-subtle">{{ $t(change.approval_status) }}</span>
                             </td>
                         </tr>
@@ -106,6 +134,12 @@ function applyPartial() {
             decision,
         })),
     })
+}
+
+function notApplicableLabel(reason) {
+    return reason === 'legacy_upload'
+        ? $t('Not applicable (legacy entry): file paths are never taken over. "Approve all" skips this row.')
+        : $t('The proposed file is no longer available. "Approve all" skips this row.')
 }
 
 // Checkboxen werden wie intern als '1'/'0' gespeichert

@@ -257,6 +257,7 @@
     "GET crm/contacts/trashed": "forbidden",
     "GET crm/contacts/{contact}/external-submissions": "not_found",
     "GET crm/contacts/{contact}/external-submissions/{submission}": "not_found",
+    "GET crm/contacts/{contact}/external-submissions/{submission}/changes/{fieldChange}/file": "not_found",
     "GET crm/contacts/{crmContact}": "forbidden",
     "GET crm/contacts/{crmContact}/data": "forbidden",
     "GET crm/contacts/{crmContact}/property-file/{property}": "forbidden",

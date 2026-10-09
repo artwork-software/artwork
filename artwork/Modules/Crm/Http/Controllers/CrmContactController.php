@@ -23,8 +23,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CrmContactController extends Controller
 {
-    private const PROPERTY_FILE_MIMES = 'pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt';
-
     public function __construct(
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
@@ -402,7 +400,13 @@ class CrmContactController extends Controller
 
         $request->validate([
             'property_id' => 'required|integer|exists:crm_properties,id',
-            'file' => ['required', 'file', 'mimes:' . self::PROPERTY_FILE_MIMES, 'max:10240', new SafeUploadFile()],
+            'file' => [
+                'required',
+                'file',
+                'mimes:' . CrmPropertyFileService::ALLOWED_EXTENSIONS,
+                'max:' . CrmPropertyFileService::MAX_KILOBYTES,
+                new SafeUploadFile(),
+            ],
         ]);
 
         $propertyId = (int) $request->input('property_id');

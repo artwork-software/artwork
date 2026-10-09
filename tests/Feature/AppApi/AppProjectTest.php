@@ -19,6 +19,7 @@ use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
@@ -589,6 +590,98 @@ final class AppProjectTest extends TestCase
             'all_day' => false,
             'event_type_id' => EventModel::factory()->create()->event_type_id,
         ])->assertForbidden();
+    }
+
+    #[Test]
+    public function eventsWithoutRoomNeedTheRightToBookWithoutRoom(): void
+    {
+        $project = Project::factory()->create();
+        // Anfragerecht erlaubt das Anlegen (EventPolicy::create), aber keinen Termin ohne Raum
+        $user = $this->actingAsApiUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $project->users()->attach($user->id);
+
+        $this->postJson(route('app.v1.projects.events.store', $project), [
+            'name' => 'Bauprobe',
+            'start' => now()->setTime(10, 0)->toIso8601String(),
+            'end' => now()->setTime(12, 0)->toIso8601String(),
+            'all_day' => false,
+            'room_id' => null,
+            'event_type_id' => EventModel::factory()->create()->event_type_id,
+        ])->assertForbidden();
+
+        $this->assertSame(0, $project->events()->where('eventName', 'Bauprobe')->count());
+    }
+
+    #[Test]
+    public function roomChangeWithoutDirectBookingRightBecomesARoomRequest(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id);
+        $oldRoom = Room::factory()->create(['everyone_can_book' => false]);
+        $newRoom = Room::factory()->create(['everyone_can_book' => false]);
+        $event = EventModel::factory()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'room_id' => $oldRoom->id,
+            'occupancy_option' => false,
+            'accepted' => true,
+            'is_planning' => false,
+        ]);
+        $this->mock(RoomRequestNotificationService::class)
+            ->shouldReceive('notifyRoomAdmins')
+            ->once()
+            ->withArgs(fn (EventModel $notified): bool => $notified->room?->id === $newRoom->id);
+
+        Passport::actingAs($user, ['app']);
+
+        $this->patchJson(route('app.v1.projects.events.update', [$project, $event]), [
+            'name' => 'Umzug',
+            'start' => now()->setTime(14, 0)->toIso8601String(),
+            'end' => now()->setTime(16, 0)->toIso8601String(),
+            'all_day' => false,
+            'room_id' => $newRoom->id,
+            'event_type_id' => $event->event_type_id,
+        ])->assertOk();
+
+        $event->refresh();
+        $this->assertSame($newRoom->id, $event->room_id);
+        $this->assertTrue((bool) $event->occupancy_option);
+        $this->assertFalse((bool) $event->accepted);
+    }
+
+    #[Test]
+    public function roomChangeWithDirectBookingRightStaysABooking(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id);
+        $newRoom = Room::factory()->create(['everyone_can_book' => false]);
+        $newRoom->users()->attach($user->id, ['is_admin' => true]);
+        $event = EventModel::factory()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'room_id' => Room::factory()->create()->id,
+            'occupancy_option' => false,
+            'accepted' => true,
+            'is_planning' => false,
+        ]);
+        $this->mock(RoomRequestNotificationService::class)->shouldNotReceive('notifyRoomAdmins');
+
+        Passport::actingAs($user, ['app']);
+
+        $this->patchJson(route('app.v1.projects.events.update', [$project, $event]), [
+            'name' => 'Umzug',
+            'start' => now()->setTime(14, 0)->toIso8601String(),
+            'end' => now()->setTime(16, 0)->toIso8601String(),
+            'all_day' => false,
+            'room_id' => $newRoom->id,
+            'event_type_id' => $event->event_type_id,
+        ])->assertOk();
+
+        $event->refresh();
+        $this->assertSame($newRoom->id, $event->room_id);
+        $this->assertFalse((bool) $event->occupancy_option);
     }
 
     #[Test]

@@ -221,6 +221,10 @@ paths:
       tags: [App]
       operationId: appCreateEvent
       summary: Create an event in the project
+      description: >-
+        The app books directly (403 without the right to book the room
+        directly). Events without a room need the right to create events
+        without a room request (403 otherwise).
       parameters:
         - { $ref: '#/components/parameters/ProjectId' }
       requestBody:
@@ -258,8 +262,14 @@ paths:
       tags: [App]
       operationId: appUpdateEvent
       summary: Update an event
+      description: >-
+        Moving the event to a room the user may not book directly turns it into
+        a room request (the room admins are notified), like in the web. Moving
+        a date that is on sale in ticketing needs the header
+        X-Ticketing-Move-Confirmed after the user confirmed it (422 otherwise).
       parameters:
         - { $ref: '#/components/parameters/ProjectId' }
+        - { name: X-Ticketing-Move-Confirmed, in: header, required: false, schema: { type: string } }
         - { name: event, in: path, required: true, schema: { type: integer } }
       requestBody:
         required: true

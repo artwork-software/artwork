@@ -18,10 +18,14 @@ use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
+use Artwork\Modules\Shift\Notifications\ShiftNotification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Laravel\Passport\Passport;
@@ -674,7 +678,7 @@ final class AppProjectTest extends TestCase
             'break_minutes' => 30,
             'description' => 'Nachtschicht',
             'craft_id' => $craft->id,
-            'room_id' => null,
+            'room_id' => Room::factory()->create()->id,
             'qualifications' => [
                 ['shift_qualification_id' => $qualification->id, 'value' => 2],
             ],
@@ -776,6 +780,163 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function shiftsWithoutEventNeedARoomLikeInTheWeb(): void
+    {
+        $project = Project::factory()->create();
+        $user = $this->actingAsApiUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project->users()->attach($user->id);
+        $payload = [
+            'day' => now()->toDateString(),
+            'start' => '10:00',
+            'end' => '16:00',
+            'break_minutes' => 30,
+            'craft_id' => Craft::factory()->create()->id,
+            'room_id' => null,
+            'qualifications' => [],
+        ];
+
+        $this->postJson(route('app.v1.projects.shifts.store', $project), $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('room_id');
+        $this->assertSame(0, $project->shifts()->count());
+
+        $room = Room::factory()->create();
+        $shiftId = $this->postJson(
+            route('app.v1.projects.shifts.store', $project),
+            [...$payload, 'room_id' => $room->id],
+        )->assertCreated()->json('shift.id');
+
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $shiftId]), $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('room_id');
+        $this->assertSame($room->id, Shift::query()->find($shiftId)->room_id);
+
+        // Schichten am Termin hängen am Raum des Termins — dort bleibt der Raum optional
+        $eventShift = $this->createShiftForUser($user, now(), ['project_id' => $project->id]);
+        $this->patchJson(
+            route('app.v1.projects.shifts.update', [$project, $eventShift]),
+            [...$payload, 'craft_id' => $eventShift->craft_id],
+        )->assertOk();
+    }
+
+    #[Test]
+    public function shiftMutationsAreLimitedToCraftsTheUserMayPlan(): void
+    {
+        $project = Project::factory()->create();
+        $user = $this->actingAsApiUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project->users()->attach($user->id);
+        $foreignCraft = Craft::factory()->create(['assignable_by_all' => false]);
+        $ownCraft = Craft::factory()->create(['assignable_by_all' => false]);
+        $ownCraft->craftShiftPlaner()->attach($user->id);
+        $qualification = ShiftQualification::factory()->create();
+        $foreignShift = $this->createShiftForUser($user, now(), [
+            'project_id' => $project->id,
+            'craft_id' => $foreignCraft->id,
+        ]);
+        ShiftsQualifications::create([
+            'shift_id' => $foreignShift->id,
+            'shift_qualification_id' => $qualification->id,
+            'value' => 2,
+        ]);
+        $ownShift = $this->createShiftForUser($user, now(), [
+            'project_id' => $project->id,
+            'craft_id' => $ownCraft->id,
+        ]);
+        $payload = [
+            'day' => now()->toDateString(),
+            'start' => '10:00',
+            'end' => '16:00',
+            'break_minutes' => 30,
+            'room_id' => Room::factory()->create()->id,
+            'qualifications' => [],
+        ];
+        $colleague = User::factory()->create();
+        $workerPayload = ['worker_id' => $colleague->id, 'worker_type' => 'user'];
+
+        $this->postJson(route('app.v1.projects.shifts.store', $project), [
+            ...$payload,
+            'craft_id' => $foreignCraft->id,
+        ])->assertForbidden()->assertJsonValidationErrors('craft_id');
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $foreignShift]), [
+            ...$payload,
+            'craft_id' => $foreignCraft->id,
+        ])->assertForbidden();
+        $this->postJson(route('app.v1.projects.shifts.workers.store', [$project, $foreignShift]), [
+            ...$workerPayload,
+            'shift_qualification_id' => $qualification->id,
+        ])->assertForbidden();
+        $this->deleteJson(
+            route('app.v1.projects.shifts.workers.destroy', [$project, $foreignShift]),
+            ['worker_id' => $user->id, 'worker_type' => 'user'],
+        )->assertForbidden();
+        $this->deleteJson(route('app.v1.projects.shifts.destroy', [$project, $foreignShift]))->assertForbidden();
+
+        // Gewerkwechsel: altes UND neues Gewerk müssen planbar sein
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $foreignShift]), [
+            ...$payload,
+            'craft_id' => $ownCraft->id,
+        ])->assertForbidden();
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $ownShift]), [
+            ...$payload,
+            'craft_id' => $foreignCraft->id,
+        ])->assertForbidden();
+
+        $this->assertNotNull($foreignShift->fresh());
+        $this->assertSame($foreignCraft->id, $foreignShift->fresh()->craft_id);
+        $this->assertSame($ownCraft->id, $ownShift->fresh()->craft_id);
+        $this->assertSame(1, $foreignShift->users()->count());
+        $this->assertSame(1, $project->shifts()->where('craft_id', $foreignCraft->id)->count());
+
+        // Im eigenen Gewerk ist alles erlaubt
+        $this->postJson(route('app.v1.projects.shifts.store', $project), [
+            ...$payload,
+            'craft_id' => $ownCraft->id,
+        ])->assertCreated();
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $ownShift]), [
+            ...$payload,
+            'craft_id' => $ownCraft->id,
+        ])->assertOk();
+        $this->deleteJson(route('app.v1.projects.shifts.destroy', [$project, $ownShift]))->assertNoContent();
+    }
+
+    #[Test]
+    public function shiftUpdateRunsTheWebFollowUpsForCommittedShifts(): void
+    {
+        Notification::fake();
+        $project = Project::factory()->create();
+        $planner = $this->actingAsApiUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project->users()->attach($planner->id);
+        $worker = User::factory()->create();
+        // createShiftForUser legt festgeschriebene Schichten an
+        $shift = $this->createShiftForUser($worker, now(), ['project_id' => $project->id]);
+        $craftPlanner = User::factory()->create();
+        $shift->craft->craftShiftPlaner()->attach($craftPlanner->id);
+        $payload = [
+            'day' => now()->toDateString(),
+            'start' => '12:00',
+            'end' => '16:00',
+            'break_minutes' => 0,
+            'craft_id' => $shift->craft_id,
+            'qualifications' => [],
+        ];
+
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $shift]), $payload)->assertOk();
+
+        Notification::assertSentTo($worker, ShiftNotification::class);
+        Notification::assertSentTo($craftPlanner, ShiftNotification::class);
+        $this->assertSame(1, $shift->fresh()->users()->count());
+
+        // Gewerkwechsel entfernt die Besetzung (wie im Web), die Antwort zeigt den neuen Stand
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $shift]), [
+            ...$payload,
+            'craft_id' => Craft::factory()->create()->id,
+        ])
+            ->assertOk()
+            ->assertJsonPath('shift.assigned_count', 0);
+        $this->assertSame(0, $shift->fresh()->users()->count());
+    }
+
+    #[Test]
     public function shiftCreationIsForbiddenWithoutThePlannerPermission(): void
     {
         $user = User::factory()->create();
@@ -790,6 +951,7 @@ final class AppProjectTest extends TestCase
             'end' => '16:00',
             'break_minutes' => 30,
             'craft_id' => Craft::factory()->create()->id,
+            'room_id' => Room::factory()->create()->id,
             'qualifications' => [],
         ])->assertForbidden();
     }

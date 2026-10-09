@@ -6,14 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Settings\ShiftSettings;
 use Artwork\Modules\AppApi\Http\Requests\AppShiftRequest;
 use Artwork\Modules\AppApi\Services\AppSystemComponentService;
+use Artwork\Modules\Craft\Services\CraftScopeService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\ShiftUpdateService;
 use Carbon\Carbon;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
@@ -25,6 +28,8 @@ class AppProjectShiftController extends Controller
         private readonly ShiftsQualificationsService $shiftsQualificationsService,
         private readonly ShiftSettings $shiftSettings,
         private readonly DatabaseManager $db,
+        private readonly CraftScopeService $craftScopeService,
+        private readonly ShiftUpdateService $shiftUpdateService,
     ) {
     }
 
@@ -46,6 +51,8 @@ class AppProjectShiftController extends Controller
     public function store(AppShiftRequest $request, Project $project): JsonResponse
     {
         $this->authorizePlanning($project);
+        // Gewerks-Scoping wie im Web (ShiftController::storeShiftWithoutEvent)
+        $this->craftScopeService->assertCanPlan($request->user(), [$request->validated('craft_id')]);
 
         $shift = $this->db->transaction(function () use ($request, $project): Shift {
             // The web's creation path — it also derives end_date for shifts
@@ -71,16 +78,28 @@ class AppProjectShiftController extends Controller
         return response()->json(['shift' => $this->systemComponentService->shiftPayload($shift)], 201);
     }
 
+    /**
+     * The web's update path (ShiftUpdateService): craft change removes the
+     * booked people, rules and conflicts are re-checked, committed shifts
+     * notify their people and planners, project days resync and the shift
+     * plan receives the live update.
+     */
     public function update(AppShiftRequest $request, Project $project, Shift $shift): JsonResponse
     {
         $this->authorizePlanning($project);
+        // Current AND target craft must be plannable (ShiftController::updateShift)
+        $this->craftScopeService->assertCanPlan(
+            $request->user(),
+            [$shift->craft_id, $request->validated('craft_id')],
+        );
 
-        $this->db->transaction(function () use ($request, $shift): void {
-            $start = Carbon::parse($request->validated('start'));
-            $end = Carbon::parse($request->validated('end'));
-            $day = Carbon::parse($request->validated('day'));
+        $start = Carbon::parse($request->validated('start'));
+        $end = Carbon::parse($request->validated('end'));
+        $day = Carbon::parse($request->validated('day'));
 
-            $shift->update([
+        $this->shiftUpdateService->update(
+            $shift,
+            [
                 'start_date' => $day->format('Y-m-d'),
                 'end_date' => $this->shiftService->endDateFor($day, $start, $end),
                 'start' => $start->format('H:i'),
@@ -89,17 +108,21 @@ class AppProjectShiftController extends Controller
                 'description' => $request->validated('description'),
                 'craft_id' => $request->validated('craft_id'),
                 'room_id' => $request->validated('room_id'),
-            ]);
+            ],
+            $request->validated('qualifications'),
+        );
 
-            $this->syncQualifications($shift, $request->validated('qualifications'));
-        });
-
-        return response()->json(['shift' => $this->systemComponentService->shiftPayload($shift)]);
+        return response()->json(['shift' => $this->systemComponentService->shiftPayload($shift->refresh())]);
     }
 
-    public function destroy(Project $project, Shift $shift, ShiftDeletionService $shiftDeletionService): Response
-    {
+    public function destroy(
+        Request $request,
+        Project $project,
+        Shift $shift,
+        ShiftDeletionService $shiftDeletionService,
+    ): Response {
         $this->authorizePlanning($project);
+        $this->craftScopeService->assertCanPlanShifts($request->user(), [$shift]);
 
         // The one delete path of the web: notifications, conflicts, rule re-check and live update.
         $shiftDeletionService->delete($shift);

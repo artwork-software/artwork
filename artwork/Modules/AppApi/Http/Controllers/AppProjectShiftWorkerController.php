@@ -10,6 +10,7 @@ use Artwork\Modules\AppApi\Http\Requests\AppRemoveWorkerRequest;
 use Artwork\Modules\AppApi\Services\AppSystemComponentService;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Craft\Services\CraftScopeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -43,6 +44,7 @@ class AppProjectShiftWorkerController extends Controller
         private readonly VacationConflictService $vacationConflictService,
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly ChangeService $changeService,
+        private readonly CraftScopeService $craftScopeService,
     ) {
     }
 
@@ -85,6 +87,8 @@ class AppProjectShiftWorkerController extends Controller
     public function store(AppAssignWorkerRequest $request, Project $project, Shift $shift): JsonResponse
     {
         $this->authorizePlanning($project);
+        // Gewerks-Scoping wie im Web: nur Schichten planbarer Gewerke besetzen
+        $this->craftScopeService->assertCanPlanShifts($request->user(), [$shift]);
 
         $workerId = (int) $request->validated('worker_id');
         $qualificationId = (int) $request->validated('shift_qualification_id');
@@ -136,6 +140,7 @@ class AppProjectShiftWorkerController extends Controller
     public function destroy(AppRemoveWorkerRequest $request, Project $project, Shift $shift): JsonResponse
     {
         $this->authorizePlanning($project);
+        $this->craftScopeService->assertCanPlanShifts($request->user(), [$shift]);
 
         $workerId = (int) $request->validated('worker_id');
 

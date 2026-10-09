@@ -281,6 +281,10 @@ paths:
       tags: [App]
       operationId: appCreateShift
       summary: Create a shift in the project
+      description: >-
+        Shift mutations (create, update, delete, assign and remove workers) are
+        limited to crafts the user may plan (shift planner of the craft or craft
+        plannable by all); other crafts answer 403 with errors.craft_id.
       parameters:
         - { $ref: '#/components/parameters/ProjectId' }
       requestBody:
@@ -1222,7 +1226,10 @@ components:
         break_minutes: { type: integer, minimum: 0, maximum: 1440 }
         description: { type: string, nullable: true, maxLength: 1000 }
         craft_id: { type: integer }
-        room_id: { type: integer, nullable: true }
+        room_id:
+          type: integer
+          nullable: true
+          description: Required for shifts without an event (always on create).
         qualifications:
           type: array
           items:

@@ -120,6 +120,32 @@ class WorkTimeBookingRepository
     }
 
     /**
+     * Beginn des Zeitkontos mehrerer Personen in EINER Abfrage (wie firstDailyBookingDay je Person).
+     * Personen ohne jede Tagesbuchung fehlen im Ergebnis.
+     *
+     * @param array<int> $userIds
+     * @return array<int, string> [userId] => 'Y-m-d'
+     */
+    public function firstDailyBookingDaysByUser(array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        return WorkTimeBooking::query()
+            ->toBase()
+            ->whereIn('user_id', $userIds)
+            ->where(fn ($query) => $query
+                ->whereNull('name')
+                ->orWhere('name', 'like', 'daily\\_work\\_time\\_booking\\_%'))
+            ->groupBy('user_id')
+            ->selectRaw('user_id, MIN(booking_day) as first_day')
+            ->get()
+            ->mapWithKeys(fn (object $row): array => [(int) $row->user_id => substr((string) $row->first_day, 0, 10)])
+            ->all();
+    }
+
+    /**
      * Nächtliche Tagesbuchung einer Person für einen Tag. Gesucht wird über den Namen: Korrektur- und
      * manuelle Buchungen desselben Tages sind eigene Zeilen und dürfen hier nicht gefunden werden
      * (sonst verrechnet der Re-Run ihren Betrag und überschreibt die Zeile).

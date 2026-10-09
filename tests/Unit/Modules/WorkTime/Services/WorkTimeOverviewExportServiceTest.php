@@ -413,6 +413,7 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
         $craft = Craft::factory()->create();
         $user = $this->createCraftWorker($craft);
         $this->giveWeekdayPattern($user, '2026-05-04', '2026-05-04'); // nur Montag, 04.05., hat ein Muster
+        $this->insertDailyBooking($user, '2026-04-30', 0, 0); // Zeitkonto läuft schon vor dem Zeitraum
         \Artwork\Modules\Vacation\Models\Vacation::factory()->create([
             'vacationer_type' => User::class,
             'vacationer_id' => $user->id,
@@ -463,5 +464,73 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
 
         $this->assertSame($tabDay['target'], $mayRow['cells'][$craft->id]['soll_intern']);
         $this->assertSame($tabDay['actual'], $mayRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function aDayBeforeTheFirstDailyBookingHasNoTargetButKeepsItsShiftMinutes(): void
+    {
+        // Vor Beginn des Zeitkontos (erste Tagesbuchung) kein Soll – wie „nicht gebucht“ im Arbeitszeiten-Tab
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->giveWeekdayPattern($user);
+        $this->assignShift($craft, $user, '2026-06-02', '10:00', '18:00'); // vor Kontobeginn: 420 im Ist
+        \Artwork\Modules\Vacation\Models\Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-06-01',
+            'full_day' => true,
+            'type' => 'OFF_WORK',
+        ]); // vor Kontobeginn: kein soll-neutrales Ist ohne Soll
+        $this->insertDailyBooking($user, '2026-06-03', 480, 480);
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        // Soll: gebuchter 03.06. + nie gebuchte Werktage danach (04., 05., 08., 09.); 01. und 02.06. ohne Soll
+        $this->assertSame(480 + 4 * 480, $juneRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame(480 + 420, $juneRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function aNeverBookedDayAfterTheFirstDailyBookingKeepsItsTarget(): void
+    {
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->giveWeekdayPattern($user, '2026-06-08', '2026-06-09');
+        $this->insertDailyBooking($user, '2026-06-05', 0, 0);
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        // 08. und 09.06. nie gebucht, aber nach Kontobeginn: Soll aus dem Muster
+        $this->assertSame(2 * 480, $juneRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame(0, $juneRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function aPersonWithoutAnyDailyBookingGetsNoTarget(): void
+    {
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->giveWeekdayPattern($user);
+        $this->assignShift($craft, $user, '2026-06-03', '10:00', '18:00');
+        // Korrekturzeile ist keine Tagesbuchung und startet kein Zeitkonto
+        WorkTimeBooking::query()->insert([
+            'user_id' => $user->id,
+            'name' => 'adjustment_work_time_change_request_1',
+            'booking_day' => '2026-06-02',
+            'booking_weekday' => 2,
+            'wanted_working_hours' => 0,
+            'worked_hours' => 0,
+            'work_time_balance_change' => 30,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        $this->assertSame(0, $juneRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame(420 + 30, $juneRow['cells'][$craft->id]['ist_intern']);
     }
 }

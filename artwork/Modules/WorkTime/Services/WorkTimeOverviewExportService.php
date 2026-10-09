@@ -18,7 +18,8 @@ use Illuminate\Support\Collection;
  *  - Gebuchte Tage: Soll = Ist − Saldo der Tageszeile (wie der Tab, auch für Altzeilen mit früherer Krank-Logik),
  *    Ist = Ist der Tageszeile; weitere Zeilen (manuell, Korrektur, doppelte Tageszeilen) zählen ihr Saldo-Delta.
  *  - Nicht gebuchte Tage nur VOR heute (heute und künftige bucht erst der Nachtlauf): Soll und Ist nach aktueller
- *    Rechnung (WorkTimeCalculationService), Schicht- und individuelle Minuten im Gewerk der Schicht.
+ *    Rechnung (WorkTimeCalculationService), Schicht- und individuelle Minuten im Gewerk der Schicht. Soll (und
+ *    soll-neutrales Ist) erst ab Beginn des Zeitkontos (erste Tagesbuchung); Schicht-/individuelle Minuten immer.
  */
 class WorkTimeOverviewExportService
 {
@@ -445,6 +446,9 @@ class WorkTimeOverviewExportService
      * Vergangene, nicht gebuchte Tage der User nach aktueller Rechnung (wie der Arbeitszeiten-Tab): Soll aus dem
      * Muster, Ist ohne die Schicht- und individuellen Minuten (die zählen getrennt im Gewerk der Schicht) – also nur
      * der soll-neutrale Anteil (Krank/Urlaub, ganztägige individuelle Zeit).
+     * Erst ab Beginn des Zeitkontos (erste Tagesbuchung, wie „nicht gebucht“ im Tab): davor weder Soll noch
+     * soll-neutrales Ist – Personen ohne jede Tagesbuchung bekommen hier nichts. Schicht- und individuelle Minuten
+     * dieser Tage zählen unverändert im Ist (getrennt ermittelt).
      *
      * @param array<int, array<string, array{soll: int, ist: int}>> $sums
      * @param array<int> $userIds
@@ -467,11 +471,24 @@ class WorkTimeOverviewExportService
             return $sums;
         }
 
+        $accountStartByUser = app(WorkTimeBookingRepository::class)->firstDailyBookingDaysByUser($userIds);
+        if ($accountStartByUser === []) {
+            return $sums;
+        }
+
         $calculation = app(WorkTimeCalculationService::class);
         $specialDays = app(SpecialDayService::class)->specialDaysBetween($start, $lastPastDay);
 
-        foreach (User::query()->whereIn('id', $userIds)->get() as $user) {
-            $breakdowns = $calculation->breakdownForRange($user, $start, $lastPastDay, [
+        foreach (User::query()->whereIn('id', array_keys($accountStartByUser))->get() as $user) {
+            $userStart = $start->copy();
+            $accountStart = Carbon::parse($accountStartByUser[$user->id]);
+            if ($accountStart->gt($userStart)) {
+                $userStart = $accountStart;
+            }
+            if ($lastPastDay->lt($userStart)) {
+                continue;
+            }
+            $breakdowns = $calculation->breakdownForRange($user, $userStart, $lastPastDay, [
                 'use_bookings' => false,
                 'special_days' => $specialDays,
             ]);

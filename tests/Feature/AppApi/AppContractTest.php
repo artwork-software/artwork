@@ -11,6 +11,7 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\User\Models\User;
@@ -172,6 +173,8 @@ final class AppContractTest extends TestCase
         $project->users()->attach($user->id);
         $craft = Craft::factory()->create();
         $qualification = ShiftQualification::factory()->create();
+        // Schichten ohne Termin brauchen einen Raum (wie im Web)
+        $room = Room::factory()->create();
 
         $created = $this->postJson(route('app.v1.projects.shifts.store', $project), [
             'day' => now()->toDateString(),
@@ -180,7 +183,7 @@ final class AppContractTest extends TestCase
             'break_minutes' => 30,
             'description' => null,
             'craft_id' => $craft->id,
-            'room_id' => null,
+            'room_id' => $room->id,
             'qualifications' => [
                 ['shift_qualification_id' => $qualification->id, 'value' => 2],
             ],
@@ -196,7 +199,7 @@ final class AppContractTest extends TestCase
             'break_minutes' => 45,
             'description' => 'Umbau',
             'craft_id' => $craft->id,
-            'room_id' => null,
+            'room_id' => $room->id,
             'qualifications' => [
                 ['shift_qualification_id' => $qualification->id, 'value' => 2],
             ],

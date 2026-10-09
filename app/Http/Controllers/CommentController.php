@@ -8,7 +8,6 @@ use Artwork\Modules\Project\Http\Requests\StoreCommentRequest;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectService;
-use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -40,11 +39,7 @@ class CommentController extends Controller
         /** @var User $user */
         $user = Auth::user();
         $comment = null;
-        if (
-            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value) ||
-            $this->projectService->getUsersForProject($project)->contains($user) ||
-            $this->projectService->isManagerForProject($user, $project)
-        ) {
+        if ($user->can('createInProject', [Comment::class, $project])) {
             $comment = $this->commentService->create(
                 text: $request->text,
                 user: $user,

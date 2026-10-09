@@ -59,7 +59,8 @@ class WorkTimeBookingService
     /**
      * Bucht vergangene Tage einer Person neu bzw. erstmals („Tag neu buchen“ in den Arbeitszeiten):
      * gleiche Rechnung wie die nächtliche Buchung, Delta gegen die vorhandene Tagesbuchung. Heute und
-     * künftige Tage werden übersprungen – die bucht der Nachtlauf. Liefert die neu gebuchten Tage.
+     * künftige Tage werden übersprungen – die bucht der Nachtlauf –, ebenso Tage vor der ersten Tagesbuchung
+     * der Person (dort wurde noch kein Zeitkonto geführt). Liefert die neu gebuchten Tage.
      *
      * @param iterable<Carbon|string> $days
      * @return array<string, int> Tag (Y-m-d) => Saldo-Delta
@@ -71,20 +72,25 @@ class WorkTimeBookingService
         }
 
         $today = now()->startOfDay();
-        // Frisch laden: Aufrufer ändern direkt davor Schichtzeiten (Zeitänderungsantrag)
-        $user->load(['shifts', 'individualTimes']);
+        $firstBookingDay = $this->repository->firstDailyBookingDay($user);
+        if ($firstBookingDay === null) {
+            return [];
+        }
 
         $pastDays = collect($days)
             ->map(fn ($day): Carbon => Carbon::parse($day)->startOfDay())
-            ->filter(fn (Carbon $day): bool => $day->lt($today))
+            ->filter(fn (Carbon $day): bool => $day->lt($today) && $day->toDateString() >= $firstBookingDay)
             ->sortBy(fn (Carbon $day): int => $day->getTimestamp())
             ->values();
         if ($pastDays->isEmpty()) {
             return [];
         }
+        // Frisch laden (nur der Zeitraum ±1 Tag): Aufrufer ändern direkt davor Schichtzeiten
+        $this->loadWorkForRange($user, $pastDays->first(), $pastDays->last());
         // Ein Kontext für den ganzen Zeitraum statt je Tag (Schichten, Muster, Abwesenheiten einmal laden)
         $context = $this->workTimeCalculationService->buildContext($user, $pastDays->first(), $pastDays->last(), [
             'use_bookings' => false,
+            'legacy_adjustments' => true,
         ]);
 
         $deltas = [];
@@ -104,11 +110,121 @@ class WorkTimeBookingService
     }
 
     /**
+     * Aktuelle Rechnung (ohne Buchungen) je Tag eines Zeitraums: Soll, Ist und Nachtminuten. Aufgenommen vor
+     * und nach einer Schichtänderung, damit bookShiftTimeChange nur deren Wirkung bucht.
+     *
+     * @return array<string, array{target: int|null, actual: int, night: int}> 'Y-m-d' => Werte
+     */
+    public function liveDaySnapshot(User $user, Carbon $from, Carbon $to): array
+    {
+        $from = $from->copy()->startOfDay();
+        $to = $to->copy()->startOfDay();
+        $this->loadWorkForRange($user, $from, $to);
+        $context = $this->workTimeCalculationService->buildContext($user, $from, $to, [
+            'use_bookings' => false,
+            'legacy_adjustments' => false,
+        ]);
+
+        $snapshot = [];
+        for ($day = $from->copy(); $day->lte($to); $day->addDay()) {
+            $breakdown = $this->workTimeCalculationService->dayBreakdown($user, $day, $context);
+            $snapshot[$day->toDateString()] = [
+                'target' => !empty($breakdown['target_unknown']) ? null : $breakdown['target'],
+                'actual' => (int) $breakdown['actual'],
+                'night' => $breakdown['is_sick'] && $breakdown['sick_factor'] >= 1.0
+                    ? 0
+                    : $this->calculateNightMinutes($day, $user),
+            ];
+        }
+
+        return $snapshot;
+    }
+
+    /**
+     * Genehmigte Zeitänderung: auf bereits gebuchte Tage (bis heute) nur die Wirkung der Schichtänderung buchen
+     * – Differenz der aktuellen Rechnung nach und vor der Änderung, Tag für Tag (Anteil nach Mitternacht am
+     * Folgetag, Pause ab dem ersten Tag, Krank/Urlaub, ganztägige Zeiten). Andere Abweichungen eines Tages
+     * (rückwirkend Krank, Altregeln …) bleiben unberührt und weiter ein Hinweis („Tag neu buchen“). Nie
+     * gebuchte Tage bleiben ungebucht.
+     *
+     * @param array<string, array{target: int|null, actual: int, night: int}> $before liveDaySnapshot vor der Änderung
+     * @return array<string, int> Tag (Y-m-d) => Saldo-Delta
+     */
+    public function bookShiftTimeChange(User $user, array $before): array
+    {
+        if (!WorkTimeAccounting::isEnabled() || $before === []) {
+            return [];
+        }
+
+        $dayKeys = array_keys($before);
+        sort($dayKeys);
+        $after = $this->liveDaySnapshot($user, Carbon::parse($dayKeys[0]), Carbon::parse(end($dayKeys)));
+        $today = now()->toDateString();
+
+        $deltas = [];
+        foreach ($dayKeys as $dayKey) {
+            $old = $before[$dayKey];
+            $new = $after[$dayKey] ?? null;
+            // Ohne Muster gibt es keine Tagesbuchung; künftige Tage bucht der Nachtlauf
+            if ($new === null || $old['target'] === null || $new['target'] === null || $dayKey > $today) {
+                continue;
+            }
+            $workedDelta = $new['actual'] - $old['actual'];
+            $wantedDelta = $new['target'] - $old['target'];
+            $nightDelta = $new['night'] - $old['night'];
+            if ($workedDelta === 0 && $wantedDelta === 0 && $nightDelta === 0) {
+                continue;
+            }
+
+            $delta = $this->repository->adjustDailyBookingWithLockedBalance(
+                $user,
+                Carbon::parse($dayKey),
+                $workedDelta,
+                $wantedDelta,
+                $nightDelta
+            );
+            if ($delta !== null) {
+                $deltas[$dayKey] = $delta;
+            }
+        }
+
+        if ($deltas !== []) {
+            $this->workingHourCacheService->forgetForEntity('user', $user->id);
+            app(OvertimeService::class)->recomputeForUser($user);
+        }
+
+        return $deltas;
+    }
+
+    /**
+     * Schichten und individuelle Zeiten frisch und nur für den Zeitraum (±1 Tag für Zeiten über Mitternacht) laden
+     * statt aller Jahre der Person.
+     */
+    private function loadWorkForRange(User $user, Carbon $from, Carbon $to): void
+    {
+        $earliest = $from->copy()->subDay()->toDateString();
+        $latest = $to->copy()->addDay()->toDateString();
+
+        $user->setRelation('shifts', $user->shifts()
+            ->where('shifts.start_date', '<=', $latest)
+            ->where(function ($query) use ($earliest): void {
+                $query->where('shifts.end_date', '>=', $earliest)
+                    ->orWhere('shift_workers.end_date', '>=', $earliest);
+            })
+            ->get());
+        $user->setRelation('individualTimes', $user->individualTimes()
+            ->individualByDateRange($earliest, $latest)
+            ->get());
+    }
+
+    /**
      * Tagesbuchung für genau einen Tag anlegen oder aktualisieren (Re-Run): Soll/Ist aus dem
      * WorkTimeCalculationService ohne vorhandene Buchungen, Saldo-Delta gegen die eigene Tageszeile.
-     * Manuelle und Korrekturbuchungen desselben Tages bleiben unberührt. Null = nicht buchbar
-     * (an diesem Tag kein gültiges Arbeitszeitmuster → Soll unbekannt). $context: vorab mit use_bookings=false
-     * für einen Zeitraum gebaut, der den Tag enthält.
+     * Manuelle und Korrekturbuchungen desselben Tages bleiben unberührt. Alte Korrekturzeilen aus Zeitänderungen
+     * (am Genehmigungstag gebucht, gehören zu diesem Schichttag) werden vom Ist abgezogen – wie rebook_difference,
+     * sonst zählte die Änderung doppelt. Null = nicht buchbar (an diesem Tag kein gültiges Arbeitszeitmuster →
+     * Soll unbekannt). $context: vorab mit use_bookings=false und legacy_adjustments=true für einen Zeitraum
+     * gebaut, der den Tag enthält.
      *
      * @param array<string, mixed>|null $context
      */
@@ -119,6 +235,7 @@ class WorkTimeBookingService
         // Bestehende Buchung des Tages darf nicht als Ist zurückfließen -> use_bookings=false
         $context ??= $this->workTimeCalculationService->buildContext($user, $day, $day, [
             'use_bookings' => false,
+            'legacy_adjustments' => true,
         ]);
         $breakdown = $this->workTimeCalculationService->dayBreakdown($user, $day, $context);
 
@@ -129,7 +246,8 @@ class WorkTimeBookingService
         }
 
         $wantedMinutes = (int) $breakdown['target'];
-        $workedMinutes = (int) $breakdown['actual'];
+        $workedMinutes = (int) $breakdown['actual']
+            - (int) ($context['legacy_adjustments'][$day->toDateString()] ?? 0);
         $nightMinutes = $breakdown['is_sick'] && $breakdown['sick_factor'] >= 1.0
             ? 0 // Krankheit zählt keine Nachtzeit
             : $this->calculateNightMinutes($day, $user);

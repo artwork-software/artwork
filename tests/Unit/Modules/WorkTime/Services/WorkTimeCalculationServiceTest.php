@@ -504,6 +504,34 @@ final class WorkTimeCalculationServiceTest extends TestCase
     }
 
     #[Test]
+    public function before_the_first_daily_booking_there_is_no_rebook_difference(): void
+    {
+        // AZ-3: Muster ohne valid_from gilt rückwirkend – vor Beginn des Zeitkontos kein „nicht gebucht“
+        $user = $this->user();
+        $this->workTime($user, ['tuesday' => '08:00']);
+
+        $tuesday = Carbon::parse(self::TUESDAY);
+
+        $day = $this->service()->breakdownForRange($user, $tuesday, $tuesday, ['with_account_start' => true])[self::TUESDAY];
+        $this->assertFalse($day['account_started']);
+        $this->assertNull($day['rebook_difference']);
+
+        // Ab der ersten Tagesbuchung (Vortag) gibt es die Differenz wieder
+        WorkTimeBooking::query()->create([
+            'user_id' => $user->id,
+            'name' => 'daily_work_time_booking_2026-07-20',
+            'booking_day' => '2026-07-20',
+            'booking_weekday' => 1,
+            'wanted_working_hours' => 0,
+            'worked_hours' => 0,
+            'work_time_balance_change' => 0,
+        ]);
+        $day = $this->service()->breakdownForRange($user, $tuesday, $tuesday, ['with_account_start' => true])[self::TUESDAY];
+        $this->assertTrue($day['account_started']);
+        $this->assertSame(-480, $day['rebook_difference']);
+    }
+
+    #[Test]
     public function a_break_longer_than_the_part_before_midnight_carries_over(): void
     {
         $user = $this->user();

@@ -160,7 +160,7 @@ class AppProjectService
             // events, edit shifts, add comments); custom components combine
             // type writability with the component permission settings.
             'is_writable' => $type?->isAppSystem()
-                ? $this->systemComponentService->isWritable($user, $type)
+                ? $this->systemComponentService->isWritable($user, $project, $type)
                 : (($type?->isAppWritable() ?? false)
                     && $user->can('writeComponent', [$project, $component])),
         ];

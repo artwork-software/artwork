@@ -55,12 +55,13 @@ final class WorkTimeRebookTest extends FeatureTestCase
     {
         $this->travelTo(Carbon::parse('2026-09-10 12:00'));
         $user = $this->userWithDailyTarget();
+        $this->dailyBooking($user, '2026-09-01', 480, 480); // Zeitkonto läuft seit dem 01.09.
         $this->actingAsAdmin(User::factory()->create());
 
         $this->post(route('users.worktimes.rebook', $user), ['dates' => ['2026-09-08']])->assertRedirect();
 
         $this->assertSame(-480, (int) $user->fresh()->work_time_balance);
-        $this->assertSame(1, $user->workTimeBookings()->count());
+        $this->assertSame(2, $user->workTimeBookings()->count());
     }
 
     #[Test]
@@ -203,5 +204,137 @@ final class WorkTimeRebookTest extends FeatureTestCase
         ]));
 
         $response->assertJsonPath('totals.difference_minutes', 0);
+    }
+
+    /**
+     * @return array<string, array<string, mixed>> 'Y-m-d' => Tag aus dem Arbeitszeiten-Endpunkt
+     */
+    private function workTimeDays(User $user, string $start, string $end): array
+    {
+        return collect($this->getJson(route('shift.user-info.worktimes', [
+            'user' => $user->id, 'start' => $start, 'end' => $end,
+        ]))->assertOk()->json('workTimes'))->flatten(1)->keyBy('date')->all();
+    }
+
+    #[Test]
+    public function rebooking_a_day_with_a_legacy_correction_books_exactly_the_shown_difference(): void
+    {
+        // AZ-1: Neu buchen zog die alte Korrekturzeile nicht ab (Anzeige schon) → Änderung doppelt gezählt
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $shift = \Artwork\Modules\Shift\Models\Shift::factory()->create([
+            'start_date' => '2026-09-08', 'end_date' => '2026-09-08', 'start' => '10:00:00', 'end' => '20:00:00',
+        ]);
+        $user->shifts()->attach($shift->id, [
+            'shift_qualification_id' => \Artwork\Modules\Shift\Models\ShiftQualification::factory()->create()->id,
+            'start_date' => '2026-09-08', 'end_date' => '2026-09-08', 'start_time' => '10:00', 'end_time' => '20:00',
+        ]);
+        $this->dailyBooking($user, '2026-09-08', 480, 480); // gebucht mit alter Zeit 10–18
+        WorkTimeBooking::create([
+            'user_id' => $user->id,
+            'name' => 'adjustment_work_time_change_request_' . $shift->id,
+            'booking_day' => '2026-09-09',
+            'booking_weekday' => 3,
+            'wanted_working_hours' => 0,
+            'worked_hours' => 0,
+            'work_time_balance_change' => 120,
+        ]);
+        $user->increment('work_time_balance', 120);
+        // Später nachgetragen: 1 h individuelle Zeit am Schichttag → echte Abweichung von +1:00
+        $user->individualTimes()->create([
+            'title' => 'Nachbereitung',
+            'start_date' => '2026-09-08',
+            'end_date' => '2026-09-08',
+            'start_time' => '21:00',
+            'end_time' => '22:00',
+            'full_day' => false,
+            'working_time_minutes' => 60,
+            'break_minutes' => 0,
+        ]);
+        $this->actingAsAdmin(User::factory()->create());
+
+        $shown = $this->workTimeDays($user, '2026-09-08', '2026-09-08')['2026-09-08'];
+        $this->assertSame(60, $shown['rebook_difference_minutes']);
+
+        $this->post(route('users.worktimes.rebook', $user), ['dates' => ['2026-09-08']])->assertRedirect();
+
+        $this->assertSame(120 + 60, (int) $user->fresh()->work_time_balance);
+        $this->assertFalse($this->workTimeDays($user, '2026-09-08', '2026-09-08')['2026-09-08']['needs_rebooking']);
+    }
+
+    #[Test]
+    public function days_before_the_first_daily_booking_show_no_hint_and_cannot_be_booked(): void
+    {
+        // AZ-3: Muster gilt rückwirkend unbegrenzt – vor Beginn des Zeitkontos kein „nicht gebucht“
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $this->dailyBooking($user, '2026-09-04', 480, 480);
+        $this->actingAsAdmin(User::factory()->create());
+
+        $days = $this->workTimeDays($user, '2026-09-01', '2026-09-08');
+        $this->assertFalse($days['2026-09-02']['needs_rebooking']);
+        $this->assertSame(0, $days['2026-09-02']['rebook_difference_minutes']);
+        $this->assertTrue($days['2026-09-07']['needs_rebooking']);
+        $this->assertSame('not_booked', $days['2026-09-07']['rebook_reason']);
+
+        $this->post(route('users.worktimes.rebook', $user), ['dates' => ['2026-09-02', '2026-09-07']])
+            ->assertSessionHasErrors('dates');
+
+        $this->assertSame(1, $user->workTimeBookings()->count());
+        $this->assertSame(0, (int) $user->fresh()->work_time_balance);
+    }
+
+    #[Test]
+    public function people_without_any_daily_booking_get_no_not_booked_hint(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $this->actingAsAdmin(User::factory()->create());
+
+        $response = $this->getJson(route('shift.user-info.worktimes', [
+            'user' => $user->id, 'start' => '2026-09-01', 'end' => '2026-09-09',
+        ]));
+        $response->assertJsonPath('totals.rebook_days', 0);
+
+        $this->post(route('users.worktimes.rebook', $user), ['dates' => ['2026-09-08']])
+            ->assertSessionHasErrors('dates');
+        $this->assertSame(0, $user->workTimeBookings()->count());
+    }
+
+    #[Test]
+    public function the_service_skips_days_before_the_first_daily_booking(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $this->dailyBooking($user, '2026-09-04', 480, 480);
+
+        $deltas = app(\Artwork\Modules\WorkTime\Services\WorkTimeBookingService::class)
+            ->rebookPastDays($user, ['2026-09-03', '2026-09-07']);
+
+        $this->assertSame(['2026-09-07' => -480], $deltas);
+    }
+
+    #[Test]
+    public function duplicate_daily_rows_are_flagged_instead_of_counting_silently_as_manual_booking(): void
+    {
+        // AZ-4: zweite Tageszeile steckt im Konto, wird angezeigt und als eigener Hinweis ausgewiesen
+        $this->travelTo(Carbon::parse('2026-09-10 12:00'));
+        $user = $this->userWithDailyTarget();
+        $this->dailyBooking($user, '2026-09-08', 0, 480);
+        $this->dailyBooking($user, '2026-09-08', 0, 480);
+        $this->actingAsAdmin(User::factory()->create());
+
+        $response = $this->getJson(route('shift.user-info.worktimes', [
+            'user' => $user->id, 'start' => '2026-09-08', 'end' => '2026-09-08',
+        ]));
+        $day = collect($response->json('workTimes'))->flatten(1)->first();
+
+        $this->assertTrue($day['has_duplicate_daily_booking']);
+        $this->assertSame(-480, $day['duplicate_daily_booking_minutes']);
+        $this->assertSame(0, $day['manual_change_minutes']);
+        $this->assertSame(-960, $day['work_time_balance_change']); // Anzeige = Zeitkonto
+        $this->assertFalse($day['needs_rebooking']);
+        $response->assertJsonPath('totals.duplicate_daily_booking_days', 1);
+        $response->assertJsonPath('totals.duplicate_daily_booking_minutes', -480);
     }
 }

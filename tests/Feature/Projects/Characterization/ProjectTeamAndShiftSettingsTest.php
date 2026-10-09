@@ -177,7 +177,7 @@ final class ProjectTeamAndShiftSettingsTest extends FeatureTestCase
         $project = Project::factory()->create();
         Component::query()->updateOrCreate(
             ['type' => 'RelevantDatesForShiftPlanningComponent'],
-            ['name' => 'Relevant Dates', 'data' => [], 'permission_type' => 'someSeeSomeEdit']
+            ['name' => 'Relevant Dates', 'data' => [], 'permission_type' => 'allSeeSomeEdit']
         );
         $eventType = EventType::factory()->create();
 
@@ -186,6 +186,24 @@ final class ProjectTeamAndShiftSettingsTest extends FeatureTestCase
         ])->assertOk();
 
         $this->assertSame([$eventType->id], $project->shiftRelevantEventTypes()->pluck('event_types.id')->all());
+    }
+
+    #[Test]
+    public function global_write_permission_does_not_unlock_shift_event_types_restricted_to_listed_viewers(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value);
+        $project = Project::factory()->create();
+        Component::query()->updateOrCreate(
+            ['type' => 'RelevantDatesForShiftPlanningComponent'],
+            ['name' => 'Relevant Dates', 'data' => [], 'permission_type' => 'someSeeSomeEdit']
+        );
+        $eventType = EventType::factory()->create();
+
+        $this->patch(route('projects.update.shift_event_types', $project), [
+            'shiftRelevantEventTypeIds' => [$eventType->id],
+        ])->assertForbidden();
+
+        $this->assertSame([], $project->shiftRelevantEventTypes()->pluck('event_types.id')->all());
     }
 
     #[Test]

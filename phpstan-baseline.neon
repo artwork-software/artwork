@@ -2854,24 +2854,6 @@ parameters:
 			path: artwork/Modules/WorkTime/Services/WorkTimeBookingService.php
 
 		-
-			message: '#^Access to an undefined property Artwork\\Modules\\WorkTime\\Models\\WorkTimeBooking\:\:\$ist_minutes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/WorkTime/Services/WorkTimeOverviewExportService.php
-
-		-
-			message: '#^Access to an undefined property Artwork\\Modules\\WorkTime\\Models\\WorkTimeBooking\:\:\$month\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/WorkTime/Services/WorkTimeOverviewExportService.php
-
-		-
-			message: '#^Access to an undefined property Artwork\\Modules\\WorkTime\\Models\\WorkTimeBooking\:\:\$soll_minutes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/WorkTime/Services/WorkTimeOverviewExportService.php
-
-		-
 			message: '#^Cannot call method pluck\(\) on array\<Artwork\\Modules\\User\\Models\\User\>\.$#'
 			identifier: method.nonObject
 			count: 1

@@ -97,7 +97,7 @@ final class ProjectTabVisibilityEnforcementTest extends FeatureTestCase
     }
 
     #[Test]
-    public function component_users_and_write_all_projects_users_receive_restricted_components(): void
+    public function only_listed_users_and_admins_receive_restricted_components(): void
     {
         $secret = $this->createTextField('Secret field', 'someSeeSomeEdit');
         $this->setValue($secret, self::SECRET_VALUE);
@@ -108,8 +108,17 @@ final class ProjectTabVisibilityEnforcementTest extends FeatureTestCase
         $this->actingAs($listedUser);
         $this->get($this->tabUrl($this->visibleTab))->assertOk()->assertSee(self::SECRET_VALUE);
 
+        // Globales "write projects" erweitert "Sehen dürfen nur die Folgenden" nicht (Produktentscheidung)
         $writeAll = $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value);
         $this->actingAs($writeAll);
+        $this->get($this->tabUrl($this->visibleTab))->assertOk()->assertDontSee(self::SECRET_VALUE);
+
+        $listedWriteAll = $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value, $this->teamMember());
+        $secret->users()->attach($listedWriteAll->id, ['can_write' => false]);
+        $this->actingAs($listedWriteAll);
+        $this->get($this->tabUrl($this->visibleTab))->assertOk()->assertSee(self::SECRET_VALUE);
+
+        $this->actingAsAdmin();
         $this->get($this->tabUrl($this->visibleTab))->assertOk()->assertSee(self::SECRET_VALUE);
     }
 
@@ -425,6 +434,11 @@ final class ProjectTabVisibilityEnforcementTest extends FeatureTestCase
         );
         $response->assertSee('printed public value');
         $response->assertDontSee(self::SECRET_VALUE);
+
+        $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value);
+        $this->get($this->printUrl($layout))->assertOk()
+            ->assertSee('printed public value')
+            ->assertDontSee(self::SECRET_VALUE);
 
         $this->actingAsAdmin();
         $this->get($this->printUrl($layout))->assertOk()

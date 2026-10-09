@@ -217,7 +217,7 @@ import {IconDoorEnter, IconTimeline} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
-import {getDaysInRange, computeEventFormattedDates} from "@/Composeables/calendarDateUtils.js";
+import {getEventDaysInRange, computeEventFormattedDates} from "@/Composeables/calendarDateUtils.js";
 
 const AddEditTimelineModal = defineAsyncComponent({
     loader: () => import("@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue"),
@@ -259,7 +259,7 @@ const props = defineProps({
 // Resolve normalized event data via lookups
 const eventType = computed(() => props.event.eventType ?? resolveEventType(props.event.eventTypeId) ?? {});
 const project = computed(() => props.event.project ?? resolveProject(props.event.projectId));
-const daysOfEvent = computed(() => props.event.daysOfEvent ?? getDaysInRange(props.event.start, props.event.end));
+const daysOfEvent = computed(() => props.event.daysOfEvent ?? getEventDaysInRange(props.event.start, props.event.end));
 const formattedDates = computed(() => props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end));
 
 // Einlass bezieht sich auf den Starttag — Spiegelungen an Folgetagen zeigen ihn nicht

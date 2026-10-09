@@ -124,6 +124,23 @@ export function getDaysInRange(startDate, endDate) {
 }
 
 /**
+ * Kalendertage eines Termins als dd.mm.YYYY. Wie getDaysInRange, aber ein Ende exakt um
+ * 00:00 belegt den Folgetag nicht (22:00–00:00 bleibt eintägig). Spiegel im Backend:
+ * EventCalendarDays::between().
+ * @param {string} start - start datetime string
+ * @param {string} end - end datetime string
+ * @returns {string[]} array of "DD.MM.YYYY" day strings
+ */
+export function getEventDaysInRange(start, end) {
+    const startAt = dayjs(start)
+    let endAt = dayjs(end)
+    if (endAt.isAfter(startAt) && endAt.isSame(endAt.startOf('day'))) {
+        endAt = endAt.subtract(1, 'minute')
+    }
+    return getDaysInRange(startAt, endAt)
+}
+
+/**
  * Format a date string as DD.MM.YYYY.
  * @param {string} dateStr
  * @returns {string}

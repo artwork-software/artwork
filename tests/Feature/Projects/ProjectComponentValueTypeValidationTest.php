@@ -132,6 +132,28 @@ final class ProjectComponentValueTypeValidationTest extends FeatureTestCase
     }
 
     #[Test]
+    public function links_accept_relative_paths_and_keep_other_targets_as_text(): void
+    {
+        // LNK-1: relative Pfade öffnet die Anzeige auf derselben Origin; UNC-Pfade und fremde Schemata bleiben als
+        // Text gespeichert und sind in der Anzeige nur nicht klickbar (SafeUrl.js)
+        $link = $this->makeComponent('Link');
+        $this->patchValue($link, ['text' => '/projects/12'])->assertOk();
+        $this->assertSame(['text' => '/projects/12'], $this->storedData($link));
+
+        $linkList = $this->makeComponent('LinkList');
+        $this->patchValue($linkList, ['links' => [
+            ['label' => 'Projekt', 'url' => '/projects/12?tab=3'],
+            ['label' => 'Ablage', 'url' => '\\\\server\\share\\plan.pdf'],
+            ['label' => 'Teams', 'url' => 'teams:/l/chat/0/0'],
+        ]])->assertOk();
+        $this->assertSame(['links' => [
+            ['label' => 'Projekt', 'url' => '/projects/12?tab=3'],
+            ['label' => 'Ablage', 'url' => '\\\\server\\share\\plan.pdf'],
+            ['label' => 'Teams', 'url' => 'teams:/l/chat/0/0'],
+        ]], $this->storedData($linkList));
+    }
+
+    #[Test]
     public function link_list_is_cleaned_and_limited(): void
     {
         $linkList = $this->makeComponent('LinkList', ['max_items' => 2]);

@@ -67,6 +67,85 @@ class WorkTimeBookingRepository
     }
 
     /**
+     * Schichtänderung auf eine vorhandene Tagesbuchung buchen: nur die übergebenen Deltas (Ist, Soll, Nacht)
+     * kommen zur Tageszeile hinzu, andere Abweichungen des Tages bleiben unberührt. Unter derselben Sperre wie
+     * bookDailyWithLockedBalance.
+     *
+     * @return int|null gebuchtes Saldo-Delta; null = an diesem Tag gibt es keine Tagesbuchung
+     */
+    public function adjustDailyBookingWithLockedBalance(
+        User $user,
+        Carbon $date,
+        int $workedDelta,
+        int $wantedDelta,
+        int $nightDelta
+    ): ?int {
+        return DB::transaction(function () use ($user, $date, $workedDelta, $wantedDelta, $nightDelta): ?int {
+            User::query()->whereKey($user->id)->lockForUpdate()->first();
+
+            $previous = $this->getPreviousBooking($user, $date);
+            if ($previous === null) {
+                return null;
+            }
+
+            $delta = $workedDelta - $wantedDelta;
+            $previous->update([
+                'worked_hours' => (int) $previous->worked_hours + $workedDelta,
+                'wanted_working_hours' => (int) $previous->wanted_working_hours + $wantedDelta,
+                'nightly_working_hours' => max(0, (int) $previous->nightly_working_hours + $nightDelta),
+                'work_time_balance_change' => (int) $previous->work_time_balance_change + $delta,
+            ]);
+            if ($delta !== 0) {
+                $this->updateUserBalance($user, $delta);
+            }
+
+            return $delta;
+        });
+    }
+
+    /**
+     * Beginn des Zeitkontos einer Person: Tag der ersten Tagesbuchung (Name daily_work_time_booking_… oder
+     * Altzeile ohne Namen), 'Y-m-d' oder null, wenn die Person noch nie per Tagesbuchung gebucht wurde.
+     */
+    public function firstDailyBookingDay(User $user): ?string
+    {
+        $firstDay = WorkTimeBooking::query()
+            ->where('user_id', $user->id)
+            ->where(fn ($query) => $query
+                ->whereNull('name')
+                ->orWhere('name', 'like', 'daily\\_work\\_time\\_booking\\_%'))
+            ->min('booking_day');
+
+        return $firstDay === null ? null : substr((string) $firstDay, 0, 10);
+    }
+
+    /**
+     * Beginn des Zeitkontos mehrerer Personen in EINER Abfrage (wie firstDailyBookingDay je Person).
+     * Personen ohne jede Tagesbuchung fehlen im Ergebnis.
+     *
+     * @param array<int> $userIds
+     * @return array<int, string> [userId] => 'Y-m-d'
+     */
+    public function firstDailyBookingDaysByUser(array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        return WorkTimeBooking::query()
+            ->toBase()
+            ->whereIn('user_id', $userIds)
+            ->where(fn ($query) => $query
+                ->whereNull('name')
+                ->orWhere('name', 'like', 'daily\\_work\\_time\\_booking\\_%'))
+            ->groupBy('user_id')
+            ->selectRaw('user_id, MIN(booking_day) as first_day')
+            ->get()
+            ->mapWithKeys(fn (object $row): array => [(int) $row->user_id => substr((string) $row->first_day, 0, 10)])
+            ->all();
+    }
+
+    /**
      * Nächtliche Tagesbuchung einer Person für einen Tag. Gesucht wird über den Namen: Korrektur- und
      * manuelle Buchungen desselben Tages sind eigene Zeilen und dürfen hier nicht gefunden werden
      * (sonst verrechnet der Re-Run ihren Betrag und überschreibt die Zeile).

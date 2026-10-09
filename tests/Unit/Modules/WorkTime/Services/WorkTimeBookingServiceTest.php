@@ -290,6 +290,7 @@ final class WorkTimeBookingServiceTest extends TestCase
             app(SpecialDayService::class),
             app(ThreeMonthAverageTargetService::class),
             app(ContractSettingsResolver::class),
+            app(\Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository::class),
         ])->makePartial();
         $calculation->shouldReceive('buildContext')
             ->withArgs(fn (User $user): bool => $user->id === $first->id)

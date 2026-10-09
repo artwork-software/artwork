@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\AppApi;
 
+use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
@@ -96,11 +98,44 @@ final class AppAuthTest extends TestCase
     {
         $this->createUser()->forceFill(['auth_provider' => 'oidc'])->save();
 
-        $this->login()
-            ->assertUnauthorized()
-            ->assertJson(['message' => __('flash-messages.oidc.error.password_login_disabled')]);
+        // Gleiche Antwort wie jeder andere Fehlversuch – sonst ließe sich ermitteln, welche
+        // Adressen als SSO-Konto existieren
+        $oidcAnswer = $this->login()->assertUnauthorized();
+        $unknownEmail = $this->login(['email' => 'nobody@example.com'])->assertUnauthorized();
 
+        $this->assertSame($unknownEmail->json(), $oidcAnswer->json());
         $this->assertSame(0, Token::query()->count());
+    }
+
+    #[Test]
+    public function loginWithAnArrayAsEmailIsAValidationErrorNotAServerError(): void
+    {
+        $this->postJson(route('app.v1.auth.login'), [
+            'email' => ['app-user@example.com'],
+            'password' => 'password',
+            'device_name' => 'Test iPhone',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('email');
+    }
+
+    #[Test]
+    public function meReportsTheShiftPlanOnlyWithTheRightsOfTheShiftPlanEndpoints(): void
+    {
+        $roster = $this->actingAsApiUserWith(PermissionEnum::CAN_VIEW_OWN_ROSTER->value);
+        $this->getJson(route('app.v1.me'))->assertOk()->assertJsonPath('user.permissions.can_view_shift_plan', true);
+        $this->getJson(route('app.v1.shift-plan'))->assertOk();
+
+        // Dienstplan-Ansicht (Planung) ohne eigenen Einsatzplan: der App-Dienstplan antwortet 403
+        $this->actingAsApiUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        $this->getJson(route('app.v1.me'))->assertOk()->assertJsonPath('user.permissions.can_view_shift_plan', false);
+        $this->getJson(route('app.v1.shift-plan'))->assertForbidden();
+
+        $modules = app(ModuleSettings::class);
+        $modules->shift_plan = false;
+        $modules->save();
+        Passport::actingAs($roster, ['app']);
+        $this->getJson(route('app.v1.me'))->assertOk()->assertJsonPath('user.permissions.can_view_shift_plan', false);
     }
 
     #[Test]

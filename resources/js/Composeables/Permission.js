@@ -50,11 +50,10 @@ export function usePermission(pageProps) {
             return false;
         }
 
-        // Spiegel von ProjectComponentVisibilityService::canSeeComponent(): Admins und globales
-        // "write projects" sind von "Sehen dürfen nur die Folgenden" ausgenommen.
+        // Spiegel von ProjectComponentVisibilityService::canSeeComponent(): nur Admins sind von
+        // "Sehen dürfen nur die Folgenden" ausgenommen ("write projects" bewusst nicht).
         if (
             hasAdminRole() ||
-            can('write projects') ||
             component.permission_type === null ||
             component.permission_type === 'allSeeAndEdit' ||
             component.permission_type === 'allSeeSomeEdit'
@@ -75,11 +74,16 @@ export function usePermission(pageProps) {
             return false;
         }
 
-        // Spiegel von ProjectPolicy::writeComponent(): globales "write projects" übersteuert alles;
+        // Spiegel von ProjectPolicy::writeComponent(): globales "write projects" übersteuert die
+        // Bearbeiten-Einstellung sichtbarer Komponenten (nicht "Sehen dürfen nur die Folgenden");
         // sonst ist Schreibrecht im Projekt (headerObject.canWriteProject, aus ProjectPolicy::update)
         // Grundvoraussetzung, und die Komponenten-Einstellung kann nur weiter einschränken.
-        if (hasAdminRole() || can('write projects')) {
+        if (hasAdminRole()) {
             return true;
+        }
+
+        if (can('write projects')) {
+            return canSeeComponent(component);
         }
 
         if (!(pageProps?.headerObject?.canWriteProject ?? false)) {

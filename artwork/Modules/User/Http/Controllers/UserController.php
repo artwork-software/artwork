@@ -824,6 +824,8 @@ class UserController extends Controller
         $difference = $targetUnknown ? null : $totalWorkedMinutes - $totalWantedMinutes;
         $rebookDays = $flatDays->filter(static fn (array $d): bool => !empty($d['needs_rebooking']));
         $rebookDifference = (int) $rebookDays->sum('rebook_difference_minutes');
+        $duplicateDays = $flatDays->filter(static fn (array $d): bool => !empty($d['has_duplicate_daily_booking']));
+        $duplicateMinutes = (int) $duplicateDays->sum('duplicate_daily_booking_minutes');
         $payoutMinutes = (int) $flatDays->sum(
             static fn (array $d): int => (int) collect($d['payouts'] ?? [])->sum('minutes')
         );
@@ -843,6 +845,9 @@ class UserController extends Controller
             'rebook_dates' => $rebookDays->pluck('date')->values()->all(),
             'rebook_difference_minutes' => $rebookDifference,
             'rebook_difference_signed' => WorkTimeCalculationService::formatSignedHours($rebookDifference),
+            'duplicate_daily_booking_days' => $duplicateDays->count(),
+            'duplicate_daily_booking_minutes' => $duplicateMinutes,
+            'duplicate_daily_booking_signed' => WorkTimeCalculationService::formatSignedHours($duplicateMinutes),
             'payout_minutes' => $payoutMinutes,
             'payout_signed' => WorkTimeCalculationService::formatSignedHours(-$payoutMinutes),
         ];
@@ -1146,6 +1151,8 @@ class UserController extends Controller
         );
         $breakdowns = $this->workTimeCalculationService->breakdownForRange($user, $start, $end, [
             'holiday_comp_days' => $compensationDayOffs->flatten(1)->where('for_holiday', true),
+            // „nicht gebucht“ erst ab Beginn des Zeitkontos (erste Tagesbuchung)
+            'with_account_start' => true,
         ]);
         $user->unsetRelation('shifts');
 
@@ -1211,6 +1218,9 @@ class UserController extends Controller
                 ? (int) ($day['rebook_difference'] ?? 0)
                 : 0;
             $dayPayouts = $payouts[$dateKey] ?? collect();
+            $duplicateRows = (int) ($day['duplicate_daily_rows'] ?? 0);
+            $duplicateChange = (int) ($day['duplicate_daily_change'] ?? 0);
+            $manualChange = (int) ($day['booking']['extra_change'] ?? 0) - $duplicateChange;
 
             $entry = [
                 'weekday' => $weekday,
@@ -1235,10 +1245,14 @@ class UserController extends Controller
                 'rebook_difference_minutes' => $rebookDifference,
                 'rebook_difference_signed' => WorkTimeCalculationService::formatSignedHours($rebookDifference),
                 // Manuelle/Korrekturbuchungen des Tages: beim Neu buchen prüfen, ob sie dieselbe Arbeit abdecken
-                'manual_change_minutes' => (int) ($day['booking']['extra_change'] ?? 0),
-                'manual_change_signed' => WorkTimeCalculationService::formatSignedHours(
-                    (int) ($day['booking']['extra_change'] ?? 0)
-                ),
+                'manual_change_minutes' => $manualChange,
+                'manual_change_signed' => WorkTimeCalculationService::formatSignedHours($manualChange),
+                // Doppelte Tageszeile (Altdaten): steckt im Zeitkonto und in Ist/Saldo des Tages, „Neu buchen“
+                // korrigiert sie nicht – eigener Hinweis statt stiller Zusatzbuchung
+                'has_duplicate_daily_booking' => $duplicateRows > 0,
+                'duplicate_daily_booking_rows' => $duplicateRows,
+                'duplicate_daily_booking_minutes' => $duplicateChange,
+                'duplicate_daily_booking_signed' => WorkTimeCalculationService::formatSignedHours($duplicateChange),
                 'payouts' => $dayPayouts->map(fn (OvertimePayout $payout): array => [
                     'minutes' => (int) $payout->minutes,
                     'formatted' => WorkTimeCalculationService::formatSignedHours(-(int) $payout->minutes),

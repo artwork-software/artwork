@@ -18,11 +18,17 @@ use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomRequestNotificationService;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
+use Artwork\Modules\Shift\Notifications\ShiftNotification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -201,6 +207,30 @@ final class AppProjectTest extends TestCase
         $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
             ->assertOk()
             ->assertJsonCount(0, 'components');
+    }
+
+    #[Test]
+    public function writeProjectsPermissionDoesNotRevealComponentsRestrictedToListedViewers(): void
+    {
+        $project = Project::factory()->create();
+        [$tab, $component] = $this->createTabWithComponent('TextField', ['permission_type' => 'someSeeSomeEdit']);
+        $user = $this->actingAsApiUserWith(PermissionEnum::WRITE_PROJECTS->value);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonCount(0, 'components');
+
+        $this->patchJson(
+            route('app.v1.projects.component.update', [$project, $tab, $component]),
+            ['data' => ['text' => 'x']],
+        )->assertForbidden();
+
+        $component->users()->attach($user->id, ['can_write' => false]);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonCount(1, 'components')
+            ->assertJsonPath('components.0.is_writable', true);
     }
 
     #[Test]
@@ -404,6 +434,38 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function updateRejectsChildrenOfFoldersTheUserMayNotSee(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id, ['can_write' => true]);
+        [$tab, $folder] = $this->createTabWithComponent('DisclosureComponent', [
+            'permission_type' => 'someSeeSomeEdit',
+        ]);
+        $child = Component::create(['name' => 'Child', 'type' => 'Checkbox', 'data' => ['label' => 'Child']]);
+        DisclosureComponents::create([
+            'disclosure_id' => $folder->id,
+            'component_id' => $child->id,
+            'order' => 0,
+        ]);
+
+        Passport::actingAs($user, ['app']);
+
+        $this->patchJson(
+            route('app.v1.projects.component.update', [$project, $tab, $child]),
+            ['data' => ['checked' => true]],
+        )->assertNotFound();
+        $this->assertSame(0, ProjectComponentValue::query()->where('component_id', $child->id)->count());
+
+        $folder->users()->attach($user->id, ['can_write' => false]);
+
+        $this->patchJson(
+            route('app.v1.projects.component.update', [$project, $tab, $child]),
+            ['data' => ['checked' => true]],
+        )->assertOk();
+    }
+
+    #[Test]
     public function calendarTabComponentContainsTheProjectsEvents(): void
     {
         $user = User::factory()->create();
@@ -563,6 +625,98 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function eventsWithoutRoomNeedTheRightToBookWithoutRoom(): void
+    {
+        $project = Project::factory()->create();
+        // Anfragerecht erlaubt das Anlegen (EventPolicy::create), aber keinen Termin ohne Raum
+        $user = $this->actingAsApiUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $project->users()->attach($user->id);
+
+        $this->postJson(route('app.v1.projects.events.store', $project), [
+            'name' => 'Bauprobe',
+            'start' => now()->setTime(10, 0)->toIso8601String(),
+            'end' => now()->setTime(12, 0)->toIso8601String(),
+            'all_day' => false,
+            'room_id' => null,
+            'event_type_id' => EventModel::factory()->create()->event_type_id,
+        ])->assertForbidden();
+
+        $this->assertSame(0, $project->events()->where('eventName', 'Bauprobe')->count());
+    }
+
+    #[Test]
+    public function roomChangeWithoutDirectBookingRightBecomesARoomRequest(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id);
+        $oldRoom = Room::factory()->create(['everyone_can_book' => false]);
+        $newRoom = Room::factory()->create(['everyone_can_book' => false]);
+        $event = EventModel::factory()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'room_id' => $oldRoom->id,
+            'occupancy_option' => false,
+            'accepted' => true,
+            'is_planning' => false,
+        ]);
+        $this->mock(RoomRequestNotificationService::class)
+            ->shouldReceive('notifyRoomAdmins')
+            ->once()
+            ->withArgs(fn (EventModel $notified): bool => $notified->room?->id === $newRoom->id);
+
+        Passport::actingAs($user, ['app']);
+
+        $this->patchJson(route('app.v1.projects.events.update', [$project, $event]), [
+            'name' => 'Umzug',
+            'start' => now()->setTime(14, 0)->toIso8601String(),
+            'end' => now()->setTime(16, 0)->toIso8601String(),
+            'all_day' => false,
+            'room_id' => $newRoom->id,
+            'event_type_id' => $event->event_type_id,
+        ])->assertOk();
+
+        $event->refresh();
+        $this->assertSame($newRoom->id, $event->room_id);
+        $this->assertTrue((bool) $event->occupancy_option);
+        $this->assertFalse((bool) $event->accepted);
+    }
+
+    #[Test]
+    public function roomChangeWithDirectBookingRightStaysABooking(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id);
+        $newRoom = Room::factory()->create(['everyone_can_book' => false]);
+        $newRoom->users()->attach($user->id, ['is_admin' => true]);
+        $event = EventModel::factory()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'room_id' => Room::factory()->create()->id,
+            'occupancy_option' => false,
+            'accepted' => true,
+            'is_planning' => false,
+        ]);
+        $this->mock(RoomRequestNotificationService::class)->shouldNotReceive('notifyRoomAdmins');
+
+        Passport::actingAs($user, ['app']);
+
+        $this->patchJson(route('app.v1.projects.events.update', [$project, $event]), [
+            'name' => 'Umzug',
+            'start' => now()->setTime(14, 0)->toIso8601String(),
+            'end' => now()->setTime(16, 0)->toIso8601String(),
+            'all_day' => false,
+            'room_id' => $newRoom->id,
+            'event_type_id' => $event->event_type_id,
+        ])->assertOk();
+
+        $event->refresh();
+        $this->assertSame($newRoom->id, $event->room_id);
+        $this->assertFalse((bool) $event->occupancy_option);
+    }
+
+    #[Test]
     public function eventCreatorsCanUpdateTheirEvent(): void
     {
         $user = User::factory()->create();
@@ -649,7 +803,7 @@ final class AppProjectTest extends TestCase
             'break_minutes' => 30,
             'description' => 'Nachtschicht',
             'craft_id' => $craft->id,
-            'room_id' => null,
+            'room_id' => Room::factory()->create()->id,
             'qualifications' => [
                 ['shift_qualification_id' => $qualification->id, 'value' => 2],
             ],
@@ -751,6 +905,163 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function shiftsWithoutEventNeedARoomLikeInTheWeb(): void
+    {
+        $project = Project::factory()->create();
+        $user = $this->actingAsApiUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project->users()->attach($user->id);
+        $payload = [
+            'day' => now()->toDateString(),
+            'start' => '10:00',
+            'end' => '16:00',
+            'break_minutes' => 30,
+            'craft_id' => Craft::factory()->create()->id,
+            'room_id' => null,
+            'qualifications' => [],
+        ];
+
+        $this->postJson(route('app.v1.projects.shifts.store', $project), $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('room_id');
+        $this->assertSame(0, $project->shifts()->count());
+
+        $room = Room::factory()->create();
+        $shiftId = $this->postJson(
+            route('app.v1.projects.shifts.store', $project),
+            [...$payload, 'room_id' => $room->id],
+        )->assertCreated()->json('shift.id');
+
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $shiftId]), $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('room_id');
+        $this->assertSame($room->id, Shift::query()->find($shiftId)->room_id);
+
+        // Schichten am Termin hängen am Raum des Termins — dort bleibt der Raum optional
+        $eventShift = $this->createShiftForUser($user, now(), ['project_id' => $project->id]);
+        $this->patchJson(
+            route('app.v1.projects.shifts.update', [$project, $eventShift]),
+            [...$payload, 'craft_id' => $eventShift->craft_id],
+        )->assertOk();
+    }
+
+    #[Test]
+    public function shiftMutationsAreLimitedToCraftsTheUserMayPlan(): void
+    {
+        $project = Project::factory()->create();
+        $user = $this->actingAsApiUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project->users()->attach($user->id);
+        $foreignCraft = Craft::factory()->create(['assignable_by_all' => false]);
+        $ownCraft = Craft::factory()->create(['assignable_by_all' => false]);
+        $ownCraft->craftShiftPlaner()->attach($user->id);
+        $qualification = ShiftQualification::factory()->create();
+        $foreignShift = $this->createShiftForUser($user, now(), [
+            'project_id' => $project->id,
+            'craft_id' => $foreignCraft->id,
+        ]);
+        ShiftsQualifications::create([
+            'shift_id' => $foreignShift->id,
+            'shift_qualification_id' => $qualification->id,
+            'value' => 2,
+        ]);
+        $ownShift = $this->createShiftForUser($user, now(), [
+            'project_id' => $project->id,
+            'craft_id' => $ownCraft->id,
+        ]);
+        $payload = [
+            'day' => now()->toDateString(),
+            'start' => '10:00',
+            'end' => '16:00',
+            'break_minutes' => 30,
+            'room_id' => Room::factory()->create()->id,
+            'qualifications' => [],
+        ];
+        $colleague = User::factory()->create();
+        $workerPayload = ['worker_id' => $colleague->id, 'worker_type' => 'user'];
+
+        $this->postJson(route('app.v1.projects.shifts.store', $project), [
+            ...$payload,
+            'craft_id' => $foreignCraft->id,
+        ])->assertForbidden()->assertJsonValidationErrors('craft_id');
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $foreignShift]), [
+            ...$payload,
+            'craft_id' => $foreignCraft->id,
+        ])->assertForbidden();
+        $this->postJson(route('app.v1.projects.shifts.workers.store', [$project, $foreignShift]), [
+            ...$workerPayload,
+            'shift_qualification_id' => $qualification->id,
+        ])->assertForbidden();
+        $this->deleteJson(
+            route('app.v1.projects.shifts.workers.destroy', [$project, $foreignShift]),
+            ['worker_id' => $user->id, 'worker_type' => 'user'],
+        )->assertForbidden();
+        $this->deleteJson(route('app.v1.projects.shifts.destroy', [$project, $foreignShift]))->assertForbidden();
+
+        // Gewerkwechsel: altes UND neues Gewerk müssen planbar sein
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $foreignShift]), [
+            ...$payload,
+            'craft_id' => $ownCraft->id,
+        ])->assertForbidden();
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $ownShift]), [
+            ...$payload,
+            'craft_id' => $foreignCraft->id,
+        ])->assertForbidden();
+
+        $this->assertNotNull($foreignShift->fresh());
+        $this->assertSame($foreignCraft->id, $foreignShift->fresh()->craft_id);
+        $this->assertSame($ownCraft->id, $ownShift->fresh()->craft_id);
+        $this->assertSame(1, $foreignShift->users()->count());
+        $this->assertSame(1, $project->shifts()->where('craft_id', $foreignCraft->id)->count());
+
+        // Im eigenen Gewerk ist alles erlaubt
+        $this->postJson(route('app.v1.projects.shifts.store', $project), [
+            ...$payload,
+            'craft_id' => $ownCraft->id,
+        ])->assertCreated();
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $ownShift]), [
+            ...$payload,
+            'craft_id' => $ownCraft->id,
+        ])->assertOk();
+        $this->deleteJson(route('app.v1.projects.shifts.destroy', [$project, $ownShift]))->assertNoContent();
+    }
+
+    #[Test]
+    public function shiftUpdateRunsTheWebFollowUpsForCommittedShifts(): void
+    {
+        Notification::fake();
+        $project = Project::factory()->create();
+        $planner = $this->actingAsApiUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project->users()->attach($planner->id);
+        $worker = User::factory()->create();
+        // createShiftForUser legt festgeschriebene Schichten an
+        $shift = $this->createShiftForUser($worker, now(), ['project_id' => $project->id]);
+        $craftPlanner = User::factory()->create();
+        $shift->craft->craftShiftPlaner()->attach($craftPlanner->id);
+        $payload = [
+            'day' => now()->toDateString(),
+            'start' => '12:00',
+            'end' => '16:00',
+            'break_minutes' => 0,
+            'craft_id' => $shift->craft_id,
+            'qualifications' => [],
+        ];
+
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $shift]), $payload)->assertOk();
+
+        Notification::assertSentTo($worker, ShiftNotification::class);
+        Notification::assertSentTo($craftPlanner, ShiftNotification::class);
+        $this->assertSame(1, $shift->fresh()->users()->count());
+
+        // Gewerkwechsel entfernt die Besetzung (wie im Web), die Antwort zeigt den neuen Stand
+        $this->patchJson(route('app.v1.projects.shifts.update', [$project, $shift]), [
+            ...$payload,
+            'craft_id' => Craft::factory()->create()->id,
+        ])
+            ->assertOk()
+            ->assertJsonPath('shift.assigned_count', 0);
+        $this->assertSame(0, $shift->fresh()->users()->count());
+    }
+
+    #[Test]
     public function shiftCreationIsForbiddenWithoutThePlannerPermission(): void
     {
         $user = User::factory()->create();
@@ -765,6 +1076,7 @@ final class AppProjectTest extends TestCase
             'end' => '16:00',
             'break_minutes' => 30,
             'craft_id' => Craft::factory()->create()->id,
+            'room_id' => Room::factory()->create()->id,
             'qualifications' => [],
         ])->assertForbidden();
     }
@@ -958,6 +1270,42 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function partialTeamRightsUpdateKeepsTheRightsNotSent(): void
+    {
+        $project = Project::factory()->create();
+        $user = $this->actingAsApiUserWith(PermissionEnum::PROJECT_MANAGEMENT->value);
+        $project->users()->attach($user->id, ['can_write' => true]);
+        $role = ProjectRole::create(['name' => 'Technik']);
+        $colleague = User::factory()->create();
+        $project->users()->attach($colleague->id, [
+            'can_write' => true,
+            'access_budget' => true,
+            'roles' => [$role->id],
+        ]);
+
+        $response = $this->patchJson(
+            route('app.v1.projects.team.update', [$project, $colleague]),
+            ['is_manager' => true],
+        )->assertOk();
+
+        $member = collect($response->json('team'))->firstWhere('id', $colleague->id);
+        $this->assertTrue($member['is_manager']);
+        $this->assertTrue($member['can_write']);
+        $this->assertTrue($member['access_budget']);
+        $this->assertSame([['id' => $role->id, 'name' => 'Technik']], $member['roles']);
+
+        // Ausdrücklich gesendete Werte gelten weiterhin
+        $response = $this->patchJson(
+            route('app.v1.projects.team.update', [$project, $colleague]),
+            ['is_manager' => false, 'access_budget' => false, 'roles' => []],
+        )->assertOk();
+        $member = collect($response->json('team'))->firstWhere('id', $colleague->id);
+        $this->assertFalse($member['access_budget']);
+        $this->assertTrue($member['can_write']);
+        $this->assertSame([], $member['roles']);
+    }
+
+    #[Test]
     public function teamEditingIsForbiddenForPlainMembers(): void
     {
         $user = User::factory()->create();
@@ -1010,6 +1358,57 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function commentingNeedsProjectTeamMembershipLikeInTheWeb(): void
+    {
+        $project = Project::factory()->create();
+        [$tab] = $this->createTabWithComponent('CommentTab');
+        // Globales Leserecht öffnet das Projekt, erlaubt aber keine Kommentare
+        $this->actingAsApiUserWith(PermissionEnum::PROJECT_VIEW->value);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonPath('components.0.is_writable', false);
+        $this->postJson(route('app.v1.projects.comments.store', $project), ['text' => 'Hallo'])
+            ->assertForbidden();
+        $this->assertSame(0, $project->comments()->count());
+
+        $member = User::factory()->create();
+        $project->users()->attach($member->id);
+        Passport::actingAs($member, ['app']);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonPath('components.0.is_writable', true);
+    }
+
+    #[Test]
+    public function commentsCannotTargetTabsTheUserMayNotSee(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id);
+        $hiddenTab = ProjectTab::factory()->create(['visible_for_all' => false]);
+        $visibleTab = ProjectTab::factory()->create(['visible_for_all' => true]);
+
+        Passport::actingAs($user, ['app']);
+
+        $this->postJson(route('app.v1.projects.comments.store', $project), [
+            'text' => 'Geheim',
+            'tab_id' => $hiddenTab->id,
+        ])->assertUnprocessable()->assertJsonValidationErrors('tab_id');
+        $this->postJson(route('app.v1.projects.comments.store', $project), [
+            'text' => 'Gibt es nicht',
+            'tab_id' => 999999,
+        ])->assertUnprocessable()->assertJsonValidationErrors('tab_id');
+        $this->assertSame(0, $project->comments()->count());
+
+        $this->postJson(route('app.v1.projects.comments.store', $project), [
+            'text' => 'Sichtbar',
+            'tab_id' => $visibleTab->id,
+        ])->assertCreated();
+    }
+
+    #[Test]
     public function documentsComponentServesSignedDownloadUrls(): void
     {
         Storage::fake();
@@ -1033,6 +1432,105 @@ final class AppProjectTest extends TestCase
         $url = $response->json('components.0.value.files.0.url');
         $this->get($url)->assertOk();
         $this->get(route('app.v1.files.download', $file))->assertForbidden();
+    }
+
+    #[Test]
+    public function documentsComponentListsBudgetDocumentsOnlyLikeTheWeb(): void
+    {
+        Storage::fake();
+        $project = Project::factory()->create();
+        [$tab] = $this->createTabWithComponent('ProjectAllDocumentsComponent');
+        $sharedBudgetUser = User::factory()->create();
+        $project->users()->attach($sharedBudgetUser->id, ['access_budget' => true]);
+        $sharedWithoutBudgetRights = User::factory()->create();
+        $project->users()->attach($sharedWithoutBudgetRights->id);
+        $budgetFile = $this->createProjectFile($project, 'Budget.pdf', ['is_budget_document' => true]);
+        $budgetFile->accessingUsers()->attach([$sharedBudgetUser->id, $sharedWithoutBudgetRights->id]);
+        $this->createProjectFile($project, 'Plan.pdf');
+
+        $listedNames = function (User $user) use ($project, $tab): array {
+            Passport::actingAs($user, ['app']);
+
+            return collect(
+                $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+                    ->assertOk()
+                    ->json('components.0.value.files')
+            )->pluck('name')->sort()->values()->all();
+        };
+
+        $this->assertSame(['Plan.pdf'], $listedNames($sharedWithoutBudgetRights));
+        $this->assertSame(['Budget.pdf', 'Plan.pdf'], $listedNames($sharedBudgetUser));
+    }
+
+    #[Test]
+    public function signedDownloadRechecksTheFileRightsOfTheSignedUser(): void
+    {
+        Storage::fake();
+        $project = Project::factory()->create();
+        $member = User::factory()->create();
+        $project->users()->attach($member->id);
+        $file = $this->createProjectFile($project, 'Plan.pdf');
+        $budgetFile = $this->createProjectFile($project, 'Budget.pdf', ['is_budget_document' => true]);
+        $hiddenTab = ProjectTab::factory()->create(['visible_for_all' => false]);
+        $hiddenTabFile = $this->createProjectFile($project, 'Hidden.pdf', ['tab_id' => $hiddenTab->id]);
+
+        $this->get($this->signedDownloadUrl($file, $member))->assertOk();
+        $this->get($this->signedDownloadUrl($budgetFile, $member))->assertForbidden();
+        $this->get($this->signedDownloadUrl($hiddenTabFile, $member))->assertForbidden();
+
+        // Ohne Nutzer in der Signatur oder mit nachträglich getauschtem Nutzer kein Download
+        $this->get(URL::temporarySignedRoute('app.v1.files.download', now()->addMinutes(5), [
+            'projectFile' => $file->id,
+        ]))->assertForbidden();
+        $admin = $this->adminUser();
+        $this->get(str_replace(
+            'user=' . $member->id,
+            'user=' . $admin->id,
+            $this->signedDownloadUrl($file, $member)
+        ))->assertForbidden();
+
+        // Rechte werden beim Download geprüft, nicht beim Ausstellen des Links
+        $url = $this->signedDownloadUrl($file, $member);
+        $project->users()->detach($member->id);
+        $this->get($url)->assertForbidden();
+
+        $this->get($this->signedDownloadUrl($budgetFile, $admin))->assertOk();
+    }
+
+    #[Test]
+    public function signedDownloadOfAMissingStoredFileIsNotFound(): void
+    {
+        Storage::fake();
+        $project = Project::factory()->create();
+        $member = User::factory()->create();
+        $project->users()->attach($member->id);
+        $file = $this->createProjectFile($project, 'Plan.pdf');
+        Storage::delete($file->storagePath());
+
+        $this->get($this->signedDownloadUrl($file, $member))->assertNotFound();
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function createProjectFile(Project $project, string $name, array $attributes = []): ProjectFile
+    {
+        $file = ProjectFile::query()->forceCreate(array_merge([
+            'project_id' => $project->id,
+            'name' => $name,
+            'basename' => uniqid() . $name,
+        ], $attributes));
+        Storage::put($file->storagePath(), 'content');
+
+        return $file;
+    }
+
+    private function signedDownloadUrl(ProjectFile $file, User $user): string
+    {
+        return URL::temporarySignedRoute('app.v1.files.download', now()->addMinutes(5), [
+            'projectFile' => $file->id,
+            'user' => $user->id,
+        ]);
     }
 
     #[Test]

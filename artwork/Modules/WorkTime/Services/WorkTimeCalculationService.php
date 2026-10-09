@@ -34,6 +34,8 @@ use Illuminate\Support\Facades\DB;
  *    Zeile – die Anzeige entspricht damit immer dem Zeitkonto. Weicht die aktuelle Rechnung ab
  *    (rückwirkend Krank, Muster, Schichtänderung …), steht die Differenz in rebook_difference
  *    („Tag neu buchen“), sie wird nie stillschweigend angezeigt.
+ *  - „Neu buchen“ gibt es erst ab der ersten Tagesbuchung der Person (Beginn des Zeitkontos): davor
+ *    (Muster rückwirkend gültig, Zeitkonto noch nicht geführt) gibt es keine Differenz und keinen Hinweis.
  *  - Sonst Schichtminuten (Pause ab dem ersten Schichttag, Rest geht auf den Folgetag über) plus Individualzeiten.
  *  - Manuelle/Korrekturbuchungen sind reine Saldo-Deltas und kommen in beiden Fällen zum Ist hinzu.
  *  - Krank/Urlaub sind soll-neutral: ganzer Tag -> Ist = Soll; Halbtag -> Arbeit + 0,5 · Soll.
@@ -61,6 +63,7 @@ class WorkTimeCalculationService
         private readonly SpecialDayService $specialDayService,
         private readonly ThreeMonthAverageTargetService $threeMonthAverageTargetService,
         private readonly ContractSettingsResolver $contractSettings,
+        private readonly WorkTimeBookingRepository $workTimeBookingRepository,
     ) {
     }
 
@@ -84,7 +87,9 @@ class WorkTimeCalculationService
     /**
      * Alle Tage eines Zeitraums, 'Y-m-d' => Breakdown (Vorab-Laden, kein N+1).
      *
-     * Optionen: use_bookings (bool, default true), special_days (array 'Y-m-d' => Name),
+     * Optionen: use_bookings (bool, default true), legacy_adjustments (bool, default = use_bookings),
+     * with_account_start (bool, default false: Beginn des Zeitkontos für rebook_difference laden – nur wo „Neu
+     * buchen“ angeboten wird, eine Query mehr je Person), special_days (array 'Y-m-d' => Name),
      * holiday_comp_days (iterable<CompensationDayOff> für diese Person).
      *
      * @return array<string, array<string, mixed>>
@@ -281,8 +286,14 @@ class WorkTimeCalculationService
 
         // Differenz zwischen aktueller Rechnung und Gebuchtem: „Tag neu buchen“ würde genau sie buchen. Alte
         // Korrekturzeilen aus Zeitänderungen (bis 10/2026 am Genehmigungstag gebucht) decken die Änderung dieses
-        // Schichttags schon ab – abziehen, sonst würde sie ein zweites Mal gebucht.
-        $rebookDifference = $liveDailyBalance === null
+        // Schichttags schon ab – abziehen, sonst würde sie ein zweites Mal gebucht (bookDay zieht sie genauso ab).
+        // Vor der ersten Tagesbuchung der Person wurde noch kein Zeitkonto geführt: dort keine Differenz (nur mit
+        // with_account_start geladen; ohne den Schlüssel bleibt die Grenze offen).
+        $firstBookingDay = $context['first_booking_day'] ?? null;
+        $accountStarted = $isBooked
+            || !array_key_exists('first_booking_day', $context)
+            || ($firstBookingDay !== null && $key >= $firstBookingDay);
+        $rebookDifference = $liveDailyBalance === null || !$accountStarted
             ? null
             : $liveDailyBalance - ($isBooked ? (int) $booking['daily_change'] : 0)
                 - (int) ($context['legacy_adjustments'][$key] ?? 0);
@@ -299,6 +310,11 @@ class WorkTimeCalculationService
             'live_target' => $liveTarget,
             'live_actual' => $liveActual,
             'rebook_difference' => $rebookDifference,
+            'account_started' => $accountStarted,
+            // Weitere Tageszeilen desselben Tages (Altdaten, parallele Nachtläufe): stecken im Saldo und zählen
+            // deshalb als Zusatzbuchung mit – hier getrennt ausgewiesen, damit die Anzeige darauf hinweist
+            'duplicate_daily_rows' => (int) ($booking['duplicate_daily_rows'] ?? 0),
+            'duplicate_daily_change' => (int) ($booking['duplicate_daily_change'] ?? 0),
             'work_minutes' => $workMinutes,
             'shift_minutes' => $shiftMinutes,
             'individual_minutes' => $individualMinutes,
@@ -338,13 +354,15 @@ class WorkTimeCalculationService
             $end = $start->copy();
         }
         $useBookings = (bool) ($options['use_bookings'] ?? true);
+        // Alte Korrekturzeilen auch ohne Buchungen: die Tagesbuchung (bookDay) zieht sie wie rebook_difference ab
+        $useLegacyAdjustments = (bool) ($options['legacy_adjustments'] ?? $useBookings);
         $isUser = $entity instanceof User;
 
         $specialDays = $isUser
             ? ($options['special_days'] ?? $this->specialDayService->specialDaysBetween($start, $end))
             : [];
 
-        return [
+        $context = [
             'start' => $start->toDateString(),
             'end' => $end->toDateString(),
             'shift_minutes' => $this->shiftMinutesPerDay($entity, $start, $end),
@@ -353,7 +371,9 @@ class WorkTimeCalculationService
             // Nur für Sondertage relevant (Minderung entfällt nur, wenn an dem Tag Arbeit BEGINNT)
             'work_starts' => $isUser && $specialDays !== [] ? $this->workStartsPerDay($entity, $start, $end) : [],
             'bookings' => $isUser && $useBookings ? $this->bookingsPerDay($entity, $start, $end) : [],
-            'legacy_adjustments' => $isUser && $useBookings ? $this->legacyAdjustmentsPerShiftDay($entity) : [],
+            'legacy_adjustments' => $isUser && $useLegacyAdjustments
+                ? $this->legacyAdjustmentsPerShiftDay($entity)
+                : [],
             'absences' => $this->absencesPerDay($entity, $start, $end),
             'special_days' => $specialDays,
             // Sondertag-Schalter je Sondertag aus der EINMAL geladenen Vertragshistorie (kein Query je Tag,
@@ -365,6 +385,12 @@ class WorkTimeCalculationService
                 ? $this->holidayCompensationPerDay($entity, $start, $end, $options['holiday_comp_days'] ?? null)
                 : [],
         ];
+        if ($isUser && $useBookings && !empty($options['with_account_start'])) {
+            // Beginn des Zeitkontos (erste Tagesbuchung): davor kein „nicht gebucht“-Hinweis
+            $context['first_booking_day'] = $this->workTimeBookingRepository->firstDailyBookingDay($entity);
+        }
+
+        return $context;
     }
 
     /**
@@ -799,7 +825,8 @@ class WorkTimeCalculationService
      *
      * @return array<string, array{
      *     worked: int, wanted: int, night: int, balance_change: int, is_special_day: bool,
-     *     has_daily: bool, daily_worked: int, daily_wanted: int, daily_change: int, extra_change: int
+     *     has_daily: bool, daily_worked: int, daily_wanted: int, daily_change: int, extra_change: int,
+     *     duplicate_daily_rows: int, duplicate_daily_change: int
      * }>
      */
     private function bookingsPerDay(User $user, Carbon $start, Carbon $end): array
@@ -837,6 +864,8 @@ class WorkTimeCalculationService
                 'daily_wanted' => 0,
                 'daily_change' => 0,
                 'extra_change' => 0,
+                'duplicate_daily_rows' => 0,
+                'duplicate_daily_change' => 0,
             ];
             $change = (int) $booking->work_time_balance_change;
             $entry['worked'] += (int) $booking->worked_hours;
@@ -844,15 +873,18 @@ class WorkTimeCalculationService
             $entry['night'] += (int) $booking->nightly_working_hours;
             $entry['balance_change'] += $change;
             $entry['is_special_day'] = $entry['is_special_day'] || (bool) $booking->is_special_day;
-            if (
-                !$entry['has_daily']
-                && $booking->name === WorkTimeBookingRepository::dailyBookingName(Carbon::parse($dayKey))
-            ) {
+            $isDailyRow = $booking->name === WorkTimeBookingRepository::dailyBookingName(Carbon::parse($dayKey));
+            if ($isDailyRow && !$entry['has_daily']) {
                 $entry['has_daily'] = true;
                 $entry['daily_worked'] = (int) $booking->worked_hours;
                 $entry['daily_wanted'] = (int) $booking->wanted_working_hours;
                 $entry['daily_change'] = $change;
             } else {
+                if ($isDailyRow) {
+                    // Doppelte Tageszeile: bleibt im Saldo (Anzeige = Zeitkonto), wird aber als Hinweis ausgewiesen
+                    $entry['duplicate_daily_rows']++;
+                    $entry['duplicate_daily_change'] += $change;
+                }
                 // Manuelle Buchung / Korrektur: reines Saldo-Delta (Soll 0) – zählt als Ist-Zuschlag
                 $entry['extra_change'] += $change;
             }

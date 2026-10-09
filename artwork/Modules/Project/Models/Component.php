@@ -162,7 +162,7 @@ class Component extends Model
     /**
      * Serverseitiges Gegenstück zu canSeeComponent() im Frontend
      * (resources/js/Composeables/Permission.js) — nur die Komponenten-Einstellung selbst;
-     * Admin- und "write projects"-Bypass liegen in ProjectComponentVisibilityService.
+     * der Admin-Bypass liegt in ProjectComponentVisibilityService.
      */
     public function isVisibleTo(User $user): bool
     {

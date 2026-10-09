@@ -3,7 +3,7 @@
         <div v-if="component.data?.label" class="text-sm font-bold text-text mb-0.5">{{ component.data.label }}</div>
         <a
             v-if="linkText && linkText.length > 0"
-            :href="safeLinkHref(linkText)"
+            :href="safeLinkTarget(linkText)"
             target="_blank"
             rel="noopener noreferrer"
             class="text-accent-600 hover:underline line-clamp-2 print:line-clamp-none block"
@@ -14,7 +14,7 @@
 </template>
 <script setup>
 import { computed } from 'vue';
-import { safeLinkHref } from '@/Helper/SafeUrl.js'
+import { safeLinkTarget } from '@/Helper/SafeUrl.js'
 const props = defineProps({
     project: {
         type: Object,

@@ -7,6 +7,7 @@ use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Services\CrmPropertyFileService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class CrmContact extends Model
 {
@@ -40,6 +42,14 @@ class CrmContact extends Model
         'profile_photo_url',
     ];
 
+    /**
+     * Dateipfade der Upload-Eigenschaften, vor dem endgültigen Löschen gemerkt – danach sind die
+     * Eigenschaftswerte per DB-Cascade weg.
+     *
+     * @var list<string>
+     */
+    private array $propertyFilePathsToDelete = [];
+
     protected static function booted(): void
     {
         // Hersteller-Lookup-Cache der Inventar-Artikel (je Prozess, unter Octane/Swoole
@@ -54,6 +64,24 @@ class CrmContact extends Model
             $contact->externalAccesses()
                 ->whereNull('revoked_at')
                 ->update(['revoked_at' => now()]);
+        });
+
+        // Endgültiges Löschen entfernt auch die Dateien der Upload-Eigenschaften (DSGVO). Beim
+        // Soft-Delete bleiben sie liegen, sonst wäre der Kontakt nicht vollständig wiederherstellbar.
+        // Gelöscht wird erst nach dem Commit, damit ein Rollback keine Werte ohne Datei hinterlässt.
+        static::forceDeleting(static function (CrmContact $contact): void {
+            $contact->propertyFilePathsToDelete = app(CrmPropertyFileService::class)
+                ->collectPathsOfContact($contact);
+        });
+        static::forceDeleted(static function (CrmContact $contact): void {
+            $paths = $contact->propertyFilePathsToDelete;
+            $contact->propertyFilePathsToDelete = [];
+
+            if ($paths === []) {
+                return;
+            }
+
+            DB::afterCommit(static fn () => app(CrmPropertyFileService::class)->deleteMany($paths));
         });
     }
 

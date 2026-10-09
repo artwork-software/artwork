@@ -29,11 +29,14 @@ class AppDashboardService
     {
         $today = $this->carbonService->getNow();
 
-        $todayBlock = $this->shiftPlanService->getDays(
-            $user,
-            $today->copy()->startOfDay(),
-            $today->copy()->endOfDay(),
-        )[0];
+        // Only with the same rights as the shift plan itself (own roster + module)
+        $todayBlock = $this->shiftPlanService->canViewOwnShiftPlan($user)
+            ? $this->shiftPlanService->getDays(
+                $user,
+                $today->copy()->startOfDay(),
+                $today->copy()->endOfDay(),
+            )[0]
+            : $this->shiftPlanService->emptyDay($today);
         $eventsToday = $this->getEventsOfToday($user, $today);
 
         return [

@@ -11,12 +11,15 @@ use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 
 class AppProjectComponentValueController extends Controller
 {
     public function __construct(
         private readonly ProjectComponentValueService $componentValueService,
+        private readonly ProjectComponentVisibilityService $visibilityService,
     ) {
     }
 
@@ -31,7 +34,7 @@ class AppProjectComponentValueController extends Controller
         $this->authorize('view', $project);
         abort_unless($projectTab->visibleForUser($user), 403, 'You are not allowed to view this tab.');
         abort_unless(
-            $this->componentBelongsToTab($component, $projectTab),
+            $this->componentBelongsToTab($user, $component, $projectTab),
             404,
             'This component does not belong to the requested tab.',
         );
@@ -45,6 +48,12 @@ class AppProjectComponentValueController extends Controller
 
         abort_unless(
             $user->can('writeComponent', [$project, $component]),
+            403,
+            'You are not allowed to edit this component.',
+        );
+        // Same visibility rule as the web (ProjectComponentValueController::update)
+        abort_unless(
+            $this->visibilityService->canSeeInProject($user, $component),
             403,
             'You are not allowed to edit this component.',
         );
@@ -64,9 +73,9 @@ class AppProjectComponentValueController extends Controller
     /**
      * Defense in depth against cross-tab manipulation: the component must live
      * in the requested tab, either directly or as a child of one of the tab's
-     * disclosure components.
+     * disclosure components the user may see (a hidden folder hides its content).
      */
-    private function componentBelongsToTab(Component $component, ProjectTab $projectTab): bool
+    private function componentBelongsToTab(User $user, Component $component, ProjectTab $projectTab): bool
     {
         if (
             ComponentInTab::query()
@@ -77,7 +86,7 @@ class AppProjectComponentValueController extends Controller
             return true;
         }
 
-        return DisclosureComponents::query()
+        $folderIds = DisclosureComponents::query()
             ->where('component_id', $component->id)
             ->whereIn(
                 'disclosure_id',
@@ -85,6 +94,11 @@ class AppProjectComponentValueController extends Controller
                     ->where('project_tab_id', $projectTab->id)
                     ->select('component_id'),
             )
-            ->exists();
+            ->pluck('disclosure_id');
+
+        return Component::query()
+            ->whereKey($folderIds)
+            ->get()
+            ->contains(fn (Component $folder): bool => $this->visibilityService->canSeeComponent($user, $folder));
     }
 }

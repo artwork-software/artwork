@@ -119,8 +119,8 @@ class ProjectPolicy
     }
 
     /**
-     * Sehen einer Tab-Komponente (die App-API baut die Tab-Payload serverseitig); Admins und
-     * "write projects" sehen alle Komponenten, wie im Web.
+     * Sehen einer Tab-Komponente (die App-API baut die Tab-Payload serverseitig); bei "Sehen dürfen nur
+     * die Folgenden" nur die Eingetragenen und Admins, wie im Web.
      */
     public function viewComponent(User $user, Project $project, Component $component): bool
     {
@@ -131,12 +131,14 @@ class ProjectPolicy
     /**
      * Schreiben in eine Tab-Komponente: Schreibrecht im Projekt (update) ist Grundvoraussetzung,
      * die Komponenten-Einstellung kann es nur weiter einschränken, nie erweitern. Globales
-     * "write projects" übersteuert die Komponenten-Einstellung; Admins passieren via Gate::before.
+     * "write projects" übersteuert die Bearbeiten-Einstellung, aber nicht die Sicht-Einschränkung
+     * ("Sehen dürfen nur die Folgenden"): was die Person nicht sehen darf, darf sie auch nicht
+     * schreiben. Admins passieren via Gate::before.
      */
     public function writeComponent(User $user, Project $project, Component $component): bool
     {
         if ($user->can(PermissionEnum::WRITE_PROJECTS->value)) {
-            return true;
+            return $this->projectComponentVisibilityService->canSeeComponent($user, $component);
         }
 
         return $this->update($user, $project) && $component->isEditableBy($user);

@@ -19,7 +19,6 @@ use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Artwork\Modules\WorkTime\Services\WorkTimeBookingService;
 use Artwork\Modules\WorkTime\Services\WorkTimeChangeRequestService;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -298,6 +297,13 @@ class WorkTimeChangeRequestController extends Controller
         $newEnd = $requestEndDate->copy()->setTimeFrom($requestEndTimeParsed);
         $newEndForPeriod = $newEnd->lte($newStart) ? $newEnd->copy()->addDay() : $newEnd;
 
+        // Betroffene Tage (alte UND neue Zeit, auch der Anteil nach Mitternacht): aktuelle Rechnung vor der
+        // Änderung festhalten, damit danach nur die Wirkung der Schichtänderung gebucht wird
+        $firstAffectedDay = ($oldStart->lt($newStart) ? $oldStart : $newStart)->copy()->startOfDay();
+        $lastAffectedDay = ($oldEnd->gt($newEndForPeriod) ? $oldEnd : $newEndForPeriod)
+            ->copy()->subMinute()->startOfDay();
+        $before = $this->workTimeBookingService->liveDaySnapshot($user, $firstAffectedDay, $lastAffectedDay);
+
         // Gleicher Schreibweg wie die individuelle Zeit im Dienstplan: Datum über Mitternacht neu
         // ableiten (sonst blieb ein altes +1-Tag-end_date stehen), Verlauf, Zu-/Absage-Reset,
         // Stunden-Cache und Live-Update. Die Person sieht die genehmigte Zeit so im Einsatzplan.
@@ -314,19 +320,10 @@ class WorkTimeChangeRequestController extends Controller
                 : null
         );
 
-        // Bereits gebuchte Tage der Schicht (alte UND neue Zeit, auch der Anteil nach Mitternacht) neu
-        // buchen: Delta landet am Schichttag statt am Genehmigungstag, und der Nachtlauf zählt den heutigen
-        // Anteil nicht ein zweites Mal. Nie gebuchte Tage bleiben ein Hinweis („Tag neu buchen“).
-        $affectedDays = CarbonPeriod::create(
-            $oldStart->lt($newStart) ? $oldStart->copy()->startOfDay() : $newStart->copy()->startOfDay(),
-            ($oldEnd->gt($newEndForPeriod) ? $oldEnd : $newEndForPeriod)->copy()->subMinute()->startOfDay()
-        );
-        $bookedDays = $user->workTimeBookings()
-            ->whereIn('name', collect($affectedDays)
-                ->map(fn (Carbon $day): string => WorkTimeBookingRepository::dailyBookingName($day))
-                ->all())
-            ->pluck('booking_day');
-        $this->workTimeBookingService->rebookPastDays($user, $bookedDays);
+        // Bereits gebuchte Tage der Schicht: nur das Delta der Schicht (alt → neu) auf die Tageszeile buchen –
+        // am Schichttag statt am Genehmigungstag, ohne andere Abweichungen des Tages mitzubuchen (die bleiben
+        // ein Hinweis). Nie gebuchte Tage bleiben ein Hinweis („Tag neu buchen“).
+        $this->workTimeBookingService->bookShiftTimeChange($user, $before);
 
         $workTimeChangeRequest->update([
             'status' => 'approved',

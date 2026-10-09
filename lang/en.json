@@ -9135,5 +9135,9 @@
     "Reset to production": "Reset to production",
     "As granted for the production. Switch a reduction off or on to depart from it.": "As granted for the production. Switch a reduction off or on to depart from it.",
     "Own reductions: {names}": "Own reductions: {names}",
-    "No reductions on this date": "No reductions on this date"
+    "No reductions on this date": "No reductions on this date",
+    "{n} past day(s) in this period have more than one daily booking (legacy data). They are included in the time account with {diff} in total; rebooking does not correct this – please have them cleaned up.": "{n} past day(s) in this period have more than one daily booking (legacy data). They are included in the time account with {diff} in total; rebooking does not correct this – please have them cleaned up.",
+    "This day has more than one daily booking (legacy data). The additional booking ({diff}) is included in the time account and in the values shown; rebooking does not correct it.": "This day has more than one daily booking (legacy data). The additional booking ({diff}) is included in the time account and in the values shown; rebooking does not correct it.",
+    "Booked twice": "Booked twice",
+    "Days before the first booking of the time account cannot be booked.": "Days before the first booking of the time account cannot be booked."
 }

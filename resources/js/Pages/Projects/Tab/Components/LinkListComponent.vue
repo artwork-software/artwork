@@ -144,11 +144,14 @@
                         <!-- Link with URL -->
                         <a
                             v-if="l.url && l.url.length > 0"
-                            :href="safeLinkHref(l.url)"
+                            :href="safeLinkTarget(l.url)"
                             target="_blank"
                             rel="noopener noreferrer nofollow"
-                            class="block hover:underline cursor-pointer"
-                            :class="inSidebar ? 'text-accent-200 hover:text-accent-100' : 'text-accent-600'"
+                            class="block hover:underline"
+                            :class="[
+                                inSidebar ? 'text-accent-200 hover:text-accent-100' : 'text-accent-600',
+                                { 'cursor-pointer': safeLinkTarget(l.url) },
+                            ]"
                         >
                             {{ l.label && l.label.length > 0 ? l.label : l.url }}
                         </a>
@@ -345,7 +348,7 @@ import axios from "axios"
 import { useI18n } from "vue-i18n"
 import draggable from "vuedraggable"
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js"
-import { safeLinkHref } from "@/Helper/SafeUrl.js"
+import { safeLinkTarget } from "@/Helper/SafeUrl.js"
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue"
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue"
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"

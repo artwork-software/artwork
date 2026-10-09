@@ -11,6 +11,7 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class ProjectTabDocumentService
 {
@@ -64,18 +65,29 @@ class ProjectTabDocumentService
 
         $query = $project->project_files();
         $this->projectComponentVisibilityService->constrainToVisibleTabs($query, $user);
-
-        if (!$this->isAdmin($user)) {
-            $canSeeBudgetSection = $this->canSeeBudgetDocumentsSection($project, $user);
-            $query->where(function (Builder $query) use ($user, $canSeeBudgetSection): void {
-                $query->where('is_budget_document', false);
-                if ($canSeeBudgetSection) {
-                    $query->orWhereHas('accessingUsers', fn (Builder $query) => $query->whereKey($user->id));
-                }
-            });
-        }
+        $this->constrainToVisibleBudgetDocuments($query, $project, $user);
 
         return $query->get();
+    }
+
+    /**
+     * Schränkt eine Dateiabfrage des Projekts auf die Budget-Dokumente ein, die die Person sehen darf
+     * (Abfrage-Gegenstück zu canSeeBudgetDocument()); andere Dateien bleiben unberührt. Auch für die
+     * Dokumentlisten der App-API (AppSystemComponentService).
+     */
+    public function constrainToVisibleBudgetDocuments(Builder|Relation $query, Project $project, User $user): void
+    {
+        if ($this->isAdmin($user)) {
+            return;
+        }
+
+        $canSeeBudgetSection = $this->canSeeBudgetDocumentsSection($project, $user);
+        $query->where(function (Builder $query) use ($user, $canSeeBudgetSection): void {
+            $query->where('is_budget_document', false);
+            if ($canSeeBudgetSection) {
+                $query->orWhereHas('accessingUsers', fn (Builder $query) => $query->whereKey($user->id));
+            }
+        });
     }
 
     /**

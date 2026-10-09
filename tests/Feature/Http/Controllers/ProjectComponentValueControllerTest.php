@@ -14,7 +14,8 @@ use Tests\Feature\FeatureTestCase;
 
 /**
  * Regelwerk (ProjectPolicy::writeComponent): Schreibrecht im Projekt ist Grundvoraussetzung,
- * die Komponenten-Einstellung kann nur weiter einschränken. Globales "write projects" übersteuert.
+ * die Komponenten-Einstellung kann nur weiter einschränken. Globales "write projects" übersteuert die
+ * Bearbeiten-Einstellung, aber nicht "Sehen dürfen nur die Folgenden".
  */
 final class ProjectComponentValueControllerTest extends FeatureTestCase
 {
@@ -101,11 +102,32 @@ final class ProjectComponentValueControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function write_projects_permission_overrides_component_restriction(): void
+    public function write_projects_permission_overrides_component_edit_restriction(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value);
+        $project = Project::factory()->create();
+        $component = $this->makeComponent('allSeeSomeEdit');
+
+        $this->assertValueStored($project, $component, $this->patchComponentValue($project, $component));
+    }
+
+    #[Test]
+    public function write_projects_permission_does_not_unlock_components_restricted_to_listed_viewers(): void
     {
         $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value);
         $project = Project::factory()->create();
         $component = $this->makeComponent('someSeeSomeEdit');
+
+        $this->assertValueRejected($project, $this->patchComponentValue($project, $component));
+    }
+
+    #[Test]
+    public function write_projects_permission_overrides_missing_write_flag_of_listed_viewer(): void
+    {
+        $user = $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value);
+        $project = Project::factory()->create();
+        $component = $this->makeComponent('someSeeSomeEdit');
+        $component->users()->attach($user->id, ['can_write' => false]);
 
         $this->assertValueStored($project, $component, $this->patchComponentValue($project, $component));
     }

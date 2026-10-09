@@ -221,6 +221,10 @@ paths:
       tags: [App]
       operationId: appCreateEvent
       summary: Create an event in the project
+      description: >-
+        The app books directly (403 without the right to book the room
+        directly). Events without a room need the right to create events
+        without a room request (403 otherwise).
       parameters:
         - { $ref: '#/components/parameters/ProjectId' }
       requestBody:
@@ -258,8 +262,14 @@ paths:
       tags: [App]
       operationId: appUpdateEvent
       summary: Update an event
+      description: >-
+        Moving the event to a room the user may not book directly turns it into
+        a room request (the room admins are notified), like in the web. Moving
+        a date that is on sale in ticketing needs the header
+        X-Ticketing-Move-Confirmed after the user confirmed it (422 otherwise).
       parameters:
         - { $ref: '#/components/parameters/ProjectId' }
+        - { name: X-Ticketing-Move-Confirmed, in: header, required: false, schema: { type: string } }
         - { name: event, in: path, required: true, schema: { type: integer } }
       requestBody:
         required: true
@@ -281,6 +291,10 @@ paths:
       tags: [App]
       operationId: appCreateShift
       summary: Create a shift in the project
+      description: >-
+        Shift mutations (create, update, delete, assign and remove workers) are
+        limited to crafts the user may plan (shift planner of the craft or craft
+        plannable by all); other crafts answer 403 with errors.craft_id.
       parameters:
         - { $ref: '#/components/parameters/ProjectId' }
       requestBody:
@@ -556,9 +570,14 @@ paths:
       tags: [App]
       operationId: appDownloadFile
       summary: Download a project file via a short-lived signed URL
+      description: >-
+        Use the URL from the documents payload as is. It is signed for the
+        requesting user; the download re-checks that user's file rights
+        (403 if they no longer apply, 404 if the stored file is missing).
       security: []
       parameters:
         - { name: projectFile, in: path, required: true, schema: { type: integer } }
+        - { name: user, in: query, required: true, schema: { type: integer } }
         - { name: signature, in: query, required: true, schema: { type: string } }
         - { name: expires, in: query, required: true, schema: { type: string } }
       responses:
@@ -1217,7 +1236,10 @@ components:
         break_minutes: { type: integer, minimum: 0, maximum: 1440 }
         description: { type: string, nullable: true, maxLength: 1000 }
         craft_id: { type: integer }
-        room_id: { type: integer, nullable: true }
+        room_id:
+          type: integer
+          nullable: true
+          description: Required for shifts without an event (always on create).
         qualifications:
           type: array
           items:

@@ -44,6 +44,23 @@ final class PdfEventDTOTest extends TestCase
     }
 
     #[Test]
+    public function days_of_event_keep_the_last_day_when_it_ends_earlier_than_it_started(): void
+    {
+        $dto = new PdfEventDTO(
+            id: 1,
+            startTime: '2026-10-24 15:00:00',
+            endTime: '2026-10-26 14:00:00',
+            eventName: 'Multi-day Event',
+            allDay: false,
+            roomId: 4,
+            eventType: null,
+            project: null,
+        );
+
+        $this->assertSame(['24.10.2026', '25.10.2026', '26.10.2026'], $dto->daysOfEvent);
+    }
+
+    #[Test]
     public function it_persists_all_optional_fields(): void
     {
         $eventType = (object) ['id' => 1];

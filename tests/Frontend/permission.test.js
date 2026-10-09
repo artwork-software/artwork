@@ -38,3 +38,15 @@ test('without project write right a component is never editable', () => {
     assert.equal(usePermission(props({headerObject: {canWriteProject: false}})).canEditComponent(component), false)
     assert.equal(usePermission(props({rolesArray: ['artwork admin'], headerObject: {}})).canEditComponent(component), true)
 })
+
+test('write projects does not reveal components restricted to listed viewers', () => {
+    const restricted = {permission_type: 'someSeeSomeEdit', users: [], departments: []}
+    const listed = {permission_type: 'someSeeSomeEdit', users: [{id: 7, pivot: {can_write: false}}], departments: []}
+    const writeAll = usePermission(props({permissionsArray: ['write projects'], headerObject: {}}))
+
+    assert.equal(writeAll.canSeeComponent(restricted), false)
+    assert.equal(writeAll.canEditComponent(restricted), false)
+    assert.equal(writeAll.canSeeComponent(listed), true)
+    assert.equal(writeAll.canEditComponent(listed), true)
+    assert.equal(usePermission(props({rolesArray: ['artwork admin']})).canSeeComponent(restricted), true)
+})

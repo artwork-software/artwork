@@ -6,6 +6,9 @@ use Artwork\Modules\AppApi\Enums\WorkerType;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
@@ -16,7 +19,44 @@ class AppShiftPlanService
 {
     public function __construct(
         private readonly EventService $eventService,
+        private readonly ModuleSettingsService $moduleSettingsService,
     ) {
+    }
+
+    /**
+     * Whether the user may see their own shift plan in the app — the same
+     * conditions as the shift-plan endpoints: "can view own roster" and the
+     * shift plan module switched on (admins like in the web). Drives /me
+     * (can_view_shift_plan) and the dashboard's `today` block.
+     */
+    public function canViewOwnShiftPlan(User $user): bool
+    {
+        if (!$user->can(PermissionEnum::CAN_VIEW_OWN_ROSTER->value)) {
+            return false;
+        }
+
+        return $this->moduleSettingsService->isModuleVisible('shift_plan')
+            || $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+    }
+
+    /**
+     * A day in the app contract shape without any of the user's data — for
+     * places that must keep the shape but may not show the shift plan.
+     *
+     * @return array<string, mixed>
+     */
+    public function emptyDay(Carbon $date): array
+    {
+        return [
+            'date' => $date->format('Y-m-d'),
+            'total_work_time' => '00:00',
+            'total_break_time' => '00:00',
+            'shifts' => [],
+            'individual_times' => [],
+            'day_services' => [],
+            'holidays' => [],
+            'comments' => [],
+        ];
     }
 
     /**

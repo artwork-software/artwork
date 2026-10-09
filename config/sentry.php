@@ -32,6 +32,10 @@ return [
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#send-default-pii
     'send_default_pii' => env('SENTRY_SEND_DEFAULT_PII', false),
 
+    // Passwörter und 2FA-Codes aus dem Request-Body entfernen (gilt für alle Requests)
+    // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/filtering/
+    'before_send' => [\Artwork\Core\Sentry\SentryEventScrubber::class, 'beforeSend'],
+
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#ignore-exceptions
     // 'ignore_exceptions' => [],
 

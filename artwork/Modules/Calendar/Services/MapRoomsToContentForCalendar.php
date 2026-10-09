@@ -23,14 +23,7 @@ trait MapRoomsToContentForCalendar
 
             $groupedEvents = $room->events->flatMap(
                 function ($eventDTO) {
-                    $eventStart = Carbon::parse($eventDTO->start);
-                    $eventEnd = Carbon::parse($eventDTO->end);
-                    // Defekte Altdaten (Ende vor Start, z.B. 22:00–00:00 am selben Tag)
-                    // ergäben eine leere Periode — mindestens am Starttag anzeigen.
-                    if ($eventEnd->lt($eventStart)) {
-                        $eventEnd = $eventStart;
-                    }
-                    return collect(CarbonPeriod::create($eventStart, $eventEnd))
+                    return collect(EventCalendarDays::between($eventDTO->start, $eventDTO->end))
                         ->map(fn($date) => [
                             'date' => $date->format('d.m.Y'),
                             'event' => $eventDTO,

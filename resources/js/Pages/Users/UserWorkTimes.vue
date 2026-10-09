@@ -31,6 +31,12 @@
             <span v-else-if="canRebook" class="shrink-0">{{ $t('At most {n} days can be rebooked at once – please narrow the period.', { n: maxRebookDays }) }}</span>
         </div>
 
+        <!-- Doppelte Tageszeilen (Altdaten): im Zeitkonto enthalten, „Neu buchen“ korrigiert sie nicht -->
+        <p v-if="totals.duplicate_daily_booking_days > 0" class="mb-5 flex items-start gap-1.5 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
+            <PropertyIcon name="IconAlertTriangle" class="size-4 shrink-0" />
+            {{ $t('{n} past day(s) in this period have more than one daily booking (legacy data). They are included in the time account with {diff} in total; rebooking does not correct this – please have them cleaned up.', { n: totals.duplicate_daily_booking_days, diff: totals.duplicate_daily_booking_signed }) }}
+        </p>
+
         <!-- Monthly breakdown when range > 1 month -->
         <div v-if="isMultiMonth" class="mb-6 p-4 bg-surface-sunken rounded-lg border border-border-subtle">
             <h3 class="text-sm font-semibold text-text-muted mb-3">{{ $t('Monthly Breakdown') }}</h3>
@@ -87,6 +93,16 @@
                             </div>
                             <div v-if="entry.is_vacation" class="text-xs text-text-muted bg-surface-sunken border border-border-subtle px-2 py-0.5 rounded inline-block mt-2 ml-1">
                                 {{ $t('Vacation') }}<template v-if="entry.vacation_factor < 1"> ({{ $t('Half day') }})</template>
+                            </div>
+                            <div v-if="entry.has_duplicate_daily_booking" class="text-xs text-warning bg-warning-surface border border-warning-border px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2 ml-1">
+                                {{ $t('Booked twice') }}
+                                <ToolTipComponent
+                                    icon="IconInfoCircle"
+                                    icon-size="w-3.5 h-3.5"
+                                    :tooltip-text="$t('This day has more than one daily booking (legacy data). The additional booking ({diff}) is included in the time account and in the values shown; rebooking does not correct it.', { diff: entry.duplicate_daily_booking_signed })"
+                                    direction="top"
+                                    classes="text-warning"
+                                />
                             </div>
                             <div v-if="entry.needs_rebooking" class="text-xs text-warning bg-warning-surface border border-warning-border px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2 ml-1">
                                 {{ entry.rebook_reason === 'not_booked' ? $t('Not in time account') : $t('Differs from time account') }}

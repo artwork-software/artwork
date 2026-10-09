@@ -23,6 +23,7 @@ use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -1057,6 +1058,105 @@ final class AppProjectTest extends TestCase
         $url = $response->json('components.0.value.files.0.url');
         $this->get($url)->assertOk();
         $this->get(route('app.v1.files.download', $file))->assertForbidden();
+    }
+
+    #[Test]
+    public function documentsComponentListsBudgetDocumentsOnlyLikeTheWeb(): void
+    {
+        Storage::fake();
+        $project = Project::factory()->create();
+        [$tab] = $this->createTabWithComponent('ProjectAllDocumentsComponent');
+        $sharedBudgetUser = User::factory()->create();
+        $project->users()->attach($sharedBudgetUser->id, ['access_budget' => true]);
+        $sharedWithoutBudgetRights = User::factory()->create();
+        $project->users()->attach($sharedWithoutBudgetRights->id);
+        $budgetFile = $this->createProjectFile($project, 'Budget.pdf', ['is_budget_document' => true]);
+        $budgetFile->accessingUsers()->attach([$sharedBudgetUser->id, $sharedWithoutBudgetRights->id]);
+        $this->createProjectFile($project, 'Plan.pdf');
+
+        $listedNames = function (User $user) use ($project, $tab): array {
+            Passport::actingAs($user, ['app']);
+
+            return collect(
+                $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+                    ->assertOk()
+                    ->json('components.0.value.files')
+            )->pluck('name')->sort()->values()->all();
+        };
+
+        $this->assertSame(['Plan.pdf'], $listedNames($sharedWithoutBudgetRights));
+        $this->assertSame(['Budget.pdf', 'Plan.pdf'], $listedNames($sharedBudgetUser));
+    }
+
+    #[Test]
+    public function signedDownloadRechecksTheFileRightsOfTheSignedUser(): void
+    {
+        Storage::fake();
+        $project = Project::factory()->create();
+        $member = User::factory()->create();
+        $project->users()->attach($member->id);
+        $file = $this->createProjectFile($project, 'Plan.pdf');
+        $budgetFile = $this->createProjectFile($project, 'Budget.pdf', ['is_budget_document' => true]);
+        $hiddenTab = ProjectTab::factory()->create(['visible_for_all' => false]);
+        $hiddenTabFile = $this->createProjectFile($project, 'Hidden.pdf', ['tab_id' => $hiddenTab->id]);
+
+        $this->get($this->signedDownloadUrl($file, $member))->assertOk();
+        $this->get($this->signedDownloadUrl($budgetFile, $member))->assertForbidden();
+        $this->get($this->signedDownloadUrl($hiddenTabFile, $member))->assertForbidden();
+
+        // Ohne Nutzer in der Signatur oder mit nachträglich getauschtem Nutzer kein Download
+        $this->get(URL::temporarySignedRoute('app.v1.files.download', now()->addMinutes(5), [
+            'projectFile' => $file->id,
+        ]))->assertForbidden();
+        $admin = $this->adminUser();
+        $this->get(str_replace(
+            'user=' . $member->id,
+            'user=' . $admin->id,
+            $this->signedDownloadUrl($file, $member)
+        ))->assertForbidden();
+
+        // Rechte werden beim Download geprüft, nicht beim Ausstellen des Links
+        $url = $this->signedDownloadUrl($file, $member);
+        $project->users()->detach($member->id);
+        $this->get($url)->assertForbidden();
+
+        $this->get($this->signedDownloadUrl($budgetFile, $admin))->assertOk();
+    }
+
+    #[Test]
+    public function signedDownloadOfAMissingStoredFileIsNotFound(): void
+    {
+        Storage::fake();
+        $project = Project::factory()->create();
+        $member = User::factory()->create();
+        $project->users()->attach($member->id);
+        $file = $this->createProjectFile($project, 'Plan.pdf');
+        Storage::delete($file->storagePath());
+
+        $this->get($this->signedDownloadUrl($file, $member))->assertNotFound();
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function createProjectFile(Project $project, string $name, array $attributes = []): ProjectFile
+    {
+        $file = ProjectFile::query()->forceCreate(array_merge([
+            'project_id' => $project->id,
+            'name' => $name,
+            'basename' => uniqid() . $name,
+        ], $attributes));
+        Storage::put($file->storagePath(), 'content');
+
+        return $file;
+    }
+
+    private function signedDownloadUrl(ProjectFile $file, User $user): string
+    {
+        return URL::temporarySignedRoute('app.v1.files.download', now()->addMinutes(5), [
+            'projectFile' => $file->id,
+            'user' => $user->id,
+        ]);
     }
 
     #[Test]

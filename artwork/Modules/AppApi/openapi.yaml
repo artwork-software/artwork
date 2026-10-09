@@ -556,9 +556,14 @@ paths:
       tags: [App]
       operationId: appDownloadFile
       summary: Download a project file via a short-lived signed URL
+      description: >-
+        Use the URL from the documents payload as is. It is signed for the
+        requesting user; the download re-checks that user's file rights
+        (403 if they no longer apply, 404 if the stored file is missing).
       security: []
       parameters:
         - { name: projectFile, in: path, required: true, schema: { type: integer } }
+        - { name: user, in: query, required: true, schema: { type: integer } }
         - { name: signature, in: query, required: true, schema: { type: string } }
         - { name: expires, in: query, required: true, schema: { type: string } }
       responses:

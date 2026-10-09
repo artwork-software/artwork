@@ -14,6 +14,7 @@ use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
+use Artwork\Modules\Project\Services\ProjectTabDocumentService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
@@ -53,6 +54,7 @@ class AppSystemComponentService
     public function __construct(
         private readonly ShiftSettings $shiftSettings,
         private readonly ProjectComponentVisibilityService $visibility,
+        private readonly ProjectTabDocumentService $documents,
     ) {
     }
 
@@ -318,7 +320,11 @@ class AppSystemComponentService
 
     /**
      * Project files with short-lived signed download URLs, so the device can
-     * open them without carrying the API token into a browser.
+     * open them without carrying the API token into a browser. Same rules as
+     * the web document lists: visible tabs only, budget documents only for
+     * people who would see them in the budget informations
+     * (ProjectTabDocumentService). The URL carries the user id so the download
+     * re-checks ProjectFilePolicy::view (AppProjectFileController).
      *
      * @param array<int, int> $scope
      * @return array<int, array<string, mixed>>
@@ -327,6 +333,7 @@ class AppSystemComponentService
     {
         return $project->project_files()
             ->tap(fn ($q) => $this->constrainToVisibleScope($q, $user, $scope))
+            ->tap(fn ($q) => $this->documents->constrainToVisibleBudgetDocuments($q, $project, $user))
             ->orderByDesc('created_at')
             ->get()
             ->map(static fn (ProjectFile $file): array => [
@@ -336,7 +343,7 @@ class AppSystemComponentService
                 'url' => URL::temporarySignedRoute(
                     'app.v1.files.download',
                     now()->addMinutes(30),
-                    ['projectFile' => $file->id],
+                    ['projectFile' => $file->id, 'user' => $user->id],
                 ),
             ])
             ->all();

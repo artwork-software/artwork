@@ -9164,5 +9164,9 @@
     "Not applicable (legacy entry)": "Nicht übernehmbar (Altbestand)",
     "Not applicable (legacy entry): file paths are never taken over. \"Approve all\" skips this row.": "Nicht übernehmbar (Altbestand): Dateipfade werden nie übernommen. „Alle übernehmen“ überspringt diese Zeile.",
     "The proposed file is no longer available. \"Approve all\" skips this row.": "Die vorgeschlagene Datei ist nicht mehr vorhanden. „Alle übernehmen“ überspringt diese Zeile.",
-    ":count change could not be applied (legacy entry or missing file) and was skipped.|:count changes could not be applied (legacy entries or missing files) and were skipped.": ":count Änderung war nicht übernehmbar (Altbestand oder fehlende Datei) und wurde übersprungen.|:count Änderungen waren nicht übernehmbar (Altbestand oder fehlende Dateien) und wurden übersprungen."
+    ":count change could not be applied (legacy entry or missing file) and was skipped.|:count changes could not be applied (legacy entries or missing files) and were skipped.": ":count Änderung war nicht übernehmbar (Altbestand oder fehlende Datei) und wurde übersprungen.|:count Änderungen waren nicht übernehmbar (Altbestand oder fehlende Dateien) und wurden übersprungen.",
+    "Return open – material blocked": "Rückgabe offen – Material blockiert",
+    "The articles stay reserved until the return is entered.": "Die Artikel bleiben reserviert, bis die Rückgabe eingetragen ist.",
+    "The return date has passed and no return has been entered yet. The articles stay reserved until the return is entered.": "Das Rückgabedatum ist überschritten und es ist noch keine Rückgabe eingetragen. Die Artikel bleiben reserviert, bis die Rückgabe eingetragen ist.",
+    "The articles stay reserved until the return is confirmed – even after the return date. Use “Enter return” as soon as the material is back.": "Die Artikel bleiben bis zur bestätigten Rückgabe reserviert – auch über das Rückgabedatum hinaus. Tragt die Rückgabe über „Rückgabe eingeben“ ein, sobald das Material zurück ist."
 }

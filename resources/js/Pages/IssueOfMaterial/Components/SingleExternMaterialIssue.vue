@@ -81,15 +81,17 @@
         <component :is="IconCheck" class="size-3.5" />
         {{ $t('Returned') }}
       </span>
+      <!-- Externe Ausgaben bleiben bis zur bestätigten Rückgabe reserviert, auch nach dem Rückgabedatum -->
+      <span v-else-if="isOverdue"
+            :title="$t('The articles stay reserved until the return is entered.')"
+            class="inline-flex items-center gap-1 rounded-md border border-danger-border bg-danger-surface px-1.5 py-0.5 text-[11px] text-danger">
+        <component :is="IconAlertTriangle" class="size-3.5" />
+        {{ $t('Return open – material blocked') }}
+      </span>
       <span v-else-if="externMaterialIssue.return_status === 'not_returned'"
             class="inline-flex items-center gap-1 rounded-md border border-danger-border bg-danger-surface px-1.5 py-0.5 text-[11px] text-danger">
         <component :is="IconAlertTriangle" class="size-3.5" />
         {{ $t('Not returned') }}
-      </span>
-      <span v-else-if="isOverdue"
-            class="inline-flex items-center gap-1 rounded-md border border-warning-border bg-warning-surface px-1.5 py-0.5 text-[11px] text-warning">
-        <component :is="IconAlertTriangle" class="size-3.5" />
-        {{ $t('Overdue') }}
       </span>
       <span v-if="!externMaterialIssue?.special_items_done && externMaterialIssue?.special_items?.length"
             class="inline-flex items-center gap-1 rounded-md border border-danger-border bg-danger-surface px-1.5 py-0.5 text-[11px] text-danger">
@@ -246,6 +248,11 @@ const checkIfStatusOrHasAnySpecialItem = computed(() => {
 });
 
 const isOverdue = computed(() => {
+    // overdue_unreturned: Backend-Flag (ExternalIssue), gleiche Regel wie die Reservierung
+    if (typeof props.externMaterialIssue.overdue_unreturned === 'boolean') {
+        return props.externMaterialIssue.overdue_unreturned;
+    }
+
     // counts_as_returned: dieselbe Regel wie Verfügbarkeit und Filter (Status, „Erhalten von“, Altbestand)
     if (props.externMaterialIssue.counts_as_returned || props.externMaterialIssue.received_by || !props.externMaterialIssue.return_date) {
         return false;

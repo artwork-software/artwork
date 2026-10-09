@@ -532,6 +532,55 @@ final class WorkTimeCalculationServiceTest extends TestCase
     }
 
     #[Test]
+    public function before_the_account_start_only_worked_minutes_count_and_only_with_the_option(): void
+    {
+        // Variante a: Anzeige vor Beginn des Zeitkontos wie im Export – kein Soll, kein Saldo, kein soll-neutrales Ist
+        $user = $this->user();
+        $this->workTime($user, ['tuesday' => '08:00', 'wednesday' => '08:00', 'thursday' => '08:00']);
+        $this->shift($user, self::TUESDAY, '10:00', self::TUESDAY, '14:00');
+        $this->vacation($user, '2026-07-22', 'NOT_AVAILABLE'); // Mi krank
+        WorkTimeBooking::query()->create([
+            'user_id' => $user->id,
+            'name' => 'daily_work_time_booking_2026-07-23',
+            'booking_day' => '2026-07-23',
+            'booking_weekday' => 4,
+            'wanted_working_hours' => 480,
+            'worked_hours' => 480,
+            'work_time_balance_change' => 0,
+        ]);
+        $start = Carbon::parse(self::TUESDAY);
+        $end = Carbon::parse('2026-07-23');
+
+        $days = $this->service()->breakdownForRange($user, $start, $end, ['with_account_start' => true]);
+
+        $tuesday = $days[self::TUESDAY];
+        $this->assertTrue($tuesday['before_account_start']);
+        $this->assertSame(0, $tuesday['target']);
+        $this->assertFalse($tuesday['target_unknown']);
+        $this->assertNull($tuesday['balance']);
+        $this->assertSame(240, $tuesday['actual']); // gearbeitete Schichtminuten bleiben
+        $this->assertSame(0, $days['2026-07-22']['actual']); // krank: kein soll-neutrales Ist
+        $this->assertNull($days['2026-07-22']['balance']);
+        $this->assertFalse($days['2026-07-23']['before_account_start']);
+        $this->assertSame(480, $days['2026-07-23']['target']);
+        $this->assertSame(0, $days['2026-07-23']['balance']);
+
+        $summary = WorkTimeCalculationService::summarizeRange($days);
+        $this->assertSame(480, $summary['target']);
+        $this->assertSame(720, $summary['actual']);
+        $this->assertSame(0, $summary['balance']); // nur Tage ab Kontobeginn
+        $this->assertSame(2, $summary['days_before_account_start']);
+
+        // Ohne Option (Dienstplan-Wochenstunden, Nachtbuchung, Regelprüfung, Export …) unverändert
+        $plain = $this->service()->breakdownForRange($user, $start, $end);
+        $this->assertFalse($plain[self::TUESDAY]['before_account_start']);
+        $this->assertSame(480, $plain[self::TUESDAY]['target']);
+        $this->assertSame(-240, $plain[self::TUESDAY]['balance']);
+        $this->assertSame(480, $plain['2026-07-22']['actual']); // krank: Ist = Soll
+        $this->assertSame(-240, WorkTimeCalculationService::summarizeRange($plain)['balance']);
+    }
+
+    #[Test]
     public function a_break_longer_than_the_part_before_midnight_carries_over(): void
     {
         $user = $this->user();

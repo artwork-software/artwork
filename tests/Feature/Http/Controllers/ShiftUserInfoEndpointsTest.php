@@ -76,6 +76,16 @@ final class ShiftUserInfoEndpointsTest extends FeatureTestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        // Zeitkonto läuft schon (erste Tagesbuchung vor dem Zeitraum) – davor gäbe es kein Soll
+        WorkTimeBooking::create([
+            'user_id' => $user->id,
+            'name' => WorkTimeBookingRepository::dailyBookingName(Carbon::parse('2026-05-29')),
+            'booking_day' => '2026-05-29',
+            'booking_weekday' => 5,
+            'wanted_working_hours' => 480,
+            'worked_hours' => 480,
+            'work_time_balance_change' => 0,
+        ]);
 
         $response = $this->getJson(route('shift.user-info.worktimes', [
             'user' => $user->id,

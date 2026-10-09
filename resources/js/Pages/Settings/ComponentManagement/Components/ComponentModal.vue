@@ -465,7 +465,7 @@
                         class="mb-4"
                         :paragraphs="[
                             'Seeing a component always requires access to the project, editing always requires write permission in the project (project team or global write permission). The settings here can narrow this circle further, but never extend it.',
-                            'Users with “Write permissions for all projects” and admins are not affected by these restrictions.'
+                            'Admins always see every component. “Write permissions for all projects” only lifts the editing restriction of components a person can see – it does not override “Only the following may see”.'
                         ]"
                     />
 

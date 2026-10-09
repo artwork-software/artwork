@@ -36,6 +36,8 @@ use Illuminate\Support\Facades\DB;
  *    („Tag neu buchen“), sie wird nie stillschweigend angezeigt.
  *  - „Neu buchen“ gibt es erst ab der ersten Tagesbuchung der Person (Beginn des Zeitkontos): davor
  *    (Muster rückwirkend gültig, Zeitkonto noch nicht geführt) gibt es keine Differenz und keinen Hinweis.
+ *    Mit with_account_start (Arbeitszeiten-Tab, Info-Modal) zeigt der Tag davor wie der Export kein Soll, keinen
+ *    Saldo und kein soll-neutrales Ist (before_account_start); alle anderen Aufrufer rechnen unverändert.
  *  - Sonst Schichtminuten (Pause ab dem ersten Schichttag, Rest geht auf den Folgetag über) plus Individualzeiten.
  *  - Manuelle/Korrekturbuchungen sind reine Saldo-Deltas und kommen in beiden Fällen zum Ist hinzu.
  *  - Krank/Urlaub sind soll-neutral: ganzer Tag -> Ist = Soll; Halbtag -> Arbeit + 0,5 · Soll.
@@ -88,8 +90,9 @@ class WorkTimeCalculationService
      * Alle Tage eines Zeitraums, 'Y-m-d' => Breakdown (Vorab-Laden, kein N+1).
      *
      * Optionen: use_bookings (bool, default true), legacy_adjustments (bool, default = use_bookings),
-     * with_account_start (bool, default false: Beginn des Zeitkontos für rebook_difference laden – nur wo „Neu
-     * buchen“ angeboten wird, eine Query mehr je Person), special_days (array 'Y-m-d' => Name),
+     * with_account_start (bool, default false: Beginn des Zeitkontos laden – nur für die Arbeitszeiten-Anzeige, eine
+     * Query mehr je Person; davor kein rebook_difference, Soll 0, Saldo null, Ist nur aus Arbeit, Flag
+     * before_account_start), special_days (array 'Y-m-d' => Name),
      * holiday_comp_days (iterable<CompensationDayOff> für diese Person).
      *
      * @return array<string, array<string, mixed>>
@@ -116,23 +119,32 @@ class WorkTimeCalculationService
     /**
      * Summen über Tages-Breakdowns (z. B. aus breakdownForRange). Soll/Differenz sind null, sobald
      * mindestens ein Tag ohne gültiges Muster enthalten ist (target_unknown), Ist wird immer summiert.
+     * Tage vor Beginn des Zeitkontos (before_account_start) zählen weder ins Soll noch in die Differenz.
      *
      * @param iterable<array<string, mixed>> $breakdowns
      * @return array{
      *     target: int|null, actual: int, balance: int|null, target_unknown: bool,
-     *     days_without_pattern: int, days: int, known_target: int
+     *     days_without_pattern: int, days_before_account_start: int, days: int, known_target: int
      * }
      */
     public static function summarizeRange(iterable $breakdowns): array
     {
         $target = 0;
         $actual = 0;
+        $accountActual = 0;
         $daysWithoutPattern = 0;
+        $daysBeforeAccountStart = 0;
         $days = 0;
 
         foreach ($breakdowns as $day) {
             $days++;
             $actual += (int) ($day['actual'] ?? 0);
+            // Vor Beginn des Zeitkontos (with_account_start): Ist zählt, aber kein Soll und kein Saldo
+            if (!empty($day['before_account_start'])) {
+                $daysBeforeAccountStart++;
+                continue;
+            }
+            $accountActual += (int) ($day['actual'] ?? 0);
             if (($day['target'] ?? null) === null || !empty($day['target_unknown'])) {
                 $daysWithoutPattern++;
                 continue;
@@ -145,9 +157,10 @@ class WorkTimeCalculationService
         return [
             'target' => $unknown ? null : $target,
             'actual' => $actual,
-            'balance' => $unknown ? null : $actual - $target,
+            'balance' => $unknown ? null : $accountActual - $target,
             'target_unknown' => $unknown,
             'days_without_pattern' => $daysWithoutPattern,
+            'days_before_account_start' => $daysBeforeAccountStart,
             'days' => $days,
             'known_target' => $target,
         ];
@@ -162,7 +175,7 @@ class WorkTimeCalculationService
      *     target_reduction: int, reduction_reason: string|null,
      *     reference_period: array{start: string, end: string}|null, reference_weekday_average: int|null,
      *     is_sick: bool, is_vacation: bool, vacation_factor: float, sick_factor: float,
-     *     has_booking: bool, booking: array<string, mixed>|null
+     *     has_booking: bool, booking: array<string, mixed>|null, before_account_start: bool
      * }
      */
     public function dayBreakdown(User|Freelancer|ServiceProvider $entity, Carbon $day, ?array $context = null): array
@@ -298,6 +311,21 @@ class WorkTimeCalculationService
             : $liveDailyBalance - ($isBooked ? (int) $booking['daily_change'] : 0)
                 - (int) ($context['legacy_adjustments'][$key] ?? 0);
 
+        // Vor Beginn des Zeitkontos (nur mit with_account_start, wie der Arbeitszeitübersicht-Export): kein Konto –
+        // weder Soll noch Saldo noch soll-neutrales Ist (Krank/Urlaub, ganztägige individuelle Zeit). Tatsächlich
+        // gearbeitete Schicht-/individuelle Minuten und manuelle Buchungen bleiben als Ist sichtbar.
+        $beforeAccountStart = array_key_exists('first_booking_day', $context) && !$accountStarted;
+        if ($beforeAccountStart) {
+            $targetUnknown = false;
+            $target = 0;
+            $actual = $workMinutes + $extraChange;
+            $balance = null;
+            $reduction = 0;
+            $reason = null;
+            $referencePeriod = null;
+            $referenceAverage = null;
+        }
+
         return [
             'date' => $key,
             'target' => $target,
@@ -311,6 +339,7 @@ class WorkTimeCalculationService
             'live_actual' => $liveActual,
             'rebook_difference' => $rebookDifference,
             'account_started' => $accountStarted,
+            'before_account_start' => $beforeAccountStart,
             // Weitere Tageszeilen desselben Tages (Altdaten, parallele Nachtläufe): stecken im Saldo und zählen
             // deshalb als Zusatzbuchung mit – hier getrennt ausgewiesen, damit die Anzeige darauf hinweist
             'duplicate_daily_rows' => (int) ($booking['duplicate_daily_rows'] ?? 0),

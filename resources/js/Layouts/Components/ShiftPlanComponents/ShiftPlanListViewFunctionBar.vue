@@ -39,19 +39,19 @@
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('day')"
                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
-                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump around') + ' ' + $t('Day')" icon="IconCalendar" icon-size="h-5 w-5 text-white"/>
+                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump by day')" icon="IconCalendar" icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('week')"
                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
-                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')" icon="IconCalendarWeek" icon-size="h-5 w-5 text-white"/>
+                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump by calendar week')" icon="IconCalendarWeek" icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('month')"
                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
-                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump around') + ' ' + $t('Month')" icon="IconCalendarMonth" icon-size="h-5 w-5 text-white"/>
+                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump by month')" icon="IconCalendarMonth" icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
                                     </div>
@@ -98,6 +98,7 @@ import {
     MenuItem,
     MenuItems,
 } from "@headlessui/vue";
+import { parseYmd, toYmd } from "@/Helper/IsoWeek.js";
 
 import {router, usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -161,8 +162,8 @@ const updateDates = (startDate, endDate) => {
 const getDateRange = () => {
     if (!props.dateValue || !props.dateValue[0] || !props.dateValue[1]) return null;
     return {
-        start: new Date(props.dateValue[0]),
-        end: new Date(props.dateValue[1]),
+        start: parseYmd(props.dateValue[0]) ?? new Date(props.dateValue[0]),
+        end: parseYmd(props.dateValue[1]) ?? new Date(props.dateValue[1]),
     };
 };
 
@@ -171,7 +172,7 @@ const addDaysToRange = (days) => {
     if (!range) return;
     range.start.setDate(range.start.getDate() + days);
     range.end.setDate(range.end.getDate() + days);
-    updateDates(range.start.toISOString().slice(0, 10), range.end.toISOString().slice(0, 10));
+    updateDates(toYmd(range.start), toYmd(range.end));
 };
 
 const getStepSize = () => {

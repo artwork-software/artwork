@@ -432,7 +432,7 @@
                         >
                             <div class="w-full px-3 py-4 bg-accent-50 hover:bg-accent-100 border border-dashed border-accent-200 rounded-lg mt-1 transition-colors">
                                 <AlertComponent
-                                    text="Es wurden noch keine Zeiten festgelegt. Klicke hier um Zeiten zu erstellen"
+                                    :text="$t('No times have been set yet. Click here to create times')"
                                     show-icon
                                     icon-size="h-4 w-4"
                                 />
@@ -968,6 +968,7 @@ import {
     ListboxOptions,
 } from '@headlessui/vue';
 import axios from 'axios';
+import { failedRequestMessage } from '@/Helper/appToast.js';
 import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 
@@ -1078,6 +1079,7 @@ async function deleteAssignment(assignment, wholeGroup) {
     try {
         await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: assignment.id }), {
             params: { whole_group: wholeGroup },
+            skipErrorToast: true, // Fehler steht über den Zuordnungen
         });
 
         localAssignmentsForDay.value = wholeGroup
@@ -1086,7 +1088,7 @@ async function deleteAssignment(assignment, wholeGroup) {
 
         emit('desiresReload');
     } catch (error) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error);
+        projectAssignmentError.value = failedRequestMessage(error);
         await refreshAssignmentsForDay().catch(() => {});
     } finally {
         projectAssignmentActionKey.value = null;
@@ -1098,7 +1100,7 @@ async function acceptAssignmentWish(assignment) {
     projectAssignmentActionKey.value = `accept:${assignment.id}`;
     projectAssignmentError.value = '';
     try {
-        await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: assignment.id }));
+        await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: assignment.id }), {}, { skipErrorToast: true }); // Fehler steht über den Zuordnungen
 
         localAssignmentsForDay.value = localAssignmentsForDay.value.map(a =>
             a.group_id === assignment.group_id ? { ...a, type: 'binding' } : a,
@@ -1106,7 +1108,7 @@ async function acceptAssignmentWish(assignment) {
 
         emit('desiresReload');
     } catch (error) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error);
+        projectAssignmentError.value = failedRequestMessage(error);
         await refreshAssignmentsForDay().catch(() => {});
     } finally {
         projectAssignmentActionKey.value = null;

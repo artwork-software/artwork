@@ -32,7 +32,7 @@
                 <div class="font-bold text-sm" :class="row.type === 'BUDGET_TYPE_COST' ? 'text-danger' : 'text-success'">
                    <span v-if="row.type === 'BUDGET_TYPE_COST'">-</span>
                    <span v-else>+</span>
-                    {{ toCurrencyString(row.value) }} €
+                    {{ toCurrencyString(row.value) }} {{ $currencySymbol() }}
                 </div>
             </div>
         </div>
@@ -44,6 +44,7 @@
 
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import {useInstanceFormat} from "@/Composeables/InstanceFormat.js";
 
 const props = defineProps({
     data: {
@@ -57,20 +58,10 @@ const props = defineProps({
 
 const emits = defineEmits(['close'])
 
-const toCurrencyString = (value) => {
-    if (value === null || typeof value === 'undefined') {
-        value = "0";
-    }
-    //cast value to String, replace commas by dots. Parse Number and format it to 1.234,56
-    return Number(
-        String(value).replace(',', '.')
-    ).toLocaleString(
-        'de-DE',
-        {
-            minimumFractionDigits: 2
-        }
-    );
-}
+const {formatNumber} = useInstanceFormat()
+
+// Betrag im Zahlenformat der Instanz (Einstellungen → Regionale Formate), Symbol steht daneben
+const toCurrencyString = (value) => formatNumber(value ?? 0, 2)
 
 </script>
 

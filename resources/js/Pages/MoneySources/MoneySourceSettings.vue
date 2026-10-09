@@ -65,7 +65,6 @@ import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FundingSourcesSettingsHeader from "@/Pages/MoneySources/Components/FundingSourcesSettingsHeader.vue";
@@ -73,7 +72,7 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         SettingsGuideBanner,
         PropertyIcon,

@@ -40,12 +40,12 @@
 </template>
 
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
+import { IconCircleX, IconGeometry, IconX } from "@tabler/icons-vue";
 
 export default {
     name: "SideNotification",
+    components: { IconCircleX, IconGeometry, IconX },
     emits: ['close'],
-    mixins: [IconLib],
     data() {
         return {
             show: true,

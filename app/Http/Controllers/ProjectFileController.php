@@ -17,6 +17,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,7 +59,8 @@ class ProjectFileController extends Controller
      */
     public function store(FileUpload $request, Project $project, ProjectController $projectController): void
     {
-        $this->authorize('create', [ProjectFile::class, $project]);
+        $tabId = $request->filled('tabId') ? $request->integer('tabId') : null;
+        $this->authorize('create', [ProjectFile::class, $project, $tabId]);
 
         if (!Storage::exists("project_files")) {
             Storage::makeDirectory("project_files");
@@ -72,10 +74,11 @@ class ProjectFileController extends Controller
         Storage::putFileAs('project_files', $file, $basename);
 
         $projectFile = $project->project_files()->create([
-            'tab_id' => $request->input('tabId'),
+            'tab_id' => $tabId,
             'name' => $original_name,
             'basename' => $basename,
-
+            // Upload aus den Budget-Informationen (ProjectFileUploadModal): nur Freigabeliste und Admins
+            'is_budget_document' => $tabId === null && $request->boolean('budgetDocument'),
         ]);
 
         $projectFile->accessingUsers()->sync(collect($request->accessibleUsers));
@@ -155,14 +158,14 @@ class ProjectFileController extends Controller
         }
 
         //return Redirect::back();
-        broadcast(new UploadNewDocumentInProject($projectFile, $project->id));
+        SafeBroadcast::send(new UploadNewDocumentInProject($projectFile, $project->id));
     }
 
     public function download(Request $request, ProjectFile $projectFile): StreamedResponse
     {
         $this->authorize('view', $projectFile);
 
-        $path = 'project_files/' . $projectFile->basename;
+        $path = $projectFile->storagePath();
 
         if ($request->boolean('inline') && $this->canDisplayInline($path)) {
             return Storage::response($path, $projectFile->name);
@@ -183,14 +186,26 @@ class ProjectFileController extends Controller
         $this->authorize('update', $projectFile);
         $original_name = '';
 
-        if ($request->get('accessibleUsers')) {
-            $projectFile->accessingUsers()->sync(collect($request->accessibleUsers));
+        // Auch eine geleerte Liste wird übernommen. Mit neuer Datei schickt Inertia FormData, darin fällt ein leeres
+        // Array weg – deshalb zusätzlich das Markerfeld accessibleUsersSent (ProjectFileEditModal).
+        if ($request->has('accessibleUsers') || $request->boolean('accessibleUsersSent')) {
+            $userIds = collect($request->input('accessibleUsers', []))
+                ->map(fn ($userId): int => (int) $userId);
+
+            // Die hochladende Person ist nicht gespeichert. Wer schon freigegeben war, sperrt sich beim Bearbeiten
+            // nicht selbst aus; wer nur korrigiert (Admin, Projektleitung), wird dadurch nicht neu eingetragen.
+            $actingUserId = (int) Auth::id();
+            if ($projectFile->accessingUsers()->whereKey($actingUserId)->exists()) {
+                $userIds->push($actingUserId);
+            }
+
+            $projectFile->accessingUsers()->sync($userIds->unique()->values());
         }
 
         if ($request->file('file')) {
             $file = $request->file('file');
             $this->handleFile(ArtworkFileTypes::PROJECT, $file);
-            Storage::delete('project_files/' . $projectFile->basename);
+            Storage::delete($projectFile->storagePath());
             $original_name = $file->getClientOriginalName();
             $basename = StoredFileName::forUpload($file);
 
@@ -317,9 +332,11 @@ class ProjectFileController extends Controller
             $this->notificationService->setNotificationTo($projectFileUser);
             $this->notificationService->createNotification();
         }
-        broadcast(new DeleteDocumentInProject($projectFile, $project->id));
-
         $projectFile->delete();
+
+        // Erst nach dem Löschen melden: Clients laden ihre Liste daraufhin neu und dürfen die Datei nicht
+        // mehr bekommen (das Event trägt nur Ids, siehe broadcastWith()).
+        SafeBroadcast::send(new DeleteDocumentInProject($projectFile, $project->id));
         //return Redirect::back();
     }
 
@@ -328,7 +345,7 @@ class ProjectFileController extends Controller
         $projectFile = ProjectFile::onlyTrashed()->findOrFail($id);
         $this->authorize('forceDelete', $projectFile);
 
-        Storage::delete('project_files/' . $projectFile->basename);
+        Storage::delete($projectFile->storagePath());
 
         $projectFile->forceDelete();
         return Redirect::back();

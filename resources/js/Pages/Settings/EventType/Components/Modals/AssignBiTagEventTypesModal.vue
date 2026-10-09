@@ -74,6 +74,7 @@ import BaseModal from '@/Components/Modals/BaseModal.vue';
 import ModalHeader from '@/Components/Modals/ModalHeader.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
+import { BI_REQUEST_CONFIG, extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     tag: { type: Object, required: true },
@@ -116,10 +117,11 @@ const save = async () => {
     try {
         await axios.post(route('bi.tags.sync-event-types', props.tag.id), {
             event_type_ids: Array.from(selectedIds.value),
-        });
+        }, BI_REQUEST_CONFIG);
         emit('close', true);
     } catch (error) {
-        errorMessage.value = error.response?.data?.message ?? error.message;
+        // Fehler steht im Modal (BI_REQUEST_CONFIG unterdrückt den globalen Toast)
+        errorMessage.value = extractSaveErrorMessage(error) ?? error.message;
     } finally {
         saving.value = false;
     }

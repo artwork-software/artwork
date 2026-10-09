@@ -24,6 +24,7 @@
         ></span>
         <span class="text-[10px] font-semibold tabular-nums shrink-0">{{ timeLabel }}</span>
         <span class="text-[11px] truncate">{{ titleLabel }}</span>
+        <IconTicket v-if="ticketSales" class="ml-auto size-3 shrink-0" stroke-width="2" />
     </div>
 
     <!-- Hover-Tooltip mit den vollen Termininfos (ersetzt das frühere Info-Icon) -->
@@ -47,6 +48,7 @@
                         , {{ formattedDates.start_without_year }} - {{ formattedDates.end_without_year }}
                     </template>
                 </div>
+                <div v-if="ticketSales" class="opacity-80">{{ ticketSalesLabel }}</div>
                 <div class="pt-1 text-[10px] opacity-60">{{ $t('Click to open event details') }}</div>
             </div>
         </div>
@@ -59,6 +61,7 @@ import { usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useColorHelper } from "@/Composeables/UseColorHelper.js";
 import { computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
+import { IconTicket } from "@tabler/icons-vue";
 
 // Bewusst schlanke Kompaktkachel für Zoomstufen unter 80 %: bei Monatsdichte
 // sind sehr viele Zellen gleichzeitig sichtbar — hier darf nichts Teures rein
@@ -75,6 +78,16 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["editEvent"]);
+
+// Verkauft/Plätze aus Artwork-Tickets: auf der Kachel nur das Symbol, die Zahlen im Tooltip.
+const calendarTicketSales = inject('calendarTicketSales', null);
+const ticketSales = computed(() => calendarTicketSales?.get(props.event.id) ?? null);
+const ticketSalesLabel = computed(() => {
+    if (!ticketSales.value) return '';
+    return ticketSales.value.cancelled
+        ? $t('Cancelled in Artwork-Tickets')
+        : $t('{sold} of {capacity} tickets sold', { sold: ticketSales.value.sold, capacity: ticketSales.value.capacity });
+});
 
 const { backgroundColorWithOpacity, getTextColorBasedOnBackground, getHighContrastPercent } = useColorHelper();
 

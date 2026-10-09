@@ -436,6 +436,7 @@
 
 <script setup>
 import BulkSingleEvent from "@/Pages/Projects/Components/BulkComponents/BulkSingleEvent.vue";
+import { parseYmd, toYmd } from "@/Helper/IsoWeek.js";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import {
     IconArrowsMoveHorizontal,
@@ -474,6 +475,7 @@ import VueVirtualScroller, {DynamicScroller} from 'vue-virtual-scroller';
 import BulkScrollerItem from '@/Pages/Projects/Components/BulkComponents/BulkScrollerItem.vue';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import axios from 'axios';
+import {rekeyDescriptionEdit, resetDescriptionEdits} from '@/Pages/Projects/Components/BulkComponents/bulkDescriptionEdits.js';
 
 // Bibliotheks-Bug (vue-virtual-scroller 2.0.1): DynamicScroller betreibt intern eine
 // zweite Scroller-Engine, reicht `page-mode` aber nur an die sichtbare weiter. Die interne
@@ -585,20 +587,67 @@ const events = ref([]);
 let localRowUid = 0;
 const nextLocalRowUid = () => `local-${++localRowUid}`;
 
+// --- "Zuletzt bearbeitet"-Markierung (blau)
+// Ein Speichervorgang = ein Satz blauer Zeilen. Gefüttert wird die Markierung aus
+// ZWEI Quellen mit demselben Server-updated_at: der eigenen Save-Response (sofort,
+// kein Warten auf den eigenen Broadcast-Roundtrip) und den Broadcasts anderer
+// Sessions. Ein deutlich neuerer Zeitstempel ersetzt den Satz, Zeitstempel innerhalb
+// des Toleranzfensters gehören zum selben Vorgang (Multi-Edit-Broadcasts driften um
+// Sekunden auseinander) und ergänzen ihn, ältere Nachzügler werden ignoriert —
+// vorher wurde der Satz bei jedem Broadcast geleert und per striktem
+// updated_at-Stringvergleich neu aufgebaut (initial geladene Zeilen haben gar kein
+// updated_at → Marker sprangen verspätet und unvollständig um).
+const EDIT_BATCH_TOLERANCE_MS = 3000;
+let lastEditStampMs = 0;
+const markRowEdited = (eventId, updatedAt) => {
+    if (!eventId) return;
+    const ts = Date.parse(updatedAt ?? '') || Date.now();
+    if (ts > lastEditStampMs + EDIT_BATCH_TOLERANCE_MS) {
+        // Neuer Speichervorgang → Markierung komplett ersetzen
+        lastEditEventIds.value = [eventId];
+        lastEditStampMs = ts;
+        return;
+    }
+    if (ts >= lastEditStampMs - EDIT_BATCH_TOLERANCE_MS) {
+        // Gleicher Speichervorgang (z.B. Multi-Edit) → Zeile ergänzen
+        if (!lastEditEventIds.value.includes(eventId)) {
+            lastEditEventIds.value.push(eventId);
+        }
+        lastEditStampMs = Math.max(lastEditStampMs, ts);
+    }
+    // Älter als das Fenster → veralteter Nachzügler, Markierung unverändert lassen
+};
+provide('bulkMarkRowEdited', markRowEdited);
+
+// Gleiches Batch-Prinzip für die pinke "Neu"-Markierung: ein Erstellvorgang
+// (Einzel-Create oder Kopien-Serie) = ein Satz pinker Zeilen. Die eigenen
+// Response-Pfade räumen alte isNew-Flags bereits selbst und melden hier nur den
+// Server-created_at ihres Batches an — Broadcasts fremder Creates räumen dann
+// alte pinke Zeilen, statt sie endlos zu akkumulieren, und Broadcasts des
+// EIGENEN Batches (gleiches Zeitfenster) lassen die frisch gesetzten stehen.
+let lastCreateStampMs = 0;
+const bumpCreateStamp = (createdAt) => {
+    const ts = Date.parse(createdAt ?? '') || Date.now();
+    lastCreateStampMs = Math.max(lastCreateStampMs, ts);
+};
+const onBroadcastRowCreated = (event) => {
+    const ts = Date.parse(event?.created_at ?? '') || Date.now();
+    if (ts > lastCreateStampMs + EDIT_BATCH_TOLERANCE_MS) {
+        // Neuer Erstellvorgang → alte "Neu"-Markierungen räumen
+        events.value.forEach(e => {
+            if (e.isNew && e.id !== event.id) e.isNew = false;
+        });
+    }
+    lastCreateStampMs = Math.max(lastCreateStampMs, ts);
+};
+
 // --- BulkEventsBroadcastUpdater Integration
 useBulkEventsBroadcastUpdater(events, computed(() => props.project?.id), {
     onEvent: (event, action) => {
-        // add event id if not existing in lastEditEventIds
         if (action === 'updated') {
-            lastEditEventIds.value = [];
-
-            // add all event ids in lastEditEventIds where are the same update_at timestamp as the updated event
-            const sameUpdatedEvents = events.value.filter(e => e.updated_at === event.updated_at);
-            sameUpdatedEvents.forEach(e => {
-                if (!lastEditEventIds.value.includes(e.id)) {
-                    lastEditEventIds.value.push(e.id);
-                }
-            });
+            markRowEdited(event.id, event.updated_at);
+        } else if (action === 'created') {
+            onBroadcastRowCreated(event);
         }
     }
 });
@@ -716,7 +765,9 @@ const persistNewEventRow = (base) => {
         .then(({data}) => {
             const idx = events.value.findIndex(e => e.localUid === base.localUid);
             if (data?.event?.id) {
+                bumpCreateStamp(data.event.created_at);
                 const row = {...mapPayloadToBulkRow(data.event), isNew: true};
+                rekeyDescriptionEdit(base.localUid, row.id);
                 if (idx !== -1) {
                     events.value[idx] = row;
                 } else {
@@ -736,7 +787,8 @@ const persistNewEventRow = (base) => {
         });
 };
 
-const toISO = (d) => d.toISOString().split('T')[0];
+// lokales Datum: Zeilen entstehen aus new Date() bzw. werden lokal (setDate/setMonth) verschoben
+const toISO = (d) => toYmd(d);
 const formatFullDate = (iso) => new Date(iso).toLocaleDateString('de-DE', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
 });
@@ -945,48 +997,19 @@ const mapBulkEventToModalEvent = (e) => {
     };
 };
 
-const onOpenEventComponent = async (payload) => {
-    // Resolve the event id first
+// Das Termin-Modal wird aus den Bulk-Daten befüllt (einen JSON-Endpunkt für Einzeltermine gibt es nicht).
+const onOpenEventComponent = (payload) => {
     const id = (payload && typeof payload === 'object') ? payload.id : payload;
-    const fallbackModel = () => {
-        if (payload && typeof payload === 'object') {
-            return (payload.start || payload.end) ? payload : mapBulkEventToModalEvent(payload);
-        }
+    let model = null;
+    if (payload && typeof payload === 'object') {
+        model = (payload.start || payload.end) ? payload : mapBulkEventToModalEvent(payload);
+    } else {
         const found = events.value.find(e => e.id == id) ?? null; // loose equality to handle string/number
-        return found ? ((found.start || found.end) ? found : mapBulkEventToModalEvent(found)) : null;
-    };
-
-    try {
-        isLoading.value = true;
-        if (!id) throw new Error('Missing event id');
-        const {data} = await axios.get(route('events.show.json', {event: id}));
-        // Laravel JSON Resource may wrap payload under data
-        const payloadData = data?.data ?? data;
-        if (props.project) payloadData.project = props.project;
-        // Fix: ensure multi-day end date is respected when opening modal from bulk list
-        try {
-            const fb = fallbackModel();
-            if (fb?.start && fb?.end) {
-                const sd = String(fb.start).slice(0, 10);
-                const ed = String(fb.end).slice(0, 10);
-                if (sd && ed && sd !== ed) {
-                    payloadData.start = fb.start;
-                    payloadData.end = fb.end;
-                    payloadData.allDay = fb.allDay;
-                }
-            }
-        } catch { /* ignore */
-        }
-        eventToEdit.value = payloadData;
-        eventComponentIsVisible.value = true;
-    } catch (e) {
-        const model = fallbackModel();
-        if (model && props.project) model.project = props.project;
-        eventToEdit.value = model;
-        eventComponentIsVisible.value = !!model;
-    } finally {
-        isLoading.value = false;
+        model = found ? ((found.start || found.end) ? found : mapBulkEventToModalEvent(found)) : null;
     }
+    if (model && props.project) model.project = props.project;
+    eventToEdit.value = model;
+    eventComponentIsVisible.value = !!model;
 };
 
 const onEventComponentClosed = () => {
@@ -1005,7 +1028,7 @@ const addEmptyEvent = () => {
     let newDate = new Date();
     if (events.value.length > 0) {
         const last = events.value[events.value.length - 1];
-        newDate = new Date(last.day);
+        newDate = parseYmd(last.day) ?? new Date(last.day);
         newDate.setDate(newDate.getDate() + 1);
     }
 
@@ -1060,7 +1083,7 @@ const addEmptyEventForGroup = (groupRow) => {
         const lastEventInGroup = groupEvents[groupEvents.length - 1];
         baseEvent = lastEventInGroup;
 
-        const parsed = lastEventInGroup?.day ? new Date(lastEventInGroup.day) : null;
+        const parsed = lastEventInGroup?.day ? (parseYmd(lastEventInGroup.day) ?? new Date(lastEventInGroup.day)) : null;
         if (parsed && !Number.isNaN(parsed.getTime())) {
             newDate = parsed;
             // When sorting by day, create event on the same day, otherwise add +1 day
@@ -1128,7 +1151,7 @@ const createCopyByEventWithData = (event) => {
     if (!props.isInModal && isCreatingEvent.value) return;
     lastUsedCopyCount.value = event.copyCount;
 
-    let cursor = new Date(event.day);
+    let cursor = parseYmd(event.day) ?? new Date(event.day);
     const createdEvents = [];
     const spanDays = (() => {
         try {
@@ -1144,7 +1167,7 @@ const createCopyByEventWithData = (event) => {
         if (event.copyType.type === 'daily') cursor.setDate(cursor.getDate() + 1);
         else if (event.copyType.type === 'weekly') cursor.setDate(cursor.getDate() + 7);
         else if (event.copyType.type === 'monthly') cursor.setMonth(cursor.getMonth() + 1);
-        else if (event.copyType.type === 'same_day') cursor = new Date(event.day);
+        else if (event.copyType.type === 'same_day') cursor = parseYmd(event.day) ?? new Date(event.day);
 
         const endCursor = new Date(cursor);
         endCursor.setDate(endCursor.getDate() + spanDays);
@@ -1200,6 +1223,7 @@ const createCopyByEventWithData = (event) => {
                     const idx = events.value.findIndex(e => e.localUid === clone.localUid);
                     const payload = stored[i];
                     if (payload?.id) {
+                        bumpCreateStamp(payload.created_at);
                         const row = {...mapPayloadToBulkRow(payload), isNew: true};
                         if (idx !== -1) events.value[idx] = row;
                         else upsertEventRowFromResponse(payload, {markNew: false});
@@ -1467,6 +1491,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+    resetDescriptionEdits();
     window.removeEventListener('resize', updateBulkFunctionBarHeight);
     window.removeEventListener('scroll', onScrollOrResize);
     window.removeEventListener('resize', onScrollOrResize);

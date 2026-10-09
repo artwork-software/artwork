@@ -77,7 +77,7 @@ readonly class PresetShiftService
         return $duplicatedPresetShift;
     }
 
-    public function updateDescription(string $description, PresetShift $presetShift): PresetShift|Model
+    public function updateDescription(?string $description, PresetShift $presetShift): PresetShift|Model
     {
         $presetShift->description = $description;
         return $this->presetShiftRepository->save($presetShift);

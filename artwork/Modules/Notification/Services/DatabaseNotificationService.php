@@ -14,7 +14,7 @@ class DatabaseNotificationService
      * Buttons that mark a notification as "passive" / archivable. A notification may only be
      * archived (bulk or single) when ALL of its buttons are within this set – otherwise it still
      * requires an explicit user action (accept/decline/answer ...) and must stay unread.
-     * Kept in sync with the frontend filter in NotificationSectionComponent / NotificationBlock.
+     * Frontend-Spiegel: NotificationComponents/archivableButtons.js (Paritätstest).
      */
     public const ARCHIVABLE_BUTTONS = [
         'showInTasks',
@@ -28,6 +28,12 @@ class DatabaseNotificationService
         'answer',
         'change_request',
         'event_delete',
+        'show_in_calendar',
+        // Budget-Prüfanfrage: verschwindet beim Erledigen/Zurückziehen, lässt sich aber auch so ablegen
+        'calculation_check',
+        'delete_request',
+        'material_issue_return_confirm',
+        'material_issue_return_decline',
     ];
 
     public function __construct(
@@ -57,10 +63,12 @@ class DatabaseNotificationService
         $now = $this->carbonService->getNow();
         $archived = 0;
 
-        $query = $user->notifications()->whereNull('read_at');
+        // reorder(): notifications() sortiert per latest() nach created_at; chunkById hängt seine
+        // id-Sortierung nur dahinter – mit zufälligen UUIDs übersprang der id-Cursor dann Einträge
+        $query = $user->notifications()->reorder()->whereNull('read_at');
 
         if ($groupType !== null) {
-            $query->where('data->groupType', $groupType);
+            $query->where('groupType', $groupType);
         }
 
         $query->select(['id', 'data'])
@@ -109,8 +117,17 @@ class DatabaseNotificationService
     }
 
     /**
-     * @throws Throwable
+     * In Blöcken, damit auch ein großer Rückstand keine riesige IN-Liste erzeugt.
+     *
+     * @param array<int, string> $notificationIds
      */
+    public function markSentInSummary(array $notificationIds, int $chunkSize = 1000): void
+    {
+        foreach (array_chunk($notificationIds, $chunkSize) as $chunk) {
+            DatabaseNotification::query()->whereKey($chunk)->update(['sent_in_summary' => true]);
+        }
+    }
+
     public function updateSentInSummary(DatabaseNotification $databaseNotification, bool $sent): DatabaseNotification
     {
         /**

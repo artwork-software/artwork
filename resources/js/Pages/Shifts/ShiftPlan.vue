@@ -919,7 +919,15 @@
                                     >
                                         <!-- Einheitliches Stundenformat "H:MM h" (signiert) wie das AZK-Badge; Fallback auf das alte "2h 0m" -->
                                         <!-- target_unknown: kein Arbeitszeitmuster in der Woche -> "–" (Tooltip über kwCellTitle) -->
+                                        <!-- Arbeitszeitberechnung aus: geplante Stunden der Woche statt Differenz zum Soll -->
                                         <div
+                                            v-if="!workTimeAccountingEnabled"
+                                            class="font-lexend text-xs text-[var(--uo-text)]"
+                                        >
+                                            {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.planned_formatted ?? row.worker?.weeklyWorkingHours?.[day.weekNumber]?.planned ?? '–' }}
+                                        </div>
+                                        <div
+                                            v-else
                                             class="font-lexend text-xs"
                                             :class="row.worker?.weeklyWorkingHours?.[day.weekNumber] && !row.worker.weeklyWorkingHours[day.weekNumber].target_unknown
                                                 ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-[var(--uo-danger-text)]' : 'text-[var(--uo-success-text)]')
@@ -1117,6 +1125,8 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
+import {isWorkTimeAccountingEnabled} from '@/Helper/workTimeAccounting.js'
+import {messageForFailedRequest} from '@/Helper/appToast.js'
 
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftPlanOpenViolationsFilterNotice from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue'
@@ -1344,6 +1354,7 @@ const dayToShow = ref<any | null>(null)
 
 /* DP-07/2.20: Projektmodus — der ganze Projektblock (Tag+Raum+Projekt) wird pink
    umrandet, fremde/projektlose Blöcke abgedimmt. */
+const workTimeAccountingEnabled = computed<boolean>(() => isWorkTimeAccountingEnabled(usePage().props))
 const shiftPlanSettings = computed<any>(() => usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings)
 const projectModeActive = computed(() =>
     !!shiftPlanSettings.value?.use_project_time_period && !!shiftPlanSettings.value?.time_period_project_id
@@ -3140,6 +3151,10 @@ function kwHoursTooltip(row: any, day: any): string {
     const week = row?.worker?.weeklyWorkingHours?.[day?.weekNumber]
     if (!week) return ''
     const planned = week.planned_formatted ?? week.planned
+    if (!workTimeAccountingEnabled.value) {
+        // Arbeitszeitberechnung aus: kein Soll, nur die geplanten Stunden
+        return `${$t('Planned')} ${planned}`
+    }
     if (week.target_unknown) {
         // Soll unbekannt: mindestens ein Tag der Woche ohne gültiges Arbeitszeitmuster
         return `${$t('Planned')} ${planned} · ${$t('Target')} – · ${$t('No work time pattern stored')}`
@@ -3264,7 +3279,7 @@ async function toggleCraftStaffingFilter(craftId: number) {
             is_shift_plan: true,
             is_daily_view: false,
             show_only_not_fully_staffed_shifts: activate,
-        })
+        }, { skipErrorToast: true }) // Fehler zeigt dropFeedback
     } catch {
         dropFeedback.value = $t('Saving failed')
         return
@@ -4597,6 +4612,7 @@ async function toggleFullPeriodProjectAssignment(projectId: number, force = fals
                         worker_id: item.id,
                         group_id: existingGroupId,
                     },
+                    skipErrorToast: true,
                 }
             )
             showNotice('success', 'Removed', 'The project assignment was removed.')
@@ -4609,7 +4625,7 @@ async function toggleFullPeriodProjectAssignment(projectId: number, force = fals
                 full_period: true,
                 days: [],
                 force,
-            })
+            }, {skipErrorToast: true})
             showNotice('success', 'Assigned', 'The person was assigned to the entire project period.')
         }
 
@@ -4621,8 +4637,10 @@ async function toggleFullPeriodProjectAssignment(projectId: number, force = fals
             // Verbindliche Zuordnung trifft Abwesenheits-/Frei-Tage: Rückfrage mit Force-Option
             fullPeriodAbsenceWarning.value = { projectId, message: response.data.message ?? '' }
         } else {
+            // Einzige Fehlermeldung (Requests ohne globalen Toast): Feldfehler, sonst Grund aus dem Status
             const errors = response?.data?.errors
-            const message = errors ? Object.values(errors).flat()[0] : $t('Saving failed')
+            const reason = messageForFailedRequest(response?.status)
+            const message = errors ? Object.values(errors).flat()[0] : $t(reason ?? 'Saving failed')
             $toast?.error?.(message)
         }
         await refreshFullPeriodAssignedProjects().catch(() => {})
@@ -4831,8 +4849,6 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
                 const resolved = await resolveQualificationFor(shift)
                 if (!resolved) {
                     userForMultiEdit.value.shift_ids = Array.from(oldIds)
-                    const msg = $t('No matching qualification for this shift')
-                    $toast?.error?.(msg)
                     showNotice('error', 'Qualification required', 'This user does not have a matching qualification for this shift.')
                     throw new Error('no_qualification')
                 }
@@ -4847,8 +4863,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
             .catch((err) => {
                 userForMultiEdit.value.shift_ids = Array.from(oldIds)
                 if (err?.message !== 'no_qualification') {
-                    $toast?.error?.($t('Saving failed'))
-                    showNotice('error', 'Save failed', 'Something went wrong while saving. Please try again.')
+                    showMultiEditSaveError(err)
                 }
             })
             .finally(() => {
@@ -4866,8 +4881,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
         })
             .catch((err) => {
                 userForMultiEdit.value.shift_ids = Array.from(oldIds)
-                $toast?.error?.($t('Saving failed'))
-                showNotice('error', 'Save failed', 'Something went wrong while saving. Please try again.')
+                showMultiEditSaveError(err)
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)
@@ -5023,7 +5037,8 @@ async function persistAssign(shiftId: number, shiftQualificationId: number | nul
             removeFromShift: [],
         },
     }
-    return axios.post(route('shift.multi.edit.save'), payload)
+    // Fehler meldet die Mehrfachbearbeitung selbst (showMultiEditSaveError) – kein zweiter globaler Toast
+    return axios.post(route('shift.multi.edit.save'), payload, {skipErrorToast: true})
 }
 
 async function persistRemove(shiftId: number) {
@@ -5032,7 +5047,13 @@ async function persistRemove(shiftId: number) {
         userTypeId: userForMultiEdit.value.id,
         craft_abbreviation: userForMultiEdit.value.craft_abbreviation,
         shiftsToHandle: {assignToShift: [], removeFromShift: [shiftId]},
-    })
+    }, {skipErrorToast: true})
+}
+
+/** Eine Meldung je fehlgeschlagener Zuweisung – mit Grund, wenn der Status ihn hergibt (403, 404, …) */
+function showMultiEditSaveError(err: any) {
+    const reason = err?.isAxiosError ? messageForFailedRequest(err.response?.status) : null
+    showNotice('error', 'Save failed', reason ?? 'Something went wrong while saving. Please try again.')
 }
 
 function enqueueSave(taskFn: () => Promise<any>) {

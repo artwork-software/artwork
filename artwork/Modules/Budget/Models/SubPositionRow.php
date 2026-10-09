@@ -37,11 +37,17 @@ class SubPositionRow extends Model
         'commented' => 'boolean'
     ];
 
+    /**
+     * @return HasMany<ColumnCell, $this>
+     */
     public function cells(): HasMany
     {
         return $this->hasMany(ColumnCell::class, 'sub_position_row_id', 'id');
     }
 
+    /**
+     * @return HasMany<RowComment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(RowComment::class);

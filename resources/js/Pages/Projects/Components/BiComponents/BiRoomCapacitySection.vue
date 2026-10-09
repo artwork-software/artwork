@@ -67,7 +67,7 @@ import { IconExternalLink } from '@tabler/icons-vue';
 import { usePermission } from '@/Composeables/Permission.js';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
-import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useBiSaveFeedback, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     roomCapacities: { type: Array, default: () => [] },
@@ -97,7 +97,7 @@ const saveOverride = async (roomId, value) => {
     const ok = await biSave.run(
         () => axios.put(route('projects.bi.update-room-capacity', [props.projectId, roomId]), {
             capacity_override: value === '' ? null : Number(value),
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');

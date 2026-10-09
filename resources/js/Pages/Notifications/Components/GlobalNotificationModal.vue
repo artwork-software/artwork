@@ -198,7 +198,9 @@ export default {
 
                 this.globalNotificationForm.notificationImage = file;
 
-                if (this.globalNotification) {
+                // ohne vorhandene Meldung liefert das Backend {image_url: null} – das Objekt ist dann
+                // trotzdem „wahr“, editGlobalNotification lief mit id undefined und route() warf
+                if (this.globalNotification?.id) {
                     this.editGlobalNotification();
                 } else {
                     this.createGlobalNotification();

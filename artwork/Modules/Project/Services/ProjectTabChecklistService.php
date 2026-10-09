@@ -12,9 +12,17 @@ use Illuminate\Support\Facades\Auth;
 
 class ProjectTabChecklistService
 {
-    public function buildChecklistPayload(Project $project, ?ComponentInTab $componentInTab = null): array
-    {
-        $userId = Auth::id();
+    public function __construct(
+        private readonly ProjectComponentVisibilityService $projectComponentVisibilityService,
+    ) {
+    }
+
+    public function buildChecklistPayload(
+        Project $project,
+        ?ComponentInTab $componentInTab = null,
+        ?User $user = null
+    ): array {
+        $userId = $user?->id ?? Auth::id();
         $scope = $componentInTab?->scope ?? [];
 
         $openedChecklists = User::where('id', $userId)
@@ -25,8 +33,8 @@ class ProjectTabChecklistService
             ChecklistTemplate::all()
         )->resolve();
 
-        $publicChecklists = $this->getFilteredChecklists($project, $scope, false, $userId);
-        $privateChecklists = $this->getFilteredChecklists($project, $scope, true, $userId);
+        $publicChecklists = $this->getFilteredChecklists($project, $scope, false, $userId, $user);
+        $privateChecklists = $this->getFilteredChecklists($project, $scope, true, $userId, $user);
 
         return [
             'opened_checklists' => $openedChecklists,
@@ -36,16 +44,16 @@ class ProjectTabChecklistService
         ];
     }
 
-    public function buildAllChecklistsPayload(Project $project): array
+    public function buildAllChecklistsPayload(Project $project, ?User $user = null): array
     {
-        $userId = Auth::id();
+        $userId = $user?->id ?? Auth::id();
 
         $openedChecklists = User::where('id', $userId)
             ->first()
             ?->opened_checklists ?? [];
 
-        $publicAllChecklists = $this->getFilteredChecklists($project, [], false, $userId);
-        $privateAllChecklists = $this->getFilteredChecklists($project, [], true, $userId);
+        $publicAllChecklists = $this->getFilteredChecklists($project, [], false, $userId, $user);
+        $privateAllChecklists = $this->getFilteredChecklists($project, [], true, $userId, $user);
 
         return [
             'opened_checklists' => $openedChecklists,
@@ -54,8 +62,13 @@ class ProjectTabChecklistService
         ];
     }
 
-    private function getFilteredChecklists(Project $project, array $scope, bool $private, int $userId): array
-    {
+    private function getFilteredChecklists(
+        Project $project,
+        array $scope,
+        bool $private,
+        int $userId,
+        ?User $user = null
+    ): array {
         $query = $project->checklists()
             ->with(['users', 'tasks.task_users', 'tasks.user_who_done'])
             ->where('private', $private);
@@ -66,7 +79,15 @@ class ProjectTabChecklistService
             ->each(static fn ($checklist) => $checklist->setRelation('project', $project));
 
         if (!empty($scope)) {
-            $query->whereIn('tab_id', $scope);
+            // Tab-Auswahl der Komponente, ohne Tabs, die die Person nicht sehen darf
+            $query->whereIn(
+                'tab_id',
+                $user !== null
+                    ? $this->projectComponentVisibilityService->restrictScopeToVisibleTabs($user, $scope)
+                    : $scope
+            );
+        } elseif ($user !== null) {
+            $this->projectComponentVisibilityService->constrainToVisibleTabs($query, $user);
         }
 
         // Public checklists are visible to everyone who can view the component

@@ -59,6 +59,8 @@ class ThreeMonthAverageTargetService
         $workedDays = $user->workTimeBookings()
             ->whereBetween('booking_day', [$referenceStart->toDateString(), $referenceEnd->toDateString()])
             ->where('worked_hours', '>', 0)
+            // Nur Tagesbuchungen: eine manuelle Übernahme (+150 h) ist keine Arbeit an diesem Wochentag
+            ->where('name', 'like', 'daily_work_time_booking_%')
             ->get(['booking_day', 'worked_hours'])
             ->filter(static fn ($booking): bool => $booking->booking_day->dayOfWeek === $weekday)
             ->reject(static fn ($booking): bool => in_array(
@@ -74,6 +76,7 @@ class ThreeMonthAverageTargetService
 
         $user->individualTimes()
             ->individualByDateRange($referenceStart->toDateString(), $referenceEnd->toDateString())
+            ->where('full_day', false) // ganztägig = Tagessoll, keine 24 h Arbeit
             ->get(['start_date', 'end_date', 'working_time_minutes'])
             ->each(function ($individualTime) use (
                 $workedDays,

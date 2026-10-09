@@ -4,6 +4,7 @@ namespace Artwork\Modules\Holidays\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -63,6 +64,20 @@ class Holiday extends Model
         'casted_date',
     ];
 
+    protected static function booted(): void
+    {
+        // Eintägige Einträge ohne Enddatum (end_date ist im Formular optional) enden am Starttag;
+        // Kalender, Schichtplan-Listen und casted_date setzen ein Enddatum voraus.
+        static::saving(static function (self $holiday): void {
+            if ($holiday->end_date === null && $holiday->date !== null) {
+                $holiday->end_date = $holiday->date;
+            }
+        });
+    }
+
+    /**
+     * @return BelongsToMany<Subdivision, $this>
+     */
     public function subdivisions(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -98,6 +113,19 @@ class Holiday extends Model
     public static function defaultTreatAsSpecialDayFor(?string $type): bool
     {
         return self::normalizeType($type) === self::TYPE_PUBLIC;
+    }
+
+    /**
+     * Beginn eines jährlichen Eintrags im angegebenen Jahr. Einen 29.02. gibt es nur in Schaltjahren –
+     * sonst null, statt dass Carbon auf den 01.03. überläuft.
+     */
+    public static function yearlyStartIn(CarbonInterface $start, int $year): ?Carbon
+    {
+        if ($start->month === 2 && $start->day === 29 && !Carbon::create($year)->isLeapYear()) {
+            return null;
+        }
+
+        return Carbon::create($year, $start->month, $start->day)->startOfDay();
     }
 
     /**

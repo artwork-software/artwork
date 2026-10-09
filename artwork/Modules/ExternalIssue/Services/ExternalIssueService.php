@@ -255,10 +255,15 @@ class ExternalIssueService
         }
 
         // Early return frees the reserved quantity: cap the planned return
-        // date to today so availability calculations stop counting it.
-        $today = now()->startOfDay();
-        if ($issue->return_date !== null && $today->lt($issue->return_date)) {
-            $updateData['return_date'] = $today->toDateString();
+        // date to today so availability calculations stop counting it – but never
+        // before the issue date (would create a reversed period).
+        $oldReturnDate = $issue->return_date?->toDateString();
+        $earliestReturn = now()->startOfDay();
+        if ($issue->issue_date !== null && $earliestReturn->lt($issue->issue_date)) {
+            $earliestReturn = $issue->issue_date->copy()->startOfDay();
+        }
+        if ($issue->return_date !== null && $earliestReturn->lt($issue->return_date)) {
+            $updateData['return_date'] = $earliestReturn->toDateString();
         }
 
         $issue->update($updateData);
@@ -272,10 +277,13 @@ class ExternalIssueService
             'old' => [
                 'return_status' => $oldStatus,
                 'return_remarks' => $oldRemarks,
+                // vorgezogene Rückgabe überschreibt das geplante Datum – im Verlauf festhalten
+                'return_date' => $oldReturnDate,
             ],
             'attributes' => [
                 'return_status' => ExternalIssue::RETURN_STATUS_RETURNED,
                 'return_remarks' => $issue->return_remarks,
+                'return_date' => $issue->return_date?->toDateString(),
             ],
         ]);
 
@@ -329,7 +337,7 @@ class ExternalIssueService
             ->where('notifiable_type', User::class)
             ->where('notifiable_id', $issue->issued_by_id)
             ->where('data->type', NotificationEnum::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE->value)
-            ->where('data->modelId', $issue->id)
+            ->where('data->modelId', (string) $issue->id)
             ->get();
 
         foreach ($notifications as $notification) {

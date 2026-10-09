@@ -7,7 +7,11 @@ use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
@@ -26,6 +30,18 @@ final class ProjectSageInvoiceOverviewControllerTest extends FeatureTestCase
             'user' => 'sage',
             'password' => 'secret',
             'enabled' => true,
+        ]);
+
+        // Der Endpunkt setzt eine sichtbare Platzierung der Sage-Komponente voraus
+        ComponentInTab::create([
+            'project_tab_id' => ProjectTab::factory()->create(['visible_for_all' => true])->id,
+            'component_id' => Component::create([
+                'name' => 'Sage ' . uniqid(),
+                'type' => ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW->value,
+                'data' => [],
+                'special' => true,
+            ])->id,
+            'order' => 1,
         ]);
     }
 

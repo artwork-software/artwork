@@ -8,6 +8,7 @@ use Artwork\Modules\User\Http\Requests\UpdateUserContractAssignRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -124,10 +125,7 @@ class UserContractAssignController extends Controller
                 }
             });
 
-            // If the overtime rule settings changed, recompute so deadlines/status reflect the new period.
-            if ($request->has('overtime_rule_active') || $request->exists('overtime_compensation_period')) {
-                app(OvertimeService::class)->recomputeForUser($user);
-            }
+            $this->afterAccountSettingsChanged($user);
 
             // Neuprüfung läuft über UserContractAssign::booted() → ShiftRuleRevalidationService (ab valid_from)
             return back()->with(
@@ -159,8 +157,19 @@ class UserContractAssignController extends Controller
 
         $retroactive = self::isRetroactive($assign);
         $assign->delete();
+        $this->afterAccountSettingsChanged($user);
 
         return back()->with('success', self::successMessage(__('Contract period removed.'), $retroactive));
+    }
+
+    /**
+     * Vertrag/Muster geändert: Wochenwerte im Dienstplan neu rechnen lassen und Überstunden (Frist je Tag
+     * aus der Vertragshistorie) neu aufbauen. Bereits gebuchte Tage bucht das bewusst NICHT neu.
+     */
+    private function afterAccountSettingsChanged(User $user): void
+    {
+        app(WorkingHourCacheService::class)->forgetForEntity('user', $user->id);
+        app(OvertimeService::class)->recomputeForUser($user);
     }
 
     /**
@@ -175,6 +184,8 @@ class UserContractAssignController extends Controller
 
         return $base . ' ' . __(
             'The period starts in the past. Committed shifts in this period will be re-checked against the shift rules.'
+        ) . ' ' . __(
+            'Days already booked to the time account are not rebooked automatically – use “Rebook” in the work times if needed.'
         );
     }
 
@@ -188,6 +199,7 @@ class UserContractAssignController extends Controller
         }
 
         $workTime->delete();
+        $this->afterAccountSettingsChanged($user);
 
         return back()->with('success', __('Work time period removed.'));
     }

@@ -714,10 +714,12 @@
 
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
+import { toYmd } from "@/Helper/IsoWeek.js";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef, defineAsyncComponent } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
+import {isWorkTimeAccountingEnabled} from "@/Helper/workTimeAccounting.js";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -740,6 +742,7 @@ import ShiftPlanOpenViolationsFilterNotice from "@/Layouts/Components/ShiftPlanC
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import ShiftPlanViewSwitch from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanViewSwitch.vue";
 import axios from "axios";
+import { failedRequestMessage } from "@/Helper/appToast.js";
 import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
 import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
@@ -828,7 +831,7 @@ const loadProjectDayAssignments = async () => {
         projectDayAssignments.value = data.assignments ?? []
         projectAssignmentError.value = ''
     } catch (error: any) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+        projectAssignmentError.value = failedRequestMessage(error)
     }
 }
 
@@ -924,11 +927,11 @@ const acceptProjectWishBundle = async (bundle: any) => {
     projectAssignmentError.value = ''
     try {
         for (const repId of bundle.groupRepIds.values()) {
-            await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: repId }))
+            await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: repId }), {}, { skipErrorToast: true }) // Fehler steht über den Zuordnungen
         }
         await loadProjectDayAssignments()
     } catch (error: any) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+        projectAssignmentError.value = failedRequestMessage(error)
     } finally {
         projectAssignmentActionKey.value = null
     }
@@ -1036,24 +1039,25 @@ const onAssignmentRemovalConfirmed = async (confirmed: boolean) => {
                     project_id: props.project.id,
                     group_id: candidate.group.group_id,
                 },
+                skipErrorToast: true, // Fehler steht über den Zuordnungen
             })
         } else if (candidate.kind === 'single_day') {
             await axios.delete(
                 route('project-day-assignments.destroy', { projectDayAssignment: candidate.day.id }),
-                { params: { whole_group: false } }
+                { params: { whole_group: false }, skipErrorToast: true }
             )
         } else {
             // Personen-Bündel: alle Anlage-Gruppen der Person entfernen
             for (const repId of candidate.group.groupRepIds.values()) {
                 await axios.delete(
                     route('project-day-assignments.destroy', { projectDayAssignment: repId }),
-                    { params: { whole_group: true } }
+                    { params: { whole_group: true }, skipErrorToast: true }
                 )
             }
         }
         await loadProjectDayAssignments()
     } catch (error: any) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+        projectAssignmentError.value = failedRequestMessage(error)
     }
 }
 
@@ -1188,7 +1192,11 @@ const projectShiftExportTabs = computed(() => {
             exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT,
         ]
     }
-    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]
+    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT]
+    // Soll/Ist-Übersicht nur mit eingeschalteter Arbeitszeitberechnung
+    if (isWorkTimeAccountingEnabled(page.props)) {
+        tabs.push(exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT)
+    }
     // Gewerke-Verteilung enthält namentliche Stunden — Backend-Route verlangt dieselbe Permission
     if (can('can view shift worker hours') || is('artwork admin')) {
         tabs.push(exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT)
@@ -2156,7 +2164,7 @@ const changeDailyViewModeValue = (newValue: boolean, onSuccessCallback?: () => v
  * Shortcuts
  */
 const jumpToToday = () => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = toYmd(new Date())
     const patchDates = () => {
         router.patch(
             route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
@@ -2188,8 +2196,8 @@ const jumpToCurrentWeek = () => {
     router.patch(
         route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
         {
-            start_date: currentWeekStart.toISOString().slice(0, 10),
-            end_date: currentWeekEnd.toISOString().slice(0, 10),
+            start_date: toYmd(currentWeekStart),
+            end_date: toYmd(currentWeekEnd),
             isDailyView: true,
         },
         { preserveScroll: true, preserveState: false }
@@ -2205,8 +2213,8 @@ const jumpToCurrentMonth = () => {
         router.patch(
             route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
             {
-                start_date: monthStart.toISOString().slice(0, 10),
-                end_date: monthEnd.toISOString().slice(0, 10),
+                start_date: toYmd(monthStart),
+                end_date: toYmd(monthEnd),
                 isDailyView: true,
             },
             { preserveScroll: true, preserveState: false }

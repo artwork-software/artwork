@@ -162,16 +162,25 @@ class Project extends Model
         });
     }
 
+    /**
+     * @return HasMany<ArtistResidency, $this>
+     */
     public function artistResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'project_id', 'id');
     }
 
+    /**
+     * @return BelongsToMany<CrmContact, $this>
+     */
     public function crmContacts(): BelongsToMany
     {
         return $this->belongsToMany(CrmContact::class, 'crm_contact_project')->withTimestamps();
     }
 
+    /**
+     * @return BelongsToMany<CrmContact, $this>
+     */
     public function teamCrmContacts(): BelongsToMany
     {
         return $this->belongsToMany(CrmContact::class, 'crm_contact_project_team')
@@ -180,17 +189,26 @@ class Project extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return BelongsTo<CostCenter, $this>
+     */
     public function costCenter(): BelongsTo
     {
         return $this->belongsTo(CostCenter::class, 'cost_center_id', 'id', 'cost_center');
     }
 
 
+    /**
+     * @return BelongsToMany<EventType, $this>
+     */
     public function shiftRelevantEventTypes(): BelongsToMany
     {
         return $this->belongsToMany(EventType::class, 'project_shift_relevant_event_types');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     //@todo: fix phpcs error - refactor function name to shiftContact
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function shift_contact(): BelongsToMany
@@ -198,6 +216,9 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_shift_contacts');
     }
 
+    /**
+     * @return BelongsToMany<User, $this, ProjectUserPivot>
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
@@ -206,6 +227,9 @@ class Project extends Model
             ->without(['vacation', 'calender_settings']);
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     //@todo: fix phpcs error - refactor function name to accessBudget
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function access_budget(): BelongsToMany
@@ -215,6 +239,9 @@ class Project extends Model
             ->without(['vacation', 'calender_settings']);
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function writeUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
@@ -222,6 +249,9 @@ class Project extends Model
             ->without(['vacation', 'calender_settings']);
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     //@todo: fix phpcs error - refactor function name to deletePermissionUsers
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function delete_permission_users(): BelongsToMany
@@ -231,6 +261,9 @@ class Project extends Model
             ->without(['vacation', 'calender_settings']);
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function managerUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
@@ -238,26 +271,41 @@ class Project extends Model
             ->without(['vacation', 'calender_settings']);
     }
 
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);
     }
 
+    /**
+     * @return HasMany<Contract, $this>
+     */
     public function contracts(): HasMany
     {
         return $this->hasMany(Contract::class)->with(['tasks', 'company_type', 'contract_type', 'currency']);
     }
 
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);
     }
 
+    /**
+     * @return HasMany<Checklist, $this>
+     */
     public function checklists(): HasMany
     {
         return $this->hasMany(Checklist::class);
     }
 
+    /**
+     * @return HasMany<ProjectFile, $this>
+     */
     //@todo: fix phpcs error - refactor function name to projectFiles
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function project_files(): HasMany
@@ -265,6 +313,9 @@ class Project extends Model
         return $this->hasMany(ProjectFile::class);
     }
 
+    /**
+     * @return HasMany<Comment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class, 'project_id', 'id');
@@ -310,11 +361,17 @@ class Project extends Model
         return $relation;
     }
 
+    /**
+     * @return BelongsToMany<Room, $this>
+     */
     public function rooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'events');
     }
 
+    /**
+     * @return HasMany<Shift, $this>
+     */
     public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class, 'project_id', 'id');
@@ -330,16 +387,25 @@ class Project extends Model
         return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id', 'project_id', 'id')->with(['users']);
     }
 
+    /**
+     * @return HasOne<Table, $this>
+     */
     public function table(): HasOne
     {
         return $this->hasOne(Table::class);
     }
 
+    /**
+     * @return BelongsToMany<MoneySource, $this>
+     */
     public function moneySources(): BelongsToMany
     {
         return $this->belongsToMany(MoneySource::class, 'money_source_project');
     }
 
+    /**
+     * @return HasOne<ProjectState, $this>
+     */
     public function status(): HasOne
     {
         return $this->hasOne(
@@ -449,6 +515,9 @@ class Project extends Model
         return parent::refresh();
     }
 
+    /**
+     * @return HasOne<BiProjectData, $this>
+     */
     // biData/biEventData sind bewusst auf den Ist-Scope gefiltert: sämtliche
     // Bestandsaufrufer (Dashboard, Export, Projektliste) meinen Ist-Zahlen.
     // Plan-Zahlen laufen über die plan*-Relationen (BI-Ausbau Phase 3).
@@ -457,36 +526,57 @@ class Project extends Model
         return $this->hasOne(BiProjectData::class, 'project_id', 'id')->where('scope', 'actual');
     }
 
+    /**
+     * @return HasOne<BiProjectData, $this>
+     */
     public function planBiData(): HasOne
     {
         return $this->hasOne(BiProjectData::class, 'project_id', 'id')->where('scope', 'plan');
     }
 
+    /**
+     * @return HasMany<BiEventData, $this>
+     */
     public function biEventData(): HasMany
     {
         return $this->hasMany(BiEventData::class, 'project_id', 'id')->where('scope', 'actual');
     }
 
+    /**
+     * @return HasMany<BiEventData, $this>
+     */
     public function planBiEventData(): HasMany
     {
         return $this->hasMany(BiEventData::class, 'project_id', 'id')->where('scope', 'plan');
     }
 
+    /**
+     * @return HasMany<BiProjectRoomCapacity, $this>
+     */
     public function biRoomCapacities(): HasMany
     {
         return $this->hasMany(BiProjectRoomCapacity::class, 'project_id', 'id');
     }
 
+    /**
+     * @return HasMany<BiAudienceCategoryValue, $this>
+     */
     public function biAudienceCategoryValues(): HasMany
     {
         return $this->hasMany(BiAudienceCategoryValue::class, 'project_id', 'id');
     }
 
+    /**
+     * @return HasMany<BiSnapshot, $this>
+     */
     public function biSnapshots(): HasMany
     {
         return $this->hasMany(BiSnapshot::class, 'project_id', 'id');
     }
 
+    /**
+     * @return HasMany<BiTimeEffort, $this>
+     */
     public function biTimeEfforts(): HasMany
     {
         return $this->hasMany(BiTimeEffort::class, 'project_id', 'id');

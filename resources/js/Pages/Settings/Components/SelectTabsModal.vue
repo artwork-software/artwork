@@ -1,7 +1,6 @@
 <script>
-import {IconX} from "@tabler/icons-vue";
+import {IconChevronDown, IconCircleCheck, IconX} from "@tabler/icons-vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import {
     Dialog,
     DialogPanel,
@@ -22,7 +21,6 @@ import {
 } from '@headlessui/vue'
 export default {
     name: "SelectTabsModal",
-    mixins: [IconLib],
     components: {
         SwitchLabel,
         Switch,
@@ -33,6 +31,8 @@ export default {
         TransitionChild,
         TransitionRoot,
         IconX, DialogPanel,
+        IconChevronDown,
+        IconCircleCheck,
         Listbox,
         ListboxButton,
         ListboxOptions,

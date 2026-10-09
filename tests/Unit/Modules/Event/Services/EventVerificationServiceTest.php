@@ -32,6 +32,8 @@ final class EventVerificationServiceTest extends TestCase
             $mock->shouldReceive('setNotificationTo')->andReturnSelf();
             $mock->shouldReceive('createNotification')->andReturnNull();
             $mock->shouldReceive('setEventId')->andReturnSelf();
+            $mock->shouldReceive('clearNotificationData')->andReturnNull();
+            $mock->shouldReceive('deleteUnhandledRoomRequestNotificationsExcept')->andReturnNull();
             $mock->shouldReceive('setRoomId')->andReturnSelf();
             $mock->shouldReceive('setButtons')->andReturnSelf();
             $mock->shouldReceive('setNotificationKey')->andReturnSelf();

@@ -15,30 +15,31 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 text-xs/[18px] text-text-subtle" v-if="notification.data?.description[0]">
-                        {{ notification.data?.description[0].text }}
-                        {{ $t('from')}}
-                        <UserPopoverTooltip :id="notification.id" :user="notification.data.created_by"
-                                        height="5" width="5"/>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs/[18px] text-text-subtle" v-else-if="notification.data.created_by">
+                    <!-- Zeitpunkt immer, „von“ nur mit bekannter Person (Scheduler/Externe: ohne). Kontaktdaten
+                         lädt der Tooltip rechtegeprüft nach – im Payload stehen nur Name und Foto. -->
+                    <div class="flex items-center gap-2 text-xs/[18px] text-text-subtle" v-if="notification.data?.created_at || notification.data?.created_by">
                         {{ notification.data.created_at }}
-                        {{ $t('from')}}
-                        <UserPopoverTooltip :id="notification.id" :user="notification.data?.created_by" height="5"
-                                        width="5"/>
+                        <template v-if="notification.data?.created_by">
+                            {{ $t('from')}}
+                            <UserPopoverTooltip :id="notification.id" :user="notification.data.created_by"
+                                                lazy-load height="5" width="5"/>
+                        </template>
                     </div>
                 </div>
                 <div class="text-xs/[18px] text-text-subtle mt-2 flex gap-1 items-center" v-if="notification.data?.description">
                     <div v-for="(description, index) in notification.data?.description" class="divide-x">
-                        <p v-if="description.type !== 'comment'">
-                            <a :href="description.href" v-if="description.type === 'link'"
+                        <p v-if="description?.type !== 'comment' && description?.title">
+                            <!-- auch Textzeilen mit Ziel sind klickbar (Schicht-, Konflikt-, Regelmeldungen) -->
+                            <a :href="description.href" v-if="description.href"
                                class="text-accent-600">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>
                         </p>
                     </div>
                 </div>
-                <p v-if="notification.data?.description[5]" class="mt-2 text-xs/[18px] text-text-subtle">
-                    {{ notification.data?.description[5]?.title }}
+                <!-- Kommentare (z. B. Begründung einer Absage) eigene Zeile – früher fest description[5] -->
+                <p v-for="(comment, index) in commentRows" :key="'comment-' + index"
+                   class="mt-2 text-xs/[18px] text-text-subtle italic">
+                    „{{ comment.title }}“
                 </p>
                 <span v-if="notification.data.isModified" class="text-special-orange bg-special-orange-surface px-2 py-1 rounded text-xs font-medium">
                     {{ $t('modified') }}
@@ -68,6 +69,7 @@
                                      @acceptRoomRequest="acceptRoomRequest"
                                      @openDialogModal="loadEventDataForDialog"
                                      @deleteEvent="showDeleteConfirmModal = true"
+                                     @see-shift="openShift"
                                      @openProjectCalculation="openProjectBudget(notification.data?.projectId)"
                                      @open-event-without-room-modal="loadEventDataForEventWithoutRoom"
                                      @deleteNotification="setReadAt"
@@ -78,15 +80,24 @@
                                      @confirm-material-return="showMaterialReturnConfirmModal = true"
                                      @decline-material-return="declineMaterialReturn"
                 />
+                <Link v-if="notification.data?.type && !isDashboard"
+                      :href="route('notifications.index', { tab: 'settings', type: notification.data.type })"
+                      class="mt-2 inline-block text-xs text-text-subtle hover:text-accent-600 underline-offset-2 hover:underline focus-visible:opacity-100"
+                      :class="notification.hovered ? '' : 'md:opacity-0'">
+                    {{ $t('Settings for this type') }}
+                </Link>
             </div>
         </div>
-        <img @click="setReadAt"
-             v-show="notification.hovered"
-             v-if="!isArchive && notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift', 'accept', 'decline', 'answerDialog', 'answer', 'change_request', 'event_delete', 'show_in_calendar', 'material_issue_return_confirm', 'material_issue_return_decline'].includes(button)).length === 0"
-             src="/Svgs/IconSvgs/icon_archive_white.svg"
-             class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-accent-600 rounded-full"
-             aria-hidden="true"
-             alt=""/>
+        <!-- immer sichtbar (auch auf Touch-Geräten), bei Hover hervorgehoben -->
+        <button v-if="!isArchive && isArchivable(notification.data.buttons)"
+                type="button"
+                class="ml-1 shrink-0 rounded-full bg-accent-600 p-1 transition-opacity"
+                :class="notification.hovered ? 'opacity-100' : 'opacity-40 hover:opacity-100 focus-visible:opacity-100'"
+                :aria-label="$t('Archive notification')"
+                :title="$t('Archive notification')"
+                @click="setReadAt">
+            <img src="/Svgs/IconSvgs/icon_archive_white.svg" class="h-4 w-4" alt="" aria-hidden="true"/>
+        </button>
     </div>
     <ProjectHistoryWithoutBudgetComponent
         v-if="showProjectHistory"
@@ -102,8 +113,9 @@
         :project_history="historyObjects"
         @closed="showEventHistory = false" />
     <DeclineEventModal
-        :request-to-decline="event"
+        :request-to-decline="eventToDecline"
         :event-types="eventTypes"
+        preserve-state
         @closed="closeDeclineEventModal"
         @declined="finishDeclineEvent"
         v-if="showDeclineEventModal"
@@ -144,6 +156,7 @@
         :eventTypes="eventTypes"
         :rooms="rooms"
         :eventsWithoutRoom="[event]"
+        :event-statuses="eventStatuses"
         :isAdmin="this.hasAdminRole()"
         :removeNotificationOnAction="true"
         :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
@@ -166,8 +179,9 @@
 
 <script>
 import {IconChevronRight} from "@tabler/icons-vue";
+import { isArchivable } from "@/Layouts/Components/NotificationComponents/archivableButtons.js";
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
-import {router, usePage} from "@inertiajs/vue3";
+import {Link, router, usePage} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
@@ -185,6 +199,7 @@ import { provide } from 'vue';
 export default {
     name: "NotificationBlock",
     components: {
+        Link,
         UserPopoverTooltip,
         MaterialIssueReturnConfirmModal,
         EventsWithoutRoomComponent,
@@ -229,26 +244,40 @@ export default {
             showDeclineModal: false,
             showProjectHistory: false,
             showDeclineEventModal: false,
+            // Stand beim Öffnen: die Seiten-Prop `event` teilen sich alle Blöcke – lädt ein anderer
+            // Block nach, darf die Absage nicht plötzlich dessen Termin treffen
+            eventToDecline: null,
             createEventComponentIsVisible: false,
             showDeleteConfirmModal: false,
             showEventWithoutRoomComponent: false,
             showRoomRequestDialogComponent: false,
             showUserVacationHistory: false,
             showEventHistory: false,
-            showMaterialReturnConfirmModal: false
+            showMaterialReturnConfirmModal: false,
+            answering: false,
         }
     },
-    computed: {},
+    computed: {
+        commentRows() {
+            const description = this.notification.data?.description;
+            return description
+                ? Object.values(description).filter((row) => row?.type === 'comment' && row?.title)
+                : [];
+        },
+    },
     methods: {
+        isArchivable,
         declineMaterialReturn() {
-            if (!this.notification.data?.modelId) {
+            if (!this.notification.data?.modelId || this.answering) {
                 return;
             }
+            this.answering = true;
             router.post(
                 route('extern-issue-of-material.return-decline', this.notification.data.modelId),
                 {},
                 {
                     preserveScroll: true,
+                    onFinish: () => { this.answering = false; },
                 }
             );
         },
@@ -278,77 +307,82 @@ export default {
                 }
             );
         },
-        openHistory() {
+        /**
+         * Dialog-Daten nachladen (nur diese Props) und den Dialog erst öffnen, wenn sie da sind.
+         * Fehlt der Termin (gelöscht, kein Zugriff), Hinweis statt leerem Dialog.
+         */
+        loadDialogData(data, open) {
             router.reload({
-                data: {
-                    showHistory: true,
-                    historyType: this.notification.data?.historyType,
-                    modelId: this.notification.data?.modelId,
+                data,
+                only: ['event', 'historyObjects', 'wantedSplit'],
+                preserveScroll: true,
+                onSuccess: () => {
+                    if (data.eventId && String(this.event?.id ?? '') !== String(data.eventId)) {
+                        this.$toast.error(this.$t('The entry no longer exists. Please reload the page.'));
+                        return;
+                    }
+                    open();
                 },
-                onFinish: () => {
-                    if (this.notification.data?.historyType === 'project') {
-                        this.showProjectHistory = true;
-                    }
-                    if (this.notification.data?.historyType === 'vacations') {
-                        this.showUserVacationHistory = true;
-                    }
-                    if (this.notification.data?.historyType === 'event') {
-                        this.showEventHistory = true;
-                    }
+            });
+        },
+        openHistory() {
+            const historyType = this.notification.data?.historyType;
+            this.loadDialogData(
+                {showHistory: true, historyType, modelId: this.notification.data?.modelId},
+                () => {
+                    this.showProjectHistory = historyType === 'project';
+                    this.showUserVacationHistory = historyType === 'vacations';
+                    this.showEventHistory = historyType === 'event';
                 }
-            })
+            );
         },
         loadEventDataForDecline() {
-            router.reload({
-                data: {
-                    openDeclineEvent: true,
-                    eventId: this.notification.data?.eventId
-                },
-                onFinish: () => {
-                    this.showDeclineEventModal = true
+            this.loadDialogData(
+                {openDeclineEvent: true, eventId: this.notification.data?.eventId},
+                () => {
+                    this.eventToDecline = this.event;
+                    this.showDeclineEventModal = true;
                 }
-            })
+            );
         },
         closeDeclineEventModal() {
             this.showDeclineEventModal = false;
         },
         loadEventDataForEditAndAccept() {
-            router.reload({
-                data: {
-                    openEditEvent: true,
-                    eventId: this.notification.data?.eventId
-                },
-                onFinish: () => {
-                    this.createEventComponentIsVisible = true;
-                }
-            });
+            this.loadDialogData(
+                {openEditEvent: true, eventId: this.notification.data?.eventId},
+                () => { this.createEventComponentIsVisible = true; }
+            );
         },
         loadEventDataForDialog() {
-            router.reload({
-                data: {
-                    openEditEvent: true,
-                    eventId: this.notification.data?.eventId
-                },
-                onFinish: () => {
-                    this.showRoomRequestDialogComponent = true;
-                }
-            });
+            this.loadDialogData(
+                {openEditEvent: true, eventId: this.notification.data?.eventId},
+                () => { this.showRoomRequestDialogComponent = true; }
+            );
         },
         loadEventDataForEventWithoutRoom(){
-            router.reload({
-                data: {
-                    openEditEvent: true,
-                    eventId: this.notification.data?.eventId
-                },
-                onFinish: () => {
-                    this.showEventWithoutRoomComponent = true
-                }
-            })
+            this.loadDialogData(
+                {openEditEvent: true, eventId: this.notification.data?.eventId},
+                () => { this.showEventWithoutRoomComponent = true; }
+            );
+        },
+        /** „Schicht ansehen“: erstes Ziel aus der Beschreibung, sonst Schichten-Tab des Projekts */
+        openShift() {
+            const target = this.descriptionRows().find((row) => row.href);
+            if (target) {
+                window.location.href = target.href;
+                return;
+            }
+            if (this.notification.data?.projectId) {
+                this.openProjectShift(this.notification.data.projectId, this.notification.data?.eventId, this.notification.data?.shiftId);
+            }
         },
         onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
 
-            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
+            // nur bei echtem Speichern (true) – „Abbrechen“ lieferte früher das Klick-Event (truthy)
+            // und löschte die Benachrichtigung
+            if (bool === true && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -360,7 +394,9 @@ export default {
         onDialogComponentClose(bool) {
             this.showRoomRequestDialogComponent = false;
 
-            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
+            // nur bei echtem Speichern (true) – „Abbrechen“ lieferte früher das Klick-Event (truthy)
+            // und löschte die Benachrichtigung
+            if (bool === true && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -372,7 +408,9 @@ export default {
         onEventWithoutRoomComponentClose(bool) {
             this.showEventWithoutRoomComponent = false;
 
-            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
+            // nur bei echtem Speichern (true) – „Abbrechen“ lieferte früher das Klick-Event (truthy)
+            // und löschte die Benachrichtigung
+            if (bool === true && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -392,59 +430,65 @@ export default {
             }
         },
         deleteEvent() {
-            if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
-                router.post(route('events.delete.by.notification', this.notification.data?.eventId), {
-                    notificationKey: this.notification.data?.notificationKey
+            // Schlüssel ist optional (räumt nur die Benachrichtigung mit auf) – ohne ihn passierte vorher
+            // nichts und der Bestätigungsdialog blieb offen
+            if (this.notification.data?.eventId) {
+                router.post(route('events.delete.by.notification', this.notification.data.eventId), {
+                    notificationKey: this.notification.data?.notificationKey ?? ''
                 }, {
                     preserveScroll: true,
                     preserveState: true
                 });
-                this.showDeleteConfirmModal = false;
             }
+            this.showDeleteConfirmModal = false;
         },
         checkNotificationKey(key){
-            return key !== null && key.length > 0;
+            // ältere Einträge haben gar keinen Schlüssel (undefined) – vorher TypeError bei .length
+            return typeof key === 'string' && key.length > 0;
         },
         openProjectBudget(projectId) {
-            if (this.first_project_budget_tab_id) {
-                window.location.href = route(
-                    'projects.tab',
-                    {
-                        project: projectId,
-                        projectTab: this.first_project_budget_tab_id
-                    }
-                );
+            const projectTab = this.first_project_budget_tab_id ?? this.$page.props.first_project_budget_tab_id;
+            if (projectId && projectTab) {
+                window.location.href = route('projects.tab', {project: projectId, projectTab});
             }
         },
+        /**
+         * Beschreibungszeilen als Liste – gespeichert ist meist ein Objekt mit Schlüsseln 1, 2, …
+         * (vorher .find() direkt darauf → TypeError, „Zum Projekt“ tat nichts).
+         */
+        descriptionRows() {
+            const description = this.notification.data?.description;
+            return description ? Object.values(description).filter(Boolean) : [];
+        },
         openProject(projectId) {
-            // Use the project link from the notification description if available (contains correct tab)
-            const desc = this.notification.data?.description || [];
-            const projectLink = desc.find(d => d.type === 'link' && d.href);
+            // Link aus der Beschreibung (zeigt auf den passenden Reiter), sonst ein vorhandener Reiter
+            const projectLink = this.descriptionRows().find((row) => row.type === 'link' && row.href);
             if (projectLink?.href) {
                 window.location.href = projectLink.href;
                 return;
             }
-            // Fallback: navigate to project main page
-            if (projectId) {
-                window.location.href = route('projects.tab', {
-                    project: projectId,
-                    projectTab: 1
-                });
+            const props = this.$page.props;
+            const projectTab = this.notification.data?.groupType === 'SHIFTS'
+                ? (this.first_project_shift_tab_id ?? props.first_project_shift_tab_id)
+                : (props.first_project_tab_id ?? this.first_project_calendar_tab_id ?? props.first_project_calendar_tab_id);
+            // vorher fest Reiter-ID 1 – die gibt es nicht in jeder Instanz (404)
+            if (projectId && projectTab) {
+                window.location.href = route('projects.tab', {project: projectId, projectTab});
             }
         },
         openProjectShift(projectId, eventId, shiftId) {
-            if (this.first_project_shift_tab_id) {
-                window.location.href = route(
-                    'projects.tab',
-                    {
-                        project: projectId,
-                        projectTab: this.first_project_shift_tab_id
-                    }
-                ) + '?eventId=' + eventId + '&shiftId=' + shiftId;
+            const projectTab = this.first_project_shift_tab_id ?? this.$page.props.first_project_shift_tab_id;
+            if (!projectId || !projectTab) {
+                return;
             }
+            // nur vorhandene IDs anhängen (vorher „?eventId=undefined&shiftId=undefined“)
+            const query = new URLSearchParams(
+                Object.entries({eventId, shiftId}).filter(([, value]) => value !== null && value !== undefined)
+            ).toString();
+            window.location.href = route('projects.tab', {project: projectId, projectTab}) + (query ? '?' + query : '');
         },
         openProjectTasks(taskId){
-            window.location.href = route('tasks.own') + '?taskId=' + taskId;
+            window.location.href = route('tasks.own') + (taskId ? '?taskId=' + taskId : '');
         },
         showInCalendar() {
             if (this.notification.data?.eventId) {
@@ -452,7 +496,8 @@ export default {
             }
         },
         acceptRoomRequest() {
-            if (this.notification.data?.eventId) {
+            if (this.notification.data?.eventId && !this.answering) {
+                this.answering = true;
                 router.put(
                     route('events.accept', { event: this.notification.data.eventId }),
                     { accepted: true },
@@ -464,7 +509,8 @@ export default {
                                     notificationKey: this.notification.data.notificationKey
                                 }, { preserveScroll: true, preserveState: true });
                             }
-                        }
+                        },
+                        onFinish: () => { this.answering = false; },
                     }
                 );
             }

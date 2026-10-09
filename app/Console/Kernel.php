@@ -26,6 +26,8 @@ use Artwork\Modules\ExternalAccess\Console\Commands\CleanupExpiredLoginTokensCom
 use Artwork\Modules\ExternalAccess\Console\Commands\SendExternalAccessExpiryRemindersCommand;
 use Artwork\Modules\ExternalUserManagement\Console\Commands\SyncExternalUsersCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Ticketing\Jobs\SyncTicketingCustomersJob;
+use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Command;
 use Illuminate\Console\Scheduling\Schedule;
@@ -54,21 +56,33 @@ class Kernel extends ConsoleKernel
                 \Artwork\Modules\Webhook\Models\WebhookDelivery::class,
             ],
         ])->daily();
-        $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
+        // Sperre wie bei der Sammelmail: ein langer Lauf darf nicht doppelt starten (sonst Doppelmeldungen)
+        $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes()
+            ->withoutOverlapping(30)
+            ->onOneServer();
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
         $schedule->command(SendExternalIssueReturnDueNotificationsCommand::class)->dailyAt('08:00')->runInBackground();
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
-        $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00');
+        $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00')->runInBackground();
         $schedule->command(NotifyShiftPlanRequestDeadlineReached::class)->dailyAt('07:15')->runInBackground();
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
-        $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00');
+        // Zusammenfassungen: täglich um 9 Uhr, Wochentage je Häufigkeit (NotificationFrequencyEnum::isDueOn)
+        $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00')
+            // Sperre nur 2 h statt 24 h: ein abgebrochener Lauf darf den nächsten Tag nicht blockieren
+            ->withoutOverlapping(120)
+            ->onOneServer();
         // BI-Exportdateien bleiben für Re-Downloads liegen und werden nach 24 h entfernt
         $schedule->command(CleanupBiExportsCommand::class)->dailyAt('03:30')->runInBackground();
         $schedule->command(CleanupExportPdfsCommand::class)->dailyAt('03:40')->runInBackground();
         // Papierkorb: nach 30 Tagen endgültig löschen (so kündigt es die Papierkorb-Seite an) —
         // über dieselben Wege wie "Endgültig löschen", nicht per Modell-Pruning
         $schedule->command(PurgeTrashCommand::class)->dailyAt('03:15')->withoutOverlapping()->runInBackground();
-        $schedule->command(CalculateDailyWorkingHoursOfUsers::class)->dailyAt('23:59')->runInBackground();
+        $schedule->command(CalculateDailyWorkingHoursOfUsers::class)
+            ->dailyAt('23:59')
+            // kurze Sperre: ein abgebrochener Lauf darf den Lauf am Folgetag nicht blockieren
+            ->withoutOverlapping(120)
+            ->onOneServer()
+            ->runInBackground();
         // DP-18: spielzeitbezogene Kennzahlen nach der Arbeitszeitberechnung tracken (Tag ist dann abgeschlossen)
         $schedule->command(TrackShiftKpisCommand::class)->dailyAt('00:30')->runInBackground();
         // DP-18 Stufe 2: überfällige Überstunden als auszuzahlend markieren
@@ -114,6 +128,10 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(180)
             ->onOneServer()
             ->runInBackground();
+        $schedule->job(new SyncTicketingCustomersJob())
+            ->dailyAt('02:30')
+            ->when(static fn (): bool => app(TicketingConnectionService::class)->isActive())
+            ->onOneServer();
     }
 
     /**

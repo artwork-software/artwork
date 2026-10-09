@@ -77,11 +77,17 @@ class Vacation extends Model
         return $this->morphTo();
     }
 
+    /**
+     * @return HasOne<VacationSeries, $this>
+     */
     public function series(): HasOne
     {
         return $this->hasOne(VacationSeries::class, 'id', 'series_id');
     }
 
+    /**
+     * @return HasMany<VacationConflict, $this>
+     */
     public function conflicts(): HasMany
     {
         return $this->hasMany(VacationConflict::class, 'vacation_id', 'id');

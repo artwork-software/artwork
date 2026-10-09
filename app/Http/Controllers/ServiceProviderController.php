@@ -109,7 +109,8 @@ class ServiceProviderController extends Controller
             'street' => 'nullable|string',
             'zip_code' => 'nullable|string',
             'location' => 'nullable|string',
-            'note' => 'nullable|string',
+            // service_providers.note ist varchar(500) – längere Notizen wären ein DB-Fehler (500)
+            'note' => 'nullable|string|max:500',
             'type_of_provider' => 'nullable|string',
         ]);
 

@@ -25,6 +25,8 @@ use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class EventVerificationController extends Controller
 {
@@ -35,6 +37,7 @@ class EventVerificationController extends Controller
         private readonly AuthManager $authManager,
         private readonly EventService $eventService,
         private readonly ProjectTabService $projectTabService,
+        private readonly UserService $userService,
     ) {
     }
 
@@ -213,7 +216,7 @@ class EventVerificationController extends Controller
         }
 
         $this->eventVerificationService->requestVerification($event, $user);
-        broadcast(new EventCreated($event->fresh(), $event->room_id));
+        SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
     }
 
     public function approved(EventVerification $eventVerification): void
@@ -226,7 +229,7 @@ class EventVerificationController extends Controller
 
         $this->eventVerificationService->approveVerification($eventVerification);
         $event = $eventVerification->event;
-        broadcast(new EventCreated($event, $event->room_id));
+        SafeBroadcast::send(new EventCreated($event, $event->room_id));
     }
 
     public function rejected(EventVerification $eventVerification, Request $request): void
@@ -239,7 +242,7 @@ class EventVerificationController extends Controller
 
         $this->eventVerificationService->rejectVerification($eventVerification, $request->get('rejection_reason', ''));
         $event = $eventVerification->event;
-        broadcast(new EventCreated($event, $event->room_id));
+        SafeBroadcast::send(new EventCreated($event, $event->room_id));
     }
 
     public function cancelVerification(Event $event): void
@@ -254,7 +257,7 @@ class EventVerificationController extends Controller
         }
 
         $this->eventVerificationService->cancelVerification($event);
-        broadcast(new EventCreated($event, $event->room_id));
+        SafeBroadcast::send(new EventCreated($event, $event->room_id));
     }
 
     public function approvedByEvent(Event $event): void
@@ -262,7 +265,7 @@ class EventVerificationController extends Controller
         /** @var User $user */
         $user = $this->authManager->user();
         $this->eventVerificationService->approveVerificationByEvent($event, $user);
-        broadcast(new EventCreated($event->fresh(), $event->room_id));
+        SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
     }
 
     public function rejectByEvent(Event $event, Request $request): void
@@ -271,12 +274,12 @@ class EventVerificationController extends Controller
         $user = $this->authManager->user();
         $rejectionReason = $request->get('rejection_reason', '');
         $this->eventVerificationService->rejectVerificationByEvent($event, $user, $rejectionReason);
-        broadcast(new EventCreated($event->fresh(), $event->room_id));
+        SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
     }
 
     public function rejectByEvents(Request $request): void
     {
-        $events = $request->collect('events', []);
+        $events = $request->collect('events');
         foreach ($events as $eventId) {
             /** @var Event $event */
             $event = $this->eventService->findEventById($eventId);
@@ -286,7 +289,7 @@ class EventVerificationController extends Controller
 
     public function approvedByEvents(Request $request): void
     {
-        $events = $request->collect('events', []);
+        $events = $request->collect('events');
         foreach ($events as $eventId) {
             /** @var Event $event */
             $event = $this->eventService->findEventById($eventId);
@@ -296,7 +299,7 @@ class EventVerificationController extends Controller
 
     public function requestVerification(Request $request): void
     {
-        $events = $request->collect('events', []);
+        $events = $request->collect('events');
         foreach ($events as $eventId) {
             /** @var Event $event */
             $event = $this->eventService->findEventById($eventId);
@@ -328,7 +331,7 @@ class EventVerificationController extends Controller
 
         $refreshedEvents = Event::whereIn('id', $planningEvents->pluck('id'))->get();
         foreach ($refreshedEvents as $event) {
-            broadcast(new EventCreated($event, $event->room_id));
+            SafeBroadcast::send(new EventCreated($event, $event->room_id));
         }
     }
 
@@ -353,7 +356,7 @@ class EventVerificationController extends Controller
 
         $refreshedEvents = Event::whereIn('id', $eventIds)->get();
         foreach ($refreshedEvents as $event) {
-            broadcast(new EventCreated($event, $event->room_id));
+            SafeBroadcast::send(new EventCreated($event, $event->room_id));
         }
     }
 
@@ -380,9 +383,7 @@ class EventVerificationController extends Controller
         $startOfWeek = Carbon::parse($event->start_time)->startOfWeek(Carbon::MONDAY);
         $endOfWeek = Carbon::parse($event->end_time)->endOfWeek(Carbon::SUNDAY);
 
-        $user->userFilters()->calendarFilter()->first()->update([
-            'start_date' => $startOfWeek->format('Y-m-d'),
-            'end_date' => $endOfWeek->format('Y-m-d'),
+        $this->userService->focusCalendarOnPeriod($user, $startOfWeek, $endOfWeek, [
             'event_type_ids' => null,
             'room_ids' => null,
             'area_ids' => null,

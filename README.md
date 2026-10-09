@@ -187,6 +187,10 @@ This writes `openapi.yaml` into the project root. Run it where the application e
 in the generated document is `APP_URL` plus `/api/v1`, so the spec points at the instance you
 generated it on.
 
+The app's API (`/api/app/v1`) is the exception: its contract is maintained by hand in
+`artwork/Modules/AppApi/openapi.yaml`, because the app generates its client from it and
+`tests/Feature/AppApi/AppContractTest.php` validates every endpoint against it in CI.
+
 ----------------
 
 If you have questions, feel free to open an issue.

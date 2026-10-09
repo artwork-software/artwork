@@ -113,6 +113,10 @@ class EventCalendarExportService extends EventExportService
                 }
             }
 
+            // Projekte ohne Termine: Export des heutigen Tages statt Abbruch an fehlendem Zeitraum
+            $earliestStartDate ??= $this->carbonService->getNow()->startOfDay();
+            $latestEndDate ??= $this->carbonService->getNow()->endOfDay();
+
             $this->eventCalendarXlsxExport
                 ->setProjects(
                     array_map(

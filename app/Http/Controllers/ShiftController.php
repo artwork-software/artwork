@@ -10,7 +10,6 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
-use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftScopeService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
@@ -28,13 +27,9 @@ use Artwork\Modules\Shift\Events\CreatedShiftInShiftPlan;
 use Artwork\Modules\Shift\Events\DestroyShift;
 use Artwork\Modules\Shift\Rules\IsoWeekExists;
 use Artwork\Modules\Shift\Events\RemoveEntityFormShiftEvent;
-use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Http\Requests\CopyShiftWeekRequest;
 use Artwork\Modules\Shift\Services\ShiftWeekCopyService;
-use Artwork\Modules\Shift\Models\ShiftUser;
-use Artwork\Modules\Shift\Models\ShiftFreelancer;
-use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\LegalBreakCalculator;
@@ -44,6 +39,7 @@ use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
+use Artwork\Modules\Shift\Services\ShiftUpdateService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
@@ -52,7 +48,6 @@ use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
 use Artwork\Modules\Shift\Services\ShiftReplacementService;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Artwork\Modules\Shift\Support\CreatedShiftsPublisher;
-use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
@@ -61,7 +56,6 @@ use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -101,6 +95,8 @@ class ShiftController extends Controller
 
     public function update(Request $request, Shift $shift): RedirectResponse
     {
+        $request->validate(['description' => ['sometimes', 'nullable', 'string', 'max:10000']]);
+
         if ($shift->is_committed) {
             $event = $shift->event;
 
@@ -145,161 +141,6 @@ class ShiftController extends Controller
     }
 
     /**
-     * Folgen einer Schichtänderung, die vorher fehlten: Projekt-Tageszuordnungen bei Projekt-/Datums-
-     * wechsel umhängen, Regeln und (bei festgeschriebenen Schichten) Urlaubs-/Verfügbarkeitskonflikte
-     * neu bewerten, Benachrichtigung nur bei echter Änderung.
-     *
-     * @param array{project_id: ?int, start_date: string, end_date: string, slots: array<string, mixed>,
-     *     users: \Illuminate\Support\Collection<int, User>} $before
-     * @param array<int, string> $changedFields
-     */
-    private function afterShiftUpdated(Shift $shift, array $before, array $changedFields): void
-    {
-        $shift->refresh();
-        $afterStart = Carbon::parse($shift->start_date)->toDateString();
-        $afterEnd = Carbon::parse($shift->end_date ?? $shift->start_date)->toDateString();
-
-        $scopeChanged = $before['project_id'] !== $shift->project_id
-            || $before['start_date'] !== $afterStart
-            || $before['end_date'] !== $afterEnd;
-        $scheduleChanged = array_intersect(
-            $changedFields,
-            ['start_date', 'end_date', 'start', 'end', 'break_minutes', 'craft_id']
-        ) !== [];
-        $slotsChanged = $before['slots'] != $this->shiftSlotSnapshot($shift);
-
-        if ($scopeChanged) {
-            $this->shiftService->resyncProjectDayAssignments($shift);
-        }
-
-        if ($scheduleChanged) {
-            // Alte UND neue Besetzung (Gewerkwechsel entfernt Personen) über alten UND neuen Zeitraum
-            $users = $before['users']->concat($shift->users()->get())->unique('id');
-            $this->revalidateShiftRules(
-                $users,
-                Carbon::parse(min($before['start_date'], $afterStart)),
-                Carbon::parse(max($before['end_date'], $afterEnd))
-            );
-
-            if ($shift->is_committed) {
-                $this->shiftService->recheckAvailabilityConflicts($shift);
-            }
-        }
-
-        if ($shift->is_committed && ($changedFields !== [] || $slotsChanged)) {
-            $this->notifyCommittedShiftChanged($shift);
-        }
-    }
-
-    /**
-     * Benachrichtigung + Verlauf bei geänderter festgeschriebener Schicht. Läuft NACH dem Speichern
-     * (vorher: auch ohne echte Änderung oder bei abgebrochenem Speichern, mit alter Zeit) und an die
-     * Besetzung bzw. Planer:innen des aktuellen Gewerks.
-     */
-    private function notifyCommittedShiftChanged(Shift $shift): void
-    {
-        $event = $shift?->event;
-
-        if ($event?->exists) {
-            $this->changeService->saveFromBuilder(
-                $this->changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Shift of event has been edited')
-                    ->setTranslationKeyPlaceholderValues([$event?->eventName])
-            );
-        }
-
-        $this->notificationService->setIcon('red');
-        $this->notificationService->setPriority(2);
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
-
-        foreach ($shift->users()->get() as $user) {
-            $notificationTitle = __(
-                'notification.shift.locked_changes',
-                [
-                    'projectName' => $shift?->project?->name
-                        ?? $shift?->event?->project?->name
-                        ?? __('notification.shift.without_project'),
-                    'craftAbbreviation' => $shift->craft->abbreviation
-                ],
-                $user?->language
-            );
-            $broadcastMessage = [
-                'id' => Str::uuid()->toString(),
-                'type' => 'error',
-                'message' => $notificationTitle
-            ];
-            $notificationDescription = [
-                1 => [
-                    'type' => 'string',
-                    'title' => __('notification.keyWords.concerns_shift', [], $user?->language) .
-                        $shift->time_span_label,
-                    'href' => null
-                ],
-            ];
-
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationTo($user);
-            $this->notificationService->createNotification();
-        }
-
-        // Nur Planer:innen des Gewerks (Fallback: Gewerksverantwortliche) — nicht alle
-        // Gewerksmitglieder; bereits benachrichtigte Schichtbesetzung wird ausgelassen.
-        $notifiedUserIds = $shift->users()->pluck('users.id')->all();
-
-        /** @var User $craftUser */
-        foreach ($this->craftPlannersToNotify($shift->craft()->first(), $notifiedUserIds) as $craftUser) {
-            if (Auth::id() !== $craftUser->id) {
-                $notificationTitle = __(
-                    'notification.shift.locked_changes',
-                    [
-                        'projectName' => $shift?->project?->name ?? $shift?->event?->project?->name ??
-                            __('notification.shift.without_project'),
-                        'craftAbbreviation' => $shift->craft->abbreviation
-                    ],
-                    $craftUser->language
-                );
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $notificationDescription = [
-                    1 => [
-                        'type' => 'string',
-                        'title' => __('notification.keyWords.concerns_shift', [], $craftUser?->language) .
-                            $shift->time_span_label,
-                        'href' => null
-                    ],
-                ];
-
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationTo($craftUser);
-                $this->notificationService->createNotification();
-            }
-        }
-    }
-
-    /**
-     * @return array{slots: array<int, int>, global: array<int, int>} Schichtplätze und globale Qualifikationen je ID
-     */
-    private function shiftSlotSnapshot(Shift $shift): array
-    {
-        return [
-            'slots' => $shift->shiftsQualifications()->pluck('value', 'shift_qualification_id')->all(),
-            'global' => $shift->globalQualifications()->pluck('quantity', 'global_qualifications.id')->all(),
-        ];
-    }
-
-    /**
      * Gewerksprüfung für Schicht-Mutationen: nur Admins, Gewerksplaner:innen und "für alle planbare"
      * Gewerke. Wirft CraftNotPlannableException (403-JSON bzw. Flash-Toast mit Hinweis).
      *
@@ -324,20 +165,14 @@ class ShiftController extends Controller
      */
     private function revalidateShiftRules(iterable $users, Carbon $start, Carbon $end): void
     {
-        $service = app(ShiftRuleService::class);
-
-        foreach ($users as $user) {
-            if ($user instanceof User) {
-                $service->validateRulesForUser($user, $start->copy(), $end->copy());
-            }
-        }
+        app(ShiftUpdateService::class)->revalidateShiftRules($users, $start, $end);
     }
 
     public function updateShift(
         Request $request,
         Shift $shift,
-        ShiftsQualificationsService $shiftsQualificationsService,
-        ProjectTabService $projectTabService
+        ProjectTabService $projectTabService,
+        ShiftUpdateService $shiftUpdateService,
     ): RedirectResponse|JsonResponse {
         // Ohne Validierung landeten end_date < start_date, negative Pausen oder
         // negative Qualifikations-Werte (SQL-Fehler auf smallint unsigned) direkt in der DB.
@@ -366,27 +201,17 @@ class ShiftController extends Controller
             'shift_group_id' => ['sometimes', 'nullable', 'integer', 'exists:shift_groups,id'],
             'start' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
             'end' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:10000'],
         ]);
 
         // Aktuelles UND Ziel-Gewerk müssen planbar sein
         $this->ensureCanPlanCrafts([$shift->craft_id, $request->input('craft_id')]);
 
         $projectId = $shift?->project_id;
-        $previousRoomId = $shift->room_id;
-        // Stand vor der Änderung: für Benachrichtigung (nur bei echter Änderung) und Neubewertung
-        $before = [
-            'project_id' => $shift->project_id,
-            'start_date' => Carbon::parse($shift->start_date)->toDateString(),
-            'end_date' => Carbon::parse($shift->end_date ?? $shift->start_date)->toDateString(),
-            'slots' => $this->shiftSlotSnapshot($shift),
-            'users' => $shift->users()->get(),
-        ];
-        $changedFields = [];
 
-        // Mutations-Teil atomar: Save, Worker-Entfernung und Qualifikations-Updates
-        // gehören zusammen — bricht ein Schritt ab, bleibt kein halber Zustand zurück.
-        DB::transaction(function () use ($request, $shift, $shiftsQualificationsService, &$changedFields): void {
-            $shift->fill($request->only([
+        $shiftPlanUpdate = $shiftUpdateService->update(
+            $shift,
+            $request->only([
                 'start_date',
                 'end_date',
                 'start',
@@ -399,74 +224,15 @@ class ShiftController extends Controller
                 'project_id',
                 'shift_group_id',
                 'room_id',
-            ]));
-
-            $craftChanged = $shift->isDirty('craft_id');
-
-            $this->shiftService->save($shift);
-            $changedFields = array_values(array_diff(array_keys($shift->getChanges()), ['updated_at']));
-
-            // When the craft changes, remove all assigned workers since they may not
-            // be qualified for the new craft, and reload the craft relation for the broadcast.
-            // Über den Service-Pfad statt Bulk-forceDelete: nur so laufen Benachrichtigung
-            // der Entfernten, Änderungs-Verlauf, shift_count-Recalc und Cache-Invalidierung.
-            if ($craftChanged) {
-                $this->removeAllWorkersFromShiftViaService($shift);
-
-                // Legacy-Pivots (werden vom unified Pfad nicht mehr befüllt) aufräumen
-                ShiftUser::where('shift_id', $shift->id)->forceDelete();
-                ShiftFreelancer::where('shift_id', $shift->id)->forceDelete();
-                ShiftServiceProvider::where('shift_id', $shift->id)->forceDelete();
-
-                $shift->unsetRelation('users');
-                $shift->unsetRelation('freelancer');
-                $shift->unsetRelation('serviceProvider');
-                $shift->load('craft:id,name,abbreviation,color');
-            }
-
-            // WICHTIG: Nur löschen, wenn das Feld `shiftsQualifications` bewusst leer mitgeschickt wurde
-            // (User hat alle Schichtplätze entfernt). Fehlt das Feld komplett im Request – z. B. bei einem
-            // partiellen Update wie dem zeitlichen Verschieben einer Schicht – dürfen weder die Schichtplätze
-            // noch die Zuweisungen (ShiftWorker = Source of Truth) gelöscht werden.
-            if ($request->has('shiftsQualifications') && empty($request->get('shiftsQualifications'))) {
-                $this->removeAllWorkersFromShiftViaService($shift);
-
-                ShiftUser::where('shift_id', $shift->id)->forceDelete();
-                ShiftFreelancer::where('shift_id', $shift->id)->forceDelete();
-                ShiftServiceProvider::where('shift_id', $shift->id)->forceDelete();
-
-                // Model-Deletes statt Bulk-Query: nur so feuert der Observer und die
-                // entfernten Schichtplätze erscheinen im Schichtverlauf.
-                $shift->shiftsQualifications()->get()->each(
-                    static fn ($shiftsQualification) => $shiftsQualification->delete()
-                );
-
-                // 3) Eager-Loaded Relation invalidieren, damit Response nicht alte Daten zeigt
-                $shift->unsetRelation('users');
-            }
-
-            foreach ($request->get('shiftsQualifications', []) as $shiftsQualification) {
-                $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
-            }
-
-            $this->shiftService->handleGlobalQualificationChange($request->collect('globalQualifications'), $shift);
-        });
-
-        $this->afterShiftUpdated($shift, $before, $changedFields);
+            ]),
+            (array) $request->get('shiftsQualifications', []),
+            // Nur löschen, wenn das Feld `shiftsQualifications` bewusst leer mitgeschickt wurde (User hat
+            // alle Schichtplätze entfernt) — fehlt es (partielles Update), bleibt die Besetzung.
+            $request->has('shiftsQualifications') && empty($request->get('shiftsQualifications')),
+            $request->collect('globalQualifications'),
+        );
 
         $projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent();
-
-        $shiftPlanUpdate = null;
-        if ($shift->event_id) {
-            if ($shift->event?->room_id !== null) {
-                $shiftPlanUpdate = new UpdateEventShiftInShiftPlan($shift, $shift->event->room_id);
-            }
-        } elseif ($shift->room_id !== null) {
-            $shiftPlanUpdate = new UpdateShiftInShiftPlan($shift, $shift->room_id, $previousRoomId);
-        }
-        if ($shiftPlanUpdate !== null) {
-            broadcast($shiftPlanUpdate);
-        }
 
         // Der Dienstplan speichert per axios (kein Inertia-Request): ein 302 würde vom Browser mit
         // PATCH auf die Dienstplan-URL weiterverfolgt (405 "PATCH not supported for shifts/view").
@@ -481,28 +247,6 @@ class ShiftController extends Controller
         }
 
         return $this->redirector->back();
-    }
-
-    /**
-     * Entfernt alle Zuweisungen einer Schicht über ShiftWorkerService::removeFromShift —
-     * im Gegensatz zum früheren Bulk-forceDelete laufen damit Benachrichtigung der
-     * Entfernten (bei committed Schichten), Änderungs-Verlauf, shift_count-Recalc
-     * und Working-Hour-Cache-Invalidierung.
-     */
-    private function removeAllWorkersFromShiftViaService(Shift $shift): void
-    {
-        $shiftWorkerService = app(ShiftWorkerService::class);
-
-        ShiftWorker::where('shift_id', $shift->id)->get()->each(
-            fn (ShiftWorker $pivot) => $shiftWorkerService->removeFromShift(
-                $pivot,
-                true,
-                $this->notificationService,
-                app(VacationConflictService::class),
-                app(AvailabilityConflictService::class),
-                $this->changeService
-            )
-        );
     }
 
     /**
@@ -1264,7 +1008,7 @@ class ShiftController extends Controller
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
     ): bool|RedirectResponse {
-        if (!auth()->user()?->can('can plan shifts') && !auth()->user()?->hasRole('artwork admin')) {
+        if (!auth()->user()?->can('plan-shifts')) {
             abort(403, __('You need the permission "Plan shifts" for this.'));
         }
 
@@ -1918,7 +1662,7 @@ class ShiftController extends Controller
 
     public function updateDescription(Request $request, Shift $shift): \Illuminate\Http\JsonResponse
     {
-        $request->validate(['description' => ['nullable', 'string', 'max:255']]);
+        $request->validate(['description' => ['nullable', 'string', 'max:10000']]);
         $this->ensureCanPlanShifts([$shift]);
         $shift->update($request->only(['description']));
 
@@ -2088,7 +1832,7 @@ class ShiftController extends Controller
             'day' => ['required', 'date'],
             'start' => ['required', 'date_format:H:i,H:i:s'],
             'end' => ['required', 'date_format:H:i,H:i:s'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:10000'],
             'break_minutes' => ['nullable', 'integer', 'min:0'],
             'globalQualifications' => ['sometimes', 'array'],
             'globalQualifications.*.global_qualification_id' => [
@@ -2368,7 +2112,7 @@ class ShiftController extends Controller
             'roomsAndDatesForMultiEdit.*.roomId' => ['required', 'integer', 'exists:rooms,id'],
             'roomsAndDatesForMultiEdit.*.day' => ['required', 'date'],
             'shift_group_id' => ['nullable', 'integer', 'exists:shift_groups,id'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:10000'],
             'globalQualifications' => ['sometimes', 'array'],
             'globalQualifications.*.global_qualification_id' => [
                 'required',
@@ -2528,31 +2272,6 @@ class ShiftController extends Controller
         } else {
             broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event?->room_id));
         }
-    }
-
-    /**
-     * Planer:innen eines Gewerks für Benachrichtigungen nach Festschreibung:
-     * craftShiftPlaner, sonst managingUsers; ohne Gewerk leer. $excludeUserIds
-     * verhindert Doppel-Benachrichtigungen an bereits informierte Personen.
-     *
-     * @param int[] $excludeUserIds
-     * @return Collection<int, User>
-     */
-    private function craftPlannersToNotify(?Craft $craft, array $excludeUserIds = []): Collection
-    {
-        if ($craft === null) {
-            return new Collection();
-        }
-
-        $planners = $craft->craftShiftPlaner()->get();
-        if ($planners->isEmpty()) {
-            $planners = $craft->managingUsers()->get();
-        }
-
-        return $planners
-            ->reject(static fn (User $user): bool => in_array($user->id, $excludeUserIds, true))
-            ->unique('id')
-            ->values();
     }
 
     public function updateWorkflowSettings(Request $request): RedirectResponse

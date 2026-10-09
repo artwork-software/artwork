@@ -5,6 +5,8 @@ namespace Artwork\Core\Console\Commands;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -15,18 +17,23 @@ class NotifyCraftIfShiftDeadlineReached extends Command
 
     protected $description = 'Notify craft if shift deadline reached.';
 
-    public function handle(NotificationService $notificationService): void
+    /** Link „Zum Projekt“ (Schichten-Reiter) der gerade bearbeiteten Schicht */
+    private ?array $projectLink = null;
+
+    private ?int $shiftTabId = null;
+
+    public function handle(NotificationService $notificationService, ProjectTabService $projectTabService): void
     {
+        $this->shiftTabId = $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+            ProjectTabComponentEnum::SHIFT_TAB
+        );
         $notificationService->setIcon('red');
         $notificationService->setPriority(2);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OPEN_DEMAND);
 
-        $crafts = Craft::with([
-            'shifts.users',
-            'shifts.freelancer',
-            'shifts.serviceProvider',
-            'shifts.event.project',
-        ])->get();
+        // Schichten werden je Gewerk nur für den Stichtag geladen (vorher zusätzlich ALLE Schichten
+        // aller Gewerke samt Besetzung per Eager-Load, ohne sie zu benutzen)
+        $crafts = Craft::with('craftShiftPlaner')->get();
 
         foreach ($crafts as $craft) {
             $this->processCraft($craft, $notificationService);
@@ -35,7 +42,17 @@ class NotifyCraftIfShiftDeadlineReached extends Command
 
     private function processCraft($craft, NotificationService $notificationService): void
     {
-        $shifts = $craft->shifts()->whereDate('shifts.start_date', now()->addDays($craft->notify_days))->get();
+        $shifts = $craft->shifts()
+            ->whereDate('shifts.start_date', now()->addDays($craft->notify_days))
+            ->with([
+                'users',
+                'freelancer',
+                'serviceProvider',
+                'shiftsQualifications',
+                'project.managerUsers',
+                'event.project.managerUsers',
+            ])
+            ->get();
 
         foreach ($shifts as $shift) {
             $this->processShift($shift, $craft, $notificationService);
@@ -47,32 +64,41 @@ class NotifyCraftIfShiftDeadlineReached extends Command
         $completeUserCount = $shift->users->count() + $shift->freelancer->count() + $shift->serviceProvider->count();
 
         if ($completeUserCount < $shift->max_users) {
+            // Schichten hängen heute am Projekt (shifts.project_id), nur Altbestand am Termin – vorher
+            // wurden alle Schichten ohne Termin übersprungen, die Erinnerung kam praktisch nie
             $event = $shift->event;
-            if (!$event || !$event->project) {
-                // If the shift is not attached to an event or the event has no project, skip safely
+            $project = $shift->project ?? $event?->project;
+            if ($project === null) {
                 return;
             }
-            $project = $event->project;
             $remainingUsersCount = $shift->max_users - $completeUserCount;
 
             $notificationService->setButtons(['show_project']);
             $notificationService->setProjectId($project->id);
+            // ohne Link führte „Zum Projekt“ auf einen festen Reiter, den es nicht überall gibt
+            $this->projectLink = [
+                'type' => 'link',
+                'title' => $project->name,
+                'href' => route('projects.tab', [$project->id, $this->shiftTabId]),
+            ];
 
             $contactedUsers = $this->notifyProjectManagers(
                 $project->managerUsers,
                 $notificationService,
-                $event,
+                $event?->eventName ?: $project->name,
                 $remainingUsersCount,
                 $craft,
                 $shift
             );
 
+            // Planer*innen des Gewerks (vorher dessen Arbeitskräfte – der Typ ist ein Planer-Hinweis und
+            // für sie in den Einstellungen gar nicht sichtbar, also auch nicht abschaltbar)
             if (!$craft->assignable_by_all) {
                 $this->notifyCraftUsers(
-                    $craft->users,
+                    $craft->craftShiftPlaner,
                     $contactedUsers,
                     $notificationService,
-                    $event,
+                    $event?->eventName ?: $project->name,
                     $remainingUsersCount,
                     $craft,
                     $shift
@@ -143,7 +169,7 @@ class NotifyCraftIfShiftDeadlineReached extends Command
         $notificationTitle = __(
             'notification.shift.open_demand',
             [
-                'event' => $event->name ?? $event->eventName,
+                'event' => $event,
                 'count' => $remainingUsersCount
             ],
             $user->language
@@ -161,7 +187,7 @@ class NotifyCraftIfShiftDeadlineReached extends Command
                 'title' => __(
                     'notification.shift.open_demand_description',
                     [
-                        'event' => $event->name ?? $event->eventName,
+                        'event' => $event,
                         'count' => $remainingUsersCount,
                         'craft' => $craft->name . ' (' . $craft->abbreviation . ')',
                         'shift' => $shift->start . ' - ' . $shift->end,
@@ -170,6 +196,7 @@ class NotifyCraftIfShiftDeadlineReached extends Command
                 ),
                 'href' => null
             ],
+            2 => $this->projectLink,
         ]);
         $notificationService->setNotificationTo($user);
         $notificationService->createNotification();

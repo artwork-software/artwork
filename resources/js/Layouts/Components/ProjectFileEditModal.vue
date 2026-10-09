@@ -109,9 +109,12 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import {sharedUsersOf} from "@/Helper/sharedAccess.js";
 
 export default {
     name: "ProjectFileEditModal",
+    // saved: Speichern ist abgeschlossen (Aufrufer laden ihre Liste neu)
+    emits: ['saved'],
     mixins: [Permissions],
     props: {
         show: Boolean,
@@ -135,15 +138,23 @@ export default {
             comment: null,
             user_query: '',
             user_search_results: [],
-            usersWithAccess: this.file?.accessibleUsers ? this.file.accessibleUsers : [],
+            // Bestehende Freigabeliste vorbelegen (Kopie): leer gespeichert entzöge sie allen anderen den Zugriff
+            usersWithAccess: sharedUsersOf(this.file),
             projectFileForm: useForm({
                 file: null,
                 comment: this.comment,
-                accessibleUsers: this.usersWithAccess
+                accessibleUsers: this.usersWithAccess,
+                // Mit neuer Datei geht das Formular als FormData raus und ein leeres Array fiele weg – der Marker
+                // sagt dem Backend, dass die (ggf. leere) Freigabeliste übernommen werden soll
+                accessibleUsersSent: true,
             })
         }
     },
     watch: {
+        // Das Modal bleibt eingehängt und bekommt die Datei erst beim Öffnen – Liste dann neu vorbelegen
+        file(newFile) {
+            this.usersWithAccess = sharedUsersOf(newFile);
+        },
         user_query: {
             handler() {
                 if (this.user_query.length > 0) {
@@ -190,7 +201,10 @@ export default {
                 userIds.push(user.id);
             })
             this.projectFileForm.accessibleUsers = userIds;
-            this.projectFileForm.post(this.route('project_files.update', this.file.id))
+            this.projectFileForm.accessibleUsersSent = true;
+            this.projectFileForm.post(this.route('project_files.update', this.file.id), {
+                onFinish: () => this.$emit('saved'),
+            })
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";

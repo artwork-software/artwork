@@ -4,12 +4,8 @@ namespace App\Http\Controllers;
 
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
-use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
-use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
-use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
-use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
@@ -17,7 +13,6 @@ use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\Notification\Jobs\ArchiveUserNotificationsJob;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
-use Artwork\Modules\Notification\Http\Resources\NotificationProjectResource;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -26,8 +21,14 @@ use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
+use Artwork\Modules\Notification\Services\NotificationSettingService;
+use Artwork\Modules\Notification\Services\NotificationDialogDataService;
+use Artwork\Modules\Event\Services\EventPropertyService;
+use Artwork\Modules\Notification\Services\NotificationSettingsPresenter;
+use Illuminate\Validation\Rule;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Response;
@@ -40,12 +41,6 @@ class NotificationController extends Controller
      * queued job instead of running inline in the request.
      */
     private const INLINE_ARCHIVE_THRESHOLD = 500;
-
-    public function __construct(
-        private readonly VacationService $vacationService,
-        private readonly ChangeService $changeService,
-    ) {
-    }
 
     /**
      * Returns the unread/archived notification counts per group for the given user as a single
@@ -64,7 +59,8 @@ class NotificationController extends Controller
         // verweigert MySQL 8 (ONLY_FULL_GROUP_BY) diese ORDER BY, MariaDB nicht.
         $rows = $user->notifications()
             ->reorder()
-            ->selectRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.groupType')) as group_type")
+            // groupType ist eine generierte Spalte aus data (Index Empfänger/Gruppe/gelesen)
+            ->selectRaw('groupType as group_type')
             ->selectRaw('SUM(CASE WHEN read_at IS NULL THEN 1 ELSE 0 END) as unread')
             ->selectRaw('SUM(CASE WHEN read_at IS NOT NULL THEN 1 ELSE 0 END) as archived')
             ->groupBy('group_type')
@@ -109,123 +105,44 @@ class NotificationController extends Controller
     public function index(
         ProjectTabService $projectTabService,
         GlobalNotificationService $globalNotificationService,
-        UserService $userService
+        UserService $userService,
+        NotificationDialogDataService $notificationDialogDataService,
+        EventPropertyService $eventPropertyService
     ): Response|ResponseFactory {
         $userService->updateCurrentUserShowNotificationIndicator(
             $userService->getAuthUser(),
             false
         );
 
-        $historyObjects = [];
-        $event = null;
-        // reload functions
-        if (request('showHistory')) {
-            if (request('historyType') === 'project') {
-                $project = Project::find(request('modelId'));
-                if ($project !== null) {
-                    $historyObjects = array_merge(
-                        $historyObjects,
-                        $this->changeService->historyForFrontend($project)
-                    );
-                }
-            }
-
-            if (request('historyType') === 'event') {
-                $event = Event::find(request('modelId'));
-                if ($event !== null) {
-                    $historyObjects = array_merge(
-                        $historyObjects,
-                        $this->changeService->historyForFrontend($event)
-                    );
-                }
-            }
-
-            if (request('historyType') === 'vacations') {
-                $vacations = $this->vacationService->findVacationsByUserId(request('modelId'));
-
-                foreach ($vacations as $vacation) {
-                    $historyObjects = array_merge(
-                        $historyObjects,
-                        $this->changeService->historyForFrontend($vacation)
-                    );
-                }
-            }
-        }
-
-        if (request('openDeclineEvent')) {
-            $event = Event::find(request('eventId'));
-        }
-
-        if (request('openEditEvent')) {
-            $event = Event::with([
-                'room',
-                'creator',
-                'project',
-                'project.managerUsers',
-                'project.status',
-                'event_type',
-                'eventStatus',
-                'eventProperties',
-                'shifts',
-                'shifts.craft',
-                'shifts.users',
-                'shifts.freelancer',
-                'shifts.serviceProvider',
-                'shifts.shiftsQualifications',
-                'subEvents.event',
-                'subEvents.event.room',
-                'series',
-            ])->find(request('eventId'));
-        }
-
         /** @var User $user */
         $user = Auth::user();
+        // Dialoge der Benachrichtigungen (Absagen, Bearbeiten/Annehmen, Antworten, Verlauf) –
+        // gemeinsam mit dem Dashboard, IDs aus der URL werden dort autorisiert
+        $dialogData = $notificationDialogDataService->forRequest(request(), $user);
 
         return inertia('Notifications/Show', [
-            'historyObjects' => $historyObjects,
-            'event' => $event !== null ? new CalendarEventResource($event) : null,
+            'historyObjects' => $dialogData['historyObjects'],
+            'event' => $dialogData['event'],
             'project' => null,
-            'wantedSplit' => $event?->room_id,
+            'wantedSplit' => $dialogData['wantedSplit'],
+            // ohne Eigenschaften schickte der Bearbeiten-Dialog event_properties: [] → sync([]) löschte sie
+            'event_properties' => $eventPropertyService->getAll(),
             'roomCollisions' => [],
             'notificationCounts' => $this->getNotificationCountsByGroup($user),
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
-            'projects' => NotificationProjectResource::collection(
-                Project::select([
-                    'id', 'name', 'shift_description',
-                    'number_of_participants', 'is_group', 'key_visual_path', 'cost_center_id'
-                ])->with(['groups', 'sectors', 'categories', 'genres', 'costCenter'])->get()
-            )->resolve(),
-            // "Termine immer direkt buchbar": Anfrage-/Verifizierungs-Benachrichtigungen gibt es nicht mehr
-            'notificationSettings' => $user->notificationSettings()->get()
-                ->when(
-                    app(EventSettingsService::class)->alwaysDirectBooking(),
-                    static fn ($settings) => $settings->reject(
-                        static fn (NotificationSetting $setting): bool => in_array($setting->type, [
-                            NotificationEnum::NOTIFICATION_ROOM_REQUEST,
-                            NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST,
-                            NotificationEnum::NOTIFICATION_ROOM_ANSWER,
-                            NotificationEnum::NOTIFICATION_REMINDER_ROOM_REQUEST,
-                            NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
-                        ], true)
-                    )
-                )
-                ->groupBy("group_type"),
+            // Die Antwort-Modals zeigen nur den Projektnamen; vorher gingen alle Projekte mit
+            // Gruppen, Sektoren, Kategorien, Genres und Kostenstelle mit (MB bei großen Häusern).
+            'projects' => Project::query()->select(['id', 'name'])->get(),
+            // Einstellungen: nur relevante Typen, Texte aus dem Enum (NotificationSettingsPresenter)
+            'notificationSettingGroups' => app(NotificationSettingsPresenter::class)->groupsFor($user),
             'notificationFrequencies' => array_map(fn (NotificationFrequencyEnum $frequency) => [
                 'title' => $frequency->title(),
                 'value' => $frequency->value,
             ], NotificationFrequencyEnum::cases()),
-            'groupTypes' => collect(NotificationGroupEnum::cases())->reduce(
-                function ($groupTypes, $type) {
-                    $groupTypes[$type->value] = [
-                        'title' => $type->title(),
-                        'description' => $type->description(),
-                    ];
-                    return $groupTypes;
-                },
-                []
-            ),
+            // Fallback für „Zum Projekt“, wenn die Benachrichtigung keinen Link mitbringt
+            'first_project_tab_id' => $projectTabService->getDefaultOrFirstProjectTabId(),
             'first_project_shift_tab_id' => $projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'first_project_budget_tab_id' => $projectTabService
@@ -255,7 +172,7 @@ class NotificationController extends Controller
         $query = Auth::user()
             ->notifications()
             ->select(['id', 'type', 'data', 'read_at', 'created_at'])
-            ->where('data->groupType', $validated['groupType'])
+            ->where('groupType', $validated['groupType'])
             ->orderBy('created_at', 'desc');
 
         $status === 'archived' ? $query->whereNotNull('read_at') : $query->whereNull('read_at');
@@ -288,43 +205,119 @@ class NotificationController extends Controller
      * single group. Small sets are archived inline (chunked bulk update); large sets are offloaded
      * to a queued job so the request returns immediately and the server is not blocked.
      */
-    public function setOnReadAll(Request $request, DatabaseNotificationService $databaseNotificationService): void
-    {
+    public function setOnReadAll(
+        Request $request,
+        DatabaseNotificationService $databaseNotificationService
+    ): JsonResponse {
         $user = User::find(Auth::id());
 
         if ($user === null) {
-            return;
+            return response()->json(['archived' => 0, 'remaining' => 0, 'queued' => false]);
         }
 
         $groupType = $request->filled('groupType') ? $request->string('groupType')->toString() : null;
 
         $unreadQuery = $user->notifications()->whereNull('read_at');
         if ($groupType !== null) {
-            $unreadQuery->where('data->groupType', $groupType);
+            $unreadQuery->where('groupType', $groupType);
         }
 
         if ($unreadQuery->count() > self::INLINE_ARCHIVE_THRESHOLD) {
             ArchiveUserNotificationsJob::dispatch($user->id, $groupType);
-            return;
+
+            return response()->json(['archived' => 0, 'remaining' => 0, 'queued' => true]);
         }
 
-        $databaseNotificationService->archiveAllUnreadForUser($user, $groupType);
+        $archived = $databaseNotificationService->archiveAllUnreadForUser($user, $groupType);
+
+        // Rückmeldung fürs Center: was archiviert wurde und was noch eine Aktion braucht
+        return response()->json([
+            'archived' => $archived,
+            'remaining' => (clone $unreadQuery)->count(),
+            'queued' => false,
+        ]);
     }
 
-    public function updateSetting(Request $request, NotificationSetting $setting): void
+    public function updateSetting(Request $request, NotificationSetting $setting): JsonResponse|RedirectResponse
     {
         if (Auth::id() !== $setting->user_id) {
             abort(403);
         }
 
-        $setting->update($request->only("enabled_email", "frequency", "enabled_push"));
+        // vorher ungeprüft: ungültige Häufigkeit → 500, "false" als Text → an
+        $validated = $request->validate([
+            'enabled_email' => ['sometimes', 'boolean'],
+            'enabled_push' => ['sometimes', 'boolean'],
+            'frequency' => ['sometimes', Rule::enum(NotificationFrequencyEnum::class)],
+        ]);
+        $settingService = app(NotificationSettingService::class);
+        $mailStateBefore = $settingService->mailStateOf(Auth::user());
+        $setting->update($validated);
+        $settingService->summariseBacklogAfterSettingsChange(Auth::user(), $mailStateBefore);
+
+        return $request->expectsJson() && !$request->header('X-Inertia')
+            ? response()->json(['setting' => $setting->fresh()])
+            : back();
     }
 
-    public function toggleGroup(Request $request): void
+    /**
+     * Sammeländerung für eine Gruppe oder alle sichtbaren Typen (E-Mail, Hinweis, Häufigkeit).
+     */
+    public function bulkUpdate(Request $request): JsonResponse|RedirectResponse
     {
-        Auth::user()->notificationSettings()
-            ->where('group_type', $request->groupType)
-            ->update($request->only('enabled_email', 'enabled_push'));
+        $validated = $request->validate([
+            'groupType' => ['nullable', Rule::enum(NotificationGroupEnum::class)],
+            'enabled_email' => ['sometimes', 'boolean'],
+            'enabled_push' => ['sometimes', 'boolean'],
+            'frequency' => ['sometimes', Rule::enum(NotificationFrequencyEnum::class)],
+        ]);
+        $values = array_intersect_key($validated, array_flip(['enabled_email', 'enabled_push', 'frequency']));
+        foreach (['enabled_email', 'enabled_push'] as $flag) {
+            if (array_key_exists($flag, $values)) {
+                $values[$flag] = (bool) $values[$flag];
+            }
+        }
+
+        $user = Auth::user();
+        $settingService = app(NotificationSettingService::class);
+        $mailStateBefore = $settingService->mailStateOf($user);
+        $user->notificationSettings()
+            ->whereIn('type', app(NotificationSettingsPresenter::class)->visibleTypeValuesFor($user))
+            ->when(
+                $validated['groupType'] ?? null,
+                static fn ($query, string $groupType) => $query->where('group_type', $groupType)
+            )
+            ->update($values);
+        $settingService->summariseBacklogAfterSettingsChange($user, $mailStateBefore);
+
+        return $this->settingsResponse($request, $user);
+    }
+
+    /**
+     * Alle Einstellungen auf die Standardwerte (E-Mail und Hinweis an, Häufigkeit je Typ).
+     */
+    public function resetSettings(Request $request): JsonResponse|RedirectResponse
+    {
+        $user = Auth::user();
+        $settingService = app(NotificationSettingService::class);
+        $mailStateBefore = $settingService->mailStateOf($user);
+        foreach (NotificationEnum::configurableCases() as $type) {
+            $user->notificationSettings()->where('type', $type->value)->update([
+                'enabled_email' => true,
+                'enabled_push' => true,
+                'frequency' => $type->defaultFrequency()->value,
+            ]);
+        }
+        $settingService->summariseBacklogAfterSettingsChange($user, $mailStateBefore);
+
+        return $this->settingsResponse($request, $user);
+    }
+
+    private function settingsResponse(Request $request, User $user): JsonResponse|RedirectResponse
+    {
+        return $request->expectsJson() && !$request->header('X-Inertia')
+            ? response()->json(['groups' => app(NotificationSettingsPresenter::class)->groupsFor($user)])
+            : back();
     }
 
     public function destroy(string $id): string

@@ -160,6 +160,26 @@ class Component extends Model
     }
 
     /**
+     * Serverseitiges Gegenstück zu canSeeComponent() im Frontend
+     * (resources/js/Composeables/Permission.js) — nur die Komponenten-Einstellung selbst;
+     * der Admin-Bypass liegt in ProjectComponentVisibilityService.
+     */
+    public function isVisibleTo(User $user): bool
+    {
+        if ($this->permission_type !== ProjectTabComponentPermissionEnum::PERMISSION_TYPE_SOME_SEE_SOME_EDIT->value) {
+            return true;
+        }
+
+        if ($this->users->contains('id', $user->id)) {
+            return true;
+        }
+
+        return $this->departments->contains(
+            fn(Department $department) => $department->users->contains('id', $user->id)
+        );
+    }
+
+    /**
      * Serverseitiges Gegenstück zu canEditComponent() im Frontend
      * (resources/js/Composeables/Permission.js) — beide müssen dieselbe Regel abbilden.
      */
@@ -197,13 +217,28 @@ class Component extends Model
         return false;
     }
 
+    /**
+     * @return HasMany<PrintLayoutComponents, $this>
+     */
     public function componentInPrintLayouts(): HasMany
     {
         return $this->hasMany(PrintLayoutComponents::class, 'component_id', 'id');
     }
 
+    /**
+     * @return HasMany<DisclosureComponents, $this>
+     */
     public function componentInDisclosures(): HasMany
     {
         return $this->hasMany(DisclosureComponents::class, 'component_id', 'id');
+    }
+
+    /**
+     * Inhalte dieses Ordners (nur bei type = DisclosureComponent befüllt).
+     * @return HasMany<DisclosureComponents, $this>
+     */
+    public function disclosureContents(): HasMany
+    {
+        return $this->hasMany(DisclosureComponents::class, 'disclosure_id', 'id');
     }
 }

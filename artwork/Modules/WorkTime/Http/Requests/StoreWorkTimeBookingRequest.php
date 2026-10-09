@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\WorkTime\Http\Requests;
 
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -14,7 +15,8 @@ class StoreWorkTimeBookingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('can manage workers') ?? false;
+        // Arbeitszeitberechnung aus: keine manuellen Buchungen aufs Stundenkonto
+        return WorkTimeAccounting::isEnabled() && ($this->user()?->can('can manage workers') ?? false);
     }
 
     /**
@@ -26,7 +28,8 @@ class StoreWorkTimeBookingRequest extends FormRequest
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'date' => 'required|date',
+            // Keine Buchungen in die Zukunft: sie verrechneten heute schon Überstunden eines Tages, der noch kommt
+            'date' => 'required|date|before_or_equal:today',
             // Dauer als "H:MM" ohne Obergrenze bei den Stunden (Salden > 24 h, z. B. Übernahme bei Produktivstart)
             'hours' => ['required', 'string', 'regex:' . self::DURATION_PATTERN],
             'nightly_working_hours' => ['required', 'string', 'regex:' . self::DURATION_PATTERN],

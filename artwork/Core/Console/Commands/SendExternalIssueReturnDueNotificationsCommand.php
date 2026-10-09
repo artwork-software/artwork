@@ -30,6 +30,8 @@ class SendExternalIssueReturnDueNotificationsCommand extends Command
             ->whereNull('return_notification_sent_at')
             ->whereNull('received_by_id')
             ->whereNull('return_status')
+            // Altbestand vor der Rückgabe-Erfassung gilt als zurückgegeben – keine Erinnerung (wie Badge/Verfügbarkeit)
+            ->notReturned()
             ->get();
 
         foreach ($dueIssues as $issue) {

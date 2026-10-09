@@ -2,13 +2,17 @@
 
 namespace Artwork\Modules\Holidays\Services;
 
+use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Holidays\Api\ApiDto;
 use Artwork\Modules\Holidays\Api\OpenHolidaysApi;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Holidays\Models\Subdivision;
 use Artwork\Modules\Holidays\Repository\HolidayRepository;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 class HolidayService
 {
@@ -98,6 +102,14 @@ class HolidayService
      * @param bool $schoolHolidays
      * @return string[]
      */
+    /**
+     * Feiertagsnamen in der Instanzsprache (gespeichert wird einmal für alle Nutzer:innen).
+     */
+    private function holidayLanguage(): string
+    {
+        return strtoupper((string) config('app.instance_locale', 'de'));
+    }
+
     public function getHolidaysFromAPI(
         \Illuminate\Support\Collection $selectedSubdivisions,
         bool $publicHolidays,
@@ -111,6 +123,7 @@ class HolidayService
                     now()->startOfYear(),
                     now()->addYears(2)->endOfYear(),
                     $subdivisionModel,
+                    $this->holidayLanguage(),
                 );
                 $data['country'] = $subdivisionModel->country_code;
                 $responses[] = $data;
@@ -121,6 +134,7 @@ class HolidayService
                     now()->startOfYear(),
                     now()->addYears(2)->endOfYear(),
                     $subdivisionModel,
+                    $this->holidayLanguage(),
                 );
                 $data['country'] = $subdivisionModel->country_code;
                 $responses[] = $data;
@@ -182,5 +196,99 @@ class HolidayService
         }
 
         return array_values($mergedHolidays);
+    }
+
+    /**
+     * Feiertage eines Zeitraums je Tag (Y-m-d); mehrtägige Einträge erscheinen an jedem ihrer Tage.
+     * @return SupportCollection<string, SupportCollection<int, CalendarHolidayDTO>>
+     */
+    public function getCalendarHolidaysByDate(Carbon $start, Carbon $end): SupportCollection
+    {
+        $rangeStart = $start->copy()->startOfDay();
+        $rangeEnd = $end->copy()->startOfDay();
+        $holidaysByDate = collect();
+
+        foreach ($this->getCalendarHolidaysForRange($rangeStart, $rangeEnd) as $holiday) {
+            $first = Carbon::parse($holiday->date)->max($rangeStart);
+            $last = Carbon::parse($holiday->end_date)->min($rangeEnd);
+            foreach (CarbonPeriod::create($first, $last) as $day) {
+                $key = $day->toDateString();
+                if (!$holidaysByDate->has($key)) {
+                    $holidaysByDate[$key] = collect();
+                }
+                $holidaysByDate[$key]->push($holiday);
+            }
+        }
+
+        return $holidaysByDate;
+    }
+
+    /**
+     * Feiertage eines Zeitraums für Kalenderansichten. Jährliche Einträge werden in jedes betroffene Jahr projiziert
+     * (auch über den Jahreswechsel), damit sie unter dem Datum des angezeigten Jahres erscheinen.
+     * @return SupportCollection<CalendarHolidayDTO>
+     */
+    public function getCalendarHolidaysForRange(Carbon $start, Carbon $end): SupportCollection
+    {
+        $rangeStart = $start->copy()->startOfDay();
+        $rangeEnd = $end->copy()->startOfDay();
+
+        $holidays = Holiday::select(['id','name','date','end_date','color','yearly','treatAsSpecialDay'])
+            ->where(function (Builder $q) use ($rangeStart, $rangeEnd): void {
+                $q->where('yearly', true)
+                    ->orWhere(function (Builder $fixed) use ($rangeStart, $rangeEnd): void {
+                        $fixed->where('date', '<=', $rangeEnd->toDateString())
+                            ->where(function (Builder $ends) use ($rangeStart): void {
+                                $ends->where('end_date', '>=', $rangeStart->toDateString())
+                                    ->orWhere(function (Builder $single) use ($rangeStart): void {
+                                        $single->whereNull('end_date')
+                                            ->where('date', '>=', $rangeStart->toDateString());
+                                    });
+                            });
+                    });
+            })
+            ->with(['subdivisions' => fn($q) => $q->select('name')])
+            ->get();
+
+        $result = collect();
+        foreach ($holidays as $holiday) {
+            $holidayStart = $holiday->date->copy()->startOfDay();
+            $holidayEnd = ($holiday->end_date ?? $holiday->date)->copy()->startOfDay();
+            if ($holidayEnd->lt($holidayStart)) {
+                $holidayEnd = $holidayStart->copy();
+            }
+
+            if (!$holiday->yearly) {
+                $result->push($this->toCalendarHolidayDto($holiday, $holidayStart, $holidayEnd));
+                continue;
+            }
+
+            $lengthInDays = (int) $holidayStart->diffInDays($holidayEnd);
+            // Vorjahr mitnehmen: ein Block ab z. B. 30.12. reicht in den Januar des Zeitraums hinein
+            for ($year = $rangeStart->year - 1; $year <= $rangeEnd->year; $year++) {
+                $projectedStart = Holiday::yearlyStartIn($holidayStart, $year);
+                if ($projectedStart === null) {
+                    continue;
+                }
+                $projectedEnd = $projectedStart->copy()->addDays($lengthInDays);
+                if ($projectedStart->lte($rangeEnd) && $projectedEnd->gte($rangeStart)) {
+                    $result->push($this->toCalendarHolidayDto($holiday, $projectedStart, $projectedEnd));
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    private function toCalendarHolidayDto(Holiday $holiday, Carbon $start, Carbon $end): CalendarHolidayDTO
+    {
+        return new CalendarHolidayDTO(
+            name: $holiday->name,
+            date: $start->toDateString(),
+            end_date: $end->toDateString(),
+            color: $holiday->color,
+            subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+            treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
+        );
     }
 }

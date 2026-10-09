@@ -12,12 +12,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
 * Class ComponentInTab
  * @package Artwork\Modules\ProjectTab\Models
- * @property Component component
- * @property int id
- * @property int project_tab_id
- * @property int component_id
- * @property int order
- * @property array scope
+ * @property Component $component
+ * @property int $id
+ * @property int $project_tab_id
+ * @property int $component_id
+ * @property int $order
+ * @property array $scope
  */
 class ComponentInTab extends Model
 {
@@ -37,12 +37,18 @@ class ComponentInTab extends Model
 
     protected $with = ['component', 'disclosureComponents'];
 
+    /**
+     * @return BelongsTo<Component, $this>
+     */
     public function component(): BelongsTo
     {
         return $this->belongsTo(Component::class, 'component_id', 'id', 'component');
     }
 
 
+    /**
+     * @return HasMany<DisclosureComponents, $this>
+     */
     public function disclosureComponents(): HasMany
     {
         return $this->hasMany(DisclosureComponents::class, 'disclosure_id', 'component_id')

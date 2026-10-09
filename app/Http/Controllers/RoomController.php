@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -42,6 +43,15 @@ class RoomController extends Controller
      */
     public function getAllDayFree(Request $request): array
     {
+        // Je Tag läuft eine Abfrage: Zeitraum begrenzen, unparsbare Daten nicht als 500 enden lassen.
+        $request->validate([
+            'start' => ['required', 'date'],
+            'end' => ['required', 'date', 'after_or_equal:start'],
+        ]);
+        if (Carbon::parse($request->input('start'))->addYear()->lt(Carbon::parse($request->input('end')))) {
+            throw ValidationException::withMessages(['end' => __('The period may cover at most one year.')]);
+        }
+
         $period = CarbonPeriod::create(
             Carbon::parse($request->get('start'))->addHours(2),
             Carbon::parse($request->get('end'))
@@ -97,20 +107,23 @@ class RoomController extends Controller
     {
         $this->authorize('create', Room::class);
 
-        // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
-        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+        $request->validate(array_merge($this->roomFieldRules($request, true), [
+            'area_id' => ['required', 'integer', 'exists:areas,id'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]));
 
         $room = Room::create([
             'name' => $request->name,
             'color' => $request->color,
             'description' => $request->description,
-            'temporary' => $request->temporary,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
+            'temporary' => $request->boolean('temporary'),
+            // Zeitraum nur für temporäre Räume speichern
+            'start_date' => $request->boolean('temporary') ? $request->start_date : null,
+            'end_date' => $request->boolean('temporary') ? $request->end_date : null,
             'area_id' => $request->area_id,
-            'user_id' => $request->user_id,
-            'everyone_can_book' => $request->everyone_can_book,
-            'relevant_for_disposition' => $request->relevant_for_disposition,
+            'user_id' => $request->user_id ?? $request->user()->id,
+            'everyone_can_book' => $request->boolean('everyone_can_book'),
+            'relevant_for_disposition' => $request->boolean('relevant_for_disposition', true),
             'capacity' => $request->capacity,
             'order' => Room::max('order') + 1,
         ]);
@@ -192,8 +205,7 @@ class RoomController extends Controller
     ): RedirectResponse {
         $this->authorize('update', $room);
 
-        // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
-        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+        $request->validate($this->roomFieldRules($request, false, $room));
 
         $roomReplicate = $room->replicate();
         $roomReplicate->admins = $room->users()->wherePivot('is_admin', true)->get();
@@ -201,19 +213,23 @@ class RoomController extends Controller
         $roomReplicate->attributes = $room->attributes()->get();
         $roomReplicate->categories = $room->categories()->get();
 
-        $room->update(
-            $request->only(
-                'name',
-                'color',
-                'description',
-                'temporary',
-                'start_date',
-                'end_date',
-                'everyone_can_book',
-                'relevant_for_disposition',
-                'capacity'
-            )
+        $attributes = $request->only(
+            'name',
+            'color',
+            'description',
+            'temporary',
+            'start_date',
+            'end_date',
+            'everyone_can_book',
+            'relevant_for_disposition',
+            'capacity'
         );
+        // Zeitraum gehört nur zu temporären Räumen; beim Abwählen nicht als Altlast stehen lassen
+        if ($request->has('temporary') && !$request->boolean('temporary')) {
+            $attributes['start_date'] = null;
+            $attributes['end_date'] = null;
+        }
+        $room->update($attributes);
 
         if (!is_null($request->room_admins) && !is_null($request->requestable_by)) {
             $room_admins_ids = [];
@@ -236,9 +252,17 @@ class RoomController extends Controller
             User::forgetCachedShareDataForIds(array_unique([...$previousUserIds, ...$new_users->keys()->all()]));
         }
 
-        $room->adjoining_rooms()->sync($request->adjoining_rooms);
-        $room->attributes()->sync($request->room_attributes);
-        $room->categories()->sync($request->room_categories);
+        // nur mitgeschickte Relationen synchronisieren: sync(null) hätte sonst alle Nebenräume,
+        // Eigenschaften und Kategorien entfernt, sobald ein Formular sie nicht mitsendet
+        if ($request->has('adjoining_rooms')) {
+            $room->adjoining_rooms()->sync($request->input('adjoining_rooms') ?? []);
+        }
+        if ($request->has('room_attributes')) {
+            $room->attributes()->sync($request->input('room_attributes') ?? []);
+        }
+        if ($request->has('room_categories')) {
+            $room->categories()->sync($request->input('room_categories') ?? []);
+        }
 
         $this->roomChangeService->applyChanges(
             $room,
@@ -398,5 +422,43 @@ class RoomController extends Controller
         ]);
 
         return response()->json($normalized);
+    }
+
+    /**
+     * Gemeinsame Regeln für Raum anlegen/bearbeiten. Ohne Prüfung führten leerer Name oder
+     * ungültige Daten zu SQL-Fehlern (500), und ein temporärer Raum ohne Enddatum wurde nie
+     * automatisch entfernt. Beim Bearbeiten nur vorhandene Felder prüfen (Teilupdates).
+     *
+     * @return array<string, array<int, string>>
+     */
+    /**
+     * @param Room|null $room bestehender Raum beim Bearbeiten
+     */
+    private function roomFieldRules(Request $request, bool $creating, ?Room $room = null): array
+    {
+        $presence = $creating ? 'required' : 'sometimes';
+        $endDateRules = ['nullable', 'date'];
+        // Altbestand: temporäre Räume ohne Enddatum bleiben bearbeitbar (z. B. umbenennen); Pflicht wird das
+        // Enddatum beim Anlegen und wenn ein Raum neu temporär wird
+        $legacyTemporaryWithoutEnd = $room !== null && $room->temporary && $room->end_date === null;
+        if (!$legacyTemporaryWithoutEnd) {
+            $endDateRules[] = 'required_if_accepted:temporary';
+        }
+        if ($request->filled('start_date')) {
+            $endDateRules[] = 'after_or_equal:start_date';
+        }
+
+        return [
+            'name' => [$presence, 'string', 'max:255'],
+            // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
+            'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'description' => ['nullable', 'string'],
+            'temporary' => ['sometimes', 'boolean'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => $endDateRules,
+            'everyone_can_book' => ['sometimes', 'boolean'],
+            'relevant_for_disposition' => ['sometimes', 'boolean'],
+            'capacity' => ['nullable', 'integer', 'min:0'],
+        ];
     }
 }

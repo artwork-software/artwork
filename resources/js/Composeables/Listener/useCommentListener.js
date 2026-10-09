@@ -1,41 +1,69 @@
-export function useCommentListener(commentList, projectId) {
-    function init() {
-        Echo.private('project.' + projectId)
-            .listen('.comment.add', (data) => {
-                const newComment = data.comment;
+import { stopListeningOnPrivateChannel } from './echoChannel.js';
 
-                // Wenn commentList ein Ref ist, immer .value verwenden
-                const list = Array.isArray(commentList.value)
-                    ? commentList.value
-                    : commentList;
+const ADD_EVENT = '.comment.add';
+const DELETE_EVENT = '.comment.delete';
 
-                const existingCommentIndex = list.findIndex(
-                    (comment) => comment.id === newComment.id
-                );
+/**
+ * Kommentar-Broadcasts auf project.{id} tragen nur Kennungen ({ id, project_id, tab_id }) — der Kanal
+ * prüft nur das Projekt-Sichtrecht, nicht die Tab-Sichtbarkeit. Die Komponente lädt ihre Liste über
+ * ihren geprüften Endpunkt neu (onChange). Mehrere Ereignisse kurz hintereinander werden gebündelt
+ * (entprellt), damit nicht jedes einzelne einen Request auslöst.
+ *
+ * @param {number} projectId
+ * @param {(changes: Array<{type: 'add'|'delete', comment: {id: number, project_id: number|null, tab_id: number|null}}>) => void} onChange
+ * @param {{ debounceMs?: number }} options
+ */
+export function useCommentListener(projectId, onChange, options = {}) {
+    const channelName = 'project.' + projectId;
+    const debounceMs = options.debounceMs ?? 300;
 
-                if (existingCommentIndex !== -1) {
-                    list.splice(existingCommentIndex, 1);
-                }
+    let pending = [];
+    let timer = null;
+    let active = false;
 
-                // Neuen Kommentar vorne einfügen
-                list.unshift(newComment);
-            })
-            .listen('.comment.delete', (data) => {
-                const deletedComment = data.comment;
-
-                const list = Array.isArray(commentList.value)
-                    ? commentList.value
-                    : commentList;
-
-                const deletedCommentIndex = list.findIndex(
-                    (comment) => comment.id === deletedComment.id
-                );
-
-                if (deletedCommentIndex !== -1) {
-                    list.splice(deletedCommentIndex, 1);
-                }
-            });
+    function flush() {
+        timer = null;
+        const changes = pending;
+        pending = [];
+        if (active && changes.length > 0) {
+            onChange(changes);
+        }
     }
 
-    return { init };
+    function schedule(type, data) {
+        pending.push({ type, comment: data?.comment ?? {} });
+        if (timer !== null) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(flush, debounceMs);
+    }
+
+    const handleAdd = (data) => schedule('add', data);
+    const handleDelete = (data) => schedule('delete', data);
+
+    function init() {
+        if (active) {
+            return;
+        }
+        active = true;
+        Echo.private(channelName)
+            .listen(ADD_EVENT, handleAdd)
+            .listen(DELETE_EVENT, handleDelete);
+    }
+
+    function stop() {
+        if (!active) {
+            return;
+        }
+        active = false;
+        if (timer !== null) {
+            clearTimeout(timer);
+            timer = null;
+        }
+        pending = [];
+        stopListeningOnPrivateChannel(channelName, ADD_EVENT, handleAdd);
+        stopListeningOnPrivateChannel(channelName, DELETE_EVENT, handleDelete);
+    }
+
+    return { init, stop };
 }

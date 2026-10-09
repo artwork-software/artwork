@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 /**
  * Wochen-/Zeitraumwerte für Schichtplan-Kacheln (KW-Spalte, AZK-Badge). Tageswerte kommen
@@ -86,6 +87,8 @@ class WorkingHourService
      */
     public function workTimeBalanceData(User $user, bool $showHours): array
     {
+        // Arbeitszeitberechnung aus: kein Stundenkonto ausliefern (Kachel-Badge entfällt)
+        $showHours = $showHours && WorkTimeAccounting::isEnabled();
         $minutes = (int) ($user->work_time_balance ?? 0);
 
         return [
@@ -191,7 +194,9 @@ class WorkingHourService
             $showHours = $canSeeWorkerHours || $user->id === $currentUser?->id;
             $additionalData = array_merge(
                 $this->workTimeBalanceData($user, $showHours),
-                ['weeklyWorkingHours' => $showHours ? ($weeklyWorkingHoursCache[$user->id] ?? []) : []]
+                ['weeklyWorkingHours' => $showHours
+                    ? $this->withoutTargetsWhenAccountingDisabled($weeklyWorkingHoursCache[$user->id] ?? [])
+                    : []]
             );
 
             $userData = $workerShiftPlanService->buildWorkerData(
@@ -245,6 +250,7 @@ class WorkingHourService
      *     weekNumber: string,
      *     year: int,
      *     isoWeek: int,
+     *     cacheWeek: int|string,
      * }>
      */
     private function buildWeekPeriods(Carbon $startDate, Carbon $endDate): array
@@ -262,6 +268,14 @@ class WorkingHourService
                 'year' => (int) $weekStart->format('o'),
                 'isoWeek' => (int) $weekStart->format('W'),
             ];
+            $index = array_key_last($weekPeriods);
+            $isPartial = !$weekPeriods[$index]['actualStart']->isSameDay($weekStart)
+                || !$weekPeriods[$index]['actualEnd']->isSameDay($weekEnd);
+            // Cache-Schlüssel: beschnittene Wochen getrennt von vollen Wochen
+            $weekPeriods[$index]['cacheWeek'] = $isPartial
+                ? $weekPeriods[$index]['isoWeek'] . ':' . $weekPeriods[$index]['actualStart']->toDateString()
+                    . ':' . $weekPeriods[$index]['actualEnd']->toDateString()
+                : $weekPeriods[$index]['isoWeek'];
         }
 
         return $weekPeriods;
@@ -362,7 +376,7 @@ class WorkingHourService
                     $entityType,
                     $userId,
                     $weekPeriod['year'],
-                    $weekPeriod['isoWeek']
+                    $weekPeriod['cacheWeek']
                 );
 
                 if ($cached !== null) {
@@ -391,7 +405,7 @@ class WorkingHourService
                     $entityType,
                     $userId,
                     $weekPeriod['year'],
-                    $weekPeriod['isoWeek'],
+                    $weekPeriod['cacheWeek'],
                     $weekData
                 );
             }
@@ -410,6 +424,46 @@ class WorkingHourService
         Carbon $startDate,
         Carbon $endDate
     ): array {
+        return $this->withoutTargetsWhenAccountingDisabled(
+            $this->computeWeeklyWorkingHours($entity, $startDate, $endDate)
+        );
+    }
+
+    /**
+     * Arbeitszeitberechnung aus: nur die geplanten Stunden bleiben, Soll und Differenz entfallen.
+     * Der Wochen-Cache hält immer die vollständigen Werte, damit das Wiedereinschalten sofort greift.
+     *
+     * @param array<string, array<string, mixed>> $weeks
+     * @return array<string, array<string, mixed>>
+     */
+    private function withoutTargetsWhenAccountingDisabled(array $weeks): array
+    {
+        if (WorkTimeAccounting::isEnabled()) {
+            return $weeks;
+        }
+
+        return array_map(static fn (array $week): array => array_merge($week, [
+            'daily_target' => null,
+            'difference' => null,
+            'isMinus' => false,
+            'target_minutes' => null,
+            'difference_minutes' => null,
+            'difference_signed' => null,
+            'daily_target_formatted' => null,
+            'difference_formatted' => null,
+            'target_unknown' => false,
+            'days_without_pattern' => 0,
+        ]), $weeks);
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function computeWeeklyWorkingHours(
+        User|Freelancer|ServiceProvider $entity,
+        Carbon $startDate,
+        Carbon $endDate
+    ): array {
         $entityType = WorkingHourCacheService::entityType($entity);
         $entityId = $entity->id;
 
@@ -422,7 +476,7 @@ class WorkingHourService
                 $entityType,
                 $entityId,
                 $wp['year'],
-                $wp['isoWeek']
+                $wp['cacheWeek']
             );
 
             if ($cached !== null) {
@@ -447,7 +501,7 @@ class WorkingHourService
                 $entityType,
                 $entityId,
                 $wp['year'],
-                $wp['isoWeek'],
+                $wp['cacheWeek'],
                 $weekData
             );
         }

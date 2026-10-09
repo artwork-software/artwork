@@ -62,7 +62,7 @@ final class WorkTimeTargetUnknownTest extends TestCase
             'title' => 'Einsatz',
             'start_date' => $date,
             'end_date' => $date,
-            'full_day' => true,
+            'full_day' => false, // Dauer ohne Uhrzeit (ganztägig zählt das Tagessoll)
             'working_time_minutes' => $minutes,
             'break_minutes' => 0,
         ]);

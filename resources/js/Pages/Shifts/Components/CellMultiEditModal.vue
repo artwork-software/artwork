@@ -62,7 +62,7 @@
                                     {{ type.name }}
                                 </span>
                             </div>
-                            <PropertyIcon name="CheckIcon"
+                            <PropertyIcon name="IconCheck"
                                 v-if="selected"
                                 class="h-5 w-5 text-success"
                                 aria-hidden="true"
@@ -180,7 +180,7 @@
                 >
                     <div class="w-full px-3 py-4 bg-accent-500/8 hover:bg-accent-500/16 border border-dashed border-accent-200/70 rounded-lg transition-colors">
                         <AlertComponent
-                            text="Es wurden noch keine Zeiten festgelegt. Klicke hier um Zeiten zu erstellen"
+                            :text="$t('No times have been set yet. Click here to create times')"
                             show-icon
                             icon-size="h-4 w-4"
                         />

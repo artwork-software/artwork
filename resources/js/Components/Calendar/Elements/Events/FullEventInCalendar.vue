@@ -18,13 +18,15 @@
       isEmphasized ? 'border-[rgba(0,0,0,0.18)]' : (isDimmed ? 'border-dashed border-border text-[#3F424A]' : 'border-black/5'),
       isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
       pageProps.auth.user.calendar_daily_view ? 'overflow-y-auto' : '',
-      // Tages-/Wochenansicht: schmale Kacheln (überlappende Termine, schmale Raumspalten)
-      // blenden unter 10rem Details aus (Info-Icon) statt über den Rand hinauszuwachsen.
-      // Tagesansicht zusätzlich Höhen-Container (Kachelhöhe = Termindauer, per Wrapper fix):
-      // niedrige Kacheln zeigen die Statusleiste nur als Farbstreifen
-      isInDailyView ? '[container:event/size] overflow-x-hidden' : (adaptsToTileWidth ? '@container/event overflow-x-hidden' : ''),
-      multiEdit ? 'relative' : ''
+      // Tagesansicht (Container event): schmale Kacheln (überlappende Termine) blenden
+      // unter 10rem Details aus (Info-Icon); zusätzlich Höhen-Container (Kachelhöhe =
+      // Termindauer, per Wrapper fix): niedrige Kacheln zeigen die Statusleiste nur als Farbstreifen.
+      // Wochenansicht (Container tile): schmale Raumspalten stapeln nur einspaltig,
+      // alle Infos und das Kontextmenü bleiben direkt sichtbar
+      isInDailyView ? '[container:event/size] overflow-x-hidden' : (adaptToTileWidth ? '@container/tile overflow-x-hidden' : ''),
+      multiEdit ? 'relative' : 'cursor-pointer'
     ]"
+        @click="onTileClick"
     >
         <!-- Multi-Edit Overlay -->
         <!-- Klick bubbelt zum Event-Wrapper in BaseCalendar (onEventClick), der die Auswahl toggelt -->
@@ -160,9 +162,9 @@
             </div>
         </div>
         <!-- CONTENT: Detailliert ab mittlerem Zoom -->
-        <div v-if="showFullContent" class="grid grid-cols-1 md:grid-cols-3 gap-x-3 px-2.5 py-2 @max-[10rem]/event:grid-cols-1! @max-[10rem]/event:px-1.5">
-            <!-- Linke 2/3 Spalte (schmale Tagesansicht-Kachel: volle Breite) -->
-            <div class="col-span-2 min-w-0 @max-[10rem]/event:col-span-1!">
+        <div v-if="showFullContent" class="relative grid grid-cols-1 md:grid-cols-3 gap-x-3 px-2.5 py-2 @max-[10rem]/event:grid-cols-1! @max-[10rem]/event:px-1.5 @max-[10rem]/tile:grid-cols-1! @max-[10rem]/tile:px-1.5">
+            <!-- Linke 2/3 Spalte (schmale Kachel: volle Breite, rechts Platz für das Kontextmenü) -->
+            <div class="col-span-2 min-w-0 @max-[10rem]/event:col-span-1! @max-[10rem]/event:pr-5 @max-[10rem]/tile:col-span-1! @max-[10rem]/tile:pr-5">
                 <div class="flex items-start">
                     <!-- Text-Block -->
                     <div
@@ -293,8 +295,31 @@
                             </span>
                         </div>
 
+                        <!-- Ticketverkauf (Artwork-Tickets, nur freigegebene Termine, nur Starttag); Klick öffnet die Gästeliste -->
+                        <button
+                            v-if="ticketSales && !project && zoom_factor >= 0.8"
+                            type="button"
+                            class="mt-0.5 flex cursor-pointer items-center gap-1.5 rounded text-xs/5 hover:underline underline-offset-2"
+                            :title="ticketSalesLabel"
+                            @click.stop="showTicketDetails = true"
+                        >
+                            <component
+                                :is="IconTicket"
+                                class="size-3.5 shrink-0"
+                                stroke-width="2"
+                                :style="{ color: eventTextColor }"
+                            />
+                            <span
+                                class="text-xs/[18px] subpixel-antialiased tabular-nums whitespace-nowrap"
+                                :class="ticketSales.cancelled ? 'line-through' : ''"
+                                :style="{ color: eventTypeTextColor }"
+                            >
+                                {{ ticketSales.sold }} / {{ ticketSales.capacity }}
+                            </span>
+                        </button>
+
                         <!-- Zeit/Optionen Zeile -->
-                        <div class="mt-0.5 flex items-center gap-1.5 text-xs/5" :class="[isSameDay && !project && !atAGlance ? 'flex-nowrap' : 'flex-wrap']">
+                        <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 @max-[10rem]/tile:flex-wrap!" :class="[isSameDay && !project && !atAGlance ? 'flex-nowrap' : 'flex-wrap']">
                             <component
                                 :is="IconRepeat"
                                 v-if="calSettings.repeating_events && event.is_series"
@@ -348,7 +373,7 @@
                             </div>
 
                             <!-- Options -->
-                            <div v-if="event.option_string && calSettings.options" class=" text-xs/5 @max-[10rem]/event:hidden">
+                            <div v-if="event.option_string && calSettings.options" class=" text-xs/5 @max-[10rem]/event:hidden @max-[10rem]/tile:basis-full">
                                 <span
                                     v-if="!atAGlance && isSameDay"
                                     class="text-xs/[18px] font-medium subpixel-antialiased"
@@ -364,7 +389,7 @@
 
                         <!-- Schmale Tagesansicht-Kachel: alles außer Name + Zeit steckt hinter dem Info-Icon -->
                         <component
-                            v-if="adaptsToTileWidth"
+                            v-if="isInDailyView"
                             :is="IconInfoCircle"
                             class="mt-1 hidden size-5 cursor-pointer @max-[10rem]/event:block"
                             stroke-width="1.5"
@@ -452,10 +477,12 @@
                 </div>
             </div>
 
-            <!-- Rechte 1/3 Spalte: Properties + Aktionen (schmale Tagesansicht-Kachel: im Info-Tooltip) -->
-            <div class="pt-1 flex flex-col justify-start items-end @max-[10rem]/event:hidden">
+            <!-- Rechte 1/3 Spalte: Properties + Aktionen. Schmale Kachel: Kontextmenü oben rechts
+                 über der Kachel; Properties/Timeline in der Wochenansicht als Zeile unter dem Text,
+                 in der Tagesansicht im Info-Tooltip -->
+            <div class="pt-1 flex flex-col justify-start items-end @max-[10rem]/event:pt-0 @max-[10rem]/tile:flex-row @max-[10rem]/tile:flex-wrap @max-[10rem]/tile:items-center @max-[10rem]/tile:justify-start @max-[10rem]/tile:gap-2">
                 <!-- Kontext-Menü -->
-                <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150">
+                <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150 @max-[10rem]/event:absolute @max-[10rem]/event:top-2 @max-[10rem]/event:right-0.5 @max-[10rem]/tile:absolute @max-[10rem]/tile:top-2 @max-[10rem]/tile:right-0.5">
                     <BaseMenu has-no-offset :dots-color="calSettings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" :title="directBookingOnly ? 'Confirm as fixed event' : 'Request verification'" />
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
@@ -482,7 +509,7 @@
                 </div>
 
                 <!-- Properties als Icons -->
-                <div class="grid grid-cols-5 md:grid-cols-2 gap-2">
+                <div class="grid grid-cols-5 md:grid-cols-2 gap-2 @max-[10rem]/event:hidden @max-[10rem]/tile:flex @max-[10rem]/tile:flex-wrap @max-[10rem]/tile:gap-1.5">
                     <div v-for="property in event.eventProperties" :key="property.id" class="col-span-1 group/property relative">
                         <PropertyIcon
                             :name="property.icon"
@@ -500,7 +527,8 @@
                 <!-- Timeline Icon -->
                 <div
                     v-if="calSettings.show_timeline"
-                    class="mt-2 cursor-pointer"
+                    class="mt-2 cursor-pointer @max-[10rem]/event:hidden @max-[10rem]/tile:mt-0"
+                    data-no-edit-click
                     @click="openTimelineModal"
                 >
                     <component
@@ -672,6 +700,21 @@
                                             <span class="subpixel-antialiased">{{ $t('Admission') }} {{ event.admission_time }}</span>
                                         </div>
 
+                                        <!-- Ticketverkauf (Artwork-Tickets) -->
+                                        <button
+                                            v-if="ticketSales"
+                                            type="button"
+                                            class="mt-0.5 flex cursor-pointer items-center gap-1.5 text-xs/5 hover:underline underline-offset-2"
+                                            @click.stop="showTicketDetails = true"
+                                        >
+                                            <component
+                                                :is="IconTicket"
+                                                class="size-3.5 shrink-0"
+                                                stroke-width="2"
+                                            />
+                                            <span class="subpixel-antialiased">{{ ticketSalesLabel }}</span>
+                                        </button>
+
                                         <!-- Zeit -->
                                         <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 flex-wrap">
                                             <component
@@ -784,7 +827,7 @@
         </Teleport>
 
         <!-- SUB-EVENTS -->
-        <div v-if="event.subEvents?.length > 0" class="space-y-1.5 border-t border-black/5 px-2.5 py-2">
+        <div v-if="event.subEvents?.length > 0" class="space-y-1.5 border-t border-black/5 px-2.5 py-2" data-no-edit-click>
             <div v-for="subEvent in event.subEvents" :key="'sub-'+subEvent.id" class="rounded-lg">
                 <div
                     class="relative rounded-lg border-l-[6px]"
@@ -928,11 +971,18 @@
             :event="event"
             @close="showSearchTimelinePresetModal = false"
         />
+
+        <TicketingSalesModal
+            v-if="showTicketDetails"
+            :event-id="event.id"
+            :description="eventNameLabel"
+            @close="showTicketDetails = false"
+        />
     </div>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue";
+import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import axios from "axios";
 import {
@@ -950,6 +1000,7 @@ import {
     IconLockOpen,
     IconRepeat,
     IconSquareCheckFilled,
+    IconTicket,
     IconTimeline,
     IconTrash,
     IconUsersGroup,
@@ -1036,6 +1087,12 @@ const SearchTimelinePresetModal = defineAsyncComponent({
     timeout: 3000,
 });
 
+const TicketingSalesModal = defineAsyncComponent({
+    loader: () => import("@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue"),
+    delay: 200,
+    timeout: 3000,
+});
+
 const props = defineProps({
     event: { type: Object, required: true },
     multiEdit: { type: Boolean, default: false },
@@ -1069,7 +1126,19 @@ const innerLineHeight = computed(() => (contentZoom.value > 1 ? "1.25rem" : prop
 // die Zoom-Schwellen (Info-Icon statt Inhalt, ausgeblendete Detailzeilen) greifen dort nicht.
 const showFullContent = computed(() => props.isInDailyView || zoom_factor.value > 0.6);
 const showDetailRows = computed(() => props.isInDailyView || zoom_factor.value >= 0.8);
-const adaptsToTileWidth = computed(() => props.isInDailyView || props.adaptToTileWidth);
+
+// Klick auf die Kachel öffnet den Termin zum Bearbeiten (wie die Kompaktkachel).
+// Ausgenommen: Multi-Edit (der Wrapper toggelt die Auswahl), eigene Bedienelemente
+// in der Kachel (Links, Buttons, Headless-UI-Menüs/Popover, Timeline, Sub-Termine)
+// und Klicks, die eine Textauswahl abschließen.
+const TILE_CLICK_IGNORE_SELECTOR = 'a, button, input, select, textarea, label, [role="button"], [id^="headlessui-"], [data-no-edit-click]';
+
+const onTileClick = (e) => {
+    if (props.multiEdit) return;
+    if (e.target instanceof Element && e.target.closest(TILE_CLICK_IGNORE_SELECTOR)) return;
+    if (window.getSelection()?.toString()) return;
+    emits('editEvent', props.event);
+};
 
 const resolvedFormattedDates = computed(() =>
     props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end)
@@ -1119,6 +1188,19 @@ const showAdmissionTime = computed(() =>
     && Boolean(props.event.admission_time)
     && isStartDayCell.value
 );
+
+// Verkauft/Plätze aus Artwork-Tickets; BaseCalendar stellt sie bereit, andere Kalender nicht.
+const calendarTicketSales = inject('calendarTicketSales', null);
+const ticketSales = computed(() =>
+    isStartDayCell.value ? calendarTicketSales?.get(props.event.id) ?? null : null
+);
+const showTicketDetails = ref(false);
+const ticketSalesLabel = computed(() => {
+    if (!ticketSales.value) return '';
+    return ticketSales.value.cancelled
+        ? $t('Cancelled in Artwork-Tickets')
+        : $t('{sold} of {capacity} tickets sold', { sold: ticketSales.value.sold, capacity: ticketSales.value.capacity });
+});
 
 // Terminstatus ausgeschrieben: eigene Zeile unter dem Terminnamen (Anzeigeeinstellung, Default AUS)
 const showEventStatusName = computed(() =>

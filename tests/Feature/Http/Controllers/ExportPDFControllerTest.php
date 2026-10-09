@@ -144,4 +144,31 @@ final class ExportPDFControllerTest extends FeatureTestCase
         self::assertCount(0, $capturedViewData['rooms']);
         self::assertTrue($capturedViewData['hideEmptyRooms']);
     }
+
+    #[Test]
+    public function calendar_pdf_without_saved_filter_and_payload_uses_the_default_period(): void
+    {
+        // Ohne Kalenderfilter und ohne „filter“ im Request gab es vorher einen TypeError (500).
+        $user = $this->actingAsAdmin();
+        $user->userFilters()->delete();
+        $this->mockSnappyPdf($capturedViewData);
+
+        $this->post(route('calendar.export.pdf'))->assertRedirectContains('download');
+
+        self::assertNotNull($capturedViewData);
+    }
+
+    #[Test]
+    public function calendar_pdf_rejects_unknown_projects_and_invalid_dates(): void
+    {
+        $this->actingAsAdmin();
+        $this->mockSnappyPdf($capturedViewData);
+
+        $this->post(route('calendar.export.pdf'), ['project' => 999999999, 'start' => 'kein-datum'])
+            ->assertSessionHasErrors(['project', 'start']);
+        $this->post(route('calendar.export.monthly-pdf'), ['project' => 999999999, 'filter' => 'x'])
+            ->assertSessionHasErrors(['project', 'filter']);
+
+        self::assertNull($capturedViewData);
+    }
 }

@@ -66,7 +66,7 @@ class CommittedShiftChangeController extends Controller
 
     public function acknowledge(CommittedShiftChange $committedShiftChange): \Illuminate\Http\RedirectResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var \Artwork\Modules\User\Models\User $user */
         $user = auth()->user();
         if ($committedShiftChange->acknowledged_at) {
             return back()->with('info', __('Änderung bereits bestätigt.'));

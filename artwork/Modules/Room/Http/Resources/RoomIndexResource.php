@@ -2,14 +2,11 @@
 
 namespace Artwork\Modules\Room\Http\Resources;
 
-use Artwork\Modules\Event\Http\Resources\EventShowResource;
-use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\User\Http\Resources\UserIconResource;
-use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \Room
+ * @mixin \Artwork\Modules\Room\Models\Room
  */
 class RoomIndexResource extends JsonResource
 {
@@ -21,10 +18,6 @@ class RoomIndexResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $startTime = Carbon::parse($request->get('start_time'));
-        $endTime = Carbon::parse($request->get('start_time'));
-
-
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
@@ -36,10 +29,13 @@ class RoomIndexResource extends JsonResource
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'everyone_can_book' => $this->everyone_can_book,
             'relevant_for_disposition' => $this->relevant_for_disposition,
-            'start_date' => Carbon::parse($this->start_date)->format('d.m.Y'),
-            'start_date_dt_local' => Carbon::parse($this->start_date)->toDateString(),
-            'end_date' => Carbon::parse($this->end_date)->format('d.m.Y'),
-            'end_date_dt_local' => Carbon::parse($this->end_date)->toDateString(),
+            'capacity' => $this->capacity,
+            // ohne Datum null statt "heute" (Carbon::parse(null)) — sonst schrieb das Bearbeiten-Modal
+            // jedem Raum das aktuelle Datum als Zeitraum zurück
+            'start_date' => $this->start_date?->format('d.m.Y'),
+            'start_date_dt_local' => $this->start_date?->toDateString(),
+            'end_date' => $this->end_date?->format('d.m.Y'),
+            'end_date_dt_local' => $this->end_date?->toDateString(),
             // Relationen statt frischer Queries: admins/creator kommen über Room::$with,
             // categories/attributes/adjoining_rooms laden die Aufrufer eager (AreaController)
             // — sonst vier Queries je Raum.

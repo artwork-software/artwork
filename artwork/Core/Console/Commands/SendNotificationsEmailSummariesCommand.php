@@ -2,21 +2,20 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Notifications\BaseNotification;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
-use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Mail\NotificationSummary;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
+use Artwork\Modules\Notification\Support\NotificationMailPresenter;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Repositories\UserRepository;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Mail\Factory as MailFactory;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Translation\Translator;
@@ -25,6 +24,12 @@ use Throwable;
 
 class SendNotificationsEmailSummariesCommand extends Command
 {
+    /**
+     * Einträge je Gruppe in einer Sammelmail; der Rest erscheint als „und X weitere“ mit Link ins
+     * Benachrichtigungscenter (vorher kamen nach langer Pause tausende Einträge in einer Mail).
+     */
+    public const MAX_ENTRIES_PER_GROUP = 50;
+
     protected $signature = 'artwork:send-notifications-email-summaries';
 
     protected $description = 'Sends summaries of notifications to all users.';
@@ -33,10 +38,10 @@ class SendNotificationsEmailSummariesCommand extends Command
         private readonly LoggerInterface $logger,
         private readonly GeneralSettings $generalSettings,
         private readonly UserService $userService,
+        private readonly UserRepository $userRepository,
         private readonly DatabaseNotificationService $databaseNotificationService,
         private readonly Repository $config,
         private readonly NotificationSettingService $notificationSettingService,
-        private readonly CarbonService $carbonService,
         // Contract statt MailManager: unter Mail::fake() liefert der Container MailFake (TypeError)
         private readonly MailFactory $mailManager,
         private readonly Translator $translator,
@@ -78,135 +83,87 @@ class SendNotificationsEmailSummariesCommand extends Command
     protected function sendNotificationsSummary(User $user): void
     {
         $notificationArray = [];
+        $notificationIds = [];
         $language = BaseNotification::languageOf($user);
-        foreach ($this->collectNotificationsToSendForUser($user) as $groupType => $notificationsByType) {
-            /** @var Collection $notificationCollection */
-            foreach ($notificationsByType as $notificationCollection) {
-                if (($notificationCollectionCount = $notificationCollection->count()) > 0) {
-                    if (!isset($notificationArray[$groupType])) {
-                        $notificationArray[$groupType] = [
-                            'title' => $this->translator->get(
-                                'notification-group-enum.title.' .
-                                NotificationGroupEnum::from($groupType)->title(),
-                                [],
-                                $language
-                            ),
-                            'count' => 0,
-                            'notifications' => [],
-                        ];
-                    }
 
-                    $notificationArray[$groupType]['notifications'] = array_merge(
-                        $notificationArray[$groupType]['notifications'],
-                        array_map(
-                            function (DatabaseNotification $databaseNotification) {
-                                return [
-                                    'body' => $databaseNotification['data'],
-                                    'model' => $databaseNotification,
-                                ];
-                            },
-                            $notificationCollection->all()
-                        )
-                    );
-
-                    $notificationArray[$groupType]['count'] += $notificationCollectionCount;
-                }
+        foreach ($this->dueTypesByGroup($user) as $groupType => $typeValues) {
+            $pending = $this->userRepository->pendingSummaryNotificationsQuery($user, $typeValues);
+            // Nur die IDs aller offenen Einträge (neueste zuerst); Inhalte nur für die gezeigten
+            $pendingIds = (clone $pending)->pluck('id')->all();
+            if ($pendingIds === []) {
+                continue;
             }
-        }
 
-        if (!empty($notificationArray)) {
-            // Absender wie bei den Sofort-Mails: Geschäfts-E-Mail aus den Einstellungen, sonst System-Mail
-            $businessEmail = (string) $this->generalSettings->__get('business_email');
-            $this->mailManager->mailer()->to($user)->send(
-                new NotificationSummary(
-                    $notificationArray,
-                    $user->getAttribute('first_name'),
-                    $this->generalSettings->__get('page_title'),
-                    $businessEmail !== '' ? $businessEmail : $this->config->get('mail.system_mail'),
-                    $this->config->get('mail.fallback_page_title'),
+            $shown = (clone $pending)
+                ->whereKey(array_slice($pendingIds, 0, self::MAX_ENTRIES_PER_GROUP))
+                ->get();
+
+            $notificationArray[$groupType] = [
+                'title' => $this->translator->get(
+                    'notification-group-enum.title.' . NotificationGroupEnum::from($groupType)->title(),
+                    [],
                     $language
-                )
-            );
-
-            $notificationTypesSentOut = [];
-            foreach ($notificationArray as $group) {
-                foreach ($group['notifications'] as $notification) {
-                    $notificationTypesSentOut[] = $notification['model']->getAttribute('data')['type'];
-                    $this->databaseNotificationService->updateSentInSummary(
-                        $notification['model'],
-                        true
-                    );
-                }
-            }
-
-            $nowFormatted = Carbon::now()->format('Y-m-d');
-            $notificationEnumsLastSentDates = $user->getAttribute('notification_enums_last_sent_dates');
-            foreach (array_unique($notificationTypesSentOut) as $notificationTypeSentOut) {
-                $notificationEnumsLastSentDates[$notificationTypeSentOut] = $nowFormatted;
-            }
-
-            $this->userService->update(
-                $user,
-                [
-                    'notification_enums_last_sent_dates' => $notificationEnumsLastSentDates,
-                ]
-            );
+                ),
+                'count' => count($pendingIds),
+                'more' => max(0, count($pendingIds) - $shown->count()),
+                'notifications' => $shown->map(
+                    static fn (DatabaseNotification $databaseNotification): array => [
+                        'body' => $databaseNotification['data'],
+                        'model' => $databaseNotification,
+                    ]
+                )->all(),
+            ];
+            // auch die nicht gezeigten: sonst käme dieselbe Riesenmail beim nächsten Lauf wieder
+            array_push($notificationIds, ...$pendingIds);
         }
+
+        if ($notificationArray === []) {
+            return;
+        }
+
+        $eventLookups = NotificationMailPresenter::eventLookups(array_merge(...array_map(
+            static fn (array $group): array => array_column($group['notifications'], 'body'),
+            array_values($notificationArray)
+        )));
+
+        // Absender wie bei den Sofort-Mails: Geschäfts-E-Mail aus den Einstellungen, sonst System-Mail
+        $businessEmail = (string) $this->generalSettings->__get('business_email');
+        $this->mailManager->mailer()->to($user)->send(
+            new NotificationSummary(
+                $notificationArray,
+                $user->getAttribute('first_name'),
+                $this->generalSettings->__get('page_title'),
+                $businessEmail !== '' ? $businessEmail : $this->config->get('mail.system_mail'),
+                $this->config->get('mail.fallback_page_title'),
+                $language,
+                $eventLookups
+            )
+        );
+
+        $this->databaseNotificationService->markSentInSummary($notificationIds);
     }
 
     /**
-     * @return array<string, array<string, array<int, DatabaseNotification>>>
+     * Heute fällige Typen mit E-Mail an, nach Gruppe (aus dem Enum – die gespeicherte Spalte kann
+     * veraltet sein), in der Reihenfolge der Einstellungen.
+     *
+     * @return array<string, array<int, string>>
      */
-    protected function collectNotificationsToSendForUser(User $user): array
+    protected function dueTypesByGroup(User $user): array
     {
-        $notificationsToSend = [];
+        $dueTypes = [];
+        $today = Carbon::today();
 
-        foreach (
-            $this->notificationSettingService
-                ->getEnabledOfUser($user->getAttribute('id'))
-                ->groupBy('group_type')
-                ->values() as $notificationSettings
-        ) {
-            $notificationEnumsLastSentDates = $user->getAttribute('notification_enums_last_sent_dates');
-            /** @var NotificationSetting $notificationSetting */
-            foreach ($notificationSettings as $notificationSetting) {
-                $notificationSettingFrequency = $notificationSetting->getAttribute('frequency');
-                //skip immediately frequency
-                if ($notificationSettingFrequency === NotificationFrequencyEnum::IMMEDIATELY) {
-                    continue;
-                }
-                $notificationSettingTypeValue = $notificationSetting->getAttribute('type')->value;
-                $lastDate = $notificationEnumsLastSentDates[$notificationSettingTypeValue] ?? null;
-
-                $sendSummary = is_null($notificationEnumsLastSentDates) || !$lastDate;
-
-                if (!$sendSummary) {
-                    $lastDate = match ($notificationSettingFrequency) {
-                        NotificationFrequencyEnum::DAILY => $this->carbonService->parseAndAddDay($lastDate),
-                        NotificationFrequencyEnum::WEEKLY_TWICE => $this->carbonService->parseAndAddThreeDays(
-                            $lastDate
-                        ),
-                        NotificationFrequencyEnum::WEEKLY_ONCE => $this->carbonService->parseAndAddWeek($lastDate),
-                    };
-
-                    $sendSummary = $this->carbonService->getTodayMidnight() >= $lastDate;
-                }
-
-                if ($sendSummary) {
-                    $notifications = $this->userService->getNotReadOfNotificationTypeNotSentInSummaryForUser(
-                        $user,
-                        $notificationSettingTypeValue
-                    );
-
-                    if ($notifications->count() > 0) {
-                        $notificationsToSend[$notificationSetting->getAttribute('group_type')][
-                            $notificationSettingTypeValue
-                        ] = $notifications;
-                    }
-                }
+        $settings = $this->notificationSettingService->getEnabledOfUser($user->getAttribute('id'));
+        /** @var NotificationSetting $notificationSetting */
+        foreach ($settings as $notificationSetting) {
+            if (!$notificationSetting->getAttribute('frequency')->isDueOn($today)) {
+                continue;
             }
+            $type = $notificationSetting->getAttribute('type');
+            $dueTypes[$type->groupType()][] = $type->value;
         }
 
-        return $notificationsToSend;
+        return $dueTypes;
     }
 }

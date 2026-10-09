@@ -254,6 +254,11 @@ final class EventBulkActionsTest extends FeatureTestCase
         ]);
 
         $response->assertSuccessful();
+        // Response-Vertrag: die Event-Payload (inkl. Server-updated_at) kommt zurück —
+        // der Client setzt daraus die "zuletzt bearbeitet"-Markierung sofort, ohne auf
+        // den eigenen Broadcast-Roundtrip zu warten.
+        $response->assertJsonPath('event.id', $event->id);
+        $this->assertNotEmpty($response->json('event.updated_at'));
         $this->assertDatabaseHas('events', [
             'id' => $event->id,
             'start_time' => '2026-09-01 22:00:00',

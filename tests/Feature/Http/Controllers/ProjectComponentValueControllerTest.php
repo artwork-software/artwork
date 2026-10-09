@@ -5,14 +5,17 @@ namespace Tests\Feature\Http\Controllers;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 /**
  * Regelwerk (ProjectPolicy::writeComponent): Schreibrecht im Projekt ist Grundvoraussetzung,
- * die Komponenten-Einstellung kann nur weiter einschränken. Globales "write projects" übersteuert.
+ * die Komponenten-Einstellung kann nur weiter einschränken. Globales "write projects" übersteuert die
+ * Bearbeiten-Einstellung, aber nicht "Sehen dürfen nur die Folgenden".
  */
 final class ProjectComponentValueControllerTest extends FeatureTestCase
 {
@@ -99,11 +102,32 @@ final class ProjectComponentValueControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function write_projects_permission_overrides_component_restriction(): void
+    public function write_projects_permission_overrides_component_edit_restriction(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value);
+        $project = Project::factory()->create();
+        $component = $this->makeComponent('allSeeSomeEdit');
+
+        $this->assertValueStored($project, $component, $this->patchComponentValue($project, $component));
+    }
+
+    #[Test]
+    public function write_projects_permission_does_not_unlock_components_restricted_to_listed_viewers(): void
     {
         $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value);
         $project = Project::factory()->create();
         $component = $this->makeComponent('someSeeSomeEdit');
+
+        $this->assertValueRejected($project, $this->patchComponentValue($project, $component));
+    }
+
+    #[Test]
+    public function write_projects_permission_overrides_missing_write_flag_of_listed_viewer(): void
+    {
+        $user = $this->actingAsUserWith(PermissionEnum::WRITE_PROJECTS->value);
+        $project = Project::factory()->create();
+        $component = $this->makeComponent('someSeeSomeEdit');
+        $component->users()->attach($user->id, ['can_write' => false]);
 
         $this->assertValueStored($project, $component, $this->patchComponentValue($project, $component));
     }
@@ -220,5 +244,53 @@ final class ProjectComponentValueControllerTest extends FeatureTestCase
         $component = $this->makeComponent('allSeeSomeEdit');
 
         $this->assertValueRejected($project, $this->patchComponentValue($project, $component));
+    }
+
+    #[Test]
+    public function update_rejects_malformed_payloads_and_keeps_a_single_value(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $component = $this->makeComponent();
+        $route = route('project.tab.component.update', ['project' => $project->id, 'component' => $component->id]);
+
+        // Vorher TypeError bzw. ErrorException (500).
+        $this->patch($route, [])->assertSessionHasErrors('data');
+        $this->patch($route, ['data' => ['text' => ['a', 'b']]])->assertSessionHasErrors('data.text');
+
+        $this->patch($route, ['data' => ['text' => 'Erster Stand']])->assertSessionHasNoErrors();
+        $this->patch($route, ['data' => ['text' => 42]])->assertSessionHasNoErrors();
+
+        $values = \Artwork\Modules\Project\Models\ProjectComponentValue::query()
+            ->where('project_id', $project->id)
+            ->where('component_id', $component->id)
+            ->get();
+        $this->assertCount(1, $values);
+        $this->assertSame(['text' => '42'], $values->first()->data);
+    }
+
+    /**
+     * Gleiche Sichtregel wie der value()-Endpunkt: Projekt-Schreibrecht reicht nicht für
+     * Komponenten, die nur in für die Person unsichtbaren Tabs liegen.
+     */
+    #[Test]
+    public function write_team_member_cannot_update_component_in_a_hidden_tab(): void
+    {
+        $project = Project::factory()->create();
+        $writer = User::factory()->create();
+        $project->users()->attach($writer->id, ['can_write' => true]);
+        $hiddenComponent = $this->makeComponent();
+        $visibleComponent = $this->makeComponent();
+        foreach ([[$hiddenComponent, false], [$visibleComponent, true]] as [$component, $visibleForAll]) {
+            ComponentInTab::create([
+                'project_tab_id' => ProjectTab::factory()->create(['visible_for_all' => $visibleForAll])->id,
+                'component_id' => $component->id,
+                'order' => 1,
+            ]);
+        }
+        $this->actingAs($writer);
+
+        $this->assertValueRejected($project, $this->patchComponentValue($project, $hiddenComponent));
+        $this->assertValueStored($project, $visibleComponent, $this->patchComponentValue($project, $visibleComponent));
     }
 }

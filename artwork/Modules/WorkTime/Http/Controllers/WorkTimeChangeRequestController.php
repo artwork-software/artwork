@@ -16,6 +16,7 @@ use Artwork\Modules\WorkTime\Http\Requests\StoreWorkTimeChangeRequestRequest;
 use Artwork\Modules\WorkTime\Http\Requests\UpdateWorkTimeChangeRequestRequest;
 use Artwork\Modules\WorkTime\Models\WorkTimeChangeRequest;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
+use Artwork\Modules\WorkTime\Services\WorkTimeBookingService;
 use Artwork\Modules\WorkTime\Services\WorkTimeChangeRequestService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -30,7 +31,8 @@ class WorkTimeChangeRequestController extends Controller
         protected WorkTimeChangeRequestService $workTimeChangeRequestService,
         protected WorkTimeBookingRepository $workTimeBookingRepository,
         protected NotificationService $notificationService,
-        protected ShiftWorkerService $shiftWorkerService
+        protected ShiftWorkerService $shiftWorkerService,
+        protected WorkTimeBookingService $workTimeBookingService
     ) {
     }
 
@@ -193,23 +195,25 @@ class WorkTimeChangeRequestController extends Controller
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
+            // 1-basiert und 'string' wie alle anderen Beschreibungen ('text' kennt das Center nicht);
+            // requestId war immer null (Request hat kein 'id') → Link ohne Anfrage
             $notificationDescription = [
-                0 => [
-                    'type' => 'text',
+                1 => [
+                    'type' => 'string',
                     'title' => __('notification.shift.worktime-request.old-new-time', [
                         'user' => $workTimeRequest->user->full_name,
                         'start_time' => $workTimeRequest->request_start_time,
                         'end_time' => $workTimeRequest->request_end_time,
                     ], $planner->language),
                     'href' => route('work-time-request.received', [
-                        'requestId' => $request->input('id'),
+                        'requestId' => $workTimeRequest->id,
                     ])
                 ],
-                1 => [
+                2 => [
                     'type' => 'link',
                     'title' => __('notification.shift.worktime-request.link-to-request', [], $planner->language),
                     'href' => route('work-time-request.received', [
-                        'requestId' => $request->input('id'),
+                        'requestId' => $workTimeRequest->id,
                     ])
                 ],
             ];
@@ -257,10 +261,8 @@ class WorkTimeChangeRequestController extends Controller
         $this->authorize('update', $workTimeChangeRequest);
     }
 
-    public function approve(
-        WorkTimeChangeRequest $workTimeChangeRequest,
-        WorkTimeBookingRepository $repository
-    ): \Illuminate\Http\RedirectResponse {
+    public function approve(WorkTimeChangeRequest $workTimeChangeRequest): \Illuminate\Http\RedirectResponse
+    {
         $this->authorizeDecision($workTimeChangeRequest);
 
         $shift = $workTimeChangeRequest->shift;
@@ -272,8 +274,10 @@ class WorkTimeChangeRequestController extends Controller
             abort(404, 'Ursprüngliche Schicht nicht gefunden.');
         }
 
-        $startDateParsed = Carbon::parse($oldPivot->start_date);
-        $endDateParsed = Carbon::parse($oldPivot->end_date ?? $oldPivot->start_date);
+        // Pivot ohne Datum (Altdaten): Datum der Schicht – wie applyIndividualTime; Carbon::parse(null) wäre heute
+        $pivotStartDate = $oldPivot->start_date ?? $shift->start_date;
+        $startDateParsed = Carbon::parse($pivotStartDate);
+        $endDateParsed = Carbon::parse($oldPivot->end_date ?? $shift->end_date ?? $pivotStartDate);
         $startTimeParsed = Carbon::parse($oldPivot->start_time);
         $endTimeParsed = Carbon::parse($oldPivot->end_time);
 
@@ -291,55 +295,35 @@ class WorkTimeChangeRequestController extends Controller
             : $shiftDate->copy();
         $requestEndTimeParsed = Carbon::parse($workTimeChangeRequest->request_end_time);
         $newEnd = $requestEndDate->copy()->setTimeFrom($requestEndTimeParsed);
+        $newEndForPeriod = $newEnd->lte($newStart) ? $newEnd->copy()->addDay() : $newEnd;
 
-        $now = now()->startOfDay();
-
-        $oldDuration = $oldStart->diffInMinutes($oldEnd);
-        $newDuration = $newStart->diffInMinutes($newEnd);
-        $balanceDelta = $newDuration - $oldDuration;
+        // Betroffene Tage (alte UND neue Zeit, auch der Anteil nach Mitternacht): aktuelle Rechnung vor der
+        // Änderung festhalten, damit danach nur die Wirkung der Schichtänderung gebucht wird
+        $firstAffectedDay = ($oldStart->lt($newStart) ? $oldStart : $newStart)->copy()->startOfDay();
+        $lastAffectedDay = ($oldEnd->gt($newEndForPeriod) ? $oldEnd : $newEndForPeriod)
+            ->copy()->subMinute()->startOfDay();
+        $before = $this->workTimeBookingService->liveDaySnapshot($user, $firstAffectedDay, $lastAffectedDay);
 
         // Gleicher Schreibweg wie die individuelle Zeit im Dienstplan: Datum über Mitternacht neu
         // ableiten (sonst blieb ein altes +1-Tag-end_date stehen), Verlauf, Zu-/Absage-Reset,
         // Stunden-Cache und Live-Update. Die Person sieht die genehmigte Zeit so im Einsatzplan.
-        $applyIndividualTime = function () use ($oldPivot, $newStart, $newEnd, $workTimeChangeRequest): void {
-            $shiftWorker = ShiftWorker::withoutTrashed()->find($oldPivot->id);
-            if ($shiftWorker === null) {
-                abort(404, 'Ursprüngliche Schicht nicht gefunden.');
-            }
-            $this->shiftWorkerService->applyIndividualTime(
-                $shiftWorker,
-                $newStart->format('H:i'),
-                $newEnd->format('H:i'),
-                $workTimeChangeRequest->request_end_date
-                    ? Carbon::parse($workTimeChangeRequest->request_end_date)->toDateString()
-                    : null
-            );
-        };
-
-        if ($shiftDate->gte($now)) {
-            $applyIndividualTime();
-        } else {
-            // For past shifts, create an adjustment booking to reflect the time change
-            $repository->storeOrUpdateBooking($user, now(), now()->dayOfWeek, [
-                'name' => 'adjustment_work_time_change_request_' . $shift->id,
-                'comment' => 'Zeitkorrektur: ' . $oldDuration . 'min → ' . $newDuration . 'min',
-                'booking_day' => now()->toDateString(),
-                'booking_weekday' => now()->dayOfWeek,
-                'worked_hours' => 0,
-                'wanted_working_hours' => 0,
-                'nightly_working_hours' => 0,
-                'is_special_day' => false,
-                'work_time_balance_change' => $balanceDelta,
-                'user_id' => $user->id,
-                'booker_id' => auth()->id(),
-            ]);
-
-            if ($balanceDelta !== 0) {
-                $repository->updateUserBalance($user, $balanceDelta);
-            }
-
-            $applyIndividualTime();
+        $shiftWorker = ShiftWorker::withoutTrashed()->find($oldPivot->id);
+        if ($shiftWorker === null) {
+            abort(404, 'Ursprüngliche Schicht nicht gefunden.');
         }
+        $this->shiftWorkerService->applyIndividualTime(
+            $shiftWorker,
+            $newStart->format('H:i'),
+            $newEnd->format('H:i'),
+            $workTimeChangeRequest->request_end_date
+                ? Carbon::parse($workTimeChangeRequest->request_end_date)->toDateString()
+                : null
+        );
+
+        // Bereits gebuchte Tage der Schicht: nur das Delta der Schicht (alt → neu) auf die Tageszeile buchen –
+        // am Schichttag statt am Genehmigungstag, ohne andere Abweichungen des Tages mitzubuchen (die bleiben
+        // ein Hinweis). Nie gebuchte Tage bleiben ein Hinweis („Tag neu buchen“).
+        $this->workTimeBookingService->bookShiftTimeChange($user, $before);
 
         $workTimeChangeRequest->update([
             'status' => 'approved',

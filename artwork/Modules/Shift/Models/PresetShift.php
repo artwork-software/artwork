@@ -44,6 +44,9 @@ class PresetShift extends Model
 
     protected $appends = ['break_formatted'];
 
+    /**
+     * @return BelongsTo<ShiftPreset, $this>
+     */
     public function shiftPreset(): BelongsTo
     {
         return $this->belongsTo(
@@ -54,6 +57,9 @@ class PresetShift extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Craft, $this>
+     */
     public function craft(): BelongsTo
     {
         return $this->belongsTo(
@@ -64,6 +70,9 @@ class PresetShift extends Model
         )->without(['users']);
     }
 
+    /**
+     * @return HasMany<PresetShiftShiftsQualifications, $this>
+     */
     public function shiftsQualifications(): HasMany
     {
         return $this->hasMany(PresetShiftShiftsQualifications::class);

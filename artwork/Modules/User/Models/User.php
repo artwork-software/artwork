@@ -48,6 +48,7 @@ use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\DeletesMirroredCrmContact;
 use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\Workflow\Traits\HasWorkflows;
 use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
@@ -58,6 +59,7 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -77,6 +79,7 @@ use LaravelAndVueJS\Traits\LaravelPermissionToVueJS;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * @property int $id
@@ -186,6 +189,7 @@ class User extends Model implements
     AuthenticatableContract,
     AuthorizableContract,
     CanResetPasswordContract,
+    HasLocalePreference,
     Vacationer,
     Available,
     DayServiceable,
@@ -215,6 +219,13 @@ class User extends Model implements
     use HasProfilePhotoCustom;
     use HasCrmContact;
     use HasCrmFields;
+    use DeletesMirroredCrmContact;
+
+    // All permissions/roles live on the web guard. Without this pin, spatie
+    // resolves the guard from auth.defaults.guard, which Authenticate/shouldUse
+    // switches to 'api' for Passport requests (app API) — every permission
+    // check would then silently fail there.
+    protected string $guard_name = 'web';
 
     protected $fillable = [
         'first_name',
@@ -359,10 +370,12 @@ class User extends Model implements
         'formated_work_time_balance',
     ];
 
-        /**
-         * Beziehung zum InventoryUserFilter
-         */
-    public function inventoryUserFilter()
+    /**
+     * Beziehung zum InventoryUserFilter
+     *
+     * @return HasOne<\Artwork\Modules\Inventory\Models\InventoryUserFilter, $this>
+     */
+    public function inventoryUserFilter(): HasOne
     {
         return $this->hasOne(\Artwork\Modules\Inventory\Models\InventoryUserFilter::class, 'user_id');
     }
@@ -446,6 +459,17 @@ class User extends Model implements
      * wird still unterdrückt (kein User-Enumeration-Leak), Break-Glass setzt den
      * Account zuvor auf 'local' zurück und aktiviert den Reset damit wieder.
      */
+    /**
+     * Mails und Benachrichtigungen in der Sprache der Empfänger:in rendern, nicht in der des
+     * Auslösers (Laravel nutzt das beim Versand automatisch).
+     */
+    public function preferredLocale(): ?string
+    {
+        $language = $this->getAttribute('language');
+
+        return in_array($language, config('app.supported_locales', ['de', 'en']), true) ? $language : null;
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         if ($this->isIdpBound()) {
@@ -459,6 +483,9 @@ class User extends Model implements
         $this->notify(new \Illuminate\Auth\Notifications\ResetPassword($token));
     }
 
+    /**
+     * @return HasMany<ProductBasket, $this>
+     */
     public function productBasket(): HasMany
     {
         return $this->hasMany(ProductBasket::class, 'user_id', 'id');
@@ -484,6 +511,9 @@ class User extends Model implements
         return $this->last_name . ', ' . $this->first_name;
     }
 
+    /**
+     * @return HasOne<UserCalendarSettings, $this>
+     */
     //@todo: fix phpcs error - refactor function name to calendarSettings
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function calendar_settings(): HasOne
@@ -491,6 +521,9 @@ class User extends Model implements
         return $this->hasOne(UserCalendarSettings::class);
     }
 
+    /**
+     * @return HasOne<UserDailyViewCalendarSettings, $this>
+     */
     //@todo: fix phpcs error - refactor function name to dailyViewCalendarSettings
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function daily_view_calendar_settings(): HasOne
@@ -498,12 +531,18 @@ class User extends Model implements
         return $this->hasOne(UserDailyViewCalendarSettings::class);
     }
 
+    /**
+     * @return HasOne<UserShiftListViewSettings, $this>
+     */
     // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps -- wird als Attribut shift_list_view_settings gelesen
     public function shift_list_view_settings(): HasOne
     {
         return $this->hasOne(UserShiftListViewSettings::class);
     }
 
+    /**
+     * @return HasOne<UserShiftPlanSettings, $this>
+     */
     //@todo: fix phpcs error - refactor function name to shiftPlanSettings
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function shift_plan_settings(): HasOne
@@ -511,6 +550,9 @@ class User extends Model implements
         return $this->hasOne(UserShiftPlanSettings::class);
     }
 
+    /**
+     * @return HasOne<UserShiftPlanDailySettings, $this>
+     */
     //@todo: fix phpcs error - refactor function name to shiftPlanDailySettings
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function shift_plan_daily_settings(): HasOne
@@ -538,6 +580,9 @@ class User extends Model implements
         return $returnInterval;
     }
 
+    /**
+     * @return HasMany<ProjectFile, $this>
+     */
     //@todo: fix phpcs error - refactor function name to projectFiles
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function project_files(): HasMany
@@ -545,32 +590,50 @@ class User extends Model implements
         return $this->hasMany(ProjectFile::class);
     }
 
+    /**
+     * @return HasMany<NotificationSetting, $this>
+     */
     public function notificationSettings(): HasMany
     {
         return $this->hasMany(NotificationSetting::class);
     }
 
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);
     }
 
+    /**
+     * @return BelongsToMany<Project, $this>
+     */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class)
             ->withPivot('access_budget', 'is_manager', 'can_write');
     }
 
+    /**
+     * @return BelongsToMany<ProjectRole, $this>
+     */
     public function defaultProjectRoles(): BelongsToMany
     {
         return $this->belongsToMany(ProjectRole::class, 'default_project_role_user');
     }
 
+    /**
+     * @return HasMany<Comment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
     }
 
+    /**
+     * @return HasMany<Checklist, $this>
+     */
     //@todo: fix phpcs error - refactor function name to privateChecklists
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function private_checklists(): HasMany
@@ -578,36 +641,57 @@ class User extends Model implements
         return $this->hasMany(Checklist::class);
     }
 
+    /**
+     * @return HasMany<Room, $this>
+     */
     public function createdRooms(): HasMany
     {
         return $this->hasMany(Room::class);
     }
 
+    /**
+     * @return BelongsToMany<Room, $this>
+     */
     public function adminRooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'room_user');
     }
 
+    /**
+     * @return HasMany<Task, $this>
+     */
     public function doneTasks(): HasMany
     {
         return $this->hasMany(Task::class);
     }
 
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);
     }
 
+    /**
+     * @return HasManyThrough<Task, Checklist, $this>
+     */
     public function privateTasks(): HasManyThrough
     {
         return $this->hasManyThrough(Task::class, Checklist::class);
     }
 
+    /**
+     * @return HasOne<GlobalNotification, $this>
+     */
     public function globalNotification(): HasOne
     {
         return $this->hasOne(GlobalNotification::class, 'created_by');
     }
 
+    /**
+     * @return HasMany<MoneySource, $this>
+     */
     //@todo: fix phpcs error - refactor function name to moneySources
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_sources(): HasMany
@@ -615,16 +699,25 @@ class User extends Model implements
         return $this->hasMany(MoneySource::class, 'creator_id');
     }
 
+    /**
+     * @return HasMany<MoneySourceTask, $this>
+     */
     public function moneySourceTasks(): HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'user_id');
     }
 
+    /**
+     * @return HasMany<Task, $this>
+     */
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class, 'user_id');
     }
 
+    /**
+     * @return BelongsToMany<MoneySource, $this>
+     */
     public function accessMoneySources(): BelongsToMany
     {
         return $this->belongsToMany(MoneySource::class, 'money_source_users')
@@ -632,6 +725,9 @@ class User extends Model implements
             ->using(MoneySourceUserPivot::class);
     }
 
+    /**
+     * @return HasOne<UserCalendarFilter, $this>
+     */
     //@todo: fix phpcs error - refactor function name to calendarFilter
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function calendar_filter(): HasOne
@@ -639,6 +735,9 @@ class User extends Model implements
         return $this->hasOne(UserCalendarFilter::class);
     }
 
+    /**
+     * @return HasOne<UserShiftCalendarFilter, $this>
+     */
     //@todo: fix phpcs error - refactor function name to shiftCalendarFilter
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function shift_calendar_filter(): HasOne
@@ -648,43 +747,65 @@ class User extends Model implements
 
     /**
      * New Filter for Calendar
+     * @return HasMany<UserFilter, $this>
      */
     public function userFilters(): HasMany
     {
         return $this->hasMany(UserFilter::class, 'user_id', 'id');
     }
 
+    /**
+     * @return HasMany<UserFilterTemplate, $this>
+     */
     public function userFilterTemplates(): HasMany
     {
         return $this->hasMany(UserFilterTemplate::class, 'user_id', 'id');
     }
 
+    /**
+     * @return HasOne<UserCommentedBudgetItemsSetting, $this>
+     */
     public function commentedBudgetItemsSetting(): HasOne
     {
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);
     }
 
+    /**
+     * @return BelongsToMany<Craft, $this>
+     */
     public function crafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'craft_users');
     }
 
+    /**
+     * @return MorphToMany<Craft, $this>
+     */
     public function assignedCrafts(): MorphToMany
     {
         return $this->morphToMany(Craft::class, 'craftable');
     }
 
 
+    /**
+     * @return HasOne<UserWorkerShiftPlanFilter, $this>
+     */
     public function workerShiftPlanFilter(): HasOne
     {
         return $this->hasOne(UserWorkerShiftPlanFilter::class);
     }
 
+    /**
+     * @return HasOne<UserInventoryArticlePlanFilter, $this>
+     */
     public function inventoryArticlePlanFilter(): HasOne
     {
         return $this->hasOne(UserInventoryArticlePlanFilter::class);
     }
 
+    /**
+     * @return HasOne<UserContractFilter, $this>
+     */
     public function contractFilter(): HasOne
     {
         return $this->hasOne(UserContractFilter::class);
@@ -775,6 +896,9 @@ class User extends Model implements
             || $this->hasRole(RoleEnum::ARTWORK_ADMIN->value);
     }
 
+    /**
+     * @return HasOne<UserUserManagementSetting, $this>
+     */
     public function projectFilterAndSortSetting(): HasOne
     {
         return $this->hasOne(
@@ -784,6 +908,9 @@ class User extends Model implements
         );
     }
 
+    /**
+     * @return HasOne<UserUserManagementSetting, $this>
+     */
     public function userFilterAndSortSetting(): HasOne
     {
         return $this->hasOne(
@@ -794,27 +921,42 @@ class User extends Model implements
     }
 
 
+    /**
+     * @return HasOne<Project, $this>
+     */
     public function lastProject(): HasOne
     {
         return $this->hasOne(Project::class, 'id', 'last_project_id');
     }
 
+    /**
+     * @return BelongsToMany<Chat, $this>
+     */
     public function chats(): BelongsToMany
     {
         return $this->belongsToMany(Chat::class, 'chat_users')
             ->using(ChatUser::class);
     }
 
+    /**
+     * @return BelongsToMany<EventType, $this>
+     */
     public function verifiableEventTypes(): BelongsToMany
     {
         return $this->belongsToMany(EventType::class, 'event_type_user');
     }
 
+    /**
+     * @return MorphMany<EventVerification, $this>
+     */
     public function eventVerifications(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(EventVerification::class, 'verifier');
     }
 
+    /**
+     * @return HasMany<UserWorkTime, $this>
+     */
     public function workTimes(): HasMany
     {
         return $this->hasMany(UserWorkTime::class, 'user_id', 'id');
@@ -830,13 +972,14 @@ class User extends Model implements
 
     public function getCurrentWorkTime(): ?UserWorkTime
     {
-        $now = now();
+        // DATE-Spalten gegen das Datum vergleichen: gegen now() fiele der letzte Gültigkeitstag ab 00:00:01 raus
+        $today = now()->toDateString();
         return $this->workTimes()
-            ->where(function ($q) use ($now): void {
-                $q->whereNull('valid_from')->orWhere('valid_from', '<=', $now);
+            ->where(function ($q) use ($today): void {
+                $q->whereNull('valid_from')->orWhereDate('valid_from', '<=', $today);
             })
-            ->where(function ($q) use ($now): void {
-                $q->whereNull('valid_until')->orWhere('valid_until', '>=', $now);
+            ->where(function ($q) use ($today): void {
+                $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', $today);
             })
             ->orderByDesc('valid_from')
             ->first();
@@ -844,6 +987,7 @@ class User extends Model implements
 
     /**
      * Alle Vertragszeiträume der Person (Historie), ältester zuerst; valid_from null = offen ab Beginn.
+     * @return HasMany<UserContractAssign, $this>
      */
     public function contractAssigns(): HasMany
     {
@@ -879,6 +1023,7 @@ class User extends Model implements
      * Abwärtskompatibel: der HEUTE gültige Vertragszeitraum als HasOne (auch für with('contract'),
      * whereHas('contract'), $user->contract). Eager-Load: die Sortierung gilt für die gesamte Abfrage,
      * Eloquent nimmt je Person den ersten Treffer = jüngster valid_from (NULL sortiert bei DESC zuletzt).
+     * @return HasOne<UserContractAssign, $this>
      */
     public function contract(): HasOne
     {
@@ -893,11 +1038,17 @@ class User extends Model implements
         return UserContractAssign::query()->with('userContract')->where('user_id', $this->id);
     }
 
+    /**
+     * @return HasMany<WorkTimeBooking, $this>
+     */
     public function workTimeBookings(): HasMany
     {
         return $this->hasMany(WorkTimeBooking::class, 'user_id', 'id');
     }
 
+    /**
+     * @return HasMany<CompensationDayOff, $this>
+     */
     public function compensationDayOffs(): HasMany
     {
         return $this->hasMany(CompensationDayOff::class, 'user_id', 'id');
@@ -905,12 +1056,11 @@ class User extends Model implements
 
     public function getFormatedWorkTimeBalanceAttribute(): string
     {
-        // convert work_time_balance to hours and minutes
-        $hours = floor($this->work_time_balance / 60);
-        $minutes = $this->work_time_balance % 60;
+        // "HH:MM" mit Vorzeichen; Betrag zuerst, sonst wird aus -30 "-1:-30"
+        $balance = (int) $this->work_time_balance;
+        $absolute = abs($balance);
 
-        // format as "HH:MM"
-        return sprintf('%02d:%02d', $hours, $minutes);
+        return sprintf('%s%02d:%02d', $balance < 0 ? '-' : '', intdiv($absolute, 60), $absolute % 60);
     }
 
     public function canHaveWorkflow(string $workflowType): bool
@@ -983,6 +1133,9 @@ class User extends Model implements
         return $builder->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
     }
 
+    /**
+     * @return BelongsToMany<InventoryTag, $this>
+     */
     public function inventoryTagsWithEditPermission(): BelongsToMany
     {
         return $this->belongsToMany(

@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Workflow\Actions;
 
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Workflow\Actions\WorkflowAction;
 use Artwork\Modules\Workflow\Models\WorkflowInstance;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
@@ -25,10 +27,25 @@ class ShiftRuleNotificationAction implements WorkflowAction
         }
 
         $usersToNotify = $this->getUsersToNotify($rule, $parameters);
-        $message = $this->generateNotificationMessage($subject, $parameters);
 
-        foreach ($usersToNotify as $user) {
-            $user->notify(new ShiftRuleViolationNotification($subject, $message));
+        $notificationService = app(NotificationService::class);
+        $previousLocale = app()->getLocale();
+        try {
+            foreach ($usersToNotify as $user) {
+                // Titel/Text des Eintrags in der Sprache der Empfänger*in (vorher Sprache der Auslösung)
+                app()->setLocale($user->language ?: config('app.locale'));
+                $message = $this->generateNotificationMessage($subject, $parameters);
+                $notification = new ShiftRuleViolationNotification($subject, $message);
+                $user->notify($notification);
+                // Live-Hinweis + Glocke wie bei allen anderen Benachrichtigungen (vorher keiner)
+                $notificationService->pushToUser(
+                    $user,
+                    NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT,
+                    $notification->broadcastMessage()
+                );
+            }
+        } finally {
+            app()->setLocale($previousLocale);
         }
     }
 

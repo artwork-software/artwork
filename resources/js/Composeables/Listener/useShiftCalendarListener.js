@@ -1,4 +1,4 @@
-import { getDaysInRange } from '@/Composeables/calendarDateUtils.js'
+import { getDaysInRange, getEventDaysInRange } from '@/Composeables/calendarDateUtils.js'
 
 // subscribeShiftChannels: false → nur Termin-Kanäle. Die Schicht-Kanäle sind in routes/channels.php auf
 // Dienstplan-Sichtrecht beschränkt; ein Abonnement ohne Recht erzeugt nur 403-Konsolenfehler.
@@ -69,7 +69,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
     }
 
     function getEventDays(event) {
-        return event.daysOfEvent || getDaysInRange(event.start, event.end)
+        return event.daysOfEvent || getEventDaysInRange(event.start, event.end)
     }
 
     function sortArrayByStartDateTimes(array) {
@@ -603,5 +603,8 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         updateShiftInRoomAndEvents(data, data.roomId ?? data.shift.roomId, { reloadWorkers: true });
     }
 
-    return { init, dispose, applyShiftUpdate };
+    // Lokal entfernen, ohne auf den Broadcast zu warten (idempotent, der Broadcast findet nichts mehr)
+    const removeEvent = (eventId) => onEventRemoved({event: {id: eventId}});
+
+    return { init, dispose, applyShiftUpdate, removeEvent };
 }

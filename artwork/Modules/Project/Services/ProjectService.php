@@ -26,6 +26,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
+use Artwork\Modules\Ticketing\Services\TicketingProductionService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
@@ -50,6 +51,7 @@ class ProjectService
         private readonly UserService $userService,
         private readonly CarbonService $carbonService,
         private readonly ProjectTeamNotificationService $projectTeamNotificationService,
+        private readonly TicketingProductionService $ticketingProductionService,
     ) {
     }
 
@@ -529,6 +531,8 @@ class ProjectService
             app()->call([app(TableService::class), 'forceDelete'], ['table' => $table]);
         }
 
+        $this->ticketingProductionService->deleteFilesOf($project);
+
         // force delete the project
         return $project->forceDelete();
     }
@@ -704,111 +708,6 @@ class ProjectService
     private function deleteMoneySources(Project $project): void
     {
         $project->moneySources()->detach();
-    }
-
-    /**
-     * @return array<string, mixed>
-     * @throws ModelNotFoundException
-     */
-    public function getEventsWithRelevantShifts(int|Project $project): array
-    {
-        if (!$project instanceof Project) {
-            $project = $this->projectRepository->findOrFail($project);
-        }
-
-        $eventsWithRelevant = [];
-        // Alle Relationen einmalig eager laden statt pro Event/Schicht/Person nachzuladen
-        // (vorher: timelines-Requery, $shift->load() und room()->first() je Event → hunderte Queries)
-        $events = $project
-            ->events()
-            ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
-            ->with([
-                'event_type',
-                'room' => fn ($query) => $query->without(['creator', 'admins']),
-                'timelines' => fn ($query) => $query
-                    ->orderBy('start_date')
-                    ->orderBy('start')
-                    ->orderBy('end_date')
-                    ->orderBy('end'),
-                'shifts.craft',
-                'shifts.committedBy',
-                'shifts.shiftsQualifications',
-                // Personen inkl. globaler Qualifikationen, damit sie im Payload enthalten sind
-                'shifts.users.globalQualifications',
-                'shifts.users.vacations',
-                'shifts.freelancer.globalQualifications',
-                'shifts.serviceProvider.globalQualifications',
-                // Bewusst KEIN eager load von assignedCrafts: Freelancer und
-                // Dienstleister hängen zwar assigned_craft_ids an (dessen Accessor
-                // sonst je Person eine craftables-Query nachschiebt), die Relation
-                // zieht über ihr eigenes with('qualifications') aber ~3 MB in den
-                // Payload. Die paar Zusatzqueries sind hier das kleinere Übel.
-            ])
-            ->orderBy('start_time', 'asc')
-            ->get();
-
-        // Urlaubs-Tage nur einmal pro User berechnen, auch wenn er in mehreren Schichten steckt
-        $vacationDaysByUserId = [];
-
-        foreach ($events as $event) {
-            $timeline = $event->timelines->toArray();
-
-            foreach ($timeline as &$singleTimeLine) {
-                // Rohtext: strip_tags würde Eingaben wie "a<b" verstümmeln.
-                $singleTimeLine['description_without_html'] = $singleTimeLine['description'];
-            }
-
-            foreach ($event->shifts as $shift) {
-                foreach ($shift->users as $user) {
-                    $user->formatted_vacation_days = $vacationDaysByUserId[$user->id]
-                        ??= $user->getFormattedVacationDays();
-                }
-            }
-
-            $eventsWithRelevant[] = [
-                'event' => $event,
-                'timeline' => $timeline,
-                'shifts' => $event->shifts,
-                'event_type' => $event->event_type,
-                'room' => $event->room,
-            ];
-        }
-        return $this->sortEventsWithRelevant($eventsWithRelevant);
-    }
-
-    /**
-     * @param array $eventsWithRelevant
-     * @return array<string, mixed>
-     */
-    private function sortEventsWithRelevant(array $eventsWithRelevant): array
-    {
-        $userSortType = $this->userService->getAuthUser()->sort_type_shift_tab;
-
-        if ($userSortType === null) {
-            return $eventsWithRelevant;
-        }
-
-        usort($eventsWithRelevant, function ($a, $b) use ($userSortType) {
-            $roomNameA = $a['room']['name'] ?? '';
-            $roomNameB = $b['room']['name'] ?? '';
-            if ($userSortType === 'ROOM_NAME_DESC') {
-                $roomComparison = strcmp($roomNameB, $roomNameA);
-            } else {
-                $roomComparison = strcmp($roomNameA, $roomNameB);
-            }
-            if ($roomComparison !== 0) {
-                return $roomComparison;
-            }
-            $dateA = $a['event']['event_date_without_time']['start_clear'] ?? '';
-            $dateB = $b['event']['event_date_without_time']['start_clear'] ?? '';
-
-            $timestampA = strtotime($dateA);
-            $timestampB = strtotime($dateB);
-
-            return $timestampA <=> $timestampB;
-        });
-
-        return $eventsWithRelevant;
     }
 
     /**

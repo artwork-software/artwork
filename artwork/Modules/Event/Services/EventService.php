@@ -2,25 +2,17 @@
 
 namespace Artwork\Modules\Event\Services;
 
-use Spatie\Activitylog\Models\Activity;
-use App\Http\Controllers\ShiftFilterController;
 use App\Http\Resources\MinimalShiftPlanShiftResource;
 use App\Settings\EventSettings;
-use App\Settings\ShiftSettings;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Services\CollectionService;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
-use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
-use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
-use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
-use Artwork\Modules\Event\DTOs\ShiftPlanDto;
-use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Events\RemoveEvent;
@@ -36,13 +28,13 @@ use Artwork\Modules\Event\Services\EventPropertyService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\Holidays\Services\HolidayService;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
@@ -51,15 +43,13 @@ use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Event\Models\SeriesEvents;
-use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
-use Artwork\Modules\Shift\Models\ShiftFilter;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -67,20 +57,19 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
-use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
-use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
-use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
-use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Artwork\Modules\User\Models\UserFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -106,7 +95,8 @@ readonly class EventService
         private CollectionService $collectionService,
         private EventCollectionService $eventCollectionService,
         private EventTypeService $eventTypeService,
-        private readonly AuthManager $authManager
+        private readonly AuthManager $authManager,
+        private readonly TicketingLock $ticketingLock,
     ) {
         $this->cachedData = null;
     }
@@ -125,6 +115,8 @@ readonly class EventService
         NotificationService $notificationService,
         ProjectTabService $projectTabService,
     ): void {
+        $this->ticketingLock->assertEventDeletable($event);
+
         if (!empty($event->project_id)) {
             $changeService->saveFromBuilder(
                 $changeService
@@ -145,14 +137,15 @@ readonly class EventService
         app(ShiftDeletionService::class)->deleteMany($event->shifts);
         $subEventService->deleteSubEvents($event->subEvents);
 
-        broadcast(new OccupancyUpdated())->toOthers();
+        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+        $notificationService->markOpenRoomRequestsHandled($event->id, 'deleted', $this->deletingUser());
 
         if ($event->room_id) {
-            broadcast(new RemoveEvent($event, $event->room_id));
+            SafeBroadcast::send(new RemoveEvent($event, $event->room_id));
         }
 
-        $event->verifications()->each(function (EventVerification $eventVerification) use ($event): void {
+        $event->verifications()->each(function (EventVerification $eventVerification): void {
             $eventVerification->delete();
         });
 
@@ -174,42 +167,55 @@ readonly class EventService
         ProjectTabService $projectTabService,
         bool $sendPerEventNotifications = true,
     ): void {
-        $eventsDeleted = false;
-        /** @var Event $event */
         foreach ($events as $event) {
-            if (!empty($event->project_id)) {
-                $changeService->saveFromBuilder(
-                    $changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($event->project_id)
-                        ->setTranslationKey('Schedule deleted')
-                );
-            }
-
-            // When a whole project is deleted we send one consolidated notification instead
-            // (see ProjectController::destroy), so the per-event notifications are skipped to
-            // avoid flooding users with thousands of "event deleted" messages.
-            if ($sendPerEventNotifications) {
-                $this->createEventDeletedNotificationsForProjectManagers(
-                    $event,
-                    $notificationService,
-                    $projectTabService
-                );
-                $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
-            }
-
-            $eventCommentService->deleteEventComments($event->comments);
-            $timelineService->deleteTimelines($event->timelines);
-            // Massenpfad: kein Live-Update je Schicht, am Ende ein OccupancyUpdated (s. unten)
-            app(ShiftDeletionService::class)->deleteMany($event->shifts, $sendPerEventNotifications, false);
-            $subEventService->deleteSubEvents($event->subEvents);
-
-            $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
-
-            $this->eventRepository->delete($event);
-            $eventsDeleted = true;
+            $this->ticketingLock->assertEventDeletable($event);
         }
+
+        $deletedEventIds = [];
+        try {
+            /** @var Event $event */
+            foreach ($events as $event) {
+                if (!empty($event->project_id)) {
+                    $changeService->saveFromBuilder(
+                        $changeService
+                            ->createBuilder()
+                            ->setModelClass(Project::class)
+                            ->setModelId($event->project_id)
+                            ->setTranslationKey('Schedule deleted')
+                    );
+                }
+
+                // When a whole project is deleted we send one consolidated notification instead
+                // (see ProjectController::destroy), so the per-event notifications are skipped to
+                // avoid flooding users with thousands of "event deleted" messages.
+                if ($sendPerEventNotifications) {
+                    $this->createEventDeletedNotificationsForProjectManagers(
+                        $event,
+                        $notificationService,
+                        $projectTabService
+                    );
+                    $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
+                }
+
+                $eventCommentService->deleteEventComments($event->comments);
+                $timelineService->deleteTimelines($event->timelines);
+                // Massenpfad: kein Live-Update je Schicht, am Ende ein OccupancyUpdated (s. unten)
+                app(ShiftDeletionService::class)->deleteMany($event->shifts, $sendPerEventNotifications, false);
+                $subEventService->deleteSubEvents($event->subEvents);
+
+                $this->eventRepository->delete($event);
+                $deletedEventIds[] = (int) $event->id;
+            }
+        } finally {
+            // Raumanfrage-Benachrichtigungen gesammelt schließen (ein Scan statt zwei je Termin) – auch für die
+            // bis zu einem Fehler mitten in der Schleife bereits gelöschten Termine
+            $notificationService->closeRoomRequestNotificationsForDeletedEvents(
+                $deletedEventIds,
+                'deleted',
+                $this->deletingUser()
+            );
+        }
+        $eventsDeleted = $deletedEventIds !== [];
 
         // Broadcast once after the whole batch instead of per event. OccupancyUpdated is a
         // generic, payload-less ping that just makes open calendars refetch their visible
@@ -217,7 +223,7 @@ readonly class EventService
         // meant thousands of redundant broadcasts and was a main cause of timeouts when
         // deleting projects with very many events.
         if ($eventsDeleted) {
-            broadcast(new OccupancyUpdated())->toOthers();
+            SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
         }
     }
 
@@ -248,8 +254,10 @@ readonly class EventService
             $shiftsQualificationsService
         );
         $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+        // Beim Löschen wurde die offene Raumanfrage geschlossen – wiederhergestellt ist sie wieder offen
+        app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents([(int) $event->id]);
 
-        broadcast(new OccupancyUpdated())->toOthers();
+        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
     }
 
     public function forceDeleteAll(
@@ -260,21 +268,30 @@ readonly class EventService
         SubEventService $subEventService,
         NotificationService $notificationService,
     ): void {
-        /** @var Event $event */
-        foreach ($events as $event) {
-            $shifts = Shift::onlyTrashed()->where('event_id', $event->id)->get();
-            $timelines = Timeline::onlyTrashed()->where('event_id', $event->id)->get();
-            $comments = EventComment::onlyTrashed()->where('event_id', $event->id)->get();
-            $subEvents = SubEvent::onlyTrashed()->where('event_id', $event->id)->get();
+        $deletedEventIds = [];
+        try {
+            /** @var Event $event */
+            foreach ($events as $event) {
+                $shifts = Shift::onlyTrashed()->where('event_id', $event->id)->get();
+                $timelines = Timeline::onlyTrashed()->where('event_id', $event->id)->get();
+                $comments = EventComment::onlyTrashed()->where('event_id', $event->id)->get();
+                $subEvents = SubEvent::onlyTrashed()->where('event_id', $event->id)->get();
 
-            $eventCommentService->deleteEventComments($comments);
-            $timelineService->forceDeleteTimelines($timelines);
-            $shiftService->forceDeleteShifts($shifts);
-            $subEventService->forceDeleteSubEvents($subEvents);
+                $eventCommentService->deleteEventComments($comments);
+                $timelineService->forceDeleteTimelines($timelines);
+                $shiftService->forceDeleteShifts($shifts);
+                $subEventService->forceDeleteSubEvents($subEvents);
 
-            $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
-
-            $this->eventRepository->forceDelete($event);
+                $this->eventRepository->forceDelete($event);
+                $deletedEventIds[] = (int) $event->id;
+            }
+        } finally {
+            // Gesammelt schließen – auch für die bis zu einem Fehler bereits gelöschten Termine
+            $notificationService->closeRoomRequestNotificationsForDeletedEvents(
+                $deletedEventIds,
+                'deleted',
+                $this->deletingUser()
+            );
         }
     }
 
@@ -287,29 +304,40 @@ readonly class EventService
         ShiftService $shiftService,
         SubEventService $subEventService,
     ): void {
-        /** @var Event $event */
-        foreach ($events as $event) {
-            $eventDeletedAt = $event->deleted_at?->copy();
-            $this->eventRepository->restore($event);
-            if (!empty($event->project_id)) {
-                $changeService->saveFromBuilder(
-                    $changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($event->project_id)
-                        ->setTranslationKey('Schedule restored')
+        $restoredEventIds = [];
+        try {
+            /** @var Event $event */
+            foreach ($events as $event) {
+                $eventDeletedAt = $event->deleted_at?->copy();
+                $this->eventRepository->restore($event);
+                $restoredEventIds[] = (int) $event->id;
+                if (!empty($event->project_id)) {
+                    $changeService->saveFromBuilder(
+                        $changeService
+                            ->createBuilder()
+                            ->setModelClass(Project::class)
+                            ->setModelId($event->project_id)
+                            ->setTranslationKey('Schedule restored')
+                    );
+                }
+
+                $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
+                $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
+                $shiftService->restoreShifts(
+                    $shiftService->trashedWithEvent($event, $eventDeletedAt),
+                    $shiftsQualificationsService,
                 );
+                $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+
+                SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
             }
-
-            $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
-            $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-            $shiftService->restoreShifts(
-                $shiftService->trashedWithEvent($event, $eventDeletedAt),
-                $shiftsQualificationsService,
-            );
-            $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
-
-            broadcast(new OccupancyUpdated())->toOthers();
+        } finally {
+            // Gegenstück zu deleteAll: beim Löschen geschlossene Raumanfragen wieder öffnen (Projekt, Serie) – auch
+            // für die bis zu einem Fehler bereits wiederhergestellten Termine. Bestehende Meldungen werden an Ort
+            // und Stelle geöffnet, daher auch bei vielen Terminen keine Mail-/Toast-Flut.
+            if ($restoredEventIds !== []) {
+                app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents($restoredEventIds);
+            }
         }
     }
 
@@ -868,17 +896,22 @@ readonly class EventService
                     'shifts.shiftsQualifications',
                 ]
             )
-            ->whereHas(
-                'shifts.' . $relationToFind,
-                function (Builder $builder) use ($modelId): void {
+            // Nach Schichtdatum filtern, nicht nach Terminzeit: Die Schicht zählt zum
+            // Tag ihres Beginns, auch wenn der Termin selbst außerhalb des Zeitraums
+            // liegt oder über Mitternacht hinausläuft.
+            ->whereHas('shifts', function (Builder $query) use (
+                $relationToFind,
+                $modelId,
+                $startDate,
+                $endDate,
+            ): void {
+                $query->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
                     $builder->whereKey($modelId);
-                }
-            )
-            // Überlappung statt vollständiger Enthaltung: Termine, die über
-            // Mitternacht (und damit über das Zeitraum-Ende) hinauslaufen,
-            // dürfen nicht komplett herausfallen.
-            ->where('start_time', '<=', $endDate->copy()->endOfDay())
-            ->where('end_time', '>=', $startDate->copy()->startOfDay())
+                })->whereBetween('start_date', [
+                    $startDate->toDateString(),
+                    $endDate->toDateString(),
+                ]);
+            })
             ->orderBy('start_time')
             ->orderBy('end_time')
             ->get();
@@ -1180,7 +1213,10 @@ readonly class EventService
 
         $spanDays = (int) $holidayStart->diffInDays($holidayEnd);
         foreach ([$day->year, $day->year - 1] as $candidateYear) {
-            $candidateStart = $holidayStart->copy()->setYear($candidateYear);
+            $candidateStart = Holiday::yearlyStartIn($holidayStart, $candidateYear);
+            if ($candidateStart === null) {
+                continue;
+            }
             $candidateEnd = $candidateStart->copy()->addDays($spanDays);
             if ($day->betweenIncluded($candidateStart, $candidateEnd)) {
                 return true;
@@ -1188,51 +1224,6 @@ readonly class EventService
         }
 
         return false;
-    }
-
-    // Diese Methode hat aktuell keinen Aufrufer; $roomService ist ungenutzt.
-    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
-    public function getShiftPlanDto(
-        UserService $userService,
-        FreelancerService $freelancerService,
-        ServiceProviderService $serviceProviderService,
-        RoomService $roomService,
-        CraftService $craftService,
-        FilterService $filterService,
-        ShiftFilterController $shiftFilterController,
-        ShiftQualificationService $shiftQualificationService,
-        DayServicesService $dayServicesService,
-        User $user,
-        ProjectTabService $projectTabService
-    ): ShiftPlanDto {
-        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
-
-        $periodArray = $this->generatePeriodArray($startDate, $endDate, $user);
-        $userFilter = $user->userFilters()->shiftCalendar()->first();
-        $userCalendarSettings = $user->calendar_settings;
-        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate);
-
-        $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate, $userCalendarSettings, true);
-
-        $mappedRooms = $this->mapRoomsToContent($rooms, $startDate, $endDate);
-
-
-        return $this->buildShiftPlanDto(
-            $periodArray,
-            $userService,
-            $craftService,
-            $filterService,
-            $shiftFilterController,
-            $freelancerService,
-            $serviceProviderService,
-            $shiftQualificationService,
-            $dayServicesService,
-            $projectTabService,
-            $startDate,
-            $endDate,
-            $user,
-            $mappedRooms
-        );
     }
 
     public function generatePeriodArray(
@@ -1299,104 +1290,16 @@ readonly class EventService
 
 
     /**
-     * Feiertage des Zeitraums in EINER Query, pro Tag zugeordnet.
-     *
-     * Die Tages-Prüfung in holidayMatchesDay() spiegelt bewusst exakt die
-     * Bedingung aus getHolidaysForPeriod() — inklusive der ungewöhnlichen
-     * yearly-Regel (Monat aus `date`, Tag aus `end_date`).
+     * Feiertage des Zeitraums in EINER Query, pro Tag zugeordnet (jährliche Einträge inkl.
+     * Jahreswechsel, mehrtägige an jedem Tag) – gleiche Quelle wie Kalender und Listenansicht.
      *
      * @return array<string, SupportCollection<int, CalendarHolidayDTO>>
      */
     private function getHolidaysGroupedByDate($startDate, $endDate): array
     {
-        $rangeStart = Carbon::parse($startDate)->format('Y-m-d');
-        $rangeEnd = Carbon::parse($endDate)->format('Y-m-d');
-
-        $holidays = Holiday::query()
-            ->where(function (Builder $query) use ($rangeStart, $rangeEnd): void {
-                $query->where(function (Builder $builder) use ($rangeStart, $rangeEnd): void {
-                    // Direkter Vergleich statt whereDate(): beide Spalten sind vom
-                    // Typ DATE, DATE(spalte) wäre also identisch — würde aber den
-                    // Index auf (date, end_date) unbenutzbar machen.
-                    $builder->where('date', '<=', $rangeEnd)
-                        ->where('end_date', '>=', $rangeStart);
-                })->orWhere('yearly', true);
-            })
-            ->with('subdivisions')
-            ->get();
-
-        if ($holidays->isEmpty()) {
-            return [];
-        }
-
-        // DTO je Feiertag einmal bauen und über die Tage teilen — die DTOs sind
-        // reine Wertobjekte und werden nur serialisiert.
-        $dtoByHolidayId = [];
-        foreach ($holidays as $holiday) {
-            $dtoByHolidayId[$holiday->getKey()] = new CalendarHolidayDTO(
-                name: $holiday->name,
-                date: $holiday->date?->format('Y-m-d'),
-                end_date: $holiday->end_date?->format('Y-m-d'),
-                color: $holiday->color,
-                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-            );
-        }
-
-        $grouped = [];
-        foreach (CarbonPeriod::create($startDate, $endDate) as $day) {
-            $matches = new SupportCollection();
-
-            foreach ($holidays as $holiday) {
-                if ($this->holidayMatchesDay($holiday, $day)) {
-                    $matches->push($dtoByHolidayId[$holiday->getKey()]);
-                }
-            }
-
-            if ($matches->isNotEmpty()) {
-                $grouped[$day->format('Y-m-d')] = $matches;
-            }
-        }
-
-        return $grouped;
-    }
-
-    private function holidayMatchesDay(Holiday $holiday, Carbon $day): bool
-    {
-        $dayKey = $day->format('Y-m-d');
-        $start = $holiday->date?->format('Y-m-d');
-        $end = $holiday->end_date?->format('Y-m-d');
-
-        if ($start !== null && $end !== null && $start <= $dayKey && $end >= $dayKey) {
-            return true;
-        }
-
-        return (bool) $holiday->yearly
-            && $holiday->date !== null
-            && $holiday->end_date !== null
-            && (int) $holiday->date->month === (int) $day->month
-            && (int) $holiday->end_date->day === (int) $day->day;
-    }
-
-    public function getHolidaysForPeriod($period): SupportCollection
-    {
-        return Holiday::where(function (Builder $query) use ($period): void {
-            $query->where(function (Builder $q) use ($period): void {
-                $q->whereDate('date', '<=', $period->format('Y-m-d'))
-                    ->whereDate('end_date', '>=', $period->format('Y-m-d'));
-            })->orWhere(function (Builder $q) use ($period): void {
-                $q->where('yearly', true)
-                    ->whereMonth('date', $period->month)
-                    ->whereDay('end_date', $period->day);
-            });
-        })->with('subdivisions')->get()->map(fn($holiday) => new CalendarHolidayDTO(
-            name: $holiday->name,
-            date: $holiday->date->format('Y-m-d'),
-            end_date: $holiday->end_date->format('Y-m-d'),
-            color: $holiday->color,
-            subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-            treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-        ));
+        return app(HolidayService::class)
+            ->getCalendarHolidaysByDate(Carbon::parse($startDate), Carbon::parse($endDate))
+            ->all();
     }
 
     public function fetchFilteredRooms(
@@ -1717,110 +1620,22 @@ readonly class EventService
         return $content;
     }
 
-    public function buildShiftPlanDto(
-        array $periodArray,
-        UserService $userService,
-        CraftService $craftService,
-        FilterService $filterService,
-        ShiftFilterController $shiftFilterController,
-        FreelancerService $freelancerService,
-        ServiceProviderService $serviceProviderService,
-        ShiftQualificationService $shiftQualificationService,
-        DayServicesService $dayServicesService,
-        ProjectTabService $projectTabService,
-        $startDate,
-        $endDate,
-        User $user,
-        array $mappedRooms
-    ): ShiftPlanDto {
-        return ShiftPlanDto::newInstance()
-            ->setHistory($this->getEventShiftsHistoryChanges())
-            ->setCrafts(
-                $craftService->getAll([
-                    'managingUsers',
-                    'managingFreelancers',
-                    'managingServiceProviders'
-                ])
-            )
-            ->setDays($periodArray)
-            ->setFilterOptions($filterService->getCalendarFilterDefinitions())
-            ->setUserFilters($userService->getAuthUser()->userFilters()->shiftFilter()->first())
-            ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->setPersonalFilters($shiftFilterController->index())
-            ->setUsersForShifts(
-                $this->workingHourService->getUsersWithPlannedWorkingHours(
-                    $startDate,
-                    $endDate,
-                    UserShiftPlanResource::class,
-                    true,
-                    $user
-                )
-            )
-            ->setFreelancersForShifts(
-                $freelancerService->getFreelancersWithPlannedWorkingHours(
-                    $startDate,
-                    $endDate,
-                    FreelancerShiftPlanResource::class,
-                    true,
-                    $user
-                )
-            )
-            ->setServiceProvidersForShifts(
-                $serviceProviderService->getServiceProvidersWithPlannedWorkingHours(
-                    $startDate,
-                    $endDate,
-                    ServiceProviderShiftPlanResource::class,
-                    $user
-                )
-            )
-            ->setCurrentUserCrafts(
-                $userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts())
-            )
-            ->setShiftTimePresets($this->shiftTimePresetService->getAll())
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByPosition())
-            ->setDayServices($dayServicesService->getAll())
-            ->setFirstProjectShiftTabId(
-                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
-                    ProjectTabComponentEnum::SHIFT_TAB
-                )
-            )
-            ->setShiftPlanWorkerSortEnumNames(
-                array_map(
-                    function (ShiftPlanWorkerSortEnum $enum): string {
-                        return $enum->name;
-                    },
-                    ShiftPlanWorkerSortEnum::cases()
-                )
-            )
-            ->setUseFirstNameForSort((new ShiftSettings())->use_first_name_for_sort)
-            ->setUserShiftPlanShiftQualificationFilters($user->getAttribute('show_qualifications'))
-            ->setMappedRooms($mappedRooms);
-    }
-
     /**
-     * @return array<int, mixed>
+     * Kalenderfilter und -einstellungen der Person; fehlen sie (z. B. Konto noch nie im
+     * Hauptkalender), werden sie wie im EventController angelegt statt mit 500 abzubrechen.
+     *
+     * @return array{0: UserFilter, 1: UserCalendarSettings}
      */
-    public function getEventShiftsHistoryChanges(): array
+    private function resolveCalendarFilterAndSettings(User $user): array
     {
-        $historyArray = [];
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+            ['start_date' => null, 'end_date' => null]
+        );
+        $userCalendarSettings = $user->getAttribute('calendar_settings')
+            ?? $user->calendar_settings()->create();
 
-        Activity::query()
-            ->where('subject_type', Shift::class)
-            ->orderByDesc('created_at')
-            ->get()
-            ->each(function (Activity $activity) use (&$historyArray): void {
-                $properties = $activity->properties;
-                $historyArray[] = [
-                    'changes' => $properties instanceof \Illuminate\Support\Collection
-                        ? $properties->all()
-                        : ($properties ?? null),
-                    'created_at' => $activity->created_at->diffInHours() < 24
-                        ? $activity->created_at->diffForHumans()
-                        : $activity->created_at->format('d.m.Y, H:i'),
-                ];
-            });
-
-        return $historyArray;
+        return [$userCalendarFilter, $userCalendarSettings];
     }
 
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
@@ -1838,8 +1653,7 @@ readonly class EventService
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
-        $userCalendarFilter = $user->userFilters()->calendarFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        [$userCalendarFilter, $userCalendarSettings] = $this->resolveCalendarFilterAndSettings($user);
 
         //today is used if project calendar is opened and no events are given as project calendar
         //do not rely on user calendar filter dates
@@ -1910,28 +1724,26 @@ readonly class EventService
                     )
             )
             ->setEventsWithoutRoom(
-                empty($room) ?
-                    CalendarEventResource::collection(
-                        $this->getEventsWithoutRoom(
-                            $project,
-                            [
-                                'room',
-                                'creator',
-                                'project',
-                                'project.managerUsers',
-                                'project.status',
-                                'shifts',
-                                'shifts.craft',
-                                'shifts.users',
-                                'shifts.freelancer',
-                                'shifts.serviceProvider',
-                                'shifts.shiftsQualifications',
-                                'subEvents.event',
-                                'subEvents.event.room',
-                            ]
-                        )
-                    )->resolve() :
-                    []
+                CalendarEventResource::collection(
+                    $this->getEventsWithoutRoom(
+                        $project,
+                        [
+                            'room',
+                            'creator',
+                            'project',
+                            'project.managerUsers',
+                            'project.status',
+                            'shifts',
+                            'shifts.craft',
+                            'shifts.users',
+                            'shifts.freelancer',
+                            'shifts.serviceProvider',
+                            'shifts.shiftsQualifications',
+                            'subEvents.event',
+                            'subEvents.event.room',
+                        ]
+                    )
+                )->resolve()
             )
             ->setEventsAtAGlance(
                 $desiredProjectHasNoEvents ?
@@ -1990,8 +1802,7 @@ readonly class EventService
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
-        $userCalendarFilter = $user->userFilters()->calendarFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        [$userCalendarFilter, $userCalendarSettings] = $this->resolveCalendarFilterAndSettings($user);
 
         //today is used if project calendar is opened and no events are given as project calendar
         //do not rely on user calendar filter dates
@@ -2060,8 +1871,7 @@ readonly class EventService
                 ];
             }
         }
-        $userFilter = $user->userFilters()->calendarFilter()->first();
-        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings);
+        $rooms = $this->fetchFilteredRooms($userCalendarFilter, $startDate, $endDate, $userCalendarSettings);
 
         // Bewusst KEIN Aufbau der Kalenderzellen mehr: BaseCalendar lädt die
         // Termine nach dem Mount ohnehin monatsweise über events.all nach und
@@ -2260,15 +2070,17 @@ readonly class EventService
 
         $event->load(['event_type', 'project']);
 
+        // Live-Updates nach dem Speichern (SafeBroadcast): ein nicht erreichbarer WebSocket-Server darf eine
+        // bereits gespeicherte Änderung nicht zur 500 machen bzw. Serien-Änderungen mittendrin abbrechen
         // Broadcast to the old room if room changed
         if ($originalRoomId && $originalRoomId !== $event->room_id) {
-            broadcast(new EventUpdated(
+            SafeBroadcast::send(new EventUpdated(
                 $event,
                 $originalRoomId
             ));
         }
 
-        broadcast(new EventUpdated(
+        SafeBroadcast::send(new EventUpdated(
             $event,
             $event->room_id
         ));
@@ -2479,6 +2291,32 @@ readonly class EventService
         return $createdEvent;
     }
 
+    /**
+     * is_planning aus einem Bulk-Update nur übernehmen, wenn die Umstellung auch auf dem regulären Weg erlaubt wäre:
+     * - fester Termin -> Planungskalender: nur mit „Planungskalender bearbeiten“
+     *   (wie EventController::convertToPlanning)
+     * - geplanter Termin -> fester Termin: nie hier, sondern nur über den Bestätigungsablauf
+     *   (EventVerificationService – Verifizierung bzw. sofortige Übernahme samt Raumanfrage-Benachrichtigung)
+     * Ohne passende Rechte bleibt der bisherige Wert stehen (Key wird ignoriert, kein 403 – der BulkBody
+     * schickt is_planning bei jedem Speichern unverändert mit).
+     */
+    public function resolveBulkIsPlanning(SupportCollection $data, Event $event): bool
+    {
+        $currentIsPlanning = (bool) $event->is_planning;
+        if (!$data->has('is_planning') || $data->get('is_planning') === null) {
+            return $currentIsPlanning;
+        }
+
+        $requestedIsPlanning = filter_var($data->get('is_planning'), FILTER_VALIDATE_BOOLEAN);
+        if ($requestedIsPlanning === $currentIsPlanning || !$requestedIsPlanning) {
+            return $currentIsPlanning;
+        }
+
+        $user = $this->authManager->user();
+
+        return $user instanceof User && $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value);
+    }
+
     public function updateBulkEvent(
         SupportCollection $data,
         Event $event,
@@ -2517,7 +2355,7 @@ readonly class EventService
             }
         }
 
-        $newIsPlanning = $data['is_planning'] ?? $event->is_planning;
+        $newIsPlanning = $this->resolveBulkIsPlanning($data, $event);
         $oldIsPlanning = (bool) $event->is_planning;
 
         $this->eventRepository->update($event, [
@@ -2532,11 +2370,19 @@ readonly class EventService
                 : $event->admission_time,
             'allDay' => $allDay,
             'event_type_id' => $data['type']['id'],
-            'room_id' => $data['room']['id'],
+            // Fehlender/leerer Raum entfernt den Raum nicht (Bulk-Zeile ohne Raumobjekt, z. B. nach Reset) –
+            // Termine ohne Raum anzulegen ist eigens berechtigt (storeEvent), das prüft dieser Weg nicht
+            'room_id' => data_get($data, 'room.id') ?? $event->room_id,
             'is_planning' => $newIsPlanning,
         ]);
 
-        if ($oldIsPlanning !== (bool) $newIsPlanning) {
+        if ($newIsPlanning && !$oldIsPlanning) {
+            // Wie convertToPlanning: offene Raumanfragen zurückziehen – der Termin ist für Raumadmins
+            // ohne Planungskalender-Zugriff nicht mehr sichtbar
+            app(NotificationService::class)->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
+        }
+
+        if ($oldIsPlanning !== $newIsPlanning) {
             $changeService = app(ChangeService::class);
             $changeService->saveFromBuilder(
                 $changeService
@@ -2638,6 +2484,16 @@ readonly class EventService
 
             $this->eventRepository->deleteEvents($eventIds);
 
+            // Raumanfrage-Meldungen wie beim Einzel-Löschen schließen – sonst blieben Annehmen/Ablehnen bzw. bei
+            // abgelehnten Terminen (ohne Raum, keine Anfrage mehr) Änderungsanfrage/Löschen stehen und führten auf
+            // einen Termin im Papierkorb (404). Alle Termine übergeben: die Funktion schließt nur offene Anfragen
+            // und entfernt die Absage-Meldungen (UPSERT)
+            app(NotificationService::class)->closeRoomRequestNotificationsForDeletedEvents(
+                $eventIds->map(static fn ($id): int => (int) $id)->all(),
+                'deleted',
+                $this->deletingUser()
+            );
+
             $projectDayAssignmentService = app(ProjectDayAssignmentService::class);
 
             Project::query()
@@ -2645,5 +2501,12 @@ readonly class EventService
                 ->each(fn (Project $project) => $projectDayAssignmentService
                     ->rematerializeForProjectPeriodChange($project));
         });
+    }
+
+    private function deletingUser(): ?\Artwork\Modules\User\Models\User
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        return $user instanceof \Artwork\Modules\User\Models\User ? $user : null;
     }
 }

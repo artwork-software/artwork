@@ -36,6 +36,9 @@ class ApiLog extends Model
         'duration_ms' => 'integer',
     ];
 
+    /**
+     * @return BelongsTo<Token, $this>
+     */
     public function token(): BelongsTo
     {
         return $this->belongsTo(Token::class, 'passport_token_id', 'id', 'token');

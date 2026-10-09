@@ -47,6 +47,9 @@ class ExternalLoginToken extends Model
         return ExternalLoginTokenFactory::new();
     }
 
+    /**
+     * @return BelongsTo<ExternalAccess, $this>
+     */
     public function externalAccess(): BelongsTo
     {
         return $this->belongsTo(ExternalAccess::class, 'external_access_id', 'id', 'externalAccess');

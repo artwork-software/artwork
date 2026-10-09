@@ -507,6 +507,7 @@
 </template>
 
 <script setup>
+import { stopListeningOnPrivateChannel } from "@/Composeables/Listener/echoChannel.js"
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { IconCirclePlus, IconFileText, IconFileDescription, IconEdit, IconTrash, IconDownload, IconUpload, IconEye } from '@tabler/icons-vue'
@@ -758,19 +759,22 @@ const deleteRequest = () => {
 
 // Listen for broadcast updates
 let echoChannel = null
+const handleContractsDocumentsUpdated = () => {
+    router.reload({ only: ['projectContracts', 'projectCreatedRequests', 'projectAssignedRequests', 'projectUnassignedRequests', 'projectAssignedToOthersRequests'] })
+}
 
 onMounted(() => {
     if (window.Echo && props.project?.id) {
-        echoChannel = window.Echo.private(`project.${props.project.id}`)
-            .listen('.contracts-documents.updated', () => {
-                router.reload({ only: ['projectContracts', 'projectCreatedRequests', 'projectAssignedRequests', 'projectUnassignedRequests', 'projectAssignedToOthersRequests'] })
-            })
+        echoChannel = `project.${props.project.id}`
+        window.Echo.private(echoChannel).listen('.contracts-documents.updated', handleContractsDocumentsUpdated)
     }
 })
 
+// Nur den eigenen Handler abmelden – Echo.leave entfernte alle Listener des geteilten Projektkanals
 onUnmounted(() => {
-    if (echoChannel && props.project?.id) {
-        window.Echo.leave(`project.${props.project.id}`)
+    if (echoChannel) {
+        stopListeningOnPrivateChannel(echoChannel, '.contracts-documents.updated', handleContractsDocumentsUpdated)
+        echoChannel = null
     }
 })
 </script>

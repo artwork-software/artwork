@@ -162,6 +162,33 @@ final class EventStoreTest extends FeatureTestCase
     }
 
     #[Test]
+    public function admin_can_store_event_without_room(): void
+    {
+        $this->actingAsAdmin();
+        $eventType = EventType::factory()->create();
+
+        // vorher 500: der Raum-Broadcast verlangte eine Raum-ID
+        $this->postJson(route('events.store'), [
+            'start' => '2026-05-10 10:00',
+            'end' => '2026-05-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $eventType->id,
+            'roomId' => null,
+            'title' => 'Ohne Raum',
+            'isOption' => false,
+            'audience' => false,
+            'isLoud' => false,
+            'allDay' => false,
+            'is_series' => false,
+            'isPlanning' => false,
+        ])->assertSuccessful();
+
+        $this->assertDatabaseHas('events', ['name' => 'Ohne Raum', 'room_id' => null]);
+    }
+
+    #[Test]
     public function admin_can_store_event_with_admission_time(): void
     {
         $this->actingAsAdmin();

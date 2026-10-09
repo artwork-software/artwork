@@ -47,7 +47,7 @@
                                 hide-icon
                                 :class="commentForm.text === '' ? 'cursor-not-allowed !bg-surface-sunken !text-text-subtle !border-border-subtle' : 'cursor-pointer'"
                                 @click="addCommentToProject"
-                                :disabled="commentForm.text === ''"
+                                :disabled="commentForm.text === '' || commentForm.processing"
                             >
                                 <IconCircleCheckFilled class="size-4" />
                                 <span class="text-sm">{{ $t('Add comment to project') }}</span>
@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed, getCurrentInstance, watch } from "vue";
+import { onMounted, onBeforeUnmount, ref, computed, getCurrentInstance, watch } from "vue";
 import { useForm, router } from "@inertiajs/vue3";
 import axios from "axios";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -163,6 +163,8 @@ const initialComments = props.project?.comments ?? [];
 const newCommentList = ref([...initialComments]);
 const isLoadingComments = ref(false);
 const loadCommentsError = ref('');
+// Vor dem watch(immediate) deklarieren – fetchComments läuft schon im Setup
+let fetchSequence = 0;
 const remoteProjectWriteIds = ref([...props.projectWriteIds]);
 const remoteProjectManagerIds = ref([...props.projectManagerIds]);
 
@@ -202,6 +204,13 @@ watch(
     { immediate: true }
 );
 
+
+// Platzierungen in Ordnern (disclosure_components, erkennbar an disclosure_id) haben eigene Ids —
+// das Backend löst sie nur mit placement=disclosure auf und nutzt dann deren Tab-Auswahl.
+function placementQuery() {
+    return props.component?.disclosure_id ? { placement: 'disclosure' } : {};
+}
+
 async function fetchComments() {
     const projectId = props.project?.id;
     const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id;
@@ -210,13 +219,18 @@ async function fetchComments() {
         return;
     }
 
+    // Nur die zuletzt angeforderte Liste übernehmen (überholte Antworten verwerfen)
+    const requestSequence = ++fetchSequence;
     isLoadingComments.value = true;
     loadCommentsError.value = '';
 
     try {
         const { data } = await axios.get(
-            route('projects.tabs.comments', { project: projectId, componentInTab: componentInTabId })
+            route('projects.tabs.comments', { project: projectId, componentInTab: componentInTabId, ...placementQuery() })
         );
+        if (requestSequence !== fetchSequence) {
+            return;
+        }
         const fetchedComments = data?.comments ?? [];
         newCommentList.value.splice(0, newCommentList.value.length, ...fetchedComments);
 
@@ -228,19 +242,29 @@ async function fetchComments() {
             remoteProjectManagerIds.value = data.projectManagerIds;
         }
     } catch (error) {
+        if (requestSequence !== fetchSequence) {
+            return;
+        }
         console.error(error);
         loadCommentsError.value = 'Unable to load comments.';
     } finally {
-        isLoadingComments.value = false;
+        if (requestSequence === fetchSequence) {
+            isLoadingComments.value = false;
+        }
     }
 }
 
+// Broadcast enthält nur Kennungen → Liste über den geprüften Endpunkt neu laden (entprellt)
+const commentListener = useCommentListener(props.project.id, () => fetchComments());
 onMounted(() => {
-    const listener = useCommentListener(newCommentList, props.project.id);
-    listener.init();
+    commentListener.init();
+});
+onBeforeUnmount(() => {
+    commentListener.stop();
 });
 
 function addCommentToProject() {
+    if (commentForm.processing) return;
     commentForm.post(route("comments.store"), {
         preserveState: true,
         preserveScroll: true,

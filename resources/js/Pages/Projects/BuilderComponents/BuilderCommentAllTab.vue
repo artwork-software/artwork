@@ -64,14 +64,13 @@
 </template>
 
 <script>
-import {IconCheck, IconCircleX, IconEdit, IconFileText, IconX} from "@tabler/icons-vue";
+import {IconCheck, IconCircleCheckFilled, IconCircleX, IconCircleXFilled, IconEdit, IconFileText, IconX} from "@tabler/icons-vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {useForm} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import {useCommentListener} from "@/Composeables/Listener/useCommentListener.js";
@@ -83,9 +82,10 @@ export default {
         UserPopoverTooltip,
         IconCheck,
         UserTooltip,
-        IconEdit, IconCircleX, IconFileText, SvgCollection, IconX, JetInputError
+        IconEdit, IconCircleX, IconFileText, SvgCollection, IconX, JetInputError,
+        IconCircleCheckFilled, IconCircleXFilled,
     },
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     props: [
         'project',
         'isMemberOfADepartment',
@@ -95,7 +95,21 @@ export default {
         'canEditComponent'
     ],
     mounted() {
-        useCommentListener(this.newCommentList, this.project.id).init();
+        // Broadcast enthält nur Kennungen (keine Inhalte) – hier ohne eigenen Lade-Endpunkt nur Löschungen übernehmen
+        this.commentListener = useCommentListener(this.project.id, (changes) => {
+            changes
+                .filter((change) => change.type === 'delete')
+                .forEach(({ comment }) => {
+                    const index = this.newCommentList.findIndex((entry) => entry.id === comment.id);
+                    if (index !== -1) {
+                        this.newCommentList.splice(index, 1);
+                    }
+                });
+        });
+        this.commentListener.init();
+    },
+    beforeUnmount() {
+        this.commentListener?.stop();
     },
     computed:{
         sortedComments: function () {

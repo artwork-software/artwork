@@ -4,6 +4,7 @@ namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Enums\UserFilterTypes;
+use Artwork\Modules\User\Http\Requests\UpdateFilterDatesRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
@@ -22,7 +23,7 @@ class UserShiftCalendarFilterController extends Controller
         ]));
     }
 
-    public function updateDates(Request $request, User $user, UserService $userService): void
+    public function updateDates(UpdateFilterDatesRequest $request, User $user, UserService $userService): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
@@ -61,8 +62,11 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
-    public function updateInventoryArticlePlanFilters(Request $request, User $user, UserService $userService): void
-    {
+    public function updateInventoryArticlePlanFilters(
+        UpdateFilterDatesRequest $request,
+        User $user,
+        UserService $userService
+    ): void {
         $this->authorize('updateOwnPreferences', $user);
 
         $startDate = Carbon::parse($request->get('start_date'))->format('Y-m-d');
@@ -115,7 +119,7 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
-    public function updateListViewDates(Request $request, User $user, UserService $userService): void
+    public function updateListViewDates(UpdateFilterDatesRequest $request, User $user, UserService $userService): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
@@ -141,9 +145,10 @@ class UserShiftCalendarFilterController extends Controller
     public function singleValueUpdate(Request $request, User $user): void
     {
         $this->authorize('updateOwnPreferences', $user);
+        $request->validate(['key' => ['required', 'string', \Illuminate\Validation\Rule::in(['event_types', 'rooms'])]]);
 
-        $user->shift_calendar_filter()->update([
-            $request->key => $request->value
+        $user->shift_calendar_filter()->first()?->update([
+            $request->string('key')->value() => $request->input('value'),
         ]);
     }
 

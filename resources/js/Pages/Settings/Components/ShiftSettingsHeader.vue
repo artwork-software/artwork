@@ -32,6 +32,7 @@ import {IconSettings} from '@tabler/icons-vue';
 import {useTranslation} from "@/Composeables/Translation.js";
 import {can, is} from 'laravel-permission-to-vuejs';
 import {usePage} from '@inertiajs/vue3';
+import {isWorkTimeAccountingEnabled} from "@/Helper/workTimeAccounting.js";
 
 export default defineComponent({
     props: ['title', 'description'],
@@ -65,7 +66,8 @@ export default defineComponent({
                 name: $t('Work Time Pattern'),
                 href: route('shift.work-time-pattern'),
                 current: route().current('shift.work-time-pattern'),
-                permission: canAccessArea('work_time_patterns')
+                // Arbeitszeitmuster sind nur mit eingeschalteter Arbeitszeitberechnung relevant
+                permission: canAccessArea('work_time_patterns') && isWorkTimeAccountingEnabled(usePage().props)
             },
             {
                 name: $t('shift groups'),

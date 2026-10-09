@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Auth\ExtendedTokenValidator;
 use App\Policies\AccommodationPolicy;
 use App\Policies\ArtistPolicy;
 use App\Policies\ContactPolicy;
@@ -47,6 +48,8 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Policies\EventPolicy;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Policies\ExternalAccessPolicy;
+use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
+use Artwork\Modules\ExternalUserManagement\Policies\ExternalUserSourcePolicy;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Policies\FreelancerPolicy;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
@@ -82,8 +85,11 @@ use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Artwork\Modules\Webhook\Policies\WebhookEndpointPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Passport\Bridge\AccessTokenRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\Token;
+use League\OAuth2\Server\CryptKey;
+use League\OAuth2\Server\ResourceServer;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -123,6 +129,7 @@ class AuthServiceProvider extends ServiceProvider
         Event::class => EventPolicy::class,
         ModuleSettings::class => ModuleSettingsPolicy::class,
         ExternalAccess::class => ExternalAccessPolicy::class,
+        ExternalUserSource::class => ExternalUserSourcePolicy::class,
         \Artwork\Modules\Chat\Models\Chat::class => \Artwork\Modules\Chat\Policies\ChatPolicy::class,
         \Artwork\Modules\Vacation\Models\Vacation::class =>
             \Artwork\Modules\Vacation\Policies\VacationPolicy::class,
@@ -139,19 +146,46 @@ class AuthServiceProvider extends ServiceProvider
         Contact::class => ContactPolicy::class,
     ];
 
+    public function register(): void
+    {
+        parent::register();
+
+        // Ersetzt Passports ResourceServer-Binding nur, um den ExtendedTokenValidator einzuhängen
+        // (bewusste Ausnahme für einzelne Tokens, siehe config passport.extended_tokens). Ohne
+        // gesetzte Konfiguration verhält sich der Validator exakt wie Passports Standard.
+        $this->app->singleton(ResourceServer::class, function ($container) {
+            // Spiegelt PassportServiceProvider::makeCryptKey('public') (protected, daher nachgebaut).
+            // Bei Passport-Upgrades gegen vendor/laravel/passport/src/PassportServiceProvider.php abgleichen.
+            $key = str_replace('\\n', "\n", config('passport.public_key') ?? '');
+
+            if (!$key) {
+                $key = 'file://' . Passport::keyPath('oauth-public.key');
+            }
+
+            return new ResourceServer(
+                $container->make(AccessTokenRepository::class),
+                new CryptKey($key, null, Passport::$validateKeyPermissions),
+                new ExtendedTokenValidator(
+                    $container->make(AccessTokenRepository::class),
+                    config('passport.extended_tokens', []),
+                ),
+            );
+        });
+    }
+
     public function boot(): void
     {
         $this->registerPolicies();
 
         Passport::$clientUuids = false;
-
-        // Scopes der Maschinen-API. Ein Scope, der hier fehlt, lässt sich nicht vergeben — die
-        // ScopeRepository lehnt ihn beim Anlegen mit invalid_scope ab.
+        // Scopes der Maschinen-API und der App. Ein Scope, der hier fehlt, lässt sich nicht
+        // vergeben — die ScopeRepository lehnt ihn beim Anlegen mit invalid_scope ab.
         //
         // Wichtig: Scopes stehen im signierten JWT, nicht in der Datenbank. Tokens, die vor der
         // Einführung dieser Liste ausgegeben wurden, tragen dauerhaft eine leere Scope-Menge und
         // können nachträglich keine Rechte erhalten — sie müssen neu erstellt werden.
         Passport::tokensCan([
+            'app' => 'Access the artwork app API',
             'inventory:read' => 'Read inventory categories and articles',
             'ticketing:read' => 'Read released events, price categories and branding',
             'ticketing:write' => 'Report sales, bookings and check-ins back to artwork',
@@ -215,5 +249,11 @@ class AuthServiceProvider extends ServiceProvider
                     ->contains(static fn ($project): bool => $user->can('view', $project));
             }
         );
+
+        // Dienstplaner-Berechtigung als benanntes Gate — die eine Definition
+        // für Web und App (Admins via Gate::before).
+        Gate::define('plan-shifts', static function (User $user): bool {
+            return $user->can(PermissionEnum::SHIFT_PLANNER->value);
+        });
     }
 }

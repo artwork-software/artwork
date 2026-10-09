@@ -5,7 +5,6 @@ namespace Artwork\Modules\Crm\Http\Controllers;
 use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Http\Controllers\Controller;
 use Artwork\Core\FileHandling\Download\PrivateFileResponse;
-use Artwork\Core\FileHandling\StoredFilePath;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
@@ -14,42 +13,26 @@ use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Services\CrmContactService;
+use Artwork\Modules\Crm\Services\CrmPropertyFileService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CrmContactController extends Controller
 {
-    // Eigenschaftsdateien liegen auf der privaten local-Disk; Auslieferung nur über downloadPropertyFile().
-    public const PROPERTY_FILE_DIR = 'crm-property-files';
-
-    private const PROPERTY_FILE_MIMES = 'pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt';
-
-    // Gespeicherte Pfade: StoredFileName (32 hex) oder Laravel-hashName (40 alnum) aus dem Altbestand.
-    private const PROPERTY_FILE_PATH_PATTERN = '#^crm-property-files/[A-Za-z0-9]{1,64}(\.[A-Za-z0-9]{1,16})?$#';
-
-    // Kontakte dieser Typen werden aus User-/Freelancer-/Dienstleister-Profilen
-    // gespiegelt und sind im CRM read-only — Schreibzugriffe würden sonst in die
-    // Quell-Entität zurückgeschrieben.
-    private const MIRRORED_SLUGS = [
-        CrmSystemContactTypeEnum::USER->value,
-        CrmSystemContactTypeEnum::FREELANCER->value,
-        CrmSystemContactTypeEnum::SERVICE_PROVIDER->value,
-    ];
-
     public function __construct(
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
+        private readonly CrmPropertyFileService $propertyFileService,
     ) {
     }
 
     private function abortIfMirrored(CrmContact $crmContact): void
     {
-        if (in_array($crmContact->contactType?->slug, self::MIRRORED_SLUGS, true)) {
+        if (CrmSystemContactTypeEnum::isMirrored($crmContact->contactType?->slug)) {
             abort(403, 'Gespiegelte Kontakte können nur über das jeweilige Profil geändert werden.');
         }
     }
@@ -304,7 +287,7 @@ class CrmContactController extends Controller
 
         $newType = CrmContactType::findOrFail($validated['crm_contact_type_id']);
 
-        if (in_array($newType->slug, self::MIRRORED_SLUGS, true)) {
+        if (CrmSystemContactTypeEnum::isMirrored($newType->slug)) {
             abort(422, 'Kontakte können nicht in einen system-verwalteten Typ umgewandelt werden.');
         }
 
@@ -333,7 +316,7 @@ class CrmContactController extends Controller
 
         foreach ($contacts as $contact) {
             // Gespiegelte Kontakte werden übersprungen statt die ganze Auswahl zu blocken
-            if (in_array($contact->contactType?->slug, self::MIRRORED_SLUGS, true)) {
+            if (CrmSystemContactTypeEnum::isMirrored($contact->contactType?->slug)) {
                 continue;
             }
 
@@ -417,18 +400,25 @@ class CrmContactController extends Controller
 
         $request->validate([
             'property_id' => 'required|integer|exists:crm_properties,id',
-            'file' => ['required', 'file', 'mimes:' . self::PROPERTY_FILE_MIMES, 'max:10240', new SafeUploadFile()],
+            'file' => [
+                'required',
+                'file',
+                'mimes:' . CrmPropertyFileService::ALLOWED_EXTENSIONS,
+                'max:' . CrmPropertyFileService::MAX_KILOBYTES,
+                new SafeUploadFile(),
+            ],
         ]);
 
         $propertyId = (int) $request->input('property_id');
         $this->authorizePropertyEdits([$propertyId]);
 
         $file = $request->file('file');
-        $path = $file->storeAs(self::PROPERTY_FILE_DIR, StoredFileName::forUpload($file), 'local');
+        // Eigenschaftsdateien liegen auf der privaten local-Disk; Auslieferung nur über downloadPropertyFile().
+        $path = $file->storeAs(CrmPropertyFileService::DIRECTORY, StoredFileName::forUpload($file), 'local');
 
         $previousPath = $crmContact->propertyValues()->where('crm_property_id', $propertyId)->value('value');
         $this->contactService->savePropertyValue($crmContact, $propertyId, $path);
-        $this->deleteStoredPropertyFile($previousPath);
+        $this->propertyFileService->delete($previousPath);
 
         return redirect()->back();
     }
@@ -446,7 +436,7 @@ class CrmContactController extends Controller
 
         $previousPath = $crmContact->propertyValues()->where('crm_property_id', $propertyId)->value('value');
         $this->contactService->savePropertyValue($crmContact, $propertyId, null);
-        $this->deleteStoredPropertyFile($previousPath);
+        $this->propertyFileService->delete($previousPath);
 
         return redirect()->back();
     }
@@ -468,25 +458,12 @@ class CrmContactController extends Controller
         $visiblePropertyIds = $this->propertyGroupService->getVisiblePropertyIds($user->id, $deptIds, $isCrmManager);
         abort_unless(in_array($property->id, array_map('intval', $visiblePropertyIds), true), 403);
 
-        $path = StoredFilePath::normalise(
+        $path = $this->propertyFileService->normalisePath(
             $crmContact->propertyValues()->where('crm_property_id', $property->id)->value('value')
         );
-        abort_unless(is_string($path) && preg_match(self::PROPERTY_FILE_PATH_PATTERN, $path) === 1, 404);
+        abort_if($path === null, 404);
 
         return PrivateFileResponse::make($path, basename($path), $request->boolean('inline'));
-    }
-
-    private function deleteStoredPropertyFile(?string $path): void
-    {
-        $path = StoredFilePath::normalise($path);
-
-        if (!is_string($path) || preg_match(self::PROPERTY_FILE_PATH_PATTERN, $path) !== 1) {
-            return;
-        }
-
-        foreach (['local', 'public'] as $disk) {
-            Storage::disk($disk)->delete($path);
-        }
     }
 
     /**

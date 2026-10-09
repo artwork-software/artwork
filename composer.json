@@ -52,9 +52,11 @@
         "tightenco/ziggy": "^2.6"
     },
     "require-dev": {
+        "brianium/paratest": "^7.20",
         "dedoc/scramble": "^0.13",
         "fakerphp/faker": "^v1.20.0",
         "fruitcake/laravel-debugbar": "^4.0",
+        "hotmeteor/spectator": "^3.0",
         "larastan/larastan": "^3.4",
         "laravel/boost": "^2.4",
         "laravel/sail": "^v1.16.2",

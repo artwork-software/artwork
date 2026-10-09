@@ -138,9 +138,7 @@ readonly class SubPositionService
         RowCommentService $rowCommentService,
         ColumnCellService $columnCellService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): void {
         if (($subPositionVerified = $subPosition->verified) instanceof SubPositionVerified) {
             $subPositionVerifiedService->restore($subPositionVerified);
@@ -166,18 +164,14 @@ readonly class SubPositionService
                 $rowCommentService,
                 $columnCellService,
                 $cellCommentService,
-                $cellCalculationService,
-                $sageNotAssignedDataService,
-                $sageAssignedDataService
+                $cellCalculationService
             ): void {
                 $subPositionRowService->restore(
                     $subPositionRow,
                     $rowCommentService,
                     $columnCellService,
                     $cellCommentService,
-                    $cellCalculationService,
-                    $sageNotAssignedDataService,
-                    $sageAssignedDataService
+                    $cellCalculationService
                 );
             }
         );

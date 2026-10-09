@@ -21,6 +21,9 @@ class CrmPropertyGroupPermission extends Model
         'can_edit' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<CrmPropertyGroup, $this>
+     */
     public function group(): BelongsTo
     {
         return $this->belongsTo(CrmPropertyGroup::class, 'crm_property_group_id');

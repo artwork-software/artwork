@@ -185,6 +185,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import axios from 'axios';
+import { failedRequestMessage } from '@/Helper/appToast.js';
 import { usePage } from '@inertiajs/vue3';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
@@ -370,7 +371,7 @@ async function submit(force = false) {
             full_period: periodMode.value === 'full_period',
             days: periodMode.value === 'days' ? selectedDays.value : [],
             force,
-        });
+        }, { skipErrorToast: true }); // Fehler/Warnung steht im Modal
         rememberLastUsedProject();
 
         if ((data.created ?? 0) === 0) {
@@ -391,10 +392,7 @@ async function submit(force = false) {
 
         // 422 mit verständlicher Meldung (z. B. Wunsch auf Abwesenheitstag) als
         // freundliche Warnung anzeigen statt rohem Fehler.
-        const errors = error?.response?.data?.errors;
-        warningMessage.value = errors
-            ? Object.values(errors).flat()[0]
-            : (error?.response?.data?.message ?? String(error));
+        warningMessage.value = failedRequestMessage(error);
     } finally {
         submitting.value = false;
     }

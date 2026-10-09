@@ -11,6 +11,7 @@ trait HasInventoryProperties
 {
     /**
      * Gibt alle Property-Werte für das Model zurück (z. B. für Kategorien, Subkategorien, Artikel).
+     * @return MorphMany<InventoryPropertyValue, $this>
      */
     public function propertyValues(): MorphMany
     {
@@ -19,6 +20,7 @@ trait HasInventoryProperties
 
     /**
      * Gibt alle Eigenschaften mit Werten zurück.
+     * @return MorphToMany<InventoryArticleProperties, $this>
      */
     public function properties(): MorphToMany
     {

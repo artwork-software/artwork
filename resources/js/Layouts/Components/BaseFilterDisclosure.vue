@@ -24,11 +24,10 @@ import {
 } from "@headlessui/vue";
 
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "BaseFilterDisclosure",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         Disclosure,
         DisclosurePanel,

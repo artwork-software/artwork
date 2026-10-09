@@ -984,7 +984,7 @@ export default {
                 sub_position_row_id: cell.sub_position_row_id,
                 is_verified: mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED'
                     || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED'
-            }).then(({data}) => {
+            }, {skipErrorToast: true}).then(({data}) => {
                 this.applyCellPatch(data);
             }).catch(() => {
                 cell.value = originalValue;

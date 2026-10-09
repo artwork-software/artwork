@@ -25,7 +25,7 @@
                     @php
                         $entry = $body['body'] ?? [];
                         $entryDescription = $presenter::descriptionOf($entry);
-                        $eventLine = $presenter::eventLine($entry['event'] ?? null, $language);
+                        $eventLine = $presenter::eventLine($entry['event'] ?? null, $language, $eventLookups ?? null);
                     @endphp
                     <div class="notification-content">
                         <div class="notification-text">
@@ -36,18 +36,32 @@
                             @foreach($presenter::textLines($entryDescription) as $line)
                                 <p class="notification-description">{{ $line }}</p>
                             @endforeach
-                            @if($presenter::hasDeepLink($entryDescription))
-                                <a href="{{ $presenter::primaryLink($entryDescription) }}" class="notification-link">
+                            @if($presenter::hasMainLink($entry))
+                                <a href="{{ $presenter::mainLink($entry) }}" class="notification-link">
                                     {{ __('Open directly in :app', ['app' => $page_title], $language) }}
                                 </a>
                             @endif
                         </div>
                     </div>
                 @endforeach
+                @if(($notification['more'] ?? 0) > 0)
+                    {{-- je Gruppe höchstens SendNotificationsEmailSummariesCommand::MAX_ENTRIES_PER_GROUP Einträge --}}
+                    <p class="notification-description">
+                        <a href="{{ $presenter::notificationsUrl() }}" class="notification-link">
+                            {{ __('And :count more – view them in the notification center', ['count' => $notification['more']], $language) }}
+                        </a>
+                    </p>
+                @endif
             </div>
         @endforeach
-        <a href="{{ $presenter::appUrl() }}" class="notification-link notification-link-footer">
+        <a href="{{ $presenter::notificationsUrl() }}" class="notification-link notification-link-footer">
             {{ __('View all notifications in :app', ['app' => $page_title], $language) }}
         </a>
+        <p class="notification-description" style="margin-top: 1.5rem;">
+            {{ __('You receive this e-mail because of your notification settings.', [], $language) }}
+            <a href="{{ route('notifications.index', ['tab' => 'settings']) }}" class="notification-link notification-link-secondary">
+                {{ __('Change notification settings', [], $language) }}
+            </a>
+        </p>
     </div>
 @endcomponent

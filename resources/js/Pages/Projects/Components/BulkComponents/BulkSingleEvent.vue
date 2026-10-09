@@ -351,7 +351,8 @@
                 <textarea
                     ref="descriptionTextarea"
                     v-model="draftDescription"
-                    @focusout="saveDescription"
+                    @focus="onDescriptionFocus"
+                    @focusout="onDescriptionFocusOut"
                     @keydown.enter.ctrl="saveDescription"
                     maxlength="250"
                     rows="2"
@@ -427,9 +428,12 @@ import {getBulkColumnSize as getColumnSize} from "@/Pages/Projects/Components/Bu
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Float} from "@headlessui-float/vue";
+import {hasUserInteractedSince} from "@/Helper/userInteraction.js";
+import {focusedDescriptionKey, openDescriptionEdits} from "@/Pages/Projects/Components/BulkComponents/bulkDescriptionEdits.js";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
 import axios from "axios";
+import {ticketingMoveHeaders} from "@/Composeables/useTicketingMove.js";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
@@ -516,6 +520,9 @@ const shouldShiftPeriod = () => shiftPeriodOnStartDateChange
 
 // --- Enddatum-Chip (Ausnahme-Anzeige bei ausgeblendeter Enddatum-Spalte) ---
 const injectedShowEndDate = inject('bulkShowEndDate', null);
+// "Zuletzt bearbeitet"-Markierung sofort aus der eigenen Save-Response setzen —
+// ohne diesen Aufruf hinge die blaue Tönung am eigenen Broadcast-Roundtrip.
+const markRowEdited = inject('bulkMarkRowEdited', () => {});
 const isMultiDay = computed(() => !!props.event.end_day && props.event.end_day !== props.event.day);
 
 // Kurzer Amber-Puls, wenn eine Startdatum-Änderung das (unsichtbare) Ende betroffen hat
@@ -555,29 +562,97 @@ const endChipTooltipBinding = computed(() => ({
     appendTo: 'body',
     class: 'aw-tooltip'
 }));
-const editingDescription = ref(false);
-const draftDescription = ref(props.event.description || '');
+// Beschreibung inline bearbeiten. Der Zustand (offen, Entwurf, Fokus) hängt am TERMIN, nicht an dieser
+// Komponente: die virtuelle Liste recycelt Komponenten – nach dem Speichern einer anderen Zeile zeigte
+// die Instanz, in der man gerade tippte, plötzlich einen anderen Termin; Feld und Fokus waren weg.
+const eventKey = computed(() => props.event.id ?? props.event.localUid);
+const descriptionEdit = computed(() => openDescriptionEdits.get(eventKey.value) ?? null);
+const editingDescription = computed(() => descriptionEdit.value !== null);
+const draftDescription = computed({
+    get: () => descriptionEdit.value?.draft ?? '',
+    set: (value) => {
+        if (descriptionEdit.value) {
+            descriptionEdit.value.draft = value;
+        }
+    },
+});
 const descriptionTextarea = ref(null);
+
+// Zeigt diese Komponente (wieder) den Termin, dessen Feld den Fokus hatte: Fokus zurückholen
+// – aber nur, wenn gerade nichts anderes den Fokus hat (sonst nähme es einem anderen Feld den Fokus weg)
+watch(descriptionTextarea, (textarea) => {
+    const focusIsFree = !document.activeElement || document.activeElement === document.body;
+    if (textarea && focusedDescriptionKey.value === eventKey.value && focusIsFree) {
+        textarea.focus({preventScroll: true});
+    }
+});
 
 const startEditDescription = () => {
     if (!canEditRow.value) return;
-    draftDescription.value = props.event.description || '';
-    editingDescription.value = true;
+    openDescriptionEdits.set(eventKey.value, {draft: props.event.description || ''});
+    focusedDescriptionKey.value = eventKey.value;
     nextTick(() => {
         descriptionTextarea.value?.focus();
     });
 };
 
-const saveDescription = async () => {
-    if (draftDescription.value !== (props.event.description || '')) {
-        if (props.event.id) {
-            await axios.patch(route('event.update.description', props.event.id), {
-                description: draftDescription.value
-            });
-        }
-        props.event.description = draftDescription.value;
+/**
+ * Fokusverlust nur dann als „fertig“ werten, wenn die Person ihn ausgelöst hat (Klick/Taste außerhalb
+ * des Felds nach dem Fokussieren). Bei einem Fensterwechsel oder Neu-Rendern der Liste bleibt das Feld
+ * offen und holt sich den Fokus zurück.
+ */
+let descriptionFocusedAt = 0;
+const onDescriptionFocus = () => {
+    descriptionFocusedAt = performance.now();
+    focusedDescriptionKey.value = eventKey.value;
+};
+const onDescriptionFocusOut = (focusEvent) => {
+    if (!document.hasFocus()) {
+        return;
     }
-    editingDescription.value = false;
+    // Fokus ging an ein anderes Element (Tab/Shift+Tab, Klick in ein Feld): die Person ist fertig.
+    // Der Tab-keydown hat die Textarea selbst als Ziel und zählt für die Interaktionsprüfung nicht.
+    const nextFocus = focusEvent?.relatedTarget;
+    if (nextFocus && !descriptionTextarea.value?.contains(nextFocus)) {
+        saveDescription();
+        return;
+    }
+    if (!hasUserInteractedSince(descriptionFocusedAt, descriptionTextarea.value)) {
+        nextTick(() => descriptionTextarea.value?.focus({preventScroll: true}));
+        return;
+    }
+    saveDescription();
+};
+
+const saveDescription = async () => {
+    // Termin und Entwurf jetzt festhalten: nach dem await kann diese Komponente schon einen
+    // anderen Termin zeigen
+    const event = props.event;
+    const key = eventKey.value;
+    const draft = openDescriptionEdits.get(key)?.draft ?? event.description ?? '';
+    openDescriptionEdits.delete(key);
+    if (focusedDescriptionKey.value === key) {
+        focusedDescriptionKey.value = null;
+    }
+    if (draft === (event.description || '')) {
+        return;
+    }
+    // Sofort anzeigen statt bis zur Antwort den alten Text
+    const previousDescription = event.description;
+    event.description = draft;
+    if (!event.id) {
+        return;
+    }
+    try {
+        const {data} = await axios.patch(route('event.update.description', event.id), {
+            description: draft
+        });
+        markRowEdited(event.id, data?.event?.updated_at);
+    } catch {
+        // Fehlermeldung zeigt der axios-Interceptor; Entwurf nicht verlieren, Feld wieder öffnen
+        event.description = previousDescription;
+        openDescriptionEdits.set(key, {draft});
+    }
 };
 
 const openSaveTimelinePresetModal = async () => {
@@ -666,6 +741,8 @@ const getComparableEvent = (ev) => ({
     name: ev.name ?? null,
     typeId: ev.type?.id ?? null,
     roomId: ev.room?.id ?? null,
+    // Name mitführen: der 403-Reset braucht ihn für Räume, die nicht (mehr) in der Auswahl stehen
+    roomName: ev.room?.name ?? null,
     day: ev.day ?? null,
     end_day: ev.end_day ?? null,
     start_time: ev.start_time ?? null,
@@ -676,34 +753,66 @@ const getComparableEvent = (ev) => ({
 });
 const isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+// Felder, deren Änderung einen Termin im Verkauf verschiebt
+const MOVE_FIELDS = ['roomId', 'day', 'end_day', 'start_time', 'end_time', 'admission_time'];
+const movesTheDate = (current, last) => !last || MOVE_FIELDS.some((field) => current[field] !== last[field]);
+
+/** Zeiten der Zeile zurück auf den gespeicherten Stand, wenn das Verschieben abgebrochen wurde. */
+const restoreTimes = (snapshot) => {
+    props.event.start_time = snapshot.start_time;
+    props.event.end_time = snapshot.end_time;
+    props.event.admission_time = snapshot.admission_time;
+    draftStartTime.value = snapshot.start_time || '';
+    draftEndTime.value = snapshot.end_time || '';
+    draftAdmissionTime.value = snapshot.admission_time?.slice(0, 5) || '';
+};
+
 const isUpdating = ref(false);
 
+// Raum der Zeile auf den zuletzt gespeicherten Stand zurücksetzen – aus dem AKTUELLEN Snapshot (ein parallel
+// erfolgreicher Wechsel kann ihn inzwischen aktualisiert haben) und nur, wenn er vom angezeigten Raum abweicht.
+const resetRoomToSavedSnapshot = (event, snapshotKey) => {
+    const savedComparable = window.__bulkEventSnapshots?.[snapshotKey] ?? null;
+    if (!savedComparable || savedComparable.roomId === (event.room?.id ?? null)) {
+        return;
+    }
+    const roomList = Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms ?? {});
+    // Raum nicht (mehr) in der Auswahl (z. B. Papierkorb): Platzhalter mit ID und Name statt null –
+    // sonst fehlte der Raum bei der nächsten Bearbeitung ganz
+    event.room = savedComparable.roomId === null
+        ? null
+        : (roomList.find(room => room.id === savedComparable.roomId)
+            ?? { id: savedComparable.roomId, name: savedComparable.roomName ?? '' });
+};
+
 const updateEventInDatabase = async () => {
+    // Termin festhalten: nach den awaits kann diese (recycelte) Komponente einen anderen Termin zeigen
+    const event = props.event;
     await nextTick(); // v-model Werte sicherstellen
 
-    // Autofill direkt auf props.event anwenden
-    if (props.event.start_time && !props.event.end_time) {
-        const s = new Date(`01/01/2000 ${props.event.start_time}`);
+    // Autofill direkt auf den Termin anwenden
+    if (event.start_time && !event.end_time) {
+        const s = new Date(`01/01/2000 ${event.start_time}`);
         s.setMinutes(s.getMinutes() + 30);
-        props.event.end_time = s.toTimeString().slice(0,5);
+        event.end_time = s.toTimeString().slice(0,5);
     }
-    if (!props.event.start_time && props.event.end_time) {
-        const e = new Date(`01/01/2000 ${props.event.end_time}`);
+    if (!event.start_time && event.end_time) {
+        const e = new Date(`01/01/2000 ${event.end_time}`);
         e.setMinutes(e.getMinutes() - 30);
-        props.event.start_time = e.toTimeString().slice(0,5);
+        event.start_time = e.toTimeString().slice(0,5);
     }
 
     // Validierung
-    if (props.event.type?.individual_name && !props.event.name) {
-        props.event.nameError = true;
+    if (event.type?.individual_name && !event.name) {
+        event.nameError = true;
         return;
     }
-    props.event.nameError = false;
+    event.nameError = false;
 
     // Snapshot-Vergleich auf Basis der aktuellen Props
     if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
-    const snapshotKey = `event-snapshot-${props.event.id}`;
-    const currentComparable = getComparableEvent(props.event);
+    const snapshotKey = `event-snapshot-${event.id}`;
+    const currentComparable = getComparableEvent(event);
     const lastComparable = window.__bulkEventSnapshots[snapshotKey] ?? null;
 
     // Wenn nichts geändert wurde, abbrechen
@@ -711,22 +820,38 @@ const updateEventInDatabase = async () => {
         return;
     }
 
-    if (!props.event.id || isUpdating.value) return;
+    if (!event.id || isUpdating.value) return;
     isUpdating.value = true;
 
     try {
+        const headers = movesTheDate(currentComparable, lastComparable)
+            ? await ticketingMoveHeaders([event.id])
+            : {};
+        if (!headers) {
+            if (lastComparable) restoreTimes(lastComparable);
+            return;
+        }
+
         // Payload normalisieren
-        const payload = JSON.parse(JSON.stringify(props.event));
+        const payload = JSON.parse(JSON.stringify(event));
         if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
         if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
-        await axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload });
+        const {data} = await axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers });
+        markRowEdited(event.id, data?.event?.updated_at);
 
         // Snapshot nach erfolgreichem Patch aktualisieren
-        window.__bulkEventSnapshots[snapshotKey] = getComparableEvent(props.event);
+        window.__bulkEventSnapshots[snapshotKey] = getComparableEvent(event);
     } catch (err) {
-        console.error('bulk:patch-failed', props.event.id, err);
+        console.error('bulk:patch-failed', event.id, err);
+        // 403 beim Raumwechsel (kein Buchungsrecht im Zielraum): Zeile auf den zuletzt gespeicherten Raum
+        // zurücksetzen – sonst zeigt sie den neuen Raum und jede weitere Änderung scheitert erneut daran.
+        // Nur wenn der fehlgeschlagene Request den Raum wechseln sollte (403 = kein Buchungsrecht im Zielraum)
+        const requestChangedRoom = lastComparable && lastComparable.roomId !== currentComparable.roomId;
+        if (err?.response?.status === 403 && requestChangedRoom) {
+            resetRoomToSavedSnapshot(event, snapshotKey);
+        }
         await nextTick();
         setTimeout(() => {
             const { id, type } = focusRegistry || {};
@@ -750,8 +875,11 @@ const removeTime = () => {
 };
 
 const onStartDateFocusOut = async () => {
+    // Termin jetzt festhalten: nach dem Umsetzen von day sortiert die Liste um und der
+    // DynamicScroller recycelt diese Komponente evtl. für einen anderen Termin.
+    const event = props.event;
     // Commit draft to actual event object only on focusout
-    const oldStart = props.event.day;
+    const oldStart = event.day;
     const newStart = draftStartDate.value;
 
     // Leeres oder ungültiges Datum nie übernehmen: Feld auf den alten Wert zurücksetzen
@@ -764,7 +892,7 @@ const onStartDateFocusOut = async () => {
     if (newStart === oldStart) return;
 
     // If end_day is missing, treat it as equal to the old start day.
-    const oldEnd = props.event.end_day || oldStart;
+    const oldEnd = event.end_day || oldStart;
 
     let newEndDay;
     if (shouldShiftPeriod()) {
@@ -784,8 +912,14 @@ const onStartDateFocusOut = async () => {
     }
 
     // Prepare payload BEFORE reactive changes to avoid component unmount issues during sorting
-    if (props.event.id) {
-        const payload = JSON.parse(JSON.stringify(props.event));
+    if (event.id) {
+        const headers = await ticketingMoveHeaders([event.id]);
+        if (!headers) {
+            draftStartDate.value = oldStart;
+            return;
+        }
+
+        const payload = JSON.parse(JSON.stringify(event));
         payload.day = newStart;
         payload.end_day = newEndDay;
         if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
@@ -793,20 +927,31 @@ const onStartDateFocusOut = async () => {
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
         // Send API request before reactive update
-        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
-            .then(() => {
+        const previousEndDay = event.end_day;
+        axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers })
+            .then(({data}) => {
+                markRowEdited(event.id, data?.event?.updated_at);
                 // Update snapshot after successful patch
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
-                const snapshotKey = `event-snapshot-${props.event.id}`;
-                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, day: newStart, end_day: newEndDay });
+                const snapshotKey = `event-snapshot-${event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...event, day: newStart, end_day: newEndDay });
             })
-            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+            .catch(err => {
+                // Nicht gespeichert: Zeile wieder auf den gespeicherten Stand (Meldung kommt global)
+                console.error('bulk:patch-failed', event.id, err);
+                event.day = oldStart;
+                event.end_day = previousEndDay;
+                // Entwurf nur zurücksetzen, wenn diese Komponente noch denselben Termin zeigt
+                if (props.event === event) {
+                    draftStartDate.value = oldStart;
+                }
+            });
     }
 
     // Now apply reactive changes (may trigger re-sort and component re-render)
-    props.event.day = newStart;
-    props.event.end_day = newEndDay;
-    dayString.value = getDayOfWeek(props.event.day).replace('.', '');
+    event.day = newStart;
+    event.end_day = newEndDay;
+    dayString.value = getDayOfWeek(newStart).replace('.', '');
 };
 
 const onStartTimeFocusOut = (e) => {
@@ -833,40 +978,73 @@ const onAdmissionTimeFocusOut = (e) => {
     updateEventInDatabase();
 };
 
-const onRoomChange = (newRoom) => {
+// v-model setzt Raum/Typ, bevor @update:model-value läuft; die synchronen Watcher merken sich
+// den vorherigen Wert, damit ein fehlgeschlagenes Speichern die Zeile zurücksetzen kann.
+let roomBeforeChange = props.event.room;
+let typeBeforeChange = props.event.type;
+watch(() => props.event.room, (_newRoom, oldRoom) => { roomBeforeChange = oldRoom; }, {flush: 'sync'});
+watch(() => props.event.type, (_newType, oldType) => { typeBeforeChange = oldType; }, {flush: 'sync'});
+
+const onRoomChange = async (newRoom) => {
+    const previousRoom = roomBeforeChange;
+    // Termin festhalten: Umsortieren kann diese Komponente für einen anderen Termin recyceln
+    const event = props.event;
     // Send API request BEFORE reactive change to avoid component unmount during sort by room
-    if (props.event.id) {
-        const payload = JSON.parse(JSON.stringify(props.event));
+    if (event.id) {
+        const headers = await ticketingMoveHeaders([event.id]);
+        if (!headers) {
+            event.room = previousRoom;
+            return;
+        }
+
+        const payload = JSON.parse(JSON.stringify(event));
         payload.room = newRoom ? { id: newRoom.id } : null;
         if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
-        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
-            .then(() => {
+        axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers })
+            .then(({data}) => {
+                markRowEdited(event.id, data?.event?.updated_at);
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
-                const snapshotKey = `event-snapshot-${props.event.id}`;
-                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, room: newRoom });
+                const snapshotKey = `event-snapshot-${event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...event, room: newRoom });
             })
-            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+            .catch(err => {
+                console.error('bulk:patch-failed', event.id, err);
+                // Nur zurücksetzen, wenn der gespeicherte Stand vom angezeigten Raum abweicht – ein späterer,
+                // bereits gespeicherter Wechsel darf nicht überschrieben werden
+                if (window.__bulkEventSnapshots?.[`event-snapshot-${event.id}`]) {
+                    resetRoomToSavedSnapshot(event, `event-snapshot-${event.id}`);
+                } else if (event.room?.id === newRoom?.id) {
+                    event.room = previousRoom;
+                }
+            });
     }
     // Reactive change already applied by v-model
 };
 
 const onTypeChange = (newType) => {
+    const previousType = typeBeforeChange;
+    // Termin festhalten: Umsortieren kann diese Komponente für einen anderen Termin recyceln
+    const event = props.event;
     // Send API request BEFORE reactive change to avoid component unmount during sort by type
-    if (props.event.id) {
-        const payload = JSON.parse(JSON.stringify(props.event));
+    if (event.id) {
+        const payload = JSON.parse(JSON.stringify(event));
         payload.type = newType ? { id: newType.id } : null;
         if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
-        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
-            .then(() => {
+        axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload })
+            .then(({data}) => {
+                markRowEdited(event.id, data?.event?.updated_at);
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
-                const snapshotKey = `event-snapshot-${props.event.id}`;
-                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, type: newType });
+                const snapshotKey = `event-snapshot-${event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...event, type: newType });
             })
-            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+            .catch(err => {
+                console.error('bulk:patch-failed', event.id, err);
+                event.type = previousType;
+            });
     }
     // Reactive change already applied by v-model
 };
@@ -918,11 +1096,15 @@ const getDayOfWeek = (date) => {
 
 onMounted(() => {
     dayString.value = getDayOfWeek(props.event.day).replace('.', '');
-    // ensure end_day initialized
-    if (!props.event.end_day) props.event.end_day = props.event.day;
-    // initialize snapshot so first change is detected
-    if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
-    const snapshotKey = `event-snapshot-${props.event.id}`;
-    window.__bulkEventSnapshots[snapshotKey] = getComparableEvent(props.event);
 });
+
+// Snapshot je angezeigtem Termin anlegen – auch wenn der DynamicScroller diese Komponente für einen anderen
+// Termin recycelt (onMounted läuft dann nicht erneut, ohne Snapshot griffen Änderungserkennung und 403-Reset nicht)
+watch(() => props.event.id, () => {
+    const event = props.event;
+    // ensure end_day initialized
+    if (!event.end_day) event.end_day = event.day;
+    if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+    window.__bulkEventSnapshots[`event-snapshot-${event.id}`] = getComparableEvent(event);
+}, {immediate: true});
 </script>

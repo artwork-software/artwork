@@ -7,6 +7,7 @@ use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Services\CrmPropertyFileService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class CrmContact extends Model
 {
@@ -40,6 +42,14 @@ class CrmContact extends Model
         'profile_photo_url',
     ];
 
+    /**
+     * Dateipfade der Upload-Eigenschaften, vor dem endgültigen Löschen gemerkt – danach sind die
+     * Eigenschaftswerte per DB-Cascade weg.
+     *
+     * @var list<string>
+     */
+    private array $propertyFilePathsToDelete = [];
+
     protected static function booted(): void
     {
         // Hersteller-Lookup-Cache der Inventar-Artikel (je Prozess, unter Octane/Swoole
@@ -55,6 +65,24 @@ class CrmContact extends Model
                 ->whereNull('revoked_at')
                 ->update(['revoked_at' => now()]);
         });
+
+        // Endgültiges Löschen entfernt auch die Dateien der Upload-Eigenschaften (DSGVO). Beim
+        // Soft-Delete bleiben sie liegen, sonst wäre der Kontakt nicht vollständig wiederherstellbar.
+        // Gelöscht wird erst nach dem Commit, damit ein Rollback keine Werte ohne Datei hinterlässt.
+        static::forceDeleting(static function (CrmContact $contact): void {
+            $contact->propertyFilePathsToDelete = app(CrmPropertyFileService::class)
+                ->collectPathsOfContact($contact);
+        });
+        static::forceDeleted(static function (CrmContact $contact): void {
+            $paths = $contact->propertyFilePathsToDelete;
+            $contact->propertyFilePathsToDelete = [];
+
+            if ($paths === []) {
+                return;
+            }
+
+            DB::afterCommit(static fn () => app(CrmPropertyFileService::class)->deleteMany($paths));
+        });
     }
 
     public function entity(): MorphTo
@@ -69,16 +97,25 @@ class CrmContact extends Model
         return $entity instanceof CrmEntity ? $entity : null;
     }
 
+    /**
+     * @return BelongsTo<CrmContactType, $this>
+     */
     public function contactType(): BelongsTo
     {
         return $this->belongsTo(CrmContactType::class, 'crm_contact_type_id');
     }
 
+    /**
+     * @return HasMany<CrmPropertyValue, $this>
+     */
     public function propertyValues(): HasMany
     {
         return $this->hasMany(CrmPropertyValue::class, 'crm_contact_id');
     }
 
+    /**
+     * @return HasOne<\Artwork\Modules\ExternalAccess\Models\ExternalAccess, $this>
+     */
     public function externalAccess(): HasOne
     {
         return $this->hasOne(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
@@ -86,6 +123,7 @@ class CrmContact extends Model
 
     /**
      * Externer Zugang, der diesen Kontakt über eine CRM-Kontaktliste im Projekt angelegt hat.
+     * @return BelongsTo<\Artwork\Modules\ExternalAccess\Models\ExternalAccess, $this>
      */
     public function createdByExternalAccess(): BelongsTo
     {
@@ -97,11 +135,17 @@ class CrmContact extends Model
         );
     }
 
+    /**
+     * @return HasMany<\Artwork\Modules\ExternalAccess\Models\ExternalAccess, $this>
+     */
     public function externalAccesses(): HasMany
     {
         return $this->hasMany(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
     }
 
+    /**
+     * @return BelongsToMany<AccommodationRoomType, $this>
+     */
     public function roomTypes(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -112,11 +156,17 @@ class CrmContact extends Model
         )->withPivot('cost_per_night');
     }
 
+    /**
+     * @return HasMany<ArtistResidency, $this>
+     */
     public function artistResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'artist_crm_contact_id');
     }
 
+    /**
+     * @return BelongsToMany<\Artwork\Modules\Project\Models\Project, $this>
+     */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -125,6 +175,9 @@ class CrmContact extends Model
         )->withTimestamps();
     }
 
+    /**
+     * @return BelongsToMany<\Artwork\Modules\Project\Models\Project, $this>
+     */
     public function teamProjects(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -135,6 +188,9 @@ class CrmContact extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<ArtistResidency, $this>
+     */
     public function accommodationResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'accommodation_crm_contact_id');
@@ -150,8 +206,18 @@ class CrmContact extends Model
 
     public function getProfilePhotoUrlAttribute(): string
     {
-        if ($this->profile_image) {
-            return asset('storage/' . $this->profile_image);
+        // Aus Freelancern/Dienstleistern gespiegelte Altbestände können ui-avatars-/
+        // generate-avatar-image-URLs enthalten (CSP-Block bzw. 404) → wie "kein Bild" behandeln
+        $profileImage = $this->profile_image;
+        if (
+            $profileImage
+            && (str_contains($profileImage, 'ui-avatars.com') || str_contains($profileImage, 'generate-avatar-image'))
+        ) {
+            $profileImage = null;
+        }
+
+        if ($profileImage) {
+            return asset('storage/' . $profileImage);
         }
 
         $letter = mb_substr($this->display_name ?? 'C', 0, 1);

@@ -1,8 +1,8 @@
 <template>
     <ExternalAppLayout :title="$t('My data')">
-        <div class="px-8 py-10 max-w-4xl">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-text">{{ $t('My data') }}</h1>
+        <div class="px-4 py-6 sm:px-8 sm:py-10 max-w-4xl">
+            <div class="flex items-center justify-between gap-3">
+                <h1 class="text-xl sm:text-2xl font-bold text-text">{{ $t('My data') }}</h1>
                 <Link
                     :href="route('external.crm.edit')"
                     class="rounded-lg bg-surface-inverse px-4 py-2 text-sm font-medium text-text-inverse"
@@ -36,10 +36,10 @@
 
             <section v-for="group in groups" :key="group.id" class="mt-10">
                 <h2 class="text-lg font-semibold">{{ group.name }}</h2>
-                <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3">
+                <dl class="mt-4 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 sm:gap-y-3">
                     <template v-for="property in group.properties" :key="property.id">
                         <dt class="text-sm font-medium text-text-muted">{{ property.name }}</dt>
-                        <dd class="text-sm text-text">{{ property.value ?? '—' }}</dd>
+                        <dd class="mb-2 break-words text-sm text-text sm:mb-0">{{ displayValue(property) }}</dd>
                     </template>
                 </dl>
             </section>
@@ -55,6 +55,9 @@
 import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import ExternalAppLayout from '@/Pages/ExternalAccess/Layouts/ExternalAppLayout.vue'
+import { useTranslation } from '@/Composeables/Translation.js'
+
+const $t = useTranslation()
 
 const page = usePage()
 const flashStatus = computed(() => page.props.flash?.status ?? null)
@@ -63,4 +66,13 @@ defineProps({
     groups: { type: Array, required: true },
     submissionStatus: { type: Object, default: null },
 })
+
+// Checkboxen werden wie intern als '1'/'0' gespeichert
+function displayValue(property) {
+    if (property.input_type === 'checkbox') {
+        return property.value === '1' ? $t('Yes') : $t('No')
+    }
+
+    return property.value === null || property.value === '' ? '—' : property.value
+}
 </script>

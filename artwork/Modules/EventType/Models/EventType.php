@@ -45,6 +45,7 @@ class EventType extends Model
         'relevant_for_shift',
         'relevant_for_inventory',
         'relevant_for_project_period',
+        'relevant_for_ticketing',
         'specific_verifier_id',
         'verification_mode',
     ];
@@ -55,28 +56,44 @@ class EventType extends Model
         'relevant_for_shift' => 'boolean',
         'fallback_type' => 'boolean',
         'relevant_for_inventory' => 'boolean',
-        'relevant_for_project_period' => 'boolean'
+        'relevant_for_project_period' => 'boolean',
+        'relevant_for_ticketing' => 'boolean',
     ];
 
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(Event::class, 'event_type_id', 'id');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function verifiers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'event_type_user');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function specificVerifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'specific_verifier_id', 'id', 'users');
     }
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function subEvents(): HasMany
     {
         return $this->hasMany(Event::class, 'event_type_id', 'id');
     }
 
+    /**
+     * @return BelongsToMany<BiEventTypeTag, $this>
+     */
     public function biTags(): BelongsToMany
     {
         return $this->belongsToMany(

@@ -241,7 +241,7 @@
 </template>
 
 <script>
-import {IconAlertTriangle, IconCalendar, IconCheck, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconFileText, IconFilter, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconAlertTriangle, IconCalendar, IconCheck, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconFileText, IconFilter, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -273,14 +273,15 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 import {provide} from "vue";
+import {stopListeningOnPrivateChannel} from "@/Composeables/Listener/echoChannel.js";
 
 export default {
     name: 'CalendarComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
+        IconUsersGroup,
         FunctionBarCalendar,
         CalendarFunctionBar,
         DatePickerComponent,
@@ -346,6 +347,11 @@ export default {
     emits: ['changeAtAGlance'],
     mounted() {
         window.addEventListener('resize', this.listenToFullscreen);
+    },
+    beforeUnmount() {
+        window.removeEventListener('resize', this.listenToFullscreen);
+        // Nur den eigenen Handler abmelden – der Kanal 'events' kann von anderen Ansichten geteilt sein
+        stopListeningOnPrivateChannel('events', 'OccupancyUpdated', this.occupancyUpdatedHandler);
     },
     data() {
         return {
@@ -437,10 +443,12 @@ export default {
         provide('filterOptions', this.filterOptions);
         provide('user_filters', this.user_filters);
         provide('personalFilters', this.personalFilters);
+        // Handler merken, damit beforeUnmount genau ihn wieder abmelden kann
+        this.occupancyUpdatedHandler = () => {
+            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
+        };
         Echo.private('events')
-            .listen('OccupancyUpdated', () => {
-                this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
-            });
+            .listen('OccupancyUpdated', this.occupancyUpdatedHandler);
     },
     watch: {
         events: {

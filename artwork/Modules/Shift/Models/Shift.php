@@ -27,6 +27,7 @@ use Illuminate\Support\Collection;
 use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * @property int $id
@@ -257,6 +258,9 @@ class Shift extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function committedBy(): BelongsTo
     {
         return $this->belongsTo(
@@ -267,6 +271,9 @@ class Shift extends Model
         )->withoutEagerLoad(['calender_settings']);
     }
 
+    /**
+     * @return BelongsTo<Event, $this>
+     */
     public function event(): BelongsTo
     {
         return $this->belongsTo(
@@ -277,6 +284,9 @@ class Shift extends Model
         )->without(['series']);
     }
 
+    /**
+     * @return BelongsTo<Craft, $this>
+     */
     public function craft(): BelongsTo
     {
         return $this->belongsTo(
@@ -287,6 +297,9 @@ class Shift extends Model
         )->without(['users']);
     }
 
+    /**
+     * @return BelongsToMany<GlobalQualification, $this>
+     */
     public function globalQualifications(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -297,12 +310,19 @@ class Shift extends Model
         )->withPivot('quantity');
     }
 
+    /**
+     * @return BelongsTo<Room, $this>
+     */
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class, 'room_id', 'id', 'rooms');
     }
 
-    /** project */
+    /**
+     * project
+     *
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(
@@ -313,6 +333,9 @@ class Shift extends Model
         )->without(['components', 'users']);
     }
 
+    /**
+     * @return MorphToMany<User, $this, ShiftWorker>
+     */
     public function users(): MorphToMany
     {
         return $this
@@ -341,6 +364,9 @@ class Shift extends Model
             ->without('calendar_settings');
     }
 
+    /**
+     * @return MorphToMany<Freelancer, $this, ShiftWorker>
+     */
     public function freelancer(): MorphToMany
     {
         return $this
@@ -368,6 +394,9 @@ class Shift extends Model
             ]);
     }
 
+    /**
+     * @return MorphToMany<ServiceProvider, $this, ShiftWorker>
+     */
     public function serviceProvider(): MorphToMany
     {
         return $this
@@ -423,6 +452,9 @@ class Shift extends Model
     }
 
 
+    /**
+     * @return HasMany<ShiftsQualifications, $this>
+     */
     public function shiftsQualifications(): HasMany
     {
         return $this->hasMany(ShiftsQualifications::class, 'shift_id', 'id');
@@ -562,6 +594,9 @@ class Shift extends Model
         return $this->shiftsQualifications->sum('value');
     }
 
+    /**
+     * @return BelongsTo<ShiftGroup, $this>
+     */
     // shift group relation
     public function shiftGroup(): BelongsTo
     {
@@ -573,11 +608,17 @@ class Shift extends Model
         );
     }
 
+    /**
+     * @return HasMany<ShiftRuleViolation, $this>
+     */
     public function shiftRuleViolations(): HasMany
     {
         return $this->hasMany(ShiftRuleViolation::class);
     }
 
+    /**
+     * @return MorphMany<ShiftPlanRequestChange, $this>
+     */
     public function shiftPlanRequestChanges(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(
@@ -588,11 +629,17 @@ class Shift extends Model
         );
     }
 
+    /**
+     * @return HasMany<CommittedShiftChange, $this>
+     */
     public function committedShiftChanges(): HasMany
     {
         return $this->hasMany(CommittedShiftChange::class, 'shift_id', 'id');
     }
 
+    /**
+     * @return BelongsTo<ShiftPlanRequest, $this>
+     */
     public function currentRequest(): BelongsTo
     {
         return $this->belongsTo(ShiftPlanRequest::class, 'current_request_id', 'id', 'shift_plan_requests');
@@ -600,6 +647,7 @@ class Shift extends Model
 
     /**
      * Historical requests this shift was part of
+     * @return BelongsToMany<\Artwork\Modules\Shift\Models\ShiftPlanRequest, $this>
      */
     public function requestHistories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {

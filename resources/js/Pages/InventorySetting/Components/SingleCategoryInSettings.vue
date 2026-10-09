@@ -30,7 +30,7 @@
     <ConfirmDeleteModal
         v-if="showDeleteConfirmation"
         :title="$t('Delete category')"
-        :description="$t('Are you sure you want to delete this category? Articles and Sub-Categories in this category will be deleted as well.')"
+        :description="$t('Are you sure you want to delete this category? Its sub-categories will be deleted as well. Categories that still contain articles cannot be deleted.')"
         @delete="deleteCategory"
         @closed="showDeleteConfirmation = false"
     />

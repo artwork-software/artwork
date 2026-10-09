@@ -5,6 +5,7 @@ namespace Tests\Feature\Http\Controllers;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Holidays\Models\Subdivision;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -99,6 +100,52 @@ final class HolidayControllerTest extends FeatureTestCase
 
         $response->assertOk();
         $this->assertSame('Updated', $holiday->fresh()->name);
+    }
+
+    #[Test]
+    public function update_without_end_date_ends_the_holiday_on_its_start_day(): void
+    {
+        $this->actingAsAdmin();
+        $holiday = Holiday::query()->forceCreate([
+            'name' => 'X',
+            'date' => '2026-01-01',
+            'end_date' => '2026-01-03',
+            'yearly' => false,
+            'color' => '#abcdef',
+        ]);
+
+        $this->patch(route('holidays.update', $holiday), [
+            'name' => 'X',
+            'date' => '2026-02-01',
+            'end_date' => null,
+            'yearly' => false,
+            'color' => '#abcdef',
+            'selectedSubdivisions' => [],
+        ])->assertOk();
+
+        $this->assertSame('2026-02-01', $holiday->fresh()->end_date->toDateString());
+        // Kalender bleibt erreichbar (vorher 500 durch end_date = null)
+        $this->get(route('events'))->assertOk();
+    }
+
+    #[Test]
+    public function migration_backfills_missing_end_dates_with_the_start_date(): void
+    {
+        $id = (int) DB::table('holidays')->insertGetId([
+            'name' => 'Altbestand',
+            'date' => '2026-03-05',
+            'end_date' => null,
+            'from_api' => false,
+            'yearly' => false,
+            'treatAsSpecialDay' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $migration = require database_path('migrations/2026_10_01_100000_backfill_missing_holiday_end_dates.php');
+        $migration->up();
+
+        $this->assertSame('2026-03-05', DB::table('holidays')->where('id', $id)->value('end_date'));
     }
 
     #[Test]
@@ -384,5 +431,60 @@ final class HolidayControllerTest extends FeatureTestCase
 
         $this->delete(route('holiday.delete', $holiday))->assertForbidden();
         $this->assertDatabaseHas('holidays', ['id' => $holiday->id, 'name' => 'X']);
+    }
+
+    #[Test]
+    public function holidays_take_the_country_of_their_region_instead_of_a_fixed_de(): void
+    {
+        $this->actingAsAdmin();
+        config(['app.instance_locale' => 'fr']);
+        $geneva = Subdivision::create(['name' => 'Genf', 'code' => 'GE', 'country_code' => 'CH']);
+        Http::fake(fn () => Http::response([[
+            'id' => 'ch-1',
+            'startDate' => '2026-08-01',
+            'endDate' => '2026-08-01',
+            'type' => 'Public',
+            'name' => [['language' => 'FR', 'text' => 'Fête nationale']],
+            'regionalScope' => 'National',
+            'temporalScope' => 'FullDay',
+            'nationwide' => true,
+            'subdivisions' => [['code' => 'CH-GE', 'shortName' => 'GE']],
+        ]]));
+
+        $this->post(route('holiday.api.call'), [
+            'selectedSubdivisions' => [['id' => $geneva->id, 'code' => 'GE']],
+            'public_holidays' => true,
+            'school_holidays' => false,
+            'color' => '#abcdef',
+        ])->assertOk();
+        $this->post(route('holiday.store'), [
+            'name' => 'Escalade',
+            'date' => '2026-12-12',
+            'yearly' => true,
+            'color' => '#abcdef',
+            'selectedSubdivisions' => [['id' => $geneva->id]],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('holidays', ['remote_identifier' => 'ch-1', 'country' => 'CH']);
+        $this->assertDatabaseHas('holidays', ['name' => 'Escalade', 'country' => 'CH']);
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'countryIsoCode=CH')
+            && str_contains($request->url(), 'languageIsoCode=FR'));
+    }
+
+    #[Test]
+    public function holidays_without_region_fall_back_to_the_instance_country(): void
+    {
+        $this->actingAsAdmin();
+        config(['app.country' => 'AT']);
+
+        $this->post(route('holiday.store'), [
+            'name' => 'Hausfeiertag',
+            'date' => '2026-03-01',
+            'yearly' => false,
+            'color' => '#abcdef',
+            'selectedSubdivisions' => [],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('holidays', ['name' => 'Hausfeiertag', 'country' => 'AT']);
     }
 }

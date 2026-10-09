@@ -56,7 +56,7 @@ class EventTypeController extends Controller
         $eventType = $eventTypeService->save($this->setProperties($eventType, $request));
 
         $eventType->verifiers()->detach();
-        $newVerifierIds = $request->collect('users', [])->pluck('id')->all();
+        $newVerifierIds = $request->collect('users')->pluck('id')->all();
         $eventType->verifiers()->attach($newVerifierIds);
 
         // Verifier-Status beeinflusst den gecachten canSeeIncomingRequests-Flag
@@ -118,6 +118,10 @@ class EventTypeController extends Controller
         $eventType->relevant_for_project_period = $request->get(
             'relevant_for_project_period',
             $eventType->relevant_for_project_period
+        );
+        $eventType->relevant_for_ticketing = $request->boolean(
+            'relevant_for_ticketing',
+            (bool) $eventType->relevant_for_ticketing
         );
         $eventType->verification_mode = $request->validated('verification_mode')
             ?? $eventType->verification_mode

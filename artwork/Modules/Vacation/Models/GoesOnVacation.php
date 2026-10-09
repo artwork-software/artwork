@@ -7,6 +7,9 @@ use Illuminate\Support\Carbon;
 
 trait GoesOnVacation
 {
+    /**
+     * @return MorphMany<Vacation, $this>
+     */
     public function vacations(): MorphMany
     {
         return $this->morphMany(Vacation::class, 'vacationer');

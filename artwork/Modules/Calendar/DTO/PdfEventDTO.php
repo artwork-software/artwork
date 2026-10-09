@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Calendar\DTO;
 
+use Artwork\Modules\Calendar\Services\EventCalendarDays;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 
 class PdfEventDTO
 {
@@ -61,7 +61,7 @@ class PdfEventDTO
         $this->projectStatus = $projectStatus;
         $this->projectLeaders = $projectLeaders;
         $this->admission_time = $admissionTime;
-        $this->daysOfEvent = collect(CarbonPeriod::create($startTime, $endTime))
+        $this->daysOfEvent = collect(EventCalendarDays::between($startTime, $endTime))
             ->map(fn($d) => $d->format('d.m.Y'))
             ->toArray();
     }

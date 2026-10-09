@@ -38,7 +38,7 @@ class ExternalUserSourceController extends Controller
 
     public function store(StoreExternalUserSourceRequest $request): RedirectResponse|JsonResponse
     {
-        $this->authorize('view', GeneralSettings::class);
+        $this->authorize('manage', ExternalUserSource::class);
 
         $source = $this->externalUserSourceService->create($request->validated());
 
@@ -53,7 +53,7 @@ class ExternalUserSourceController extends Controller
         UpdateExternalUserSourceRequest $request,
         ExternalUserSource $externalUserSource
     ): RedirectResponse|JsonResponse {
-        $this->authorize('view', GeneralSettings::class);
+        $this->authorize('manage', ExternalUserSource::class);
 
         $source = $this->externalUserSourceService->update($externalUserSource, $request->validated());
 
@@ -66,7 +66,7 @@ class ExternalUserSourceController extends Controller
 
     public function destroy(ExternalUserSource $externalUserSource): RedirectResponse|JsonResponse
     {
-        $this->authorize('view', GeneralSettings::class);
+        $this->authorize('manage', ExternalUserSource::class);
 
         $this->externalUserSourceService->delete($externalUserSource);
 
@@ -84,9 +84,13 @@ class ExternalUserSourceController extends Controller
         return $this->runConnectionTest($externalUserSource);
     }
 
+    /**
+     * Testet eine noch nicht gespeicherte Konfiguration (Quell-Dialog). Nur für Admins, die Quellen
+     * auch speichern dürfen – sonst ließe sich der Server zu beliebigen LDAP-/IdP-Hosts verbinden.
+     */
     public function testConnectionConfig(Request $request): JsonResponse
     {
-        $this->authorize('view', GeneralSettings::class);
+        $this->authorize('manage', ExternalUserSource::class);
 
         $request->validate([
             'type' => ['sometimes', 'string', 'in:ldap,identity_provider'],

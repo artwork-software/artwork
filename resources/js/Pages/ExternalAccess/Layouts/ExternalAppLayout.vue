@@ -5,6 +5,7 @@
     </Head>
     <div class="artwork relative min-h-screen bg-surface-sunken">
         <ExternalSubMenu />
+        <ExternalMobileHeader />
 
         <main class="lg:pl-72 pb-20">
             <div class="artwork relative" id="main-content-wrapper">
@@ -19,6 +20,7 @@ import { Head, usePage } from '@inertiajs/vue3'
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ExternalSubMenu from '@/Pages/ExternalAccess/Layouts/ExternalSubMenu.vue'
+import ExternalMobileHeader from '@/Pages/ExternalAccess/Layouts/ExternalMobileHeader.vue'
 
 const { locale } = useI18n()
 const page = usePage()

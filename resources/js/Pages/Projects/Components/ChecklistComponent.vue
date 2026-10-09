@@ -226,6 +226,7 @@
 </template>
 
 <script setup>
+import { stopListeningOnPrivateChannel } from "@/Composeables/Listener/echoChannel.js";
 import {ref, computed, nextTick, watch, onMounted, onUnmounted} from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -330,6 +331,13 @@ watch(
     { immediate: true }
 );
 
+
+// Platzierungen in Ordnern (disclosure_components, erkennbar an disclosure_id) haben eigene Ids —
+// das Backend löst sie nur mit placement=disclosure auf und nutzt dann deren Tab-Auswahl.
+function placementQuery() {
+    return props.component?.disclosure_id ? { placement: 'disclosure' } : {};
+}
+
 async function fetchChecklists() {
     const projectId = props.project?.id;
     const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id;
@@ -344,7 +352,7 @@ async function fetchChecklists() {
 
     try {
         const { data } = await axios.get(
-            route('projects.tabs.checklists', { project: projectId, componentInTab: componentInTabId })
+            route('projects.tabs.checklists', { project: projectId, componentInTab: componentInTabId, ...placementQuery() })
         );
         localOpenedChecklists.value = data?.opened_checklists ?? [];
         localChecklistTemplates.value = data?.checklist_templates ?? [];
@@ -551,21 +559,24 @@ function sortTo(type) {
 
 // Echo listener for real-time checklist updates
 let echoChannel = null;
+const handleChecklistUpdated = () => {
+    fetchChecklists();
+};
 
 onMounted(() => {
     syncOpenedChecklists();
 
     if (props.project?.id) {
-        echoChannel = Echo.private('project.' + props.project.id)
-            .listen('.checklist.updated', () => {
-                fetchChecklists();
-            });
+        echoChannel = 'project.' + props.project.id;
+        Echo.private(echoChannel).listen('.checklist.updated', handleChecklistUpdated);
     }
 });
 
+// Nur den eigenen Handler abmelden – Echo.leave entfernte alle Listener des geteilten Projektkanals
 onUnmounted(() => {
-    if (echoChannel && props.project?.id) {
-        Echo.leave('project.' + props.project.id);
+    if (echoChannel) {
+        stopListeningOnPrivateChannel(echoChannel, '.checklist.updated', handleChecklistUpdated);
+        echoChannel = null;
     }
 });
 

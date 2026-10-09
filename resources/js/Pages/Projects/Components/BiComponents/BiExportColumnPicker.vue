@@ -134,7 +134,7 @@ import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
-import { extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
+import { extractSaveErrorMessage, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
 import { useTranslation } from '@/Composeables/Translation.js';
 
 const t = useTranslation();
@@ -250,7 +250,7 @@ const savePreset = async () => {
         const response = await axios.post(route('bi.export.presets.store'), {
             name: newPresetName.value,
             columns: props.modelValue,
-        });
+        }, BI_REQUEST_CONFIG);
         presetList.value = [...presetList.value, response.data].sort((a, b) => a.name.localeCompare(b.name));
         selectedPreset.value = response.data;
         newPresetName.value = '';
@@ -269,7 +269,7 @@ const updatePreset = async () => {
     try {
         const response = await axios.put(route('bi.export.presets.update', selectedPreset.value.id), {
             columns: props.modelValue,
-        });
+        }, BI_REQUEST_CONFIG);
         presetList.value = presetList.value.map(preset => preset.id === response.data.id ? response.data : preset);
         selectedPreset.value = response.data;
         notice(t('Preset updated.'));
@@ -287,7 +287,7 @@ const deletePreset = async () => {
     presetBusy.value = true;
     presetError.value = null;
     try {
-        await axios.delete(route('bi.export.presets.destroy', preset.id));
+        await axios.delete(route('bi.export.presets.destroy', preset.id), BI_REQUEST_CONFIG);
         presetList.value = presetList.value.filter(p => p.id !== preset.id);
         selectedPreset.value = null;
         notice(t('Preset deleted.'));

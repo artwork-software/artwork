@@ -4,6 +4,9 @@ namespace Artwork\Modules\EventType\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\EventType\Models\EventType
+ */
 class EventTypPdfResource extends JsonResource
 {
     public static $wrap = null;

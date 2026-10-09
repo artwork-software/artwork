@@ -14,7 +14,7 @@ class UpdateShiftPresetNoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'description' => 'required|max:250'
+            'description' => ['nullable', 'string', 'max:10000'],
         ];
     }
 }

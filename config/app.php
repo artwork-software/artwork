@@ -2,6 +2,7 @@
 
 use Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider;
 use Artwork\Modules\Shift\Providers\ShiftChangeServiceProvider;
+use Artwork\Modules\Ticketing\Providers\TicketingServiceProvider;
 use Illuminate\Support\Facades\Facade;
 
 return [
@@ -105,7 +106,9 @@ return [
     |
     */
 
-    'timezone' => 'Europe/Berlin',
+    // Eigene Variablennamen: neuere Laravel-.env-Vorlagen setzen APP_TIMEZONE=UTC/APP_LOCALE=en,
+    // die bisher ignoriert wurden und beim Deploy nicht still greifen sollen.
+    'timezone' => env('ARTWORK_TIMEZONE', 'Europe/Berlin'),
 
     /*
     |--------------------------------------------------------------------------
@@ -118,7 +121,11 @@ return [
     |
     */
 
-    'locale' => 'de',
+    'locale' => env('ARTWORK_LOCALE', 'de'),
+
+    // Sprache der Instanz – anders als 'locale' nicht von der Localization-Middleware pro
+    // Request auf die Sprache der Person umgestellt (für einmal gespeicherte Inhalte)
+    'instance_locale' => env('ARTWORK_LOCALE', 'de'),
 
     /*
     |--------------------------------------------------------------------------
@@ -133,6 +140,9 @@ return [
 
     'fallback_locale' => 'en',
 
+    // Sprachen mit vollständigen Übersetzungen (lang/*.json) – Oberfläche und Empfängersprache
+    'supported_locales' => ['de', 'en'],
+
     /*
     |--------------------------------------------------------------------------
     | Faker Locale
@@ -145,6 +155,13 @@ return [
     */
 
     'faker_locale' => 'de_DE',
+
+    /*
+    | Land der Instanz (ISO 3166-1 alpha-2): Rückfall für Feiertage ohne Region und für
+    | länderabhängige Formate.
+    */
+
+    'country' => env('ARTWORK_COUNTRY', 'DE'),
 
     /*
     |--------------------------------------------------------------------------
@@ -222,6 +239,7 @@ return [
         Artwork\Modules\Webhook\Providers\WebhookServiceProvider::class,
 
         ShiftChangeServiceProvider::class,
+        TicketingServiceProvider::class,
         Clockwork\Support\Laravel\ClockworkServiceProvider::class
     ],
 

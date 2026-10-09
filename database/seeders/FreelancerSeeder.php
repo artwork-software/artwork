@@ -31,8 +31,7 @@ class FreelancerSeeder extends Seeder
             $lastName = $faker->lastName;
             $freelancer = Freelancer::create([
                 'position' => 'Techniker',
-                'profile_image' => 'https://ui-avatars.com/api/?name=' . $firstName[0] . '+' .
-                    $lastName[0] . '&color=7F9CF5&background=EBF4FF',
+                // kein profile_image: profile_photo_url-Accessor generiert lokalen SVG-Fallback
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'email' => $faker->email,

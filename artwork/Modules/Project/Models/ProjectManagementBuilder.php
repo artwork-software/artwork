@@ -5,6 +5,7 @@ namespace Artwork\Modules\Project\Models;
 use Artwork\Modules\Project\Models\Component;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProjectManagementBuilder extends Model
 {
@@ -24,7 +25,10 @@ class ProjectManagementBuilder extends Model
         'deletable' => 'boolean'
     ];
 
-    public function component()
+    /**
+     * @return BelongsTo<Component, $this>
+     */
+    public function component(): BelongsTo
     {
         return $this->belongsTo(Component::class, 'component_id', 'id', 'component');
     }

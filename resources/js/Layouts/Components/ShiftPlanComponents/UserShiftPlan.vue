@@ -389,6 +389,7 @@ import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { provideShiftPlanLookups } from '@/Composeables/useShiftPlanLookups.js';
 import axios from 'axios';
+import { extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
 import { colorForProjectId, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js';
 import { useTranslation } from '@/Composeables/Translation.js';
 
@@ -478,10 +479,12 @@ const deleteOwnWish = async (assignment) => {
     try {
         await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: assignment.id }), {
             params: { whole_group: false },
+            // Fehler steht über dem Plan (projectAssignmentError)
+            skipErrorToast: true,
         })
         router.reload({ only: ['projectAssignments'] })
     } catch (error) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+        projectAssignmentError.value = extractSaveErrorMessage(error) ?? String(error)
     } finally {
         projectAssignmentActionId.value = null
     }

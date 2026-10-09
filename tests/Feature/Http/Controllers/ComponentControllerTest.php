@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\DisclosureComponents;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -99,5 +100,41 @@ final class ComponentControllerTest extends FeatureTestCase
 
         $response->assertOk();
         $this->assertDatabaseMissing('components', ['id' => $component->id]);
+    }
+
+    /**
+     * disclosure_components.disclosure_id hat kein ON DELETE CASCADE: ein Ordner mit Inhalt darf nicht am
+     * Fremdschlüssel scheitern. Die enthaltenen Komponenten bleiben in der Bibliothek erhalten.
+     */
+    #[Test]
+    public function admin_can_destroy_non_empty_folder(): void
+    {
+        $this->actingAsAdmin();
+        $folder = Component::query()->forceCreate([
+            'name' => 'Ordner',
+            'type' => 'DisclosureComponent',
+            'data' => ['label' => 'Ordner'],
+            'special' => false,
+            'sidebar_enabled' => true,
+        ]);
+        $child = Component::query()->forceCreate([
+            'name' => 'Inhalt',
+            'type' => 'TextField',
+            'data' => [],
+            'special' => false,
+            'sidebar_enabled' => true,
+        ]);
+        $placement = DisclosureComponents::query()->create([
+            'disclosure_id' => $folder->id,
+            'component_id' => $child->id,
+            'order' => 1,
+        ]);
+
+        $response = $this->delete(route('component.destroy', $folder));
+
+        $response->assertOk();
+        $this->assertDatabaseMissing('components', ['id' => $folder->id]);
+        $this->assertDatabaseMissing('disclosure_components', ['id' => $placement->id]);
+        $this->assertDatabaseHas('components', ['id' => $child->id]);
     }
 }

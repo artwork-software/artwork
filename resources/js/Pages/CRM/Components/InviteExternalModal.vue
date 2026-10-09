@@ -261,6 +261,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { toYmd } from '@/Helper/IsoWeek.js'
 import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -283,6 +284,8 @@ const props = defineProps({
     externalFileUploadEnabled: { type: Boolean, default: false },
     /** Fester Kontakt (Einstieg von der CRM-Kontaktseite): { id, display_name } */
     contact: { type: Object, default: null },
+    /** Schreibzugriff nur vergeben, wer im Projekt schreiben darf (Backend prüft dasselbe) */
+    canGrantWrite: { type: Boolean, default: true },
 })
 
 const emit = defineEmits(['close', 'success'])
@@ -375,7 +378,7 @@ const fieldLabels = {
 }
 const publicFieldLabel = (field) => $t(fieldLabels[field] ?? field)
 
-const today = new Date().toISOString().slice(0, 10)
+const today = toYmd(new Date())
 const defaults = ref({ crm_access_expires_at: '', tab_valid_from: today, tab_valid_to: '' })
 
 const requirements = ref(null)
@@ -403,7 +406,7 @@ async function loadInviteInfo(contactId) {
 // --- Tabs ------------------------------------------------------------------------------
 const accessTypeItems = computed(() => [
     { id: 'read', name: $t('Read only') },
-    { id: 'write', name: $t('Read and write') },
+    ...(props.canGrantWrite ? [{ id: 'write', name: $t('Read and write') }] : []),
 ])
 // Der aktuelle Tab wird nur vorausgewählt, wenn externe Personen darin überhaupt etwas sehen könnten.
 function tabHasExternalContent(tabId) {
@@ -417,7 +420,7 @@ const tabConfig = ref({})
 
 function tabDefaults() {
     return {
-        access: accessTypeItems.value[1],
+        access: accessTypeItems.value[accessTypeItems.value.length - 1],
         valid_from: defaults.value.tab_valid_from || today,
         valid_to: defaults.value.tab_valid_to || '',
     }
@@ -547,7 +550,7 @@ const submit = () => {
     serverError.value = ''
     form.clearErrors()
     submitting.value = true
-    axios.post(route('crm.externals.invitations.store'), payload)
+    axios.post(route('crm.externals.invitations.store'), payload, { skipErrorToast: true }) // Fehler steht im Modal
         .then(() => {
             emit('success')
             emit('close')

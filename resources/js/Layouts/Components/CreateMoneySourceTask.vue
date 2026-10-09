@@ -75,7 +75,6 @@ import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -87,7 +86,7 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     name: 'EventComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         BaseTextarea,
         BaseInput,

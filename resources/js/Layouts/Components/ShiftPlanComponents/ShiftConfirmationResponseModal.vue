@@ -19,6 +19,7 @@
                 :label="$t('Comment (optional)')"
                 id="shift-confirmation-response-comment"
                 :maxlength="500"
+                show-counter
             />
 
             <!-- Absage ändert die Planung nicht von selbst – Begründung bleibt optional -->

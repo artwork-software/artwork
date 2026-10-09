@@ -37,11 +37,17 @@ class DayRemark extends Model
         'date' => 'date:Y-m-d',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by', 'id', 'createdBy');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by', 'id', 'updatedBy');

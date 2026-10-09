@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal title="User Book working hours" description="Add or edit working hours for the user" @close="$emit('close')">
+    <ArtworkBaseModal title="Book working hours" description="Add or edit working hours for the user" @close="$emit('close')">
         <div v-if="bookingForm.user" class="flex items-center justify-between gap-4 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2.5">
             <div class="flex min-w-0 items-center gap-3">
                 <img :alt="bookingForm.user.first_name" :src="bookingForm.user.profile_photo_url" class="size-10 shrink-0 rounded-full object-cover">
@@ -54,7 +54,7 @@
                 </div>
             </div>
 
-            <BaseInput id="booking_date" label="Date" type="date" v-model="bookingForm.date" required :error="bookingForm.errors.date" />
+            <BaseInput id="booking_date" label="Date" type="date" v-model="bookingForm.date" required :max="toYmd(new Date())" :error="bookingForm.errors.date" />
 
             <BaseTextarea id="booking_comment" v-model="bookingForm.comment" label="Comment" placeholder="Enter comment" required />
 
@@ -78,6 +78,7 @@
 <script setup>
 
 import {computed, reactive, watch} from "vue";
+import { toYmd } from "@/Helper/IsoWeek.js";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {useForm} from "@inertiajs/vue3";
@@ -103,7 +104,7 @@ const bookingForm = useForm({
     nightly_working_hours: '0:00',
     plus_minus: '+',
     comment: '',
-    date: new Date().toISOString().split('T')[0] // Default to today
+    date: toYmd(new Date()) // Default to today (lokal)
 })
 
 // Stunden und Minuten getrennt statt type="time": ein Zeitfeld endet bei 23:59,

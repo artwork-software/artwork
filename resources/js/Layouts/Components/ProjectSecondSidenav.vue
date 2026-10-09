@@ -29,12 +29,11 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
 import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
 
 export default {
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     props: [
         'project',
         'projectMembers',

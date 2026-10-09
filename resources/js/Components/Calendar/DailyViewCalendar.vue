@@ -156,7 +156,7 @@ import ShiftInCalendarCell from "@/Components/Calendar/Elements/ShiftInCalendarC
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import {usePermission} from "@/Composeables/Permission.js";
-import { getDaysInRange, computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
+import { getEventDaysInRange, computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
 import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
 import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
 import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
@@ -396,7 +396,7 @@ const eventEndMinutesLocal = (event) => {
 const getEventDays = (event) => {
     return Array.isArray(event?.daysOfEvent) && event.daysOfEvent.length > 0
         ? event.daysOfEvent
-        : getDaysInRange(event?.start, event?.end);
+        : getEventDaysInRange(event?.start, event?.end);
 };
 
 const dayPosOf = (event, fullDay) => {

@@ -125,20 +125,6 @@ function handleSaved() {
     showAddEditModal.value = false;
     emit('saved');
 }
-
-function removeDisclosureComponent(id) {
-    if (confirm('Möchten Sie diese Komponente aus dem Ordner entfernen?')) {
-        router.delete(route("sidebar.disclosure.component.remove", { disclosureComponent: id }), {
-            preserveScroll: true,
-            onSuccess: () => {
-                router.reload({ only: ['tabs'] });
-            },
-            onError: (errors) => {
-                console.error('❌ Fehler beim Entfernen der Komponente aus Ordner:', errors);
-            }
-        });
-    }
-}
 </script>
 
 <template>
@@ -224,20 +210,8 @@ function removeDisclosureComponent(id) {
                             <!-- Hauptkomponente -->
                             <div class="flex items-center justify-between gap-3 px-4 py-4">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <!-- Disclosure-Icon (wenn DisclosureComponent) -->
-                                    <button
-                                        v-if="element.component.type === 'DisclosureComponent'"
-                                        @click="disclosureOpen[element.id] = !disclosureOpen[element.id]"
-                                        class="grid place-items-center size-9 rounded-lg border border-border-subtle/80 bg-white/70 shrink-0 hover:bg-surface-sunken transition"
-                                        :aria-expanded="disclosureOpen[element.id]"
-                                    >
-                                        <IconChevronDown
-                                            class="h-4 w-4 text-text-muted transition-transform duration-200"
-                                            :class="{'-rotate-180': disclosureOpen[element.id]}"
-                                        />
-                                    </button>
-                                    <!-- Normales Icon -->
-                                    <div v-else class="grid place-items-center size-9 rounded-lg border border-border-subtle/80 bg-white/70 shrink-0">
+                                    <!-- Ordner (DisclosureComponent) sind in der Sidebar nicht erlaubt; Altbestand zeigt nur das Icon -->
+                                    <div class="grid place-items-center size-9 rounded-lg border border-border-subtle/80 bg-white/70 shrink-0">
                                         <ComponentIcons :type="element.component.type" />
                                     </div>
 

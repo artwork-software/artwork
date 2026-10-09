@@ -40,7 +40,8 @@ class WorkerService
         $freelancers = $this->freelancerService->searchFreelancers($search);
         $serviceProviders = $this->serviceProviderService->searchServiceProviders($search);
 
-        return $users->merge($freelancers)->merge($serviceProviders);
+        // toBase(): ohne Treffer bleibt map() eine Eloquent-Collection, deren merge() getKey() auf den Arrays aufruft.
+        return $users->toBase()->merge($freelancers)->merge($serviceProviders);
     }
 
     public function getWorkersForShiftPlan(

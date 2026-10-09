@@ -2,7 +2,7 @@
     <BaseModal @closed="closeEventHistoryModal" v-if="true" modal-image="/Svgs/Overlays/illu_event_history.svg">
             <div class="mx-4">
                 <div class="font-bold font-lexend text-text tracking-wide text-2xl my-2">
-                    {{$t('Event process')}}
+                    {{$t('Event history')}}
                 </div>
                 <div class="text-text-subtle subpixel-antialiased">
                     {{  $t('Here you can see what was changed by whom and when.') }}
@@ -40,12 +40,11 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'RoomHistoryComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         BaseModal,
         UserPopoverTooltip,

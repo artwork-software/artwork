@@ -62,6 +62,7 @@
                 :id="`day-remark-inline-${day.withoutFormat}`"
                 v-model="draftText"
                 :rows="4"
+                :maxlength="maxLength"
                 :placeholder="$t('Add remark')"
             />
             <div class="flex items-center justify-between">
@@ -85,7 +86,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { IconPencil, IconPencilPlus } from '@tabler/icons-vue'
 import { useCalendarZoom } from '@/Composeables/useCalendarZoom.js'
@@ -136,13 +137,6 @@ const editing = ref(false)
 const draftText = ref('')
 const saving = ref(false)
 const editorStyle = ref({})
-
-// BaseTextarea reicht kein maxlength ans <textarea> durch — Limit hier durchsetzen
-watch(draftText, (value) => {
-    if (value.length > maxLength) {
-        draftText.value = value.slice(0, maxLength)
-    }
-})
 
 const EDITOR_WIDTH = 280
 const EDITOR_HEIGHT_ESTIMATE = 190

@@ -27,6 +27,9 @@ class ShiftPresetGroup extends Model
         static::deleted($flush);
     }
 
+    /**
+     * @return BelongsToMany<SingleShiftPreset, $this>
+     */
     public function presets(): BelongsToMany
     {
         return $this->belongsToMany(

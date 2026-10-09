@@ -9,7 +9,7 @@
             <div v-if="canAdd" class="relative shrink-0">
                 <button
                     type="button"
-                    class="inline-flex items-center gap-1.5 rounded-lg bg-surface-inverse px-3 py-2 text-sm font-medium text-white"
+                    class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-inverse px-3 py-3 text-base font-medium text-white sm:w-auto sm:py-2 sm:text-sm"
                     :aria-expanded="contactTypes.length > 1 ? String(typeMenuOpen) : undefined"
                     @click="onAddClick"
                 >
@@ -18,10 +18,10 @@
                 </button>
                 <ul
                     v-if="typeMenuOpen"
-                    class="absolute right-0 z-10 mt-1 w-56 overflow-hidden rounded-lg border border-border-subtle bg-white text-sm shadow-lg"
+                    class="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-lg border border-border-subtle bg-white text-sm shadow-lg sm:left-auto sm:w-56"
                 >
                     <li v-for="type in contactTypes" :key="type.id">
-                        <button type="button" class="block w-full px-3 py-2 text-left hover:bg-surface-sunken" @click="openCreate(type)">
+                        <button type="button" class="block w-full px-3 py-3 text-left hover:bg-surface-sunken sm:py-2" @click="openCreate(type)">
                             {{ type.name }}
                         </button>
                     </li>
@@ -67,14 +67,14 @@
                     <div v-if="contact.can_edit && editable" class="mt-3 flex justify-end gap-2">
                         <button
                             type="button"
-                            class="rounded-lg px-2 py-1 text-xs font-medium text-text ring-1 ring-inset ring-border"
+                            class="rounded-lg px-3 py-2 text-xs font-medium text-text ring-1 ring-inset ring-border sm:px-2 sm:py-1"
                             @click="openEdit(contact)"
                         >
                             {{ $t('Edit') }}
                         </button>
                         <button
                             type="button"
-                            class="rounded-lg px-2 py-1 text-xs font-medium text-danger ring-1 ring-inset ring-danger-border"
+                            class="rounded-lg px-3 py-2 text-xs font-medium text-danger ring-1 ring-inset ring-danger-border sm:px-2 sm:py-1"
                             @click="remove(contact)"
                         >
                             {{ $t('Remove') }}
@@ -191,7 +191,7 @@ async function remove(contact) {
     if (!window.confirm($t('Remove {name} from the list?', { name: contact.display_name }))) return
     actionError.value = ''
     try {
-        await axios.delete(route('external.project.tab.crm-contacts.destroy', { ...routeParams.value, crmContact: contact.id }))
+        await axios.delete(route('external.project.tab.crm-contacts.destroy', { ...routeParams.value, crmContact: contact.id }), { skipErrorToast: true }) // Fehler steht unter der Liste
         contacts.value = contacts.value.filter((c) => c.id !== contact.id)
     } catch (e) {
         actionError.value = e?.response?.data?.message ?? $t('Could not save. Try again.')

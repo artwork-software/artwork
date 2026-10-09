@@ -45,6 +45,9 @@ class VacationConflict extends Model
         'scheduled_at_casted'
     ];
 
+    /**
+     * @return BelongsTo<Vacation, $this>
+     */
     public function vacation(): BelongsTo
     {
         return $this->belongsTo(Vacation::class, 'vacation_id', 'id', 'vacations');

@@ -58,8 +58,13 @@ class WorkerEagerLoadConfig
                     },
                 ]);
                 if ($startDate && $endDate) {
+                    // Ende auch über die individuelle Zeit (Pivot): über Mitternacht verlängert endet sie erst am
+                    // Folgetag – die Wochenstunden (WorkTimeCalculationService) brauchen diesen Anteil
                     $query->where('shifts.start_date', '<=', $endDate)
-                          ->where('shifts.end_date', '>=', $startDate);
+                          ->where(function ($query) use ($startDate): void {
+                              $query->where('shifts.end_date', '>=', $startDate)
+                                  ->orWhere('shift_workers.end_date', '>=', $startDate);
+                          });
                 }
             },
             'shiftQualifications' => function ($query): void {

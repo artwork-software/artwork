@@ -270,7 +270,7 @@ async function remove(contact) {
     if (!window.confirm($t('Remove {name} from this list? The contact remains in the CRM.', { name: contact.display_name }))) return
     actionError.value = ''
     try {
-        await axios.delete(route('projects.components.crm-contacts.destroy', { ...routeParams.value, crmContact: contact.id }))
+        await axios.delete(route('projects.components.crm-contacts.destroy', { ...routeParams.value, crmContact: contact.id }), { skipErrorToast: true }) // Fehler steht unter der Liste
         contacts.value = contacts.value.filter((c) => c.id !== contact.id)
     } catch (e) {
         actionError.value = e?.response?.data?.message ?? $t('Failed to save')
@@ -324,7 +324,7 @@ function closeSearch() {
 async function link(result) {
     actionError.value = ''
     try {
-        const { data } = await axios.post(route('projects.components.crm-contacts.link', routeParams.value), { crm_contact_id: result.id })
+        const { data } = await axios.post(route('projects.components.crm-contacts.link', routeParams.value), { crm_contact_id: result.id }, { skipErrorToast: true }) // Fehler steht unter der Liste
         onSaved(data.contact)
         closeSearch()
     } catch (e) {

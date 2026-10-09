@@ -9,7 +9,7 @@
             </div>
 
             <div>
-                <BaseUIButton label="Arbeitszeit Buchen" is-add-button :icon="IconAlarmPlus" @click="showWorkingTimePostEntryModal = true" />
+                <BaseUIButton :label="$t('Book working hours')" is-add-button :icon="IconAlarmPlus" @click="showWorkingTimePostEntryModal = true" />
             </div>
         </div>
         <div class="flex items-center justify-between mb-5">
@@ -20,6 +20,28 @@
 
             <WorkTimeTimerComponent :totals="totals" />
         </div>
+
+        <!-- Vergangene Tage, deren Buchung von der aktuellen Rechnung abweicht (nie gebucht oder nachträglich geändert) -->
+        <div v-if="totals.rebook_days > 0" class="mb-5 flex flex-col gap-2 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning md:flex-row md:items-center md:justify-between">
+            <p class="flex items-start gap-1.5">
+                <PropertyIcon name="IconAlertTriangle" class="size-4 shrink-0" />
+                {{ $t('{n} past day(s) in this period differ from the time account: never booked (e.g. work time pattern created later) or changed afterwards (e.g. sick note, shift time). Rebooking changes the time account by {diff}.', { n: totals.rebook_days, diff: totals.rebook_difference_signed }) }}
+            </p>
+            <BaseUIButton v-if="canRebook && totals.rebook_days <= maxRebookDays" :label="$t('Rebook all {n} days', { n: totals.rebook_days })" :use-translation="false" icon="IconRefresh" :disabled="rebooking" @click="askRebook(totals.rebook_dates)" />
+            <span v-else-if="canRebook" class="shrink-0">{{ $t('At most {n} days can be rebooked at once – please narrow the period.', { n: maxRebookDays }) }}</span>
+        </div>
+
+        <!-- Doppelte Tageszeilen (Altdaten): im Zeitkonto enthalten, „Neu buchen“ korrigiert sie nicht -->
+        <p v-if="totals.duplicate_daily_booking_days > 0" class="mb-5 flex items-start gap-1.5 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
+            <PropertyIcon name="IconAlertTriangle" class="size-4 shrink-0" />
+            {{ $t('{n} past day(s) in this period have more than one daily booking (legacy data). They are included in the time account with {diff} in total; rebooking does not correct this – please have them cleaned up.', { n: totals.duplicate_daily_booking_days, diff: totals.duplicate_daily_booking_signed }) }}
+        </p>
+
+        <!-- Tage vor Beginn des Zeitkontos (erste Tagesbuchung): wie im Export kein Soll und kein Saldo -->
+        <p v-if="totals.days_before_account_start > 0" class="mb-5 flex items-start gap-1.5 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-text-muted">
+            <PropertyIcon name="IconInfoCircle" class="size-4 shrink-0" />
+            {{ totals.account_not_started ? $t('No time account is kept for this period yet (before the first daily booking): only the hours actually worked are shown, without target and balance.') : $t('{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance.', { n: totals.days_before_account_start }) }}
+        </p>
 
         <!-- Monthly breakdown when range > 1 month -->
         <div v-if="isMultiMonth" class="mb-6 p-4 bg-surface-sunken rounded-lg border border-border-subtle">
@@ -69,6 +91,9 @@
                                     </div>
                                 </div>
                             </div>
+                            <div v-if="entry.before_account_start" class="text-xs text-text-subtle bg-surface-sunken border border-border-subtle px-2 py-0.5 rounded inline-block mt-2 mr-1">
+                                {{ $t('Before the start of the time account') }}
+                            </div>
                             <div v-if="entry.is_special_day" class="text-xs text-warning bg-warning-surface border border-warning-border px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2">
                                 {{ $t('Special Day') }}<template v-if="entry.special_day_name">: {{ entry.special_day_name }}</template>
                             </div>
@@ -77,6 +102,32 @@
                             </div>
                             <div v-if="entry.is_vacation" class="text-xs text-text-muted bg-surface-sunken border border-border-subtle px-2 py-0.5 rounded inline-block mt-2 ml-1">
                                 {{ $t('Vacation') }}<template v-if="entry.vacation_factor < 1"> ({{ $t('Half day') }})</template>
+                            </div>
+                            <div v-if="entry.has_duplicate_daily_booking" class="text-xs text-warning bg-warning-surface border border-warning-border px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2 ml-1">
+                                {{ $t('Booked twice') }}
+                                <ToolTipComponent
+                                    icon="IconInfoCircle"
+                                    icon-size="w-3.5 h-3.5"
+                                    :tooltip-text="$t('This day has more than one daily booking (legacy data). The additional booking ({diff}) is included in the time account and in the values shown; rebooking does not correct it.', { diff: entry.duplicate_daily_booking_signed })"
+                                    direction="top"
+                                    classes="text-warning"
+                                />
+                            </div>
+                            <div v-if="entry.needs_rebooking" class="text-xs text-warning bg-warning-surface border border-warning-border px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2 ml-1">
+                                {{ entry.rebook_reason === 'not_booked' ? $t('Not in time account') : $t('Differs from time account') }}
+                                <ToolTipComponent
+                                    icon="IconInfoCircle"
+                                    icon-size="w-3.5 h-3.5"
+                                    :tooltip-text="rebookTooltip(entry)"
+                                    direction="top"
+                                    classes="text-warning"
+                                />
+                                <button v-if="canRebook" type="button" class="ml-1 font-semibold underline disabled:opacity-50" :disabled="rebooking" @click="askRebook([entry.date])">
+                                    {{ $t('Rebook') }}
+                                </button>
+                            </div>
+                            <div v-for="(payout, idx) in entry.payouts" :key="'payout-' + idx" class="text-xs text-text-muted bg-surface-sunken border border-border-subtle px-2 py-0.5 rounded inline-block mt-2 ml-1">
+                                {{ $t('Overtime paid out') }}: {{ payout.formatted }}<template v-if="payout.comment"> – {{ payout.comment }}</template>
                             </div>
                             <div v-if="entry.is_compensation_day_off" class="text-xs text-special-teal bg-special-teal-surface px-2 py-0.5 rounded inline-block mt-2">
                                 <span v-for="(comp, idx) in entry.compensation_day_off_info" :key="idx">
@@ -89,7 +140,11 @@
                         </div>
                         <!-- Rechte Spalte -->
                         <div class="w-full md:w-2/3">
-                            <div class="relative h-4 bg-surface-sunken rounded overflow-hidden mb-1">
+                            <!-- Vor Beginn des Zeitkontos: kein Soll -> nur Gearbeitetes, keine Minus-/Plus-Färbung -->
+                            <div v-if="entry.before_account_start" class="relative h-4 bg-surface-sunken rounded overflow-hidden mb-1">
+                                <div v-if="entry.worked_hours > 0" class="absolute top-0 left-0 h-full w-full bg-accent-600"></div>
+                            </div>
+                            <div v-else class="relative h-4 bg-surface-sunken rounded overflow-hidden mb-1">
                                 <!-- Worked hours (blue) - up to daily target -->
                                 <div
                                     v-if="entry.worked_hours"
@@ -148,7 +203,7 @@
                             </div>
                             <div class="flex flex-wrap gap-3 text-xs text-text-muted mt-1">
                                 <div class="flex items-center gap-1">
-                                    <strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}h
+                                    <strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}<template v-if="entry.daily_target_hours !== '–'">h</template>
                                     <span v-if="entry.is_compensation_day_off" class="text-special-teal text-[10px] ml-1">({{ $t('Compensation day off') }})</span>
                                     <ToolTipComponent
                                         v-if="reductionTooltip(entry)"
@@ -167,7 +222,7 @@
                                 <div v-if="entry.nightly_working_hours"><strong>{{ $t('Night') }}: </strong>{{ entry.nightly_working_hours_formatted }}</div>
                                 <div><strong>{{ $t('Balance') }}: </strong>
                                     <span :class="[ entry.work_time_balance_change > 0 ? 'text-success' : entry.work_time_balance_change < 0 ? 'text-danger' : 'text-text-subtle']">
-                                        {{ entry.work_time_balance_change_formatted }}
+                                        {{ entry.work_time_balance_change_formatted ?? '–' }}
                                     </span>
                                 </div>
                             </div>
@@ -177,6 +232,15 @@
             </div>
         </div>
 
+
+        <ConfirmationComponent
+            v-if="pendingRebookDates.length"
+            :confirm="$t('Rebook')"
+            :destructive="false"
+            :titel="$t('Rebook days')"
+            :description="$t('{n} day(s) will be booked to the time account according to the current calculation (shifts, absences, work time pattern). Existing daily bookings of these days are replaced; manual bookings remain.', { n: pendingRebookDates.length })"
+            @closed="afterRebookConfirm"
+        />
 
         <WorkingTimePostEntryModal
             v-if="showWorkingTimePostEntryModal"
@@ -198,6 +262,9 @@ import {IconAlarmPlus} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import {router} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 
 const $t = useTranslation();
@@ -218,6 +285,14 @@ const props = defineProps({
     totals: {
         type: Object,
         required: true
+    },
+    canRebook: {
+        type: Boolean,
+        default: false
+    },
+    maxRebookDays: {
+        type: Number,
+        default: 366
     }
 })
 
@@ -261,20 +336,24 @@ const monthlyBreakdown = computed(() => {
                 months[monthKey] = {
                     name: monthName,
                     worked: 0,
-                    wanted: 0
+                    wanted: 0,
+                    unknown: false,
+                    accountDays: 0
                 };
             }
 
             months[monthKey].worked += entry.worked_hours || 0;
             months[monthKey].wanted += entry.daily_target_minutes || 0;
+            months[monthKey].unknown = months[monthKey].unknown || !!entry.target_unknown;
+            months[monthKey].accountDays += entry.before_account_start ? 0 : 1;
         });
     });
 
-    // Convert to array and format hours
+    // Convert to array and format hours (Monat ganz vor Beginn des Zeitkontos: kein Soll)
     return Object.values(months).map(month => ({
         name: month.name,
         worked: convertMinutesToHoursAndMinutes(month.worked),
-        wanted: convertMinutesToHoursAndMinutes(month.wanted)
+        wanted: month.unknown || month.accountDays === 0 ? '–' : convertMinutesToHoursAndMinutes(month.wanted)
     }));
 });
 
@@ -285,15 +364,21 @@ const weeklySums = computed(() => {
     Object.entries(props.workTimes).forEach(([weekKey, week]) => {
         let totalWorked = 0;
         let totalWanted = 0;
+        let targetUnknown = false;
+        let accountDays = 0;
 
         Object.values(week).forEach(entry => {
             totalWorked += entry.worked_hours || 0;
             totalWanted += entry.daily_target_minutes || 0;
+            targetUnknown = targetUnknown || !!entry.target_unknown;
+            accountDays += entry.before_account_start ? 0 : 1;
         });
 
+        // Ein Tag ohne Arbeitszeitmuster -> Wochen-Soll unbekannt (wie Gesamtkachel und Info-Modal);
+        // Woche ganz vor Beginn des Zeitkontos -> kein Soll (Tage davor zählen 0)
         sums[weekKey] = {
             worked: convertMinutesToHoursAndMinutes(totalWorked),
-            wanted: convertMinutesToHoursAndMinutes(totalWanted)
+            wanted: targetUnknown || accountDays === 0 ? '–' : convertMinutesToHoursAndMinutes(totalWanted)
         };
     });
 
@@ -316,6 +401,9 @@ const formatDayMonth = (value) => {
  * Sondertag ohne Wirkung (Arbeit bzw. Regel inaktiv) sowie Krank/Urlaub (soll-neutral).
  */
 const reductionTooltip = (entry) => {
+    if (entry.before_account_start) {
+        return $t('Before the start of the time account (first daily booking): no target and no balance, only the hours actually worked count.');
+    }
     const parts = [];
     if (entry.is_special_day) {
         parts.push(`${$t('Special Day')}: ${entry.special_day_name ?? ''}`.trim());
@@ -342,6 +430,37 @@ const reductionTooltip = (entry) => {
         parts.push(`${$t('Vacation')}${entry.vacation_factor < 1 ? ` (${$t('Half day')})` : ''}: ${$t('actual = target')}`);
     }
     return parts.join(' · ');
+}
+
+// Abweichung zum Zeitkonto: nie gebucht (Anzeige = aktuelle Rechnung) bzw. nachträglich geändert (Anzeige = Gebuchtes)
+const rebookTooltip = (entry) => {
+    const reason = entry.rebook_reason === 'not_booked'
+        ? $t('This day has no daily booking: the values shown are not included in the time account.')
+        : $t('The current calculation differs from the booking (e.g. sick note, shift time or work time pattern changed afterwards). The values shown are the booked ones.')
+    const manual = entry.manual_change_minutes
+        ? ` ${$t('Manual bookings on this day: {diff}. Check whether they already cover the same work before rebooking.', { diff: entry.manual_change_signed })}`
+        : ''
+    return `${reason} ${$t('Rebooking changes the time account by {diff}.', { diff: entry.rebook_difference_signed })}${manual}`
+}
+
+const pendingRebookDates = ref([])
+const rebooking = ref(false)
+
+const askRebook = (dates) => {
+    pendingRebookDates.value = [...dates]
+}
+
+const afterRebookConfirm = (confirmed) => {
+    const dates = pendingRebookDates.value
+    pendingRebookDates.value = []
+    if (!confirmed || !dates.length) {
+        return
+    }
+    rebooking.value = true
+    router.post(route('users.worktimes.rebook', { user: props.userToEdit.id }), { dates }, {
+        preserveScroll: true,
+        onFinish: () => { rebooking.value = false },
+    })
 }
 
 // Helper function to convert minutes to HH:MM format

@@ -10,7 +10,9 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Artwork\Modules\User\Services\ThreeMonthAverageTargetService;
+use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * EINZIGE Quelle für Tageswerte (Soll/Ist) im Arbeitszeitkonto.
@@ -28,8 +30,16 @@ use Carbon\Carbon;
  *  - Krank (NOT_AVAILABLE) und Urlaub (OFF_WORK) lassen das Soll stehen.
  *
  * Ist:
- *  - Tag mit Nachtbuchung (work_time_bookings): worked_hours der Buchung (keine Doppelzählung).
- *  - Sonst Schichtminuten (Pause einmal am ersten Schichttag) plus Individualzeiten.
+ *  - Tag mit Tagesbuchung (nächtliche Buchung, work_time_bookings): gebuchtes Soll UND Ist dieser
+ *    Zeile – die Anzeige entspricht damit immer dem Zeitkonto. Weicht die aktuelle Rechnung ab
+ *    (rückwirkend Krank, Muster, Schichtänderung …), steht die Differenz in rebook_difference
+ *    („Tag neu buchen“), sie wird nie stillschweigend angezeigt.
+ *  - „Neu buchen“ gibt es erst ab der ersten Tagesbuchung der Person (Beginn des Zeitkontos): davor
+ *    (Muster rückwirkend gültig, Zeitkonto noch nicht geführt) gibt es keine Differenz und keinen Hinweis.
+ *    Mit with_account_start (Arbeitszeiten-Tab, Info-Modal) zeigt der Tag davor wie der Export kein Soll, keinen
+ *    Saldo und kein soll-neutrales Ist (before_account_start); alle anderen Aufrufer rechnen unverändert.
+ *  - Sonst Schichtminuten (Pause ab dem ersten Schichttag, Rest geht auf den Folgetag über) plus Individualzeiten.
+ *  - Manuelle/Korrekturbuchungen sind reine Saldo-Deltas und kommen in beiden Fällen zum Ist hinzu.
  *  - Krank/Urlaub sind soll-neutral: ganzer Tag -> Ist = Soll; Halbtag -> Arbeit + 0,5 · Soll.
  *    Bei unbekanntem Soll bleibt nur die tatsächliche Arbeit als Ist (kein Neutralanteil).
  *
@@ -55,6 +65,7 @@ class WorkTimeCalculationService
         private readonly SpecialDayService $specialDayService,
         private readonly ThreeMonthAverageTargetService $threeMonthAverageTargetService,
         private readonly ContractSettingsResolver $contractSettings,
+        private readonly WorkTimeBookingRepository $workTimeBookingRepository,
     ) {
     }
 
@@ -78,7 +89,10 @@ class WorkTimeCalculationService
     /**
      * Alle Tage eines Zeitraums, 'Y-m-d' => Breakdown (Vorab-Laden, kein N+1).
      *
-     * Optionen: use_bookings (bool, default true), special_days (array 'Y-m-d' => Name),
+     * Optionen: use_bookings (bool, default true), legacy_adjustments (bool, default = use_bookings),
+     * with_account_start (bool, default false: Beginn des Zeitkontos laden – nur für die Arbeitszeiten-Anzeige, eine
+     * Query mehr je Person; davor kein rebook_difference, Soll 0, Saldo null, Ist nur aus Arbeit, Flag
+     * before_account_start), special_days (array 'Y-m-d' => Name),
      * holiday_comp_days (iterable<CompensationDayOff> für diese Person).
      *
      * @return array<string, array<string, mixed>>
@@ -105,23 +119,32 @@ class WorkTimeCalculationService
     /**
      * Summen über Tages-Breakdowns (z. B. aus breakdownForRange). Soll/Differenz sind null, sobald
      * mindestens ein Tag ohne gültiges Muster enthalten ist (target_unknown), Ist wird immer summiert.
+     * Tage vor Beginn des Zeitkontos (before_account_start) zählen weder ins Soll noch in die Differenz.
      *
      * @param iterable<array<string, mixed>> $breakdowns
      * @return array{
      *     target: int|null, actual: int, balance: int|null, target_unknown: bool,
-     *     days_without_pattern: int, days: int, known_target: int
+     *     days_without_pattern: int, days_before_account_start: int, days: int, known_target: int
      * }
      */
     public static function summarizeRange(iterable $breakdowns): array
     {
         $target = 0;
         $actual = 0;
+        $accountActual = 0;
         $daysWithoutPattern = 0;
+        $daysBeforeAccountStart = 0;
         $days = 0;
 
         foreach ($breakdowns as $day) {
             $days++;
             $actual += (int) ($day['actual'] ?? 0);
+            // Vor Beginn des Zeitkontos (with_account_start): Ist zählt, aber kein Soll und kein Saldo
+            if (!empty($day['before_account_start'])) {
+                $daysBeforeAccountStart++;
+                continue;
+            }
+            $accountActual += (int) ($day['actual'] ?? 0);
             if (($day['target'] ?? null) === null || !empty($day['target_unknown'])) {
                 $daysWithoutPattern++;
                 continue;
@@ -134,9 +157,10 @@ class WorkTimeCalculationService
         return [
             'target' => $unknown ? null : $target,
             'actual' => $actual,
-            'balance' => $unknown ? null : $actual - $target,
+            'balance' => $unknown ? null : $accountActual - $target,
             'target_unknown' => $unknown,
             'days_without_pattern' => $daysWithoutPattern,
+            'days_before_account_start' => $daysBeforeAccountStart,
             'days' => $days,
             'known_target' => $target,
         ];
@@ -151,7 +175,7 @@ class WorkTimeCalculationService
      *     target_reduction: int, reduction_reason: string|null,
      *     reference_period: array{start: string, end: string}|null, reference_weekday_average: int|null,
      *     is_sick: bool, is_vacation: bool, vacation_factor: float, sick_factor: float,
-     *     has_booking: bool, booking: array<string, mixed>|null
+     *     has_booking: bool, booking: array<string, mixed>|null, before_account_start: bool
      * }
      */
     public function dayBreakdown(User|Freelancer|ServiceProvider $entity, Carbon $day, ?array $context = null): array
@@ -168,6 +192,7 @@ class WorkTimeCalculationService
         $individualMinutes = (int) ($context['individual_minutes'][$key] ?? 0);
         $workMinutes = $shiftMinutes + $individualMinutes;
 
+        $fullDayIndividual = !empty($context['individual_full_days'][$key]);
         $booking = $context['bookings'][$key] ?? null;
         $absence = $context['absences'][$key] ?? null;
         $sickFactor = (float) ($absence['sick_factor'] ?? 0.0);
@@ -193,8 +218,12 @@ class WorkTimeCalculationService
 
         if ($entity instanceof User && $baseTarget !== null && $baseTarget > 0) {
             if ($specialDayCounts) {
-                // Nur Sondertage OHNE Arbeit senken das Soll; geleistete Stunden zählen normal.
-                if ($workMinutes === 0) {
+                // Nur Sondertage, an denen keine Arbeit BEGINNT, senken das Soll (wie die Regelprüfung, die dann
+                // den Ersatzruhetag vorschlägt). Der Überhang einer Nachtschicht vom Vortag oder eine am Vortag
+                // begonnene Zeit hebt die Minderung nicht auf; diese Minuten zählen als Plus.
+                $workStartsToday = $fullDayIndividual || !empty($context['work_starts'][$key] ?? null)
+                    || (!array_key_exists('work_starts', $context) && $workMinutes > 0);
+                if (!$workStartsToday) {
                     if ($threeMonthMode) {
                         $referenceAverage = $this->threeMonthAverageTargetService
                             ->averageMinutesFor($entity, $day, $baseTarget);
@@ -225,20 +254,76 @@ class WorkTimeCalculationService
             }
         }
 
-        $targetUnknown = $baseTarget === null;
-        $target = $targetUnknown ? null : max(0, $baseTarget - $reduction);
+        $liveTargetUnknown = $baseTarget === null;
+        $liveTarget = $liveTargetUnknown ? null : max(0, $baseTarget - $reduction);
 
-        if ($booking !== null) {
-            $actual = (int) $booking['worked'];
-        } elseif ($targetUnknown) {
+        if ($liveTargetUnknown) {
             // Ohne Soll ist der soll-neutrale Anteil (Krank/Urlaub) nicht bestimmbar: nur echte Arbeit
-            $actual = $workMinutes;
+            $liveActual = $workMinutes;
         } elseif ($neutralFactor >= 1.0) {
-            $actual = $target;
+            // Ganzer Tag abwesend: Ist = Soll. Bei reinem Urlaub kommt trotzdem geleistete Arbeit dazu; bei
+            // Krankheit nicht – die geplante Schicht bleibt dort oft zugewiesen, bis es eine Vertretung gibt.
+            $liveActual = $sickFactor > 0.0 ? $liveTarget : $liveTarget + $workMinutes;
         } elseif ($neutralFactor > 0.0) {
-            $actual = $workMinutes + (int) round($target * $neutralFactor);
+            $liveActual = $workMinutes + (int) round($liveTarget * $neutralFactor);
         } else {
-            $actual = $workMinutes;
+            $liveActual = $workMinutes;
+        }
+        if ($fullDayIndividual && !$liveTargetUnknown) {
+            // Ganztägige individuelle Zeit (Gastspiel, Reisetag): zählt das Tagessoll, mindestens
+            $liveActual = max($liveActual, $liveTarget);
+        }
+        // Was die Tagesbuchung jetzt buchen würde (WorkTimeBookingService::bookDay rechnet genauso)
+        $liveDailyBalance = $liveTargetUnknown ? null : $liveActual - $liveTarget;
+
+        $isBooked = $booking !== null && !empty($booking['has_daily']);
+        $extraChange = (int) ($booking['extra_change'] ?? 0);
+
+        if ($isBooked) {
+            // Gebuchter Tag: Anzeige = Zeitkonto (gebuchtes Soll/Ist + Zusatzbuchungen), nie Live-Werte –
+            // sonst laufen Tagessalden und Kontostand nach rückwirkenden Änderungen auseinander. Soll aus
+            // Ist − gebuchtem Saldo: Altzeilen mit Saldo ≠ Ist − Soll (frühere Krank-Logik) bleiben so in sich
+            // stimmig (Tages- und Zeitraumsummen = Kontobewegung).
+            $targetUnknown = false;
+            $actual = (int) $booking['daily_worked'] + $extraChange;
+            $balance = (int) $booking['daily_change'] + $extraChange;
+            $target = (int) $booking['daily_worked'] - (int) $booking['daily_change'];
+        } else {
+            // Nicht (oder noch nicht) per Tagesbuchung gebucht: Live-Werte; manuelle/Korrekturbuchungen
+            // kommen als Delta hinzu, ersetzen aber nicht Schichten und Krank/Urlaub.
+            $targetUnknown = $liveTargetUnknown;
+            $target = $liveTarget;
+            $actual = $liveActual + $extraChange;
+            $balance = $targetUnknown ? null : $actual - $target;
+        }
+
+        // Differenz zwischen aktueller Rechnung und Gebuchtem: „Tag neu buchen“ würde genau sie buchen. Alte
+        // Korrekturzeilen aus Zeitänderungen (bis 10/2026 am Genehmigungstag gebucht) decken die Änderung dieses
+        // Schichttags schon ab – abziehen, sonst würde sie ein zweites Mal gebucht (bookDay zieht sie genauso ab).
+        // Vor der ersten Tagesbuchung der Person wurde noch kein Zeitkonto geführt: dort keine Differenz (nur mit
+        // with_account_start geladen; ohne den Schlüssel bleibt die Grenze offen).
+        $firstBookingDay = $context['first_booking_day'] ?? null;
+        $accountStarted = $isBooked
+            || !array_key_exists('first_booking_day', $context)
+            || ($firstBookingDay !== null && $key >= $firstBookingDay);
+        $rebookDifference = $liveDailyBalance === null || !$accountStarted
+            ? null
+            : $liveDailyBalance - ($isBooked ? (int) $booking['daily_change'] : 0)
+                - (int) ($context['legacy_adjustments'][$key] ?? 0);
+
+        // Vor Beginn des Zeitkontos (nur mit with_account_start, wie der Arbeitszeitübersicht-Export): kein Konto –
+        // weder Soll noch Saldo noch soll-neutrales Ist (Krank/Urlaub, ganztägige individuelle Zeit). Tatsächlich
+        // gearbeitete Schicht-/individuelle Minuten und manuelle Buchungen bleiben als Ist sichtbar.
+        $beforeAccountStart = array_key_exists('first_booking_day', $context) && !$accountStarted;
+        if ($beforeAccountStart) {
+            $targetUnknown = false;
+            $target = 0;
+            $actual = $workMinutes + $extraChange;
+            $balance = null;
+            $reduction = 0;
+            $reason = null;
+            $referencePeriod = null;
+            $referenceAverage = null;
         }
 
         return [
@@ -246,8 +331,19 @@ class WorkTimeCalculationService
             'target' => $target,
             'actual' => $actual,
             'base_target' => $baseTarget,
-            'balance' => $targetUnknown ? null : $actual - $target,
+            'balance' => $balance,
             'target_unknown' => $targetUnknown,
+            'is_booked' => $isBooked,
+            'booked_balance' => $booking !== null ? (int) $booking['balance_change'] : 0,
+            'live_target' => $liveTarget,
+            'live_actual' => $liveActual,
+            'rebook_difference' => $rebookDifference,
+            'account_started' => $accountStarted,
+            'before_account_start' => $beforeAccountStart,
+            // Weitere Tageszeilen desselben Tages (Altdaten, parallele Nachtläufe): stecken im Saldo und zählen
+            // deshalb als Zusatzbuchung mit – hier getrennt ausgewiesen, damit die Anzeige darauf hinweist
+            'duplicate_daily_rows' => (int) ($booking['duplicate_daily_rows'] ?? 0),
+            'duplicate_daily_change' => (int) ($booking['duplicate_daily_change'] ?? 0),
             'work_minutes' => $workMinutes,
             'shift_minutes' => $shiftMinutes,
             'individual_minutes' => $individualMinutes,
@@ -287,18 +383,26 @@ class WorkTimeCalculationService
             $end = $start->copy();
         }
         $useBookings = (bool) ($options['use_bookings'] ?? true);
+        // Alte Korrekturzeilen auch ohne Buchungen: die Tagesbuchung (bookDay) zieht sie wie rebook_difference ab
+        $useLegacyAdjustments = (bool) ($options['legacy_adjustments'] ?? $useBookings);
         $isUser = $entity instanceof User;
 
         $specialDays = $isUser
             ? ($options['special_days'] ?? $this->specialDayService->specialDaysBetween($start, $end))
             : [];
 
-        return [
+        $context = [
             'start' => $start->toDateString(),
             'end' => $end->toDateString(),
             'shift_minutes' => $this->shiftMinutesPerDay($entity, $start, $end),
             'individual_minutes' => $this->individualMinutesPerDay($entity, $start, $end),
+            'individual_full_days' => $this->fullDayIndividualDays($entity, $start, $end),
+            // Nur für Sondertage relevant (Minderung entfällt nur, wenn an dem Tag Arbeit BEGINNT)
+            'work_starts' => $isUser && $specialDays !== [] ? $this->workStartsPerDay($entity, $start, $end) : [],
             'bookings' => $isUser && $useBookings ? $this->bookingsPerDay($entity, $start, $end) : [],
+            'legacy_adjustments' => $isUser && $useLegacyAdjustments
+                ? $this->legacyAdjustmentsPerShiftDay($entity)
+                : [],
             'absences' => $this->absencesPerDay($entity, $start, $end),
             'special_days' => $specialDays,
             // Sondertag-Schalter je Sondertag aus der EINMAL geladenen Vertragshistorie (kein Query je Tag,
@@ -310,6 +414,12 @@ class WorkTimeCalculationService
                 ? $this->holidayCompensationPerDay($entity, $start, $end, $options['holiday_comp_days'] ?? null)
                 : [],
         ];
+        if ($isUser && $useBookings && !empty($options['with_account_start'])) {
+            // Beginn des Zeitkontos (erste Tagesbuchung): davor kein „nicht gebucht“-Hinweis
+            $context['first_booking_day'] = $this->workTimeBookingRepository->firstDailyBookingDay($entity);
+        }
+
+        return $context;
     }
 
     /**
@@ -362,6 +472,12 @@ class WorkTimeCalculationService
             if ($shiftStartTs === false || $shiftEndTs === false) {
                 continue;
             }
+            // Ende ≤ Beginn bei gleichem Enddatum (Datensatz ohne Folgetag, z. B. 22:00–02:00, oder 08:00–08:00 aus
+            // dem früheren Schichtdialog = 24 h): Ende am Folgetag – wie Schichtvorlagen, Zeitänderungsantrag und
+            // Arbeitszeitübersicht-Export, sonst zählte die Schicht 0 Minuten
+            if ($shiftEndTs <= $shiftStartTs && $eDateOnly === $sDateOnly) {
+                $shiftEndTs = strtotime("{$eDateOnly} {$eTime} +1 day");
+            }
             if ($shiftEndTs <= $rangeStartTimestamp || $shiftStartTs >= $rangeEndTimestamp) {
                 continue;
             }
@@ -369,11 +485,14 @@ class WorkTimeCalculationService
             $breakMinutes = (int) ($shift->break_minutes ?? 0);
             $firstDayStr = date('Y-m-d', max($shiftStartTs, $rangeStartTimestamp));
             $lastDayStr = date('Y-m-d', min($shiftEndTs - 1, $rangeEndTimestamp - 1));
-            // Pause nur am ersten Tag der Schicht abziehen – auch wenn der erste Tag vor dem Zeitraum liegt
+            // Pause ab dem ersten Tag der Schicht abziehen – auch wenn der erste Tag vor dem Zeitraum liegt
             $shiftFirstDayStr = date('Y-m-d', $shiftStartTs);
 
-            $dayTs = strtotime($firstDayStr);
+            // Ab dem ersten Schichttag laufen (auch vor dem Zeitraum), damit eine Pause, die länger ist als
+            // der Anteil vor Mitternacht, auf den Folgetag übertragen wird statt verloren zu gehen.
+            $dayTs = strtotime($shiftFirstDayStr);
             $lastDayTs = strtotime($lastDayStr);
+            $remainingBreak = max(0, $breakMinutes);
 
             while ($dayTs <= $lastDayTs) {
                 $dateStr = date('Y-m-d', $dayTs);
@@ -385,10 +504,12 @@ class WorkTimeCalculationService
 
                 if ($workStartTimestamp < $workEndTimestamp) {
                     $duration = (int) (($workEndTimestamp - $workStartTimestamp) / 60);
-                    if ($dateStr === $shiftFirstDayStr) {
-                        $duration -= $breakMinutes;
+                    $deducted = min($remainingBreak, $duration);
+                    $duration -= $deducted;
+                    $remainingBreak -= $deducted;
+                    if ($dateStr >= $firstDayStr) {
+                        $shiftMinutesPerDay[$dateStr] = ($shiftMinutesPerDay[$dateStr] ?? 0) + $duration;
                     }
-                    $shiftMinutesPerDay[$dateStr] = ($shiftMinutesPerDay[$dateStr] ?? 0) + max(0, $duration);
                 }
 
                 $dayTs = self::nextCalendarDay($dayTs);
@@ -594,9 +715,17 @@ class WorkTimeCalculationService
             return $entity->shifts;
         }
 
+        // Ende über Schicht ODER individuelle Zeit (Pivot), einen Tag Puffer: eine über Mitternacht verlängerte
+        // Zeit endet erst am Folgetag, und Datensätze ohne Folgedatum (22:00–02:00 am selben Datum) enden
+        // rechnerisch am Folgetag. Zugeschnitten wird danach exakt über die Uhrzeiten.
+        $earliestEnd = $start->copy()->subDay()->toDateString();
+
         return $entity->shifts()
             ->where('shifts.start_date', '<=', $end->toDateString())
-            ->where('shifts.end_date', '>=', $start->toDateString())
+            ->where(function ($query) use ($earliestEnd): void {
+                $query->where('shifts.end_date', '>=', $earliestEnd)
+                    ->orWhere('shift_workers.end_date', '>=', $earliestEnd);
+            })
             ->get();
     }
 
@@ -621,8 +750,9 @@ class WorkTimeCalculationService
     {
         $individualTimes = $entity->relationLoaded('individualTimes')
             ? $entity->individualTimes
+            // Ein Tag Puffer: Zeiten über Mitternacht ohne Folgedatum enden rechnerisch erst am Folgetag
             : $entity->individualTimes()
-                ->individualByDateRange($start->toDateString(), $end->toDateString())
+                ->individualByDateRange($start->copy()->subDay()->toDateString(), $end->toDateString())
                 ->get();
 
         $startKey = $start->toDateString();
@@ -633,6 +763,9 @@ class WorkTimeCalculationService
         $result = [];
 
         foreach ($individualTimes as $individualTime) {
+            if ((bool) ($individualTime->full_day ?? false)) {
+                continue; // ganztägig = Tagessoll (fullDayIndividualDays), nicht working_time_minutes (1440)
+            }
             $days = [];
             foreach (($individualTime->days_of_individual_time ?? []) as $day) {
                 if ($day !== null && is_scalar($day)) {
@@ -656,16 +789,27 @@ class WorkTimeCalculationService
                 $timeEndTs = strtotime(
                     self::dateOnly($individualTime->end_date) . ' ' . self::timeOnly($individualTime->end_time)
                 );
+                // Ende ≤ Beginn ohne Folgedatum (z. B. Serie 22:00–04:00): Ende am Folgetag, wie bei Schichten
+                if (
+                    $timeStartTs !== false && $timeEndTs !== false && $timeEndTs <= $timeStartTs
+                    && self::dateOnly($individualTime->end_date) === self::dateOnly($individualTime->start_date)
+                ) {
+                    $timeEndTs = strtotime(
+                        self::dateOnly($individualTime->end_date) . ' '
+                        . self::timeOnly($individualTime->end_time) . ' +1 day'
+                    );
+                }
 
                 if ($timeStartTs !== false && $timeEndTs !== false && $timeEndTs > $timeStartTs) {
                     if ($timeEndTs <= $rangeStartTimestamp || $timeStartTs >= $rangeEndTimestamp) {
                         continue;
                     }
 
-                    $breakMinutes = max(0, (int) ($individualTime->break_minutes ?? 0));
-                    // Pause nur am ersten Tag des Eintrags – auch wenn der vor dem Zeitraum liegt
-                    $entryFirstDay = date('Y-m-d', $timeStartTs);
-                    $dayTs = strtotime(date('Y-m-d', max($timeStartTs, $rangeStartTimestamp)));
+                    // Pause ab dem ersten Tag des Eintrags (auch vor dem Zeitraum) abziehen; was dort keinen
+                    // Platz hat, geht auf den Folgetag über
+                    $remainingBreak = max(0, (int) ($individualTime->break_minutes ?? 0));
+                    $rangeFirstDay = date('Y-m-d', max($timeStartTs, $rangeStartTimestamp));
+                    $dayTs = strtotime(date('Y-m-d', $timeStartTs));
                     $lastDayTs = strtotime(date('Y-m-d', min($timeEndTs - 1, $rangeEndTimestamp - 1)));
 
                     while ($dayTs <= $lastDayTs) {
@@ -674,10 +818,12 @@ class WorkTimeCalculationService
                         $workEnd = min($timeEndTs, self::nextCalendarDay($dayTs));
                         if ($workStart < $workEnd) {
                             $duration = intdiv($workEnd - $workStart, 60);
-                            if ($dateStr === $entryFirstDay) {
-                                $duration -= $breakMinutes;
+                            $deducted = min($remainingBreak, $duration);
+                            $duration -= $deducted;
+                            $remainingBreak -= $deducted;
+                            if ($dateStr >= $rangeFirstDay) {
+                                $result[$dateStr] = ($result[$dateStr] ?? 0) + $duration;
                             }
-                            $result[$dateStr] = ($result[$dateStr] ?? 0) + max(0, $duration);
                         }
                         $dayTs = self::nextCalendarDay($dayTs);
                     }
@@ -704,7 +850,13 @@ class WorkTimeCalculationService
     }
 
     /**
-     * @return array<string, array{worked: int, wanted: int, night: int, balance_change: int, is_special_day: bool}>
+     * Tageszeile (nächtliche Buchung, über den Namen) und Zusatzbuchungen (manuell/Korrektur) getrennt.
+     *
+     * @return array<string, array{
+     *     worked: int, wanted: int, night: int, balance_change: int, is_special_day: bool,
+     *     has_daily: bool, daily_worked: int, daily_wanted: int, daily_change: int, extra_change: int,
+     *     duplicate_daily_rows: int, duplicate_daily_change: int
+     * }>
      */
     private function bookingsPerDay(User $user, Carbon $start, Carbon $end): array
     {
@@ -716,7 +868,9 @@ class WorkTimeCalculationService
             : $user->workTimeBookings()->whereBetween('booking_day', [$startKey, $endKey])->get();
 
         $result = [];
-        foreach ($bookings as $booking) {
+        // Nach id: bei Altdaten-Duplikaten ist die älteste Tageszeile „die“ Tagesbuchung (wie getPreviousBooking),
+        // weitere Zeilen gleichen Namens zählen als Zusatzbuchung (sie stecken ja im Saldo)
+        foreach ($bookings->sortBy('id') as $booking) {
             $bookingDay = $booking->booking_day;
             if ($bookingDay === null) {
                 continue;
@@ -734,13 +888,149 @@ class WorkTimeCalculationService
                 'night' => 0,
                 'balance_change' => 0,
                 'is_special_day' => false,
+                'has_daily' => false,
+                'daily_worked' => 0,
+                'daily_wanted' => 0,
+                'daily_change' => 0,
+                'extra_change' => 0,
+                'duplicate_daily_rows' => 0,
+                'duplicate_daily_change' => 0,
             ];
+            $change = (int) $booking->work_time_balance_change;
             $entry['worked'] += (int) $booking->worked_hours;
             $entry['wanted'] += (int) $booking->wanted_working_hours;
             $entry['night'] += (int) $booking->nightly_working_hours;
-            $entry['balance_change'] += (int) $booking->work_time_balance_change;
+            $entry['balance_change'] += $change;
             $entry['is_special_day'] = $entry['is_special_day'] || (bool) $booking->is_special_day;
+            $isDailyRow = $booking->name === WorkTimeBookingRepository::dailyBookingName(Carbon::parse($dayKey));
+            if ($isDailyRow && !$entry['has_daily']) {
+                $entry['has_daily'] = true;
+                $entry['daily_worked'] = (int) $booking->worked_hours;
+                $entry['daily_wanted'] = (int) $booking->wanted_working_hours;
+                $entry['daily_change'] = $change;
+            } else {
+                if ($isDailyRow) {
+                    // Doppelte Tageszeile: bleibt im Saldo (Anzeige = Zeitkonto), wird aber als Hinweis ausgewiesen
+                    $entry['duplicate_daily_rows']++;
+                    $entry['duplicate_daily_change'] += $change;
+                }
+                // Manuelle Buchung / Korrektur: reines Saldo-Delta (Soll 0) – zählt als Ist-Zuschlag
+                $entry['extra_change'] += $change;
+            }
             $result[$dayKey] = $entry;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Tage mit ganztägiger individueller Zeit im Zeitraum ('Y-m-d' => true).
+     *
+     * @return array<string, true>
+     */
+    public function fullDayIndividualDays(User|Freelancer|ServiceProvider $entity, Carbon $start, Carbon $end): array
+    {
+        $startKey = $start->toDateString();
+        $endKey = $end->toDateString();
+        $individualTimes = $entity->relationLoaded('individualTimes')
+            ? $entity->individualTimes
+            : $entity->individualTimes()->individualByDateRange($startKey, $endKey)->get();
+
+        $days = [];
+        foreach ($individualTimes as $individualTime) {
+            if (!(bool) ($individualTime->full_day ?? false)) {
+                continue;
+            }
+            foreach (($individualTime->days_of_individual_time ?? []) as $day) {
+                $dayKey = is_scalar($day) ? self::dateOnly((string) $day) : null;
+                if ($dayKey !== null && $dayKey >= $startKey && $dayKey <= $endKey) {
+                    $days[$dayKey] = true;
+                }
+            }
+        }
+
+        return $days;
+    }
+
+    /**
+     * Tage, an denen eine Schicht (Pivot-Beginn) oder eine individuelle Zeit beginnt ('Y-m-d' => true).
+     *
+     * @return array<string, true>
+     */
+    private function workStartsPerDay(User $user, Carbon $start, Carbon $end): array
+    {
+        $startKey = $start->toDateString();
+        $endKey = $end->toDateString();
+        $days = [];
+
+        foreach ($this->shiftsFor($user, $start, $end) as $shift) {
+            $startDate = $shift->pivot?->start_date ?? $shift->start_date ?? null;
+            $dayKey = $startDate !== null ? self::dateOnly($startDate) : null;
+            if ($dayKey !== null && $dayKey >= $startKey && $dayKey <= $endKey) {
+                $days[$dayKey] = true;
+            }
+        }
+
+        $individualTimes = $user->relationLoaded('individualTimes')
+            ? $user->individualTimes
+            : $user->individualTimes()->individualByDateRange($startKey, $endKey)->get();
+        foreach ($individualTimes as $individualTime) {
+            $hasTimes = !empty($individualTime->start_time) && !empty($individualTime->start_date);
+            $entryDays = $hasTimes
+                ? [self::dateOnly($individualTime->start_date)]
+                : array_map(
+                    static fn ($day): string => self::dateOnly((string) $day),
+                    $individualTime->days_of_individual_time ?? []
+                );
+            foreach ($entryDays as $dayKey) {
+                if ($dayKey >= $startKey && $dayKey <= $endKey) {
+                    $days[$dayKey] = true;
+                }
+            }
+        }
+
+        return $days;
+    }
+
+    /**
+     * Alte Korrekturbuchungen aus genehmigten Zeitänderungen (Name adjustment_work_time_change_request_<shift>),
+     * die bis 10/2026 am Genehmigungstag statt am Schichttag gebucht wurden: Summe je SCHICHTTAG der Person.
+     *
+     * @return array<string, int> 'Y-m-d' (Schichttag) => Minuten
+     */
+    private function legacyAdjustmentsPerShiftDay(User $user): array
+    {
+        $prefix = 'adjustment_work_time_change_request_';
+        $adjustments = $user->workTimeBookings()
+            ->where('name', 'like', 'adjustment\\_work\\_time\\_change\\_request\\_%')
+            ->get(['name', 'work_time_balance_change']);
+        if ($adjustments->isEmpty()) {
+            return [];
+        }
+
+        $shiftIds = $adjustments
+            ->map(fn ($booking): int => (int) substr((string) $booking->name, strlen($prefix)))
+            ->filter()
+            ->unique()
+            ->values();
+        $shiftDays = DB::table('shift_workers')
+            ->join('shifts', 'shifts.id', '=', 'shift_workers.shift_id')
+            ->where('shift_workers.employable_type', User::class)
+            ->where('shift_workers.employable_id', $user->id)
+            ->whereIn('shift_workers.shift_id', $shiftIds)
+            ->selectRaw(
+                'shift_workers.shift_id as shift_id, COALESCE(shift_workers.start_date, shifts.start_date) as shift_day'
+            )
+            ->pluck('shift_day', 'shift_id');
+
+        $result = [];
+        foreach ($adjustments as $adjustment) {
+            $shiftDay = $shiftDays[(int) substr((string) $adjustment->name, strlen($prefix))] ?? null;
+            if ($shiftDay === null) {
+                continue;
+            }
+            $dayKey = self::dateOnly((string) $shiftDay);
+            $result[$dayKey] = ($result[$dayKey] ?? 0) + (int) $adjustment->work_time_balance_change;
         }
 
         return $result;
@@ -880,19 +1170,21 @@ class WorkTimeCalculationService
 
     private static function patternDayMinutes(UserWorkTime $workTime, string $weekday): int
     {
-        $time = $workTime->{$weekday};
+        // Rohwert ("08:00:00") statt datetime-Cast: der Cast setzt das heutige Datum ein und verschiebt am Tag der
+        // Sommerzeitumstellung Werte zwischen 02:00 und 03:00 um eine Stunde
+        $time = $workTime->getAttributes()[$weekday] ?? null;
 
         if ($time === null && $workTime->work_time_pattern_id) {
             // Zeile ohne eigene Zeiten = reine Referenz auf die Vorlage
             $hasOwnTimes = false;
             foreach (self::WEEKDAYS as $name) {
-                if ($workTime->{$name} !== null) {
+                if (($workTime->getAttributes()[$name] ?? null) !== null) {
                     $hasOwnTimes = true;
                     break;
                 }
             }
             if (!$hasOwnTimes) {
-                $time = $workTime->workTimePattern?->{$weekday};
+                $time = $workTime->workTimePattern?->getAttributes()[$weekday] ?? null;
             }
         }
 
@@ -903,9 +1195,12 @@ class WorkTimeCalculationService
             return (int) $time->format('G') * 60 + (int) $time->format('i');
         }
 
-        $parts = explode(':', (string) $time);
+        // "08:00", "08:00:00" oder (frisch gesetzter datetime-Cast) "2026-10-08 08:00:00": Uhrzeit am Ende
+        if (preg_match('/(\d{1,2}):(\d{2})(?::\d{2})?$/', trim((string) $time), $matches) !== 1) {
+            return 0;
+        }
 
-        return ((int) ($parts[0] ?? 0)) * 60 + (int) ($parts[1] ?? 0);
+        return (int) $matches[1] * 60 + (int) $matches[2];
     }
 
     private static function dateOnly(mixed $value): string

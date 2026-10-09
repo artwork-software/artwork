@@ -6,6 +6,7 @@ use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InventoryDetailedQuantityArticle extends Model
 {
@@ -75,7 +76,10 @@ class InventoryDetailedQuantityArticle extends Model
         ];
     }
 
-    public function status()
+    /**
+     * @return BelongsTo<InventoryArticleStatus, $this>
+     */
+    public function status(): BelongsTo
     {
         return $this->belongsTo(InventoryArticleStatus::class, 'inventory_article_status_id')
             ->orderBy('order');

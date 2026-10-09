@@ -89,6 +89,9 @@ class IndividualTime extends Model
         return $days;
     }
 
+    /**
+     * @return BelongsTo<IndividualTimeSeries, $this>
+     */
     public function series(): BelongsTo
     {
         return $this->belongsTo(

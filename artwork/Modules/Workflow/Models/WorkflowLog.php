@@ -21,6 +21,9 @@ class WorkflowLog extends Model
         'metadata' => 'array'
     ];
 
+    /**
+     * @return BelongsTo<WorkflowInstance, $this>
+     */
     public function workflowInstance(): BelongsTo
     {
         return $this->belongsTo(WorkflowInstance::class, 'workflow_instance_id', 'id', 'workflowInstance');

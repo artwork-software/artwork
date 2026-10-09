@@ -255,7 +255,7 @@ const commitDirectly = async () => {
             week_number: Number(props.week.week_number),
             year: Number(props.week.year),
             craft_ids: [Number(props.craft.id)],
-        })
+        }, { skipErrorToast: true }) // Fehler steht im Modal
         emit('changed')
     } catch (e) {
         errorMessage.value = e?.response?.data?.message

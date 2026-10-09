@@ -553,6 +553,7 @@
 
 <script setup>
 import {ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, onUnmounted, nextTick, defineAsyncComponent} from 'vue';
+import { parseYmd, toYmd } from '@/Helper/IsoWeek.js';
 import {Link, router, usePage} from '@inertiajs/vue3';
 import NotificationToast from '@/Artwork/Feedback/NotificationToast.vue';
 import {useI18n} from 'vue-i18n';
@@ -1101,7 +1102,7 @@ const groupShiftsByShiftGroup = (shifts) => {
 
 // Navigation to shift plan (always weekly view) with highlight + scroll
 const navigateToShiftPlan = async (shift, dayString) => {
-    const shiftDate = new Date(dayString);
+    const shiftDate = parseYmd(dayString) ?? new Date(dayString);
     const dayOfWeek = shiftDate.getDay();
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
@@ -1117,8 +1118,8 @@ const navigateToShiftPlan = async (shift, dayString) => {
     await axios.patch(route('user.update.daily_view', userId), { daily_view: false, context: 'shift_plan' });
 
     router.patch(route('update.user.shift.calendar.filter.dates', userId), {
-        start_date: monday.toISOString().slice(0, 10),
-        end_date: sunday.toISOString().slice(0, 10),
+        start_date: toYmd(monday),
+        end_date: toYmd(sunday),
         isDailyView: false,
     }, {
         preserveState: false,
@@ -1195,7 +1196,7 @@ const showBulkActionError = (error) => {
 const deleteSelectedShifts = () => {
     axios.post(route('shifts.multi.delete'), {
         shift_ids: selectedShiftIds.value,
-    }).then(() => {
+    }, { skipErrorToast: true }).then(() => { // Fehler zeigt showBulkActionError
         selectedShiftIds.value = [];
         router.reload({ only: ['groupedShifts'], preserveScroll: true });
     }).catch(showBulkActionError).finally(() => {
@@ -1212,7 +1213,7 @@ const duplicateSelectedShifts = () => {
     duplicateInFlight.value = true;
     axios.post(route('shifts.multi.duplicate'), {
         shift_ids: selectedShiftIds.value,
-    }).then(() => {
+    }, { skipErrorToast: true }).then(() => { // Fehler zeigt showBulkActionError
         selectedShiftIds.value = [];
         router.reload({ only: ['groupedShifts'], preserveScroll: true });
     }).catch(showBulkActionError).finally(() => {

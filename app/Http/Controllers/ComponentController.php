@@ -8,6 +8,7 @@ use Artwork\Modules\Project\Http\Requests\UpdateComponentRequest;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ComponentUsageService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -47,6 +48,13 @@ class ComponentController extends Controller
                 ->reject(
                     fn (Component $component) => $component->type === ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW->value
                 )
+                ->values();
+        }
+
+        // Artwork-Tickets nur anbieten, wenn diese Instanz verbunden ist
+        if (!app(TicketingConnectionService::class)->isActive()) {
+            $componentsSpecial = $componentsSpecial
+                ->reject(fn (Component $component) => $component->type === ProjectTabComponentEnum::TICKETING->value)
                 ->values();
         }
 
@@ -136,6 +144,8 @@ class ComponentController extends Controller
         $component->users()->detach();
         $component->departments()->detach();
         $component->componentInDisclosures()->delete();
+        // Ordner-Inhalte (disclosure_id hat kein ON DELETE CASCADE); die enthaltenen Komponenten bleiben bestehen
+        $component->disclosureContents()->delete();
 
         // first check if the component has projectValues attached
         if ($component->projectValue) {

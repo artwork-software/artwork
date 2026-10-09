@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class EventVerificationService
 {
@@ -256,9 +257,12 @@ class EventVerificationService
                     'uuid',
                     $verification->uuid
                 )->count();
+                // Alle Prüfenden der Anfrage zählen – auch die noch offenen. Ohne 'pending' galt bei
+                // drei Prüfenden schon die erste Zustimmung als „vollständig freigegeben“.
                 $totalCount = $event->verifications()->whereIn('status', [
                     'approved',
                     'rejected',
+                    'pending',
                 ])->where('uuid', $verification->uuid)->count();
                 $notificationTitle = __('notification.request-verification.user-approved', [
                     'name' => $verification->verifier?->full_name ?? '',
@@ -489,7 +493,7 @@ class EventVerificationService
                 $this->notificationService->createNotification();
             }
 
-            broadcast(new BroadcastToReloadEventVerificationRequests($verifier));
+            SafeBroadcast::send(new BroadcastToReloadEventVerificationRequests($verifier));
         }
     }
 
@@ -502,7 +506,7 @@ class EventVerificationService
         foreach ($event->verifications as $verification) {
             $verifier = $verification->verifier;
             $verification->delete();
-            broadcast(new BroadcastToReloadEventVerificationRequests($verifier));
+            SafeBroadcast::send(new BroadcastToReloadEventVerificationRequests($verifier));
         }
     }
 }

@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateExternalUserGroupMappingRequest extends FormRequest
 {
+    use RestrictsAdminRoleMapping;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -25,9 +27,9 @@ class UpdateExternalUserGroupMappingRequest extends FormRequest
             'ad_group_dn' => ['sometimes', 'required', 'string', 'max:500'],
             'ad_group_name' => ['sometimes', 'required', 'string', 'max:255'],
             'permission_ids' => ['nullable', 'array'],
-            'permission_ids.*' => ['integer', 'exists:permissions,id'],
+            'permission_ids.*' => ['integer', 'exists:permissions,id', $this->grantablePermissionRule()],
             'role_ids' => ['nullable', 'array'],
-            'role_ids.*' => ['integer', 'exists:roles,id'],
+            'role_ids.*' => ['integer', 'exists:roles,id', $this->adminRoleRule()],
             'include_nested_groups' => ['sometimes', 'boolean'],
         ];
     }

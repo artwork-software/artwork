@@ -69,11 +69,25 @@ return [
                 'update' => 'Account could not be updated, please try again.',
                 'delete' => 'Account could not be deleted, please try again.'
             ],
-            'cost_unit' => [
+            'cost-unit' => [
                 'create' => 'Cost unit could not be saved, please try again.',
                 'update' => 'Cost unit could not be updated, please try again.',
                 'delete' => 'Cost unit could not be deleted, please try again.'
             ]
+        ]
+    ],
+    'budget-drag-and-drop' => [
+        'success' => [
+            'drop' => 'Budget moved',
+            'restore' => 'Budget restored',
+            'delete' => 'Budget deleted',
+            'force-delete' => 'Budget permanently deleted'
+        ],
+        'error' => [
+            'update' => 'Budget could not be updated, please try again.',
+            'drop' => 'Budget could not be moved, please try again. Values in column 1 or column 2 do not match.',
+            'restore' => 'Budget could not be restored, please try again.',
+            'delete' => 'Budget could not be deleted, please try again.',
         ]
     ],
     'inventory-management' => [

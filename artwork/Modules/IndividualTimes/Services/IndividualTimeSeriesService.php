@@ -88,9 +88,14 @@ class IndividualTimeSeriesService
                 $breakMinutes = ($startTime && $endTime)
                     ? LegalBreakCalculator::resolveBreakMinutes($data['break_minutes'] ?? null, $startTime, $endTime)
                     : (int) ($data['break_minutes'] ?? 0);
+                $entryEndDate = $date->toDateString();
                 if ($startTime && $endTime) {
                     $startTimeConverted = \Illuminate\Support\Carbon::parse($date->toDateString() . ' ' . $startTime);
                     $endTimeConverted = \Illuminate\Support\Carbon::parse($date->toDateString() . ' ' . $endTime);
+                    if ($endTimeConverted->lte($startTimeConverted)) {
+                        $endTimeConverted->addDay(); // über Mitternacht (z. B. 22:00–04:00)
+                    }
+                    $entryEndDate = $endTimeConverted->toDateString();
                     $totalMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
                     $workingTimeInMinutes = max(0, $totalMinutes - $breakMinutes);
                 } else {
@@ -99,7 +104,7 @@ class IndividualTimeSeriesService
                 $timeable->individualTimes()->create([
                     'title'                 => $series->title,
                     'start_date'            => $date->toDateString(),
-                    'end_date'              => $date->toDateString(),
+                    'end_date'              => $entryEndDate,
                     'start_time'            => $startTime,
                     'end_time'              => $endTime,
                     'full_day'              => $fullDay,

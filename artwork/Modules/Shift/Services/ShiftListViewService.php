@@ -2,11 +2,12 @@
 
 namespace Artwork\Modules\Shift\Services;
 
-use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\Holidays\Services\HolidayService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Serializers\ShiftListViewSerializer;
+use Artwork\Modules\User\Enums\UserFilterTypes;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Models\UserShiftListViewSettings;
 use Carbon\Carbon;
@@ -16,8 +17,29 @@ readonly class ShiftListViewService
 {
     public function __construct(
         private ShiftListViewSerializer $serializer,
+        private HolidayService $holidayService,
     ) {
     }
+    /**
+     * Der persistierte Zeitraum-Filter der Listenansicht, beim ersten Aufruf mit dem laufenden
+     * Monat angelegt — Web und App lesen dieselbe Zeile.
+     */
+    public function filterFor(User $user): UserFilter
+    {
+        return $user->userFilters()->firstOrCreate(
+            ['filter_type' => UserFilterTypes::SHIFT_LIST_VIEW_FILTER->value],
+            [
+                'start_date' => Carbon::now()->startOfMonth()->format('Y-m-d'),
+                'end_date' => Carbon::now()->endOfMonth()->format('Y-m-d'),
+            ],
+        );
+    }
+
+    public function settingsFor(User $user): UserShiftListViewSettings
+    {
+        return $user->shift_list_view_settings ?? $user->shift_list_view_settings()->create();
+    }
+
     public function getGroupedShifts(
         Carbon $startDate,
         Carbon $endDate,
@@ -213,8 +235,7 @@ readonly class ShiftListViewService
         }
 
         // Load holidays for the date range
-        $holidaysByDate = $this->getHolidaysForRange($startDate, $endDate)
-            ->groupBy(fn (CalendarHolidayDTO $h) => $h->date);
+        $holidaysByDate = $this->holidayService->getCalendarHolidaysByDate($startDate, $endDate);
 
         // Convert to sequential arrays so JS preserves insertion order
         $result = [];
@@ -294,35 +315,5 @@ readonly class ShiftListViewService
         }
 
         return $query->get();
-    }
-
-    private function getHolidaysForRange(Carbon $start, Carbon $end): \Illuminate\Support\Collection
-    {
-        return Holiday::select(['id', 'name', 'date', 'end_date', 'color', 'yearly', 'treatAsSpecialDay'])
-            ->where(function (Builder $q) use ($start, $end): void {
-                $q->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-                    ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
-                    ->orWhere(function (Builder $nested) use ($start, $end): void {
-                        $nested->where('date', '<=', $start->toDateString())
-                            ->where('end_date', '>=', $end->toDateString());
-                    })
-                    ->orWhere(function (Builder $nested) use ($start, $end): void {
-                        $nested->where('yearly', true)
-                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [
-                                $start->format('m-d'),
-                                $end->format('m-d'),
-                            ]);
-                    });
-            })
-            ->with(['subdivisions' => fn ($q) => $q->select('name')])
-            ->get()
-            ->map(fn ($holiday) => new CalendarHolidayDTO(
-                name: $holiday->name,
-                date: $holiday->date->toDateString(),
-                end_date: $holiday->end_date->toDateString(),
-                color: $holiday->color,
-                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-            ));
     }
 }

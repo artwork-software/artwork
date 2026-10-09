@@ -817,11 +817,17 @@ class UserController extends Controller
     {
         $flatDays = collect($workTimes)->flatten(1);
         $totalWorkedMinutes = (int) $flatDays->sum('worked_hours');
+        // Soll/Differenz nur aus Tagen ab Beginn des Zeitkontos (davor wie im Export kein Soll, kein Saldo);
+        // liegt der ganze Zeitraum davor (oder gibt es keine Tagesbuchung), sind beide null
+        $accountDays = $flatDays->reject(static fn (array $d): bool => !empty($d['before_account_start']));
+        $daysBeforeAccountStart = $flatDays->count() - $accountDays->count();
+        $accountNotStarted = $accountDays->isEmpty();
         // Mindestens ein Tag ohne Arbeitszeitmuster -> Soll/Differenz des Zeitraums unbekannt (null)
-        $daysWithoutPattern = $flatDays->filter(static fn (array $d): bool => !empty($d['target_unknown']))->count();
+        $daysWithoutPattern = $accountDays->filter(static fn (array $d): bool => !empty($d['target_unknown']))->count();
         $targetUnknown = $daysWithoutPattern > 0;
-        $totalWantedMinutes = $targetUnknown ? null : (int) $flatDays->sum('wantedHours');
-        $difference = $targetUnknown ? null : $totalWorkedMinutes - $totalWantedMinutes;
+        $noTarget = $targetUnknown || $accountNotStarted;
+        $totalWantedMinutes = $noTarget ? null : (int) $accountDays->sum('wantedHours');
+        $difference = $noTarget ? null : (int) $accountDays->sum('worked_hours') - $totalWantedMinutes;
         $rebookDays = $flatDays->filter(static fn (array $d): bool => !empty($d['needs_rebooking']));
         $rebookDifference = (int) $rebookDays->sum('rebook_difference_minutes');
         $duplicateDays = $flatDays->filter(static fn (array $d): bool => !empty($d['has_duplicate_daily_booking']));
@@ -832,14 +838,16 @@ class UserController extends Controller
 
         return [
             'worked' => $this->convertMinutesToHoursAndMinutes($totalWorkedMinutes),
-            'wanted' => $targetUnknown ? null : $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
+            'wanted' => $noTarget ? null : $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
             'worked_minutes' => $totalWorkedMinutes,
             'wanted_minutes' => $totalWantedMinutes,
             'difference_minutes' => $difference,
-            'difference' => $targetUnknown ? null : $this->convertMinutesToHoursAndMinutes($difference),
-            'difference_signed' => $targetUnknown ? null : WorkTimeCalculationService::formatSignedHours($difference),
+            'difference' => $noTarget ? null : $this->convertMinutesToHoursAndMinutes($difference),
+            'difference_signed' => $noTarget ? null : WorkTimeCalculationService::formatSignedHours($difference),
             'target_unknown' => $targetUnknown,
             'days_without_pattern' => $daysWithoutPattern,
+            'days_before_account_start' => $daysBeforeAccountStart,
+            'account_not_started' => $accountNotStarted,
             'rebook_days' => $rebookDays->count(),
             'rebook_not_booked_days' => $rebookDays->where('rebook_reason', 'not_booked')->count(),
             'rebook_dates' => $rebookDays->pluck('date')->values()->all(),
@@ -1206,8 +1214,11 @@ class UserController extends Controller
             // Kein gültiges Arbeitszeitmuster an diesem Tag -> Soll unbekannt: Soll-/Differenzfelder null,
             // daily_target_minutes bleibt 0 (Altkonsument Users/UserWorkTimes.vue rechnet damit)
             $targetUnknown = $day['target'] === null || !empty($day['target_unknown']);
-            $dailyTargetMinutes = $targetUnknown ? 0 : (int) $day['target'];
-            $balanceChange = $targetUnknown ? null : (int) $day['balance'];
+            // Vor Beginn des Zeitkontos (erste Tagesbuchung) wie im Export: kein Soll, kein Saldo, nur Gearbeitetes
+            $beforeAccountStart = !empty($day['before_account_start']);
+            $noTarget = $targetUnknown || $beforeAccountStart;
+            $dailyTargetMinutes = $noTarget ? 0 : (int) $day['target'];
+            $balanceChange = $noTarget || $day['balance'] === null ? null : (int) $day['balance'];
             $nightlyMinutes = (int) $day['nightly_minutes'];
 
             // Weicht die aktuelle Rechnung vom Gebuchten ab (nie gebucht, oder rückwirkend Krank/Muster/
@@ -1229,12 +1240,13 @@ class UserController extends Controller
                 'planned_minutes' => $workedMinutes,
                 'planned_hours' => $this->convertMinutesToHoursAndMinutes($workedMinutes, true),
                 'daily_target_minutes' => $dailyTargetMinutes,
-                'daily_target_hours' => $targetUnknown
+                'daily_target_hours' => $noTarget
                     ? '–' // Altkonsument Users/UserWorkTimes.vue rendert den String direkt
                     : $this->convertMinutesToHoursAndMinutes($dailyTargetMinutes, true),
-                'base_target_minutes' => $targetUnknown ? null : (int) $day['base_target'],
+                'base_target_minutes' => $noTarget ? null : (int) $day['base_target'],
                 'target_unknown' => $targetUnknown,
-                'wantedHours' => $targetUnknown ? null : $dailyTargetMinutes,
+                'before_account_start' => $beforeAccountStart,
+                'wantedHours' => $noTarget ? null : $dailyTargetMinutes,
                 'worked_hours' => $workedMinutes,
                 'nightly_working_hours' => $nightlyMinutes,
                 'work_time_balance_change' => $balanceChange,
@@ -1278,7 +1290,7 @@ class UserController extends Controller
                 'is_compensation_day_off' => $compensationInfo !== null,
                 'compensation_day_off_info' => $compensationInfo,
                 'comments' => $comments,
-                'wantedHoursFormatted' => $targetUnknown
+                'wantedHoursFormatted' => $noTarget
                     ? null
                     : $this->convertMinutesToHoursAndMinutes($dailyTargetMinutes, true),
                 'worked_hours_formatted' => $this->convertMinutesToHoursAndMinutes($workedMinutes),

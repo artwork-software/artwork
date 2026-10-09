@@ -9148,5 +9148,9 @@
     "{n} past day(s) in this period have more than one daily booking (legacy data). They are included in the time account with {diff} in total; rebooking does not correct this – please have them cleaned up.": "{n} vergangene(r) Tag(e) in diesem Zeitraum haben mehr als eine Tagesbuchung (Altdaten). Sie sind mit insgesamt {diff} im Zeitkonto enthalten; „Neu buchen“ korrigiert das nicht – bitte bereinigen lassen.",
     "This day has more than one daily booking (legacy data). The additional booking ({diff}) is included in the time account and in the values shown; rebooking does not correct it.": "Dieser Tag hat mehr als eine Tagesbuchung (Altdaten). Die zusätzliche Buchung ({diff}) ist im Zeitkonto und in den angezeigten Werten enthalten; „Neu buchen“ korrigiert sie nicht.",
     "Booked twice": "Doppelt gebucht",
-    "Days before the first booking of the time account cannot be booked.": "Tage vor der ersten Buchung des Zeitkontos können nicht gebucht werden."
+    "Days before the first booking of the time account cannot be booked.": "Tage vor der ersten Buchung des Zeitkontos können nicht gebucht werden.",
+    "Before the start of the time account": "Vor Beginn des Zeitkontos",
+    "Before the start of the time account (first daily booking): no target and no balance, only the hours actually worked count.": "Vor Beginn des Zeitkontos (erste Tagesbuchung): kein Soll und kein Saldo, es zählen nur die tatsächlich gearbeiteten Stunden.",
+    "No time account is kept for this period yet (before the first daily booking): only the hours actually worked are shown, without target and balance.": "Für diesen Zeitraum wird noch kein Zeitkonto geführt (vor der ersten Tagesbuchung): angezeigt werden nur die tatsächlich gearbeiteten Stunden, ohne Soll und Saldo.",
+    "{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance.": "{n} Tag(e) in diesem Zeitraum liegen vor Beginn des Zeitkontos (erste Tagesbuchung): dort werden nur die tatsächlich gearbeiteten Stunden angezeigt, ohne Soll und Saldo."
 }

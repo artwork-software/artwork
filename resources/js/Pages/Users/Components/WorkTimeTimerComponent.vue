@@ -19,8 +19,11 @@
                 <span v-else class="text-text">{{ formatMinutes(displayWanted) }}</span>
             </div>
         </div>
-        <div v-if="targetUnknown" class="mt-1 text-[11px] text-warning">
+        <div v-if="patternMissing" class="mt-1 text-[11px] text-warning">
             {{ $t('Work time pattern missing') }}
+        </div>
+        <div v-else-if="accountNotStarted" class="mt-1 text-[11px] text-text-subtle">
+            {{ $t('Before the start of the time account') }}
         </div>
     </div>
 </template>
@@ -35,8 +38,11 @@ const props = defineProps({
     }
 })
 
-// Soll ist null, sobald im Zeitraum an mindestens einem Tag kein Arbeitszeitmuster greift
+// Soll ist null, sobald im Zeitraum an mindestens einem Tag kein Arbeitszeitmuster greift oder der ganze
+// Zeitraum vor Beginn des Zeitkontos liegt (erste Tagesbuchung)
 const targetUnknown = computed(() => props.totals?.wanted_minutes === null || props.totals?.wanted_minutes === undefined)
+const accountNotStarted = computed(() => props.totals?.account_not_started === true)
+const patternMissing = computed(() => targetUnknown.value && !accountNotStarted.value)
 
 const displayWorked = ref(0)
 const displayWanted = ref(0)

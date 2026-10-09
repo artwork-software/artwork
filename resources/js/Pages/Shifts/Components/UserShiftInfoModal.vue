@@ -207,13 +207,13 @@
                     </div>
                     <div class="rounded-lg border border-border-subtle p-3">
                         <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Target') }}</p>
-                        <p v-if="!worktimesTargetUnknown" class="mt-1 text-lg font-semibold">{{ data.worktimes.totals.wanted }} h</p>
+                        <p v-if="!worktimesNoTarget" class="mt-1 text-lg font-semibold">{{ data.worktimes.totals.wanted }} h</p>
                         <p v-else class="mt-1 text-lg font-semibold text-text-subtle flex items-center gap-1">
                             –
                             <ToolTipComponent
                                 icon="IconInfoCircle"
                                 icon-size="w-3.5 h-3.5"
-                                :tooltip-text="worktimesTargetUnknownTooltip"
+                                :tooltip-text="worktimesNoTargetTooltip"
                                 direction="top"
                                 classes="text-text-subtle"
                             />
@@ -221,7 +221,7 @@
                     </div>
                     <div class="rounded-lg border border-border-subtle p-3">
                         <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Balance') }}</p>
-                        <p v-if="!worktimesTargetUnknown" class="mt-1 text-lg font-semibold" :class="(data.worktimes.totals.difference_minutes ?? 0) >= 0 ? 'text-success' : 'text-danger'">
+                        <p v-if="!worktimesNoTarget" class="mt-1 text-lg font-semibold" :class="(data.worktimes.totals.difference_minutes ?? 0) >= 0 ? 'text-success' : 'text-danger'">
                             {{ data.worktimes.totals.difference_signed ?? data.worktimes.totals.difference }}
                         </p>
                         <p v-else class="mt-1 text-lg font-semibold text-text-subtle flex items-center gap-1">
@@ -229,13 +229,18 @@
                             <ToolTipComponent
                                 icon="IconInfoCircle"
                                 icon-size="w-3.5 h-3.5"
-                                :tooltip-text="worktimesTargetUnknownTooltip"
+                                :tooltip-text="worktimesNoTargetTooltip"
                                 direction="top"
                                 classes="text-text-subtle"
                             />
                         </p>
                     </div>
                 </div>
+                <!-- Tage vor Beginn des Zeitkontos (erste Tagesbuchung): wie im Export kein Soll und kein Saldo -->
+                <p v-if="data.worktimes.totals?.days_before_account_start > 0" class="flex items-start gap-1.5 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-text-muted">
+                    <PropertyIcon name="IconInfoCircle" class="size-4 shrink-0" />
+                    {{ worktimesAccountStartHint }}
+                </p>
                 <!-- Tage ohne Arbeitszeitmuster: Soll/Saldo des Zeitraums unbekannt, Überstunden unvollständig -->
                 <p v-if="worktimesTargetUnknown" class="flex items-center gap-1.5 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
                     <PropertyIcon name="IconAlertTriangle" class="size-4 shrink-0" />
@@ -257,11 +262,11 @@
                      class="rounded-lg border border-border-subtle">
                     <div class="flex items-center justify-between px-3 py-2 bg-surface-sunken rounded-t-lg">
                         <span class="text-sm font-semibold">{{ weekKey }}</span>
-                        <span v-if="!weekDiff(days).unknown" class="text-xs" :class="weekDiff(days).minutes >= 0 ? 'text-success' : 'text-danger'">
+                        <span v-if="!weekDiff(days).unknown && !weekDiff(days).noAccount" class="text-xs" :class="weekDiff(days).minutes >= 0 ? 'text-success' : 'text-danger'">
                             {{ $t('Actual') }} {{ weekDiff(days).worked }} / {{ $t('Target') }} {{ weekDiff(days).wanted }}
                             ({{ weekDiff(days).diff }})
                         </span>
-                        <span v-else class="text-xs text-text-subtle" :title="$t('No work time pattern stored')">
+                        <span v-else class="text-xs text-text-subtle" :title="weekDiff(days).unknown ? $t('No work time pattern stored') : $t('Before the start of the time account')">
                             {{ $t('Actual') }} {{ weekDiff(days).worked }} / {{ $t('Target') }} –
                         </span>
                     </div>
@@ -280,6 +285,9 @@
                                                 direction="top"
                                                 :classes="day.reduction_reason === 'special_day' ? 'text-warning' : 'text-text-subtle'"
                                             />
+                                            <span v-if="day.before_account_start" class="rounded bg-surface-sunken text-text-subtle border border-border-subtle px-1 text-[9px]">
+                                                {{ $t('Before the start of the time account') }}
+                                            </span>
                                             <span v-if="day.is_special_day" class="rounded bg-warning-surface text-warning border border-warning-border px-1 text-[9px] font-semibold uppercase">
                                                 {{ $t('Special Day') }}
                                             </span>
@@ -294,13 +302,13 @@
                                         </div>
                                     </td>
                                     <td class="py-1.5 px-3 text-right">{{ day.worked_hours_formatted }}</td>
-                                    <td class="py-1.5 px-3 text-right text-text-subtle" :title="day.target_unknown ? $t('No work time pattern stored') : undefined">
-                                        / {{ day.target_unknown ? '–' : day.wantedHoursFormatted }}
+                                    <td class="py-1.5 px-3 text-right text-text-subtle" :title="dayNoTargetTitle(day)">
+                                        / {{ dayHasTarget(day) ? day.wantedHoursFormatted : '–' }}
                                     </td>
                                     <td class="py-1.5 px-3 text-right"
-                                        :class="day.target_unknown ? 'text-text-subtle' : (day.work_time_balance_change >= 0 ? 'text-success' : 'text-danger')"
-                                        :title="day.target_unknown ? $t('No work time pattern stored') : undefined">
-                                        {{ day.target_unknown ? '–' : day.work_time_balance_change_formatted }}
+                                        :class="!dayHasTarget(day) || day.work_time_balance_change === null ? 'text-text-subtle' : (day.work_time_balance_change >= 0 ? 'text-success' : 'text-danger')"
+                                        :title="dayNoTargetTitle(day)">
+                                        {{ dayHasTarget(day) ? (day.work_time_balance_change_formatted ?? '–') : '–' }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -566,6 +574,21 @@ const worktimesTargetUnknownTooltip = computed(() => {
         ? $t('No work time pattern is stored for {n} day(s) in this period – the target cannot be calculated.', { n: days })
         : $t('No work time pattern stored')
 })
+// Zeitraum ganz vor Beginn des Zeitkontos (erste Tagesbuchung): wie im Export kein Soll und kein Saldo
+const worktimesAccountNotStarted = computed(() => data.value.worktimes?.totals?.account_not_started === true)
+const worktimesNoTarget = computed(() => worktimesTargetUnknown.value || worktimesAccountNotStarted.value)
+const worktimesAccountStartHint = computed(() => worktimesAccountNotStarted.value
+    ? $t('No time account is kept for this period yet (before the first daily booking): only the hours actually worked are shown, without target and balance.')
+    : $t('{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance.', { n: Number(data.value.worktimes?.totals?.days_before_account_start ?? 0) }))
+const worktimesNoTargetTooltip = computed(() => worktimesTargetUnknown.value
+    ? worktimesTargetUnknownTooltip.value
+    : worktimesAccountStartHint.value)
+const dayHasTarget = (day) => !day.target_unknown && !day.before_account_start
+const dayNoTargetTitle = (day) => {
+    if (day.target_unknown) return $t('No work time pattern stored')
+    if (day.before_account_start) return $t('Before the start of the time account')
+    return undefined
+}
 
 // Zielwert im Vertrag aktiv? (fehlender Zielwert-Eintrag = kein Vertrag -> als aktiv behandeln, damit nichts verschwindet)
 const targetActive = (target) => !(target && target.active === false)
@@ -701,21 +724,30 @@ const visibleSeasonRows = computed(() => {
 
 const weekDiff = (days) => {
     let worked = 0
+    let accountWorked = 0
     let wanted = 0
     let unknown = false
+    let accountDays = 0
     Object.values(days).forEach((d) => {
         worked += d.worked_hours || 0
+        // Vor Beginn des Zeitkontos: Gearbeitetes zählt, aber weder Soll noch Saldo
+        if (d.before_account_start) {
+            return
+        }
+        accountDays++
+        accountWorked += d.worked_hours || 0
         if (d.target_unknown) {
             unknown = true
             return
         }
         wanted += d.wantedHours || 0
     })
-    const diffMin = worked - wanted
+    const diffMin = accountWorked - wanted
     const sign = diffMin >= 0 ? '+' : '−'
     return {
         minutes: diffMin,
         unknown,
+        noAccount: accountDays === 0,
         worked: toHM(worked),
         wanted: toHM(wanted),
         diff: sign + toHM(Math.abs(diffMin)),
@@ -745,6 +777,9 @@ const formatDayMonth = (value) => {
  * sowie Krank/Urlaub (soll-neutral).
  */
 const dayTooltip = (day) => {
+    if (day.before_account_start) {
+        return $t('Before the start of the time account (first daily booking): no target and no balance, only the hours actually worked count.')
+    }
     const parts = []
     if (day.is_special_day) {
         parts.push(`${$t('Special Day')}: ${day.special_day_name ?? ''}`.trim())

@@ -37,6 +37,12 @@
             {{ $t('{n} past day(s) in this period have more than one daily booking (legacy data). They are included in the time account with {diff} in total; rebooking does not correct this – please have them cleaned up.', { n: totals.duplicate_daily_booking_days, diff: totals.duplicate_daily_booking_signed }) }}
         </p>
 
+        <!-- Tage vor Beginn des Zeitkontos (erste Tagesbuchung): wie im Export kein Soll und kein Saldo -->
+        <p v-if="totals.days_before_account_start > 0" class="mb-5 flex items-start gap-1.5 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-text-muted">
+            <PropertyIcon name="IconInfoCircle" class="size-4 shrink-0" />
+            {{ totals.account_not_started ? $t('No time account is kept for this period yet (before the first daily booking): only the hours actually worked are shown, without target and balance.') : $t('{n} day(s) in this period lie before the start of the time account (first daily booking): only the hours actually worked are shown there, without target and balance.', { n: totals.days_before_account_start }) }}
+        </p>
+
         <!-- Monthly breakdown when range > 1 month -->
         <div v-if="isMultiMonth" class="mb-6 p-4 bg-surface-sunken rounded-lg border border-border-subtle">
             <h3 class="text-sm font-semibold text-text-muted mb-3">{{ $t('Monthly Breakdown') }}</h3>
@@ -85,6 +91,9 @@
                                     </div>
                                 </div>
                             </div>
+                            <div v-if="entry.before_account_start" class="text-xs text-text-subtle bg-surface-sunken border border-border-subtle px-2 py-0.5 rounded inline-block mt-2 mr-1">
+                                {{ $t('Before the start of the time account') }}
+                            </div>
                             <div v-if="entry.is_special_day" class="text-xs text-warning bg-warning-surface border border-warning-border px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2">
                                 {{ $t('Special Day') }}<template v-if="entry.special_day_name">: {{ entry.special_day_name }}</template>
                             </div>
@@ -131,7 +140,11 @@
                         </div>
                         <!-- Rechte Spalte -->
                         <div class="w-full md:w-2/3">
-                            <div class="relative h-4 bg-surface-sunken rounded overflow-hidden mb-1">
+                            <!-- Vor Beginn des Zeitkontos: kein Soll -> nur Gearbeitetes, keine Minus-/Plus-Färbung -->
+                            <div v-if="entry.before_account_start" class="relative h-4 bg-surface-sunken rounded overflow-hidden mb-1">
+                                <div v-if="entry.worked_hours > 0" class="absolute top-0 left-0 h-full w-full bg-accent-600"></div>
+                            </div>
+                            <div v-else class="relative h-4 bg-surface-sunken rounded overflow-hidden mb-1">
                                 <!-- Worked hours (blue) - up to daily target -->
                                 <div
                                     v-if="entry.worked_hours"
@@ -190,7 +203,7 @@
                             </div>
                             <div class="flex flex-wrap gap-3 text-xs text-text-muted mt-1">
                                 <div class="flex items-center gap-1">
-                                    <strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}h
+                                    <strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}<template v-if="entry.daily_target_hours !== '–'">h</template>
                                     <span v-if="entry.is_compensation_day_off" class="text-special-teal text-[10px] ml-1">({{ $t('Compensation day off') }})</span>
                                     <ToolTipComponent
                                         v-if="reductionTooltip(entry)"
@@ -209,7 +222,7 @@
                                 <div v-if="entry.nightly_working_hours"><strong>{{ $t('Night') }}: </strong>{{ entry.nightly_working_hours_formatted }}</div>
                                 <div><strong>{{ $t('Balance') }}: </strong>
                                     <span :class="[ entry.work_time_balance_change > 0 ? 'text-success' : entry.work_time_balance_change < 0 ? 'text-danger' : 'text-text-subtle']">
-                                        {{ entry.work_time_balance_change_formatted }}
+                                        {{ entry.work_time_balance_change_formatted ?? '–' }}
                                     </span>
                                 </div>
                             </div>
@@ -324,21 +337,23 @@ const monthlyBreakdown = computed(() => {
                     name: monthName,
                     worked: 0,
                     wanted: 0,
-                    unknown: false
+                    unknown: false,
+                    accountDays: 0
                 };
             }
 
             months[monthKey].worked += entry.worked_hours || 0;
             months[monthKey].wanted += entry.daily_target_minutes || 0;
             months[monthKey].unknown = months[monthKey].unknown || !!entry.target_unknown;
+            months[monthKey].accountDays += entry.before_account_start ? 0 : 1;
         });
     });
 
-    // Convert to array and format hours
+    // Convert to array and format hours (Monat ganz vor Beginn des Zeitkontos: kein Soll)
     return Object.values(months).map(month => ({
         name: month.name,
         worked: convertMinutesToHoursAndMinutes(month.worked),
-        wanted: month.unknown ? '–' : convertMinutesToHoursAndMinutes(month.wanted)
+        wanted: month.unknown || month.accountDays === 0 ? '–' : convertMinutesToHoursAndMinutes(month.wanted)
     }));
 });
 
@@ -350,17 +365,20 @@ const weeklySums = computed(() => {
         let totalWorked = 0;
         let totalWanted = 0;
         let targetUnknown = false;
+        let accountDays = 0;
 
         Object.values(week).forEach(entry => {
             totalWorked += entry.worked_hours || 0;
             totalWanted += entry.daily_target_minutes || 0;
             targetUnknown = targetUnknown || !!entry.target_unknown;
+            accountDays += entry.before_account_start ? 0 : 1;
         });
 
-        // Ein Tag ohne Arbeitszeitmuster -> Wochen-Soll unbekannt (wie Gesamtkachel und Info-Modal)
+        // Ein Tag ohne Arbeitszeitmuster -> Wochen-Soll unbekannt (wie Gesamtkachel und Info-Modal);
+        // Woche ganz vor Beginn des Zeitkontos -> kein Soll (Tage davor zählen 0)
         sums[weekKey] = {
             worked: convertMinutesToHoursAndMinutes(totalWorked),
-            wanted: targetUnknown ? '–' : convertMinutesToHoursAndMinutes(totalWanted)
+            wanted: targetUnknown || accountDays === 0 ? '–' : convertMinutesToHoursAndMinutes(totalWanted)
         };
     });
 
@@ -383,6 +401,9 @@ const formatDayMonth = (value) => {
  * Sondertag ohne Wirkung (Arbeit bzw. Regel inaktiv) sowie Krank/Urlaub (soll-neutral).
  */
 const reductionTooltip = (entry) => {
+    if (entry.before_account_start) {
+        return $t('Before the start of the time account (first daily booking): no target and no balance, only the hours actually worked count.');
+    }
     const parts = [];
     if (entry.is_special_day) {
         parts.push(`${$t('Special Day')}: ${entry.special_day_name ?? ''}`.trim());

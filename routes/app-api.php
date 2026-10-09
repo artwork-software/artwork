@@ -61,10 +61,13 @@ Route::middleware(['auth:api', 'throttle:api-token', CheckToken::using('app')])-
         ->group(function (): void {
             Route::get('', [AppProjectController::class, 'show'])->name('show');
             Route::get('tabs/{projectTab}', [AppProjectController::class, 'showTab'])->name('tab');
-            Route::patch('tabs/{projectTab}/components/{component}', [AppProjectComponentValueController::class, 'update'])
-                ->name('component.update');
+            Route::patch(
+                'tabs/{projectTab}/components/{component}',
+                [AppProjectComponentValueController::class, 'update'],
+            )->name('component.update');
             Route::post('comments', [AppProjectCommentController::class, 'store'])->name('comments.store');
-            Route::patch('tasks/{task}/done', [AppProjectTaskController::class, 'toggleDone'])->name('tasks.toggle-done');
+            Route::patch('tasks/{task}/done', [AppProjectTaskController::class, 'toggleDone'])
+                ->name('tasks.toggle-done');
             Route::get('team/candidates', [AppProjectTeamController::class, 'candidates'])->name('team.candidates');
             Route::post('team', [AppProjectTeamController::class, 'store'])->name('team.store');
 

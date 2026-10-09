@@ -223,6 +223,7 @@
         <ConfirmationComponent
             v-if="pendingRebookDates.length"
             :confirm="$t('Rebook')"
+            :destructive="false"
             :titel="$t('Rebook days')"
             :description="$t('{n} day(s) will be booked to the time account according to the current calculation (shifts, absences, work time pattern). Existing daily bookings of these days are replaced; manual bookings remain.', { n: pendingRebookDates.length })"
             @closed="afterRebookConfirm"

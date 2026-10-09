@@ -25,9 +25,12 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('shifts', function (Blueprint $table): void {
-            $table->dropIndex('shifts_start_date_index');
-            $table->dropIndex('shifts_craft_start_date_index');
-        });
+        foreach (['shifts_start_date_index', 'shifts_craft_start_date_index'] as $index) {
+            if (Schema::hasIndex('shifts', $index)) {
+                Schema::table('shifts', function (Blueprint $table) use ($index): void {
+                    $table->dropIndex($index);
+                });
+            }
+        }
     }
 };

@@ -204,13 +204,82 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
     }
 
     #[Test]
+    public function unbookedDaysOfAPartlyBookedMonthStillCountTheirShifts(): void
+    {
+        // Vorher: sobald ein Monat eine Buchung hatte, fielen die Schichten aller übrigen Tage weg
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->insertBooking($user, '2026-06-01', 480, 480);
+        $this->assignShift($craft, $user, '2026-06-01', '09:00', '18:00'); // gebucht: nicht doppelt
+        $this->assignShift($craft, $user, '2026-06-20', '10:00', '18:00'); // nicht gebucht: 420
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        $this->assertSame(480 + 420, $juneRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(480, $juneRow['cells'][$craft->id]['soll_intern']);
+    }
+
+    #[Test]
+    public function individualTimesOfUnbookedDaysCountOnceInThePrimaryCraft(): void
+    {
+        $craft = Craft::factory()->create(['position' => 1]);
+        $otherCraft = Craft::factory()->create(['position' => 2]);
+        $user = $this->createCraftWorker($craft);
+        $otherCraft->users()->attach($user->id);
+        $user->individualTimes()->create([
+            'title' => 'Probe',
+            'start_date' => '2026-06-10',
+            'end_date' => '2026-06-10',
+            'start_time' => '10:00',
+            'end_time' => '13:00',
+            'full_day' => false,
+            'working_time_minutes' => 180,
+            'break_minutes' => 0,
+        ]);
+
+        $matrix = $this->service->buildMatrix(
+            Carbon::parse('2026-06-01'),
+            Carbon::parse('2026-06-30'),
+            [$craft->id, $otherCraft->id],
+            'en'
+        );
+        $juneRow = $matrix['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        $this->assertSame(180, $juneRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(0, $juneRow['cells'][$otherCraft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function legacyCorrectionBookingsCountTheirDeltaAsActualHours(): void
+    {
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->insertBooking($user, '2026-06-01', 480, 480);
+        WorkTimeBooking::query()->insert([
+            'user_id' => $user->id,
+            'name' => 'adjustment_work_time_change_request_1',
+            'booking_day' => '2026-06-02',
+            'booking_weekday' => 2,
+            'wanted_working_hours' => 0,
+            'worked_hours' => 0,
+            'work_time_balance_change' => 60,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        $this->assertSame(540, $juneRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
     public function itIncludesOverlappingShiftsAndSplitsTheirMinutesAcrossMonths(): void
     {
         $craft = Craft::factory()->create();
         $user = $this->createCraftWorker($craft);
 
-        // Four hours across the month boundary, minus a 60-minute break:
-        // the proportional split assigns 90 worked minutes to each month.
+        // Four hours across the month boundary, minus a 60-minute break: like the time account the break is
+        // deducted on the first day (60 in March), the part after midnight counts fully (120 in April).
         $this->assignShift(
             $craft,
             $user,
@@ -223,12 +292,12 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
 
         $marchRow = $matrix['rows']->first(fn (array $row) => $row['label'] === 'March 2026');
         $aprilRow = $matrix['rows']->first(fn (array $row) => $row['label'] === 'April 2026');
-        $this->assertSame(90, $marchRow['cells'][$craft->id]['ist_intern']);
-        $this->assertSame(90, $aprilRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(60, $marchRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(120, $aprilRow['cells'][$craft->id]['ist_intern']);
 
         $overlapOnlyMatrix = $this->buildMatrix($craft, '2026-04-01', '2026-04-30');
         $overlapOnlyAprilRow = $overlapOnlyMatrix['rows']->first(fn (array $row) => !$row['is_sum']);
-        $this->assertSame(90, $overlapOnlyAprilRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(120, $overlapOnlyAprilRow['cells'][$craft->id]['ist_intern']);
     }
 
     #[Test]

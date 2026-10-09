@@ -26,6 +26,7 @@ class EventTypeResource extends JsonResource
             'individual_name' => $this->individual_name,
             'abbreviation' => $this->abbreviation,
             'relevant_for_project_period' => $this->relevant_for_project_period,
+            'relevant_for_ticketing' => $this->relevant_for_ticketing,
             'verification_mode' => $this->verification_mode,
             'relevant_for_shift' => $this->relevant_for_shift,
             'relevant_for_inventory' => $this->relevant_for_inventory,

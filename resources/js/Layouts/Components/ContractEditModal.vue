@@ -454,6 +454,8 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import {sharedDepartmentsOf, sharedUsersOf} from "@/Helper/sharedAccess.js";
+import {normalizeContractForEdit} from "@/Helper/contractEditForm.js";
 
 export default {
     name: "ContractEditModal",
@@ -537,77 +539,80 @@ export default {
         })
     },
     data() {
-        // Format deadline_date to YYYY-MM-DD for HTML date input
-        let formattedDeadlineDate = null;
-        if (this.contract?.deadline_date) {
-            const date = new Date(this.contract.deadline_date);
-            if (!isNaN(date.getTime())) {
-                formattedDeadlineDate = date.toISOString().split('T')[0];
-            }
-        }
+        // Budget-Informationen übergeben das rohe Vertragsmodell, die Listen aufbereitete Arrays – vereinheitlichen,
+        // sonst sendet das Speichern leere Werte für Felder, die nur anders heißen (contract_partner, project_id …)
+        // Typ, Rechtsform und Währung notfalls über *_id aus den Auswahllisten auflösen (nie still auf € fallen);
+        // deadline_date kommt als Kalenderdatum (Y-m-d) für das Datumsfeld
+        const source = normalizeContractForEdit(this.contract, null, {
+            currencies: this.currencies,
+            companyTypes: this.companyTypes,
+            contractTypes: this.contractTypes,
+        }) ?? {};
+        const formattedDeadlineDate = source?.deadline_date ?? null;
 
         return {
-            selectedProject: this.contract?.project || null,
-            first_project_calendar_tab_id: this.contract?.project?.calendar_tab_id || null,
+            selectedProject: source?.project || null,
+            first_project_calendar_tab_id: source?.project?.calendar_tab_id || null,
             errorText: null,
             creatingNewTask: false,
             tasks: [],
             uploadDocumentFeedback: "",
-            file: this.contract?.name,
-            description: this.contract?.description || "",
-            contractPartner: this.contract?.partner || '',
-            selectedLegalForm: this.contract?.company_type || null,
-            selectedContractType: this.contract?.contract_type || null,
-            selectedCurrency: this.contract?.currency || {id: 1, name: '€'},
+            file: source?.name,
+            description: source?.description || "",
+            contractPartner: source?.partner || '',
+            selectedLegalForm: source?.company_type || null,
+            selectedContractType: source?.contract_type || null,
+            selectedCurrency: source?.currency || {id: 1, name: '€'},
             user_search_results: [],
             user_query: '',
-            usersWithAccess: this.contract?.accessibleUsers ? [...this.contract.accessibleUsers] : [],
+            // accessibleUsers (aufbereitet) oder accessing_users (Modell aus den Budget-Informationen)
+            usersWithAccess: sharedUsersOf(this.contract),
             department_search_results: [],
             department_query: '',
-            departmentsWithAccess: this.contract?.accessibleDepartments ? [...this.contract.accessibleDepartments] : [],
+            departmentsWithAccess: sharedDepartmentsOf(this.contract),
             showExtraSettings: false,
-            contractAmount: this.contract?.amount || '',
-            kskLiable: this.contract?.ksk_liable || false,
-            kskAmount: this.contract?.ksk_amount || null,
-            kskReason: this.contract?.ksk_reason || '',
-            isAbroad: this.contract?.resident_abroad || false,
-            foreignTax: this.contract?.foreign_tax || false,
-            foreignTaxAmount: this.contract?.foreign_tax_amount || null,
-            foreignTaxCity: this.contract?.foreign_tax_city || '',
-            foreignTaxCountry: this.contract?.foreign_tax_country || '',
-            foreignTaxReason: this.contract?.foreign_tax_reason || '',
-            contractState: this.contract?.contract_state || '',
-            contractStateComment: this.contract?.contract_state_comment || '',
-            reverseChargeAmount: this.contract?.reverse_charge_amount || null,
+            contractAmount: source?.amount ?? '',
+            kskLiable: source?.ksk_liable || false,
+            kskAmount: source?.ksk_amount ?? null,
+            kskReason: source?.ksk_reason || '',
+            isAbroad: source?.resident_abroad || false,
+            foreignTax: source?.foreign_tax || false,
+            foreignTaxAmount: source?.foreign_tax_amount ?? null,
+            foreignTaxCity: source?.foreign_tax_city || '',
+            foreignTaxCountry: source?.foreign_tax_country || '',
+            foreignTaxReason: source?.foreign_tax_reason || '',
+            contractState: source?.contract_state || '',
+            contractStateComment: source?.contract_state_comment || '',
+            reverseChargeAmount: source?.reverse_charge_amount ?? null,
             deadlineDate: formattedDeadlineDate,
-            hasPowerOfAttorney: this.contract?.has_power_of_attorney || false,
-            isFreed: this.contract?.is_freed || false,
+            hasPowerOfAttorney: source?.has_power_of_attorney || false,
+            isFreed: source?.is_freed || false,
             comment: null,
-            comments: this.contract?.comments || [],
+            comments: source?.comments || [],
             contractForm: useForm({
                 file: null,
-                contract_partner: this.contract?.partner || '',
-                company_type_id: this.contract?.company_type?.id || null,
-                contract_type_id: this.contract?.contract_type?.id || null,
-                amount: this.contract?.amount || '',
-                currency_id: this.contract?.currency?.id || 1,
-                project_id: this.contract?.project?.id || null,
-                ksk_liable: this.contract?.ksk_liable || false,
-                ksk_amount: this.contract?.ksk_amount || null,
-                ksk_reason: this.contract?.ksk_reason || '',
-                resident_abroad: this.contract?.resident_abroad || false,
-                foreign_tax: this.contract?.foreign_tax || false,
-                foreign_tax_amount: this.contract?.foreign_tax_amount || null,
-                foreign_tax_city: this.contract?.foreign_tax_city || '',
-                foreign_tax_country: this.contract?.foreign_tax_country || '',
-                foreign_tax_reason: this.contract?.foreign_tax_reason || '',
-                contract_state: this.contract?.contract_state || '',
-                contract_state_comment: this.contract?.contract_state_comment || '',
-                reverse_charge_amount: this.contract?.reverse_charge_amount || null,
-                deadline_date: this.contract?.deadline_date || null,
-                has_power_of_attorney: this.contract?.has_power_of_attorney || false,
-                is_freed: this.contract?.is_freed || false,
-                description: this.contract?.description || '',
+                contract_partner: source?.partner || '',
+                company_type_id: source?.company_type?.id || null,
+                contract_type_id: source?.contract_type?.id || null,
+                amount: source?.amount ?? '',
+                currency_id: source?.currency?.id || 1,
+                project_id: source?.project?.id || null,
+                ksk_liable: source?.ksk_liable || false,
+                ksk_amount: source?.ksk_amount ?? null,
+                ksk_reason: source?.ksk_reason || '',
+                resident_abroad: source?.resident_abroad || false,
+                foreign_tax: source?.foreign_tax || false,
+                foreign_tax_amount: source?.foreign_tax_amount ?? null,
+                foreign_tax_city: source?.foreign_tax_city || '',
+                foreign_tax_country: source?.foreign_tax_country || '',
+                foreign_tax_reason: source?.foreign_tax_reason || '',
+                contract_state: source?.contract_state || '',
+                contract_state_comment: source?.contract_state_comment || '',
+                reverse_charge_amount: source?.reverse_charge_amount ?? null,
+                deadline_date: source?.deadline_date || null,
+                has_power_of_attorney: source?.has_power_of_attorney || false,
+                is_freed: source?.is_freed || false,
+                description: source?.description || '',
                 accessibleUsers: [],
                 accessibleDepartments: [],
                 tasks: [],

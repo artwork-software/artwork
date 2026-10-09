@@ -78,18 +78,30 @@ class ExternalUserGroupMappingController extends Controller
     /**
      * Mappings, die die Admin-Rolle vergeben, ändern/löschen nur Admins: Löschen entzieht beim
      * nächsten Sync allen Personen der Gruppe die per Sync vergebene Admin-Rolle – mit „Tool-
-     * Einstellungen ändern“ allein hätte man so Admins absetzen können.
+     * Einstellungen ändern“ allein hätte man so Admins absetzen können. Gleiches gilt für Mappings
+     * mit Rechten, die die handelnde Person selbst nicht besitzt.
      */
     private function ensureMayManage(ExternalUserGroupMapping $mapping): void
     {
+        $user = request()->user();
+
+        if ($user?->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return;
+        }
+
         $adminRoleId = Role::query()->where('name', RoleEnum::ARTWORK_ADMIN->value)->value('id');
         $grantsAdmin = $adminRoleId !== null
             && in_array((int) $adminRoleId, array_map('intval', $mapping->role_ids ?? []), true);
 
+        abort_if($grantsAdmin, 403, __('Only artwork admins can assign the admin role.'));
+
+        $heldPermissionIds = $user?->getAllPermissions()->pluck('id')->map(fn ($id): int => (int) $id)->all() ?? [];
+        $foreignPermissionIds = array_diff(array_map('intval', $mapping->permission_ids ?? []), $heldPermissionIds);
+
         abort_if(
-            $grantsAdmin && !request()->user()?->hasRole(RoleEnum::ARTWORK_ADMIN->value),
+            $foreignPermissionIds !== [],
             403,
-            __('Only artwork admins can assign the admin role.')
+            __('Only artwork admins can change mappings with permissions you do not hold yourself.')
         );
     }
 }

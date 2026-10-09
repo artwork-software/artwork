@@ -2,14 +2,14 @@
     <div class="rounded-xl border border-border-subtle">
         <button
             type="button"
-            class="flex w-full items-center justify-between px-5 py-4 text-left"
+            class="flex w-full items-center justify-between gap-3 px-4 py-4 text-left sm:px-5"
             @click="open = !open"
         >
             <span class="text-sm font-semibold text-text">{{ label }}</span>
             <span class="text-text-subtle">{{ open ? '−' : '+' }}</span>
         </button>
 
-        <div v-show="open" class="border-t border-border-subtle px-5 py-4">
+        <div v-show="open" class="border-t border-border-subtle px-4 py-4 sm:px-5">
             <div v-if="children.length === 0" class="text-xs text-text-subtle">
                 {{ $t('No content') }}
             </div>

@@ -63,7 +63,9 @@ class DatabaseNotificationService
         $now = $this->carbonService->getNow();
         $archived = 0;
 
-        $query = $user->notifications()->whereNull('read_at');
+        // reorder(): notifications() sortiert per latest() nach created_at; chunkById hängt seine
+        // id-Sortierung nur dahinter – mit zufälligen UUIDs übersprang der id-Cursor dann Einträge
+        $query = $user->notifications()->reorder()->whereNull('read_at');
 
         if ($groupType !== null) {
             $query->where('groupType', $groupType);
@@ -115,18 +117,15 @@ class DatabaseNotificationService
     }
 
     /**
-     * @throws Throwable
-     */
-    /**
+     * In Blöcken, damit auch ein großer Rückstand keine riesige IN-Liste erzeugt.
+     *
      * @param array<int, string> $notificationIds
      */
-    public function markSentInSummary(array $notificationIds): void
+    public function markSentInSummary(array $notificationIds, int $chunkSize = 1000): void
     {
-        if ($notificationIds === []) {
-            return;
+        foreach (array_chunk($notificationIds, $chunkSize) as $chunk) {
+            DatabaseNotification::query()->whereKey($chunk)->update(['sent_in_summary' => true]);
         }
-
-        DatabaseNotification::query()->whereKey($notificationIds)->update(['sent_in_summary' => true]);
     }
 
     public function updateSentInSummary(DatabaseNotification $databaseNotification, bool $sent): DatabaseNotification

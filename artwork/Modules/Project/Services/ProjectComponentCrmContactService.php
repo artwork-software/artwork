@@ -41,13 +41,6 @@ use Spatie\Activitylog\Models\Activity;
  */
 class ProjectComponentCrmContactService
 {
-    /** Gespiegelte Typen werden über ihr Quellprofil gepflegt, nicht frei angelegt. */
-    public const MIRRORED_SLUGS = [
-        CrmSystemContactTypeEnum::USER->value,
-        CrmSystemContactTypeEnum::FREELANCER->value,
-        CrmSystemContactTypeEnum::SERVICE_PROVIDER->value,
-    ];
-
     /** Tabellen mit Spalte crm_contact_id (FK auf crm_contacts) außer den oben gesondert geprüften. */
     private const CONTACT_REFERENCE_TABLES = [
         'crm_contact_project_team',
@@ -96,7 +89,7 @@ class ProjectComponentCrmContactService
         return CrmContactType::query()
             ->whereIn('id', $ids)
             ->where('is_active', true)
-            ->whereNotIn('slug', self::MIRRORED_SLUGS)
+            ->whereNotIn('slug', CrmSystemContactTypeEnum::mirroredSlugs())
             ->orderBy('sort_order')
             ->get();
     }
@@ -110,7 +103,7 @@ class ProjectComponentCrmContactService
     {
         return CrmContactType::query()
             ->where('is_active', true)
-            ->whereNotIn('slug', self::MIRRORED_SLUGS)
+            ->whereNotIn('slug', CrmSystemContactTypeEnum::mirroredSlugs())
             ->orderBy('sort_order')
             ->get();
     }
@@ -366,7 +359,7 @@ class ProjectComponentCrmContactService
 
         $contact = $entry->crmContact()->with('contactType')->firstOrFail();
         $contactType = $contact->contactType;
-        if ($contactType === null || in_array($contactType->slug, self::MIRRORED_SLUGS, true)) {
+        if ($contactType === null || CrmSystemContactTypeEnum::isMirrored($contactType->slug)) {
             abort(403, __('Mirrored contacts can only be changed via their profile.'));
         }
 

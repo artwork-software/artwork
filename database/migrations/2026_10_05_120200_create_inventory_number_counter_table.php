@@ -15,10 +15,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('inventory_number_counter', function (Blueprint $table): void {
-            $table->unsignedTinyInteger('id')->primary();
-            $table->unsignedBigInteger('last_number')->default(0);
-        });
+        // wiederholbar nach Teil-Fehlschlag (Tabelle angelegt, Insert gescheitert)
+        if (!Schema::hasTable('inventory_number_counter')) {
+            Schema::create('inventory_number_counter', function (Blueprint $table): void {
+                $table->unsignedTinyInteger('id')->primary();
+                $table->unsignedBigInteger('last_number')->default(0);
+            });
+        }
+
+        if (DB::table('inventory_number_counter')->where('id', 1)->exists()) {
+            return;
+        }
 
         $currentMax = (int) DB::table('inventory_articles')
             ->max(DB::raw('CAST(inventory_number AS UNSIGNED)'));

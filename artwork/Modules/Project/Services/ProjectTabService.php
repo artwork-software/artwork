@@ -4,12 +4,7 @@ namespace Artwork\Modules\Project\Services;
 
 use Artwork\Core\Cache\ServiceWithArrayCache;
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\CompanyType\Services\CompanyTypeService;
-use Artwork\Modules\Contract\Services\ContractTypeService;
-use Artwork\Modules\Currency\Services\CurrencyService;
-use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Cache\ProjectTabArrayCache;
-use Artwork\Modules\Project\DTOs\BudgetInformationDto;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Repositories\ProjectTabRepository;
@@ -104,24 +99,6 @@ class ProjectTabService implements ServiceWithArrayCache
     {
         return $this->findFirstProjectTabWithType($type)?->getAttribute('id') ??
             $this->getDefaultOrFirstProjectTabId();
-    }
-
-    public function getBudgetInformationDto(
-        Project $project,
-        ContractTypeService $contractTypeService,
-        CompanyTypeService $companyTypeService,
-        CurrencyService $currencyService
-    ): BudgetInformationDto {
-        return BudgetInformationDto::newInstance()
-            ->setAccessBudget($project->access_budget)
-            ->setContracts($project->contracts)
-            ->setProjectFiles($project->project_files)
-            ->setProjectMoneySources($project->moneySources)
-            ->setProjectManagerIds($project->managerUsers->pluck('id'))
-            ->setContractTypes($contractTypeService->getAll())
-            ->setCompanyTypes($companyTypeService->getAll())
-            ->setCurrencies($currencyService->getAll())
-            ->setCostCenter($project->costCenter);
     }
 
     public function findByIdWithoutCache(int $id): ?Model

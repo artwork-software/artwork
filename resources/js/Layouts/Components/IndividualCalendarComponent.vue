@@ -143,6 +143,8 @@
 
 <script>
 import {IconAlertTriangle} from "@tabler/icons-vue";
+import { parseYmd, toYmd } from "@/Helper/IsoWeek.js";
+import axios from "axios";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
@@ -324,13 +326,18 @@ export default {
         },
         deleteSelectedEvents() {
             this.getCheckedEvents();
-            router.post(route('multi-edit.delete'), {
-                events: this.editEvents
-            }, {
-                onSuccess: () => {
-                    this.openDeleteSelectedEventsModal = false
-                }
-            })
+            if (this.editEvents.length === 0) {
+                this.openDeleteSelectedEventsModal = false;
+                return;
+            }
+            // JSON-Endpunkt (liefert bool, keine Inertia-Antwort) → axios wie in BaseCalendar
+            axios.post(route('multi-edit.delete'), { events: this.editEvents })
+                .then(() => router.reload())
+                .catch(() => {}) // Meldung zeigt der globale axios-Interceptor
+                .finally(() => {
+                    this.openDeleteSelectedEventsModal = false;
+                    this.editEvents = [];
+                });
         },
         openMultiEditModal() {
             this.getCheckedEvents();
@@ -446,17 +453,17 @@ export default {
         previousTimeRange() {
             const dayDifference = this.calculateDateDifference();
             this.dateValueCopy[1] = this.getPreviousDay(this.dateValueCopy[0]);
-            const newDate = new Date(this.dateValueCopy[1]);
+            const newDate = parseYmd(this.dateValueCopy[1]) ?? new Date(this.dateValueCopy[1]);
             newDate.setDate(newDate.getDate() - dayDifference);
-            this.dateValueCopy[0] = newDate.toISOString().slice(0, 10);
+            this.dateValueCopy[0] = toYmd(newDate);
             this.updateTimes();
         },
         nextTimeRange() {
             const dayDifference = this.calculateDateDifference();
             this.dateValueCopy[0] = this.getNextDay(this.dateValueCopy[1]);
-            const newDate = new Date(this.dateValueCopy[1]);
+            const newDate = parseYmd(this.dateValueCopy[1]) ?? new Date(this.dateValueCopy[1]);
             newDate.setDate(newDate.getDate() + dayDifference + 1);
-            this.dateValueCopy[1] = newDate.toISOString().slice(0, 10);
+            this.dateValueCopy[1] = toYmd(newDate);
             this.updateTimes();
         },
         getNextDay(dateString) {

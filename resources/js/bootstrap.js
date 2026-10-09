@@ -1,6 +1,6 @@
 import axios from 'axios';
 import pusher from 'pusher-js';
-import {messageForFailedRequest, shouldToastAxiosError, showAppToast, t} from './Helper/appToast';
+import {messageForFailedRequest, shouldHandleSessionExpiry, shouldToastAxiosError, showAppToast, t} from './Helper/appToast';
 
 
 /**
@@ -18,7 +18,8 @@ window.axios.interceptors.response.use(
     response => response,
     error => {
         const status = error.response?.status
-        if (status === 401 || status === 419) {
+        // Inertia-Requests meldet der 'invalid'-Handler in app.js (sonst zwei Alerts)
+        if (shouldHandleSessionExpiry(error)) {
             alert(t('Your session has expired. The page will reload so you can sign in again.'))
             window.location.reload()
         } else if (shouldToastAxiosError(error)) {

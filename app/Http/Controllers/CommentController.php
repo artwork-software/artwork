@@ -9,6 +9,7 @@ use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -51,7 +52,8 @@ class CommentController extends Controller
                 project: $project,
                 tabId: $request->tab_id
             );
-            broadcast(new NewCommentInProject($comment, $project->id));
+            // Live-Update darf den bereits gespeicherten Kommentar nicht in eine 500 verwandeln (WebSocket-Ausfall)
+            SafeBroadcast::send(new NewCommentInProject($comment, $project->id));
         }
     }
 

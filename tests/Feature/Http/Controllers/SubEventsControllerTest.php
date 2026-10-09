@@ -74,6 +74,50 @@ final class SubEventsControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function stored_subevent_belongs_to_the_authenticated_user_regardless_of_the_payload(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $event = Event::factory()->create();
+        $eventType = EventType::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $this->post(route('subEvent.add'), [
+            'event_id' => $event->id,
+            'eventName' => 'Untertermin',
+            'description' => 'desc',
+            'start_time' => '2026-01-01 10:00:00',
+            'end_time' => '2026-01-01 11:00:00',
+            'event_type_id' => $eventType->id,
+            'user_id' => $otherUser->id,
+            'audience' => false,
+            'is_loud' => false,
+            'allDay' => false,
+            'eventProperties' => [],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('sub_events', ['eventName' => 'Untertermin', 'user_id' => $admin->id]);
+    }
+
+    #[Test]
+    public function updating_a_subevent_keeps_its_creator(): void
+    {
+        $this->actingAsAdmin();
+        $creator = User::factory()->create();
+        $subEvent = SubEvent::factory()->create([
+            'event_id' => Event::factory()->create()->id,
+            'user_id' => $creator->id,
+        ]);
+
+        $this->patch(route('subEvent.update', $subEvent), [
+            'eventName' => 'Neu',
+            'user_id' => User::factory()->create()->id,
+            'eventProperties' => [],
+        ])->assertOk();
+
+        $this->assertSame($creator->id, $subEvent->fresh()->user_id);
+    }
+
+    #[Test]
     public function admin_can_destroy_subevent(): void
     {
         $this->actingAsAdmin();

@@ -13,6 +13,9 @@ use Throwable;
 
 class NotificationSettingService
 {
+    /** Konten je UPDATE beim Markieren des Rückstands (Länge der IN-Liste begrenzen) */
+    private const BACKLOG_USER_CHUNK = 500;
+
     public function __construct(private readonly NotificationSettingRepository $notificationSettingRepository)
     {
     }
@@ -71,13 +74,16 @@ class NotificationSettingService
             ->where('notifiable_type', (new User())->getMorphClass())
             ->whereNull('read_at')
             ->where('sent_in_summary', false)
+            ->whereRaw('JSON_VALID(data)')
             ->whereJsonContains('data->type', $type->value);
         $restrictRecipients($query);
         $query->update(['sent_in_summary' => true]);
     }
 
     /**
-     * Dasselbe für alle Konten in einem INSERT … SELECT je Typ (für artwork:update).
+     * Dasselbe für alle Konten in einem INSERT … SELECT je Typ (für artwork:update). Der Rückstand
+     * wird nur für Konten markiert, denen die Einstellung wirklich fehlt – vorher lief je Typ ein
+     * UPDATE über die ganze notifications-Tabelle, auch wenn niemandem etwas fehlte.
      */
     public function ensureDefaultsForAllUsers(): int
     {
@@ -85,15 +91,26 @@ class NotificationSettingService
         $now = now();
 
         foreach (NotificationEnum::configurableCases() as $type) {
-            $attributes = $this->defaultAttributes($type);
-            $this->markBacklogAsSummarised($type, function ($query) use ($type): void {
-                $query->whereNotExists(function ($settings) use ($type): void {
-                    $settings->selectRaw('1')
+            $usersWithoutSetting = DB::table('users')
+                ->whereNotExists(function ($query) use ($type): void {
+                    $query->selectRaw('1')
                         ->from('notification_settings')
-                        ->whereColumn('notification_settings.user_id', 'notifications.notifiable_id')
+                        ->whereColumn('notification_settings.user_id', 'users.id')
                         ->where('notification_settings.type', $type->value);
-                });
-            });
+                })
+                ->pluck('users.id')
+                ->all();
+            if ($usersWithoutSetting === []) {
+                continue;
+            }
+
+            $attributes = $this->defaultAttributes($type);
+            foreach (array_chunk($usersWithoutSetting, self::BACKLOG_USER_CHUNK) as $userIds) {
+                $this->markBacklogAsSummarised(
+                    $type,
+                    static fn ($query) => $query->whereIn('notifiable_id', $userIds)
+                );
+            }
             $created += DB::table('notification_settings')->insertUsing(
                 [
                     'user_id', 'group_type', 'type', 'title', 'description', 'frequency',
@@ -122,41 +139,101 @@ class NotificationSettingService
     }
 
     /**
-     * Typen, die gerade als Sofort-Mail rausgehen.
+     * Typen mit E-Mail an, davon die Sofort-Mail-Typen, und für Typen mit E-Mail aus der Zeitpunkt der
+     * letzten Änderung – Stand vor einer Änderung für summariseBacklogAfterSettingsChange().
      *
-     * @return array<int, string>
+     * @return array{email: array<int, string>, immediate: array<int, string>, emailOffSince: array<string, mixed>}
      */
-    public function immediateMailTypes(User $user): array
+    public function mailStateOf(User $user): array
     {
-        return $user->notificationSettings()
-            ->where('enabled_email', true)
-            ->where('frequency', NotificationFrequencyEnum::IMMEDIATELY->value)
-            ->pluck('type')
-            ->map(fn (mixed $type): string => $type instanceof NotificationEnum ? $type->value : (string) $type)
-            ->all();
+        $state = ['email' => [], 'immediate' => [], 'emailOffSince' => []];
+        $settings = $user->notificationSettings()
+            ->toBase()
+            ->get(['type', 'frequency', 'enabled_email', 'email_disabled_at']);
+
+        foreach ($settings as $setting) {
+            $type = (string) $setting->type;
+            if (!$setting->enabled_email) {
+                $state['emailOffSince'][$type] = $setting->email_disabled_at;
+                continue;
+            }
+            $state['email'][] = $type;
+            if ($setting->frequency === NotificationFrequencyEnum::IMMEDIATELY->value) {
+                $state['immediate'][] = $type;
+            }
+        }
+
+        return $state;
     }
 
     /**
-     * Nach einer Änderung: Typen, die nicht mehr sofort gemailt werden, nicht noch einmal in die
-     * nächste Zusammenfassung packen – ihre ungelesenen Benachrichtigungen kamen schon per Mail.
+     * Nach einer Änderung (einzeln, Sammeländerung, „Standard wiederherstellen“) ungelesene Meldungen
+     * als zusammengefasst markieren, die die nächste Sammelmail sonst (noch einmal) verschicken würde:
+     * - Typen, die nicht mehr sofort gemailt werden – ihre Meldungen kamen schon per Mail,
+     * - Typen, deren E-Mail gerade erst eingeschaltet wurde – aber nur Meldungen aus der Zeit ohne
+     *   E-Mail (sonst käme der ganze Rückstand, teils Monate, in einer Mail). Was vor dem Ausschalten
+     *   auf die Sammelmail wartete, bleibt drin; im Zweifel eher eine Meldung zu viel als eine zu wenig.
      *
-     * @param array<int, string> $immediateTypesBefore
+     * @param array{
+     *     email: array<int, string>,
+     *     immediate: array<int, string>,
+     *     emailOffSince: array<string, mixed>
+     * } $stateBefore
      */
-    public function summariseTypesNoLongerImmediate(User $user, array $immediateTypesBefore): void
+    public function summariseBacklogAfterSettingsChange(User $user, array $stateBefore): void
     {
-        $leftImmediate = array_values(array_diff($immediateTypesBefore, $this->immediateMailTypes($user)));
-        if ($leftImmediate === []) {
+        $this->syncEmailDisabledAt($user, $stateBefore['email']);
+        $stateAfter = $this->mailStateOf($user);
+        $markSince = [];
+        foreach (array_diff($stateBefore['immediate'], $stateAfter['immediate']) as $type) {
+            $markSince[$type] = null;
+        }
+        foreach (array_diff($stateAfter['email'], $stateBefore['email']) as $type) {
+            if (!array_key_exists($type, $markSince)) {
+                $markSince[$type] = $stateBefore['emailOffSince'][$type] ?? null;
+            }
+        }
+        if ($markSince === []) {
             return;
         }
 
         $user->unreadNotifications()
+            ->reorder()
             ->where('sent_in_summary', false)
-            ->where(function ($query) use ($leftImmediate): void {
-                foreach ($leftImmediate as $type) {
-                    $query->orWhereJsonContains('data->type', $type);
+            ->whereRaw('JSON_VALID(data)')
+            ->where(function ($query) use ($markSince): void {
+                foreach ($markSince as $type => $since) {
+                    $query->orWhere(function ($typeQuery) use ($type, $since): void {
+                        $typeQuery->whereJsonContains('data->type', $type)
+                            ->when($since !== null, fn ($q) => $q->where('created_at', '>=', $since));
+                    });
                 }
             })
             ->update(['sent_in_summary' => true]);
+    }
+
+    /**
+     * email_disabled_at nach jeder Änderung nachziehen – alle Schreibwege (einzeln, Sammeländerung,
+     * Standard wiederherstellen) laufen über summariseBacklogAfterSettingsChange(). Bewusst ohne
+     * updated_at, damit nichts anderes den Zeitpunkt verschiebt.
+     *
+     * @param array<int, string> $emailTypesBefore Typen, deren E-Mail vor der Änderung an war
+     */
+    private function syncEmailDisabledAt(User $user, array $emailTypesBefore): void
+    {
+        // nur echte Übergänge an → aus stempeln, nicht Zeilen, die schon vorher aus waren
+        if ($emailTypesBefore !== []) {
+            DB::table('notification_settings')
+                ->where('user_id', $user->getKey())
+                ->where('enabled_email', false)
+                ->whereIn('type', $emailTypesBefore)
+                ->update(['email_disabled_at' => now()]);
+        }
+        DB::table('notification_settings')
+            ->where('user_id', $user->getKey())
+            ->where('enabled_email', true)
+            ->whereNotNull('email_disabled_at')
+            ->update(['email_disabled_at' => null]);
     }
 
     /**

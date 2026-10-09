@@ -34,6 +34,7 @@
                 :project="project"
                 :available-tabs="headerObject.tabs ?? []"
                 :preselected-tab-id="currentTab.id"
+                :can-grant-write="headerObject.canWriteProject === true"
                 :external-file-upload-enabled="pageProps.externalFileUploadEnabled === true"
                 @close="onInviteModalClosed"
             />
@@ -242,7 +243,7 @@ const currentSideBarTab = ref(0);
  * Die Breite gehört dem Layout, nie der Komponente — Komponenten zentrieren sich
  * nicht selbst und setzen keine eigenen Außenbreiten oder Seitenpaddings.
  */
-const TOOL_COMPONENT_TYPES = ['CalendarTab', 'ShiftTab', 'BudgetTab', 'BulkBody'];
+const TOOL_COMPONENT_TYPES = ['CalendarTab', 'ShiftTab', 'BudgetTab', 'BulkBody', 'TicketingTab'];
 const PROSE_COMPONENT_TYPES = [
     'TextField', 'TextArea', 'Title', 'Checkbox', 'DropDown', 'Link', 'LinkList',
     'ProjectStateComponent', 'ProjectBudgetDeadlineComponent', 'ArtistNameDisplayComponent',

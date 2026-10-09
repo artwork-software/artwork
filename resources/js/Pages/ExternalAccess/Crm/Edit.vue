@@ -1,7 +1,7 @@
 <template>
     <ExternalAppLayout :title="$t('My data')">
-        <div class="px-8 py-10 max-w-3xl">
-            <h1 class="text-2xl font-bold text-text">{{ $t('My data') }}</h1>
+        <div class="px-4 py-6 sm:px-8 sm:py-10 max-w-3xl">
+            <h1 class="text-xl sm:text-2xl font-bold text-text">{{ $t('My data') }}</h1>
 
             <p v-if="pendingSubmission" class="mt-4 rounded-xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning">
                 {{ $t('You have a pending submission from {date}.', { date: formatDate(pendingSubmission.submitted_at) }) }}
@@ -28,23 +28,36 @@
                                 v-if="field.inputType === 'textarea'"
                                 :id="`${section.key}-${field.key}`"
                                 v-model="form.values[section.key][field.key]"
-                                class="mt-1 block w-full rounded-lg border-border text-sm"
+                                class="mt-1 block w-full rounded-lg border border-border bg-white px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
                                 rows="3"
                             />
+                            <!-- Wie intern (CrmPropertyValueInput): gespeichert als '1'/'0' -->
                             <label v-else-if="field.inputType === 'checkbox'" class="mt-1 inline-flex items-center gap-2">
                                 <input
                                     :id="`${section.key}-${field.key}`"
                                     type="checkbox"
-                                    v-model="form.values[section.key][field.key]"
-                                    class="rounded border-border"
+                                    :checked="form.values[section.key][field.key] === '1'"
+                                    class="size-5 rounded border-border sm:size-4"
+                                    @change="form.values[section.key][field.key] = $event.target.checked ? '1' : '0'"
                                 />
                             </label>
+                            <select
+                                v-else-if="field.inputType === 'select'"
+                                :id="`${section.key}-${field.key}`"
+                                v-model="form.values[section.key][field.key]"
+                                class="mt-1 block w-full rounded-lg border border-border bg-white px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
+                            >
+                                <option value="">{{ $t('Please select') }}</option>
+                                <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
+                            </select>
+                            <!-- url als Textfeld wie intern: type="url" lehnt Adressen ohne https:// ab -->
                             <input
                                 v-else
                                 :id="`${section.key}-${field.key}`"
-                                :type="field.inputType"
+                                :type="field.inputType === 'url' ? 'text' : field.inputType"
+                                :inputmode="field.inputType === 'url' ? 'url' : undefined"
                                 v-model="form.values[section.key][field.key]"
-                                class="mt-1 block w-full rounded-lg border-border text-sm"
+                                class="mt-1 block w-full rounded-lg border border-border bg-white px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
                             />
 
                             <p v-if="errors[`values.${section.key}.${field.key}`]" class="mt-1 text-xs text-danger">
@@ -58,7 +71,7 @@
                     <button
                         type="submit"
                         :disabled="form.processing"
-                        class="rounded-lg bg-surface-inverse px-4 py-2 text-sm font-medium text-white disabled:bg-border-strong disabled:cursor-not-allowed"
+                        class="w-full rounded-lg bg-surface-inverse px-4 py-3 text-base font-medium text-white disabled:bg-border-strong disabled:cursor-not-allowed sm:w-auto sm:py-2 sm:text-sm"
                     >
                         {{ $t('Submit changes for review') }}
                     </button>

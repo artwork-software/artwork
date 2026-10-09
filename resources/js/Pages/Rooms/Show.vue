@@ -91,6 +91,21 @@
                                 id="descriptionEdit"
                             />
                         </div>
+                        <div class="rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
+                            <div class="text-sm text-text mb-1">{{ $t('Color') }}</div>
+                            <div class="flex items-center mb-3">
+                                <input v-model="editRoomInheritColor" id="inheritRoomColor" type="checkbox" class="input-checklist"/>
+                                <label for="inheritRoomColor"
+                                       :class="[editRoomInheritColor ? 'text-text font-black' : 'text-text-subtle']"
+                                       class="ml-4 my-auto text-sm cursor-pointer">
+                                    {{ $t('Inherit color from area') }}
+                                </label>
+                            </div>
+                            <div v-if="!editRoomInheritColor">
+                                <ColorPickerComponent @updateColor="(color) => editRoomForm.color = color" :color="editRoomForm.color ?? editRoomAreaColor"/>
+                            </div>
+                            <jet-input-error :message="editRoomForm.errors.color" class="mt-2"/>
+                        </div>
                         <div class="flex items-center">
                             <input v-model="editRoomForm.temporary"
                                    type="checkbox"
@@ -153,6 +168,7 @@
                                 :label="$t('Capacity')"
                                 :min="0"
                                 :step="1"
+                                :error="editRoomForm.errors.capacity"
                             />
                             <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
                         </div>
@@ -176,186 +192,6 @@
             :show="showSuccessModal"
             @closed="closeSuccessModal"
         />
-        <!-- Approve Request Modal -->
-        <ArtworkBaseModal @close="closeApproveRequestModal" v-if="showApproveRequestModal"  :title="$t('Confirm room occupancy')"
-                          :description="$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')">
-                <div class="mx-4">
-
-                    <div class="flex flex-wrap w-full items-center">
-                        <div class="flex w-full items-center flex-wrap">
-
-                            <div class="flex items-center w-full mt-4">
-                                <div class="flex items-center ml-12 w-full">
-                                    <div>
-                                        <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToApprove.eventType?.hex_code }" />
-                                    </div>
-                                    <div
-                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-text">
-                                        {{ requestToApprove.event_type.name }}
-                                        <PropertyIcon name="AdjustmentsIcon" v-if="requestToApprove.occupancy_option"
-                                                         class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToApprove.audience"
-                                             class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToApprove.is_loud"
-                                             class="h-5 w-5 ml-2 my-auto"/>
-                                    </div>
-
-                                    <div class="flex w-full text-sm/5 font-bold text-text-subtle whitespace-nowrap ml-3"
-                                         v-if="requestToApprove.start_time.split(',')[0] === requestToApprove.end_time.split(',')[0]">
-                                        {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }}, {{
-                                            requestToApprove.start_time.split(',')[0]
-                                        }},{{ requestToApprove.start_time.split(',')[1] }}
-                                        - {{ requestToApprove.end_time.split(',')[1] }}
-                                    </div>
-                                    <div class="flex w-full text-sm/5 font-bold text-text-subtle whitespace-nowrap ml-3" v-else>
-                                        {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }},
-                                        {{ requestToApprove.start_time }} -
-                                        {{ getGermanWeekdayAbbreviation(requestToApprove.end_time_weekday) }},
-                                        {{ requestToApprove.end_time }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center w-full ml-2 justify-between">
-                                <div v-if="requestToApprove.project" class="w-80">
-                                    <div class="ml-16  text-sm/5 font-bold text-text-subtle flex items-center">
-                                        {{$t('assigned to')}}
-                                        <div class="text-sm/5 font-semibold text-text ml-2">
-                                            {{ requestToApprove.project.name }}
-                                        </div>
-                                    </div>
-                                    <!--
-                                    <div v-for="projectLeader in requestToApprove.project.project_managers">
-                                        <img :data-tooltip-target="projectLeader.id"
-                                             :src="projectLeader.profile_photo_url"
-                                             :alt="projectLeader.name"
-                                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip :user="projectLeader"/>
-                                    </div>
-                                    -->
-                                </div>
-                                <div class="text-sm/5 font-bold text-text-subtle ml-10" v-else>
-                                    {{$t('Not assigned to a project')}}
-                                </div>
-                                <div class="flex text-sm/5 font-bold text-text-subtle items-center">
-                                    {{$t('requested')}}:
-                                    <UserPopoverTooltip :height="7" :width="7" v-if="requestToApprove.created_by"
-                                                    :user="requestToApprove.created_by" :id="1"/>
-                                    <span class="ml-2 text-sm/5 font-bold text-text-subtle"> {{ requestToApprove.created_at }}</span>
-                                </div>
-                                <div>
-
-                                </div>
-                            </div>
-                            <div class="flex ml-12 mt-2 text-sm/5 font-bold text-text-subtle items-center w-full"
-                                 v-if="requestToApprove.description">
-                                {{ requestToApprove.description }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm "
-                                @click="approveRequest" :disabled="approveRequestForm.processing">
-                            {{$t('Commitments')}}
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeApproveRequestModal"
-                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{$t('No, not really')}}</span>
-                        </div>
-                    </div>
-                </div>
-        </ArtworkBaseModal>
-        <!-- Decline Request Modal -->
-        <ArtworkBaseModal @close="closeDeclineRequestModal" v-if="showDeclineRequestModal"  :title="$t('Cancel room reservation')"
-                          :description="$t('Are you sure you want to cancel the room reservation?')">
-                <div class="mx-4">
-
-                    <div class="flex flex-wrap w-full items-center">
-                        <div class="flex w-full items-center flex-wrap">
-
-                            <div class="flex items-center w-full mt-4">
-                                <div class="flex items-center ml-12 w-full">
-                                    <div>
-                                        <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToDecline.eventType?.hex_code }" />
-                                    </div>
-                                    <div
-                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-text">
-                                        {{ requestToDecline.event_type.name }}
-                                        <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
-                                                         class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
-                                             class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToDecline.is_loud"
-                                             class="h-5 w-5 ml-2 my-auto"/>
-                                    </div>
-
-                                    <div class="flex w-full text-sm/5 font-bold text-text-subtle whitespace-nowrap ml-3"
-                                         v-if="requestToDecline.start_time.split(',')[0] === requestToDecline.end_time.split(',')[0]">
-                                        {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }}, {{
-                                            requestToDecline.start_time.split(',')[0]
-                                        }},{{ requestToDecline.start_time.split(',')[1] }}
-                                        - {{ requestToDecline.end_time.split(',')[1] }}
-                                    </div>
-                                    <div class="flex w-full text-sm/5 font-bold text-text-subtle whitespace-nowrap ml-3" v-else>
-                                        {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }},
-                                        {{ requestToDecline.start_time }} -
-                                        {{ getGermanWeekdayAbbreviation(requestToDecline.end_time_weekday) }},
-                                        {{ requestToDecline.end_time }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center w-full ml-2 justify-between">
-                                <div v-if="requestToDecline.project" class="w-80">
-                                    <div class="ml-16 text-sm/5 font-bold text-text-subtle flex items-center">
-                                        {{$t('assigned to')}}
-                                        <div class="text-sm/5 font-semibold text-text ml-2">
-                                            {{ requestToDecline.project.name }}
-                                        </div>
-                                    </div>
-                                    <!--
-                                    <div v-for="projectLeader in requestToApprove.project.project_managers">
-                                        <img :data-tooltip-target="projectLeader.id"
-                                             :src="projectLeader.profile_photo_url"
-                                             :alt="projectLeader.name"
-                                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip :user="projectLeader"/>
-                                    </div>
-                                    -->
-                                </div>
-                                <div class="text-sm/5 font-bold text-text-subtle ml-10" v-else>
-                                    {{$t('Not assigned to a project')}}
-                                </div>
-                                <div class="flex text-sm/5 font-bold text-text-subtle items-center">
-                                    {{$t('requested')}}:
-                                    <UserPopoverTooltip :height="7" :width="7" v-if="requestToDecline.created_by"
-                                                    :user="requestToDecline.created_by" :id="1"/>
-                                    <span class="ml-2 text-sm/5 font-bold text-text-subtle"> {{ requestToDecline.created_at }}</span>
-                                </div>
-                                <div>
-
-                                </div>
-                            </div>
-                            <div class="flex ml-12 mt-2 text-sm/5 font-bold text-text-subtle items-center w-full"
-                                 v-if="requestToDecline.description">
-                                {{ requestToDecline.description }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <BaseUIButton
-                            @click="declineRequest"
-                            :label="$t('Cancellations')"
-                            is-delete-button
-                            icon="IconProgressX"
-                            :disabled="approveRequestForm.processing"
-                        />
-                        <div class="flex my-auto">
-                            <span @click="closeDeclineRequestModal"
-                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really')}}</span>
-                        </div>
-                    </div>
-                </div>
-        </ArtworkBaseModal>
     </app-layout>
 
     <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
@@ -408,7 +244,6 @@ import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Link, useForm} from "@inertiajs/vue3";
-import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
@@ -429,6 +264,7 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 
 export default {
     mixins: [Permissions],
@@ -447,6 +283,7 @@ export default {
         'adjoiningRooms',
     ],
     components: {
+        ColorPickerComponent,
         PropertyIcon,
         ArtworkBaseModal,
         BaseUIButton,
@@ -489,7 +326,6 @@ export default {
         IconChevronDown,
         IconFileText,
         IconCopy,
-        UserTooltip,
         IconPlus,
         Link,
         Listbox,
@@ -529,10 +365,6 @@ export default {
             roomToSoftDelete: null,
             showSuccessModal: false,
             showSoftDeleteRoomModal: false,
-            requestToDecline: null,
-            requestToApprove: null,
-            showApproveRequestModal: false,
-            showDeclineRequestModal: false,
             showRoomHistory: false,
             successHeading: "",
             successDescription: "",
@@ -543,53 +375,26 @@ export default {
                 room_attributes: this.roomAttributeIds,
                 adjoining_rooms: this.adjoiningRoomIds
             }),
+            // Kategorien, Eigenschaften, Nebenräume und Admins pflegt die Seitenleiste; das Modal schickt
+            // sie bewusst nicht mit, sonst überschrieben veraltete Werte vom Seitenaufruf dortige Änderungen
+            editRoomInheritColor: true,
+            editRoomAreaColor: '#000000',
             editRoomForm: useForm({
                 id: null,
                 name: '',
+                color: null,
                 description: '',
                 temporary: false,
-                room_admins: this.room.room_admins,
-                room_categories: this.roomCategoryIds,
-                room_attributes: this.roomAttributeIds,
-                adjoining_rooms: this.adjoiningRoomIds,
                 start_date: null,
                 start_date_dt_local: null,
                 end_date: null,
                 end_date_dt_local: null,
-                area_id: null,
-                user_id: null,
-                everyone_can_book: this.room.everyone_can_book,
-                relevant_for_disposition: this.room.relevant_for_disposition,
-                capacity: this.room.capacity,
+                everyone_can_book: false,
+                relevant_for_disposition: false,
+                capacity: null,
             }),
             documentForm: useForm({
                 file: null
-            }),
-            approveRequestForm: useForm({
-                name: '',
-                start_time: null,
-                end_time: null,
-                description: '',
-                occupancy_option: false,
-                is_loud: false,
-                audience: false,
-                room_id: null,
-                project_id: null,
-                event_type_id: null,
-                user_id: this.$page.props.auth.user.id,
-            }),
-            declineRequestForm: useForm({
-                name: '',
-                start_time: null,
-                end_time: null,
-                description: '',
-                occupancy_option: false,
-                is_loud: false,
-                audience: false,
-                room_id: null,
-                project_id: null,
-                event_type_id: null,
-                user_id: this.$page.props.auth.user.id,
             }),
         }
     },
@@ -602,56 +407,6 @@ export default {
             }
         },
 
-        openApproveRequestModal(eventRequest) {
-            this.requestToApprove = eventRequest;
-            this.showApproveRequestModal = true;
-        },
-        closeApproveRequestModal() {
-            this.showApproveRequestModal = false;
-            this.requestToApprove = null;
-        },
-        openDeclineRequestModal(eventRequest) {
-            this.requestToDecline = eventRequest;
-            this.showDeclineRequestModal = true;
-        },
-        closeDeclineRequestModal() {
-            this.showDeclineRequestModal = false;
-            this.requestToDecline = null;
-        },
-        approveRequest() {
-            this.approveRequestForm.name = this.requestToApprove.name;
-            this.approveRequestForm.start_time = this.requestToApprove.start_time_dt_local;
-            this.approveRequestForm.end_time = this.requestToApprove.end_time_dt_local;
-            this.approveRequestForm.description = this.requestToApprove.description;
-            this.approveRequestForm.occupancy_option = false;
-            this.approveRequestForm.is_loud = this.requestToApprove.is_loud;
-            this.approveRequestForm.audience = this.requestToApprove.audience;
-            if (this.requestToApprove.room) {
-                this.approveRequestForm.room_id = this.requestToApprove.room.id;
-            }
-            if (this.requestToApprove.project) {
-                this.approveRequestForm.project_id = this.requestToApprove.project.id;
-            }
-            this.approveRequestForm.event_type_id = this.requestToApprove.event_type.id;
-            this.approveRequestForm.patch(route('events.update', {event: this.requestToApprove.id}));
-            this.closeApproveRequestModal();
-        },
-        declineRequest() {
-            this.approveRequestForm.name = this.requestToDecline.name;
-            this.approveRequestForm.start_time = this.requestToDecline.start_time_dt_local;
-            this.approveRequestForm.end_time = this.requestToDecline.end_time_dt_local;
-            this.approveRequestForm.description = this.requestToDecline.description;
-            this.approveRequestForm.occupancy_option = false;
-            this.approveRequestForm.is_loud = this.requestToDecline.is_loud;
-            this.approveRequestForm.audience = this.requestToDecline.audience;
-            this.approveRequestForm.room_id = null;
-            if (this.requestToDecline.project) {
-                this.approveRequestForm.project_id = this.requestToDecline.project.id;
-            }
-            this.approveRequestForm.event_type_id = this.requestToDecline.event_type.id;
-            this.approveRequestForm.patch(route('events.update', {event: this.requestToDecline.id}));
-            this.closeDeclineRequestModal();
-        },
         selectNewFiles() {
             this.$refs.room_files.click();
         },
@@ -732,27 +487,28 @@ export default {
             this.$inertia.post(`/rooms/${room.id}/duplicate`);
         },
         openEditRoomModal(room) {
+            // bei jedem Öffnen aus dem aktuellen Raum befüllen, damit verworfene Eingaben nicht hängen bleiben
             this.editRoomForm.id = room.id;
             this.editRoomForm.name = room.name;
-            this.editRoomForm.description = room.description;
+            this.editRoomForm.description = room.description ?? '';
+            this.editRoomForm.color = room.color ?? null;
+            this.editRoomInheritColor = !room.color;
+            this.editRoomAreaColor = room.area?.color ?? '#000000';
+            this.editRoomForm.temporary = room.temporary === true;
             this.editRoomForm.start_date = room.start_date;
             this.editRoomForm.end_date = room.end_date;
             this.editRoomForm.start_date_dt_local = room.start_date_dt_local;
             this.editRoomForm.end_date_dt_local = room.end_date_dt_local;
-            if (room.temporary === true) {
-                this.editRoomForm.temporary = true;
-            }
+            this.editRoomForm.everyone_can_book = room.everyone_can_book === true;
+            this.editRoomForm.relevant_for_disposition = room.relevant_for_disposition === true;
+            this.editRoomForm.capacity = room.capacity ?? null;
+            this.editRoomForm.clearErrors();
             this.showEditRoomModal = true;
         },
         closeEditRoomModal() {
             this.showEditRoomModal = false;
-            this.editRoomForm.id = null;
-            this.editRoomForm.name = null;
-            this.editRoomForm.description = null;
-            this.editRoomForm.start_date = null;
-            this.editRoomForm.end_date = null;
-            this.editRoomForm.start_date_dt_local = null;
-            this.editRoomForm.end_date_dt_local = null;
+            this.editRoomForm.reset();
+            this.editRoomForm.clearErrors();
         },
         openSoftDeleteRoomModal(room) {
             this.roomToSoftDelete = room;
@@ -771,8 +527,19 @@ export default {
             setTimeout(() => this.closeSuccessModal(), 2000);
         },
         editRoom() {
-            this.editRoomForm.start_date = this.editRoomForm.start_date_dt_local;
-            this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
+            // Zeitraum nur für temporäre Räume mitschicken
+            this.editRoomForm.start_date = this.editRoomForm.temporary ? (this.editRoomForm.start_date_dt_local || null) : null;
+            this.editRoomForm.end_date = this.editRoomForm.temporary ? (this.editRoomForm.end_date_dt_local || null) : null;
+            if (this.editRoomForm.capacity === '') {
+                this.editRoomForm.capacity = null;
+            }
+            if (this.editRoomInheritColor) {
+                // null = Farbe des Areals erben
+                this.editRoomForm.color = null;
+            } else if (!this.editRoomForm.color) {
+                // Erben abgewählt, aber keine Farbe gewählt → aktuelle Areal-Farbe übernehmen
+                this.editRoomForm.color = this.editRoomAreaColor;
+            }
             // erst nach Erfolg schließen: bei Validierungsfehlern (z. B. temporär ohne Enddatum)
             // gingen sonst alle Änderungen still verloren
             this.editRoomForm.patch(route('rooms.update', {room: this.editRoomForm.id}), {

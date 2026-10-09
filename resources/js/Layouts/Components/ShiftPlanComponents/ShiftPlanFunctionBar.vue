@@ -343,6 +343,7 @@ import {
     MenuButton,
     MenuItems,
 } from "@headlessui/vue";
+import { toYmd } from "@/Helper/IsoWeek.js";
 
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
@@ -650,8 +651,8 @@ const jumpToCurrentWeek = () => {
     currentWeekEnd.setDate(today.getDate() + daysToSunday);
 
     router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-        start_date: currentWeekStart.toISOString().slice(0, 10),
-        end_date: currentWeekEnd.toISOString().slice(0, 10),
+        start_date: toYmd(currentWeekStart),
+        end_date: toYmd(currentWeekEnd),
         isDailyView: props.isDailyView,
     }, {
         preserveScroll: true,
@@ -670,8 +671,8 @@ const jumpToCurrentMonth = () => {
         // Update dates after mode change
         setTimeout(() => {
             router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-                start_date: monthStart.toISOString().slice(0, 10),
-                end_date: monthEnd.toISOString().slice(0, 10),
+                start_date: toYmd(monthStart),
+                end_date: toYmd(monthEnd),
                 isDailyView: false,
             }, {
                 preserveScroll: true,
@@ -681,8 +682,8 @@ const jumpToCurrentMonth = () => {
     } else {
         // If already in normal mode, just update the dates
         router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-            start_date: monthStart.toISOString().slice(0, 10),
-            end_date: monthEnd.toISOString().slice(0, 10),
+            start_date: toYmd(monthStart),
+            end_date: toYmd(monthEnd),
             isDailyView: props.isDailyView,
         }, {
             preserveScroll: true,

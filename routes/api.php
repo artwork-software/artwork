@@ -21,11 +21,6 @@ use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiControlle
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-
 // get all timeline presets with times count
 // Die Liste dient dem Import in den Ablaufplan eines Termins: gleiche Schranke wie der Import selbst.
 Route::middleware('auth:sanctum')->get('/timeline-presets', function (Request $request) {

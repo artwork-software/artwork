@@ -92,7 +92,8 @@ class ExportPDFController extends Controller
             $user->getAttribute('calendar_settings')
         );
         $userCalendarSettings = $displaySettings->settings();
-        $filterData   = $request->input('filter', []);
+        // explizites null (erlaubt laut Validierung) wie „kein Filter“ behandeln
+        $filterData   = $request->input('filter') ?? [];
 
         $userCalendarFilter = new UserFilter($filterData);
         $userCalendarFilter->exists = false;
@@ -718,12 +719,6 @@ class ExportPDFController extends Controller
 
 
     /**
-     * `displaySettings` aus dem Request; alte Payloads (colorSource/includeDayRemarks)
-     * werden auf die entsprechenden Flags gemappt, damit noch offene Tabs weiter funktionieren.
-     *
-     * @return array<string, bool>|null
-     */
-    /**
      * Gemeinsame Eingaben der Kalender-PDF-Exporte. Fehlende/ungültige Werte führten vorher
      * zu 500 (TypeError bei fehlendem Filter, unbekanntes Projekt, unparsbares Datum).
      *
@@ -737,6 +732,12 @@ class ExportPDFController extends Controller
         ], $additionalRules));
     }
 
+    /**
+     * `displaySettings` aus dem Request; alte Payloads (colorSource/includeDayRemarks)
+     * werden auf die entsprechenden Flags gemappt, damit noch offene Tabs weiter funktionieren.
+     *
+     * @return array<string, bool>|null
+     */
     private function resolveDisplaySettingsInput(Request $request): ?array
     {
         $input = $request->input('displaySettings');
@@ -794,7 +795,7 @@ class ExportPDFController extends Controller
             $user->getAttribute('calendar_settings')
         );
         $userCalendarSettings = $displaySettings->settings();
-        $filterData = $request->input('filter', []);
+        $filterData = $request->input('filter') ?? [];
         $userCalendarFilter = new UserFilter($filterData);
         $userCalendarFilter->exists = false;
 

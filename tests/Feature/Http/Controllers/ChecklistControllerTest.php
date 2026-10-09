@@ -5,6 +5,7 @@ namespace Tests\Feature\Http\Controllers;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
@@ -75,41 +76,46 @@ final class ChecklistControllerTest extends FeatureTestCase
         $this->assertDatabaseHas('tasks', ['name' => 'Task A']);
     }
 
+    /**
+     * Die Seiten Checklists/Show und Checklists/Edit gibt es nicht mehr; die GET-Routen lieferten die
+     * Liste trotzdem als Inertia-JSON aus und sind deshalb entfernt.
+     */
     #[Test]
     public function guest_cannot_view_checklist(): void
     {
-        $checklist = Checklist::factory()->create();
+        $checklist = Checklist::factory()->create(['name' => 'Guest probe']);
 
-        $this->get('/checklists/' . $checklist->id)
-            ->assertRedirect(route('login'));
+        $this->get('/checklists/' . $checklist->id)->assertMethodNotAllowed();
     }
 
     #[Test]
-    public function admin_can_view_checklist(): void
+    public function checklist_show_route_no_longer_exists(): void
     {
         $this->actingAsAdmin();
         $checklist = Checklist::factory()->create();
 
-        $this->get('/checklists/' . $checklist->id)->assertOk();
+        $this->get('/checklists/' . $checklist->id)->assertMethodNotAllowed();
     }
 
     #[Test]
-    public function admin_with_checklist_settings_can_view_checklist(): void
+    public function checklist_show_route_does_not_leak_data_via_inertia(): void
     {
-        // ChecklistPolicy::view starts with can(CHECKLIST_SETTINGS_ADMIN) — admin satisfies it.
         $this->actingAsAdmin();
-        $checklist = Checklist::factory()->create();
+        $checklist = Checklist::factory()->create(['name' => 'Inertia probe']);
 
-        $this->get('/checklists/' . $checklist->id)->assertOk();
+        // kein Inertia-Payload mehr (die Debug-Fehlerseite listet in Tests die SQL-Werte, daher Status statt Inhalt)
+        $response = $this->get('/checklists/' . $checklist->id, ['X-Inertia' => 'true']);
+        $response->assertMethodNotAllowed();
+        $this->assertNull($response->headers->get('X-Inertia'));
     }
 
     #[Test]
-    public function admin_can_view_checklist_edit_page(): void
+    public function checklist_edit_route_no_longer_exists(): void
     {
         $this->actingAsAdmin();
         $checklist = Checklist::factory()->create();
 
-        $this->get('/checklists/' . $checklist->id . '/edit')->assertOk();
+        $this->get('/checklists/' . $checklist->id . '/edit')->assertNotFound();
     }
 
     #[Test]
@@ -245,5 +251,59 @@ final class ChecklistControllerTest extends FeatureTestCase
         foreach ($checklist->fresh()->tasks as $task) {
             $this->assertTrue((bool) $task->done);
         }
+    }
+
+    #[Test]
+    public function checklist_cannot_be_created_in_a_hidden_tab(): void
+    {
+        $project = Project::factory()->create();
+        $member = User::factory()->create();
+        $project->users()->attach($member->id, ['can_write' => true]);
+        $hiddenTab = ProjectTab::factory()->create(['visible_for_all' => false]);
+        $visibleTab = ProjectTab::factory()->create(['visible_for_all' => true]);
+        $this->actingAs($member);
+
+        $this->post(route('checklists.store'), [
+            'name' => 'Hidden list',
+            'project_id' => $project->id,
+            'tab_id' => $hiddenTab->id,
+            'private' => false,
+        ])->assertSessionHasErrors('tab_id');
+        $this->assertDatabaseMissing('checklists', ['name' => 'Hidden list']);
+
+        $this->post(route('checklists.store'), [
+            'name' => 'Visible list',
+            'project_id' => $project->id,
+            'tab_id' => $visibleTab->id,
+            'private' => false,
+        ])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('checklists', ['name' => 'Visible list', 'tab_id' => $visibleTab->id]);
+    }
+
+    #[Test]
+    public function checklist_cannot_be_moved_into_a_hidden_tab(): void
+    {
+        $member = User::factory()->create();
+        $hiddenTab = ProjectTab::factory()->create(['visible_for_all' => false]);
+        $visibleTab = ProjectTab::factory()->create(['visible_for_all' => true]);
+        $checklist = Checklist::factory()->create(['user_id' => $member->id, 'tab_id' => $visibleTab->id]);
+        $ownHiddenChecklist = Checklist::factory()->create(['user_id' => $member->id, 'tab_id' => $hiddenTab->id]);
+        $this->actingAs($member);
+
+        $this->patch(route('checklists.update', $checklist), ['tab_id' => $hiddenTab->id])
+            ->assertSessionHasErrors('tab_id');
+        $this->assertSame($visibleTab->id, (int) $checklist->fresh()->tab_id);
+
+        // Eigene Liste in einem versteckten Tab bleibt bearbeitbar, solange der Tab gleich bleibt
+        $this->patch(route('checklists.update', $ownHiddenChecklist), [
+            'name' => 'Renamed',
+            'tab_id' => $hiddenTab->id,
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('Renamed', $ownHiddenChecklist->fresh()->name);
+
+        $this->actingAsAdmin();
+        $this->patch(route('checklists.update', $checklist), ['tab_id' => $hiddenTab->id])
+            ->assertSessionHasNoErrors();
+        $this->assertSame($hiddenTab->id, (int) $checklist->fresh()->tab_id);
     }
 }

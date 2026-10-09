@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Ticketing\Exceptions\TicketingLockedException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -29,6 +30,13 @@ class Handler extends ExceptionHandler
 
     public function register(): void
     {
+        // Eine Sperre aus dem Ticketing ist eine Nachricht an die Person, kein Fehler: Toast oder 422.
+        $this->renderable(function (TicketingLockedException $e, $request) {
+            return $request->expectsJson()
+                ? response()->json(['message' => $e->getMessage()], 422)
+                : back()->with('error', $e->getMessage());
+        });
+
         $this->reportable(function (Throwable $e): void {
             if (app()->bound('sentry')) {
                 if (app()->environment('local') || app()->runningUnitTests()) {

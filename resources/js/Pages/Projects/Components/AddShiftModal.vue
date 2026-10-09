@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, toRef, nextTick, defineAsyncComponent } from 'vue'
+import { parseYmd, toYmd } from '@/Helper/IsoWeek.js'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
+import { failedRequestMessage } from '@/Helper/appToast.js'
 import { useI18n } from 'vue-i18n'
 import { useAutoBreak } from "@/Composeables/useAutoBreak";
 import LegalBreakHint from "@/Components/Inputs/LegalBreakHint.vue";
@@ -107,7 +109,8 @@ function applyServerErrors(errors: any) {
     const map: Record<string, string> = {}
     const source = errors?.response?.data?.errors
         ?? (errors?.response?.data?.message ? { general: errors.response.data.message } : null)
-        ?? (errors && typeof errors === 'object' && !errors.response ? errors : null)
+        // Inertia-onError liefert eine Feld-Map; ein Axios-Fehler ohne Antwort (Netzwerk) nicht
+        ?? (errors && typeof errors === 'object' && !errors.response && !errors.isAxiosError ? errors : null)
     if (source && typeof source === 'object') {
         for (const [field, value] of Object.entries(source)) {
             const text = flattenErrorMessage(value)
@@ -115,7 +118,8 @@ function applyServerErrors(errors: any) {
         }
     }
     if (Object.keys(map).length === 0) {
-        map.general = $t('Saving failed. Please check your entries and try again.')
+        // Netzwerk/403/404/5xx: konkreten Grund nennen statt „Eingaben prüfen“
+        map.general = failedRequestMessage(errors, 'Saving failed. Please check your entries and try again.')
     }
     serverErrors.value = map
 }
@@ -396,7 +400,7 @@ watch(selectedProject, async (p) => {
             const { data } = await axios.post(route('project.scoutSearch'), {
                 project_search: p.name,
                 wantsJson: true,
-            })
+            }, { skipErrorToast: true }) // Lesezugriff im Hintergrund
             const match = (Array.isArray(data) ? data : []).find((r: any) => r.id === p.id)
             if (match?.first_and_last_event_date) {
                 selectedProject.value = { ...p, first_and_last_event_date: match.first_and_last_event_date }
@@ -646,9 +650,9 @@ watch([() => shiftForm.start, () => shiftForm.end], ([startTime, endTime]) => {
         shiftForm.end_date = shiftForm.start_date
     } else {
         // Endzeit < Startzeit bedeutet Schicht geht über Mitternacht
-        const startDate = new Date(shiftForm.start_date)
+        const startDate = parseYmd(shiftForm.start_date) ?? new Date(shiftForm.start_date)
         startDate.setDate(startDate.getDate() + 1)
-        shiftForm.end_date = startDate.toISOString().slice(0, 10)
+        shiftForm.end_date = toYmd(startDate)
     }
 })
 
@@ -738,7 +742,7 @@ const saveDisabledReason = computed(() =>
 function deleteShift() {
     serverErrors.value = {}
     axiosProcessing.value = true
-    axios.delete(route('shifts.destroy', { shift: props.shift.id }))
+    axios.delete(route('shifts.destroy', { shift: props.shift.id }), { skipErrorToast: true }) // Fehler steht im Modal
         // Antwort { removed, shift, roomId } → Ansicht nimmt die Schicht sofort heraus
         .then(({ data }) => closeModal(true, data?.shift ? data : null))
         .catch((e) => applyServerErrors(e))
@@ -1068,7 +1072,7 @@ function saveShift() {
         axios.patch(route('event.shift.update', props.shift.id), {
             ...withoutUnchangedEmptyQualifications(shiftForm.data()),
             updateOrCreateInShiftPlan: true,
-        })
+        }, { skipErrorToast: true }) // Fehler steht im Modal
             .then(({ data }) => {
                 shiftForm.reset()
                 // Gespeicherter Stand ({ shift, roomId, lookups }) → Ansicht aktualisiert sofort,
@@ -1819,10 +1823,10 @@ const lockOrUnlockShift = (commit = false) => {
                             rows="2"
                             name="comment"
                             id="comment"
-                            maxlength="250"
+                            maxlength="10000"
                         />
                         <div class="text-xs text-end mt-1 text-text-muted">
-                            {{ shiftForm.description?.length ?? 0 }} / 250
+                            {{ shiftForm.description?.length ?? 0 }} / 10000
                         </div>
                     </div>
                 </div>

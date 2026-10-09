@@ -155,21 +155,20 @@ class SpecialDayService
             return $day->betweenIncluded($start, $end);
         }
 
-        // Jährlich: Monat/Tag auf das Jahr des geprüften Tags legen, Jahreswechsel (31.12.–02.01.) beachten.
-        $thisYearStart = Carbon::create($day->year, $start->month, $start->day)->startOfDay();
-        $thisYearEnd = Carbon::create($day->year, $end->month, $end->day)->startOfDay();
-
-        if ($thisYearEnd->lt($thisYearStart)) {
-            // Zeitraum läuft über den Jahreswechsel: entweder Ende des Vorjahresblocks ...
-            $previousYearStart = $thisYearStart->copy()->subYear();
-            if ($day->betweenIncluded($previousYearStart, $thisYearEnd)) {
+        // Jährlich: Block mit gleicher Länge in das Jahr des geprüften Tags bzw. – für Blöcke über den
+        // Jahreswechsel (31.12.–02.01.) – in das Vorjahr legen.
+        $spanDays = (int) $start->diffInDays($end);
+        foreach ([$day->year, $day->year - 1] as $candidateYear) {
+            $candidateStart = Holiday::yearlyStartIn($start, $candidateYear);
+            if (
+                $candidateStart !== null &&
+                $day->betweenIncluded($candidateStart, $candidateStart->copy()->addDays($spanDays))
+            ) {
                 return true;
             }
-            // ... oder Anfang des Blocks in diesem Jahr.
-            $thisYearEnd->addYear();
         }
 
-        return $day->betweenIncluded($thisYearStart, $thisYearEnd);
+        return false;
     }
 
     /**

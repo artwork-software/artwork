@@ -40,9 +40,11 @@
 </template>
 
 <script>
+import { IconCircleX, IconGeometry, IconX } from "@tabler/icons-vue";
 
 export default {
     name: "SideNotification",
+    components: { IconCircleX, IconGeometry, IconX },
     emits: ['close'],
     data() {
         return {

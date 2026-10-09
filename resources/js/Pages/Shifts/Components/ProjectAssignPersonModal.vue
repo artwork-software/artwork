@@ -206,6 +206,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import axios from 'axios';
+import { failedRequestMessage } from '@/Helper/appToast.js';
 import { usePage } from '@inertiajs/vue3';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
@@ -376,7 +377,7 @@ async function submit(forceRequests = null) {
             const { data } = await axios.post(route('project-day-assignments.store'), {
                 ...request.payload,
                 force: isForcePass,
-            });
+            }, { skipErrorToast: true }); // Fehler stehen pro Person im Modal
             created += data.created ?? 0;
             skipped += data.skipped ?? 0;
         } catch (error) {
@@ -385,13 +386,10 @@ async function submit(forceRequests = null) {
                 continue;
             }
 
-            const errors = error?.response?.data?.errors;
             failed.push({
                 key: workerKey(request.worker),
                 name: request.worker.name,
-                message: errors
-                    ? Object.values(errors).flat()[0]
-                    : (error?.response?.data?.message ?? String(error)),
+                message: failedRequestMessage(error),
             });
         }
     }

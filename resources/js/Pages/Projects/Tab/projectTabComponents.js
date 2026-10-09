@@ -12,6 +12,7 @@ import ProjectStateComponent from '@/Pages/Projects/Components/ProjectStateCompo
 import CalendarTab from '@/Pages/Projects/Tab/Components/CalendarTab.vue'
 import ShiftTab from '@/Pages/Projects/Tab/Components/ShiftTab.vue'
 import BudgetTab from '@/Pages/Projects/Tab/Components/BudgetTab.vue'
+import TicketingTab from '@/Pages/Projects/Tab/Components/TicketingTab.vue'
 import ProjectBudgetDeadlineComponent from '@/Pages/Projects/Components/ProjectBudgetDeadlineComponent.vue'
 import SeparatorComponent from '@/Pages/Projects/Tab/Components/SeparatorComponent.vue'
 import ProjectGroupComponent from '@/Pages/Projects/Components/ProjectGroupComponent.vue'
@@ -54,6 +55,7 @@ export const projectTabComponents = {
     CalendarTab,
     ShiftTab,
     BudgetTab,
+    TicketingTab,
     ProjectBudgetDeadlineComponent,
     SeparatorComponent,
     ProjectGroupComponent,

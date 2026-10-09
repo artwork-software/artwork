@@ -20,7 +20,8 @@ return new class extends Migration
                  'last_name', JSON_EXTRACT(data, '$.created_by.last_name'),
                  'profile_photo_url', JSON_EXTRACT(data, '$.created_by.profile_photo_url')
              ))
-             WHERE JSON_TYPE(JSON_EXTRACT(data, '$.created_by')) = 'OBJECT'
+             WHERE JSON_VALID(data)
+               AND JSON_TYPE(JSON_EXTRACT(data, '$.created_by')) = 'OBJECT'
                AND JSON_LENGTH(JSON_EXTRACT(data, '$.created_by')) > 4"
         );
     }

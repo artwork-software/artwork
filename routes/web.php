@@ -121,6 +121,13 @@ use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsFormatsController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingCustomerController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingProjectController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingTeamController;
+use Artwork\Modules\Ticketing\Services\TicketingBillingService;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use Artwork\Modules\Mail\Http\Controllers\MailSettingsController;
@@ -395,6 +402,36 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
             'getUserWeekSchedule',
         ])->name('compensation-day-offs.week-schedule');
+    });
+
+    // Artwork-Tickets: eigene Einstellungskategorie mit eigener Berechtigung, ein Tab je Bereich
+    Route::group([
+        'prefix' => 'settings/tickets',
+        'middleware' => 'can:' . PermissionEnum::TICKETING_MANAGE->value,
+    ], function (): void {
+        Route::get('/', [TicketingConnectionController::class, 'index'])->name('settings.tickets');
+        Route::get('/availability', [TicketingConnectionController::class, 'checkAvailability'])
+            ->name('settings.tickets.availability');
+        Route::post('/connection', [TicketingConnectionController::class, 'store'])->name('settings.tickets.connect');
+        Route::delete('/connection', [TicketingConnectionController::class, 'destroy'])->name('settings.tickets.disconnect');
+        Route::get('/billing', [TicketingBillingController::class, 'index'])->name('settings.tickets.billing');
+        // POST: mit PDFs kommt das Formular als multipart, und das liest PHP nur bei POST.
+        Route::post('/billing', [TicketingBillingController::class, 'update'])->name('settings.tickets.billing.save');
+        Route::delete('/billing/documents/{document}', [TicketingBillingController::class, 'removeLegalDocument'])
+            ->whereIn('document', TicketingBillingService::LEGAL_DOCUMENTS)
+            ->name('settings.tickets.billing.documents.remove');
+        Route::post('/billing/stripe-session', [TicketingBillingController::class, 'stripeSession'])
+            ->name('settings.tickets.billing.stripe-session');
+        Route::post('/billing/platform-terms', [TicketingBillingController::class, 'acceptPlatformTerms'])
+            ->name('settings.tickets.billing.platform-terms');
+        Route::get('/rooms', [TicketingConnectionController::class, 'rooms'])->name('settings.tickets.rooms');
+        Route::post('/rooms', [TicketingConnectionController::class, 'syncRooms'])->name('settings.tickets.rooms.sync');
+        Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');
+        Route::post('/reductions', [TicketingConnectionController::class, 'syncReductions'])
+            ->name('settings.tickets.reductions.sync');
+        Route::get('/team', [TicketingTeamController::class, 'index'])->name('settings.tickets.team');
+        Route::post('/team/invitations', [TicketingTeamController::class, 'invite'])
+            ->name('settings.tickets.team.invite');
     });
 
     // TOOL SETTING ROUTE
@@ -875,7 +912,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/components/{componentInTab}/documents', [ProjectDocumentsController::class, 'index'])
             ->name('projects.tabs.documents');
         Route::get('/all-documents', [ProjectDocumentsController::class, 'all'])
-            ->name('projects.tabs.all-documents');
+            ->name('projects.tabs.all-documents')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS));
         Route::get('/status', [ProjectStatusController::class, 'show'])
             ->name('projects.tabs.status')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::PROJECT_STATUS));
@@ -891,7 +929,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/components/{componentInTab}/checklists', [ProjectChecklistController::class, 'index'])
             ->name('projects.tabs.checklists');
         Route::get('/all-checklists', [ProjectChecklistController::class, 'all'])
-            ->name('projects.tabs.all-checklists');
+            ->name('projects.tabs.all-checklists')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::CHECKLIST_ALL));
         Route::get('/material-issues', [ProjectMaterialIssueController::class, 'show'])
             ->name('projects.tabs.material-issues')
             ->middleware(EnsureUserCanSeeProjectComponent::for(
@@ -900,10 +939,26 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/artist-residencies', [ProjectArtistResidenciesController::class, 'show'])
             ->name('projects.tabs.artist-residencies')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::ARTIST_RESIDENCIES));
+        Route::get('/ticketing', [TicketingProjectController::class, 'show'])
+            ->name('projects.tabs.ticketing')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::TICKETING));
+        Route::post('/ticketing/production', [TicketingProjectController::class, 'saveProduction'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.production');
+        Route::put('/ticketing/events', [TicketingProjectController::class, 'saveDraft'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.draft');
+        Route::post('/ticketing/release', [TicketingProjectController::class, 'release'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.release');
+        Route::delete('/ticketing/release', [TicketingProjectController::class, 'withdraw'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.withdraw');
         Route::get('/components/{componentInTab}/comments', [ProjectCommentController::class, 'index'])
             ->name('projects.tabs.comments');
         Route::get('/all-comments', [ProjectCommentController::class, 'all'])
-            ->name('projects.tabs.all-comments');
+            ->name('projects.tabs.all-comments')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::COMMENT_ALL_TAB));
         Route::get('/budget-informations', [ProjectBudgetInformationController::class, 'show'])
             ->name('projects.tabs.budget-informations')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::BUDGET_INFORMATIONS));
@@ -988,10 +1043,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     //Checklists
     Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');
     Route::post('/checklists', [ChecklistController::class, 'store'])->name('checklists.store');
-    Route::get('/checklists/{checklist}', [ChecklistController::class, 'show']);
     Route::post('/checklists/{checklist}/duplicate', [ChecklistController::class, 'duplicate'])
         ->name('checklists.duplicate');
-    Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);
     Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update'])->name('checklists.update');
     Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy'])->name('checklist.destroy');
 
@@ -1189,6 +1242,13 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::get('/calendar/redirect/day/{day}', [EventController::class, 'redirectToCalendarByDay'])
         ->name('calendar.redirect-by-day');
     Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
+    Route::get('/ticketing/calendar-summary', [TicketingCalendarController::class, 'summary'])
+        ->name('ticketing.calendar-summary');
+    Route::get('/ticketing/open', [TicketingCalendarController::class, 'open'])->name('ticketing.open');
+    Route::get('/ticketing/events/{event}/sales', [TicketingCalendarController::class, 'sales'])
+        ->name('ticketing.sales');
+    Route::get('/ticketing/move-check', [TicketingCalendarController::class, 'moveCheck'])
+        ->name('ticketing.move-check');
     Route::get('/response/all/shift-plan-events', [
         EventController::class,
         'shiftPlanEventAPI',
@@ -2879,6 +2939,10 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::patch('component/{project}/{component}/update', [ProjectComponentValueController::class,
             'update'])
             ->name('project.tab.component.update');
+        // project.tab.component.value — Wert nachladen nach Broadcast (data.updated trägt nur Kennungen)
+        Route::get('component/{project}/{component}/value', [ProjectComponentValueController::class,
+            'value'])
+            ->name('project.tab.component.value');
         Route::group(['prefix' => 'component', 'middleware' => 'can:change project settings'], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])
@@ -3316,6 +3380,10 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             CrmContactController::class,
             'tooltipInfo',
         ])->middleware('can:crm.contacts.lookup,crmContact')->name('crm.contacts.tooltip');
+        Route::get('/contacts/{crmContact}/ticketing', [TicketingCustomerController::class, 'show'])
+            ->middleware('can:can view crm')->name('crm.contacts.ticketing');
+        Route::post('/ticketing-customers/sync', [TicketingCustomerController::class, 'sync'])
+            ->middleware('can:crm manager')->name('crm.ticketing-customers.sync');
         Route::get('/contacts/{crmContact}', [
             CrmController::class,
             'show',
@@ -3954,6 +4022,12 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         '/users/worktimes/store/{user}',
         [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeBookingController::class, 'store']
     )->middleware('can:can manage workers')->name('users.worktimes.store');
+
+    // users.worktimes.rebook – vergangene Tage nach aktueller Rechnung (neu) buchen
+    Route::post(
+        '/users/worktimes/rebook/{user}',
+        [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeBookingController::class, 'rebook']
+    )->middleware('can:can manage workers')->name('users.worktimes.rebook');
 
     // shifts.requestWorkTimeChange
     Route::post(

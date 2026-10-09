@@ -34,8 +34,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property bool $temporary
  * @property bool $everyone_can_book
  * @property bool $fallback_room
- * @property Carbon $start_date
- * @property Carbon $end_date
+ * @property Carbon|null $start_date
+ * @property Carbon|null $end_date
+ * @property int|null $capacity
  * @property int $area_id
  * @property int $user_id
  * @property \Illuminate\Support\Carbon $created_at
@@ -108,6 +109,7 @@ class Room extends Model
         'end_date' => 'datetime',
         'temporary' => 'boolean',
         'relevant_for_disposition' => 'boolean',
+        'capacity' => 'integer',
     ];
 
     /**

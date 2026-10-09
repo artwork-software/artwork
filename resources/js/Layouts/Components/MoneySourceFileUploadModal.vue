@@ -37,7 +37,7 @@
                 <div class="justify-center flex w-full my-6">
                     <FormButton
                         :text="$t('Upload document')"
-                        :disabled="files.length < 1"
+                        :disabled="files.length < 1 || isUploading"
                         @click="storeFiles"
                     />
                 </div>
@@ -49,7 +49,13 @@
 import {IconX} from "@tabler/icons-vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
+import {
+    inertiaUploadErrorMessage,
+    isInvalidResponse,
+    submitInertiaForm,
+    uploadSequentially,
+} from "@/Helper/sequentialUpload.js";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -74,6 +80,7 @@ export default {
             uploadDocumentFeedback: "",
             files: [],
             comment: "",
+            isUploading: false,
             moneySourceFileForm: useForm({
                 file: null,
                 comment: this.comment,
@@ -93,7 +100,14 @@ export default {
         storeFile(file) {
             this.moneySourceFileForm.file = file
             this.moneySourceFileForm.comment = this.comment
-            this.moneySourceFileForm.post(this.route('money_sources_files.store', this.moneySourceId))
+
+            return submitInertiaForm(
+                this.moneySourceFileForm,
+                'post',
+                this.route('money_sources_files.store', this.moneySourceId),
+                { preserveState: true, preserveScroll: true },
+                { router }
+            )
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";
@@ -105,11 +119,34 @@ export default {
             this.files = [];
             this.closeModal()
         },
-        storeFiles() {
-            for (let file of this.files) {
-                this.storeFile(file)
+        /**
+         * Nacheinander hochladen: mehrere .post() derselben useForm brachen sich gegenseitig ab, praktisch kam nur
+         * die letzte Datei an. Fehlgeschlagene Dateien bleiben mit Meldung stehen.
+         */
+        async storeFiles() {
+            // Doppelklick: eine zweite Kette über dieselbe useForm bräche die erste ab
+            if (this.isUploading || this.files.length < 1) {
+                return
             }
-            this.files = []
+            this.isUploading = true
+            this.uploadDocumentFeedback = ''
+            const { failed, skipped } = await uploadSequentially(
+                [...this.files],
+                (file) => this.storeFile(file),
+                { stopOnError: isInvalidResponse }
+            )
+
+            this.isUploading = false
+            this.moneySourceFileForm.file = null
+            this.files = [...failed.map(({ file }) => file), ...skipped]
+            if (failed.length > 0) {
+                const translate = (key, params) => this.$t(key, params)
+                this.uploadDocumentFeedback = failed
+                    .map(({ file, error }) => `${file.name}: ${inertiaUploadErrorMessage(error, translate)}`)
+                    .join(' ')
+                return
+            }
+
             this.comment = null
             this.closeModal()
         }

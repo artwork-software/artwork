@@ -69,6 +69,12 @@ class ExternalAccessService
      */
     public function invite(InviteExternalCommand $command): ExternalAccess
     {
+        // Tab-Freigaben ohne Projekt würden als project_id 0 gespeichert; die Rechteprüfung
+        // (Projekt sehen, Tab sehen, Schreiben nur mit Projekt-Schreibrecht) liegt im Request.
+        if ($command->tabScopes !== [] && $command->sourceReferenceProjectId === null) {
+            throw new \InvalidArgumentException('Tab scopes require a source project.');
+        }
+
         return DB::transaction(function () use ($command): ExternalAccess {
             $contact = $command->crmContactId !== null
                 ? CrmContact::query()->findOrFail($command->crmContactId)

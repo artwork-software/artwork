@@ -421,6 +421,7 @@
 
 <script>
 import {IconCheck, IconChevronDown, IconChevronUp, IconCircleX, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
+import {parseYmd, toYmd} from "@/Helper/IsoWeek.js";
 
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {
@@ -704,7 +705,9 @@ export default {
                         end: endFull,
                         currentEventId: this.event.id
                     }
-                }).then(response => this.roomCollisionArray = response.data);
+                }, { skipErrorToast: true }) // Lesezugriff im Hintergrund
+                    .then(response => this.roomCollisionArray = response.data)
+                    .catch(() => { /* Kollisionsanzeige ist best effort */ });
             }
         },
         updateTimes() {
@@ -720,10 +723,13 @@ export default {
                             let startHours = this.startTime.slice(0, 2);
                             if (startHours === '23') {
                                 this.endTime = '00:' + this.startTime.slice(3, 5);
-                                let date = new Date();
-                                this.endDate = new Date(
-                                    date.setDate(new Date(this.endDate).getDate() + 1)
-                                ).toISOString().slice(0, 10);
+                                // Ende = Folgetag des Enddatums (vorher: Tag des Monats auf das
+                                // heutige Datum gesetzt und per UTC formatiert → falscher Monat/Vortag)
+                                const nextDay = parseYmd(this.endDate);
+                                if (nextDay) {
+                                    nextDay.setDate(nextDay.getDate() + 1);
+                                    this.endDate = toYmd(nextDay);
+                                }
                             } else {
                                 this.endTime = this.getNextHourString(this.startTime)
                             }
@@ -832,19 +838,6 @@ export default {
         chooseProject(project) {
             this.selectedProject = project;
             this.projectName = '';
-        },
-        toggleAccept(type) {
-            if(type === 'option'){
-                if (this.optionAccept) {
-                    this.accept = false;
-                    this.optionString = options[0].name;
-                }
-            }else{
-                if(this.accept){
-                    this.optionAccept = false;
-                    this.optionString = null;
-                }
-            }
         },
         eventData() {
             return {

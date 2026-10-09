@@ -9,6 +9,7 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Passport\AccessToken;
 
 class RouteServiceProvider extends ServiceProvider
@@ -48,6 +49,11 @@ class RouteServiceProvider extends ServiceProvider
             // External-access routes carry their own middleware groups (declared per-group in the files).
             Route::group([], base_path('routes/external-guest.php'));
             Route::group([], base_path('routes/external.php'));
+
+            Route::prefix('api/app/v1')
+                ->middleware('api.app')
+                ->name('app.v1.')
+                ->group(base_path('routes/app-api.php'));
         });
 
         Route::bind('projects', function ($value) {
@@ -61,7 +67,19 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        RateLimiter::for('machine-api', function (Request $request) {
+        // Login der App: nur drosseln, keine Sperren oder Alarme — die App probiert beim Login jede
+        // bekannte Instanz durch, Fehlversuche gültiger Nutzer sind also normaler Verkehr.
+        RateLimiter::for('app-login', function (Request $request) {
+            $email = Str::lower((string) $request->input('email'));
+            $ip = (string) $request->ip();
+
+            return [
+                Limit::perMinute(10)->by('app-login:ip:' . $ip),
+                Limit::perMinute(5)->by('app-login:identity:' . hash('sha256', $email . '|' . $ip)),
+            ];
+        });
+
+        RateLimiter::for('api-token', function (Request $request) {
             $token = $request->user()?->token();
             $key = $token instanceof AccessToken
                 ? $token->oauth_access_token_id

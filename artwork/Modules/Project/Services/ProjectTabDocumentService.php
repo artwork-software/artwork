@@ -2,10 +2,14 @@
 
 namespace Artwork\Modules\Project\Services;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 class ProjectTabDocumentService
@@ -49,7 +53,8 @@ class ProjectTabDocumentService
     }
 
     /**
-     * Alle Dateien des Projekts ohne Tab oder aus Tabs, die die Person sehen darf.
+     * Alle Dateien des Projekts ohne Tab oder aus Tabs, die die Person sehen darf. Budget-Dokumente nur,
+     * wenn die Person sie auch in den Budget-Informationen sähe (siehe canSeeBudgetDocument()).
      */
     public function loadVisibleDocuments(Project $project, ?User $user): Collection
     {
@@ -60,7 +65,45 @@ class ProjectTabDocumentService
         $query = $project->project_files();
         $this->projectComponentVisibilityService->constrainToVisibleTabs($query, $user);
 
+        if (!$this->isAdmin($user)) {
+            $canSeeBudgetSection = $this->canSeeBudgetDocumentsSection($project, $user);
+            $query->where(function (Builder $query) use ($user, $canSeeBudgetSection): void {
+                $query->where('is_budget_document', false);
+                if ($canSeeBudgetSection) {
+                    $query->orWhereHas('accessingUsers', fn (Builder $query) => $query->whereKey($user->id));
+                }
+            });
+        }
+
         return $query->get();
+    }
+
+    /**
+     * Spiegel von ProjectTabBudgetInformationService::visibleProjectFiles(): Budget-Dokumente sehen Admins
+     * sowie freigegebene Personen, die den Dokumente-Bereich der Budget-Informationen sehen (globale
+     * Budget-Verwaltung, Budgetzugriff im Projekt oder Projektleitung). Andere Dateien sind nicht betroffen.
+     */
+    public function canSeeBudgetDocument(User $user, ProjectFile $projectFile): bool
+    {
+        if (!$projectFile->is_budget_document || $this->isAdmin($user)) {
+            return true;
+        }
+
+        return $projectFile->project !== null &&
+            $projectFile->accessingUsers->contains('id', $user->id) &&
+            $this->canSeeBudgetDocumentsSection($projectFile->project, $user);
+    }
+
+    private function canSeeBudgetDocumentsSection(Project $project, User $user): bool
+    {
+        return $user->can(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value) ||
+            $project->access_budget->contains('id', $user->id) ||
+            $project->managerUsers->contains('id', $user->id);
+    }
+
+    private function isAdmin(User $user): bool
+    {
+        return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
     }
 
     private function loadDocuments(Project $project, array $scope): Collection

@@ -172,7 +172,21 @@
 </template>
 
 <script>
-import {IconCalendar, IconChevronDown, IconChevronLeft, IconChevronRight, IconCirclePlus, IconZoomIn, IconZoomOut} from "@tabler/icons-vue";
+import {
+    IconArrowsDiagonal,
+    IconCalendar,
+    IconCalendarStar,
+    IconChevronDown,
+    IconChevronLeft,
+    IconChevronRight,
+    IconCirclePlus,
+    IconFileExport,
+    IconList,
+    IconPencil,
+    IconSettings,
+    IconZoomIn,
+    IconZoomOut,
+} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {Menu, MenuButton, MenuItems, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
@@ -217,7 +231,13 @@ export default {
         Switch,
         DatePickerComponent,
         IconZoomIn,
-        IconZoomOut
+        IconZoomOut,
+        IconArrowsDiagonal,
+        IconCalendarStar,
+        IconFileExport,
+        IconList,
+        IconPencil,
+        IconSettings,
     },
     props: [
         'atAGlance',

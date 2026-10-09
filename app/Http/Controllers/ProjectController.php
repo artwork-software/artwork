@@ -54,6 +54,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Contract\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
@@ -94,6 +95,7 @@ use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Events\UpdateBudget;
 use Artwork\Modules\Project\Jobs\ForceDeleteProjectJob;
 use Artwork\Modules\Project\Jobs\SoftDeleteProjectJob;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Exports\DetailedBudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
@@ -114,6 +116,7 @@ use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\Project\Services\ProjectStateService;
+use Artwork\Modules\Project\Services\ProjectTeamService;
 use Artwork\Modules\Project\Models\ProjectManagementBuilder;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
@@ -122,7 +125,6 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ProjectTabService;
-use Artwork\Modules\Project\Events\ProjectTeamUpdated;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
@@ -303,8 +305,28 @@ class ProjectController extends Controller
             $request->string('query')->toString()
         );
 
-        $pinnedProjectsComponents = $this->mapProjectsToComponents($pinnedProjects, $components, $componentData);
-        $projectComponents = $this->mapProjectsToComponents($projects, $components, $componentData);
+        // Sichtbarkeit hängt an Komponente und Tab, nicht am Projekt: einmal je Person bestimmen
+        $visibleComponentIds = app(ProjectComponentVisibilityService::class)
+            ->visibleInProjectComponentIds($user, $componentData)
+            ->flip();
+        // Gleiche Regel wie der Budget-Informationen-Endpunkt (unabhängig von der Übersichts-Konfiguration)
+        $canSeeBudgetInformations = app(ProjectComponentVisibilityService::class)
+            ->canSeeComponentTypeInProject($user, [ProjectTabComponentEnum::BUDGET_INFORMATIONS->value]);
+
+        $pinnedProjectsComponents = $this->mapProjectsToComponents(
+            $pinnedProjects,
+            $components,
+            $componentData,
+            $visibleComponentIds,
+            $canSeeBudgetInformations
+        );
+        $projectComponents = $this->mapProjectsToComponents(
+            $projects,
+            $components,
+            $componentData,
+            $visibleComponentIds,
+            $canSeeBudgetInformations
+        );
 
         return inertia('Projects/NewProjectManagement', [
             'projects' => $projects,
@@ -341,9 +363,20 @@ class ProjectController extends Controller
 
     /**
      * Hilfsfunktion zur Vermeidung von Code-Duplikation
+     *
+     * Komponentenwerte und Budget-Informationen gehen nur für betretbare Projekte und für Komponenten
+     * raus, die die Person sehen darf (Komponenten-Berechtigung + Tab-Sichtbarkeit). Ausgeblendete
+     * Spalten listet hiddenComponentIds je Projekt; das Frontend lässt die Zelle leer.
+     *
+     * @param Collection<int, int> $visibleComponentIds Komponenten-ID => Index (geflippt)
      */
-    private function mapProjectsToComponents($projects, $components, $componentData)
-    {
+    private function mapProjectsToComponents(
+        $projects,
+        $components,
+        $componentData,
+        Collection $visibleComponentIds,
+        bool $canSeeBudgetInformations
+    ) {
         // Cache these values outside the loop to avoid N+1 queries
         $firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
         $projectStates = ProjectState::all()->keyBy('id');
@@ -353,20 +386,14 @@ class ProjectController extends Controller
 
         $projectPeriods = $this->prepareProjectsForComponentMapping($projects, $components);
 
-        // Komponentenwerte einmal für alle Projekte laden (statt einer Query pro Projekt × Komponente)
-        $componentValues = ProjectComponentValue::query()
-            ->whereIn('project_id', $projects->pluck('id'))
-            ->whereIn('component_id', collect($componentData)->keys())
-            ->get()
-            ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
-
         // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
         // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
         // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
         // Rechteliste kommt aus der Policy (eine Quelle); Admins passieren via Gate::before.
         $authUser = Auth::user();
         $canEnterAll = $authUser->canAny(ProjectPolicy::GLOBAL_ENTER_PERMISSIONS);
-        $enterableProjectIds = $canEnterAll ? [] : Project::query()
+        $canWriteAll = $authUser->can(PermissionEnum::WRITE_PROJECTS->value);
+        $enterableProjectIds = $canEnterAll ? collect() : Project::query()
             ->whereIn('id', $projects->pluck('id'))
             ->where(function (Builder $query) use ($authUser): void {
                 $query
@@ -379,6 +406,14 @@ class ProjectController extends Controller
             ->pluck('id')
             ->flip();
 
+        // Komponentenwerte einmal für alle Projekte laden (statt einer Query pro Projekt × Komponente) –
+        // nur betretbare Projekte und sichtbare Komponenten
+        $componentValues = ProjectComponentValue::query()
+            ->whereIn('project_id', $canEnterAll ? $projects->pluck('id') : $enterableProjectIds->keys())
+            ->whereIn('component_id', $visibleComponentIds->keys())
+            ->get()
+            ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
+
         $mapped = $projects->map(function ($project) use (
             $components,
             $componentData,
@@ -387,7 +422,11 @@ class ProjectController extends Controller
             $projectStates,
             $projectPeriods,
             $canEnterAll,
-            $enterableProjectIds
+            $enterableProjectIds,
+            $visibleComponentIds,
+            $canSeeBudgetInformations,
+            $canWriteAll,
+            $authUser
         ) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
@@ -395,12 +434,35 @@ class ProjectController extends Controller
             $projectData->updated_at = $project->updated_at;
             $projectData->firstTabId = $firstTabId;
             $projectData->canEnter = $canEnterAll || isset($enterableProjectIds[$project->id]);
+            $hiddenComponentIds = [];
+            if (
+                !$projectData->canEnter ||
+                (!$canSeeBudgetInformations && !$this->mayEditProjectInOverview($project, $authUser, $canWriteAll))
+            ) {
+                $this->hideBudgetInformationOfProject($project);
+            }
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
 
             foreach ($components as $component) {
                 $componentFullData = $componentData[$component->component_id] ?? null;
+                // Projektinhalte (Komponentenwerte, Budget-Informationen): nur mit Zutritt und Sicht
+                $isProjectContent = $componentFullData !== null && (
+                    !$componentFullData->special ||
+                    $component->type === ProjectTabComponentEnum::BUDGET_INFORMATIONS->value
+                );
+                if (
+                    $isProjectContent &&
+                    (!$projectData->canEnter || !isset($visibleComponentIds[$componentFullData->id]))
+                ) {
+                    $hiddenComponentIds[] = $componentFullData->id;
+                    if (!$componentFullData->special) {
+                        // Schlüssel bleibt erhalten: die Builder-Zellen lesen project[Typ][Id]
+                        $projectData->{$component->type}[$componentFullData->id] = null;
+                    }
+                    continue;
+                }
 
                 switch ($component->type) {
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
@@ -474,6 +536,7 @@ class ProjectController extends Controller
                         $componentValues->get($componentFullData->id . ':' . $project->id);
                 }
             }
+            $projectData->hiddenComponentIds = array_values(array_unique($hiddenComponentIds));
 
             return $projectData;
         });
@@ -481,6 +544,30 @@ class ProjectController extends Controller
         $this->unsetHeavyProjectRelations($projects);
 
         return $mapped;
+    }
+
+    /**
+     * Die Projekt-Modelle gehen zusätzlich roh an Inertia (`projects`/`pinnedProjectsAll`): ohne Zutritt
+     * oder ohne Sicht auf die Budget-Informationen keine Kostenträger, GEMA, Beschreibung. Ausnahme:
+     * das Bearbeiten-Modal der Übersicht liest sie und braucht sie bei Schreibrecht (immer mit Zutritt).
+     */
+    private function hideBudgetInformationOfProject(Project $project): void
+    {
+        $project->makeHidden(['cost_center_id', 'gema', 'cost_center_description']);
+        $project->unsetRelation('costCenter');
+    }
+
+    /**
+     * Schreibrecht wie ProjectPolicy::update, aber nur aus den bereits geladenen Relationen (keine Query
+     * pro Projekt). Abteilungen fehlen bewusst: das Frontend bietet "Edit basic data" nur globalen
+     * Schreibrechten und write_auth an (SingleProjectInManagement checkPermission 'edit').
+     */
+    private function mayEditProjectInOverview(Project $project, User $user, bool $canWriteAll): bool
+    {
+        return $canWriteAll ||
+            $project->writeUsers->contains('id', $user->id) ||
+            $project->managerUsers->contains('id', $user->id) ||
+            $project->user_id === $user->id;
     }
 
     /**
@@ -3120,10 +3207,20 @@ class ProjectController extends Controller
     ): array {
         $userId = $authUser?->id;
 
-        // Load contracts for this project with necessary relations
+        // Nur Verträge, die die Person laut ContractPolicy öffnen darf (Ersteller:in, Freigabe an Person
+        // oder Abteilung, Projektleitung; Admins via Gate::before) – wie BudgetInformations.
         $contracts = $project->contracts()
-            ->with(['accessingUsers', 'accessingDepartments', 'contract_type', 'company_type', 'currency'])
+            ->with([
+                'accessingUsers',
+                'accessingDepartments',
+                'contract_type',
+                'company_type',
+                'currency',
+                'project.managerUsers',
+            ])
             ->get()
+            ->filter(fn (Contract $contract): bool => $authUser !== null && $authUser->can('view', $contract))
+            ->values()
             ->map(function ($contract) use ($project) {
                 return [
                     'id' => $contract->id,
@@ -3153,12 +3250,20 @@ class ProjectController extends Controller
                     'ksk_reason' => $contract->ksk_reason,
                     'resident_abroad' => $contract->resident_abroad,
                     'has_foreign_tax' => $contract->foreign_tax,
+                    // ContractEditModal belegt alle Felder vor und sendet sie vollständig zurück – fehlende
+                    // Schlüssel würden beim Speichern die gespeicherten Werte leeren
+                    'foreign_tax' => $contract->foreign_tax,
                     'foreign_tax_amount' => $contract->foreign_tax_amount,
+                    'foreign_tax_city' => $contract->foreign_tax_city,
+                    'foreign_tax_country' => $contract->foreign_tax_country,
                     'foreign_tax_reason' => $contract->foreign_tax_reason,
+                    'contract_state' => $contract->contract_state,
+                    'contract_state_comment' => $contract->contract_state_comment,
                     'reverse_charge_amount' => $contract->reverse_charge_amount,
                     'has_power_of_attorney' => $contract->has_power_of_attorney,
                     'is_freed' => $contract->is_freed,
-                    'deadline_date' => $contract->deadline_date,
+                    // Kalenderdatum (Y-m-d) – ein Carbon-Objekt würde als UTC-Zeitpunkt des Vortags serialisiert
+                    'deadline_date' => $contract->deadline_date?->format('Y-m-d'),
                     'amount' => $contract->amount,
                     'description' => $contract->description,
                     'currency_id' => $contract->currency_id,
@@ -3543,18 +3648,16 @@ class ProjectController extends Controller
 
 
 
-    public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
-    {
+    public function updateTeam(
+        Request $request,
+        Project $project,
+        ProjectTeamService $projectTeamService
+    ): JsonResponse|RedirectResponse {
         // Team setzen = Schreibrecht im Projekt. Vorher genügte "eigene Projekte anlegen" für jedes
         // fremde Projekt – samt Selbstvergabe von Budgetzugriff und Schreibrecht.
         if (Gate::denies('update', $project)) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
-
-        $projectManagerBefore = $project->managerUsers()->get();
-        $projectBudgetAccessBefore = $project->access_budget()->get();
-        $projectUsers = $project->users()->get();
-        $oldProjectDepartments = $project->departments()->get();
 
         // only persist role ids that actually exist; anything else would linger
         // in the project_user.roles JSON forever (role deletion can't clean it up)
@@ -3568,60 +3671,38 @@ class ProjectController extends Controller
 
                 $pivotData['roles'] = $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all();
 
-                // Projektleitung hat laut ProjectPolicy::update immer Schreibrecht — Pivot spiegelt das,
-                // damit Listen/Exports (writeUsers) nicht vom Frontend-Häkchen abhängen
-                if (!empty($pivotData['is_manager'])) {
-                    $pivotData['can_write'] = true;
-                }
-
-                return $pivotData;
+                return ProjectTeamService::withManagerWriteRight($pivotData);
             }
         );
 
-        $project->users()->sync($assignedUsers);
-        $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
-
-        // CRM-Kontakte im Team nur synchronisieren, wenn das globale Setting aktiv ist und der
-        // Payload den Key enthält — sonst würden bestehende Verknüpfungen still gelöscht
-        if (
-            app(ProjectCreateSettings::class)->crm_contacts_in_team
-            && $request->has('assigned_crm_contact_ids')
-        ) {
-            $assignedCrmContacts = collect($request->assigned_crm_contact_ids)->map(
-                static function ($pivotData) use ($validRoleIds) {
-                    if (!is_array($pivotData)) {
-                        return $pivotData;
-                    }
-
-                    return [
-                        'roles' => $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all(),
-                    ];
-                }
-            );
-
-            $project->teamCrmContacts()->sync($assignedCrmContacts);
-        }
-
-        $newProjectDepartments = $project->departments()->get();
-        $projectUsersAfter = $project->users()->get();
-        $projectManagerAfter = $project->managerUsers()->get();
-        $projectBudgetAccessAfter = $project->access_budget()->get();
-
-        // history functions
-        $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
-        // Get and check project admins, managers and users after update
-        $this->createNotificationProjectMemberChanges(
+        $projectTeamService->applyRosterChange(
             $project,
-            $projectManagerBefore,
-            $projectUsers,
-            $projectUsersAfter,
-            $projectManagerAfter,
-            $projectBudgetAccessBefore,
-            $projectBudgetAccessAfter
-        );
+            static function (Project $project) use ($assignedUsers, $validRoleIds, $request): void {
+                $project->users()->sync($assignedUsers);
+                $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
 
-        // Broadcast team update event
-        broadcast(new ProjectTeamUpdated($project->id));
+                // CRM-Kontakte im Team nur synchronisieren, wenn das globale Setting aktiv ist und der
+                // Payload den Key enthält — sonst würden bestehende Verknüpfungen still gelöscht
+                if (
+                    app(ProjectCreateSettings::class)->crm_contacts_in_team
+                    && $request->has('assigned_crm_contact_ids')
+                ) {
+                    $assignedCrmContacts = collect($request->assigned_crm_contact_ids)->map(
+                        static function ($pivotData) use ($validRoleIds) {
+                            if (!is_array($pivotData)) {
+                                return $pivotData;
+                            }
+
+                            return [
+                                'roles' => $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all(),
+                            ];
+                        }
+                    );
+
+                    $project->teamCrmContacts()->sync($assignedCrmContacts);
+                }
+            }
+        );
 
         return Redirect::back();
     }
@@ -3915,43 +3996,6 @@ class ProjectController extends Controller
         }
     }
 
-    private function checkDepartmentChanges($projectId, $oldDepartments, $newDepartments): void
-    {
-        $oldDepartmentIds = [];
-        $newDepartmentIds = [];
-        $oldDepartmentNames = [];
-        foreach ($oldDepartments as $oldDepartment) {
-            $oldDepartmentIds[] = $oldDepartment->id;
-            $oldDepartmentNames[$oldDepartment->id] = $oldDepartment->name;
-        }
-
-        foreach ($newDepartments as $newDepartment) {
-            $newDepartmentIds[] = $newDepartment->id;
-            if (!in_array($newDepartment->id, $oldDepartmentIds)) {
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($projectId)
-                        ->setTranslationKey('Department added to project team')
-                        ->setTranslationKeyPlaceholderValues([$newDepartment->name])
-                );
-            }
-        }
-
-        foreach ($oldDepartmentIds as $oldDepartmentId) {
-            if (!in_array($oldDepartmentId, $newDepartmentIds)) {
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($projectId)
-                        ->setTranslationKey('Department removed from project team')
-                        ->setTranslationKeyPlaceholderValues([$oldDepartmentNames[$oldDepartmentId]])
-                );
-            }
-        }
-    }
 
     private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription): void
     {
@@ -3988,212 +4032,6 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
-    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    private function createNotificationProjectMemberChanges(
-        Project $project,
-        $projectManagerBefore,
-        $projectUsers,
-        $projectUsersAfter,
-        $projectManagerAfter,
-        $projectBudgetAccessBefore,
-        $projectBudgetAccessAfter
-    ): void {
-        $userIdsBefore = [];
-        $managerIdsBefore = [];
-        $budgetIdsBefore = [];
-        $userIdsAfter = [];
-        $managerIdsAfter = [];
-        $budgetIdsAfter = [];
-
-        foreach ($projectUsers as $projectUser) {
-            $userIdsBefore[$projectUser->id] = $projectUser->id;
-        }
-
-        foreach ($projectManagerBefore as $managerBefore) {
-            $managerIdsBefore[$managerBefore->id] = $managerBefore->id;
-            if (in_array($managerBefore->id, $userIdsBefore)) {
-                unset($userIdsBefore[$managerBefore->id]);
-            }
-        }
-        foreach ($projectBudgetAccessBefore as $budgetBefore) {
-            $budgetIdsBefore[$budgetBefore->id] = $budgetBefore->id;
-            if (in_array($budgetBefore->id, $userIdsBefore)) {
-                unset($userIdsBefore[$budgetBefore->id]);
-            }
-        }
-        foreach ($projectUsersAfter as $projectUserAfter) {
-            $userIdsAfter[$projectUserAfter->id] = $projectUserAfter->id;
-        }
-
-        foreach ($projectManagerAfter as $managerAfter) {
-            $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
-            // if added a new project manager, send notification to this user
-            if (!in_array($managerAfter->id, $managerIdsBefore)) {
-                $notificationTitle = __('notification.project.leader.add', [
-                    'project' => $project->name
-                ], $managerAfter->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($managerAfter);
-                $this->notificationService->createNotification();
-            }
-            if (in_array($managerAfter->id, $userIdsAfter)) {
-                unset($userIdsAfter[$managerAfter->id]);
-            }
-        }
-
-        foreach ($projectBudgetAccessAfter as $budgetAfter) {
-            $budgetIdsAfter[$budgetAfter->id] = $budgetAfter->id;
-            // if added a new project manager, send notification to this user
-            if (!in_array($budgetAfter->id, $budgetIdsBefore)) {
-                $notificationTitle = __('notification.project.budget.add', [
-                    'project' => $project->name
-                ], $budgetAfter->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($budgetAfter);
-                $this->notificationService->createNotification();
-            }
-            if (in_array($budgetAfter->id, $userIdsAfter)) {
-                unset($userIdsAfter[$budgetAfter->id]);
-            }
-        }
-
-        foreach ($managerIdsBefore as $managerBefore) {
-            if (!in_array($managerBefore, $managerIdsAfter)) {
-                $user = User::find($managerBefore);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.leader.remove', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-            }
-        }
-        foreach ($budgetIdsBefore as $budgetBefore) {
-            if (!in_array($budgetBefore, $budgetIdsAfter)) {
-                $user = User::find($budgetBefore);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.budget.remove', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-            }
-        }
-        foreach ($userIdsAfter as $userIdAfter) {
-            if (!in_array($userIdAfter, $userIdsBefore)) {
-                $user = User::find($userIdAfter);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.member.add', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($project->id)
-                        ->setTranslationKey('User added to project team')
-                        ->setTranslationKeyPlaceholderValues([$user->first_name . ' ' . $user->last_name])
-                );
-            }
-        }
-        foreach ($userIdsBefore as $userIdBefore) {
-            if (!in_array($userIdBefore, $userIdsAfter)) {
-                $user = User::find($userIdBefore);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.member.remove', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setType('public_changes')
-                        ->setModelClass(Project::class)
-                        ->setModelId($project->id)
-                        ->setTranslationKey('User removed from project team')
-                        ->setTranslationKeyPlaceholderValues([$user->first_name . ' ' . $user->last_name])
-                );
-            }
-        }
-    }
 
     public function duplicate(
         Project $project,
@@ -4261,9 +4099,11 @@ class ProjectController extends Controller
 
     public function destroy(
         Project $project,
-        Request $request
+        Request $request,
+        TicketingLock $ticketingLock
     ): RedirectResponse {
         $this->authorize('delete', $project);
+        $ticketingLock->assertProjectDeletable($project);
         // Single, consolidated notification instead of one per deleted event.
         $eventCount = $project->events()->count();
 
@@ -4303,7 +4143,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function bulkDestroy(Request $request): RedirectResponse
+    public function bulkDestroy(Request $request, TicketingLock $ticketingLock): RedirectResponse
     {
         $validated = $request->validate([
             'project_ids' => 'required|array|min:1',
@@ -4311,6 +4151,7 @@ class ProjectController extends Controller
         ]);
 
         $projects = Project::whereIn('id', $validated['project_ids'])->get();
+        $projects->each(fn (Project $project) => $ticketingLock->assertProjectDeletable($project));
 
         foreach ($projects as $project) {
             // Skip projects the user is not allowed to delete instead of failing the whole batch.
@@ -4783,22 +4624,11 @@ class ProjectController extends Controller
 
     /**
      * Bearbeitungsregel für Inhalte, deren Edit-UI über die Komponenten-Einstellung
-     * (canEditComponent) gegated ist: Schreibrecht im Projekt + Komponenten-Einstellung
-     * (ProjectPolicy::writeComponent). Ohne Komponenten-Datensatz greift die
-     * Projekt-Bearbeitungsregel allein.
+     * (canEditComponent) gegated ist (ProjectPolicy::writeComponentType).
      */
     private function authorizeProjectComponentEdit(Project $project, ProjectTabComponentEnum $componentType): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $component = Component::query()->where('type', $componentType->value)->first();
-        abort_unless(
-            $component !== null
-                ? $user->can('writeComponent', [$project, $component])
-                : $user->can('update', $project),
-            403
-        );
+        abort_unless(Auth::user()->can('writeComponentType', [$project, $componentType]), 403);
     }
 
     public function updateShiftDescription(Request $request, Project $project): void

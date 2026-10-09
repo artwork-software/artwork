@@ -25,7 +25,7 @@
                     @php
                         $entry = $body['body'] ?? [];
                         $entryDescription = $presenter::descriptionOf($entry);
-                        $eventLine = $presenter::eventLine($entry['event'] ?? null, $language);
+                        $eventLine = $presenter::eventLine($entry['event'] ?? null, $language, $eventLookups ?? null);
                     @endphp
                     <div class="notification-content">
                         <div class="notification-text">
@@ -44,6 +44,14 @@
                         </div>
                     </div>
                 @endforeach
+                @if(($notification['more'] ?? 0) > 0)
+                    {{-- je Gruppe höchstens SendNotificationsEmailSummariesCommand::MAX_ENTRIES_PER_GROUP Einträge --}}
+                    <p class="notification-description">
+                        <a href="{{ $presenter::notificationsUrl() }}" class="notification-link">
+                            {{ __('And :count more – view them in the notification center', ['count' => $notification['more']], $language) }}
+                        </a>
+                    </p>
+                @endif
             </div>
         @endforeach
         <a href="{{ $presenter::notificationsUrl() }}" class="notification-link notification-link-footer">

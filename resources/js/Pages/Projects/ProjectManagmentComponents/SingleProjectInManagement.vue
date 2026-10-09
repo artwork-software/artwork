@@ -291,6 +291,9 @@ const checkIfComponentIsVisible = (component) => {
         showActionComponent.value = true;
         return false;
     }
+    // Backend liefert Werte/Budget-Infos nur mit Zutritt und Sicht auf die Komponente; ausgeblendete
+    // Zellen bleiben leer statt "Nein"/"-" anzuzeigen.
+    if (props.project?.hiddenComponentIds?.includes(component?.component_id)) return false;
     return canSeeComponent(component.component);
 };
 

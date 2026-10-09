@@ -10,6 +10,7 @@ use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -104,6 +105,123 @@ final class InventoryReservationTest extends FeatureTestCase
 
         $this->assertSame(0, $article->fresh()->getAvailableStock($today, $today)['reserved']);
         $this->assertTrue($legacy->fresh()->effectiveReturnDate()->isSameDay(Carbon::today()->subDays(50)));
+    }
+
+    #[Test]
+    public function legacy_issues_due_before_return_tracking_existed_are_free(): void
+    {
+        $article = $this->article(4);
+        // vor der Rückgabe-Erfassung angelegt und fällig: kein Status, kein „Erhalten von“
+        $legacy = ExternalIssue::factory()->create([
+            'issue_date' => '2026-05-01',
+            'return_date' => '2026-05-10',
+            'return_status' => null,
+            'received_by_id' => null,
+            'created_at' => '2026-05-01 10:00:00',
+        ]);
+        $legacy->articles()->attach($article->id, ['quantity' => 3]);
+        $explicitlyNotReturned = ExternalIssue::factory()->create([
+            'issue_date' => '2026-05-01',
+            'return_date' => '2026-05-10',
+            'return_status' => ExternalIssue::RETURN_STATUS_NOT_RETURNED,
+            'received_by_id' => null,
+            'created_at' => '2026-05-01 10:00:00',
+        ]);
+        $explicitlyNotReturned->articles()->attach($article->id, ['quantity' => 1]);
+        $today = Carbon::today()->toDateString();
+
+        $this->assertTrue($legacy->fresh()->isReturned());
+        $this->assertTrue($legacy->fresh()->toArray()['counts_as_returned']);
+        $this->assertFalse($explicitlyNotReturned->fresh()->isReturned());
+        $this->assertSame(1, $article->fresh()->getAvailableStock($today, $today)['reserved']);
+    }
+
+    #[Test]
+    public function the_tracking_start_is_frozen_at_the_deploy_date_of_this_installation(): void
+    {
+        $article = $this->article(4);
+        // Haus hat die Rückgabe-Erfassung erst am 01.10. eingespielt: der Backfill stempelte damals den Altbestand
+        ExternalIssue::factory()->create([
+            'issue_date' => '2026-07-01',
+            'return_date' => '2026-07-10',
+            'return_status' => null,
+            'received_by_id' => null,
+            'return_notification_sent_at' => '2026-10-01 03:00:00',
+            'created_at' => '2026-07-01 10:00:00',
+        ]);
+        // vor dem 01.10. angelegt und fällig, nie erfasst – ebenfalls Altbestand dieses Hauses
+        $untrackedBeforeDeploy = ExternalIssue::factory()->create([
+            'issue_date' => '2026-09-01',
+            'return_date' => '2026-09-20',
+            'return_status' => null,
+            'received_by_id' => null,
+            'created_at' => '2026-09-01 10:00:00',
+        ]);
+        $untrackedBeforeDeploy->articles()->attach($article->id, ['quantity' => 2]);
+        $this->freezeTrackingStart();
+
+        // eine spätere echte Erinnerung verschiebt den festgeschriebenen Stichtag nicht mehr
+        ExternalIssue::factory()->create(['return_notification_sent_at' => '2026-10-05 08:00:00']);
+        ExternalIssue::forgetReturnTrackingSince();
+        $today = Carbon::today()->toDateString();
+
+        $this->assertSame('2026-10-01', ExternalIssue::returnTrackingSince());
+        $this->assertTrue($untrackedBeforeDeploy->fresh()->isReturned());
+        $this->assertSame(0, $article->fresh()->getAvailableStock($today, $today)['reserved']);
+    }
+
+    #[Test]
+    public function an_issue_reminded_after_the_tracking_start_is_never_legacy(): void
+    {
+        $article = $this->article(4);
+        DB::table('settings')->updateOrInsert(
+            ['group' => 'inventory', 'name' => 'return_tracking_since'],
+            ['payload' => json_encode('2026-10-01'), 'locked' => false]
+        );
+        // nachträglich erfasst (vor dem Stichtag angelegt und fällig), aber am 07.10. erinnert → wird erfasst
+        $reminded = ExternalIssue::factory()->create([
+            'issue_date' => '2026-09-01',
+            'return_date' => '2026-09-20',
+            'return_status' => null,
+            'received_by_id' => null,
+            'return_notification_sent_at' => '2026-10-07 08:00:00',
+            'created_at' => '2026-09-01 10:00:00',
+        ]);
+        $reminded->articles()->attach($article->id, ['quantity' => 2]);
+        $today = Carbon::today()->toDateString();
+
+        $this->assertFalse($reminded->fresh()->isReturned());
+        $this->assertSame([$reminded->id], ExternalIssue::query()->notReturned()->pluck('id')->all());
+        $this->assertSame(2, $article->fresh()->getAvailableStock($today, $today)['reserved']);
+    }
+
+    private function freezeTrackingStart(): void
+    {
+        DB::table('settings')->where('group', 'inventory')->where('name', 'return_tracking_since')->delete();
+        (require database_path('settings/2026_10_06_160000_freeze_return_tracking_since.php'))->up();
+        ExternalIssue::forgetReturnTrackingSince();
+    }
+
+    #[Test]
+    public function a_backdated_issue_created_after_tracking_started_stays_reserved(): void
+    {
+        $article = $this->article(4);
+        // heute erfasst, Rückgabe lag vor dem Stichtag – Material ist noch draußen
+        $backdated = ExternalIssue::factory()->create([
+            'issue_date' => '2026-05-01',
+            'return_date' => '2026-05-10',
+            'return_status' => null,
+            'received_by_id' => null,
+        ]);
+        $backdated->articles()->attach($article->id, ['quantity' => 2]);
+        $today = Carbon::today()->toDateString();
+
+        $this->assertFalse($backdated->fresh()->isReturned());
+        $this->assertSame(2, $article->fresh()->getAvailableStock($today, $today)['reserved']);
+        $this->assertSame(
+            [$backdated->id],
+            ExternalIssue::query()->notReturned()->pluck('id')->all()
+        );
     }
 
     #[Test]

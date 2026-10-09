@@ -64,6 +64,27 @@ export function messageForFailedRequest(status) {
 }
 
 /**
+ * Meldung für einen Request, dessen Fehler ein Dialog selbst anzeigt (skipErrorToast):
+ * erste Validierungsmeldung, sonst Servermeldung, sonst dieselbe Meldung wie der globale
+ * Toast (Netzwerk, 403, 404, 5xx), sonst der übersetzte Fallback.
+ */
+export function failedRequestMessage(error, fallback = 'Failed to save') {
+    const fieldErrors = error?.response?.data?.errors
+    const firstFieldError = fieldErrors && typeof fieldErrors === 'object'
+        ? Object.values(fieldErrors).flat().find(Boolean)
+        : null
+    if (firstFieldError) {
+        return firstFieldError
+    }
+    const serverMessage = error?.response?.data?.message
+    if (serverMessage) {
+        return serverMessage
+    }
+    const requestMessage = error?.isAxiosError ? messageForFailedRequest(error?.response?.status) : null
+    return t(requestMessage ?? fallback)
+}
+
+/**
  * Für axios: nur schreibende Requests melden – Lesezugriffe im Hintergrund (Tooltips,
  * Nachladen) haben eigene Zustände und würden sonst zu viele Meldungen erzeugen.
  * Requests mit `skipErrorToast: true` in der Config zeigen ihren Fehler selbst an;
@@ -74,8 +95,31 @@ export function shouldToastAxiosError(error) {
     if (config.skipErrorToast || error?.code === 'ERR_CANCELED') {
         return false
     }
-    if (config.headers?.['X-Inertia']) {
+    if (isInertiaRequest(error)) {
         return false
     }
     return MUTATING_METHODS.includes(String(config.method ?? '').toLowerCase())
+}
+
+/** Inertia-Requests (Header X-Inertia) behandelt das 'invalid'-Event in app.js */
+export function isInertiaRequest(error) {
+    const headers = error?.config?.headers
+    if (!headers) {
+        return false
+    }
+
+    return Boolean(headers['X-Inertia'] ?? headers.get?.('X-Inertia'))
+}
+
+/**
+ * Für den axios-Interceptor: abgelaufene Sitzung (401/419) melden. Inertia-Requests nicht –
+ * deren 'invalid'-Handler in app.js meldet sich selbst, sonst kämen zwei Alerts.
+ */
+export function shouldHandleSessionExpiry(error) {
+    const status = error?.response?.status
+    if (status !== 401 && status !== 419) {
+        return false
+    }
+
+    return !isInertiaRequest(error)
 }

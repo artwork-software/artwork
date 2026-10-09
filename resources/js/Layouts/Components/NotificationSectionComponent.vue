@@ -165,6 +165,7 @@ import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent.vu
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import {applyPageResponse, beginPageRequest, createPagedList} from "@/Helper/pagedNotificationList.js";
 
 export default  {
     name: 'NotificationSectionComponent',
@@ -188,8 +189,8 @@ export default  {
     data() {
         return {
             perPage: 20,
-            unread: { items: [], page: 0, total: 0, lastPage: 1, loading: false },
-            archived: { items: [], page: 0, total: 0, lastPage: 1, loading: false },
+            unread: createPagedList(),
+            archived: createPagedList(),
             archiving: false,
             showSection: true,
             showReadSection: false,
@@ -277,56 +278,60 @@ export default  {
             clearTimeout(this.refreshTimer);
             this.refreshTimer = setTimeout(() => this.refreshLoadedLists(), 150);
         },
-        /** Geladene Listen neu holen und dabei per „Mehr anzeigen“ nachgeladene Seiten behalten */
+        /**
+         * Geladene Listen neu holen und dabei per „Mehr anzeigen“ nachgeladene Seiten behalten. Startet
+         * währenddessen ein neuer Refresh, bricht dieser ab (siehe pagedNotificationList.js).
+         */
         async refreshLoadedLists() {
-            const reload = async (fetchPage, loadedPages) => {
-                for (let page = 1; page <= loadedPages; page++) {
-                    await fetchPage(page);
+            const reload = async (status, loadedPages) => {
+                const generation = await this.fetchPage(status, 1);
+                const list = status === 'unread' ? this.unread : this.archived;
+                // nach Archivieren/Löschen kann es weniger Seiten geben als vorher geladen
+                for (let page = 2; generation !== null && page <= Math.min(loadedPages, list.lastPage); page++) {
+                    if (await this.fetchPage(status, page, generation) === null) {
+                        return;
+                    }
                 }
             };
             await Promise.all([
-                reload((page) => this.fetchUnread(page), Math.max(1, this.unread.page)),
-                this.archived.page > 0
-                    ? reload((page) => this.fetchArchived(page), this.archived.page)
-                    : Promise.resolve(),
+                reload('unread', Math.max(1, this.unread.page)),
+                this.archived.page > 0 ? reload('archived', this.archived.page) : Promise.resolve(),
             ]);
         },
-        async fetchUnread(page = 1) {
-            this.unread.loading = true;
+        /**
+         * @returns {Promise<number|null>} Generation der übernommenen Antwort, null = verworfen/fehlgeschlagen
+         */
+        async fetchPage(status, page = 1, expectedGeneration = null) {
+            const list = status === 'unread' ? this.unread : this.archived;
+            const generation = beginPageRequest(list, page, expectedGeneration);
+            if (generation === null) {
+                return null;
+            }
+            list.loading = true;
             try {
                 const { data } = await axios.get(route('notifications.list'), {
-                    params: { groupType: this.groupType, status: 'unread', page, perPage: this.perPage },
+                    params: { groupType: this.groupType, status, page, perPage: this.perPage },
                 });
-                this.unread.items = page === 1 ? data.data : this.unread.items.concat(data.data);
-                this.unread.page = data.current_page;
-                this.unread.lastPage = data.last_page;
-                this.unread.total = data.total;
+                return applyPageResponse(list, generation, data) ? generation : null;
             } catch (err) {
                 console.error(err);
+                return null;
             } finally {
-                this.unread.loading = false;
+                if (generation === list.generation) {
+                    list.loading = false;
+                }
             }
+        },
+        fetchUnread(page = 1) {
+            return this.fetchPage('unread', page);
         },
         loadMoreUnread() {
             if (!this.unread.loading && this.unread.page < this.unread.lastPage) {
                 this.fetchUnread(this.unread.page + 1);
             }
         },
-        async fetchArchived(page = 1) {
-            this.archived.loading = true;
-            try {
-                const { data } = await axios.get(route('notifications.list'), {
-                    params: { groupType: this.groupType, status: 'archived', page, perPage: this.perPage },
-                });
-                this.archived.items = page === 1 ? data.data : this.archived.items.concat(data.data);
-                this.archived.page = data.current_page;
-                this.archived.lastPage = data.last_page;
-                this.archived.total = data.total;
-            } catch (err) {
-                console.error(err);
-            } finally {
-                this.archived.loading = false;
-            }
+        fetchArchived(page = 1) {
+            return this.fetchPage('archived', page);
         },
         loadMoreArchived() {
             if (!this.archived.loading && this.archived.page < this.archived.lastPage) {

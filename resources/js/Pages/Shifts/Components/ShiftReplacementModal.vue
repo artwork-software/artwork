@@ -285,7 +285,8 @@ async function confirmReplacement(candidate) {
                 replacement_id: candidate.id,
                 shift_qualification_id: candidate.qualification_id ?? props.worker.pivot.shift_qualification_id,
                 craft_abbreviation: candidate.craft_abbreviation ?? '',
-            }
+            },
+            { skipErrorToast: true } // Fehler steht im Modal
         )
         emit('replaced', {
             workers: data?.workers ?? null,

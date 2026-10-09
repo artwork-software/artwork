@@ -15,7 +15,7 @@ class ApiAccessLog
     /**
      * Erlaubte Logeinträge pro Minute und IP für Requests, deren Authentifizierung fehlschlug.
      * Fehlgeschlagene Zugriffe sollen sichtbar bleiben, aber ein Skript, das Garbage-Bearer-Header
-     * sprüht, darf die Tabelle nicht ungebremst fluten — throttle:machine-api greift erst NACH
+     * sprüht, darf die Tabelle nicht ungebremst fluten — throttle:api-token greift erst NACH
      * auth:api und schützt diesen Pfad nicht.
      */
     private const UNAUTHENTICATED_LOGS_PER_MINUTE = 10;

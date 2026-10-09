@@ -503,8 +503,6 @@ const roomId = computed(() => {
 const roomLabel = computed(() => (typeof props.room === "object" ? (props.room?.roomName) : String(props.room ?? "—")));
 const setTab = (t) => (tab.value = t)
 
-const t = (key) => (typeof window !== "undefined" && typeof $t === "function" ? $t(key) : key) // optional falls du $t nicht importierst
-
 function toMinutes(hhmm) {
     if (!hhmm) return null;
     const [h, m] = String(hhmm).slice(0, 5).split(":").map(Number);

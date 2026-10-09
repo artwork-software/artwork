@@ -217,7 +217,7 @@ class Project extends Model
     }
 
     /**
-     * @return BelongsToMany<User, $this>
+     * @return BelongsToMany<User, $this, ProjectUserPivot>
      */
     public function users(): BelongsToMany
     {

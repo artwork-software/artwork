@@ -4,7 +4,10 @@ namespace Artwork\Modules\ExternalAccess\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\ExternalAccess\Http\Requests\RequestLoginLinkRequest;
+use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
+use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\ExternalAccess\Services\ExternalLoginService;
+use Artwork\Modules\ExternalAccess\Services\ExternalScopeResolver;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -43,7 +46,7 @@ class ExternalLoginController extends Controller
         ]);
     }
 
-    public function redeem(string $token): RedirectResponse
+    public function redeem(string $token, ExternalScopeResolver $externalScopeResolver): RedirectResponse
     {
         $external = $this->externalLoginService->redeemToken($token);
 
@@ -51,7 +54,29 @@ class ExternalLoginController extends Controller
             return redirect()->route('external.login.invalid');
         }
 
-        return redirect()->route('external.dashboard');
+        return redirect()->to($this->landingUrlFor($external, $externalScopeResolver));
+    }
+
+    /**
+     * Wer genau einen Tab und keine eigene Datenpflege hat (der Normalfall einer Tab-Einladung),
+     * landet direkt im Tab; sonst auf der Übersicht.
+     */
+    private function landingUrlFor(ExternalAccess $external, ExternalScopeResolver $externalScopeResolver): string
+    {
+        $scopes = $externalScopeResolver->activeScopesFor($external)
+            ->filter(fn (ExternalAccessScope $scope): bool => $scope->project !== null && $scope->projectTab !== null);
+
+        if ($scopes->count() !== 1 || $external->isCrmAccessActive()) {
+            return route('external.dashboard');
+        }
+
+        /** @var ExternalAccessScope $scope */
+        $scope = $scopes->first();
+
+        return route('external.project.tab.show', [
+            'project' => $scope->project_id,
+            'tab' => $scope->project_tab_id,
+        ]);
     }
 
     public function logout(): RedirectResponse

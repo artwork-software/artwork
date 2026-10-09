@@ -12,6 +12,7 @@
                 v-model="remarkText"
                 :label="$t('Day remark')"
                 :rows="4"
+                :maxlength="maxLength"
             />
             <div class="flex items-center justify-between text-xs text-text-subtle">
                 <span v-if="remark?.updated_by">
@@ -43,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
@@ -66,13 +67,6 @@ const { saveDayRemark } = useDayRemarks()
 const maxLength = DAY_REMARK_MAX_LENGTH
 const remarkText = ref(props.remark?.text ?? '')
 const saving = ref(false)
-
-// BaseTextarea reicht kein maxlength ans <textarea> durch — Limit hier durchsetzen
-watch(remarkText, (value) => {
-    if (value.length > maxLength) {
-        remarkText.value = value.slice(0, maxLength)
-    }
-})
 
 const persist = (text) => {
     saving.value = true

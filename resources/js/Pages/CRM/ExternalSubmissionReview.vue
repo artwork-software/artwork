@@ -24,8 +24,8 @@
                     <tbody>
                         <tr v-for="change in submission.field_changes" :key="change.id" class="border-b border-border-subtle">
                             <td class="px-4 py-3 text-sm font-medium">{{ change.field_label }}</td>
-                            <td class="px-4 py-3 text-sm text-text-muted">{{ displayValue(change.old_value) }}</td>
-                            <td class="px-4 py-3 text-sm font-medium text-text">{{ displayValue(change.new_value) }}</td>
+                            <td class="px-4 py-3 text-sm text-text-muted">{{ displayValue(change.old_value, change.field_type) }}</td>
+                            <td class="px-4 py-3 text-sm font-medium text-text">{{ displayValue(change.new_value, change.field_type) }}</td>
                             <td class="px-4 py-3 text-sm">
                                 <div class="flex gap-2" v-if="change.approval_status === 'pending' && submission.status === 'pending'">
                                     <button @click="setDecision(change.id, 'approved')" :class="decisionButtonClass(change.id, 'approved')">
@@ -108,7 +108,9 @@ function applyPartial() {
     })
 }
 
-function displayValue(value) {
+// Checkboxen werden wie intern als '1'/'0' gespeichert
+function displayValue(value, fieldType) {
+    if (fieldType === 'checkbox') return value === '1' ? $t('Yes') : $t('No')
     if (value === null || value === '' || value === undefined) return '—'
     return value
 }

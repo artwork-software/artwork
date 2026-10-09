@@ -1267,7 +1267,7 @@ class ShiftController extends Controller
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
     ): bool|RedirectResponse {
-        if (!auth()->user()?->can('can plan shifts') && !auth()->user()?->hasRole('artwork admin')) {
+        if (!auth()->user()?->can('plan-shifts')) {
             abort(403, __('You need the permission "Plan shifts" for this.'));
         }
 

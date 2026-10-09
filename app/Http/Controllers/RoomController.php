@@ -117,8 +117,9 @@ class RoomController extends Controller
             'color' => $request->color,
             'description' => $request->description,
             'temporary' => $request->boolean('temporary'),
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
+            // Zeitraum nur für temporäre Räume speichern
+            'start_date' => $request->boolean('temporary') ? $request->start_date : null,
+            'end_date' => $request->boolean('temporary') ? $request->end_date : null,
             'area_id' => $request->area_id,
             'user_id' => $request->user_id ?? $request->user()->id,
             'everyone_can_book' => $request->boolean('everyone_can_book'),
@@ -204,7 +205,7 @@ class RoomController extends Controller
     ): RedirectResponse {
         $this->authorize('update', $room);
 
-        $request->validate($this->roomFieldRules($request, false));
+        $request->validate($this->roomFieldRules($request, false, $room));
 
         $roomReplicate = $room->replicate();
         $roomReplicate->admins = $room->users()->wherePivot('is_admin', true)->get();
@@ -212,19 +213,23 @@ class RoomController extends Controller
         $roomReplicate->attributes = $room->attributes()->get();
         $roomReplicate->categories = $room->categories()->get();
 
-        $room->update(
-            $request->only(
-                'name',
-                'color',
-                'description',
-                'temporary',
-                'start_date',
-                'end_date',
-                'everyone_can_book',
-                'relevant_for_disposition',
-                'capacity'
-            )
+        $attributes = $request->only(
+            'name',
+            'color',
+            'description',
+            'temporary',
+            'start_date',
+            'end_date',
+            'everyone_can_book',
+            'relevant_for_disposition',
+            'capacity'
         );
+        // Zeitraum gehört nur zu temporären Räumen; beim Abwählen nicht als Altlast stehen lassen
+        if ($request->has('temporary') && !$request->boolean('temporary')) {
+            $attributes['start_date'] = null;
+            $attributes['end_date'] = null;
+        }
+        $room->update($attributes);
 
         if (!is_null($request->room_admins) && !is_null($request->requestable_by)) {
             $room_admins_ids = [];
@@ -247,9 +252,17 @@ class RoomController extends Controller
             User::forgetCachedShareDataForIds(array_unique([...$previousUserIds, ...$new_users->keys()->all()]));
         }
 
-        $room->adjoining_rooms()->sync($request->adjoining_rooms);
-        $room->attributes()->sync($request->room_attributes);
-        $room->categories()->sync($request->room_categories);
+        // nur mitgeschickte Relationen synchronisieren: sync(null) hätte sonst alle Nebenräume,
+        // Eigenschaften und Kategorien entfernt, sobald ein Formular sie nicht mitsendet
+        if ($request->has('adjoining_rooms')) {
+            $room->adjoining_rooms()->sync($request->input('adjoining_rooms') ?? []);
+        }
+        if ($request->has('room_attributes')) {
+            $room->attributes()->sync($request->input('room_attributes') ?? []);
+        }
+        if ($request->has('room_categories')) {
+            $room->categories()->sync($request->input('room_categories') ?? []);
+        }
 
         $this->roomChangeService->applyChanges(
             $room,
@@ -418,10 +431,19 @@ class RoomController extends Controller
      *
      * @return array<string, array<int, string>>
      */
-    private function roomFieldRules(Request $request, bool $creating): array
+    /**
+     * @param Room|null $room bestehender Raum beim Bearbeiten
+     */
+    private function roomFieldRules(Request $request, bool $creating, ?Room $room = null): array
     {
         $presence = $creating ? 'required' : 'sometimes';
-        $endDateRules = ['nullable', 'date', 'required_if_accepted:temporary'];
+        $endDateRules = ['nullable', 'date'];
+        // Altbestand: temporäre Räume ohne Enddatum bleiben bearbeitbar (z. B. umbenennen); Pflicht wird das
+        // Enddatum beim Anlegen und wenn ein Raum neu temporär wird
+        $legacyTemporaryWithoutEnd = $room !== null && $room->temporary && $room->end_date === null;
+        if (!$legacyTemporaryWithoutEnd) {
+            $endDateRules[] = 'required_if_accepted:temporary';
+        }
         if ($request->filled('start_date')) {
             $endDateRules[] = 'after_or_equal:start_date';
         }

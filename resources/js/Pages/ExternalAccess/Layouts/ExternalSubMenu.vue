@@ -37,10 +37,9 @@
                                 </div>
                                 <ul class="ml-2 space-y-1">
                                     <li v-for="scope in group.scopes" :key="scope.id">
-                                        <a
-                                            href="#"
+                                        <Link
+                                            :href="scopeHref(scope)"
                                             :class="navItemClasses(isCurrentScope(scope))"
-                                            @click.prevent="onTabClick(scope)"
                                         >
                                             <span>{{ scope.tab.name }}</span>
                                             <span
@@ -49,7 +48,7 @@
                                             >
                                                 {{ $t('read only') }}
                                             </span>
-                                        </a>
+                                        </Link>
                                     </li>
                                 </ul>
                             </li>
@@ -58,7 +57,7 @@
 
                     <li class="mt-auto">
                         <div v-if="page.props.crm_access_active && page.props.crm_access_expires_at" class="text-xs text-white/70 mb-2">
-                            {{ $t('CRM access valid until') }}: {{ formatDate(page.props.crm_access_expires_at) }}
+                            {{ $t('CRM access valid until') }}: {{ formatExternalDate(page.props.crm_access_expires_at) }}
                         </div>
                         <form @submit.prevent="logout">
                             <button
@@ -77,40 +76,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { Link, usePage, router } from '@inertiajs/vue3'
+import { Link } from '@inertiajs/vue3'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import { formatExternalDate, useExternalNavigation } from '@/Pages/ExternalAccess/Layouts/useExternalNavigation.js'
 
-const page = usePage()
-
-const groupedScopes = computed(() => {
-    const groups = new Map()
-    for (const scope of page.props.accessible_scopes ?? []) {
-        const key = scope.project.id
-        if (!groups.has(key)) {
-            groups.set(key, { project: scope.project, scopes: [] })
-        }
-        groups.get(key).scopes.push(scope)
-    }
-    return Array.from(groups.values())
-})
-
-function logout() {
-    router.post(route('external.logout'))
-}
-
-function isCurrentScope(scope) {
-    if (!route().current('external.project.tab.show')) return false
-    const params = route().params ?? {}
-    return String(params.project) === String(scope.project.id) && String(params.tab) === String(scope.tab.id)
-}
-
-function onTabClick(scope) {
-    router.visit(route('external.project.tab.show', {
-        project: scope.project.id,
-        tab: scope.tab.id,
-    }))
-}
+const { page, groupedScopes, scopeHref, isCurrentScope, logout } = useExternalNavigation()
 
 function navItemClasses(isCurrent) {
     return [
@@ -119,10 +89,5 @@ function navItemClasses(isCurrent) {
             ? 'bg-white/10 text-white'
             : 'text-white/70 hover:bg-white/5 hover:text-white',
     ]
-}
-
-function formatDate(iso) {
-    if (!iso) return '—'
-    return new Date(iso).toLocaleDateString()
 }
 </script>

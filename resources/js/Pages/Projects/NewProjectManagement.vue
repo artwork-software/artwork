@@ -262,7 +262,7 @@
         </div>
 
         <!-- Notifications & Modals -->
-        <SideNotification v-if="dropFeedbackShown" type="project_create_success" />
+        <SideNotification v-if="dropFeedbackShown" type="project_create_success" @close="dropFeedbackShown = false" />
 
         <project-create-modal
             v-if="createProject"
@@ -293,16 +293,6 @@
             :title="$t('Project created')"
             :description="$t('The project was successfully created.')"
             :button="$t('Close')"
-        />
-
-        <project-data-edit-modal
-            v-if="editingProject"
-            :show="editingProject"
-            :project="projectToEdit"
-            :group-projects="projectGroups"
-            :current-group="groupPerProject[projectToEdit?.id]"
-            :states="states"
-            @closed="closeEditProjectModal"
         />
 
         <project-history-component
@@ -396,13 +386,12 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import { usePermission } from "@/Composeables/Permission.js";
 import { MenuItem, Switch, SwitchGroup } from "@headlessui/vue";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { useSortEnumTranslation } from "@/Composeables/SortEnumTranslation.js";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
-import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import AddBulkEventsModal from "@/Pages/Projects/Components/AddBulkEventsModal.vue";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
@@ -456,14 +445,23 @@ const showSearchbar = ref(route().params.query?.length > 0);
 const showSuccessModal2 = ref(false);
 const showProjectHistory = ref(false);
 const selectedProjectId = ref(null);
-const editingProject = ref(false);
-const projectToEdit = ref(null);
 const createProject = ref(false);
 const showExportModal = ref(false);
 const page = ref(route().params.page ?? 1);
 const perPage = ref(props.entitiesPerPage ?? 10);
 const showAddBulkEventModal = ref(false);
 const dropFeedbackShown = ref(null);
+let dropFeedbackTimer = null;
+
+// Rückmeldung nach dem Anlegen eines Projekts (ProjectCreateModal emittiert dropFeedback)
+const showDropFeedback = () => {
+    dropFeedbackShown.value = true;
+    clearTimeout(dropFeedbackTimer);
+    dropFeedbackTimer = setTimeout(() => {
+        dropFeedbackShown.value = false;
+    }, 3000);
+};
+onBeforeUnmount(() => clearTimeout(dropFeedbackTimer));
 
 // Bulk selection (move multiple projects to trash)
 const selectionMode = ref(false);
@@ -563,10 +561,6 @@ const openCreateProjectModal = () => (createProject.value = true);
 const closeCreateProjectModal = (showSuccessModalFlag) => {
     createProject.value = false;
     if (showSuccessModalFlag) showAddBulkEventModal.value = true;
-};
-const closeEditProjectModal = () => {
-    editingProject.value = false;
-    projectToEdit.value = null;
 };
 const closeSearchbar = () => {
     showSearchbar.value = !showSearchbar.value;

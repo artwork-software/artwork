@@ -117,12 +117,15 @@ import Permissions from "@/Mixins/Permissions.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import {IconEye, IconEyeClosed} from "@tabler/icons-vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
         BaseInput,
         BaseButton,
+        IconEye,
+        IconEyeClosed,
         TextInputComponent,
         Head,
         JetAuthenticationCard,

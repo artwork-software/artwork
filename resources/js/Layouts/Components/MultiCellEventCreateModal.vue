@@ -212,6 +212,7 @@
 import { computed, ref } from "vue";
 import { usePage } from "@inertiajs/vue3";
 import axios from "axios";
+import { extractSaveErrorMessage } from "@/Composeables/BiSaveFeedback.js";
 import { useI18n } from "vue-i18n";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
@@ -346,10 +347,11 @@ const submit = () => {
         start_time: allDayEvent.value ? null : startTime.value,
         end_time: allDayEvent.value ? null : endTime.value,
         is_planning: props.isPlanning,
-    }).then(() => {
+    }, {skipErrorToast: true}).then(() => {
         emit("closed", true);
     }).catch((error) => {
-        requestError.value = error.response?.data?.message ?? $t("An error has occurred");
+        // Fehler steht im Modal – kein zusätzlicher globaler Toast (skipErrorToast)
+        requestError.value = extractSaveErrorMessage(error) ?? $t("An error has occurred");
     }).finally(() => {
         submitting.value = false;
     });

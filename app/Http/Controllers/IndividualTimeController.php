@@ -211,6 +211,9 @@ class IndividualTimeController extends Controller
                 $end->addDay();
             }
             $updateData['working_time_minutes'] = max(0, $start->diffInMinutes($end) - ($breakMinutes ?? 0));
+            // end_date mitziehen: die Arbeitszeitrechnung schneidet über Datum+Uhrzeit zu – ein stehen gebliebenes
+            // altes end_date (z. B. Folgetag nach 22–04 → jetzt 09–17) zählte sonst über 24 h
+            $updateData['end_date'] = $end->toDateString();
         }
 
         $individualTime->update($updateData);

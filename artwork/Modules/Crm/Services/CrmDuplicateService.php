@@ -11,14 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 readonly class CrmDuplicateService
 {
-    // Gespiegelte Typen werden nicht zusammengeführt — deren Duplikate müssen an der
-    // Quelle (User-/Freelancer-/Dienstleister-Verwaltung) bereinigt werden.
-    private const MIRRORED_SLUGS = [
-        CrmSystemContactTypeEnum::USER->value,
-        CrmSystemContactTypeEnum::FREELANCER->value,
-        CrmSystemContactTypeEnum::SERVICE_PROVIDER->value,
-    ];
-
     public function __construct(
         private CrmContactService $contactService,
     ) {
@@ -33,7 +25,7 @@ readonly class CrmDuplicateService
     public function findDuplicateGroups(): array
     {
         $types = CrmContactType::query()
-            ->whereNotIn('slug', self::MIRRORED_SLUGS)
+            ->whereNotIn('slug', CrmSystemContactTypeEnum::mirroredSlugs())
             ->get()
             ->keyBy('id');
 

@@ -23,10 +23,10 @@
                             <MenuItems
                                 class="z-40 overflow-y-auto origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5">
                                 <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
-                                    <Link href="#" @click="teamForm.svg_name = item.iconName; editTeam()"
-                                          :class="[active ? 'bg-text-inverse/10 ' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <button type="button" @click="teamForm.svg_name = item.iconName; editTeam()"
+                                          :class="[active ? 'bg-text-inverse/10 ' : 'text-text-subtle', 'group flex w-full items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TeamIconCollection class="h-16 w-16" :iconName="item.iconName"/>
-                                    </Link>
+                                    </button>
                                 </MenuItem>
                             </MenuItems>
                         </transition>

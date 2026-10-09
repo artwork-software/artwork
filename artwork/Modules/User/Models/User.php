@@ -48,6 +48,7 @@ use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\DeletesMirroredCrmContact;
 use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\Workflow\Traits\HasWorkflows;
 use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
@@ -218,6 +219,13 @@ class User extends Model implements
     use HasProfilePhotoCustom;
     use HasCrmContact;
     use HasCrmFields;
+    use DeletesMirroredCrmContact;
+
+    // All permissions/roles live on the web guard. Without this pin, spatie
+    // resolves the guard from auth.defaults.guard, which Authenticate/shouldUse
+    // switches to 'api' for Passport requests (app API) — every permission
+    // check would then silently fail there.
+    protected string $guard_name = 'web';
 
     protected $fillable = [
         'first_name',
@@ -964,13 +972,14 @@ class User extends Model implements
 
     public function getCurrentWorkTime(): ?UserWorkTime
     {
-        $now = now();
+        // DATE-Spalten gegen das Datum vergleichen: gegen now() fiele der letzte Gültigkeitstag ab 00:00:01 raus
+        $today = now()->toDateString();
         return $this->workTimes()
-            ->where(function ($q) use ($now): void {
-                $q->whereNull('valid_from')->orWhere('valid_from', '<=', $now);
+            ->where(function ($q) use ($today): void {
+                $q->whereNull('valid_from')->orWhereDate('valid_from', '<=', $today);
             })
-            ->where(function ($q) use ($now): void {
-                $q->whereNull('valid_until')->orWhere('valid_until', '>=', $now);
+            ->where(function ($q) use ($today): void {
+                $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', $today);
             })
             ->orderByDesc('valid_from')
             ->first();
@@ -1047,12 +1056,11 @@ class User extends Model implements
 
     public function getFormatedWorkTimeBalanceAttribute(): string
     {
-        // convert work_time_balance to hours and minutes
-        $hours = floor($this->work_time_balance / 60);
-        $minutes = $this->work_time_balance % 60;
+        // "HH:MM" mit Vorzeichen; Betrag zuerst, sonst wird aus -30 "-1:-30"
+        $balance = (int) $this->work_time_balance;
+        $absolute = abs($balance);
 
-        // format as "HH:MM"
-        return sprintf('%02d:%02d', $hours, $minutes);
+        return sprintf('%s%02d:%02d', $balance < 0 ? '-' : '', intdiv($absolute, 60), $absolute % 60);
     }
 
     public function canHaveWorkflow(string $workflowType): bool

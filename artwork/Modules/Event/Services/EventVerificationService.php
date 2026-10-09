@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class EventVerificationService
 {
@@ -492,7 +493,7 @@ class EventVerificationService
                 $this->notificationService->createNotification();
             }
 
-            broadcast(new BroadcastToReloadEventVerificationRequests($verifier));
+            SafeBroadcast::send(new BroadcastToReloadEventVerificationRequests($verifier));
         }
     }
 
@@ -505,7 +506,7 @@ class EventVerificationService
         foreach ($event->verifications as $verification) {
             $verifier = $verification->verifier;
             $verification->delete();
-            broadcast(new BroadcastToReloadEventVerificationRequests($verifier));
+            SafeBroadcast::send(new BroadcastToReloadEventVerificationRequests($verifier));
         }
     }
 }

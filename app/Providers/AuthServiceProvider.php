@@ -48,6 +48,8 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Policies\EventPolicy;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Policies\ExternalAccessPolicy;
+use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
+use Artwork\Modules\ExternalUserManagement\Policies\ExternalUserSourcePolicy;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Policies\FreelancerPolicy;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
@@ -127,6 +129,7 @@ class AuthServiceProvider extends ServiceProvider
         Event::class => EventPolicy::class,
         ModuleSettings::class => ModuleSettingsPolicy::class,
         ExternalAccess::class => ExternalAccessPolicy::class,
+        ExternalUserSource::class => ExternalUserSourcePolicy::class,
         \Artwork\Modules\Chat\Models\Chat::class => \Artwork\Modules\Chat\Policies\ChatPolicy::class,
         \Artwork\Modules\Vacation\Models\Vacation::class =>
             \Artwork\Modules\Vacation\Policies\VacationPolicy::class,
@@ -175,14 +178,14 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Passport::$clientUuids = false;
-
-        // Scopes der Maschinen-API. Ein Scope, der hier fehlt, lässt sich nicht vergeben — die
-        // ScopeRepository lehnt ihn beim Anlegen mit invalid_scope ab.
+        // Scopes der Maschinen-API und der App. Ein Scope, der hier fehlt, lässt sich nicht
+        // vergeben — die ScopeRepository lehnt ihn beim Anlegen mit invalid_scope ab.
         //
         // Wichtig: Scopes stehen im signierten JWT, nicht in der Datenbank. Tokens, die vor der
         // Einführung dieser Liste ausgegeben wurden, tragen dauerhaft eine leere Scope-Menge und
         // können nachträglich keine Rechte erhalten — sie müssen neu erstellt werden.
         Passport::tokensCan([
+            'app' => 'Access the artwork app API',
             'inventory:read' => 'Read inventory categories and articles',
             'ticketing:read' => 'Read released events, price categories and branding',
             'ticketing:write' => 'Report sales, bookings and check-ins back to artwork',
@@ -246,5 +249,11 @@ class AuthServiceProvider extends ServiceProvider
                     ->contains(static fn ($project): bool => $user->can('view', $project));
             }
         );
+
+        // Dienstplaner-Berechtigung als benanntes Gate — die eine Definition
+        // für Web und App (Admins via Gate::before).
+        Gate::define('plan-shifts', static function (User $user): bool {
+            return $user->can(PermissionEnum::SHIFT_PLANNER->value);
+        });
     }
 }

@@ -34,6 +34,7 @@ use Artwork\Modules\Holidays\Services\HolidayService;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
@@ -42,6 +43,7 @@ use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -56,9 +58,11 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Enums\UserFilterTypes;
@@ -91,7 +95,8 @@ readonly class EventService
         private CollectionService $collectionService,
         private EventCollectionService $eventCollectionService,
         private EventTypeService $eventTypeService,
-        private readonly AuthManager $authManager
+        private readonly AuthManager $authManager,
+        private readonly TicketingLock $ticketingLock,
     ) {
         $this->cachedData = null;
     }
@@ -110,6 +115,8 @@ readonly class EventService
         NotificationService $notificationService,
         ProjectTabService $projectTabService,
     ): void {
+        $this->ticketingLock->assertEventDeletable($event);
+
         if (!empty($event->project_id)) {
             $changeService->saveFromBuilder(
                 $changeService
@@ -130,12 +137,12 @@ readonly class EventService
         app(ShiftDeletionService::class)->deleteMany($event->shifts);
         $subEventService->deleteSubEvents($event->subEvents);
 
-        broadcast(new OccupancyUpdated())->toOthers();
+        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
         $notificationService->markOpenRoomRequestsHandled($event->id, 'deleted', $this->deletingUser());
 
         if ($event->room_id) {
-            broadcast(new RemoveEvent($event, $event->room_id));
+            SafeBroadcast::send(new RemoveEvent($event, $event->room_id));
         }
 
         $event->verifications()->each(function (EventVerification $eventVerification): void {
@@ -160,43 +167,55 @@ readonly class EventService
         ProjectTabService $projectTabService,
         bool $sendPerEventNotifications = true,
     ): void {
-        $eventsDeleted = false;
-        /** @var Event $event */
         foreach ($events as $event) {
-            if (!empty($event->project_id)) {
-                $changeService->saveFromBuilder(
-                    $changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($event->project_id)
-                        ->setTranslationKey('Schedule deleted')
-                );
-            }
-
-            // When a whole project is deleted we send one consolidated notification instead
-            // (see ProjectController::destroy), so the per-event notifications are skipped to
-            // avoid flooding users with thousands of "event deleted" messages.
-            if ($sendPerEventNotifications) {
-                $this->createEventDeletedNotificationsForProjectManagers(
-                    $event,
-                    $notificationService,
-                    $projectTabService
-                );
-                $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
-            }
-
-            $eventCommentService->deleteEventComments($event->comments);
-            $timelineService->deleteTimelines($event->timelines);
-            // Massenpfad: kein Live-Update je Schicht, am Ende ein OccupancyUpdated (s. unten)
-            app(ShiftDeletionService::class)->deleteMany($event->shifts, $sendPerEventNotifications, false);
-            $subEventService->deleteSubEvents($event->subEvents);
-
-            $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
-            $notificationService->markOpenRoomRequestsHandled($event->id, 'deleted', $this->deletingUser());
-
-            $this->eventRepository->delete($event);
-            $eventsDeleted = true;
+            $this->ticketingLock->assertEventDeletable($event);
         }
+
+        $deletedEventIds = [];
+        try {
+            /** @var Event $event */
+            foreach ($events as $event) {
+                if (!empty($event->project_id)) {
+                    $changeService->saveFromBuilder(
+                        $changeService
+                            ->createBuilder()
+                            ->setModelClass(Project::class)
+                            ->setModelId($event->project_id)
+                            ->setTranslationKey('Schedule deleted')
+                    );
+                }
+
+                // When a whole project is deleted we send one consolidated notification instead
+                // (see ProjectController::destroy), so the per-event notifications are skipped to
+                // avoid flooding users with thousands of "event deleted" messages.
+                if ($sendPerEventNotifications) {
+                    $this->createEventDeletedNotificationsForProjectManagers(
+                        $event,
+                        $notificationService,
+                        $projectTabService
+                    );
+                    $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
+                }
+
+                $eventCommentService->deleteEventComments($event->comments);
+                $timelineService->deleteTimelines($event->timelines);
+                // Massenpfad: kein Live-Update je Schicht, am Ende ein OccupancyUpdated (s. unten)
+                app(ShiftDeletionService::class)->deleteMany($event->shifts, $sendPerEventNotifications, false);
+                $subEventService->deleteSubEvents($event->subEvents);
+
+                $this->eventRepository->delete($event);
+                $deletedEventIds[] = (int) $event->id;
+            }
+        } finally {
+            // Raumanfrage-Benachrichtigungen gesammelt schließen (ein Scan statt zwei je Termin) – auch für die
+            // bis zu einem Fehler mitten in der Schleife bereits gelöschten Termine
+            $notificationService->closeRoomRequestNotificationsForDeletedEvents(
+                $deletedEventIds,
+                'deleted',
+                $this->deletingUser()
+            );
+        }
+        $eventsDeleted = $deletedEventIds !== [];
 
         // Broadcast once after the whole batch instead of per event. OccupancyUpdated is a
         // generic, payload-less ping that just makes open calendars refetch their visible
@@ -204,7 +223,7 @@ readonly class EventService
         // meant thousands of redundant broadcasts and was a main cause of timeouts when
         // deleting projects with very many events.
         if ($eventsDeleted) {
-            broadcast(new OccupancyUpdated())->toOthers();
+            SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
         }
     }
 
@@ -235,8 +254,10 @@ readonly class EventService
             $shiftsQualificationsService
         );
         $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+        // Beim Löschen wurde die offene Raumanfrage geschlossen – wiederhergestellt ist sie wieder offen
+        app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents([(int) $event->id]);
 
-        broadcast(new OccupancyUpdated())->toOthers();
+        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
     }
 
     public function forceDeleteAll(
@@ -247,22 +268,30 @@ readonly class EventService
         SubEventService $subEventService,
         NotificationService $notificationService,
     ): void {
-        /** @var Event $event */
-        foreach ($events as $event) {
-            $shifts = Shift::onlyTrashed()->where('event_id', $event->id)->get();
-            $timelines = Timeline::onlyTrashed()->where('event_id', $event->id)->get();
-            $comments = EventComment::onlyTrashed()->where('event_id', $event->id)->get();
-            $subEvents = SubEvent::onlyTrashed()->where('event_id', $event->id)->get();
+        $deletedEventIds = [];
+        try {
+            /** @var Event $event */
+            foreach ($events as $event) {
+                $shifts = Shift::onlyTrashed()->where('event_id', $event->id)->get();
+                $timelines = Timeline::onlyTrashed()->where('event_id', $event->id)->get();
+                $comments = EventComment::onlyTrashed()->where('event_id', $event->id)->get();
+                $subEvents = SubEvent::onlyTrashed()->where('event_id', $event->id)->get();
 
-            $eventCommentService->deleteEventComments($comments);
-            $timelineService->forceDeleteTimelines($timelines);
-            $shiftService->forceDeleteShifts($shifts);
-            $subEventService->forceDeleteSubEvents($subEvents);
+                $eventCommentService->deleteEventComments($comments);
+                $timelineService->forceDeleteTimelines($timelines);
+                $shiftService->forceDeleteShifts($shifts);
+                $subEventService->forceDeleteSubEvents($subEvents);
 
-            $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
-            $notificationService->markOpenRoomRequestsHandled($event->id, 'deleted', $this->deletingUser());
-
-            $this->eventRepository->forceDelete($event);
+                $this->eventRepository->forceDelete($event);
+                $deletedEventIds[] = (int) $event->id;
+            }
+        } finally {
+            // Gesammelt schließen – auch für die bis zu einem Fehler bereits gelöschten Termine
+            $notificationService->closeRoomRequestNotificationsForDeletedEvents(
+                $deletedEventIds,
+                'deleted',
+                $this->deletingUser()
+            );
         }
     }
 
@@ -275,29 +304,40 @@ readonly class EventService
         ShiftService $shiftService,
         SubEventService $subEventService,
     ): void {
-        /** @var Event $event */
-        foreach ($events as $event) {
-            $eventDeletedAt = $event->deleted_at?->copy();
-            $this->eventRepository->restore($event);
-            if (!empty($event->project_id)) {
-                $changeService->saveFromBuilder(
-                    $changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($event->project_id)
-                        ->setTranslationKey('Schedule restored')
+        $restoredEventIds = [];
+        try {
+            /** @var Event $event */
+            foreach ($events as $event) {
+                $eventDeletedAt = $event->deleted_at?->copy();
+                $this->eventRepository->restore($event);
+                $restoredEventIds[] = (int) $event->id;
+                if (!empty($event->project_id)) {
+                    $changeService->saveFromBuilder(
+                        $changeService
+                            ->createBuilder()
+                            ->setModelClass(Project::class)
+                            ->setModelId($event->project_id)
+                            ->setTranslationKey('Schedule restored')
+                    );
+                }
+
+                $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
+                $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
+                $shiftService->restoreShifts(
+                    $shiftService->trashedWithEvent($event, $eventDeletedAt),
+                    $shiftsQualificationsService,
                 );
+                $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+
+                SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
             }
-
-            $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
-            $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-            $shiftService->restoreShifts(
-                $shiftService->trashedWithEvent($event, $eventDeletedAt),
-                $shiftsQualificationsService,
-            );
-            $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
-
-            broadcast(new OccupancyUpdated())->toOthers();
+        } finally {
+            // Gegenstück zu deleteAll: beim Löschen geschlossene Raumanfragen wieder öffnen (Projekt, Serie) – auch
+            // für die bis zu einem Fehler bereits wiederhergestellten Termine. Bestehende Meldungen werden an Ort
+            // und Stelle geöffnet, daher auch bei vielen Terminen keine Mail-/Toast-Flut.
+            if ($restoredEventIds !== []) {
+                app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents($restoredEventIds);
+            }
         }
     }
 
@@ -856,17 +896,22 @@ readonly class EventService
                     'shifts.shiftsQualifications',
                 ]
             )
-            ->whereHas(
-                'shifts.' . $relationToFind,
-                function (Builder $builder) use ($modelId): void {
+            // Nach Schichtdatum filtern, nicht nach Terminzeit: Die Schicht zählt zum
+            // Tag ihres Beginns, auch wenn der Termin selbst außerhalb des Zeitraums
+            // liegt oder über Mitternacht hinausläuft.
+            ->whereHas('shifts', function (Builder $query) use (
+                $relationToFind,
+                $modelId,
+                $startDate,
+                $endDate,
+            ): void {
+                $query->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
                     $builder->whereKey($modelId);
-                }
-            )
-            // Überlappung statt vollständiger Enthaltung: Termine, die über
-            // Mitternacht (und damit über das Zeitraum-Ende) hinauslaufen,
-            // dürfen nicht komplett herausfallen.
-            ->where('start_time', '<=', $endDate->copy()->endOfDay())
-            ->where('end_time', '>=', $startDate->copy()->startOfDay())
+                })->whereBetween('start_date', [
+                    $startDate->toDateString(),
+                    $endDate->toDateString(),
+                ]);
+            })
             ->orderBy('start_time')
             ->orderBy('end_time')
             ->get();
@@ -1168,7 +1213,10 @@ readonly class EventService
 
         $spanDays = (int) $holidayStart->diffInDays($holidayEnd);
         foreach ([$day->year, $day->year - 1] as $candidateYear) {
-            $candidateStart = $holidayStart->copy()->setYear($candidateYear);
+            $candidateStart = Holiday::yearlyStartIn($holidayStart, $candidateYear);
+            if ($candidateStart === null) {
+                continue;
+            }
             $candidateEnd = $candidateStart->copy()->addDays($spanDays);
             if ($day->betweenIncluded($candidateStart, $candidateEnd)) {
                 return true;
@@ -2022,15 +2070,17 @@ readonly class EventService
 
         $event->load(['event_type', 'project']);
 
+        // Live-Updates nach dem Speichern (SafeBroadcast): ein nicht erreichbarer WebSocket-Server darf eine
+        // bereits gespeicherte Änderung nicht zur 500 machen bzw. Serien-Änderungen mittendrin abbrechen
         // Broadcast to the old room if room changed
         if ($originalRoomId && $originalRoomId !== $event->room_id) {
-            broadcast(new EventUpdated(
+            SafeBroadcast::send(new EventUpdated(
                 $event,
                 $originalRoomId
             ));
         }
 
-        broadcast(new EventUpdated(
+        SafeBroadcast::send(new EventUpdated(
             $event,
             $event->room_id
         ));
@@ -2241,6 +2291,32 @@ readonly class EventService
         return $createdEvent;
     }
 
+    /**
+     * is_planning aus einem Bulk-Update nur übernehmen, wenn die Umstellung auch auf dem regulären Weg erlaubt wäre:
+     * - fester Termin -> Planungskalender: nur mit „Planungskalender bearbeiten“
+     *   (wie EventController::convertToPlanning)
+     * - geplanter Termin -> fester Termin: nie hier, sondern nur über den Bestätigungsablauf
+     *   (EventVerificationService – Verifizierung bzw. sofortige Übernahme samt Raumanfrage-Benachrichtigung)
+     * Ohne passende Rechte bleibt der bisherige Wert stehen (Key wird ignoriert, kein 403 – der BulkBody
+     * schickt is_planning bei jedem Speichern unverändert mit).
+     */
+    public function resolveBulkIsPlanning(SupportCollection $data, Event $event): bool
+    {
+        $currentIsPlanning = (bool) $event->is_planning;
+        if (!$data->has('is_planning') || $data->get('is_planning') === null) {
+            return $currentIsPlanning;
+        }
+
+        $requestedIsPlanning = filter_var($data->get('is_planning'), FILTER_VALIDATE_BOOLEAN);
+        if ($requestedIsPlanning === $currentIsPlanning || !$requestedIsPlanning) {
+            return $currentIsPlanning;
+        }
+
+        $user = $this->authManager->user();
+
+        return $user instanceof User && $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value);
+    }
+
     public function updateBulkEvent(
         SupportCollection $data,
         Event $event,
@@ -2279,7 +2355,7 @@ readonly class EventService
             }
         }
 
-        $newIsPlanning = $data['is_planning'] ?? $event->is_planning;
+        $newIsPlanning = $this->resolveBulkIsPlanning($data, $event);
         $oldIsPlanning = (bool) $event->is_planning;
 
         $this->eventRepository->update($event, [
@@ -2294,11 +2370,19 @@ readonly class EventService
                 : $event->admission_time,
             'allDay' => $allDay,
             'event_type_id' => $data['type']['id'],
-            'room_id' => $data['room']['id'],
+            // Fehlender/leerer Raum entfernt den Raum nicht (Bulk-Zeile ohne Raumobjekt, z. B. nach Reset) –
+            // Termine ohne Raum anzulegen ist eigens berechtigt (storeEvent), das prüft dieser Weg nicht
+            'room_id' => data_get($data, 'room.id') ?? $event->room_id,
             'is_planning' => $newIsPlanning,
         ]);
 
-        if ($oldIsPlanning !== (bool) $newIsPlanning) {
+        if ($newIsPlanning && !$oldIsPlanning) {
+            // Wie convertToPlanning: offene Raumanfragen zurückziehen – der Termin ist für Raumadmins
+            // ohne Planungskalender-Zugriff nicht mehr sichtbar
+            app(NotificationService::class)->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
+        }
+
+        if ($oldIsPlanning !== $newIsPlanning) {
             $changeService = app(ChangeService::class);
             $changeService->saveFromBuilder(
                 $changeService
@@ -2398,19 +2482,17 @@ readonly class EventService
                 ->distinct()
                 ->pluck('project_id');
 
-            // Offene Raumanfragen wie beim Einzel-Löschen als erledigt markieren – sonst blieben
-            // Annehmen/Ablehnen stehen und führten auf einen Termin im Papierkorb (404)
-            $openRequestIds = Event::query()
-                ->whereIn('id', $eventIds)
-                ->where('occupancy_option', true)
-                ->pluck('id');
-
             $this->eventRepository->deleteEvents($eventIds);
 
-            $notificationService = app(NotificationService::class);
-            foreach ($openRequestIds as $openRequestId) {
-                $notificationService->markOpenRoomRequestsHandled($openRequestId, 'deleted', $this->deletingUser());
-            }
+            // Raumanfrage-Meldungen wie beim Einzel-Löschen schließen – sonst blieben Annehmen/Ablehnen bzw. bei
+            // abgelehnten Terminen (ohne Raum, keine Anfrage mehr) Änderungsanfrage/Löschen stehen und führten auf
+            // einen Termin im Papierkorb (404). Alle Termine übergeben: die Funktion schließt nur offene Anfragen
+            // und entfernt die Absage-Meldungen (UPSERT)
+            app(NotificationService::class)->closeRoomRequestNotificationsForDeletedEvents(
+                $eventIds->map(static fn ($id): int => (int) $id)->all(),
+                'deleted',
+                $this->deletingUser()
+            );
 
             $projectDayAssignmentService = app(ProjectDayAssignmentService::class);
 

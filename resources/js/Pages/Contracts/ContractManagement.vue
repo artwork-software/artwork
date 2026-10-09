@@ -88,7 +88,7 @@
                     <div class="flex items-center">
                         <div class="flex -space-x-2">
                             <img
-                                v-for="user in row.accessibleUsers?.slice(0, 3)"
+                                v-for="user in displayedAccessUsersOf(row)?.slice(0, 3)"
                                 :key="'user-' + user.id"
                                 :src="user.profile_photo_url"
                                 :alt="user.first_name + ' ' + user.last_name"
@@ -96,7 +96,7 @@
                                 v-tooltip.top="{ value: user.first_name + ' ' + user.last_name, appendTo: 'body', class: 'aw-tooltip' }"
                             />
                             <div
-                                v-for="department in row.accessibleDepartments?.slice(0, Math.max(0, 3 - (row.accessibleUsers?.length || 0)))"
+                                v-for="department in row.accessibleDepartments?.slice(0, Math.max(0, 3 - (displayedAccessUsersOf(row)?.length || 0)))"
                                 :key="'dept-' + department.id"
                                 class="size-8 rounded-full ring-2 ring-white bg-surface-sunken flex items-center justify-center"
                                 v-tooltip.top="{ value: department.name, appendTo: 'body', class: 'aw-tooltip' }"
@@ -105,16 +105,16 @@
                             </div>
                         </div>
                         <BaseMenu
-                            v-if="(row.accessibleUsers?.length || 0) + (row.accessibleDepartments?.length || 0) > 3"
+                            v-if="(displayedAccessUsersOf(row)?.length || 0) + (row.accessibleDepartments?.length || 0) > 3"
                             :show-icon="false"
                             :show-menu-button-text="true"
-                            :menu-button-text="'+' + ((row.accessibleUsers?.length || 0) + (row.accessibleDepartments?.length || 0) - 3)"
+                            :menu-button-text="'+' + ((displayedAccessUsersOf(row)?.length || 0) + (row.accessibleDepartments?.length || 0) - 3)"
                             classes="ml-2 cursor-pointer"
                             classes-button="text-xs text-text-subtle hover:text-text-muted cursor-pointer"
                             white-menu-background
                         >
                             <div class="p-2 min-w-48">
-                                <div v-for="user in row.accessibleUsers" :key="'menu-user-' + user.id" class="flex items-center py-1.5 px-2 hover:bg-surface-sunken rounded">
+                                <div v-for="user in displayedAccessUsersOf(row)" :key="'menu-user-' + user.id" class="flex items-center py-1.5 px-2 hover:bg-surface-sunken rounded">
                                     <img :src="user.profile_photo_url" :alt="user.first_name + ' ' + user.last_name" class="size-6 rounded-full object-cover mr-2" />
                                     <span class="text-sm text-text-muted">{{ user.first_name }} {{ user.last_name }}</span>
                                 </div>
@@ -220,6 +220,7 @@ import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue"
 import axios from 'axios'
+import { displayedAccessUsersOf } from '@/Helper/sharedAccess.js'
 
 export default {
     mixins: [Permissions],
@@ -388,6 +389,8 @@ export default {
         },
     },
     methods: {
+        // Anzeige inkl. Projektleitungen; das Bearbeiten-Modal nutzt nur die echten Freigaben (accessibleUsers)
+        displayedAccessUsersOf,
         openContractFilterModal() {
             this.showContractFilterModal = true;
         },

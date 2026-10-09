@@ -1,8 +1,9 @@
 <script setup>
-import { ref, watch, onMounted, computed } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, computed } from "vue";
 import axios from 'axios';
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
+import { createComponentTextSave } from "@/Composeables/componentTextSave.js";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
@@ -27,39 +28,42 @@ const text = ref(
         : props.data.data.text
 );
 
-// Listener initialisieren (wie zuvor im mounted)
+// Während getippt wird, überschreiben Live-Updates die ungespeicherte Eingabe nicht
+const isFocused = ref(false);
+
+// Getter: Inertia-Besuche mit preserveState ersetzen props.data, die Komponente bleibt gemountet
+const dataListener = useProjectDataListener(() => props.data, props.projectId);
 onMounted(() => {
-    useProjectDataListener(props.data, props.projectId).init();
+    dataListener.init();
+});
+onBeforeUnmount(() => {
+    dataListener.stop();
 });
 
-// Patch-Aufruf mit axios (ohne Page Reload)
-async function updateTextData() {
-    try {
-        await axios.patch(
-            route("project.tab.component.update", {
-                project: props.projectId,
-                component: props.data.id,
-            }),
-            {
-                data: {
-                    text: text.value,
-                },
-            }
-        );
-        // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
-    } catch (error) {
-        console.error('Fehler beim Aktualisieren:', error);
-    }
+// Nur bei Änderung, nacheinander (neuester Wert gewinnt), eigene Antwort übernehmen
+const textSave = createComponentTextSave({
+    text,
+    isEditing: isFocused,
+    getStoredText: () => (props.data.project_value ? props.data.project_value.data.text : props.data.data.text),
+    dataListener,
+    send: (value) => axios.patch(
+        route("project.tab.component.update", {
+            project: props.projectId,
+            component: props.data.id,
+        }),
+        { data: { text: value } }
+    ),
+});
+
+function updateTextData() {
+    isFocused.value = false;
+    textSave.submit();
 }
 
-// Deep-Watch auf eingehende Daten (entspricht deinem watcher auf projectData)
+// Deep-Watch auf eingehende Daten (Broadcast-Nachladen, Abgleich anderer Instanzen)
 watch(
     () => props.data,
-    (newVal) => {
-        text.value = newVal.project_value
-            ? newVal.project_value.data.text
-            : newVal.data.text;
-    },
+    () => textSave.syncFromStored(),
     { deep: true }
 );
 </script>
@@ -82,6 +86,7 @@ watch(
                     :id="projectData.id"
                     type="text"
                     :disabled="!canEditComponent"
+                    @focusin="isFocused = true"
                     @focusout="updateTextData"
                     v-model="text"
                     :placeholder="projectData.data.placeholder"

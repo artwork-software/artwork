@@ -25,7 +25,7 @@
                             <BaseInput
                                 id="saveFilter"
                                 v-model="filterName"
-                                label="Name des Filters"
+                                label="Name of the filter"
                                 is-small
                                 @keydown.space.prevent
                             />
@@ -280,11 +280,13 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     name: "IndividualCalendarFilterComponent",
     mixins: [Permissions],
     components: {
+        BaseInput,
         TextInputComponent,
         SwitchLabel,
         Switch,

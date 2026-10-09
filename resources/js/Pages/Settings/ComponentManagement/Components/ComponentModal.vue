@@ -702,6 +702,9 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import { useTranslation } from "@/Composeables/Translation.js";
+
+const $t = useTranslation()
 
 defineOptions({ name: 'ComponentModal' })
 
@@ -945,7 +948,7 @@ function closeModal() {
 function updateOrSaveComponent() {
     helpTexts.name = null
     if (!componentName.value?.trim()) {
-        helpTexts.name = (typeof $t === 'function' ? $t('Please enter a name.') : 'Please enter a name.')
+        helpTexts.name = $t('Please enter a name.')
         return
     }
 

@@ -2,9 +2,11 @@
 
 namespace Artwork\Modules\Workflow\Actions;
 
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Workflow\Models\WorkflowInstance;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Str;
 
 class NotificationAction implements WorkflowAction
 {
@@ -20,12 +22,12 @@ class NotificationAction implements WorkflowAction
         $userIds = $parameters['user_ids'] ?? [];
 
         if ($userId) {
-            $this->sendToUser($userId, $message, $workflowInstance);
+            $this->sendToUser((int) $userId, (string) $message);
         }
 
         if (!empty($userIds)) {
             foreach ($userIds as $id) {
-                $this->sendToUser($id, $message, $workflowInstance);
+                $this->sendToUser((int) $id, (string) $message);
             }
         }
     }
@@ -41,22 +43,35 @@ class NotificationAction implements WorkflowAction
         return 'notification';
     }
 
-    private function sendToUser(int $userId, string $message, WorkflowInstance $workflowInstance): void
+    /**
+     * Über NotificationService wie alle anderen Absender (Einstellungen, Sammelmail, Live-Hinweis).
+     * Vorher: verkettete void-Setter und ein nicht existierendes sendToUsers() – ein \Error, den
+     * WorkflowService (catch \Exception) nicht abfing.
+     */
+    private function sendToUser(int $userId, string $message): void
     {
         $user = User::find($userId);
         if (!$user) {
             return;
         }
 
-        $this->notificationService->setTitle('Workflow Benachrichtigung')
-            ->setDescription($message)
-            ->setNotificationConstEnum(
-                \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST
-            )
-            ->setButtons([
-                ['type' => 'success', 'text' => 'OK']
-            ])
-            ->setIcon('workflow')
-            ->sendToUsers($user);
+        $title = __('Workflow notification', [], $user->language);
+        $this->notificationService->clearNotificationData();
+        $this->notificationService->setTitle($title);
+        $this->notificationService->setDescription([
+            1 => ['type' => 'string', 'title' => $message, 'href' => null],
+        ]);
+        $this->notificationService->setNotificationConstEnum(
+            NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST
+        );
+        $this->notificationService->setIcon('workflow');
+        $this->notificationService->setBroadcastMessage([
+            'id' => Str::uuid()->toString(),
+            'type' => 'success',
+            'message' => $title,
+        ]);
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
+        $this->notificationService->clearNotificationData();
     }
 }

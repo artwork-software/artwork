@@ -1,7 +1,9 @@
 <script>
+import {IconDragDrop} from "@tabler/icons-vue";
 
 export default {
     name: "SageDragCellElement",
+    components: {IconDragDrop},
     props: ['cell'],
     emits: ['isDragged'],
     methods: {

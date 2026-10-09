@@ -62,7 +62,7 @@
                                     {{ type.name }}
                                 </span>
                             </div>
-                            <PropertyIcon name="CheckIcon"
+                            <PropertyIcon name="IconCheck"
                                 v-if="selected"
                                 class="h-5 w-5 text-success"
                                 aria-hidden="true"

@@ -75,7 +75,7 @@
                             @focusout="onFieldSave('name', articleForm.name)"
                         />
                         <p v-if="fieldStatus.name === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
-                        <p v-if="fieldStatus.name === 'error'" class="text-xs text-danger mt-1">{{ $t('This field must not be empty') }}</p>
+                        <p v-if="fieldStatus.name === 'error'" class="text-xs text-danger mt-1">{{ fieldErrorMessages.name || $t('This field must not be empty') }}</p>
                     </div>
 
                     <div class="col-span-full">
@@ -226,7 +226,7 @@
                              und nicht manuell änderbar (Abnahme MAT-05 Ref. 1.24) -->
                         <p v-if="articleForm.is_detailed_quantity" class="text-xs text-text-subtle mt-1">{{ $t('Calculated automatically from the sum of the individual inventory items') }}</p>
                         <p v-if="fieldStatus.quantity === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
-                        <p v-if="fieldStatus.quantity === 'error'" class="text-xs text-danger mt-1">{{ $t('This field must not be empty') }}</p>
+                        <p v-if="fieldStatus.quantity === 'error'" class="text-xs text-danger mt-1">{{ fieldErrorMessages.quantity || $t('This field must not be empty') }}</p>
                         <div v-if="articleForm.is_detailed_quantity && calculateTotalQuantity !== articleForm.quantity" class="mt-1 flex items-center gap-x-1">
                             <span class="text-xs text-danger font-lexend">{{ $t('Sum of detailed articles') }}: </span>
                             <button type="button" class="text-xs font-semibold text-accent-600 hover:text-accent-700 font-lexend flex items-center gap-x-0.5" @click="articleForm.quantity = calculateTotalQuantity">
@@ -1237,6 +1237,9 @@ const $t = useTranslation()
 
 // === Inline-Autosave state ===
 const fieldStatus = ref({})
+// Fehlermeldung des Servers je Feld (z. B. Gesamtmenge kleiner als die übrigen Statusmengen) –
+// ohne sie zeigte jeder Inline-Fehler „Dieses Feld darf nicht leer sein“
+const fieldErrorMessages = ref({})
 const detailedFieldStatus = ref({})
 const originalValues = ref({})
 const originalDetailedValues = ref({})
@@ -2321,20 +2324,38 @@ const toggleTag = (tag) => {
 // === Inline-Autosave Logik (nur Edit-Modus) ===
 const articleRequiredFields = ['name', 'quantity']
 
+// Der Server gleicht eine Inline-Mengenänderung im Standard-Status aus – nur diesen im Formular
+// nachziehen, sonst überschreibt „Speichern“ (complete_form) ihn wieder mit dem alten Wert. Andere
+// Statusmengen bleiben, wie sie im Formular stehen (dort ggf. noch ungespeicherte Eingaben).
+const applyServerStatusValues = (statusValues) => {
+    if (!Array.isArray(statusValues)) return
+    for (const serverStatusValue of statusValues.filter(s => s.default)) {
+        const statusValue = articleForm.statusValues.find(s => s.id === serverStatusValue.id)
+        if (statusValue) {
+            statusValue.value = serverStatusValue.value
+        }
+    }
+}
+
 const onFieldSave = async (field, value) => {
     if (!isEditMode.value) return
     if (value === originalValues.value[field]) return
+    fieldErrorMessages.value[field] = null
     if (articleRequiredFields.includes(field) && (value === null || value === '')) {
         fieldStatus.value[field] = 'error'
         return
     }
     try {
-        await axios.patch(route('inventory-management.articles.update-field', props.article.id), { field, value })
+        const response = await axios.patch(route('inventory-management.articles.update-field', props.article.id), { field, value })
+        if (field === 'quantity') {
+            applyServerStatusValues(response?.data?.status_values)
+        }
         fieldStatus.value[field] = 'success'
         hasInlineSaved.value = true
         originalValues.value[field] = value
         setTimeout(() => { fieldStatus.value[field] = null }, 3000)
-    } catch {
+    } catch (error) {
+        fieldErrorMessages.value[field] = error?.response?.data?.error ?? null
         fieldStatus.value[field] = 'error'
     }
 }

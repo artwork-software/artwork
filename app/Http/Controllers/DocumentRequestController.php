@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
+use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmContactTypeService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
@@ -294,6 +295,15 @@ class DocumentRequestController extends Controller
         $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
 
         $groups = $this->crmPropertyGroupService->getVisibleForUser($user->id, $deptIds, $isCrmManager);
+        $groups->loadMissing('properties');
+
+        // Werte vertraulicher Gruppen ohne Freigabe nicht ausliefern – vorher wurden nur die
+        // Gruppen gefiltert, die Werte (Stundensatz, Geburtsdatum …) lagen trotzdem im JSON
+        $visiblePropertyIds = $groups->flatMap(fn (CrmPropertyGroup $group) => $group->properties)->pluck('id')->all();
+        $contact->setRelation(
+            'propertyValues',
+            $contact->propertyValues->whereIn('crm_property_id', $visiblePropertyIds)->values()
+        );
 
         return response()->json([
             'contact' => $contact,

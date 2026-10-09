@@ -5,11 +5,15 @@ namespace Artwork\Modules\WorkTime\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
+use Artwork\Modules\WorkTime\Http\Requests\RebookWorkTimeRequest;
 use Artwork\Modules\WorkTime\Http\Requests\StoreWorkTimeBookingRequest;
 use Artwork\Modules\WorkTime\Http\Requests\UpdateWorkTimeBookingRequest;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
+use Artwork\Modules\WorkTime\Services\OvertimeService;
+use Artwork\Modules\WorkTime\Services\WorkTimeBookingService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 
 class WorkTimeBookingController extends Controller
 {
@@ -17,6 +21,8 @@ class WorkTimeBookingController extends Controller
     public function __construct(
         protected WorkTimeBookingRepository $repository,
         protected WorkingHourCacheService $workingHourCacheService,
+        protected OvertimeService $overtimeService,
+        protected WorkTimeBookingService $workTimeBookingService,
     ) {
     }
 
@@ -71,7 +77,7 @@ class WorkTimeBookingController extends Controller
             $workedMinutes = -$workedMinutes;
         }
 
-        $user->workTimeBookings()->create([
+        $this->repository->createBookingAndUpdateBalanceInTransaction($user, [
             'booker_id' => auth()->id(),
             'name' => 'manual_booking',
             'comment' => $request->input('comment'),
@@ -82,13 +88,25 @@ class WorkTimeBookingController extends Controller
             'is_special_day' => false,
             'nightly_working_hours' => $nightlyMinutes,
             'work_time_balance_change' => $workedMinutes,
-        ]);
-
-        $this->repository->updateUserBalance($user, $workedMinutes);
+        ], $workedMinutes);
 
         $this->workingHourCacheService->forgetForEntity('user', $user->id);
+
+        // Überstunden sofort neu aufbauen (sonst erst mit der nächtlichen Buchung sichtbar)
+        $this->overtimeService->recomputeForUser($user);
     }
 
+
+    /**
+     * „Tag neu buchen“: vergangene Tage nach aktueller Rechnung buchen (Delta gegen die vorhandene
+     * Tagesbuchung bzw. erstmalig). Nur auf ausdrücklichen Klick – nie automatisch.
+     */
+    public function rebook(RebookWorkTimeRequest $request, User $user): RedirectResponse
+    {
+        $this->workTimeBookingService->rebookPastDays($user, array_unique($request->validated('dates')));
+
+        return redirect()->back();
+    }
 
     /**
      * Display the specified resource.

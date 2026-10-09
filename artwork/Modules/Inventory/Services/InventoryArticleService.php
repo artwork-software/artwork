@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Inventory\Services;
 
+use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
+use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Carbon\Carbon;
 use Illuminate\Notifications\DatabaseNotification;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
@@ -237,6 +239,16 @@ class InventoryArticleService
     public function count(): int
     {
         return $this->articleRepository->count();
+    }
+
+    /**
+     * Volltextsuche für die Artikelauswahl; fällt auf SQL zurück, solange der Meilisearch-Index fehlt.
+     *
+     * @return Collection<int, InventoryArticle>
+     */
+    public function searchArticles(string $term, int $limit): Collection
+    {
+        return $this->articleRepository->search($term, $limit);
     }
 
     /**
@@ -674,50 +686,109 @@ class InventoryArticleService
     /**
      * Benachrichtigt die Verantwortlichen künftiger Ausgaben, deren Zeitraum für diesen Artikel
      * überbucht ist. Je Ausgabe zählt die gleichzeitige Nutzung im Zeitraum über interne UND
-     * externe Ausgaben gegen die einsatzbereite Menge (getAvailableStock). Vorher wurden alle
-     * künftigen Ausgaben ohne Zeitbezug addiert und mit der Gesamtmenge verglichen, intern und
-     * extern getrennt – Fehlalarme bei nicht überlappenden Ausgaben, echte Überbuchungen blieben
-     * unbemerkt. Pro Person und Ausgabe nur eine ungelesene Meldung.
+     * externe Ausgaben gegen die einsatzbereite Menge (wie getAvailableStock). Pro Person und
+     * Ausgabe nur eine ungelesene Meldung.
+     *
+     * Artikel, Ausgaben und Belegungsintervalle werden einmal geladen und je Ausgabe nur noch im
+     * Speicher ausgewertet – vorher je Ausgabe fresh() samt zwei Overlap-Queries, Statuswerten
+     * und lazy geladenen Verantwortlichen (bei vielen Ausgaben tausende Queries beim Speichern).
      */
     public function checkAndNotifyOverbooking(InventoryArticle $article): void
     {
-        $today = now()->toDateString();
+        $freshArticle = $article->fresh();
+        if ($freshArticle === null) {
+            return;
+        }
 
-        foreach ($article->internalIssues()->where('end_date', '>=', $today)->get() as $issue) {
-            $start = Carbon::parse($issue->start_date)->toDateString() . ' ' . ($issue->start_time ?? '00:00:00');
-            $end = Carbon::parse($issue->end_date ?? $issue->start_date)->toDateString()
-                . ' ' . ($issue->end_time ?? '23:59:59');
-            if (!$this->isOverbookedWithin($article, $start, $end)) {
+        $today = now()->toDateString();
+        $futureInternalIssues = $freshArticle->internalIssues()
+            ->where('end_date', '>=', $today)
+            ->with('responsibleUsers')
+            ->get();
+        $futureExternalIssues = $freshArticle->externalIssues()
+            ->reservedOnOrAfter($today)
+            ->with('issuedBy')
+            ->get();
+        if ($futureInternalIssues->isEmpty() && $futureExternalIssues->isEmpty()) {
+            return;
+        }
+
+        /** @var list<array{issue: InternalIssue|ExternalIssue, type: string, window: array{0: int, 1: int}}> $checks */
+        $checks = [];
+        $firstDay = null;
+        $lastDay = null;
+        foreach ($futureInternalIssues as $issue) {
+            $startDay = Carbon::parse($issue->start_date)->toDateString();
+            $endDay = Carbon::parse($issue->end_date ?? $issue->start_date)->toDateString();
+            $checks[] = [
+                'issue' => $issue,
+                'type' => 'intern',
+                'window' => InventoryArticle::availabilityWindow(
+                    $startDay . ' ' . ($issue->start_time ?? '00:00:00'),
+                    $endDay . ' ' . ($issue->end_time ?? '23:59:59')
+                ),
+            ];
+            $firstDay = $firstDay === null ? $startDay : min($firstDay, $startDay);
+            $lastDay = $lastDay === null ? $endDay : max($lastDay, $endDay);
+        }
+        foreach ($futureExternalIssues as $issue) {
+            if ($issue->issuedBy === null) {
+                continue;
+            }
+            $startDay = Carbon::parse($issue->issue_date)->toDateString();
+            $endDay = ($issue->effectiveReturnDate() ?? Carbon::parse($issue->issue_date))->toDateString();
+            $checks[] = [
+                'issue' => $issue,
+                'type' => 'extern',
+                'window' => InventoryArticle::availabilityWindow($startDay, $endDay),
+            ];
+            $firstDay = $firstDay === null ? $startDay : min($firstDay, $startDay);
+            $lastDay = $lastDay === null ? $endDay : max($lastDay, $endDay);
+        }
+        if ($checks === []) {
+            return;
+        }
+
+        // Alle Ausgaben, die eines der Prüffenster berühren können – gleiche Vorauswahl wie
+        // getAvailableStock, nur über den gesamten Prüfzeitraum statt je Ausgabe
+        $internalIssues = $freshArticle->internalIssues()
+            ->where('start_date', '<=', $lastDay)
+            ->where(function ($query) use ($firstDay): void {
+                $query->where('end_date', '>=', $firstDay)
+                    ->orWhere(function ($openEnd) use ($firstDay): void {
+                        $openEnd->whereNull('end_date')->where('start_date', '>=', $firstDay);
+                    });
+            })
+            ->get();
+        $externalIssues = $freshArticle->externalIssues()
+            ->where('issue_date', '<=', $lastDay)
+            ->reservedOnOrAfter($firstDay)
+            ->get();
+        $intervals = InventoryArticle::usageIntervals($internalIssues, $externalIssues);
+        $readyQuantity = $freshArticle->readyQuantity();
+
+        foreach ($checks as ['issue' => $issue, 'type' => $type, 'window' => [$windowStart, $windowEnd]]) {
+            if (InventoryArticle::peakUsageOfIntervals($intervals, $windowStart, $windowEnd) <= $readyQuantity) {
                 continue;
             }
 
-            foreach ($issue->responsibleUsers as $user) {
-                $this->sendOverbookingNotification(
-                    $article,
-                    $user,
-                    $issue->id,
-                    $issue->name,
-                    route('issue-of-material.index', ['issue' => $issue->id]),
-                    'intern'
-                );
-            }
-        }
+            if ($type === 'intern') {
+                foreach ($issue->responsibleUsers as $user) {
+                    $this->sendOverbookingNotification(
+                        $freshArticle,
+                        $user,
+                        $issue->id,
+                        $issue->name,
+                        route('issue-of-material.index', ['issue' => $issue->id]),
+                        'intern'
+                    );
+                }
 
-        foreach ($article->externalIssues()->reservedOnOrAfter($today)->get() as $issue) {
-            $returnDate = $issue->effectiveReturnDate() ?? Carbon::parse($issue->issue_date);
-            if (
-                $issue->issuedBy === null
-                || !$this->isOverbookedWithin(
-                    $article,
-                    Carbon::parse($issue->issue_date)->toDateString(),
-                    $returnDate->toDateString()
-                )
-            ) {
                 continue;
             }
 
             $this->sendOverbookingNotification(
-                $article,
+                $freshArticle,
                 $issue->issuedBy,
                 $issue->id,
                 $issue->name,
@@ -725,14 +796,6 @@ class InventoryArticleService
                 'extern'
             );
         }
-    }
-
-    private function isOverbookedWithin(InventoryArticle $article, string $start, string $end): bool
-    {
-        // Frisch laden: getAvailableStock nutzt sonst ggf. vorgeladene, anders gefilterte Relationen
-        $stock = $article->fresh()?->getAvailableStock($start, $end);
-
-        return $stock !== null && $stock['reserved'] > $stock['total'];
     }
 
     private function sendOverbookingNotification(

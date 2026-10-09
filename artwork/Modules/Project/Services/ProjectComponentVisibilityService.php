@@ -3,14 +3,18 @@
 namespace Artwork\Modules\Project\Services;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentPermissionEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
+use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Container\Attributes\Scoped;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -23,7 +27,11 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * - Komponenten-Berechtigung ("Sehen dürfen nur die Folgenden"): Component::isVisibleTo; Admins und
  *   "write projects" sind davon ausgenommen.
  * Projektzugriff selbst prüft weiterhin ProjectPolicy::view (CanViewProject).
+ *
+ * Scoped (je Request/Job eine Instanz): Policies werden je Prüfung neu gebaut, ohne geteilte Instanz
+ * griff der Cache visibleTabIdsByUser nie (N+1 in Checklisten- und Datei-Policies).
  */
+#[Scoped]
 class ProjectComponentVisibilityService
 {
     /** @var array<int, Collection<int, int>> */
@@ -53,6 +61,10 @@ class ProjectComponentVisibilityService
 
     public function canSeeTab(User $user, int $tabId): bool
     {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return true;
+        }
+
         return $this->visibleTabIds($user)->contains($tabId);
     }
 
@@ -75,10 +87,15 @@ class ProjectComponentVisibilityService
     }
 
     /**
-     * Inhalte ohne Tab (tab_id = null) oder aus sichtbaren Tabs.
+     * Inhalte ohne Tab (tab_id = null) oder aus sichtbaren Tabs. Admins sehen alles — auch Inhalte
+     * gelöschter eingeschränkter Tabs, deren tab_id auf keinen Tab mehr zeigt.
      */
     public function constrainToVisibleTabs(Builder|Relation $query, User $user): void
     {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return;
+        }
+
         $visibleTabIds = $this->visibleTabIds($user);
 
         $query->where(function ($query) use ($visibleTabIds): void {
@@ -161,17 +178,39 @@ class ProjectComponentVisibilityService
      */
     public function canSeeInProject(User $user, Component $component): bool
     {
+        return $this->visibleInProjectComponentIds($user, [$component])->contains($component->id);
+    }
+
+    /**
+     * Sammelvariante von canSeeInProject() (Drucklayout, Projektübersicht): Platzierungen aller
+     * Komponenten werden mit einer festen Zahl Abfragen geladen statt je Komponente.
+     *
+     * @param iterable<int, Component|null> $components
+     * @return Collection<int, int> IDs der sichtbaren Komponenten
+     */
+    public function visibleInProjectComponentIds(User $user, iterable $components): Collection
+    {
+        $components = EloquentCollection::make($components)->filter()->unique('id')->values();
+        if ($components->isEmpty()) {
+            return collect();
+        }
+
         if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            return true;
+            return $components->pluck('id')->values();
         }
 
-        if (!$this->canSeeComponent($user, $component)) {
-            return false;
-        }
+        $permitted = $this->filterComponentsVisibleTo($user, $components);
+        $placementTabIds = $this->placementTabIdsByComponent($user, $permitted->pluck('id'));
+        $visibleTabIds = $this->visibleTabIds($user);
 
-        $tabIds = $this->placementTabIds($user, $component);
+        return $permitted
+            ->filter(function (Component $component) use ($placementTabIds, $visibleTabIds): bool {
+                $tabIds = $placementTabIds[$component->id] ?? null;
 
-        return $tabIds === null || $tabIds->intersect($this->visibleTabIds($user))->isNotEmpty();
+                return $tabIds === null || $tabIds->intersect($visibleTabIds)->isNotEmpty();
+            })
+            ->pluck('id')
+            ->values();
     }
 
     /**
@@ -187,14 +226,15 @@ class ProjectComponentVisibilityService
             return true;
         }
 
+        $permitted = $this->filterComponentsVisibleTo($user, Component::query()->whereIn('type', $types)->get());
+        $placementTabIds = $this->placementTabIdsByComponent($user, $permitted->pluck('id'));
         $visibleTabIds = $this->visibleTabIds($user);
 
-        return Component::query()
-            ->whereIn('type', $types)
-            ->with(['users', 'departments.users'])
-            ->get()
-            ->contains(fn (Component $component) => $this->canSeeComponent($user, $component) &&
-                ($this->placementTabIds($user, $component) ?? collect())->intersect($visibleTabIds)->isNotEmpty());
+        return $permitted->contains(
+            fn (Component $component) => ($placementTabIds[$component->id] ?? collect())
+                ->intersect($visibleTabIds)
+                ->isNotEmpty()
+        );
     }
 
     private function canSeeFolderPlacement(User $user, DisclosureComponents $folderPlacement): bool
@@ -216,44 +256,110 @@ class ProjectComponentVisibilityService
     }
 
     /**
-     * Tabs, in denen die Komponente liegt; null, wenn sie in keinem Tab platziert ist.
+     * Komponenten-Berechtigung ("Sehen dürfen nur die Folgenden") für viele Komponenten; Personen und
+     * Abteilungen werden nur für eingeschränkte Komponenten und gesammelt nachgeladen.
      *
-     * @return Collection<int, int>|null
+     * @param EloquentCollection<int, Component> $components
+     * @return EloquentCollection<int, Component>
      */
-    private function placementTabIds(User $user, Component $component): ?Collection
+    private function filterComponentsVisibleTo(User $user, EloquentCollection $components): EloquentCollection
     {
-        $directTabIds = ComponentInTab::query()
-            ->without(['component', 'disclosureComponents'])
-            ->where('component_id', $component->id)
-            ->pluck('project_tab_id');
-
-        $sidebarTabIds = ProjectTabSidebarTab::query()
-            ->without('componentsInSidebar')
-            ->whereHas('componentsInSidebar', fn (Builder $query) => $query->where('component_id', $component->id))
-            ->pluck('project_tab_id');
-
-        $folderIds = DisclosureComponents::query()
-            ->without('component')
-            ->where('component_id', $component->id)
-            ->pluck('disclosure_id');
-
-        if ($directTabIds->isEmpty() && $sidebarTabIds->isEmpty() && $folderIds->isEmpty()) {
-            return null;
+        if ($this->bypassesComponentPermissions($user)) {
+            return $components;
         }
 
-        $visibleFolderIds = Component::query()
-            ->whereIn('id', $folderIds)
-            ->get()
-            ->filter(fn (Component $folder) => $this->canSeeComponent($user, $folder))
-            ->pluck('id');
+        $restricted = $components->filter(fn (Component $component) => $component->permission_type ===
+            ProjectTabComponentPermissionEnum::PERMISSION_TYPE_SOME_SEE_SOME_EDIT->value);
+        if ($restricted->isNotEmpty()) {
+            $restricted->loadMissing(['users', 'departments.users']);
+        }
 
-        $folderTabIds = $visibleFolderIds->isEmpty()
+        return $components->filter(fn (Component $component) => $component->isVisibleTo($user))->values();
+    }
+
+    /**
+     * Tabs, in denen die Komponenten liegen (direkt, in der Seitenleiste oder in einem für die Person
+     * sichtbaren Ordner). Nicht platzierte Komponenten fehlen im Ergebnis (Bedeutung: kein Tab-Bezug).
+     *
+     * @param Collection<int, int> $componentIds
+     * @return array<int, Collection<int, int>>
+     */
+    private function placementTabIdsByComponent(User $user, Collection $componentIds): array
+    {
+        if ($componentIds->isEmpty()) {
+            return [];
+        }
+
+        $directPlacements = ComponentInTab::query()
+            ->without(['component', 'disclosureComponents'])
+            ->whereIn('component_id', $componentIds)
+            ->get(['component_id', 'project_tab_id']);
+
+        $sidebarPlacements = SidebarTabComponent::query()
+            ->without('component')
+            ->whereIn('component_id', $componentIds)
+            ->get(['component_id', 'project_tab_sidebar_id']);
+        $tabIdBySidebarId = $sidebarPlacements->isEmpty()
             ? collect()
-            : ComponentInTab::query()
-                ->without(['component', 'disclosureComponents'])
-                ->whereIn('component_id', $visibleFolderIds)
-                ->pluck('project_tab_id');
+            : ProjectTabSidebarTab::query()
+                ->without('componentsInSidebar')
+                ->whereIn('id', $sidebarPlacements->pluck('project_tab_sidebar_id')->unique())
+                ->pluck('project_tab_id', 'id');
 
-        return $directTabIds->concat($sidebarTabIds)->concat($folderTabIds)->unique()->values();
+        $folderPlacements = DisclosureComponents::query()
+            ->without('component')
+            ->whereIn('component_id', $componentIds)
+            ->get(['component_id', 'disclosure_id']);
+        $tabIdsByVisibleFolder = $this->tabIdsOfVisibleFolders($user, $folderPlacements->pluck('disclosure_id'));
+
+        $tabIds = [];
+        foreach ($directPlacements as $placement) {
+            $tabIds[$placement->component_id][] = (int) $placement->project_tab_id;
+        }
+        foreach ($sidebarPlacements as $placement) {
+            // Verwaiste Seitenleisten-Einträge (Seitenleiste gelöscht) gelten nicht als Platzierung
+            if ($tabIdBySidebarId->has($placement->project_tab_sidebar_id)) {
+                $tabIds[$placement->component_id][] = (int) $tabIdBySidebarId[$placement->project_tab_sidebar_id];
+            }
+        }
+        foreach ($folderPlacements as $placement) {
+            // Auch ein unsichtbarer Ordner macht die Komponente zu einer platzierten (ohne sichtbaren Tab)
+            $tabIds[$placement->component_id] = array_merge(
+                $tabIds[$placement->component_id] ?? [],
+                $tabIdsByVisibleFolder[$placement->disclosure_id] ?? []
+            );
+        }
+
+        return array_map(fn (array $ids) => collect($ids)->unique()->values(), $tabIds);
+    }
+
+    /**
+     * @param Collection<int, int> $folderIds
+     * @return array<int, array<int, int>> Tab-IDs je Ordner, nur für Ordner, die die Person sehen darf
+     */
+    private function tabIdsOfVisibleFolders(User $user, Collection $folderIds): array
+    {
+        if ($folderIds->isEmpty()) {
+            return [];
+        }
+
+        $visibleFolderIds = $this->filterComponentsVisibleTo(
+            $user,
+            Component::query()->whereIn('id', $folderIds->unique())->get()
+        )->pluck('id');
+        if ($visibleFolderIds->isEmpty()) {
+            return [];
+        }
+
+        $tabIds = [];
+        $folderPlacements = ComponentInTab::query()
+            ->without(['component', 'disclosureComponents'])
+            ->whereIn('component_id', $visibleFolderIds)
+            ->get(['component_id', 'project_tab_id']);
+        foreach ($folderPlacements as $placement) {
+            $tabIds[$placement->component_id][] = (int) $placement->project_tab_id;
+        }
+
+        return $tabIds;
     }
 }

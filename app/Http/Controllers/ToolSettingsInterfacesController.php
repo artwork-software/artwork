@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
-use Laravel\Passport\Passport;
+use Artwork\Modules\System\ApiManagement\Support\MachineScopes;
 use Laravel\Passport\Scope;
 use Laravel\Passport\Token;
 use Maatwebsite\Excel\Excel;
@@ -55,6 +55,7 @@ class ToolSettingsInterfacesController extends Controller
 
         $tokens = $canManageTokens
             ? Token::query()
+                ->whereJsonDoesntContain('scopes', MachineScopes::APP_SCOPE)
                 ->orderBy('name')
                 ->get()
                 ->map(function (Token $token): array {
@@ -77,7 +78,7 @@ class ToolSettingsInterfacesController extends Controller
                 'canManageTokens' => $canManageTokens,
                 'tokens' => $tokens,
                 'availableScopes' => $canManageTokens
-                    ? Passport::scopes()
+                    ? MachineScopes::all()
                         ->map(fn (Scope $scope): array => [
                             'id' => $scope->id,
                             'description' => $scope->description,

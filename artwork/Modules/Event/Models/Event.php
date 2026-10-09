@@ -14,6 +14,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DateTimeInterface;
@@ -259,6 +260,14 @@ class Event extends Model
     }
 
     /**
+     * @return HasOne<TicketingEventRelease, $this>
+     */
+    public function ticketingRelease(): HasOne
+    {
+        return $this->hasOne(TicketingEventRelease::class, 'event_id');
+    }
+
+    /**
      * @return HasOne<SeriesEvents, $this>
      */
     public function series(): HasOne
@@ -280,6 +289,15 @@ class Event extends Model
     public function eventProperties(): BelongsToMany
     {
         return $this->belongsToMany(EventProperty::class);
+    }
+
+    /**
+     * Die Spalte ist TIME und liest sich als "19:00:00"; Formulare schicken "19:00". Ohne Angleichen
+     * gälte der Termin als geändert (isDirty), und ein Termin im Verkauf ließe sich nicht mehr speichern.
+     */
+    public function setAdmissionTimeAttribute(?string $value): void
+    {
+        $this->attributes['admission_time'] = $value ? Carbon::parse($value)->format('H:i:s') : null;
     }
 
     public function getStartTimeWithoutDayAttribute(): string

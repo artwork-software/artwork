@@ -72,6 +72,19 @@ final class SpecialDayServiceTest extends TestCase
     }
 
     #[Test]
+    public function yearly_leap_day_only_counts_in_leap_years(): void
+    {
+        $this->holiday(['name' => 'Schalttag', 'date' => '2024-02-29', 'end_date' => '2024-02-29', 'yearly' => true]);
+
+        $service = $this->service();
+
+        $this->assertTrue($service->isSpecialDay('2028-02-29'));
+        // vorher lief der 29.02. in Nicht-Schaltjahren auf den 01.03. über
+        $this->assertFalse($service->isSpecialDay('2027-03-01'));
+        $this->assertFalse($service->isSpecialDay('2027-02-28'));
+    }
+
+    #[Test]
     public function yearly_entries_repeat_and_may_span_the_turn_of_the_year(): void
     {
         $this->holiday([

@@ -41,7 +41,9 @@ class CalendarEventResource extends JsonResource
                 'first_name'       => $creator->getAttribute('first_name'),
                 'last_name'        => $creator->getAttribute('last_name'),
             ],
-            'project'     => $this->getAttribute('project'),
+            // Nur, was Termin-Dialog/Absage-Dialog lesen (project.id/.name) – vorher das volle Modell samt
+            // geladener managerUsers (work_time_balance, auth_provider_id, Beschäftigungsdaten …)
+            'project'     => $this->projectSummary(),
             'start'       => $startTime->utc()->toIso8601String(),
             'startTime'   => $startTime,
             'end'         => $this->getAttribute('end_time')->utc()->toIso8601String(),
@@ -99,6 +101,24 @@ class CalendarEventResource extends JsonResource
         ];
     }
 
+    /**
+     * Schlanke Projektangaben statt des Eloquent-Modells.
+     *
+     * @return array{id: int, name: string|null}|null
+     */
+    private function projectSummary(): ?array
+    {
+        $project = $this->getAttribute('project');
+        if (!$project instanceof Project) {
+            return null;
+        }
+
+        return [
+            'id'   => $project->getAttribute('id'),
+            'name' => $project->getAttribute('name'),
+        ];
+    }
+
     private function aggregateEventShifts(array $shifts): array
     {
         return array_map(function (Shift $shift): array {
@@ -121,6 +141,7 @@ class CalendarEventResource extends JsonResource
     {
         return count($managerUsers) > 0
             ? array_map(fn(User $u) => [
+                'id'                => $u->getAttribute('id'),
                 'profile_photo_url' => $u->getAttribute('profile_photo_url'),
                 'first_name'        => $u->getAttribute('first_name'),
                 'last_name'         => $u->getAttribute('last_name'),

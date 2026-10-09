@@ -6,6 +6,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\ThreeMonthAverageTargetService;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -32,6 +33,25 @@ final class ThreeMonthAverageTargetServiceTest extends TestCase
             'start' => '2026-04-01',
             'end' => '2026-06-30',
         ], $service->referencePeriodFor(Carbon::parse('2026-07-21')));
+    }
+
+    #[Test]
+    public function a_manual_booking_is_not_counted_as_work_on_that_weekday(): void
+    {
+        // Übernahme +150 h an einem Dienstag darf den Dienstagsschnitt nicht hochtreiben
+        $user = User::factory()->create();
+        $this->booking($user, '2026-04-07', 360);
+        WorkTimeBooking::query()->create([
+            'user_id' => $user->id,
+            'name' => 'manual_booking',
+            'booking_day' => '2026-05-12',
+            'booking_weekday' => 2,
+            'wanted_working_hours' => 0,
+            'worked_hours' => 150 * 60,
+            'work_time_balance_change' => 150 * 60,
+        ]);
+
+        $this->assertSame(360, app(ThreeMonthAverageTargetService::class)->averageMinutesFor($user, Carbon::parse('2026-07-21'), 420));
     }
 
     #[Test]
@@ -128,7 +148,7 @@ final class ThreeMonthAverageTargetServiceTest extends TestCase
     {
         return WorkTimeBooking::query()->create([
             'user_id' => $user->id,
-            'name' => "booking_{$date}",
+            'name' => WorkTimeBookingRepository::dailyBookingName(Carbon::parse($date)),
             'booking_day' => $date,
             'booking_weekday' => Carbon::parse($date)->dayOfWeek,
             'wanted_working_hours' => 420,

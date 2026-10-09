@@ -165,7 +165,7 @@ final class WorkTimeBookingServiceTest extends TestCase
             'title' => 'Feiertagsdienst',
             'start_date' => '2026-07-21',
             'end_date' => '2026-07-21',
-            'full_day' => true,
+            'full_day' => false, // Dauer ohne Uhrzeit (ganztägig zählt das Tagessoll)
             'working_time_minutes' => 480,
         ]);
 
@@ -261,7 +261,7 @@ final class WorkTimeBookingServiceTest extends TestCase
             'title' => 'Kurzfristiger Einsatz',
             'start_date' => '2026-07-21',
             'end_date' => '2026-07-21',
-            'full_day' => true,
+            'full_day' => false, // Dauer ohne Uhrzeit (ganztägig zählt das Tagessoll)
             'working_time_minutes' => 120,
         ]);
 
@@ -306,6 +306,36 @@ final class WorkTimeBookingServiceTest extends TestCase
             ->pluck('user_id');
         $this->assertSame([$second->id], $bookedUserIds->all());
         $exceptions->assertReported(RuntimeException::class);
+
+        Carbon::setTestNow();
+    }
+
+    #[Test]
+    public function the_nightly_booking_leaves_a_manual_booking_of_the_same_day_untouched(): void
+    {
+        // Regression: Die Tagesbuchung wurde nur über booking_day gesucht und übernahm die manuelle Buchung
+        // desselben Tages (Betrag verrechnet, Zeile überschrieben).
+        Carbon::setTestNow(Carbon::parse('2026-07-21 23:59:00')); // Dienstag
+
+        $user = $this->workShiftUserWithDailyTarget('08:00');
+        $user->workTimeBookings()->create([
+            'name' => 'manual_booking',
+            'booking_day' => '2026-07-21',
+            'booking_weekday' => 2,
+            'worked_hours' => 90,
+            'work_time_balance_change' => 90,
+        ]);
+        $user->update(['work_time_balance' => 90]);
+
+        $this->service->calculateDailyWorkingHours();
+        $this->service->calculateDailyWorkingHours();
+
+        $this->assertSame(90 - 480, (int) $user->fresh()->work_time_balance);
+        $this->assertSame(
+            ['daily_work_time_booking_2026-07-21' => -480, 'manual_booking' => 90],
+            $user->workTimeBookings()->orderBy('name')->pluck('work_time_balance_change', 'name')
+                ->map(fn ($change): int => (int) $change)->all()
+        );
 
         Carbon::setTestNow();
     }

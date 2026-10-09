@@ -13,6 +13,7 @@ use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
+use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -109,7 +110,7 @@ final class WorkTimeCalculationServiceTest extends TestCase
             'title' => 'Einsatz',
             'start_date' => $date,
             'end_date' => $date,
-            'full_day' => true,
+            'full_day' => false, // Dauer ohne Uhrzeit (ganztägig zählt das Tagessoll)
             'working_time_minutes' => $minutes,
             'break_minutes' => 0,
         ]);
@@ -150,7 +151,7 @@ final class WorkTimeCalculationServiceTest extends TestCase
             'title' => 'Einsatz',
             'start_date' => $startDate,
             'end_date' => $endDate,
-            'full_day' => true,
+            'full_day' => false, // Dauer ohne Uhrzeit (ganztägig zählt das Tagessoll)
             'working_time_minutes' => $minutes,
             'break_minutes' => 0,
         ]);
@@ -188,7 +189,7 @@ final class WorkTimeCalculationServiceTest extends TestCase
     {
         WorkTimeBooking::query()->create([
             'user_id' => $user->id,
-            'name' => "booking_{$date}",
+            'name' => WorkTimeBookingRepository::dailyBookingName(Carbon::parse($date)),
             'booking_day' => $date,
             'booking_weekday' => Carbon::parse($date)->dayOfWeek,
             'wanted_working_hours' => $wanted,
@@ -402,6 +403,119 @@ final class WorkTimeCalculationServiceTest extends TestCase
         $this->assertSame(480, $day['actual']);
         $this->assertSame(0, $day['balance']);
         $this->assertSame(1.0, $day['vacation_factor']);
+    }
+
+    #[Test]
+    public function a_full_day_individual_time_counts_the_daily_target_not_24_hours(): void
+    {
+        $user = $this->user();
+        $this->workTime($user, ['tuesday' => '08:00']);
+        $user->individualTimes()->create([
+            'title' => 'Gastspiel',
+            'start_date' => self::TUESDAY,
+            'end_date' => self::TUESDAY,
+            'full_day' => true,
+            'working_time_minutes' => 1440,
+            'break_minutes' => 0,
+        ]);
+
+        $day = $this->service()->dayBreakdown($user, Carbon::parse(self::TUESDAY));
+
+        $this->assertSame(480, $day['actual']);
+        $this->assertSame(0, $day['balance']);
+    }
+
+    #[Test]
+    public function a_shift_on_a_vacation_day_counts_on_top_but_not_on_a_sick_day(): void
+    {
+        $vacation = $this->user();
+        $this->workTime($vacation, ['tuesday' => '08:00']);
+        $this->vacation($vacation, self::TUESDAY, 'OFF_WORK');
+        $this->shift($vacation, self::TUESDAY, '10:00', self::TUESDAY, '14:00');
+
+        $sick = $this->user();
+        $this->workTime($sick, ['tuesday' => '08:00']);
+        $this->vacation($sick, self::TUESDAY, 'NOT_AVAILABLE');
+        $this->shift($sick, self::TUESDAY, '10:00', self::TUESDAY, '14:00'); // noch nicht ersetzte Schicht
+
+        $this->assertSame(480 + 240, $this->service()->dayBreakdown($vacation, Carbon::parse(self::TUESDAY))['actual']);
+        $this->assertSame(480, $this->service()->dayBreakdown($sick, Carbon::parse(self::TUESDAY))['actual']);
+    }
+
+    #[Test]
+    public function the_overhang_of_a_night_shift_does_not_cancel_the_special_day_reduction(): void
+    {
+        $user = $this->user();
+        $this->workTime($user, ['monday' => '08:00', 'tuesday' => '08:00']);
+        $this->contract($user);
+        $this->holiday(self::TUESDAY);
+        $this->shift($user, '2026-07-20', '22:00', self::TUESDAY, '02:00'); // Mo 22 – Di 02 Uhr
+
+        $day = $this->service()->dayBreakdown($user, Carbon::parse(self::TUESDAY));
+
+        $this->assertSame(0, $day['target']);       // Minderung bleibt
+        $this->assertSame(120, $day['actual']);     // Überhang zählt als Plus
+        $this->assertSame('special_day', $day['reduction_reason']);
+    }
+
+    #[Test]
+    public function a_booked_day_shows_the_booked_target_and_flags_a_later_sick_note(): void
+    {
+        // Gebuchter Tag = Zeitkonto: Soll/Ist aus der Tagesbuchung. Krank nachträglich eingetragen ->
+        // Anzeige bleibt beim Gebuchten, Differenz steht in rebook_difference ("Tag neu buchen").
+        $user = $this->user();
+        $this->workTime($user, ['tuesday' => '08:00']);
+        $this->booking($user, self::TUESDAY, 0, 480);
+        $this->vacation($user, self::TUESDAY, 'NOT_AVAILABLE');
+
+        $day = $this->service()->dayBreakdown($user, Carbon::parse(self::TUESDAY));
+
+        $this->assertTrue($day['is_booked']);
+        $this->assertSame(480, $day['target']);
+        $this->assertSame(0, $day['actual']);
+        $this->assertSame(-480, $day['balance']);
+        $this->assertSame(480, $day['rebook_difference']);
+    }
+
+    #[Test]
+    public function a_manual_booking_adds_to_shifts_instead_of_replacing_them(): void
+    {
+        $user = $this->user();
+        $this->workTime($user, ['tuesday' => '08:00']);
+        $this->shift($user, self::TUESDAY, '08:00', self::TUESDAY, '16:00');
+        WorkTimeBooking::query()->create([
+            'user_id' => $user->id,
+            'name' => 'manual_booking',
+            'booking_day' => self::TUESDAY,
+            'booking_weekday' => Carbon::parse(self::TUESDAY)->dayOfWeek,
+            'wanted_working_hours' => 0,
+            'worked_hours' => 60,
+            'nightly_working_hours' => 0,
+            'work_time_balance_change' => 60,
+            'is_special_day' => false,
+        ]);
+
+        $day = $this->service()->dayBreakdown($user, Carbon::parse(self::TUESDAY));
+
+        $this->assertFalse($day['is_booked']);
+        $this->assertSame(540, $day['actual']); // Schicht 480 + manuell 60
+        $this->assertSame(60, $day['balance']);
+        $this->assertSame(0, $day['rebook_difference']); // Tagesbuchung würde 0 buchen
+    }
+
+    #[Test]
+    public function a_break_longer_than_the_part_before_midnight_carries_over(): void
+    {
+        $user = $this->user();
+        $this->workTime($user, ['tuesday' => '08:00', 'wednesday' => '08:00']);
+        $this->shift($user, self::TUESDAY, '23:30', '2026-07-22', '07:30', 60);
+
+        $minutes = $this->service()->shiftMinutesPerDay($user, Carbon::parse(self::TUESDAY), Carbon::parse('2026-07-22'));
+        $onlyNextDay = $this->service()->shiftMinutesPerDay($user, Carbon::parse('2026-07-22'), Carbon::parse('2026-07-22'));
+
+        $this->assertSame(0, $minutes[self::TUESDAY] ?? 0);
+        $this->assertSame(420, $minutes['2026-07-22']); // 7:30 − 30 min Restpause
+        $this->assertSame(420, $onlyNextDay['2026-07-22']);
     }
 
     #[Test]

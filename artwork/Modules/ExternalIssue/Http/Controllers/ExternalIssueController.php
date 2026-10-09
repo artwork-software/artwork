@@ -107,8 +107,9 @@ class ExternalIssueController extends Controller
             ->when($issuedBy !== null, fn($q) => $q->where('issued_by_id', $issuedBy))
             ->when($receivedBy !== null, fn($q) => $q->where('received_by_id', $receivedBy))
             ->when($projectId !== null, fn($q) => $q->where('project_id', $projectId))
+            // gleiche Regel wie Verfügbarkeit/Badge (Status, „Erhalten von“, Altbestand)
             ->when($overdueOnly, fn($q) => $q
-                ->whereNull('received_by_id')
+                ->notReturned()
                 ->whereDate('return_date', '<', now()->toDateString()));
 
         // Name/Extern/Remarks Suche

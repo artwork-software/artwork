@@ -20,7 +20,6 @@
                     no-margin-top
                     @focusout="updateTextData()"
                     v-model="text"
-                    :maxlength="2000"
                 />
             </div>
             <!-- Nur-Lesen: Text anzeigen -->
@@ -36,9 +35,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import axios from 'axios';
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
+import { createComponentTextSave } from "@/Composeables/componentTextSave.js";
 
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
@@ -66,47 +66,45 @@ const text = ref(
         ? props.data.project_value.text_without_html
         : props.data.data.text
 );
-// Nur bei tatsächlicher Änderung speichern (das Feld ist jetzt dauerhaft offen, Fokuswechsel sind häufig)
-let lastSavedText = text.value;
 // Während getippt wird, überschreiben Live-Updates (Broadcast) die ungespeicherte Eingabe nicht
 const isFocused = ref(false);
 
-// Listener initialisieren (wie zuvor im mounted)
+// Getter: Inertia-Besuche mit preserveState ersetzen props.data, die Komponente bleibt gemountet
+const dataListener = useProjectDataListener(() => props.data, props.projectId);
 onMounted(() => {
-    useProjectDataListener(props.data, props.projectId).init();
+    dataListener.init();
+});
+onBeforeUnmount(() => {
+    dataListener.stop();
+});
+
+// Nur bei Änderung (das Feld ist dauerhaft offen, Fokuswechsel sind häufig), nacheinander (neuester
+// Wert gewinnt), eigene Antwort übernehmen
+const textSave = createComponentTextSave({
+    text,
+    isEditing: isFocused,
+    getStoredText: () => (props.data.project_value?.text_without_html
+        ? props.data.project_value.text_without_html
+        : props.data.data.text),
+    dataListener,
+    send: (value) => axios.patch(
+        route("project.tab.component.update", {
+            project: props.projectId,
+            component: props.data.id,
+        }),
+        { data: { text: value } }
+    ),
 });
 
 // Deep-Watch: wenn sich eingehende Daten ändern, Editor-Inhalt synchronisieren
 watch(
     () => props.data,
-    (newVal) => {
-        if (isFocused.value && (text.value ?? '') !== (lastSavedText ?? '')) {
-            return;
-        }
-        text.value = newVal.project_value?.text_without_html
-            ? newVal.project_value.text_without_html
-            : newVal.data.text;
-        lastSavedText = text.value;
-    },
+    () => textSave.syncFromStored(),
     { deep: true }
 );
 
-// Patch-Aufruf mit axios (ohne Page Reload)
-async function updateTextData() {
-    if ((text.value ?? '') === (lastSavedText ?? '')) return;
-    try {
-        await axios.patch(
-            route("project.tab.component.update", {
-                project: props.projectId,
-                component: props.data.id,
-            }),
-            { data: { text: text.value } }
-        );
-        lastSavedText = text.value;
-        // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
-    } catch (error) {
-        console.error('Fehler beim Aktualisieren:', error);
-    }
+function updateTextData() {
+    textSave.submit();
 }
 
 </script>

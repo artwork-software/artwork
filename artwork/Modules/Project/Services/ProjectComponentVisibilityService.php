@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Project\Services;
 
-use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentPermissionEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
@@ -24,8 +23,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * Serverseitige Sichtregel für Projekt-Tabs und ihre Komponenten — Spiegel von canSeeComponent()
  * im Frontend (resources/js/Composeables/Permission.js):
  * - Tab-Sichtbarkeit: ProjectTab::visibleForUser (Admins sehen alle Tabs).
- * - Komponenten-Berechtigung ("Sehen dürfen nur die Folgenden"): Component::isVisibleTo; Admins und
- *   "write projects" sind davon ausgenommen.
+ * - Komponenten-Berechtigung ("Sehen dürfen nur die Folgenden"): Component::isVisibleTo; nur Admins sind
+ *   davon ausgenommen. Globales "write projects" erweitert die Sicht bewusst NICHT (Produktentscheidung
+ *   10/2026) — es übersteuert nur die Bearbeiten-Einstellung sichtbarer Komponenten (ProjectPolicy).
  * Projektzugriff selbst prüft weiterhin ProjectPolicy::view (CanViewProject).
  *
  * Scoped (je Request/Job eine Instanz): Policies werden je Prüfung neu gebaut, ohne geteilte Instanz
@@ -37,10 +37,12 @@ class ProjectComponentVisibilityService
     /** @var array<int, Collection<int, int>> */
     private array $visibleTabIdsByUser = [];
 
+    /**
+     * Nur Admins sehen Komponenten mit "Sehen dürfen nur die Folgenden", ohne dort eingetragen zu sein.
+     */
     public function bypassesComponentPermissions(User $user): bool
     {
-        return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value) ||
-            $user->can(PermissionEnum::WRITE_PROJECTS->value);
+        return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
     }
 
     public function canSeeComponent(User $user, Component $component): bool

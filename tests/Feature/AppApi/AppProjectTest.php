@@ -204,6 +204,30 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function writeProjectsPermissionDoesNotRevealComponentsRestrictedToListedViewers(): void
+    {
+        $project = Project::factory()->create();
+        [$tab, $component] = $this->createTabWithComponent('TextField', ['permission_type' => 'someSeeSomeEdit']);
+        $user = $this->actingAsApiUserWith(PermissionEnum::WRITE_PROJECTS->value);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonCount(0, 'components');
+
+        $this->patchJson(
+            route('app.v1.projects.component.update', [$project, $tab, $component]),
+            ['data' => ['text' => 'x']],
+        )->assertForbidden();
+
+        $component->users()->attach($user->id, ['can_write' => false]);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonCount(1, 'components')
+            ->assertJsonPath('components.0.is_writable', true);
+    }
+
+    #[Test]
     public function tabPayloadMarksAllSeeSomeEditComponentsReadOnlyForNonMembers(): void
     {
         $user = User::factory()->create();

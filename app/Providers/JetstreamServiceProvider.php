@@ -13,6 +13,11 @@ class JetstreamServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Jetstreams eigene Routen (user/profile, Profilfoto löschen, andere Sitzungen beenden) nutzt
+        // artwork nicht; Profil und Foto laufen über eigene Routen im UserController. Weil
+        // config jetstream.guard = api ist, nahmen diese Routen Maschinen-Tokens der Schnittstelle
+        // ohne Scope-Prüfung an — ein Lese-Schlüssel bekam so die Profilseite seiner Besitzer:in.
+        Jetstream::ignoreRoutes();
     }
 
     public function boot(): void

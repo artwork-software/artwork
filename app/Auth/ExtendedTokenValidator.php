@@ -3,20 +3,29 @@
 namespace App\Auth;
 
 use DateTimeImmutable;
+use Laravel\Passport\Passport;
 use League\OAuth2\Server\AuthorizationValidators\BearerTokenValidator;
 use League\OAuth2\Server\CryptKeyInterface;
+use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Repositories\AccessTokenRepositoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 
 /**
- * Akzeptiert einzelne, per jti konfigurierte Tokens bis zu einer festen Deadline über ihren
+ * Bearer-Validierung für auth:api mit zwei Ergänzungen zu Passports Standard:
+ *
+ * 1. Ablaufdatum aus der Datenbank: Das in Tooleinstellungen → Schnittstellen gesetzte Ablaufdatum
+ *    landet nur in oauth_access_tokens.expires_at, der signierte exp-Claim behält Passports
+ *    Standardlaufzeit. Deshalb gilt zusätzlich expires_at — das frühere der beiden Daten gewinnt.
+ *
+ * 2. Akzeptiert einzelne, per jti konfigurierte Tokens bis zu einer festen Deadline über ihren
  * exp-Claim hinaus. Bewusste, zeitlich begrenzte Ausnahme für Integrationen, deren Gegenseite
  * Tokens nicht rotieren kann — kein allgemeiner Mechanismus zur Laufzeitverlängerung.
  *
  * Signatur- und Revoke-Prüfung bleiben vollständig aktiv: Ein gelistetes Token lässt sich über
- * oauth_access_tokens.revoked = 1 jederzeit sperren. Nicht gelistete Tokens laufen unverändert
- * über den Standardpfad. Standardmäßig inaktiv (config passport.extended_tokens leer).
+ * oauth_access_tokens.revoked = 1 jederzeit sperren. expires_at gilt für gelistete Tokens nicht,
+ * dort ist die Deadline maßgeblich. Nicht gelistete Tokens laufen über den Standardpfad.
+ * Standardmäßig inaktiv (config passport.extended_tokens leer).
  *
  * Solange eine Ausnahme aktiv ist, darf das Passport-Keypair der Instanz nicht rotiert werden.
  */
@@ -45,7 +54,7 @@ final class ExtendedTokenValidator extends BearerTokenValidator
         $deadline = is_string($jti) ? ($this->extendedTokens[$jti] ?? null) : null;
 
         if ($deadline === null || !isset($claims['exp'])) {
-            return parent::validateAuthorization($request);
+            return $this->validateStandard($request);
         }
 
         try {
@@ -53,12 +62,12 @@ final class ExtendedTokenValidator extends BearerTokenValidator
                 ->diff(new DateTimeImmutable($deadline));
         } catch (Throwable) {
             // Nicht parsebare Deadline: fail closed über den Standardpfad.
-            return parent::validateAuthorization($request);
+            return $this->validateStandard($request);
         }
 
         if ($leeway->invert) {
             // Deadline vor exp: Die Ausnahme verlängert nichts, Standardpfad.
-            return parent::validateAuthorization($request);
+            return $this->validateStandard($request);
         }
 
         // Frische Instanz, damit der Leeway ausschließlich für dieses Token gilt — nie global.
@@ -67,6 +76,26 @@ final class ExtendedTokenValidator extends BearerTokenValidator
         $validator->setPublicKey($this->verificationKey);
 
         return $validator->validateAuthorization($request);
+    }
+
+    /**
+     * Passports Standardprüfung (Signatur, exp, revoked) plus das Ablaufdatum aus der Datenbank.
+     *
+     * @throws OAuthServerException
+     */
+    private function validateStandard(ServerRequestInterface $request): ServerRequestInterface
+    {
+        $validated = parent::validateAuthorization($request);
+
+        $token = Passport::token()->newQuery()
+            ->whereKey((string) $validated->getAttribute('oauth_access_token_id'))
+            ->first(['id', 'expires_at']);
+
+        if ($token?->expires_at?->isPast()) {
+            throw OAuthServerException::accessDenied('Access token has expired');
+        }
+
+        return $validated;
     }
 
     /**

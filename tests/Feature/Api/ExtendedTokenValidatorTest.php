@@ -69,6 +69,23 @@ final class ExtendedTokenValidatorTest extends FeatureTestCase
     }
 
     #[Test]
+    public function unlisted_token_is_rejected_once_its_stored_expiry_has_passed(): void
+    {
+        // exp im JWT noch gültig, aber in der Oberfläche ein früheres Ablaufdatum gesetzt.
+        $this->requestWith($this->issueToken('+1 hour', storedExpiresIn: '-1 minute'))->assertUnauthorized();
+    }
+
+    #[Test]
+    public function listed_token_ignores_stored_expiry_until_deadline(): void
+    {
+        // Für gelistete Tokens ist allein die Deadline maßgeblich.
+        $this->extend([$this->jti('listed') => $this->date('+30 days')]);
+
+        $this->requestWith($this->issueToken('-1 day', $this->jti('listed'), storedExpiresIn: '-2 days'))
+            ->assertOk();
+    }
+
+    #[Test]
     public function expired_listed_token_is_accepted_until_deadline(): void
     {
         $this->extend([$this->jti('listed') => $this->date('+30 days')]);
@@ -183,6 +200,7 @@ final class ExtendedTokenValidatorTest extends FeatureTestCase
         ?string $jti = null,
         bool $revoked = false,
         ?string $signingKey = null,
+        ?string $storedExpiresIn = null,
     ): string {
         $jti ??= Str::random(40);
         $expiresAt = new DateTimeImmutable($expiresIn);
@@ -197,7 +215,8 @@ final class ExtendedTokenValidatorTest extends FeatureTestCase
             'revoked' => $revoked,
             'created_at' => now(),
             'updated_at' => now(),
-            'expires_at' => $expiresAt,
+            // Passport speichert exp; ein in der Oberfläche gesetztes Ablaufdatum weicht davon ab.
+            'expires_at' => $storedExpiresIn !== null ? new DateTimeImmutable($storedExpiresIn) : $expiresAt,
         ]);
 
         $key = $signingKey !== null

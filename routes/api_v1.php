@@ -1,7 +1,10 @@
 <?php
 
+use Artwork\Modules\Event\Http\Controllers\Api\EventApiController;
+use Artwork\Modules\Event\Http\Controllers\Api\EventStatusApiController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
+use Artwork\Modules\Room\Http\Controllers\Api\RoomApiController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Middleware\CheckToken;
 
@@ -10,7 +13,7 @@ use Laravel\Passport\Http\Middleware\CheckToken;
 | Machine API v1
 |--------------------------------------------------------------------------
 |
-| Versionierte Schnittstelle für externe Systeme (derzeit: der Ticketshop).
+| Versionierte Schnittstelle für externe Systeme (derzeit: Ticketshop, Inventar, Raumbelegung).
 | Registriert in RouteServiceProvider mit Präfix api/v1 und der Middleware-Gruppe api.machine.
 |
 | Reihenfolge der Middleware ist bedeutsam: auth:api muss vor throttle:api-token und vor der
@@ -33,5 +36,18 @@ Route::middleware(['auth:api', 'throttle:api-token'])->group(function (): void {
 
         Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show'])
             ->name('api.v1.inventory.articles.show');
+    });
+
+    // Raumbelegung für externe Planungssysteme: Räume, Termine und Terminstatus, nur lesend.
+    // Die Feldnamen der Antworten sind ein Vertrag — nur ergänzen, nie umbenennen.
+    Route::middleware(CheckToken::using('calendar:read'))->group(function (): void {
+        Route::get('/rooms', [RoomApiController::class, 'index'])
+            ->name('api.v1.rooms.index');
+
+        Route::get('/events', [EventApiController::class, 'index'])
+            ->name('api.v1.events.index');
+
+        Route::get('/event-statuses', [EventStatusApiController::class, 'index'])
+            ->name('api.v1.event-statuses.index');
     });
 });

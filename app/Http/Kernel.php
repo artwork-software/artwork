@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\SetDeveloperEnvironment;
 use App\Http\Middleware\UpdateUserStatus;
 use Artwork\Core\Api\Middleware\ApiAccessLog;
+use Artwork\Core\Api\Middleware\ForceJsonResponse;
 use Artwork\Core\Http\Middleware\Authenticate;
 use Artwork\Core\Http\Middleware\EncryptCookies;
 use Artwork\Core\Http\Middleware\HandleInertiaRequests;
@@ -82,6 +83,7 @@ class Kernel extends HttpKernel
         // keine Session. Ebenso ohne throttle:api, weil dessen 60/min pro Benutzer gelten und damit
         // das feinere Limit pro Token (throttle:api-token) überstimmen würden.
         'api.machine' => [
+            ForceJsonResponse::class,
             SubstituteBindings::class,
             ApiAccessLog::class,
         ],

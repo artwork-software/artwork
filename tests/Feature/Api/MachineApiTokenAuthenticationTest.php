@@ -51,7 +51,7 @@ final class MachineApiTokenAuthenticationTest extends FeatureTestCase
             'updated_at' => now(),
         ]);
 
-        $result = $user->createToken('Terpsi', ['inventory:read']);
+        $result = $user->createToken('Externes System', ['inventory:read']);
 
         $this->assertSame((string) $user->id, (string) $result->token->client_id);
 

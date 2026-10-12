@@ -18,7 +18,7 @@ use Tests\Feature\FeatureTestCase;
 
 /**
  * Raumbelegungs-Schnittstelle der Maschinen-API: GET /api/v1/rooms und GET /api/v1/events
- * (Scope calendar:read). Die Feldnamen sind ein Vertrag mit externen Systemen (zuerst Terpsi).
+ * (Scope calendar:read). Die Feldnamen sind ein Vertrag mit externen Systemen.
  */
 final class CalendarApiTest extends FeatureTestCase
 {
@@ -40,17 +40,17 @@ final class CalendarApiTest extends FeatureTestCase
 
         Carbon::setTestNow(Carbon::parse('2026-10-12 09:15:00'));
 
-        $this->area = Area::factory()->create(['name' => 'THW']);
+        $this->area = Area::factory()->create(['name' => 'Gästewohnung']);
         $this->blueRoom = Room::factory()->create([
-            'name' => 'THW - Blue Room - 2 Einzelbetten',
+            'name' => 'Gästewohnung - Zimmer Blau',
             'area_id' => $this->area->id,
             'capacity' => 2,
         ]);
         $this->pinkRoom = Room::factory()->create([
-            'name' => 'THW - Pink Room - 2 Einzelbetten',
+            'name' => 'Gästewohnung - Zimmer Rosa',
             'area_id' => $this->area->id,
         ]);
-        $this->project = Project::factory()->create(['name' => 'Jack Bannerman']);
+        $this->project = Project::factory()->create(['name' => 'Gastspiel Nord']);
 
         Passport::actingAs(User::factory()->create(), ['calendar:read']);
     }
@@ -107,9 +107,9 @@ final class CalendarApiTest extends FeatureTestCase
         );
         $response->assertJsonPath('data.0', [
             'id' => $this->blueRoom->id,
-            'name' => 'THW - Blue Room - 2 Einzelbetten',
+            'name' => 'Gästewohnung - Zimmer Blau',
             'area_id' => $this->area->id,
-            'area_name' => 'THW',
+            'area_name' => 'Gästewohnung',
             'categories' => [['id' => $category->id, 'name' => 'Wohnung']],
             'capacity' => 2,
             'color' => $this->blueRoom->fresh()->getEffectiveColor(),
@@ -147,14 +147,14 @@ final class CalendarApiTest extends FeatureTestCase
         $response->assertJsonCount(1, 'data');
         $response->assertJsonPath('data.0', [
             'id' => $event->id,
-            'title' => 'Jack Bannerman',
+            'title' => 'Gastspiel Nord',
             'project_id' => $this->project->id,
-            'project_name' => 'Jack Bannerman',
+            'project_name' => 'Gastspiel Nord',
             'event_type' => ['id' => $event->event_type->id, 'name' => $event->event_type->name],
             'room_id' => $this->blueRoom->id,
-            'room_name' => 'THW - Blue Room - 2 Einzelbetten',
+            'room_name' => 'Gästewohnung - Zimmer Blau',
             'area_id' => $this->area->id,
-            'area_name' => 'THW',
+            'area_name' => 'Gästewohnung',
             'start' => '2027-03-01T15:00:00+01:00',
             'end' => '2027-03-05T10:00:00+01:00',
             'all_day' => false,
@@ -337,14 +337,14 @@ final class CalendarApiTest extends FeatureTestCase
         $event = $this->createEvent($this->blueRoom, '2027-03-01 10:00:00', '2027-03-01 12:00:00');
 
         Carbon::setTestNow(Carbon::parse('2026-10-12 10:00:00'));
-        $this->project->update(['name' => 'Jack Bannerman (neu)']);
+        $this->project->update(['name' => 'Gastspiel Nord (neu)']);
 
         $data = $this->getJson(
             $this->eventsUrl('2027-03-01', '2027-03-31') . '&updated_since=' . urlencode('2026-10-12T09:30:00+02:00')
         )->assertOk()->json('data');
 
         $this->assertSame([$event->id], array_column($data, 'id'));
-        $this->assertSame('Jack Bannerman (neu)', $data[0]['project_name']);
+        $this->assertSame('Gastspiel Nord (neu)', $data[0]['project_name']);
     }
 
     #[Test]

@@ -38,8 +38,8 @@ Route::middleware(['auth:api', 'throttle:api-token'])->group(function (): void {
             ->name('api.v1.inventory.articles.show');
     });
 
-    // Raumbelegung für externe Planungssysteme (zuerst Terpsi, Tanzhaus Basel): Räume, Termine und
-    // Terminstatus, nur lesend. Die Feldnamen der Antworten sind ein Vertrag — nur ergänzen, nie umbenennen.
+    // Raumbelegung für externe Planungssysteme: Räume, Termine und Terminstatus, nur lesend.
+    // Die Feldnamen der Antworten sind ein Vertrag — nur ergänzen, nie umbenennen.
     Route::middleware(CheckToken::using('calendar:read'))->group(function (): void {
         Route::get('/rooms', [RoomApiController::class, 'index'])
             ->name('api.v1.rooms.index');

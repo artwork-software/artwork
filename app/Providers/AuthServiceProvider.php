@@ -187,6 +187,7 @@ class AuthServiceProvider extends ServiceProvider
         Passport::tokensCan([
             'app' => 'Access the artwork app API',
             'inventory:read' => 'Read inventory categories and articles',
+            'calendar:read' => 'Read rooms, areas and events (room occupancy)',
             'ticketing:read' => 'Read released events, price categories and branding',
             'ticketing:write' => 'Report sales, bookings and check-ins back to artwork',
         ]);

@@ -73,7 +73,7 @@ final class MachineApiScopeTest extends FeatureTestCase
     {
         // Teilmengen-Prüfung statt exakter Gleichheit: Vendor-Pakete registrieren eigene Scopes
         // (laravel/mcp etwa "mcp:use"), die hier nicht mitgepflegt werden sollen.
-        foreach (['inventory:read', 'ticketing:read', 'ticketing:write'] as $scopeId) {
+        foreach (['inventory:read', 'calendar:read', 'ticketing:read', 'ticketing:write'] as $scopeId) {
             $this->assertContains($scopeId, Passport::scopeIds());
         }
     }

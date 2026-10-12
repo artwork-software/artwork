@@ -5,7 +5,6 @@ namespace Artwork\Modules\Event\Http\Requests\Api;
 use Artwork\Core\Api\Requests\MachineApiRequest;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
@@ -18,6 +17,9 @@ class EventApiIndexRequest extends MachineApiRequest
     public const DEFAULT_PER_PAGE = 500;
 
     public const MAX_PER_PAGE = 1000;
+
+    /** Obergrenze je Filterliste; jede ID wird einzeln gegen die Datenbank geprüft. */
+    public const MAX_FILTER_IDS = 500;
 
     protected function prepareForValidation(): void
     {
@@ -39,10 +41,10 @@ class EventApiIndexRequest extends MachineApiRequest
         return [
             'from' => ['required', 'date_format:Y-m-d'],
             'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
-            'rooms' => ['sometimes', 'array'],
-            'rooms.*' => ['integer', 'distinct', Rule::exists('rooms', 'id')->whereNull('deleted_at')],
-            'areas' => ['sometimes', 'array'],
-            'areas.*' => ['integer', 'distinct', Rule::exists('areas', 'id')->whereNull('deleted_at')],
+            'rooms' => ['sometimes', 'array', 'max:' . self::MAX_FILTER_IDS],
+            'rooms.*' => $this->existingIdRules('rooms', 'rooms', self::MAX_FILTER_IDS),
+            'areas' => ['sometimes', 'array', 'max:' . self::MAX_FILTER_IDS],
+            'areas.*' => $this->existingIdRules('areas', 'areas', self::MAX_FILTER_IDS),
             'updated_since' => ['sometimes', 'date'],
             'page' => ['sometimes', 'integer', 'min:1'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:' . self::MAX_PER_PAGE],

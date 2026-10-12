@@ -12,6 +12,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomCategory;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -435,6 +436,14 @@ final class CalendarApiTest extends FeatureTestCase
         $this->getJson('/api/v1/events?from=2027-01-01&to=2027-12-31&updated_since=gestern')
             ->assertStatus(400)
             ->assertJsonValidationErrors(['updated_since']);
+
+        // Überlange Liste: scheitert an max, ohne jede ID einzeln gegen die Datenbank zu prüfen.
+        DB::enableQueryLog();
+        $this->getJson('/api/v1/events?from=2027-01-01&to=2027-12-31&rooms=' . implode(',', range(1, 501)))
+            ->assertStatus(400)
+            ->assertJsonValidationErrors(['rooms']);
+        $this->assertLessThan(20, count(DB::getQueryLog()));
+        DB::disableQueryLog();
 
         $this->getJson('/api/v1/rooms?areas=abc')
             ->assertStatus(400)

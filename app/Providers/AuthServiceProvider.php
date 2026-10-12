@@ -150,9 +150,9 @@ class AuthServiceProvider extends ServiceProvider
     {
         parent::register();
 
-        // Ersetzt Passports ResourceServer-Binding nur, um den ExtendedTokenValidator einzuhängen
-        // (bewusste Ausnahme für einzelne Tokens, siehe config passport.extended_tokens). Ohne
-        // gesetzte Konfiguration verhält sich der Validator exakt wie Passports Standard.
+        // Ersetzt Passports ResourceServer-Binding nur, um den ExtendedTokenValidator einzuhängen:
+        // Er prüft zusätzlich oauth_access_tokens.expires_at (in der Oberfläche gesetztes Ablaufdatum)
+        // und trägt die bewusste Ausnahme für einzelne Tokens (config passport.extended_tokens).
         $this->app->singleton(ResourceServer::class, function ($container) {
             // Spiegelt PassportServiceProvider::makeCryptKey('public') (protected, daher nachgebaut).
             // Bei Passport-Upgrades gegen vendor/laravel/passport/src/PassportServiceProvider.php abgleichen.

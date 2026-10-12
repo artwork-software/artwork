@@ -882,11 +882,28 @@ class User extends Model implements
     }
 
 
+    /**
+     * Jedes Wort der Eingabe (getrennt durch Leerzeichen oder Komma) muss den Anfang eines
+     * Namensteils im Vor- oder Nachnamen treffen, so finden „Max Muster“, „Muster, Max“ und
+     * „Lüd“ (bei „Müller-Lüdenscheidt“) dieselbe Person.
+     */
     public function scopeNameOrLastNameLike(Builder $builder, string $name): Builder
     {
-        return $builder
-            ->where('first_name', 'like', $name . '%')
-            ->orWhere('last_name', 'like', $name . '%');
+        $terms = preg_split('/[\s,]+/', trim($name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        return $builder->where(function (Builder $query) use ($terms): void {
+            foreach ($terms as $term) {
+                $escapedTerm = addcslashes($term, '%_\\');
+                $query->where(function (Builder $termQuery) use ($escapedTerm): void {
+                    foreach (['first_name', 'last_name'] as $column) {
+                        $termQuery
+                            ->orWhere($column, 'like', $escapedTerm . '%')
+                            ->orWhere($column, 'like', '% ' . $escapedTerm . '%')
+                            ->orWhere($column, 'like', '%-' . $escapedTerm . '%');
+                    }
+                });
+            }
+        });
     }
 
 

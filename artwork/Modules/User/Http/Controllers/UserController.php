@@ -98,6 +98,8 @@ use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class UserController extends Controller
 {
+    private const PROFILE_SEARCH_LIMIT = 25;
+
     public function __construct(
         protected AuthManager $auth,
         protected GlobalQualificationService $qualificationService,
@@ -113,7 +115,14 @@ class UserController extends Controller
      */
     public function search(SearchRequest $request): array
     {
-        return UserIndexResource::collection(User::nameOrLastNameLike($request->get('query'))->get())->resolve();
+        $users = User::nameOrLastNameLike($request->get('query'))
+            ->excludeDeletedPlaceholder()
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->limit(self::PROFILE_SEARCH_LIMIT)
+            ->get();
+
+        return UserIndexResource::collection($users)->resolve();
     }
 
 

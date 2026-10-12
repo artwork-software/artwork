@@ -35,6 +35,76 @@ final class UserSearchAndPublicEndpointsTest extends FeatureTestCase
     }
 
     #[Test]
+    public function user_search_finds_full_name_in_any_order_and_narrows_with_each_word(): void
+    {
+        $target = User::factory()->create(['first_name' => 'Zxqmax', 'last_name' => 'Zxqmuster']);
+        User::factory()->create(['first_name' => 'Zxqmax', 'last_name' => 'Anders']);
+        User::factory()->create(['first_name' => 'Zxqmoritz', 'last_name' => 'Zxqmuster']);
+        $this->actingAs(User::factory()->create());
+
+        foreach (['Zxqmax Zxqmuster', 'Zxqmuster Zxqmax', 'Zxqmuster, Zxqmax', 'zxqma zxqmu'] as $query) {
+            $response = $this->getJson(route('users.search', ['query' => $query]))->assertOk();
+            $this->assertSame([$target->id], array_column($response->json(), 'id'), $query);
+        }
+    }
+
+    #[Test]
+    public function user_search_matches_the_start_of_each_name_part(): void
+    {
+        $hyphenated = User::factory()->create(['first_name' => 'Anna', 'last_name' => 'Zxqmüller-Zxqlüden']);
+        $nobiliary = User::factory()->create(['first_name' => 'Ben', 'last_name' => 'von Zxqberg']);
+        User::factory()->create(['first_name' => 'Cleo', 'last_name' => 'Azxqlüden']);
+        $this->actingAs(User::factory()->create());
+
+        $this->assertSame(
+            [$hyphenated->id],
+            array_column($this->getJson(route('users.search', ['query' => 'Zxqlüd']))->json(), 'id')
+        );
+        $this->assertSame(
+            [$nobiliary->id],
+            array_column($this->getJson(route('users.search', ['query' => 'Zxqberg']))->json(), 'id')
+        );
+    }
+
+    #[Test]
+    public function user_search_treats_like_wildcards_literally(): void
+    {
+        User::factory()->create(['first_name' => 'Zxqwild', 'last_name' => 'Card']);
+        $this->actingAs(User::factory()->create());
+
+        $this->getJson(route('users.search', ['query' => '%']))->assertOk()->assertExactJson([]);
+        $this->getJson(route('users.search', ['query' => '_']))->assertOk()->assertExactJson([]);
+    }
+
+    #[Test]
+    public function user_search_excludes_deleted_placeholder_and_limits_sorted_results(): void
+    {
+        User::factory()->create([
+            'first_name' => 'Zxqgelöscht',
+            'last_name' => 'Zxqnutzer',
+            'email' => config('artwork.deleted_user_email', 'deleted-user@artwork.local'),
+        ]);
+        foreach (range(1, 30) as $number) {
+            User::factory()->create([
+                'first_name' => 'Zxqviele',
+                'last_name' => sprintf('Zxqnachname%02d', 31 - $number),
+            ]);
+        }
+        $this->actingAs(User::factory()->create());
+
+        $placeholderResponse = $this->getJson(route('users.search', ['query' => 'Zxqgelöscht']))->assertOk();
+        $this->assertSame([], $placeholderResponse->json());
+
+        $lastNames = array_column(
+            $this->getJson(route('users.search', ['query' => 'Zxqviele']))->assertOk()->json(),
+            'last_name'
+        );
+        $this->assertCount(25, $lastNames);
+        $this->assertSame('Zxqnachname01', $lastNames[0]);
+        $this->assertSame('Zxqnachname25', $lastNames[24]);
+    }
+
+    #[Test]
     public function user_search_hides_private_contact_data_from_regular_users(): void
     {
         User::factory()->create([

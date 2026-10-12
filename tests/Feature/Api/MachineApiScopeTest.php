@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -69,11 +70,25 @@ final class MachineApiScopeTest extends FeatureTestCase
     }
 
     #[Test]
+    public function machine_tokens_do_not_reach_jetstream_profile_routes(): void
+    {
+        // Jetstream hängt am api-Guard (config jetstream.guard). Seine Routen würden Maschinen-Tokens
+        // ohne Scope-Prüfung annehmen und die Profilseite der Token-Besitzer:in ausliefern.
+        $this->assertFalse(Route::has('profile.show'));
+        $this->assertFalse(Route::has('current-user-photo.destroy'));
+        $this->assertFalse(Route::has('other-browser-sessions.destroy'));
+
+        Passport::actingAs(User::factory()->create(), ['calendar:read']);
+
+        $this->get('/user/profile')->assertNotFound();
+    }
+
+    #[Test]
     public function all_registered_scopes_are_available(): void
     {
         // Teilmengen-Prüfung statt exakter Gleichheit: Vendor-Pakete registrieren eigene Scopes
         // (laravel/mcp etwa "mcp:use"), die hier nicht mitgepflegt werden sollen.
-        foreach (['inventory:read', 'ticketing:read', 'ticketing:write'] as $scopeId) {
+        foreach (['inventory:read', 'calendar:read', 'ticketing:read', 'ticketing:write'] as $scopeId) {
             $this->assertContains($scopeId, Passport::scopeIds());
         }
     }

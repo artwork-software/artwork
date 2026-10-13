@@ -3,11 +3,14 @@
 namespace Artwork\Modules\AppApi\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\AppApi\Http\Requests\AppDiscoverRequest;
 use Artwork\Modules\AppApi\Http\Requests\AppLoginRequest;
 use Artwork\Modules\AppApi\Services\AppShiftPlanService;
 use Artwork\Modules\AppApi\Services\AppTwoFactorAuthenticationService;
 use Artwork\Modules\ExternalUserManagement\Service\CredentialLoginService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -20,7 +23,21 @@ class AppAuthController extends Controller
         private readonly AppTwoFactorAuthenticationService $twoFactorAuthenticationService,
         private readonly CredentialLoginService $credentialLoginService,
         private readonly AppShiftPlanService $shiftPlanService,
+        private readonly UserRepository $userRepository,
     ) {
+    }
+
+    /**
+     * Lets the app find the instance that holds an account before it sends a
+     * password anywhere. Only a hash of the email arrives here, so instances
+     * never see addresses of other customers' users.
+     */
+    public function discover(AppDiscoverRequest $request, GeneralSettings $generalSettings): JsonResponse
+    {
+        return response()->json([
+            'known' => $this->userRepository->existsWithEmailHash($request->validated('email_hash')),
+            'name' => $generalSettings->page_title,
+        ]);
     }
 
     public function login(AppLoginRequest $request): JsonResponse
@@ -37,8 +54,7 @@ class AppAuthController extends Controller
         }
 
         if ($user === null) {
-            // Uniform message — never reveal whether the email exists. Failed logins are
-            // routine here: the app probes every known instance during discovery.
+            // Uniform message — never reveal whether the email exists.
             return response()->json(['message' => __('These credentials do not match our records.')], 401);
         }
 

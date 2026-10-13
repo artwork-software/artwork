@@ -59,6 +59,20 @@ final class AppContractTest extends TestCase
     }
 
     #[Test]
+    public function discoverMatchesTheContract(): void
+    {
+        $user = User::factory()->create();
+
+        $this->postJson(route('app.v1.auth.discover'), [
+            'email_hash' => hash('sha256', strtolower($user->email)),
+        ])->assertValidRequest()->assertValidResponse(200);
+
+        $this->postJson(route('app.v1.auth.discover'), [
+            'email_hash' => 'not-a-hash',
+        ])->assertValidResponse(422);
+    }
+
+    #[Test]
     public function meAndLogoutMatchTheContract(): void
     {
         Passport::actingAs(User::factory()->create(), ['app']);

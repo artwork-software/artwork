@@ -10,6 +10,10 @@ info:
 
     ## Authentication
 
+    Every customer runs their own instance. The app first finds the user's instance
+    with `POST /api/app/v1/auth/discover`, sent to every known instance with only a
+    hash of the email; the password then goes to the matching instance alone.
+
     `POST /api/app/v1/auth/login` issues a Passport personal access token with the `app`
     scope. Every other endpoint expects it as `Authorization: Bearer {token}`; download
     links are signed URLs and need no token.
@@ -22,6 +26,29 @@ servers:
 security:
   - bearerAuth: []
 paths:
+  /api/app/v1/auth/discover:
+    post:
+      tags: [App]
+      operationId: appDiscover
+      summary: Check whether this instance holds an account for an email hash
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppDiscoverRequest' }
+      responses:
+        '200':
+          description: Whether the email belongs to an account here
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppDiscoverResponse' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429':
+          description: Too many discovery requests from this IP
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
   /api/app/v1/auth/login:
     post:
       tags: [App]
@@ -681,6 +708,23 @@ components:
           required: [can_view_shift_plan]
           properties:
             can_view_shift_plan: { type: boolean }
+    AppDiscoverRequest:
+      type: object
+      required: [email_hash]
+      properties:
+        email_hash:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: |
+            Lower-case hex SHA-256 of the email, trimmed and lower-cased before hashing.
+            Example: `" Max.Mustermann@Example.de "` hashes as `max.mustermann@example.de`
+            to `3b128ad4c64aa69af51af3b20b35d7e336ac6046bee10c6130cada27545d3e4a`.
+    AppDiscoverResponse:
+      type: object
+      required: [known, name]
+      properties:
+        known: { type: boolean }
+        name: { type: string, description: 'Display name of the instance, shown when several instances match' }
     AppLoginRequest:
       type: object
       required: [email, password, device_name]

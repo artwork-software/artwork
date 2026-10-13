@@ -83,14 +83,19 @@ class EventPolicy
         $isRoomAdmin = $room->admins()->where('user_id', $user->id)->exists();
         $hasGlobalCreate = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
 
-        if (!$asOption) {
-            // Reguläre Termine über "Termine fest planen", geplante Termine NUR über
-            // "Im Planungskalender fest planen" (getrennte Berechtigung, keine Implikation).
-            $canPlanFixed = $inPlanning
-                ? $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value)
-                : $hasGlobalCreate;
+        // Geplante Termine kennen keine Raumanfrage (Entscheidung 13.10.2026): sie werden immer direkt
+        // angelegt, und zwar NUR über "Im Planungskalender fest planen" (getrennt von "Termine fest planen").
+        if ($inPlanning) {
+            return !$asOption
+                && (
+                    $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value)
+                    || $isRoomAdmin
+                    || $room->everyone_can_book
+                );
+        }
 
-            return $canPlanFixed || $isRoomAdmin || $room->everyone_can_book;
+        if (!$asOption) {
+            return $hasGlobalCreate || $isRoomAdmin || $room->everyone_can_book;
         }
 
         return $hasGlobalCreate
@@ -115,8 +120,10 @@ class EventPolicy
     {
         // "Projektleitung sein" (management projects) gab hier bisher systemweites Bearbeiten aller Termine —
         // Widerspruch zur Beschreibung. Jetzt: Schreibrecht im Projekt des Termins (Konzept Nutzerrechte 6.2 A).
+        // "Geplante Termine bearbeiten" gilt wie bei delete/declineEvent nur für geplante Termine (Katalog) –
+        // vorher erlaubte es das Bearbeiten ALLER Termine.
         return $this->canWriteProjectOf($user, $event) ||
-            $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value) ||
+            ($event->is_planning && $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)) ||
             $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
             $event->room?->users()
                 ->wherePivot('is_admin', true)
@@ -127,7 +134,8 @@ class EventPolicy
 
     public function answerRoomRequest(User $user, Event $event): bool
     {
-        if (!$event->occupancy_option || $event->room_id === null) {
+        // Geplante Termine sind nie Raumanfragen – sie werden über die Verifizierung bestätigt.
+        if (!$event->occupancy_option || $event->room_id === null || $event->is_planning) {
             return false;
         }
 

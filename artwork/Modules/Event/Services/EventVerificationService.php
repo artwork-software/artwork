@@ -10,7 +10,6 @@ use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
-use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Support\Carbon;
@@ -25,24 +24,18 @@ class EventVerificationService
     public function __construct(
         private readonly NotificationService $notificationService,
         private readonly ChangeService $changeService,
-        private readonly RoomRequestNotificationService $roomRequestNotificationService,
         private readonly EventSettingsService $eventSettingsService,
     ) {
     }
 
     /**
-     * Stellt einen geplanten Termin auf einen "richtigen" Termin um.
-     * War der Termin als Raumanfrage angelegt (occupancy_option), bleibt die Anfrage bestehen
-     * und die Raumadmins werden erst jetzt benachrichtigt - nicht schon im Planungskalender.
+     * Stellt einen geplanten Termin auf einen "richtigen" Termin um. Geplante Termine kennen keine
+     * Raumanfrage (seit 13.10.2026), der bestätigte Termin ist fest gebucht.
      */
     private function confirmEvent(Event $event): void
     {
         $this->trackIsPlanningChange($event, false);
-        $event->update(['is_planning' => false]);
-
-        if ($event->occupancy_option && $event->room_id) {
-            $this->roomRequestNotificationService->notifyRoomAdmins($event);
-        }
+        $event->update(['is_planning' => false, 'occupancy_option' => false]);
     }
 
     /**

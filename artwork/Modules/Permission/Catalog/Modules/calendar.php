@@ -83,14 +83,15 @@ return new PermissionModuleDefinition(
                 'Switch "Show planned events" in the calendar settings',
             ],
             allows: [
-                'Create planned events (as request)',
+                'See planned events in the planning calendar and in the calendar',
                 'Request verification of planned events',
             ],
             requires: [$planningModule],
             personas: [Persona::PRODUCTION_LEAD],
-            note: 'When the module "Planning calendar" is disabled, the planning calendar is closed for artwork admins as well.',
+            note: 'Planned events are never room requests: creating them requires "Plan directly in the planning calendar". '
+                . 'When the module "Planning calendar" is disabled, the planning calendar is closed for artwork admins as well.',
             supersededBy: $directBooking,
-            supersededEffect: 'Planned events are created directly instead of as a request; there is no verification step.',
+            supersededEffect: 'Planned events can be created without "Plan directly in the planning calendar"; there is no verification step.',
         ),
         new PermissionDefinition(
             name: PermissionEnum::CAN_EDIT_PLANNING_CALENDAR,
@@ -113,13 +114,15 @@ return new PermissionModuleDefinition(
         new PermissionDefinition(
             name: PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR,
             title: 'Plan directly in the planning calendar',
-            effect: 'Can book planned events without a request',
-            unlocks: ['Direct booking in the planned event dialog'],
-            allows: ['Only when creating – no editing of existing planned events'],
+            effect: 'Can create planned events in all rooms',
+            unlocks: ['Button "Save" in the planned event dialog'],
+            allows: ['Only when creating – editing existing planned events needs "Edit planned events"'],
             requires: [$planningModule, Requirement::permission(PermissionEnum::CAN_SEE_PLANNING_CALENDAR)],
             personas: [Persona::DISPOSITION],
-            note: 'Independent of "Plan events directly": calendar and planning calendar are permitted separately.',
+            note: 'Planned events are never room requests. Independent of "Plan events directly": calendar and '
+                . 'planning calendar are permitted separately. Room admins create planned events in their own rooms without this permission.',
             supersededBy: $directBooking,
+            supersededEffect: 'Everyone who may see the planning calendar creates planned events directly.',
         ),
         new PermissionDefinition(
             name: PermissionEnum::DAY_REMARKS_VIEW,

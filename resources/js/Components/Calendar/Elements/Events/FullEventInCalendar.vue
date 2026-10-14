@@ -508,26 +508,11 @@
                     </BaseMenu>
                 </div>
 
-                <!-- Properties als Icons -->
-                <div class="grid grid-cols-5 md:grid-cols-2 gap-2 @max-[10rem]/event:hidden @max-[10rem]/tile:flex @max-[10rem]/tile:flex-wrap @max-[10rem]/tile:gap-1.5">
-                    <div v-for="property in event.eventProperties" :key="property.id" class="col-span-1 group/property relative">
-                        <PropertyIcon
-                            :name="property.icon"
-                            class="size-3.5 opacity-90"
-                            :style="{ color: eventTextColor }"
-                        />
-                        <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
-                            <div class="rounded-lg bg-surface-inverse px-3 py-1 text-xs text-white">
-                                {{ property.name }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timeline Icon -->
+                <!-- Timeline Icon: direkt unter dem Kontextmenü statt unten rechts, dort liegt
+                     beim Hovern der „+"-Button der Zelle (CalendarDayRow) darüber -->
                 <div
                     v-if="calSettings.show_timeline"
-                    class="mt-2 cursor-pointer @max-[10rem]/event:hidden @max-[10rem]/tile:mt-0"
+                    class="mb-2 cursor-pointer @max-[10rem]/event:hidden @max-[10rem]/tile:mb-0"
                     data-no-edit-click
                     @click="openTimelineModal"
                 >
@@ -544,6 +529,22 @@
                         }"
                         :class="!event.hasTimelines && !calSettings.high_contrast ? 'text-gray-400' : ''"
                     />
+                </div>
+
+                <!-- Properties als Icons (nur Anzeige, dürfen vom „+"-Button kurz verdeckt werden) -->
+                <div class="grid grid-cols-5 md:grid-cols-2 gap-2 @max-[10rem]/event:hidden @max-[10rem]/tile:flex @max-[10rem]/tile:flex-wrap @max-[10rem]/tile:gap-1.5">
+                    <div v-for="property in event.eventProperties" :key="property.id" class="col-span-1 group/property relative">
+                        <PropertyIcon
+                            :name="property.icon"
+                            class="size-3.5 opacity-90"
+                            :style="{ color: eventTextColor }"
+                        />
+                        <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
+                            <div class="rounded-lg bg-surface-inverse px-3 py-1 text-xs text-white">
+                                {{ property.name }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

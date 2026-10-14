@@ -133,7 +133,7 @@
                                 </template>
                             </div>
 
-                            <!-- "+"-Button: OBEN RECHTS außerhalb des Scrollbereichs.
+                            <!-- "+"-Button: UNTEN RECHTS über dem Scrollbereich (Timeline-Icon der Termine sitzt deshalb oben).
                                  Im Multi-Edit ausgeblendet — dort wählt der Zellen-Klick die Zelle aus.
                                  Nur in Zeilen im Renderfenster (sonst ~7.000 versteckte Buttons im DOM). -->
                             <button
@@ -249,8 +249,9 @@ const cellSeparatorStyle = computed(() => ({
     borderLeft: `1px solid ${settings.value.high_contrast ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.18)'}`
 }));
 
-// "+"-Button: 40px Zielgröße, aber nie höher als die Zoom-Zeilenhöhe
-const addEventButtonSize = computed(() => Math.min(40, Math.max(20, rowHeight.value - 8)));
+// "+"-Button: höchstens 28px (deckt sonst unten rechts zu viel vom letzten Element ab),
+// nie höher als die Zoom-Zeilenhöhe
+const addEventButtonSize = computed(() => Math.min(28, Math.max(20, rowHeight.value - 8)));
 const addEventButtonStyle = computed(() => ({
     width: `${addEventButtonSize.value}px`,
     height: `${addEventButtonSize.value}px`

@@ -67,8 +67,12 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        // Login der App: nur drosseln, keine Sperren oder Alarme — die App probiert beim Login jede
-        // bekannte Instanz durch, Fehlversuche gültiger Nutzer sind also normaler Verkehr.
+        // Login-Discovery der App: fragt jede bekannte Instanz nach einem E-Mail-Hash. Das
+        // Limit bremst das Abklopfen fremder Adressen, normale Logins brauchen eine Anfrage.
+        RateLimiter::for('app-discover', function (Request $request) {
+            return Limit::perMinute(10)->by('app-discover:ip:' . $request->ip());
+        });
+
         RateLimiter::for('app-login', function (Request $request) {
             // Läuft vor der Request-Validierung: Bots posten "email" auch als Array (sonst 500)
             $email = $request->input('email');

@@ -660,6 +660,9 @@
                             >
                                 {{ primaryButtonText }}
                             </BaseUIButton>
+                            <span v-else-if="planningWithoutCreateRight" class="text-xs text-secondary">
+                                {{ $t('You lack the permission "Plan directly in the planning calendar" to create planned events in this room.') }}
+                            </span>
                             <BaseUIButton
                                 v-else
                                 type="button"
@@ -1371,6 +1374,9 @@ function loadFullDescription() {
             if (!descriptionTouched.value && description.value === prefilled) {
                 description.value = data?.description ?? ''
             }
+            if (typeof data?.can_update === 'boolean') {
+                canEdit.value = data.can_update
+            }
         })
         .catch(() => { descriptionLoadFailed.value = true })
         .finally(() => { descriptionRequest = null })
@@ -1448,7 +1454,7 @@ const modalTitle = computed(() => {
 const modalDescription = computed(() => {
     if (props.event?.id) {
         if (props.event?.occupancy_option) return $t('Please review the event details and confirm the booking by selecting "Commitments" or "Optional commitment". You can also send a message to the inquirer if needed.')
-        if (props.event?.isPlanning) return $t('This event is marked as planned. You can edit the details, but it will not be visible to regular users until it is confirmed.')
+        if (props.event?.isPlanning) return $t('Here you can view and edit the details of the planned event. Planned events are never room requests; saving keeps the event firmly planned.')
         return $t('Here you can view and edit the details of the event. Make sure to save any changes you make.')
     }
     return props.isPlanning
@@ -1460,10 +1466,16 @@ const modalDescription = computed(() => {
 
 const checkedEventProperties = computed(() => (event_properties ?? []).filter(p => p.checked))
 
+// Bestehende Termine richten sich nach ihrem eigenen Planungs-Flag, nicht nach dem Kalender, aus dem der
+// Dialog geöffnet wurde (vorher wurde ein geplanter Termin im normalen Kalender wie ein regulärer behandelt).
+const effectiveIsPlanning = computed(() => (props.event?.id ? !!props.event.isPlanning : props.isPlanning))
+
 // "Termine immer direkt buchbar" (Instanz-Setting): nie Anfrage-Modus, jede anlegeberechtigte Person bucht direkt
 const canCreateDirect = computed(
-    () => !!page.props.event_direct_booking_only || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (props.isPlanning ? can('can plan fixed in planning calendar') : can('create events without request'))
+    () => !!page.props.event_direct_booking_only || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (effectiveIsPlanning.value ? can('can plan fixed in planning calendar') : can('create events without request'))
 )
+// Geplante Termine kennen keine Raumanfrage: ohne Anlegerecht gibt es keinen Anfrage-Button, nur einen Hinweis
+const planningWithoutCreateRight = computed(() => effectiveIsPlanning.value && !canCreateDirect.value)
 
 const isPrimaryDisabled = computed(() => {
     const invalidSeries = series.value && !seriesFieldsLocked.value && !seriesDefinitionValid.value
@@ -1489,7 +1501,7 @@ const requestDisabled = computed(() => {
     const canRequestGlobal = can('request room occupancy')
     const canRequestRoom = isRequestableForRoom.value
     if (!canRequestGlobal && !canRequestRoom && !canCreateDirect.value) return true
-    if (!can('can see planning calendar') && props.isPlanning) return true
+    if (effectiveIsPlanning.value) return true
     return false
 })
 
@@ -1550,7 +1562,10 @@ function findRoomById(rawId) {
     return list.find(r => Number(r?.id) === rid || Number(r?.roomId) === rid) || null
 }
 function openModal() {
+    // Vorläufig aus den Rechten des Clients; für bestehende Termine liefert loadFullDescription das
+    // Ergebnis der EventPolicy (can_update) nach, inkl. Projekt-Schreibrecht.
     canEdit.value = (!props.event?.id) || isCreator.value || isRoomAdmin.value || hasAdminRole() || can('create events without request')
+        || (!!props.event?.isPlanning && can('can edit planning calendar'))
     if (!props.event) {
         selectedEventType.value = props.eventTypes?.[0] ?? null
         selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null

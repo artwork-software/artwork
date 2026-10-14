@@ -9168,5 +9168,7 @@
     "Return open – material blocked": "Rückgabe offen – Material blockiert",
     "The articles stay reserved until the return is entered.": "Die Artikel bleiben reserviert, bis die Rückgabe eingetragen ist.",
     "The return date has passed and no return has been entered yet. The articles stay reserved until the return is entered.": "Das Rückgabedatum ist überschritten und es ist noch keine Rückgabe eingetragen. Die Artikel bleiben reserviert, bis die Rückgabe eingetragen ist.",
-    "The articles stay reserved until the return is confirmed – even after the return date. Use “Enter return” as soon as the material is back.": "Die Artikel bleiben bis zur bestätigten Rückgabe reserviert – auch über das Rückgabedatum hinaus. Tragt die Rückgabe über „Rückgabe eingeben“ ein, sobald das Material zurück ist."
+    "The articles stay reserved until the return is confirmed – even after the return date. Use “Enter return” as soon as the material is back.": "Die Artikel bleiben bis zur bestätigten Rückgabe reserviert – auch über das Rückgabedatum hinaus. Tragt die Rückgabe über „Rückgabe eingeben“ ein, sobald das Material zurück ist.",
+    "You lack the permission \"Plan directly in the planning calendar\" to create planned events in this room.": "Zum Anlegen geplanter Termine in diesem Raum fehlt das Recht „Im Planungskalender fest planen“.",
+    "Here you can view and edit the details of the planned event. Planned events are never room requests; saving keeps the event firmly planned.": "Hier könnt ihr die Details des geplanten Termins ansehen und bearbeiten. Geplante Termine sind nie Raumanfragen; nach dem Speichern bleibt der Termin fest geplant."
 }

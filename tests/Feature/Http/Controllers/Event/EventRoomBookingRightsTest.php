@@ -327,10 +327,10 @@ final class EventRoomBookingRightsTest extends FeatureTestCase
     }
 
     #[Test]
-    public function moving_a_planning_event_needs_the_planning_calendar_booking_right(): void
+    public function moving_a_planning_event_keeps_it_firmly_planned_without_a_room_request(): void
     {
-        // „Termine fest planen“ bucht nur reguläre Termine direkt – geplante wie beim Anlegen nur mit
-        // „Im Planungskalender fest planen“
+        // 13.10.2026: Geplante Termine kennen keine Raumanfrage – der Raumwechsel ist mit dem
+        // Bearbeitungsrecht abgedeckt (vorher wurde der Termin ohne „Im Planungskalender fest planen“ zur Anfrage)
         $planner = $this->actingAsUserWith([PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST]);
         $event = $this->bookedEvent($planner, Room::factory()->create(['everyone_can_book' => false]));
         $event->update(['is_planning' => true]);
@@ -341,7 +341,23 @@ final class EventRoomBookingRightsTest extends FeatureTestCase
 
         $event->refresh();
         $this->assertSame($targetRoom->id, $event->room_id);
-        $this->assertTrue($event->occupancy_option);
+        $this->assertFalse((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function planning_calendar_editor_moves_a_foreign_planned_event_into_a_restricted_room(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]);
+        $event = $this->bookedEvent(User::factory()->create(), Room::factory()->create(['everyone_can_book' => false]));
+        $event->update(['is_planning' => true]);
+        $targetRoom = Room::factory()->create(['everyone_can_book' => false]);
+
+        $this->putJson(route('events.update', $event), $this->updatePayload($event, ['roomId' => $targetRoom->id]))
+            ->assertSuccessful();
+
+        $event->refresh();
+        $this->assertSame($targetRoom->id, $event->room_id);
+        $this->assertFalse((bool) $event->occupancy_option);
     }
 
     // ------------------------------------------------------------------ Bulk / Multi-Edit / Serien-Update

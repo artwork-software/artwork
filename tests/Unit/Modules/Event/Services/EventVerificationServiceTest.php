@@ -158,12 +158,12 @@ final class EventVerificationServiceTest extends TestCase
 
         $fresh = $event->fresh();
         $this->assertFalse((bool) $fresh->is_planning);
-        // Die Raumanfrage bleibt bestehen und geht erst jetzt an die Raumadmins raus
-        $this->assertTrue((bool) $fresh->occupancy_option);
+        // 13.10.2026: Geplante Termine kennen keine Raumanfrage – der bestätigte Termin ist fest gebucht
+        $this->assertFalse((bool) $fresh->occupancy_option);
     }
 
     #[Test]
-    public function confirming_a_planned_room_request_notifies_room_admins(): void
+    public function confirming_a_planned_event_sends_no_room_request_to_room_admins(): void
     {
         $user = User::factory()->create();
         $roomAdmin = User::factory()->create();
@@ -178,12 +178,14 @@ final class EventVerificationServiceTest extends TestCase
 
         $this->mock(NotificationService::class, function ($mock): void {
             $mock->shouldIgnoreMissing($mock);
-            $mock->shouldReceive('updateExistingRoomRequestNotification')->andReturnFalse();
-            $mock->shouldReceive('createNotification')->atLeast()->once();
+            $mock->shouldReceive('updateExistingRoomRequestNotification')->never();
+            $mock->shouldReceive('createNotification')->never();
         });
         $service = app(EventVerificationService::class);
 
         $service->requestVerification($event->fresh(), $user);
+
+        $this->assertFalse((bool) $event->fresh()->occupancy_option);
     }
 
     #[Test]

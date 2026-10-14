@@ -109,6 +109,51 @@ final class EventUpdateTest extends FeatureTestCase
         );
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function bookedEventOf(User $creator, array $attributes = []): Event
+    {
+        // Ohne Projekt: der Project-Observer trägt die handelnde Person als Ersteller:in ein,
+        // was über das Projekt-Schreibrecht jedes Bearbeiten erlauben würde.
+        return Event::factory()->create(array_replace([
+            'user_id' => $creator->id,
+            'project_id' => null,
+            'room_id' => Room::factory()->create(['everyone_can_book' => false])->id,
+            'occupancy_option' => false,
+            'is_planning' => false,
+            'is_series' => false,
+            'start_time' => '2026-11-10 10:00:00',
+            'end_time' => '2026-11-10 12:00:00',
+            'allDay' => false,
+        ], $attributes));
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     * @return array<string, mixed>
+     */
+    private function editPayload(Event $event, array $overrides = []): array
+    {
+        return array_replace([
+            'start' => '2026-11-10 10:00',
+            'end' => '2026-11-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $event->event_type_id,
+            'roomId' => $event->room_id,
+            'title' => $event->name,
+            'eventName' => $event->eventName,
+            'isOption' => false,
+            'audience' => false,
+            'isLoud' => false,
+            'allDay' => false,
+            'isPlanning' => (bool) $event->is_planning,
+            'noNotifications' => true,
+        ], $overrides);
+    }
+
     private function projectWithManagerForRoomChange(): User
     {
         $project = Project::factory()->create();
@@ -216,6 +261,119 @@ final class EventUpdateTest extends FeatureTestCase
 
         $this->putJson(route('events.decline', $event), [])
             ->assertUnauthorized();
+    }
+
+    /**
+     * 13.10.2026: Der Anfrage-Status kommt nie vom Client. Vorher machte der Dialog ohne Buchungsrecht aus
+     * einem fest gebuchten (auch geplanten) Termin beim Bearbeiten eine Raumanfrage.
+     */
+    #[Test]
+    public function editing_a_booked_event_as_request_only_creator_keeps_it_booked(): void
+    {
+        $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $event = $this->bookedEventOf($requester);
+
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['isOption' => true, 'eventName' => 'Neu']))
+            ->assertSuccessful();
+
+        $event->refresh();
+        $this->assertSame('Neu', $event->eventName);
+        $this->assertFalse((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function editing_a_booked_planned_event_from_the_calendar_keeps_it_firmly_planned(): void
+    {
+        $creator = $this->actingAsUserWith([
+            PermissionEnum::EVENT_REQUEST,
+            PermissionEnum::CAN_EDIT_PLANNING_CALENDAR,
+            PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR,
+        ]);
+        $event = $this->bookedEventOf($creator, ['is_planning' => true]);
+
+        // Der Kalender-Dialog schickte für geplante Termine isOption=true, weil "Termine fest planen" fehlt
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['isOption' => true, 'eventName' => 'Neu']))
+            ->assertSuccessful();
+
+        $event->refresh();
+        $this->assertSame('Neu', $event->eventName);
+        $this->assertTrue((bool) $event->is_planning);
+        $this->assertFalse((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function editing_an_open_room_request_as_creator_keeps_the_request_open(): void
+    {
+        $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $event = $this->bookedEventOf($requester, ['occupancy_option' => true]);
+
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['isOption' => true, 'eventName' => 'Neu']))
+            ->assertSuccessful();
+
+        $event->refresh();
+        $this->assertSame('Neu', $event->eventName);
+        $this->assertTrue((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function planning_calendar_editor_can_update_a_foreign_planned_event(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]);
+        $event = $this->bookedEventOf(User::factory()->create(), ['is_planning' => true]);
+
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['eventName' => 'Neu']))
+            ->assertSuccessful();
+
+        $this->assertSame('Neu', $event->fresh()->eventName);
+    }
+
+    #[Test]
+    public function planning_calendar_editor_cannot_update_a_foreign_regular_event(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]);
+        $event = $this->bookedEventOf(User::factory()->create());
+
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['eventName' => 'Neu']))
+            ->assertForbidden();
+    }
+
+    #[Test]
+    public function description_endpoint_reports_the_update_right_of_the_policy(): void
+    {
+        $editor = $this->actingAsUserWith([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]);
+        $planned = $this->bookedEventOf(User::factory()->create(), ['is_planning' => true, 'description' => 'Plan']);
+        $regular = $this->bookedEventOf(User::factory()->create(), ['description' => 'Fest']);
+
+        $this->getJson(route('events.description', $planned))
+            ->assertSuccessful()
+            ->assertJson(['description' => 'Plan', 'can_update' => true]);
+        $this->getJson(route('events.description', $regular))
+            ->assertSuccessful()
+            ->assertJson(['description' => 'Fest', 'can_update' => false]);
+        $this->assertNotNull($editor);
+    }
+
+    #[Test]
+    public function a_planned_event_is_never_an_answerable_room_request(): void
+    {
+        $planner = $this->actingAsUserWith([PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST]);
+        $event = $this->bookedEventOf(User::factory()->create(), ['is_planning' => true, 'occupancy_option' => true]);
+
+        $this->assertTrue(Gate::forUser($planner)->denies('answerRoomRequest', $event));
+        $this->putJson(route('events.accept', $event))->assertForbidden();
+    }
+
+    #[Test]
+    public function migration_turns_planned_room_requests_into_firmly_planned_events(): void
+    {
+        $plannedRequest = Event::factory()->create(['is_planning' => true, 'occupancy_option' => true]);
+        $regularRequest = Event::factory()->create(['is_planning' => false, 'occupancy_option' => true]);
+
+        $migration = require base_path('database/migrations/2026_10_13_100000_planned_events_are_never_room_requests.php');
+        $migration->up();
+
+        $this->assertFalse((bool) $plannedRequest->fresh()->occupancy_option);
+        $this->assertTrue((bool) $regularRequest->fresh()->occupancy_option);
     }
 
     #[Test]

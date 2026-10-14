@@ -1434,7 +1434,9 @@ class EventController extends Controller
         // "Termine immer direkt buchbar": es gibt keine Raumanfragen – jede Person, die anlegen darf
         // (EventPolicy::create), bucht direkt; ein vom Client gesendetes isOption wird verworfen.
         $alwaysDirectBooking = $this->eventSettingsService->alwaysDirectBooking();
-        if ($alwaysDirectBooking) {
+        // Geplante Termine kennen keine Raumanfrage: ein vom Client gesendetes isOption wird verworfen,
+        // wer nicht direkt anlegen darf, bekommt 403 (EventPolicy::book).
+        if ($alwaysDirectBooking || $isPlanning) {
             $isOption = false;
         }
 
@@ -1444,7 +1446,7 @@ class EventController extends Controller
 
         if (!$roomId) {
             if (!$user->can('bookWithoutRoom', [Event::class, $isPlanning])) {
-                if ($user->can(PermissionEnum::EVENT_REQUEST->value)) {
+                if (!$isPlanning && $user->can(PermissionEnum::EVENT_REQUEST->value)) {
                     throw ValidationException::withMessages([
                         'roomId' => $alwaysDirectBooking
                             ? __('A room is required for this event.')
@@ -2089,9 +2091,10 @@ class EventController extends Controller
 
         // remove is_series and series_id from data to prevent overwriting
         unset($data['is_series'], $data['series_id']);
-        if (!$request->has('isOption') || $shouldAcceptRoomRequest) {
-            unset($data['occupancy_option']);
-        }
+        // Den Anfrage-Status setzt nie der Client: ein fest gebuchter Termin bleibt beim Bearbeiten fest
+        // (vorher machte ein Dialog ohne Buchungsrecht daraus eine Raumanfrage), eine offene Anfrage wird nur
+        // über acceptEvent (shouldAcceptRoomRequest) zugesagt oder beim Raumwechsel unten neu bewertet.
+        unset($data['occupancy_option']);
         $event->fill($data);
 
         // Nur die tatsächlich geänderten Felder werden auf die Geschwister übertragen
@@ -2140,11 +2143,14 @@ class EventController extends Controller
             );
         }
 
-        // If room changed and new room requires approval, create a room request notification
+        // If room changed and new room requires approval, create a room request notification.
+        // Geplante Termine kennen keine Raumanfrage: der Raumwechsel ist mit dem Bearbeitungsrecht
+        // (EventPolicy::update) abgedeckt und bleibt fest.
         $roomChangeBecameRequest = false;
         if (
             $event->room_id
             && (int) $oldEventRoom !== (int) $event->room_id
+            && !$event->is_planning
             && !$this->eventSettingsService->alwaysDirectBooking()
         ) {
             $newRoom = Room::find($event->room_id);
@@ -2166,11 +2172,7 @@ class EventController extends Controller
                         'declined_room_id' => null,
                         'accepted' => false,
                     ]);
-                    // Bei geplanten Terminen geht die Raumanfrage erst beim Umstellen
-                    // auf einen "richtigen" Termin raus
-                    if (!$event->is_planning) {
-                        $this->roomRequestNotificationService->notifyRoomAdmins($event);
-                    }
+                    $this->roomRequestNotificationService->notifyRoomAdmins($event);
                     $roomChangeBecameRequest = true;
                 }
             }
@@ -4523,7 +4525,12 @@ class EventController extends Controller
     {
         $this->authorize('view', $event);
 
-        return new JsonResponse(['description' => $event->description]);
+        // can_update: der Dialog schaltet Bearbeiten/Lesen nach derselben Policy wie das Speichern
+        // (vorher kannte er weder "Geplante Termine bearbeiten" noch das Projekt-Schreibrecht).
+        return new JsonResponse([
+            'description' => $event->description,
+            'can_update' => $this->authManager->user()?->can('update', $event) ?? false,
+        ]);
     }
 
     public function updateDescription(Request $request, Event $event): JsonResponse

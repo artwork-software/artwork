@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Models;
 
 use Artwork\Core\Casts\TranslatedDateTimeCast;
 use Artwork\Modules\User\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $verifier_type
  * @property string|null $status
  * @property string|null $rejection_reason
- * @property \Illuminate\Support\Carbon|null $created_at
+ * @property string|null $created_at übersetzter Anzeige-String (TranslatedDateTimeCast), kein Carbon
  * @property \Illuminate\Support\Carbon|null $updated_at
  *
  * @property \Artwork\Modules\Event\Models\Event $event
@@ -43,6 +44,17 @@ class EventVerification extends Model
     protected $casts = [
         'created_at' => TranslatedDateTimeCast::class,
     ];
+
+    /**
+     * created_at ist für die Anzeige zu einem übersetzten String gecastet; für Payloads wird der
+     * Rohwert als ISO-8601 gebraucht.
+     */
+    public function createdAtIso8601(): ?string
+    {
+        $rawCreatedAt = $this->getRawOriginal('created_at');
+
+        return $rawCreatedAt === null ? null : Carbon::parse($rawCreatedAt)->toIso8601String();
+    }
 
     public function verifier(): MorphTo
     {

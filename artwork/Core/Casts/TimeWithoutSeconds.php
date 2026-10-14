@@ -7,6 +7,12 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 class TimeWithoutSeconds implements CastsAttributes
 {
+    /**
+     * Ohne: nach dem Setzen eines Carbon lieferte das Attribut bis zum Neuladen das Carbon statt "H:i" (Eloquent
+     * cached gesetzte Objekte), toArray() serialisierte es als vollen ISO-Zeitstempel.
+     */
+    public bool $withoutObjectCaching = true;
+
     //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceAfterLastUsed, Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceBeforeLastUsed
     public function get($model, string $key, mixed $value, array $attributes): ?string
     {

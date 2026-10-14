@@ -18,6 +18,7 @@ use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\EventPlanningCalendarService;
+use Artwork\Modules\Event\Services\EventVerificationService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftPlanService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -321,7 +322,7 @@ class EventController extends Controller
         $calendarWarningText = '';
         if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
             // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
-            $endDate = $startDate->copy()->addDays(30);
+            $endDate = $startDate->copy()->addDays(30)->endOfDay();
             $calendarWarningText = __('calendar.daily_view_info');
 
             $user->userFilters()->updateOrCreate(
@@ -331,7 +332,7 @@ class EventController extends Controller
         }
 
         if ($startDate->diffInDays($endDate) > (365 * 2)) {
-            $endDate = $startDate->copy()->addYears(2);
+            $endDate = $startDate->copy()->addYears(2)->endOfDay();
             $calendarWarningText = __('calendar.calendar_limit_two_years');
 
             $user->userFilters()->updateOrCreate(
@@ -575,6 +576,11 @@ class EventController extends Controller
                 ['start_date' => null, 'end_date' => null]
             );
             $userCalendarSettings = $user->getAttribute('calendar_settings');
+            // Wie im Kalender: ohne Einstellungen (Konto vor initializeAccountDefaults) brach
+            // getCalendarDateRange() mit TypeError ab
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->calendar_settings()->create();
+            }
         }
 
         $this->userService->shareCalendarAbo('calendar');
@@ -587,7 +593,7 @@ class EventController extends Controller
         // Tagesansicht bis zu einem Monat (wie im Standard-Kalender)
         if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
             // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
-            $endDate = $startDate->copy()->addDays(30);
+            $endDate = $startDate->copy()->addDays(30)->endOfDay();
             $calendarWarningText = __('calendar.daily_view_info');
             $user->userFilters()->updateOrCreate([
                 'filter_type' => $planningFilterType
@@ -598,7 +604,7 @@ class EventController extends Controller
 
 
         if ($startDate->diffInDays($endDate) > (365 * 2)) {
-            $endDate = $startDate->copy()->addYears(2);
+            $endDate = $startDate->copy()->addYears(2)->endOfDay();
             $calendarWarningText = __('calendar.calendar_limit_two_years');
             $user->userFilters()->updateOrCreate([
                 'filter_type' => $planningFilterType
@@ -700,7 +706,12 @@ class EventController extends Controller
                 ->resolveTimePeriodProject($userCalendarSettings)?->name,
             'calendarWarningText' => $calendarWarningText,
             'months' => $months,
-            'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
+            // Auch Modus "spezifisch" (event_types.specific_verifier_id) – sonst fehlten der festgelegten Person
+            // "Prüfung genehmigen/ablehnen" im Planungskalender (die Eingangsliste kennt beide Quellen)
+            'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id')
+                ->merge(EventType::where('specific_verifier_id', $user->id)->pluck('id'))
+                ->unique()
+                ->values(),
             'filterType' => $planningFilterType,
             'isDailyView' => $isDailyView,
             'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
@@ -1460,7 +1471,8 @@ class EventController extends Controller
             return $isOption;
         }
 
-        $room = $alwaysDirectBooking ? null : Room::find($roomId);
+        // Geplante Termine prüfen auch bei "Termine immer direkt buchbar" das Anlegerecht (EventPolicy::book)
+        $room = $alwaysDirectBooking && !$isPlanning ? null : Room::find($roomId);
         if ($room === null) {
             return $isOption;
         }
@@ -5021,24 +5033,9 @@ class EventController extends Controller
             abort(403);
         }
 
-        $wasPlanning = $event->is_planning;
-
-        // Set the event as a planning event
-        $event->update(['is_planning' => true]);
-
-        // Offene Raumanfrage-Benachrichtigungen zurückziehen - der Termin ist für
-        // Raumadmins ohne Planungskalender-Zugriff nicht mehr sichtbar
-        $this->notificationService->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
-
-        if (!$wasPlanning) {
-            $this->changeService->saveFromBuilder(
-                $this->changeService
-                    ->createBuilder()
-                    ->setModelClass(Event::class)
-                    ->setModelId($event->id)
-                    ->setTranslationKey('Event converted to planning event')
-            );
-        }
+        // Änderungsverlauf, offene Raumanfrage zurücknehmen (geplante Termine kennen keine Raumanfrage) –
+        // gemeinsam mit der Projekt-Umstellung
+        app(EventVerificationService::class)->convertToPlanning($event);
 
         // Broadcast the event update
         $freshEvent = $event->fresh()->load(['event_type', 'project']);

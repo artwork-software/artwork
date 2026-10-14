@@ -2378,8 +2378,11 @@ readonly class EventService
 
         if ($newIsPlanning && !$oldIsPlanning) {
             // Wie convertToPlanning: offene Raumanfragen zurückziehen – der Termin ist für Raumadmins
-            // ohne Planungskalender-Zugriff nicht mehr sichtbar
+            // ohne Planungskalender-Zugriff nicht mehr sichtbar, und geplante Termine kennen keine Raumanfrage
             app(NotificationService::class)->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
+            if ($event->occupancy_option) {
+                $this->eventRepository->update($event, ['occupancy_option' => false]);
+            }
         }
 
         if ($oldIsPlanning !== $newIsPlanning) {

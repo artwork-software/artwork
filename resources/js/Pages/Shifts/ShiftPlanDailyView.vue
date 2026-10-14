@@ -2041,6 +2041,8 @@ function startShiftCalendarListener() {
         onEventsChanged: () => { eventsVersion.value++ },
         onShiftDataChanged: () => { triggerRef(shiftPlanCopy) },
         onLookupsReceived: mergeLookups,
+        // Geplante Termine nur mit Planungskalender-Recht (wie der Server-Load, Event::visiblePlanningFor)
+        subscribePlanningChannels: hasAdminRole() || can('can see planning calendar') || can('can edit planning calendar'),
         // Projekt-Schichten-Tab ohne „Schichten anderer Projekte anzeigen": wie der Server-Load nur
         // Schichten dieses Projekts live einspielen (sonst bleibt eine weg-verschobene Schicht stehen)
         projectFilterId: () => (

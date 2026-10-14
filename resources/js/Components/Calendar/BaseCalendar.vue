@@ -234,22 +234,26 @@
                 <!-- Verifizierungs-Workflow (nur Planungskalender). Bei "Termine immer direkt buchbar"
                      gibt es keine Verifizierung: derselbe Endpunkt übernimmt die Termine sofort als feste Termine. -->
                 <template v-if="isPlanning">
+                    <!-- Prüfung anfragen: "Geplante Termine bearbeiten" (alle) oder eigene Termine (anlegen dürfen nur
+                         Personen mit "Im Planungskalender fest planen" bzw. Raumadmins) – "einsehen" allein reicht nicht -->
                     <FormButton
-                        v-if="can('can see planning calendar') || isAdmin"
+                        v-if="isAdmin || can('can edit planning calendar') || can('can plan fixed in planning calendar')"
                         :disabled="checkedCount === 0"
                         @click="requestVerification"
                         :text="checkedCount + ' ' + (directBookingOnly ? $t('Confirm as fixed events') : $t('request verification'))"
                         class="transition-all duration-300 ease-in-out pointer-events-auto"
                     />
+                    <!-- Genehmigen/Ablehnen wirkt nur auf eigene offene Prüfungen (approve/reject-by-event) –
+                         daher an die Prüfer-Zuordnung gebunden, nicht an das Bearbeitungsrecht -->
                     <FormButton
-                        v-if="!directBookingOnly && (can('can edit planning calendar') || isAdmin)"
+                        v-if="!directBookingOnly && verifierForEventTypIds?.length > 0"
                         :disabled="checkedCount === 0"
                         @click="approveRequests"
                         :text="checkedCount + ' ' + $t('Approve events')"
                         class="transition-all duration-300 ease-in-out pointer-events-auto"
                     />
                     <FormButton
-                        v-if="!directBookingOnly && (can('can edit planning calendar') || isAdmin)"
+                        v-if="!directBookingOnly && verifierForEventTypIds?.length > 0"
                         class="bg-danger hover:bg-danger/70 transition-all duration-300 ease-in-out pointer-events-auto"
                         @click="showRejectEventVerificationRequestModal = true"
                         :disabled="checkedCount === 0"
@@ -1135,6 +1139,23 @@ async function runInitialLoad() {
 }
 
 
+// Live-Termine nach derselben Regel wie die Server-Abfrage einsortieren (EventPlanningCalendarService /
+// EventCalendarService::filter): vorher landeten feste Termine im Planungskalender und geplante im Kalender,
+// auch ohne „Geplante Termine anzeigen“ bzw. Planungskalender-Recht
+const canSeePlannedEvents = computed(() => isAdmin.value || can('can see planning calendar') || can('can edit planning calendar'));
+const acceptLiveEvent = (evt) => {
+    const isPlannedEvent = !!evt?.isPlanning;
+    // Tagesansicht filtert der Server nach den Tagesansicht-Einstellungen
+    const viewSettings = isDaily.value ? user.value.daily_view_calendar_settings : settings.value;
+    if (props.isPlanning) {
+        return isPlannedEvent || !!viewSettings?.show_unplanned_events;
+    }
+    return !isPlannedEvent || (
+        !!viewSettings?.show_planned_events
+        && canSeePlannedEvents.value
+    );
+};
+
 // Echo-Handler dieser Instanz — beim Verlassen abmelden, sonst laufen sie mit veralteten Daten weiter
 let shiftCalendarListener: ReturnType<typeof useShiftCalendarListener> | null = null;
 let isCalendarUnmounted = false;
@@ -1146,6 +1167,8 @@ onMounted(async () => {
     // Schicht-Kanäle nur mit Dienstplan-Sichtrecht (Spiegel von CalendarShiftVisibility / routes/channels.php)
     shiftCalendarListener = useShiftCalendarListener(newCalendarData, {
         subscribeShiftChannels: isAdmin.value || can('can view shift plan') || can('can plan shifts'),
+        acceptEvent: acceptLiveEvent,
+        subscribePlanningChannels: canSeePlannedEvents.value,
     });
     shiftCalendarListener.init();
     initMonthObserver();
@@ -1225,7 +1248,8 @@ const selectedRoomRequestIds = computed(() => {
     for (const room of newCalendarData.value) {
         for (const slot of Object.values(room.content || {})) {
             for (const evt of (slot.events ?? [])) {
-                if (selectedIds.has(evt.id) && evt.occupancy_option && !requestIds.includes(evt.id)) {
+                // Geplante Termine sind nie Raumanfragen (EventPolicy::answerRoomRequest → 403)
+                if (selectedIds.has(evt.id) && evt.occupancy_option && !evt.isPlanning && !requestIds.includes(evt.id)) {
                     requestIds.push(evt.id);
                 }
             }
@@ -1274,7 +1298,24 @@ function clearEventSelection() {
     clearAllConsiderFlags();
 }
 
+function findCalendarEvent(eventId) {
+    for (const room of newCalendarData.value) {
+        for (const slot of Object.values(room.content ?? {})) {
+            const evt = (slot.events ?? []).find((candidate) => candidate.id === eventId);
+            if (evt) return evt;
+        }
+    }
+    return null;
+}
+
 function handleMultiEditEventCheckboxChange(eventId, considerOnMultiEdit, eventRoomId) {
+    // Planungskalender: eingeblendete feste Termine sind nur Orientierung (Kachel ohne Checkbox). Per Klick
+    // auf die Kachel ließen sie sich trotzdem wählen – ein fremder fester Termin ließ dann Verschieben,
+    // Duplizieren und Löschen der ganzen Auswahl mit 403 scheitern.
+    if (considerOnMultiEdit && props.isPlanning) {
+        const evt = findCalendarEvent(eventId);
+        if (evt && !evt.isPlanning && !evt.hasVerification) return;
+    }
     if (considerOnMultiEdit) {
         if (!editEvents.value.includes(eventId)) editEvents.value.push(eventId);
     } else {

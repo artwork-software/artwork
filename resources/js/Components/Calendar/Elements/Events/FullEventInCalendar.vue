@@ -484,12 +484,12 @@
                 <!-- Kontext-Menü -->
                 <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150 @max-[10rem]/event:absolute @max-[10rem]/event:top-2 @max-[10rem]/event:right-0.5 @max-[10rem]/tile:absolute @max-[10rem]/tile:top-2 @max-[10rem]/tile:right-0.5">
                     <BaseMenu has-no-offset :dots-color="calSettings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" :title="directBookingOnly ? 'Confirm as fixed event' : 'Request verification'" />
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
-                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
-                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification && canManageVerification" @click="SendEventToVerification" :icon="IconLock" :title="directBookingOnly ? 'Confirm as fixed event' : 'Request verification'" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification && canManageVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
+                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType?.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
+                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType?.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
 
-                        <BaseMenuItem white-menu-background v-if="event.occupancy_option && (isRoomAdmin || hasAdminRole)" @click="$emit('acceptRoomRequest', event)" :icon="IconChecks" title="Accept room request" />
+                        <BaseMenuItem white-menu-background v-if="event.occupancy_option && !event.isPlanning && (isRoomAdmin || hasAdminRole)" @click="$emit('acceptRoomRequest', event)" :icon="IconChecks" title="Accept room request" />
                         <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
                         <BaseMenuItem
                             white-menu-background
@@ -1431,10 +1431,14 @@ const checkIfMultiEditIsEnabled = computed(() => {
     return false;
 });
 
-const isCreator = computed(() => props.event.created_by.id === currentUserId.value);
+// created_by ist null, wenn die anlegende Person gelöscht wurde
+const isCreator = computed(() => props.event.created_by?.id === currentUserId.value);
+
+// Prüfung anfragen/zurückziehen: dieselbe Schranke wie EventVerificationController (sonst 403 nach dem Klick)
+const canManageVerification = computed(() => props.hasAdminRole || isCreator.value || can('can edit planning calendar'));
 
 const roomCanBeBookedByEveryone = computed(() => {
-    return props.rooms?.find((room) => room.id === props.event.roomId).everyone_can_book;
+    return props.rooms?.find((room) => room.id === props.event.roomId)?.everyone_can_book;
 });
 
 const { backgroundColorWithOpacity, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper();
@@ -1523,10 +1527,10 @@ const heightSubtraction = (event) => {
 const getEditHref = (projectId) => route("projects.tab", { project: projectId, projectTab: props.first_project_tab_id });
 
 const SendEventToVerification = () => {
-    router.post(route("events.sendToVerification", { event: props.event.id }), {
+    // Optionen erst als drittes Argument – vorher landeten sie als Request-Body und die Seite sprang nach oben
+    router.post(route("events.sendToVerification", { event: props.event.id }), {}, {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => {},
     });
 };
 

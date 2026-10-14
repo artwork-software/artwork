@@ -1,10 +1,10 @@
 <template>
     <BaseCard elevation="raised" class="w-full">
         <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
-            <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.event_type.hex_code}"></div>
+            <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.event_type?.hex_code}"></div>
             <div class="w-full">
-                <p class="text-sm font-lexend font-semibold text-text" :style="{color: event.event_type.hex_code}">
-                    {{ event.event_type.abbreviation }}: {{ event.eventName ?? event?.project?.name }}
+                <p class="text-sm font-lexend font-semibold text-text" :style="{color: event.event_type?.hex_code}">
+                    {{ event.event_type?.abbreviation }}: {{ event.eventName ?? event?.project?.name }}
                 </p>
                 <p class="mt-1 flex items-center gap-x-1 text-xs text-text-subtle">
                     <span class="font-lexend font-bold">{{ $t('Start') }}:</span>
@@ -41,12 +41,10 @@ const props = defineProps({
 
 
 const SendEventToVerification = () => {
-    router.post(route('events.sendToVerification', {event: props.event.id}), {
+    // Optionen als drittes Argument – vorher gingen sie als Request-Body raus
+    router.post(route('events.sendToVerification', {event: props.event.id}), {}, {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => {
-
-        }
     });
 }
 </script>

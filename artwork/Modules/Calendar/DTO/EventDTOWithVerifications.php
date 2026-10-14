@@ -44,7 +44,9 @@ class EventDTOWithVerifications extends Data
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
         public ?array $verifications = null,
+        public ?bool $hasTimelines = false,
         public ?string $admission_time = null,
+        public ?int $series_id = null,
     ) {
     }
 
@@ -102,6 +104,7 @@ class EventDTOWithVerifications extends Data
                 profile_photo_url: $user->profile_photo_url ?? null,
             ) : null,
             is_series: $event->is_series,
+            series_id: $event->series_id,
             eventProperties: self::serializeEventProperties($event),
             occupancy_option: $event->occupancy_option,
             declinedRoomId: $event->declined_room_id,
@@ -120,6 +123,8 @@ class EventDTOWithVerifications extends Data
             hasVerification: $event->getAttribute('has_pending_verification')
                 ?? $event->getAttribute('has_verification') ?? false,
             verifications: self::serializeVerifications($verificationsByEvent, $event->id),
+            // Timeline-Symbol in der Kachel – vorher nur nach einem Broadcast (BroadcastEventDTOWithVerifications)
+            hasTimelines: $event->timelines_exists ?? $event->hasTimelines(),
             // TIME-Spalte ("HH:mm:ss") → "HH:mm"
             admission_time: $event->admission_time ? substr($event->admission_time, 0, 5) : null,
         );

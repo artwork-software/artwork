@@ -5,7 +5,11 @@ import { getDaysInRange, getEventDaysInRange } from '@/Composeables/calendarDate
 // projectFilterId: Getter für die Projekt-ID, auf die die Ansicht eingeschränkt ist (Projekt-Schichten-Tab
 // ohne „Schichten anderer Projekte anzeigen") — null = keine Einschränkung. Spiegelt den Server-Filter,
 // sonst tauchen live Schichten fremder Projekte auf bzw. bleiben nach einem Projektwechsel stehen.
-export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged, onLookupsReceived, subscribeShiftChannels = true, projectFilterId = null } = {}) {
+// acceptEvent: Prädikat, ob ein live gesendeter Termin in diese Ansicht gehört (z. B. Planungskalender ohne
+// „Feste Termine anzeigen") — sonst wird er entfernt statt eingefügt. Ohne Angabe gehört jeder Termin dazu.
+// subscribePlanningChannels: geplante Termine kommen vollständig nur auf event.planning.room.* (routes/channels.php:
+// Planungskalender-Recht); auf event.room.* steht für sie nur ein Hinweis ohne Inhalt ({id, redacted: true}).
+export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged, onLookupsReceived, subscribeShiftChannels = true, projectFilterId = null, acceptEvent = null, subscribePlanningChannels = false } = {}) {
 
     function isShiftVisibleInView(shift) {
         const projectId = typeof projectFilterId === 'function' ? projectFilterId() : projectFilterId;
@@ -477,6 +481,26 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         updateShiftInRoomAndEvents(data, data.roomId, { reloadWorkers: true });
     }
 
+    // Gehört der Termin (nach der Änderung) nicht mehr in die Ansicht – z. B. abgelehnte Prüfung macht ihn im
+    // Kalender wieder zum geplanten Termin –, eine vorhandene Kachel entfernen statt ihn einzufügen
+    function onEventBroadcast(data) {
+        if (!data?.event) return;
+        if (data.event.redacted) {
+            // Geplanter Termin: Wer den Planungskanal hört und geplante Termine zeigt, bekommt ihn dort
+            // vollständig – sonst die Kachel entfernen (der Termin ist z. B. gerade zum geplanten geworden)
+            const showsPlannedEvents = typeof acceptEvent !== 'function' || acceptEvent(data.event);
+            if (!(subscribePlanningChannels && showsPlannedEvents)) {
+                onEventRemoved({ event: { id: data.event.id } });
+            }
+            return;
+        }
+        if (typeof acceptEvent === 'function' && !acceptEvent(data.event)) {
+            onEventRemoved({ event: { id: data.event.id } });
+            return;
+        }
+        addEventToRoomAndDay(data.event);
+    }
+
     function onEventRemoved(data) {
         for (const currentRoom of newShiftPlanData.value) {
             let roomTouched = false;
@@ -557,9 +581,14 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
             // Event room
             const eventChannel = 'event.room.' + room.roomId;
-            listen(eventChannel, '.event.created', (data) => addEventToRoomAndDay(data.event));
-            listen(eventChannel, '.event.updated', (data) => addEventToRoomAndDay(data.event));
+            listen(eventChannel, '.event.created', onEventBroadcast);
+            listen(eventChannel, '.event.updated', onEventBroadcast);
             listen(eventChannel, '.event.removed', onEventRemoved);
+            if (subscribePlanningChannels) {
+                const planningChannel = 'event.planning.room.' + room.roomId;
+                listen(planningChannel, '.event.created', onEventBroadcast);
+                listen(planningChannel, '.event.updated', onEventBroadcast);
+            }
         }
 
         // Multi-shifts channel

@@ -124,7 +124,7 @@
 import SingleMyEventVerificationRequests
     from "@/Pages/EventVerification/Components/SingleMyEventVerificationRequests.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
-import {onMounted, provide, ref} from "vue";
+import {onMounted, onUnmounted, provide, ref} from "vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import BaseCard from "@/Artwork/Cards/BaseCard.vue";
@@ -203,24 +203,34 @@ const onEditModalClose = () => {
 
 const showNewRequestIncoming = ref(false);
 
+const verificationChannelName = `event-verification-index.${usePage().props.auth.user.id}`;
+const reloadMyRequests = () => {
+    router.reload({
+        preserveScroll: true,
+        preserveState: false,
+        // plannedEvents: ein zurückgezogener Termin wechselt wieder in "Geplant"
+        only: ['myRequests', 'plannedEvents', 'myRoomRequests', 'myRoomRequestsForEdit'],
+        data: {
+            page: 1,
+        },
+        onSuccess: () => {
+            showNewRequestIncoming.value = true;
+            setTimeout(() => {
+                showNewRequestIncoming.value = false;
+            }, 5000);
+        }
+    })
+};
+
 onMounted(() => {
-    window.Echo.private(`event-verification-index.${usePage().props.auth.user.id}`)
-        .listen('.reload-event-verification-requests', (e) => {
-            router.reload({
-                preserveScroll: true,
-                preserveState: false,
-                only: ['myRequests', 'myRoomRequests', 'myRoomRequestsForEdit'],
-                data: {
-                    page: 1,
-                },
-                onSuccess: (e) => {
-                    showNewRequestIncoming.value = true;
-                    setTimeout(() => {
-                        showNewRequestIncoming.value = false;
-                    }, 5000);
-                }
-            })
-        });
+    window.Echo.private(verificationChannelName)
+        .listen('.reload-event-verification-requests', reloadMyRequests);
+})
+
+// Nur den eigenen Handler abmelden – der Kanal ist mit der Eingangsliste geteilt
+onUnmounted(() => {
+    window.Echo.private(verificationChannelName)
+        .stopListening('.reload-event-verification-requests', reloadMyRequests);
 })
 </script>
 

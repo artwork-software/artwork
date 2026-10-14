@@ -2900,6 +2900,8 @@ function startShiftCalendarListener() {
         onWorkersNeedReload: debouncedLoadShiftPlanWorkers,
         onWorkerNeedReload: reloadSingleWorker,
         onLookupsReceived: mergeLookups,
+        // Geplante Termine nur mit Planungskalender-Recht (wie der Server-Load, Event::visiblePlanningFor)
+        subscribePlanningChannels: is('artwork admin') || can('can see planning calendar') || can('can edit planning calendar'),
     })
     shiftCalendarListener.init()
 }

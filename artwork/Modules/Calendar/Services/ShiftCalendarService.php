@@ -23,6 +23,7 @@ use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class ShiftCalendarService
 {
@@ -89,10 +90,13 @@ class ShiftCalendarService
                 'user_id',
                 'occupancy_option',
                 'declined_room_id',
+                'is_planning',
             ])
             ->withExists('timelines')
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
+            // Geplante Termine nur mit Planungskalender-Recht – vorher sah sie jede Person mit Dienstplan-Sichtrecht
+            ->visiblePlanningFor(Auth::user())
             // "Projektfremde Termine anzeigen": Projektfilter aussetzen, es zählt nur Raum + Zeitraum
             ->when($project !== null && !$showUnrelatedEvents, fn ($q) => $q->where('project_id', $project->id))
             ->when(!empty($filter->event_type_ids), fn ($q) => $q->whereIn('event_type_id', $filter->event_type_ids))

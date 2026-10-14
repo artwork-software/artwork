@@ -11,7 +11,6 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Models\EventVerification;
-use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Event\Services\EventVerificationService;
 use Artwork\Modules\EventType\Models\EventType;
@@ -35,7 +34,6 @@ class EventVerificationController extends Controller
         private readonly EventVerificationService $eventVerificationService,
         private readonly EventSettingsService $eventSettingsService,
         private readonly AuthManager $authManager,
-        private readonly EventService $eventService,
         private readonly ProjectTabService $projectTabService,
         private readonly UserService $userService,
     ) {
@@ -207,12 +205,21 @@ class EventVerificationController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        if (
-            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
-            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value) &&
-            $event->creator?->id !== $user->id
-        ) {
-            abort(403);
+        abort_unless($this->mayManageVerification($event, $user), 403);
+
+        // Feste Termine haben keine Prüfung (sonst würde confirmEvent eine offene Raumanfrage fest buchen);
+        // eine offene Prüfrunde wird nicht doppelt angelegt (veraltete Ansicht, Doppelklick).
+        // Rückmeldung über den globalen Flash-Toast.
+        if (!$event->is_planning) {
+            session()->flash('error', __('Only planned events can be sent for verification.'));
+            return;
+        }
+        if (!$this->eventVerificationService->canRequestVerification($event)) {
+            return;
+        }
+        if ($this->eventVerificationService->lacksVerifiers($event)) {
+            session()->flash('error', __('No verifiers are assigned to the event type of this event.'));
+            return;
         }
 
         $this->eventVerificationService->requestVerification($event, $user);
@@ -221,39 +228,80 @@ class EventVerificationController extends Controller
 
     public function approved(EventVerification $eventVerification): void
     {
-        /** @var User $user */
-        $user = $this->authManager->user();
-        if (!$this->canVerifyEvent($eventVerification->event, $user)) {
-            abort(403);
+        if (!$this->isOpenVerificationOfCurrentUser($eventVerification)) {
+            return;
         }
 
         $this->eventVerificationService->approveVerification($eventVerification);
-        $event = $eventVerification->event;
+        $event = $eventVerification->event->fresh();
         SafeBroadcast::send(new EventCreated($event, $event->room_id));
     }
 
     public function rejected(EventVerification $eventVerification, Request $request): void
     {
+        $rejectionReason = $this->validatedRejectionReason($request);
+        if (!$this->isOpenVerificationOfCurrentUser($eventVerification)) {
+            return;
+        }
+
+        $this->eventVerificationService->rejectVerification($eventVerification, $rejectionReason);
+        $event = $eventVerification->event->fresh();
+        SafeBroadcast::send(new EventCreated($event, $event->room_id));
+    }
+
+    /**
+     * Prüft Recht und Zustand einer einzelnen Prüfung. Bearbeitet wird nur die eigene Prüfung (Admins: jede) –
+     * die Eingangsliste zeigt Nicht-Admins auch nur ihre eigenen. Bereits beantwortete Prüfungen (zweiter
+     * Klick, andere Person war schneller, alte Prüfrunde) sind ein No-op: vorher bestätigte ein erneutes
+     * "Genehmigen" einer längst abgelehnten Prüfung den Termin.
+     */
+    private function isOpenVerificationOfCurrentUser(EventVerification $eventVerification): bool
+    {
         /** @var User $user */
         $user = $this->authManager->user();
-        if (!$this->canVerifyEvent($eventVerification->event, $user)) {
+        // Termin im Papierkorb: es gibt nichts mehr zu prüfen
+        abort_if($eventVerification->event === null, 404);
+
+        $isOwnVerification = $eventVerification->verifier_type === User::class
+            && (int) $eventVerification->verifier_id === $user->id;
+        if (!$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) && !$isOwnVerification) {
             abort(403);
         }
 
-        $this->eventVerificationService->rejectVerification($eventVerification, $request->get('rejection_reason', ''));
-        $event = $eventVerification->event;
-        SafeBroadcast::send(new EventCreated($event, $event->room_id));
+        return $eventVerification->status === 'pending';
+    }
+
+    private function validatedRejectionReason(Request $request): string
+    {
+        return (string) ($request->validate([
+            'rejection_reason' => ['nullable', 'string', 'max:65000'],
+        ])['rejection_reason'] ?? '');
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, Event> Termine der Mehrfachauswahl; gelöschte fehlen
+     */
+    private function validatedEvents(Request $request): \Illuminate\Support\Collection
+    {
+        $eventIds = $request->validate([
+            'events' => ['required', 'array'],
+            'events.*' => ['integer'],
+        ])['events'];
+
+        return Event::whereIn('id', $eventIds)->get();
     }
 
     public function cancelVerification(Event $event): void
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        if (
-            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
-            $event->creator?->id !== $user->id
-        ) {
-            abort(403);
+        // Wer die Prüfung anfragen darf (store), darf sie auch zurückziehen – vorher nur Admin und Ersteller
+        abort_unless($this->mayManageVerification($event, $user), 403);
+
+        // Nur eine offene Prüfrunde lässt sich zurückziehen. Aus veralteter Ansicht machte das einen bereits
+        // bestätigten Termin wieder zum geplanten und löschte den Prüfverlauf.
+        if (!$event->verifications()->where('status', 'pending')->exists()) {
+            return;
         }
 
         $this->eventVerificationService->cancelVerification($event);
@@ -272,39 +320,64 @@ class EventVerificationController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $rejectionReason = $request->get('rejection_reason', '');
+        $rejectionReason = $this->validatedRejectionReason($request);
         $this->eventVerificationService->rejectVerificationByEvent($event, $user, $rejectionReason);
         SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
     }
 
+    // Mehrfachauswahl: gelöschte Termine (findEventById → null, vorher TypeError) werden übersprungen
     public function rejectByEvents(Request $request): void
     {
-        $events = $request->collect('events');
-        foreach ($events as $eventId) {
-            /** @var Event $event */
-            $event = $this->eventService->findEventById($eventId);
+        foreach ($this->validatedEvents($request) as $event) {
             $this->rejectByEvent($event, $request);
         }
     }
 
     public function approvedByEvents(Request $request): void
     {
-        $events = $request->collect('events');
-        foreach ($events as $eventId) {
-            /** @var Event $event */
-            $event = $this->eventService->findEventById($eventId);
+        foreach ($this->validatedEvents($request) as $event) {
             $this->approvedByEvent($event);
         }
     }
 
     public function requestVerification(Request $request): void
     {
-        $events = $request->collect('events');
-        foreach ($events as $eventId) {
-            /** @var Event $event */
-            $event = $this->eventService->findEventById($eventId);
+        /** @var User $user */
+        $user = $this->authManager->user();
+        // Die Auswahl kann feste Termine ("Feste Termine anzeigen") und fremde Termine (nur Sichtrecht) enthalten:
+        // überspringen statt die Anfrage mittendrin mit 403/422 abzubrechen (vorher halb verschickt)
+        $skippedForeignEvents = 0;
+        foreach ($this->validatedEvents($request) as $event) {
+            if (!$event->is_planning) {
+                continue;
+            }
+            if (!$this->mayManageVerification($event, $user)) {
+                $skippedForeignEvents++;
+                continue;
+            }
             $this->store($event);
         }
+
+        if ($skippedForeignEvents > 0) {
+            session()->flash('error', trans_choice(
+                '{1} One event of someone else was skipped: '
+                . 'you may only request verification for your own planned events.|'
+                . '[2,*] :count events of others were skipped: '
+                . 'you may only request verification for your own planned events.',
+                $skippedForeignEvents,
+                ['count' => $skippedForeignEvents]
+            ));
+        }
+    }
+
+    /**
+     * Prüfung anfragen/zurückziehen: Admin, "Geplante Termine bearbeiten" oder die anlegende Person.
+     */
+    private function mayManageVerification(Event $event, User $user): bool
+    {
+        return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)
+            || $event->creator?->id === $user->id;
     }
 
     /**
@@ -323,7 +396,10 @@ class EventVerificationController extends Controller
 
         $planningEvents = Event::where('project_id', $project)
             ->where('is_planning', true)
-            ->get();
+            ->get()
+            // Termine mit offener Prüfrunde nicht doppelt anfragen, Terminarten ohne Prüfende überspringen
+            ->filter(fn (Event $event) => $this->eventVerificationService->canRequestVerification($event)
+                && !$this->eventVerificationService->lacksVerifiers($event));
 
         foreach ($planningEvents as $event) {
             $this->eventVerificationService->requestVerification($event, $user);
@@ -352,27 +428,16 @@ class EventVerificationController extends Controller
         $events = Event::where('project_id', $project)->get();
         $eventIds = $events->pluck('id');
 
-        Event::whereIn('id', $eventIds)->update(['is_planning' => true]);
+        // Je Termin wie die Einzel-Umstellung: Änderungsverlauf, offene Raumanfrage zurücknehmen
+        // (vorher Massen-Update nur von is_planning)
+        foreach ($events as $event) {
+            $this->eventVerificationService->convertToPlanning($event);
+        }
 
         $refreshedEvents = Event::whereIn('id', $eventIds)->get();
         foreach ($refreshedEvents as $event) {
             SafeBroadcast::send(new EventCreated($event, $event->room_id));
         }
-    }
-
-    private function canVerifyEvent(Event $event, User $user): bool
-    {
-        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            return true;
-        }
-
-        $eventType = $event->event_type;
-        if (!$eventType) {
-            return false;
-        }
-
-        return $eventType->specific_verifier_id === $user->id
-            || $eventType->verifiers()->where('user_id', $user->id)->exists();
     }
 
     public function redirectToCalendar(Event $event): \Illuminate\Http\RedirectResponse
@@ -382,6 +447,10 @@ class EventVerificationController extends Controller
 
         $startOfWeek = Carbon::parse($event->start_time)->startOfWeek(Carbon::MONDAY);
         $endOfWeek = Carbon::parse($event->end_time)->endOfWeek(Carbon::SUNDAY);
+
+        // Geplante Termine (Verifizierungsanfragen) liegen im Planungskalender; im Kalender erscheinen sie nur
+        // mit "Geplante Termine anzeigen" – der Sprung landete sonst in einer Woche ohne den Termin
+        $openPlanningCalendar = $event->is_planning && $user->can('viewPlanning', Event::class);
 
         $this->userService->focusCalendarOnPeriod($user, $startOfWeek, $endOfWeek, [
             'event_type_ids' => null,
@@ -393,9 +462,9 @@ class EventVerificationController extends Controller
             'craft_ids' => null,
             // Blendet sonst den Zieltermin aus (und alle Termine ohne Projekt)
             'project_state_ids' => null,
-        ]);
+        ], $openPlanningCalendar);
 
-        return redirect()->route('events', [
+        return redirect()->route($openPlanningCalendar ? 'planning-event-calendar.index' : 'events', [
             'highlightEventId' => $event->id,
         ]);
     }

@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Event\Events;
 
+use Artwork\Modules\Event\Events\Concerns\HasPlanningCompanionBroadcast;
+use Artwork\Modules\Event\Events\Concerns\SplitsPlanningBroadcast;
 use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -10,9 +12,10 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class BulkEventChanged implements ShouldBroadcastNow
+class BulkEventChanged implements ShouldBroadcastNow, HasPlanningCompanionBroadcast
 {
     use Dispatchable;
+    use SplitsPlanningBroadcast;
     use InteractsWithSockets;
     use SerializesModels;
 
@@ -31,7 +34,7 @@ class BulkEventChanged implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('bulk.events');
+        return new PrivateChannel($this->onPlanningChannel ? 'bulk.events.planning' : 'bulk.events');
     }
 
     public function broadcastAs(): string
@@ -56,7 +59,9 @@ class BulkEventChanged implements ShouldBroadcastNow
             'status' => $event->eventStatus,
             'eventTypeName' => $event->event_type?->name ?? null,
             'name' => $event->name,
-            'room' => $event->room,
+            // Nur was die Bulk-Zeile liest – das Raum-Model brachte über $with den anlegenden Nutzer samt
+            // E-Mail und die Raumadmins mit, an alle Abonnent:innen des offenen Kanals
+            'room' => $event->room?->only(['id', 'name', 'position']),
             'roomName' => $event->room?->name ?? null,
             'roomPosition' => $event->room?->position ?? null,
             'day' => Carbon::parse($event->start_time)->format('Y-m-d'),
@@ -78,6 +83,18 @@ class BulkEventChanged implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
+        if ($this->sendsRedactedPayload()) {
+            return [
+                'event' => [
+                    'id' => $this->event->id,
+                    'project_id' => $this->event->project_id,
+                    'is_planning' => true,
+                    'redacted' => true,
+                ],
+                'action' => $this->action,
+            ];
+        }
+
         return [
             'event' => self::eventPayload($this->event),
             'action' => $this->action,

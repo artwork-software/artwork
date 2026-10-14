@@ -31,6 +31,10 @@ use Laravel\Passport\Http\Middleware\CheckToken;
 |
 */
 
+Route::post('auth/discover', [AppAuthController::class, 'discover'])
+    ->middleware('throttle:app-discover')
+    ->name('auth.discover');
+
 Route::post('auth/login', [AppAuthController::class, 'login'])
     ->middleware('throttle:app-login')
     ->name('auth.login');

@@ -56,6 +56,7 @@ class CalendarEventResource extends JsonResource
             'series'      => $this->aggregateSeriesEvents(),
             'option_string'    => $this->getAttribute('option_string'),
             'occupancy_option' => $this->getAttribute('occupancy_option'),
+            'isPlanning'       => (bool) $this->getAttribute('is_planning'),
             'declinedRoomId'   => $this->getAttribute('declined_room_id'),
             'alwaysEventName'  => $eventName,
             'eventName'        => $eventName,

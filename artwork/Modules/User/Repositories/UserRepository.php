@@ -51,6 +51,15 @@ class UserRepository extends BaseRepository
         return User::find($userId);
     }
 
+    /**
+     * App login discovery: the app sends sha256(lower(trim(email))) instead of the
+     * address itself, see the email_hash contract in AppApi/openapi.yaml.
+     */
+    public function existsWithEmailHash(string $emailHash): bool
+    {
+        return User::query()->whereRaw('SHA2(LOWER(TRIM(email)), 256) = ?', [$emailHash])->exists();
+    }
+
     public function findWorker(int $workerId): User|null
     {
         return User::query()->canWorkShifts()->where('id', $workerId)->first();

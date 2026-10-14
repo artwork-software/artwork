@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\AppApi;
 
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
@@ -36,6 +37,11 @@ final class AppAuthTest extends TestCase
             'password' => 'password',
             'device_name' => 'Test iPhone',
         ], $overrides));
+    }
+
+    private function discover(string $emailHash): \Illuminate\Testing\TestResponse
+    {
+        return $this->postJson(route('app.v1.auth.discover'), ['email_hash' => $emailHash]);
     }
 
     private function createUser(): User
@@ -244,5 +250,49 @@ final class AppAuthTest extends TestCase
         $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])
             ->login(['email' => 'missing@example.com'])
             ->assertUnauthorized();
+    }
+
+    #[Test]
+    public function discoverMatchesTheHashExampleFromTheContract(): void
+    {
+        // Same example as AppDiscoverRequest.email_hash in openapi.yaml and the app's hashing test.
+        User::factory()->create(['email' => 'Max.Mustermann@Example.de']);
+
+        $this->discover('3b128ad4c64aa69af51af3b20b35d7e336ac6046bee10c6130cada27545d3e4a')
+            ->assertOk()
+            ->assertExactJson(['known' => true, 'name' => app(GeneralSettings::class)->page_title]);
+    }
+
+    #[Test]
+    public function discoverReportsUnknownEmailsWithoutError(): void
+    {
+        $this->createUser();
+
+        $this->discover(hash('sha256', 'someone-else@example.com'))
+            ->assertOk()
+            ->assertJsonPath('known', false);
+    }
+
+    #[Test]
+    public function discoverRejectsAnythingButALowerCaseSha256Hash(): void
+    {
+        $this->discover('app-user@example.com')->assertUnprocessable();
+        $this->discover(strtoupper(hash('sha256', 'app-user@example.com')))->assertUnprocessable();
+    }
+
+    #[Test]
+    public function discoverThrottleIsPerIp(): void
+    {
+        $emailHash = hash('sha256', 'missing@example.com');
+
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $this->discover($emailHash)->assertOk();
+        }
+
+        $this->discover($emailHash)->assertTooManyRequests();
+
+        $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])
+            ->discover($emailHash)
+            ->assertOk();
     }
 }

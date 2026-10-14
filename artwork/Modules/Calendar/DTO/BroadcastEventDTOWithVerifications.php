@@ -107,7 +107,7 @@ class BroadcastEventDTOWithVerifications extends Data
         return $verifications->map(fn ($v) => [
             'id' => $v->id,
             'status' => $v->status,
-            'created_at' => $v->created_at?->toIso8601String(),
+            'created_at' => $v->createdAtIso8601(),
             'verifier' => $v->verifier ? [
                 'id' => $v->verifier->id,
                 'first_name' => $v->verifier->first_name ?? null,

@@ -189,7 +189,7 @@ const deleteIssue = () => {
 };
 
 const setSpecialItemsDone = () => {
-    router.post(route('issue-of-material.set-special-items-done', props.issueOfMaterial.id), {
+    router.post(route('issue-of-material.set-special-items-done', props.issueOfMaterial.id), {}, {
         preserveState: true, preserveScroll: true
     });
 };

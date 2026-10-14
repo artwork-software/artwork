@@ -137,7 +137,7 @@ const statusClasses = (status) => {
 };
 
 const approveRequest = () => {
-    router.post(route('worktime.change-request.approve', {workTimeChangeRequest: props.request.id}), {
+    router.post(route('worktime.change-request.approve', {workTimeChangeRequest: props.request.id}), {}, {
         preserveScroll: true,
         onSuccess: () => {
         },

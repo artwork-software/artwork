@@ -22,7 +22,8 @@ class EventPolicy
         if (
             $user->can(PermissionEnum::EVENT_REQUEST->value) ||
             $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
-            $user->can(PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value) ||
+            // "Planungskalender einsehen" erlaubt nur das Sehen (Entscheidung 14.10.2026) – geplante Termine anlegen
+            // regelt "Im Planungskalender fest planen"
             $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value) ||
             $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value)
         ) {
@@ -75,16 +76,13 @@ class EventPolicy
      */
     public function book(User $user, Room $room, bool $asOption = false, bool $inPlanning = false): bool
     {
-        // "Termine immer direkt buchbar": keine Raumanfragen – wer anlegen darf (create), bucht direkt.
-        if ($this->eventSettingsService->alwaysDirectBooking()) {
-            return true;
-        }
-
         $isRoomAdmin = $room->admins()->where('user_id', $user->id)->exists();
         $hasGlobalCreate = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
 
         // Geplante Termine kennen keine Raumanfrage (Entscheidung 13.10.2026): sie werden immer direkt
         // angelegt, und zwar NUR über "Im Planungskalender fest planen" (getrennt von "Termine fest planen").
+        // Gilt auch bei "Termine immer direkt buchbar" (Entscheidung 14.10.2026): vorher legte dort jede Person mit
+        // "Planungskalender einsehen" geplante Termine an.
         if ($inPlanning) {
             return !$asOption
                 && (
@@ -92,6 +90,11 @@ class EventPolicy
                     || $isRoomAdmin
                     || $room->everyone_can_book
                 );
+        }
+
+        // "Termine immer direkt buchbar": keine Raumanfragen – wer anlegen darf (create), bucht direkt.
+        if ($this->eventSettingsService->alwaysDirectBooking()) {
+            return true;
         }
 
         if (!$asOption) {

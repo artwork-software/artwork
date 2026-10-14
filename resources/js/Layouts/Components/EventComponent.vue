@@ -1470,9 +1470,10 @@ const checkedEventProperties = computed(() => (event_properties ?? []).filter(p 
 // Dialog geöffnet wurde (vorher wurde ein geplanter Termin im normalen Kalender wie ein regulärer behandelt).
 const effectiveIsPlanning = computed(() => (props.event?.id ? !!props.event.isPlanning : props.isPlanning))
 
-// "Termine immer direkt buchbar" (Instanz-Setting): nie Anfrage-Modus, jede anlegeberechtigte Person bucht direkt
+// "Termine immer direkt buchbar" (Instanz-Setting): nie Anfrage-Modus, jede anlegeberechtigte Person bucht direkt –
+// geplante Termine brauchen auch dann "Im Planungskalender fest planen" (EventPolicy::book)
 const canCreateDirect = computed(
-    () => !!page.props.event_direct_booking_only || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (effectiveIsPlanning.value ? can('can plan fixed in planning calendar') : can('create events without request'))
+    () => (!!page.props.event_direct_booking_only && !effectiveIsPlanning.value) || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (effectiveIsPlanning.value ? can('can plan fixed in planning calendar') : can('create events without request'))
 )
 // Geplante Termine kennen keine Raumanfrage: ohne Anlegerecht gibt es keinen Anfrage-Button, nur einen Hinweis
 const planningWithoutCreateRight = computed(() => effectiveIsPlanning.value && !canCreateDirect.value)

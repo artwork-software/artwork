@@ -252,7 +252,7 @@
                                 is-add-button
                                 use-translation
                                 icon="IconCalendarMonth"
-                                v-if="!project && (can('create events without request') || can('request room occupancy') || can('can see planning calendar') || can('can edit planning calendar'))"
+                                v-if="!project && (can('create events without request') || can('request room occupancy') || can('can edit planning calendar'))"
                                 :processing="createProjectForm.processing"
                                 @click="addProject(true)"
                             />

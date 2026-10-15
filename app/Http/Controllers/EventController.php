@@ -986,6 +986,9 @@ class EventController extends Controller
             $renderViewName = 'Shifts/ShiftPlanDailyView';
         }
 
+        // Schwere Props als Closures: beim normalen Seitenaufruf löst Inertia sie identisch auf,
+        // Partial-Reloads (z.B. nach Aktionen mit only: ['flash']) überspringen sie — sonst lief nach
+        // jeder Inertia-Aktion im Dienstplan der komplette Seitenaufbau erneut.
         return Inertia::render($renderViewName, [
             'history' => [],
             // Bewusst OHNE 'users'/'freelancers'/'serviceProviders': die Worker-Zeilen
@@ -995,7 +998,7 @@ class EventController extends Controller
             // 2,45 MB Props aus. Von den Managing-Relationen wird nur die id
             // gelesen (buildManagingSets), qualifications braucht das
             // AddShiftModal zum Auflösen der Schichtplätze.
-            'crafts' => Craft::query()
+            'crafts' => static fn () => Craft::query()
                 ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
                 ->with([
                     // Das Frontend liest hier nur die id — die Namens-/Bildspalten
@@ -1014,20 +1017,20 @@ class EventController extends Controller
             // Das Festschreibungs-Modal filtert damit seine Gewerksliste — sonst liefe „alle Gewerke
             // auswählen" bei Nicht-Admins in den 422 aus CommitShiftsRequest.
             'plannableCraftIds' => static fn (): ?array => app(CraftScopeService::class)->plannableCraftIdsFor($user),
-            'eventTypes' => EventType::all(),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'event_properties' => EventProperty::all(),
-            'first_project_calendar_tab_id' => $this->projectTabService
+            'eventTypes' => static fn () => EventType::all(),
+            'eventStatuses' => static fn () => EventStatus::orderBy('order')->get(),
+            'event_properties' => static fn () => EventProperty::all(),
+            'first_project_calendar_tab_id' => fn () => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
+            'personalFilters' => fn () => $this->filterService->getPersonalFilter($user, $shiftFilterType),
+            'filterOptions' => fn () => $this->filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
-            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByPosition(),
-            'dayServices' => $this->dayServicesService->getAll(),
-            'firstProjectShiftTabId' => $this->projectTabService
+            'shiftQualifications' => fn () => $this->shiftQualificationService->getAllOrderedByPosition(),
+            'dayServices' => fn () => $this->dayServicesService->getAll(),
+            'firstProjectShiftTabId' => fn () => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'projectNameUsedForProjectTimePeriod' => $this->projectService
+            'projectNameUsedForProjectTimePeriod' => fn () => $this->projectService
                 ->resolveTimePeriodProject($userCalendarSettings)?->name,
             'projectId' => $project->id ?? null,
             'shiftPlanWorkerSortEnums' => array_map(
@@ -1038,9 +1041,9 @@ class EventController extends Controller
             ),
             'useFirstNameForSort' => (new ShiftSettings())->use_first_name_for_sort,
             'userShiftPlanShiftQualificationFilters' => $user->getAttribute('show_qualifications'),
-            'currentUserCrafts' => $this->getCurrentUserCrafts($user),
-            'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
-            'shiftGroupPresets' => ShiftPresetGroup::query()
+            'currentUserCrafts' => fn () => $this->getCurrentUserCrafts($user),
+            'shiftTimePresets' => fn () => $this->shiftTimePresetService->getAll(),
+            'shiftGroupPresets' => static fn () => ShiftPresetGroup::query()
                 ->select(['id', 'name'])
                 ->withCount('presets')
                 ->with([
@@ -1062,8 +1065,8 @@ class EventController extends Controller
                 ->orderBy('name')
                 ->get(),
             'calendarWarningText' => $calendarWarningText,
-            'globalQualifications' => $this->globalQualificationService->getAll(),
-            'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
+            'globalQualifications' => fn () => $this->globalQualificationService->getAll(),
+            'shiftGroups' => fn () => $this->shiftGroupService->getAllShiftGroups(),
             'filterType' => $shiftFilterType,
             'isDailyView' => $isDailyView,
         ]);

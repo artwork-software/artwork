@@ -172,4 +172,100 @@ final class SpecialDayServiceTest extends TestCase
         $assign->special_day_rule_active = true;
         $this->assertTrue($this->service()->countsAsSpecialDayForUser($user, '2026-07-21'));
     }
+
+    /**
+     * Absicherung des vorberechneten Grenzen-Caches: Ergebnis muss für jeden Tag exakt der bisherigen
+     * Auswertung (Parsen je Tag × Eintrag) entsprechen — mehrtägig, jährlich, über den Jahreswechsel,
+     * 29.02., fehlendes bzw. vor dem Start liegendes Enddatum, Reihenfolge bei Überschneidungen.
+     */
+    #[Test]
+    public function precomputed_bounds_match_the_reference_evaluation_for_every_day(): void
+    {
+        $this->holiday(['name' => 'Einzeltag', 'date' => '2026-07-21', 'end_date' => '2026-07-21']);
+        $this->holiday(['name' => 'Ohne Ende', 'date' => '2026-03-03', 'end_date' => null]);
+        $this->holiday(['name' => 'Ende vor Start', 'date' => '2026-04-10', 'end_date' => '2026-04-08']);
+        $this->holiday(['name' => 'Block', 'date' => '2026-12-24', 'end_date' => '2027-01-02']);
+        $this->holiday(['name' => 'Überlappt Block', 'date' => '2026-12-31', 'end_date' => '2026-12-31']);
+        $this->holiday(['name' => 'Jährlich', 'date' => '2019-05-01', 'end_date' => '2019-05-01', 'yearly' => true]);
+        $this->holiday([
+            'name' => 'Jährlich Jahreswechsel',
+            'date' => '2020-12-30',
+            'end_date' => '2021-01-02',
+            'yearly' => true,
+        ]);
+        $this->holiday(['name' => 'Schalttag', 'date' => '2024-02-29', 'end_date' => '2024-02-29', 'yearly' => true]);
+        $this->holiday([
+            'name' => 'Jährlich ohne Ende',
+            'date' => '2022-10-03',
+            'end_date' => null,
+            'yearly' => true,
+        ]);
+        $this->holiday([
+            'name' => 'Kein Sondertag',
+            'date' => '2026-08-01',
+            'end_date' => '2026-08-05',
+            'treatAsSpecialDay' => false,
+        ]);
+
+        $flagged = Holiday::query()
+            ->where('treatAsSpecialDay', true)
+            ->get(['id', 'name', 'date', 'end_date', 'yearly']);
+        $service = $this->service();
+        $from = Carbon::parse('2023-12-01');
+        $to = Carbon::parse('2028-03-31');
+
+        $expected = [];
+        for ($day = $from->copy(); $day->lte($to); $day->addDay()) {
+            $name = $this->referenceMatchingHoliday($flagged, $day->copy()->startOfDay())?->name;
+            if ($name !== null) {
+                $expected[$day->toDateString()] = $name;
+            }
+        }
+
+        $this->assertNotEmpty($expected);
+        $this->assertSame($expected, $service->specialDaysBetween($from, $to));
+
+        $fresh = app(SpecialDayService::class);
+        for ($day = $from->copy(); $day->lte($to); $day->addDay()) {
+            $key = $day->toDateString();
+            $this->assertSame(isset($expected[$key]), $fresh->isSpecialDay($key), $key);
+            $this->assertSame($expected[$key] ?? null, $fresh->specialDayName($key), $key);
+        }
+    }
+
+    /**
+     * Bisherige Auswertung (vor dem Grenzen-Cache) als Referenz.
+     *
+     * @param \Illuminate\Support\Collection<int, Holiday> $holidays
+     */
+    private function referenceMatchingHoliday(\Illuminate\Support\Collection $holidays, Carbon $day): ?Holiday
+    {
+        foreach ($holidays as $holiday) {
+            $start = Carbon::parse($holiday->date)->startOfDay();
+            $end = $holiday->end_date ? Carbon::parse($holiday->end_date)->startOfDay() : $start->copy();
+            if ($end->lt($start)) {
+                $end = $start->copy();
+            }
+
+            if (!$holiday->yearly) {
+                if ($day->betweenIncluded($start, $end)) {
+                    return $holiday;
+                }
+                continue;
+            }
+
+            $spanDays = (int) $start->diffInDays($end);
+            foreach ([$day->year, $day->year - 1] as $candidateYear) {
+                $candidateStart = Holiday::yearlyStartIn($start, $candidateYear);
+                if (
+                    $candidateStart !== null
+                    && $day->betweenIncluded($candidateStart, $candidateStart->copy()->addDays($spanDays))
+                ) {
+                    return $holiday;
+                }
+            }
+        }
+
+        return null;
+    }
 }

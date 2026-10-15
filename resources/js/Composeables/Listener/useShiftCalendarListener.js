@@ -1,4 +1,5 @@
 import { getDaysInRange, getEventDaysInRange } from '@/Composeables/calendarDateUtils.js'
+import { createdShiftsCarryWorkers } from '@/Helper/shiftPlanReloads.js'
 
 // subscribeShiftChannels: false → nur Termin-Kanäle. Die Schicht-Kanäle sind in routes/channels.php auf
 // Dienstplan-Sichtrecht beschränkt; ein Abonnement ohne Recht erzeugt nur 403-Konsolenfehler.
@@ -542,8 +543,10 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
         const updated = addShiftsToRoomAndDay(data.shifts);
 
-        // If shifts were added, we might want to reload certain data
-        if (updated && onWorkersNeedReload) {
+        // Personenzeilen (Stunden, eigene Schichten) ändern sich nur, wenn eine angelegte Schicht
+        // schon Personen trägt (Duplizieren mit Personen, Wiederherstellen aus dem Papierkorb).
+        // Neu angelegte leere Schichten lösten sonst einen Reload ALLER Personen aus.
+        if (updated && onWorkersNeedReload && createdShiftsCarryWorkers(data.shifts)) {
             onWorkersNeedReload();
         }
     }

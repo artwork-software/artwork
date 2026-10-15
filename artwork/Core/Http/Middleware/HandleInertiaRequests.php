@@ -36,6 +36,16 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
+     * Axios-/Fetch-Aufruf ohne Inertia-Header (JSON-Endpunkte, z. B. Dienstplan-Aktionen, Komponenten der
+     * Projekt-Tabs, Kalender-Monate). Die geteilten Props landen nur in Inertia-Seitenantworten — für diese
+     * Requests liefen die Settings-, Rollen- und Workflow-Abfragen von share() bisher bei jedem Aufruf umsonst.
+     */
+    public static function isPlainXhrRequest(Request $request): bool
+    {
+        return $request->ajax() && !$request->header('X-Inertia');
+    }
+
+    /**
      * @return array<string, mixed>
      * @throws \JsonException
      */
@@ -43,6 +53,10 @@ class HandleInertiaRequests extends Middleware
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function share(Request $request): array
     {
+        if (self::isPlainXhrRequest($request)) {
+            return parent::share($request);
+        }
+
         $generalSettings = app(GeneralSettings::class);
         $generalCalendarSettings = app(GeneralCalendarSettings::class);
         $eventSettings = app(EventSettings::class);

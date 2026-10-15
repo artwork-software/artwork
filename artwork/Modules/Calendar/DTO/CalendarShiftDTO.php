@@ -43,11 +43,22 @@ class CalendarShiftDTO extends Data
     ) {
     }
 
-    public static function fromModel(Shift $shift): CalendarShiftDTO
+    /**
+     * @param array{0: array<int, int>, 1: array<int, int>, 2: int}|null $workerCounts Vorab aggregierte
+     *        Zählstände (CalendarShiftWorkerCounts: je Funktion, je globaler Qualifikation, gesamt) — ohne
+     *        Angabe werden sie aus den geladenen Worker-Relationen gezählt.
+     */
+    public static function fromModel(Shift $shift, ?array $workerCounts = null): CalendarShiftDTO
     {
         $resolvedProject = $shift->relationLoaded('project') ? $shift->project : null;
 
-        [$assignedCounts, $globalAssignedCounts, $assignedTotal] = self::aggregateWorkerCounts($shift);
+        [$assignedCounts, $globalAssignedCounts, $assignedTotal] = $workerCounts !== null
+            ? [
+                $workerCounts[0],
+                array_intersect_key($workerCounts[1], self::demandedGlobalQualificationIds($shift)),
+                $workerCounts[2],
+            ]
+            : self::aggregateWorkerCounts($shift);
 
         return new self(
             id: $shift->id,
@@ -83,16 +94,7 @@ class CalendarShiftDTO extends Data
         $globalAssignedCounts = [];
         $total = 0;
 
-        // Nur an der Schicht geforderte globale Qualifikationen zählen — alles andere
-        // wäre totes Payload und würde Konsumenten Phantom-Zuweisungen vorgaukeln.
-        $demandedGlobalQualificationIds = [];
-        if ($shift->relationLoaded('globalQualifications')) {
-            foreach ($shift->globalQualifications as $globalQualification) {
-                if (($globalQualification->pivot->quantity ?? 0) > 0) {
-                    $demandedGlobalQualificationIds[$globalQualification->id] = true;
-                }
-            }
-        }
+        $demandedGlobalQualificationIds = self::demandedGlobalQualificationIds($shift);
 
         foreach (['users', 'freelancer', 'serviceProvider'] as $relation) {
             if (!$shift->relationLoaded($relation)) {
@@ -124,6 +126,26 @@ class CalendarShiftDTO extends Data
         }
 
         return [$assignedCounts, $globalAssignedCounts, $total];
+    }
+
+    /**
+     * Nur an der Schicht geforderte globale Qualifikationen zählen — alles andere
+     * wäre totes Payload und würde Konsumenten Phantom-Zuweisungen vorgaukeln.
+     *
+     * @return array<int, true>
+     */
+    private static function demandedGlobalQualificationIds(Shift $shift): array
+    {
+        $demandedGlobalQualificationIds = [];
+        if ($shift->relationLoaded('globalQualifications')) {
+            foreach ($shift->globalQualifications as $globalQualification) {
+                if (($globalQualification->pivot->quantity ?? 0) > 0) {
+                    $demandedGlobalQualificationIds[$globalQualification->id] = true;
+                }
+            }
+        }
+
+        return $demandedGlobalQualificationIds;
     }
 
     private static function serializeShiftsQualifications(Shift $shift): array

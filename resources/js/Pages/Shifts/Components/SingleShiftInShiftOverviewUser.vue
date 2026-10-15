@@ -169,7 +169,8 @@
 
 <script setup>
 
-import {router, usePage} from "@inertiajs/vue3";
+import {usePage} from "@inertiajs/vue3";
+import axios from "axios";
 import {computed, defineAsyncComponent, ref} from "vue";
 import {Popover, PopoverButton, PopoverPanel} from "@headlessui/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
@@ -193,7 +194,7 @@ const props = defineProps({
     },
 })
 
-const emit = defineEmits(['shiftDeleted', 'confirmationChanged'])
+const emit = defineEmits(['shiftDeleted', 'confirmationChanged', 'individualTimeSaved'])
 const page = usePage()
 const { can, hasAdminRole } = usePermission(page.props)
 const { getConfirmationInfo, getConfirmationTooltip, respond: respondToShift } = useShiftWorkerConfirmation()
@@ -280,24 +281,28 @@ const ShiftConfirmationResponseModal = defineAsyncComponent({
     timeout: 5000,
 });
 
+// axios statt Inertia-Visit: der Endpunkt antwortet ohne Inhalt, ein Inertia-Visit liefe danach
+// über den Redirect auf die komplette Dienstplanseite (voller Controller-Durchlauf + Props-Tausch).
+// Grid und Personenzeile aktualisiert der Broadcast (.shift-remove-entity).
 const submitDeleteUserFromShift = (shiftId, pivotId) => {
     isDeletingUser.value = true;
-    router.delete(route('shift.removeUserByType', {usersPivotId: pivotId, userType: props.user.type}), {
+    axios.delete(route('shift.removeUserByType', {usersPivotId: pivotId, userType: props.user.type}), {
         data: {
             removeFromSingleShift: true
         },
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
+    })
+        .then(() => {
             closeConfirmDeleteModal();
             // Emit event to parent to remove shift from user.element.shifts array
             emit('shiftDeleted', shiftId);
-        },
-        onFinish: () => {
-            isDeletingUser.value = false;
             document.getElementById('shift-' + shiftId)?.remove();
-        }
-    });
+        })
+        .catch(() => {
+            // Fehlermeldung zeigt der globale axios-Interceptor
+        })
+        .finally(() => {
+            isDeletingUser.value = false;
+        });
 }
 
 const blackColorIfColorIsWhite = (color) => {
@@ -328,50 +333,24 @@ const userToSend = ref({
 });
 
 
+// axios statt Inertia-Visit: der Visit (ohne preserveState) mountete den kompletten Dienstplan
+// neu und lud Räume, Gewerke und alle Personen nach. Jetzt lädt der Parent nur diese Person nach
+// (individualTimeSaved → desiresReload); das Grid aktualisiert der Broadcast.
 const saveIndividualShiftTime = (closePopover) => {
-    // Logic to save the individual shift time for the person, freelancer, or service provider
-    // This could involve making an API call to update the shift time in the database
-    router.post(route('shifts.updateIndividualShiftTime', {
+    axios.post(route('shifts.updateIndividualShiftTime', {
         entity: userToSend.value,
         shiftPivotId: props.shift.pivotId
     }), {
         start_time: props.shift.startPivot,
         end_time: props.shift.endPivot
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-            // Optionally, you can show a success message or perform any other action after saving
-            console.log('Shift time saved successfully');
+    })
+        .then(() => {
             if (typeof closePopover === 'function') closePopover();
-        },
-        onError: (error) => {
-            // Handle error if needed
+            emit('individualTimeSaved');
+        })
+        .catch((error) => {
             console.error('Error saving shift time:', error);
-        }
-    });
-}
-
-const saveShortDescription = (closePopover) => {
-    // Logic to save the short description for the person, freelancer, or service provider
-    // This could involve making an API call to update the short description in the database
-    router.post(route('shifts.updateShortDescription', {
-        entity: props.person,
-        shiftPivotId: props.person.pivot.id
-    }), {
-        short_description: props.person.pivot.short_description
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-            // Optionally, you can show a success message or perform any other action after saving
-            console.log('Short description saved successfully');
-            // Close the popover after saving
-            if (typeof closePopover === 'function') closePopover();
-        },
-        onError: (error) => {
-            // Handle error if needed
-            console.error('Error saving short description:', error);
-        }
-    });
+        });
 }
 
 </script>

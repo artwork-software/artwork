@@ -25,7 +25,8 @@ class RoomIndexResource extends JsonResource
             'color' => $this->color,
             'description' => $this->description,
             'temporary' => $this->temporary,
-            'created_by' => $this->creator,
+            // Ersteller nur für Avatar + Tooltip (Kontaktdaten lädt der Tooltip per lazy-load nach)
+            'created_by' => $this->creator?->setVisible(['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']),
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'everyone_can_book' => $this->everyone_can_book,
             'relevant_for_disposition' => $this->relevant_for_disposition,

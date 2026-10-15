@@ -163,7 +163,9 @@ class ShiftRuleController extends Controller
                 'created_at' => $a->created_at->toIso8601String(),
             ]);
 
+        // Filterauswahl: nur Name/Kürzel — ohne die über Craft::$with mitgeladenen Planer:innen
         $crafts = \Artwork\Modules\Craft\Models\Craft::select('id', 'name', 'abbreviation', 'color')
+            ->without(['craftShiftPlaner'])
             ->orderBy('name')
             ->get();
 

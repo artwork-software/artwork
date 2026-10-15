@@ -1110,6 +1110,24 @@ class EventController extends Controller
         return [$start, $end];
     }
 
+    /**
+     * Das Dashboard zeigt von Aufgaben keine Personen — zugewiesene und erledigende Person nur schlank
+     * ausliefern statt als volle User-Modelle.
+     *
+     * @template T of iterable
+     * @param T $tasks
+     * @return T
+     */
+    private function slimDashboardTaskPeople(iterable $tasks): iterable
+    {
+        foreach ($tasks as $task) {
+            $task->task_users?->each->setVisible(['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']);
+            $task->user_who_done?->setVisible(['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']);
+        }
+
+        return $tasks;
+    }
+
     public function viewShiftPlanListView(): Response
     {
         /** @var User $user */
@@ -1324,9 +1342,10 @@ class EventController extends Controller
             )->with([
                 'event',
                 'event.project' => $withTeamFlag,
-                'event.room',
+                // SingleUserEventShift liest vom Raum nur den Namen
+                'event.room' => static fn ($query) => $query->without(['admins', 'creator']),
                 'event.event_type',
-                'room',
+                'room' => static fn ($query) => $query->without(['admins', 'creator']),
                 'project' => $withTeamFlag,
                 'craft',
                 'users',
@@ -1377,7 +1396,12 @@ class EventController extends Controller
                         $query->where('user_id', Auth::id());
                     });
                 }
-            )->with(['project', 'room', 'event_type'])->get();
+            )->with([
+                'project',
+                // Kachel zeigt nur den Raumnamen — ohne Room::$with (Admins, Ersteller als volle User-Modelle)
+                'room' => static fn ($query) => $query->without(['admins', 'creator']),
+                'event_type',
+            ])->get();
 
         //get date for humans of today with weekday
         $todayDate = Carbon::now()->locale(
@@ -1399,7 +1423,7 @@ class EventController extends Controller
         $dialogData = app(NotificationDialogDataService::class)->forRequest(request(), $user);
 
         return inertia('Dashboard', [
-            'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
+            'tasks' => TaskDashboardResource::collection($this->slimDashboardTaskPeople($tasks))->resolve(),
             // Pivot-Spalte ist DATE — Vergleich mit vollem Timestamp ($now) würde nur um
             // Mitternacht matchen und die Tagesdienste sonst immer leer lassen.
             'users_day_services_of_day' => $user->dayServices()->wherePivot('date', $today)->get(),
@@ -1417,7 +1441,11 @@ class EventController extends Controller
             'wantedSplit' => $dialogData['wantedSplit'],
             'roomCollisions' => [],
             'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
-            'rooms' => Room::select(['id', 'name', 'area_id', 'order'])->get(),
+            // Raumauswahl im Termin-Dialog: Raumadmins werden nur als IDs gelesen (adminIdsOf)
+            'rooms' => Room::select(['id', 'name', 'area_id', 'order'])
+                ->without(['creator'])
+                ->get()
+                ->each(static fn (Room $room) => $room->admins->each->setVisible(['id'])),
             'projects' => Project::select(['id', 'name'])->get(),
             'historyObjects' => $dialogData['historyObjects'],
             'eventStatuses' => EventStatus::orderBy('order')->get(),

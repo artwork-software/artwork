@@ -1565,10 +1565,16 @@ class ShiftPlanRequestController extends Controller
         $crafts = Craft::query()
             ->whereIn('id', $craftIdsWithRequests)
             ->orderBy('name')
+            // Filterauswahl liest nur Name/Kürzel — ohne die über Craft::$with mitgeladenen Planer:innen
+            ->without(['craftShiftPlaner'])
             ->get(['id', 'name', 'abbreviation', 'color']);
 
         $paginator = (clone $baseQuery)
-            ->with(['craft:id,name,abbreviation,color', 'requestedBy:id,first_name,last_name'])
+            ->with([
+                'craft' => fn ($query) => $query->select(['id', 'name', 'abbreviation', 'color'])
+                    ->without(['craftShiftPlaner']),
+                'requestedBy:id,first_name,last_name',
+            ])
             ->when($status !== 'all', fn ($q) => $q->where('status', $status))
             ->when($craftId, fn ($q) => $q->where('craft_id', $craftId))
             ->when($onlyMine, fn ($q) => $q->where('requested_by_user_id', $user->id))

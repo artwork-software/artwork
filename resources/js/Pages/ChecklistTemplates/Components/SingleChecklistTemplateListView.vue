@@ -10,7 +10,7 @@
                 </div>
                 <div class="flex items-center gap-x-2 print:hidden">
                     <div class="hidden sm:flex items-center gap-x-2 text-text-subtle">
-                        <UserPopoverTooltip v-if="checklist_template.user" :user="checklist_template.user" height="6" width="6" />
+                        <UserPopoverTooltip lazy-load v-if="checklist_template.user" :user="checklist_template.user" height="6" width="6" />
                         <span class="text-[11px]">{{ checklist_template.created_at }}</span>
                     </div>
                     <span class="bg-accent-50 border border-accent-200 text-accent-600 text-xs px-2 py-0.5 rounded">

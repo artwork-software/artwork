@@ -67,6 +67,7 @@
         <div class="col-span-2">
             <div class="flex -space-x-2 items-center">
                 <UserPopoverTooltip
+                    lazy-load
                     v-for="user in issueOfMaterial.responsible_users"
                     :key="user.id"
                     :user="user"

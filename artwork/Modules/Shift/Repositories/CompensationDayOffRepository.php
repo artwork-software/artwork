@@ -87,6 +87,7 @@ class CompensationDayOffRepository extends BaseRepository
     }
 
     private const DASHBOARD_RELATIONS = ['user.assignedCrafts:id,name', 'violation.shiftRule'];
+    private const DASHBOARD_PERSON_FIELDS = ['id', 'first_name', 'last_name', 'full_name'];
 
     public function getAllOpen(int|array|null $filters = null): Collection
     {
@@ -131,9 +132,11 @@ class CompensationDayOffRepository extends BaseRepository
         int $perPage,
         string $pageName
     ): \Illuminate\Contracts\Pagination\LengthAwarePaginator {
+        // Die Dashboard-Tabelle zeigt von Person und Gewährender*m nur den Namen — keine Gewerke der Person
+        // (die Excel-Exporte laden sie weiterhin über DASHBOARD_RELATIONS) und keine vollen User-Modelle
         $relations = $status === 'granted'
-            ? array_merge(self::DASHBOARD_RELATIONS, ['grantedByUser'])
-            : self::DASHBOARD_RELATIONS;
+            ? ['user', 'violation.shiftRule', 'grantedByUser']
+            : ['user', 'violation.shiftRule'];
 
         $query = $this->applyDashboardFilters(
             CompensationDayOff::with($relations),
@@ -146,7 +149,13 @@ class CompensationDayOffRepository extends BaseRepository
             default => $query->open()->orderBy('deadline'),
         };
 
-        return $query->orderByDesc('id')->paginate($perPage, ['*'], $pageName)->withQueryString();
+        $paginator = $query->orderByDesc('id')->paginate($perPage, ['*'], $pageName)->withQueryString();
+        foreach ($paginator->getCollection() as $compensationDay) {
+            $compensationDay->user?->setVisible(self::DASHBOARD_PERSON_FIELDS);
+            $compensationDay->grantedByUser?->setVisible(self::DASHBOARD_PERSON_FIELDS);
+        }
+
+        return $paginator;
     }
 
     /**

@@ -116,8 +116,20 @@ readonly class ShiftListViewService
 
         $shifts = $query->get();
 
+        // Verfügbarkeitsstatus je Schicht × Person nur einmal ermitteln: der Filter unten und die
+        // Serialisierung fragen ihn beide ab (je Status mehrere Carbon-Operationen)
+        $unavailableStatuses = [];
+        $unavailableStatusFor = static function (Shift $shift, $worker) use (&$unavailableStatuses): ?string {
+            $key = spl_object_id($shift) . ':' . spl_object_id($worker);
+            if (!array_key_exists($key, $unavailableStatuses)) {
+                $unavailableStatuses[$key] = ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $worker);
+            }
+
+            return $unavailableStatuses[$key];
+        };
+
         if (!$settings->show_fully_staffed_shifts) {
-            $shifts = $shifts->filter(function (Shift $shift) {
+            $shifts = $shifts->filter(function (Shift $shift) use ($unavailableStatusFor) {
                 $assignedCount = $shift->users->count()
                     + $shift->freelancer->count()
                     + $shift->serviceProvider->count();
@@ -137,7 +149,7 @@ readonly class ShiftListViewService
                 // zählt nicht als voll besetzt — es besteht weiter Belegungsbedarf.
                 foreach ([$shift->users, $shift->freelancer, $shift->serviceProvider] as $workers) {
                     foreach ($workers as $worker) {
-                        if (ShiftWorkerAvailability::isWorkerUnavailable($shift, $worker)) {
+                        if ($unavailableStatusFor($shift, $worker) !== null) {
                             return true;
                         }
                     }
@@ -147,18 +159,13 @@ readonly class ShiftListViewService
             });
         }
 
-        $shifts = $shifts->sortBy([
-            ['start_date', 'asc'],
-            fn (Shift $a, Shift $b) => ($a->room->position ?? 0) <=> ($b->room->position ?? 0),
-            fn (Shift $a, Shift $b) => ($a->craft->position ?? 0) <=> ($b->craft->position ?? 0),
-            ['start', 'asc'],
-        ]);
+        $shifts = $this->sortForListView($shifts);
 
         // Group by day, then by room — using arrays (not objects with numeric keys)
         // to preserve room.position ordering in JavaScript
         $dayMap = [];
         foreach ($shifts as $shift) {
-            $day = Carbon::parse($shift->start_date)->format('Y-m-d');
+            $day = $this->startDay($shift);
             $roomId = $shift->room_id ?? 0;
 
             if (!isset($dayMap[$day])) {
@@ -176,7 +183,7 @@ readonly class ShiftListViewService
                     'events' => [],
                 ];
             }
-            $dayMap[$day][$roomId]['shifts'][] = $this->serializer->serializeShift($shift);
+            $dayMap[$day][$roomId]['shifts'][] = $this->serializer->serializeShift($shift, $unavailableStatusFor);
         }
 
         if ($settings->show_appointments) {
@@ -315,5 +322,55 @@ readonly class ShiftListViewService
         }
 
         return $query->get();
+    }
+
+    /**
+     * Sortierung Tag → Raum-Position → Gewerk-Position → Beginn, wie zuvor per Collection::sortBy, aber mit
+     * einmal je Schicht ermittelten Schlüsseln: sortBy las bei jedem Vergleich die gecasteten Attribute neu
+     * (start_date erzeugt je Zugriff ein Carbon-Objekt) — bei einigen tausend Schichten über eine Sekunde.
+     * Der Rohwert von start_date (DATE-Spalte, 'Y-m-d') sortiert wie die Carbon-Instanz; uasort ist stabil.
+     *
+     * @param \Illuminate\Support\Collection<int, Shift> $shifts
+     * @return \Illuminate\Support\Collection<int, Shift>
+     */
+    private function sortForListView(\Illuminate\Support\Collection $shifts): \Illuminate\Support\Collection
+    {
+        $keys = [];
+        foreach ($shifts as $index => $shift) {
+            $keys[$index] = [
+                $shift->getAttributes()['start_date'] ?? null,
+                $shift->room->position ?? 0,
+                $shift->craft->position ?? 0,
+                $shift->start,
+            ];
+        }
+
+        uasort($keys, static function (array $a, array $b): int {
+            foreach ([0, 1, 2, 3] as $position) {
+                $result = $a[$position] <=> $b[$position];
+                if ($result !== 0) {
+                    return $result;
+                }
+            }
+
+            return 0;
+        });
+
+        $items = $shifts->all();
+        $sorted = [];
+        foreach (array_keys($keys) as $index) {
+            $sorted[$index] = $items[$index];
+        }
+
+        return $shifts->make($sorted);
+    }
+
+    private function startDay(Shift $shift): string
+    {
+        $raw = $shift->getAttributes()['start_date'] ?? null;
+
+        return is_string($raw) && preg_match('/^\d{4}-\d{2}-\d{2}(?:$|[ T])/', $raw) === 1
+            ? substr($raw, 0, 10)
+            : Carbon::parse($shift->start_date)->format('Y-m-d');
     }
 }

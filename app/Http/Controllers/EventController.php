@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\GetShiftPlanWorkersRequest;
 use App\Settings\EventSettings;
 use App\Settings\ShiftSettings;
+use Artwork\Core\Http\Inertia\PlainDataProp;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
 use Artwork\Core\Services\HelperService;
@@ -1136,15 +1137,16 @@ class EventController extends Controller
             $endDate->format('Y-m-d'),
         ];
 
-        $groupedShifts = $this->shiftListViewService->getGroupedShifts(
-            $startDate,
-            $endDate,
-            $listViewSettings,
-            $userCalendarFilter
-        );
-
+        // Schwere Props als Closures: nach Aktionen lädt die Listenansicht per only: ['groupedShifts'] nach,
+        // dann werden Gewerke, Filter usw. nicht erneut berechnet. Große reine Datenblöcke in PlainDataProp,
+        // sonst durchläuft Inertia jeden einzelnen Wert (Response::resolvePropertyInstances).
         return Inertia::render('Shifts/ShiftPlanListView', [
-            'groupedShifts' => $groupedShifts,
+            'groupedShifts' => fn () => new PlainDataProp($this->shiftListViewService->getGroupedShifts(
+                $startDate,
+                $endDate,
+                $listViewSettings,
+                $userCalendarFilter
+            )),
             'dateValue' => $dateValue,
             'listViewSettings' => $listViewSettings,
             'user_filters' => $userCalendarFilter,
@@ -1153,21 +1155,21 @@ class EventController extends Controller
             // weiter, dessen getAssignablePeople() daraus die Auswahlliste zum
             // Zuweisen von Personen auf Schichtplätze baut. Ohne die Relationen
             // bleibt dieses Dropdown leer. Schlanke Personen-Serialisierung: CraftService.
-            'crafts' => $this->craftService->getAllWithAssignableWorkers(),
-            'eventTypes' => EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get(),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
-            'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),
-            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByPosition(),
-            'firstProjectShiftTabId' => $this->projectTabService
+            'crafts' => fn () => new PlainDataProp($this->craftService->getAllWithAssignableWorkers()),
+            'eventTypes' => static fn () => EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get(),
+            'filterOptions' => fn () => $this->filterService->getCalendarFilterDefinitions(),
+            'personalFilters' => fn () => $this->filterService->getPersonalFilter($user, $shiftFilterType),
+            'shiftQualifications' => fn () => $this->shiftQualificationService->getAllOrderedByPosition(),
+            'firstProjectShiftTabId' => fn () => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'filterType' => $shiftFilterType,
             'calendarWarningText' => $calendarWarningText,
-            'rooms' => Room::select(['id', 'name', 'position', 'area_id'])->get(),
-            'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
-            'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
-            'globalQualifications' => $this->globalQualificationService->getAll(),
-            'currentUserCrafts' => $this->craftService->getCraftsForShiftCreation($user),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
+            'rooms' => static fn () => Room::select(['id', 'name', 'position', 'area_id'])->get(),
+            'shiftTimePresets' => fn () => $this->shiftTimePresetService->getAll(),
+            'shiftGroups' => fn () => $this->shiftGroupService->getAllShiftGroups(),
+            'globalQualifications' => fn () => $this->globalQualificationService->getAll(),
+            'currentUserCrafts' => fn () => $this->craftService->getCraftsForShiftCreation($user),
+            'eventStatuses' => static fn () => EventStatus::orderBy('order')->get(),
         ]);
     }
 

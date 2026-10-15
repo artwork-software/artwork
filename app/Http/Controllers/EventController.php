@@ -427,7 +427,7 @@ class EventController extends Controller
                     ->get()
                 : [],
             'currentUserCrafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
-                ? $this->getCurrentUserCrafts($user)
+                ? $this->craftService->getCraftsForShiftCreation($user)
                 : [],
             'shiftTimePresets' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftTimePresetService->getAll()
@@ -728,7 +728,7 @@ class EventController extends Controller
                     ->get()
                 : [],
             'currentUserCrafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
-                ? $this->getCurrentUserCrafts($user)
+                ? $this->craftService->getCraftsForShiftCreation($user)
                 : [],
             'shiftTimePresets' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftTimePresetService->getAll()
@@ -1041,7 +1041,7 @@ class EventController extends Controller
             ),
             'useFirstNameForSort' => (new ShiftSettings())->use_first_name_for_sort,
             'userShiftPlanShiftQualificationFilters' => $user->getAttribute('show_qualifications'),
-            'currentUserCrafts' => fn () => $this->getCurrentUserCrafts($user),
+            'currentUserCrafts' => fn () => $this->craftService->getCraftsForShiftCreation($user),
             'shiftTimePresets' => fn () => $this->shiftTimePresetService->getAll(),
             'shiftGroupPresets' => static fn () => ShiftPresetGroup::query()
                 ->select(['id', 'name'])
@@ -1166,7 +1166,7 @@ class EventController extends Controller
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
             'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
             'globalQualifications' => $this->globalQualificationService->getAll(),
-            'currentUserCrafts' => $this->getCurrentUserCrafts($user),
+            'currentUserCrafts' => $this->craftService->getCraftsForShiftCreation($user),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
         ]);
     }
@@ -5050,29 +5050,6 @@ class EventController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * Get crafts that the current user is allowed to assign in shift planning.
-     *
-     * @param User $user
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    private function getCurrentUserCrafts(User $user): \Illuminate\Database\Eloquent\Collection
-    {
-        // If user is admin, return all crafts with qualifications
-        if ($user->hasRole('artwork admin')) {
-            return $this->craftService->getAll(['qualifications']);
-        }
-
-        // Get crafts that are assignable by all (not restricted)
-        $assignableByAllCrafts = $this->craftService->getAssignableByAllCrafts();
-
-        // Get crafts where user is explicitly allowed (restricted crafts via craft_users table)
-        $userRestrictedCrafts = $user->crafts()->with(['qualifications'])->get();
-
-        // Merge both collections and remove duplicates by craft id
-        return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
-    }
-
     public function getShiftPlanWorkers(
         GetShiftPlanWorkersRequest $request,
         \Artwork\Modules\Shift\Services\ShiftPlanWorkflowStatusService $workflowStatusService
@@ -5169,15 +5146,20 @@ class EventController extends Controller
         // ABER: die Tagesansicht reicht diese crafts an SingleShiftInDailyShiftView
         // weiter, dessen getAssignablePeople() die Personen zum Zuweisen von
         // Schichtplätzen daraus zieht. Sie fordert sie deshalb per withPeople an.
+        if ($request->boolean('withPeople')) {
+            // Dieselbe schlanke Personen-Serialisierung wie die crafts-Prop des Projekt-Schichten-Tabs und
+            // der Listenansicht (Vertrag: CraftAssignableWorkersPayloadTest) — vorher volle Modelle mit
+            // allen Funktions-Pivots, doppelt so groß und ohne can_work_shifts
+            return new JsonResponse([
+                'crafts' => $this->craftService->getAllWithAssignableWorkers(
+                    withManagers: !$request->boolean('lightweight')
+                ),
+            ]);
+        }
+
         $eagerLoad = [
             'qualifications:id,name,icon,available',
         ];
-
-        if ($request->boolean('withPeople')) {
-            $eagerLoad[] = 'users:id,first_name,last_name,position,profile_photo_path';
-            $eagerLoad[] = 'freelancers:id,first_name,last_name,position,profile_image';
-            $eagerLoad[] = 'serviceProviders:id,provider_name,profile_image';
-        }
 
         if (!$request->boolean('lightweight')) {
             // Nur die id wird gelesen; die übrigen Spalten brauchen die $appends

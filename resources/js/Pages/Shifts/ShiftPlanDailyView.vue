@@ -2295,11 +2295,18 @@ onMounted(async () => {
     // Load shift plan data and crafts in parallel. Die Worker-Daten (shifts.workers)
     // werden hier bewusst NICHT geladen: das Unbesetzt-Dropdown zieht seine Kandidaten
     // aus shifts.crafts, Kollisionen kommen on-demand über shift.check-collisions.
+    // Der Projekt-Schichten-Tab liefert die Gewerke samt zuweisbarer Personen schon als Seiten-Prop
+    // (gleiche Serialisierung) — dann nicht ein zweites Mal laden
+    const pageCraftsCarryPeople = Object.values((page.props.crafts as any) ?? {})
+        .some((craft: any) => Array.isArray(craft?.users))
+
     await Promise.all([
         initializeDailyShiftPlan(),
-        axios.get(route("shifts.crafts"), { params: { lightweight: 1, withPeople: 1 } }).then(({ data }) => {
-            craftsLoaded.value = data.crafts ?? []
-        }).catch(() => { craftsLoaded.value = [] }),
+        pageCraftsCarryPeople
+            ? Promise.resolve()
+            : axios.get(route("shifts.crafts"), { params: { lightweight: 1, withPeople: 1 } }).then(({ data }) => {
+                craftsLoaded.value = data.crafts ?? []
+            }).catch(() => { craftsLoaded.value = [] }),
         loadProjectDayAssignments(),
     ])
 

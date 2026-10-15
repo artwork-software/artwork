@@ -4,6 +4,7 @@ namespace Artwork\Modules\Calendar\DTO;
 
 use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 
 /**
@@ -15,6 +16,8 @@ use Spatie\LaravelData\Data;
  */
 class CalendarShiftDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
+
     public function __construct(
         public int $id,
         public string $startDate,

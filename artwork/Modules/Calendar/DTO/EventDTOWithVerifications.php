@@ -8,12 +8,14 @@ use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 use Spatie\LaravelData\Optional;
 
 class EventDTOWithVerifications extends Data
 {
+    use TransformsWithoutDataPipeline;
     use SerializesEventRelations;
 
     public function __construct(

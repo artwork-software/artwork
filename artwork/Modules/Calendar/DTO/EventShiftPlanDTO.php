@@ -6,11 +6,14 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 
 class EventShiftPlanDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
+
     public function __construct(
         public int $id,
         public string $start,

@@ -130,6 +130,10 @@ use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 
 class EventController extends Controller
 {
+    /** Tage je Block der Dienstplan-Listenansicht (erster Block mit der Seite, Rest nachgeladen) */
+    private const SHIFT_LIST_VIEW_CHUNK_DAYS = 7;
+    private const SHIFT_LIST_VIEW_MAX_CHUNK_DAYS = 31;
+
     private const MAX_MULTI_CELL_TARGETS = 250;
     private const MAX_MULTI_CELL_SOURCE_EVENTS = 50;
     private const MAX_MULTI_CELL_DUPLICATES = 500;
@@ -1115,22 +1119,20 @@ class EventController extends Controller
         $userCalendarFilter = $this->shiftListViewService->filterFor($user);
         $listViewSettings = $this->shiftListViewService->settingsFor($user);
 
-        $startDate = $userCalendarFilter->start_date
-            ? Carbon::parse($userCalendarFilter->start_date)
-            : Carbon::now()->startOfMonth();
-        $endDate = $userCalendarFilter->end_date
-            ? Carbon::parse($userCalendarFilter->end_date)
-            : Carbon::now()->endOfMonth();
+        [$startDate, $endDate, $clamped] = $this->resolveShiftListViewRange($userCalendarFilter);
 
         $calendarWarningText = '';
-        if ($startDate->diffInDays($endDate) > 183) {
-            $endDate = $startDate->copy()->addMonths(6);
+        if ($clamped) {
             $calendarWarningText = __('calendar.calendar_limit_six_months');
             $user->userFilters()->updateOrCreate(
                 ['filter_type' => $shiftFilterType],
                 ['end_date' => $endDate->format('Y-m-d')]
             );
         }
+
+        // Erster Block (eine Woche) direkt mit der Seite, die übrigen lädt die Listenansicht über
+        // shifts.plan.list-view.days nach — lange Zeiträume blockierten sonst Server und Browser
+        $firstChunkEnd = $startDate->copy()->addDays(self::SHIFT_LIST_VIEW_CHUNK_DAYS - 1)->min($endDate);
 
         $dateValue = [
             $startDate->format('Y-m-d'),
@@ -1145,8 +1147,16 @@ class EventController extends Controller
                 $startDate,
                 $endDate,
                 $listViewSettings,
-                $userCalendarFilter
+                $userCalendarFilter,
+                $startDate->copy(),
+                $firstChunkEnd->copy()
             )),
+            'groupedShiftsChunk' => [
+                'start' => $startDate->toDateString(),
+                'end' => $endDate->toDateString(),
+                'loadedUntil' => $firstChunkEnd->toDateString(),
+                'chunkDays' => self::SHIFT_LIST_VIEW_CHUNK_DAYS,
+            ],
             'dateValue' => $dateValue,
             'listViewSettings' => $listViewSettings,
             'user_filters' => $userCalendarFilter,
@@ -1171,6 +1181,71 @@ class EventController extends Controller
             'currentUserCrafts' => fn () => $this->craftService->getCraftsForShiftCreation($user),
             'eventStatuses' => static fn () => EventStatus::orderBy('order')->get(),
         ]);
+    }
+
+    /**
+     * Weiterer Tagesblock der Listenansicht (gleiche Berechnung und Filter wie die Seite, siehe
+     * ShiftListViewService::getGroupedShifts). Zeitraum und Filter kommen aus den gespeicherten
+     * Einstellungen der Person; der Client wählt nur den Block.
+     */
+    public function shiftPlanListViewDays(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'chunk_start' => ['required', 'date_format:Y-m-d'],
+            'chunk_end' => ['required', 'date_format:Y-m-d', 'after_or_equal:chunk_start'],
+        ]);
+
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $userCalendarFilter = $this->shiftListViewService->filterFor($user);
+        $listViewSettings = $this->shiftListViewService->settingsFor($user);
+        [$startDate, $endDate] = $this->resolveShiftListViewRange($userCalendarFilter);
+
+        $chunkStart = Carbon::parse($validated['chunk_start'])->max($startDate);
+        $chunkEnd = Carbon::parse($validated['chunk_end'])
+            ->min($endDate)
+            ->min($chunkStart->copy()->addDays(self::SHIFT_LIST_VIEW_MAX_CHUNK_DAYS - 1));
+
+        if ($chunkStart->gt($endDate) || $chunkEnd->lt($chunkStart)) {
+            abort(422, __('The requested days are outside the selected period.'));
+        }
+
+        return new JsonResponse([
+            'start' => $startDate->toDateString(),
+            'end' => $endDate->toDateString(),
+            'chunkStart' => $chunkStart->toDateString(),
+            'chunkEnd' => $chunkEnd->toDateString(),
+            'groupedShifts' => $this->shiftListViewService->getGroupedShifts(
+                $startDate,
+                $endDate,
+                $listViewSettings,
+                $userCalendarFilter,
+                $chunkStart->copy(),
+                $chunkEnd->copy()
+            ),
+        ]);
+    }
+
+    /**
+     * Zeitraum der Listenansicht aus dem gespeicherten Filter (ohne Datum: laufender Monat), höchstens
+     * sechs Monate.
+     *
+     * @return array{0: Carbon, 1: Carbon, 2: bool} [Start, Ende, auf sechs Monate gekürzt]
+     */
+    private function resolveShiftListViewRange(\Artwork\Modules\User\Models\UserFilter $filter): array
+    {
+        $startDate = $filter->start_date
+            ? Carbon::parse($filter->start_date)
+            : Carbon::now()->startOfMonth();
+        $endDate = $filter->end_date
+            ? Carbon::parse($filter->end_date)
+            : Carbon::now()->endOfMonth();
+
+        if ($startDate->diffInDays($endDate) > 183) {
+            return [$startDate, $startDate->copy()->addMonths(6), true];
+        }
+
+        return [$startDate, $endDate, false];
     }
 
     public function updateShiftListViewSettings(User $user, Request $request, UserService $userService): void

@@ -40,12 +40,24 @@ readonly class ShiftListViewService
         return $user->shift_list_view_settings ?? $user->shift_list_view_settings()->create();
     }
 
+    /**
+     * Tage der Listenansicht für den Zeitraum [$startDate, $endDate]. Mit $chunkStart/$chunkEnd nur der
+     * Abschnitt dieses Blocks (Listenansicht lädt wochenweise nach): jede Schicht gehört genau dem Block, der
+     * ihren Gruppierungstag enthält (Starttag, ohne Starttag „heute“ — wie die Gruppierung unten), Schichten
+     * mit Gruppierungstag vor bzw. nach dem Zeitraum dem ersten bzw. letzten Block. Termine und Feiertage
+     * werden je Tag im Block ausgegeben. Die Vereinigung aller Blöcke ergibt damit exakt das Gesamtergebnis.
+     */
     public function getGroupedShifts(
         Carbon $startDate,
         Carbon $endDate,
         UserShiftListViewSettings $settings,
-        ?UserFilter $userFilter = null
+        ?UserFilter $userFilter = null,
+        ?Carbon $chunkStart = null,
+        ?Carbon $chunkEnd = null
     ): array {
+        $dayRangeStart = ($chunkStart ?? $startDate)->copy()->startOfDay();
+        $dayRangeEnd = ($chunkEnd ?? $endDate)->copy()->startOfDay();
+
         // Abwesenheiten im Zeitraum für das is_unavailable-Flag (ohne N+1)
         $vacationsScope = fn ($q) => $q
             ->without(['series', 'conflicts'])
@@ -73,6 +85,10 @@ readonly class ShiftListViewService
                 'globalQualifications',
             ])
             ->eventStartDayAndEventEndDayBetween($startDate, $endDate);
+
+        if ($chunkStart !== null && $chunkEnd !== null) {
+            $this->restrictToChunk($query, $startDate, $endDate, $dayRangeStart, $dayRangeEnd);
+        }
 
         if ($userFilter) {
             if (!empty($userFilter->craft_ids)) {
@@ -187,15 +203,15 @@ readonly class ShiftListViewService
         }
 
         if ($settings->show_appointments) {
-            $events = $this->getEventsForRange($startDate, $endDate, $userFilter);
+            $events = $this->getEventsForRange($dayRangeStart, $dayRangeEnd, $userFilter);
 
             foreach ($events as $event) {
                 $serializedEvent = $this->serializer->serializeListViewEvent($event);
                 // An event can span multiple days; emit it on each day in range
                 $eventStart = $event->start_time->copy()->startOfDay();
                 $eventEnd = $event->end_time->copy()->startOfDay();
-                $rangeStart = $startDate->copy()->startOfDay();
-                $rangeEnd = $endDate->copy()->startOfDay();
+                $rangeStart = $dayRangeStart->copy();
+                $rangeEnd = $dayRangeEnd->copy();
 
                 $loopStart = $eventStart->lt($rangeStart) ? $rangeStart : $eventStart;
                 $loopEnd = $eventEnd->gt($rangeEnd) ? $rangeEnd : $eventEnd;
@@ -242,7 +258,7 @@ readonly class ShiftListViewService
         }
 
         // Load holidays for the date range
-        $holidaysByDate = $this->holidayService->getCalendarHolidaysByDate($startDate, $endDate);
+        $holidaysByDate = $this->holidayService->getCalendarHolidaysByDate($dayRangeStart, $dayRangeEnd);
 
         // Convert to sequential arrays so JS preserves insertion order
         $result = [];
@@ -322,6 +338,47 @@ readonly class ShiftListViewService
         }
 
         return $query->get();
+    }
+
+    /**
+     * Schichten auf die des Blocks [$chunkStart, $chunkEnd] beschränken (siehe getGroupedShifts): maßgeblich
+     * ist der Gruppierungstag — Starttag, ohne Starttag der heutige Tag (startDay()).
+     *
+     * @param Builder<Shift> $query
+     */
+    private function restrictToChunk(
+        Builder $query,
+        Carbon $startDate,
+        Carbon $endDate,
+        Carbon $chunkStart,
+        Carbon $chunkEnd
+    ): void {
+        $groupingDay = 'COALESCE(shifts.start_date, ?)';
+        $today = Carbon::now()->format('Y-m-d');
+        $isFirstChunk = $chunkStart->lte($startDate->copy()->startOfDay());
+        $isLastChunk = $chunkEnd->gte($endDate->copy()->startOfDay());
+
+        $query->where(function (Builder $query) use (
+            $groupingDay,
+            $today,
+            $chunkStart,
+            $chunkEnd,
+            $startDate,
+            $endDate,
+            $isFirstChunk,
+            $isLastChunk
+        ): void {
+            $query->whereRaw(
+                $groupingDay . ' BETWEEN ? AND ?',
+                [$today, $chunkStart->toDateString(), $chunkEnd->toDateString()]
+            );
+            if ($isFirstChunk) {
+                $query->orWhereRaw($groupingDay . ' < ?', [$today, $startDate->toDateString()]);
+            }
+            if ($isLastChunk) {
+                $query->orWhereRaw($groupingDay . ' > ?', [$today, $endDate->toDateString()]);
+            }
+        });
     }
 
     /**

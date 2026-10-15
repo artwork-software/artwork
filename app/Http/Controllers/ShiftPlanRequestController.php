@@ -56,6 +56,47 @@ class ShiftPlanRequestController extends Controller
      *
      * @return \Illuminate\Database\Eloquent\Collection<int,Shift>
      */
+    /**
+     * Felder, die ShiftPlanRequests/Show von Personen bzw. Bearbeiter:innen liest. Vorher gingen volle
+     * User-Modelle (inkl. Einstellungen) je Schicht, je Verlaufseintrag und je Änderung raus.
+     */
+    private const SHOW_WORKER_FIELDS = [
+        'id', 'first_name', 'last_name', 'full_name', 'name', 'provider_name', 'profile_photo_url', 'is_freelancer',
+        'pivot',
+    ];
+    private const SHOW_PERSON_FIELDS = ['id', 'first_name', 'last_name', 'full_name'];
+
+    /**
+     * Payload der Anfrage-Ansicht verschlanken: requested_shifts liest das Frontend nicht (je Schicht lud
+     * das Append max_users zusätzlich die Funktionen nach — N+1), Personen nur mit den angezeigten Feldern.
+     */
+    private function slimShowPayload(
+        ShiftPlanRequest $shiftPlanRequest,
+        \Illuminate\Database\Eloquent\Collection $shifts
+    ): void {
+        $shiftPlanRequest->unsetRelation('requestedShifts');
+
+        foreach ($shifts as $shift) {
+            foreach (['users', 'freelancer', 'serviceProvider'] as $relation) {
+                if ($shift->relationLoaded($relation)) {
+                    $shift->getRelation($relation)->each->setVisible(self::SHOW_WORKER_FIELDS);
+                }
+            }
+            if ($shift->relationLoaded('activities')) {
+                foreach ($shift->activities as $activity) {
+                    $activity->causer?->setVisible(self::SHOW_PERSON_FIELDS);
+                }
+            }
+            foreach (['shiftPlanRequestChanges', 'committedShiftChanges'] as $relation) {
+                if ($shift->relationLoaded($relation)) {
+                    foreach ($shift->getRelation($relation) as $change) {
+                        $change->changedBy?->setVisible(self::SHOW_PERSON_FIELDS);
+                    }
+                }
+            }
+        }
+    }
+
     private function loadShiftsForRequest(
         ShiftPlanRequest $shiftPlanRequest,
         Carbon $start,
@@ -497,6 +538,8 @@ class ShiftPlanRequestController extends Controller
 
         $overviewChanges = app(ShiftPlanRequestService::class)
             ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
+        $this->slimShowPayload($shiftPlanRequest, $shifts);
 
         return Inertia::render('ShiftPlanRequests/Show', [
             'request' => $shiftPlanRequest,
@@ -1667,6 +1710,8 @@ class ShiftPlanRequestController extends Controller
 
         $overviewChanges = app(ShiftPlanRequestService::class)
             ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
+        $this->slimShowPayload($shiftPlanRequest, $shifts);
 
         return Inertia::render('ShiftPlanRequests/Show', [
             'request' => $shiftPlanRequest,

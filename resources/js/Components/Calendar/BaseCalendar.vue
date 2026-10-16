@@ -407,6 +407,7 @@ import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import {can} from "laravel-permission-to-vuejs";
 import {canRequestVerificationInBulk} from "@/Helper/verificationRights.js";
+import {canViewPlanning} from "@/Helper/planningRights.js";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
@@ -1144,7 +1145,7 @@ async function runInitialLoad() {
 // Live-Termine nach derselben Regel wie die Server-Abfrage einsortieren (EventPlanningCalendarService /
 // EventCalendarService::filter): vorher landeten feste Termine im Planungskalender und geplante im Kalender,
 // auch ohne „Geplante Termine anzeigen“ bzw. Planungskalender-Recht
-const canSeePlannedEvents = computed(() => isAdmin.value || can('can see planning calendar') || can('can edit planning calendar'));
+const canSeePlannedEvents = computed(() => canViewPlanning({ isAdmin: isAdmin.value, can }));
 const acceptLiveEvent = (evt) => {
     const isPlannedEvent = !!evt?.isPlanning;
     // Tagesansicht filtert der Server nach den Tagesansicht-Einstellungen

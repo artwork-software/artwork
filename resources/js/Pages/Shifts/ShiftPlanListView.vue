@@ -568,7 +568,7 @@ import NotificationToast from '@/Artwork/Feedback/NotificationToast.vue';
 import {useI18n} from 'vue-i18n';
 import {usePermission} from '@/Composeables/Permission.js';
 import axios from 'axios';
-import {chunkRanges, mergeDayChunk, ownedRange, prioritizeChunks, addDays} from '@/Helper/listViewChunks.js';
+import {chunkRanges, chunksOwningDays, chunksToLoadNow, mergeDayChunk, ownedRange, prioritizeChunks, rangesNearVisibleDays} from '@/Helper/listViewChunks.js';
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue';
 import ShiftPlanListViewFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanListViewFunctionBar.vue';
 import BaseMenu from '@/Components/Menu/BaseMenu.vue';
@@ -652,7 +652,6 @@ const localGroupedShifts = shallowRef(props.groupedShifts || []);
 // --- Blockweises Laden: die Seite bringt die erste Woche, der Rest kommt über shifts.plan.list-view.days ---
 const loadingMoreDays = ref(false);
 const dayChunkFailed = ref(false);
-let dayChunkGeneration = 0;
 // Zeitraum + Einstellungen, für die die geladenen Tage gelten — ändern sie sich, wird neu aufgebaut
 const chunkPeriodKey = () => JSON.stringify([
     props.groupedShiftsChunk?.start,
@@ -662,6 +661,27 @@ const chunkPeriodKey = () => JSON.stringify([
 ]);
 let loadedPeriodKey = chunkPeriodKey();
 
+// Blöcke (Schlüssel = Starttag), die noch nie geladen wurden bzw. nach einer Aktion/einem fremden Broadcast
+// veraltet sind. Noch nie geladene kommen im Hintergrund nach, veraltete erst, wenn sie in Sicht kommen.
+const unloadedChunkStarts = new Set();
+const staleChunkStarts = new Set();
+let chunkQueue = [];
+let chunkQueueGeneration = 0;
+let chunkInFlight = null;
+let chunkWorkerGeneration = null;
+
+const periodRanges = () => {
+    const period = props.groupedShiftsChunk;
+    return period?.start ? chunkRanges(period.start, period.end, period.chunkDays) : [];
+};
+const chunkView = (affectedDays = []) => ({
+    periodStart: props.groupedShiftsChunk?.start,
+    periodEnd: props.groupedShiftsChunk?.end,
+    visibleDays: visibleDays.value,
+    renderedDays: localGroupedShifts.value.map((dayData) => dayData.day),
+    affectedDays,
+});
+
 function applyDayChunk(chunk, days) {
     const period = props.groupedShiftsChunk;
     localGroupedShifts.value = mergeDayChunk(localGroupedShifts.value, days, ownedRange(chunk, period.start, period.end));
@@ -670,55 +690,126 @@ function applyDayChunk(chunk, days) {
 }
 
 /**
- * Blöcke nacheinander laden und einsortieren. Bricht ab, sobald ein neuerer Ladevorgang startet oder
- * der Server einen anderen Zeitraum meldet (z. B. in einem anderen Tab geändert).
+ * Blöcke zum Laden einreihen. restart verwirft die Warteschlange und macht laufende Antworten ungültig (sie
+ * können älter als die auslösende Aktion sein); front stellt die Blöcke vor die Hintergrund-Ladevorgänge.
  */
-async function loadDayChunks(ranges) {
-    const generation = ++dayChunkGeneration;
+function queueDayChunks(ranges, { restart = false, front = false } = {}) {
+    if (restart) {
+        chunkQueue = [];
+        chunkQueueGeneration++;
+        chunkInFlight = null;
+    }
+    const queued = new Set(chunkQueue.map((range) => range.start));
+    if (chunkInFlight) queued.add(chunkInFlight.start);
+    const additional = ranges.filter((range) => !queued.has(range.start));
+    chunkQueue = front ? [...additional, ...chunkQueue] : [...chunkQueue, ...additional];
     dayChunkFailed.value = false;
-    if (!ranges.length) {
-        loadingMoreDays.value = false;
-        return;
-    }
-    loadingMoreDays.value = true;
-    try {
-        for (const range of ranges) {
-            const { data } = await axios.get(route('shifts.plan.list-view.days'), {
-                params: { chunk_start: range.start, chunk_end: range.end },
-            });
-            if (generation !== dayChunkGeneration) return;
-            const period = props.groupedShiftsChunk;
-            if (data.start !== period?.start || data.end !== period?.end) {
-                router.reload({ preserveScroll: true });
-                return;
-            }
-            applyDayChunk({ start: data.chunkStart, end: data.chunkEnd }, data.groupedShifts || []);
-        }
-    } catch (error) {
-        if (generation === dayChunkGeneration) dayChunkFailed.value = true;
-    } finally {
-        if (generation === dayChunkGeneration) loadingMoreDays.value = false;
-    }
-}
-
-/** Restliche Tage nach dem mit der Seite gelieferten ersten Block laden */
-function loadRemainingDays() {
-    const period = props.groupedShiftsChunk;
-    if (!period?.loadedUntil) return;
-    loadDayChunks(chunkRanges(addDays(period.loadedUntil, 1), period.end, period.chunkDays));
+    runChunkQueue();
 }
 
 /**
- * Nach Aktionen alle Tage neu laden — blockweise, sichtbare Tage zuerst, jeder Block ersetzt nur seine
- * Tage (kein Komplett-Neuaufbau, kein Springen der Ansicht).
+ * Warteschlange nacheinander abarbeiten. Je Generation läuft ein eigener Durchlauf: nach einem Neustart wartet
+ * der neue nicht auf die Antwort des alten, der alte verwirft sie. Bricht ab, wenn der Server einen anderen
+ * Zeitraum meldet (z. B. in einem anderen Tab geändert).
  */
-function reloadGroupedShifts() {
+async function runChunkQueue() {
+    if (chunkWorkerGeneration === chunkQueueGeneration) return;
+    const generation = chunkQueueGeneration;
+    chunkWorkerGeneration = generation;
+    const isCurrent = () => generation === chunkQueueGeneration;
+    try {
+        while (chunkQueue.length && isCurrent()) {
+            loadingMoreDays.value = true;
+            const range = chunkQueue.shift();
+            chunkInFlight = range;
+            let data;
+            try {
+                ({ data } = await axios.get(route('shifts.plan.list-view.days'), {
+                    params: { chunk_start: range.start, chunk_end: range.end },
+                }));
+            } catch (error) {
+                if (isCurrent()) {
+                    dayChunkFailed.value = true;
+                    chunkQueue = [];
+                }
+                break;
+            }
+            // Neu eingeplant (Aktion, Broadcast, Zeitraumwechsel): der Block ist dort erneut eingereiht bzw. veraltet
+            if (!isCurrent()) break;
+            chunkInFlight = null;
+            const period = props.groupedShiftsChunk;
+            if (data.start !== period?.start || data.end !== period?.end) {
+                chunkQueue = [];
+                router.reload({ preserveScroll: true });
+                break;
+            }
+            applyDayChunk({ start: data.chunkStart, end: data.chunkEnd }, data.groupedShifts || []);
+            unloadedChunkStarts.delete(range.start);
+            staleChunkStarts.delete(range.start);
+        }
+    } finally {
+        if (isCurrent()) {
+            chunkInFlight = null;
+            chunkWorkerGeneration = null;
+            loadingMoreDays.value = false;
+        }
+    }
+}
+
+/** Neuer Zeitraum: alle Blöcke nach dem mit der Seite gelieferten ersten im Hintergrund laden */
+function loadRemainingDays() {
     const period = props.groupedShiftsChunk;
-    if (!period?.start) {
+    unloadedChunkStarts.clear();
+    staleChunkStarts.clear();
+    const remaining = period?.loadedUntil ? periodRanges().filter((range) => range.start > period.loadedUntil) : [];
+    remaining.forEach((range) => unloadedChunkStarts.add(range.start));
+    queueDayChunks(remaining, { restart: true });
+}
+
+/**
+ * Nach Aktionen und fremden Broadcasts: nur Blöcke am sichtbaren Bereich und mit betroffenen Tagen sofort
+ * neu laden, die übrigen als veraltet markieren — sie laden beim Hineinscrollen nach (loadStaleChunksInView).
+ * Jeder Block ersetzt nur seine Tage, sodass die Vereinigung aller Blöcke dem Server-Ergebnis entspricht.
+ *
+ * @param {Iterable<string>} affectedDays Tage ('YYYY-MM-DD'), deren Blöcke auch außerhalb der Sicht sofort laden
+ * @param {{firstBlockFresh?: boolean}} options firstBlockFresh: der erste Block kam gerade frisch mit der Seite
+ */
+function refreshDayChunks(affectedDays = [], { firstBlockFresh = false } = {}) {
+    const period = props.groupedShiftsChunk;
+    if (firstBlockFresh) staleChunkStarts.delete(period.start);
+    const ranges = periodRanges().filter((range) => !firstBlockFresh || range.start > period.loadedUntil);
+    const loaded = ranges.filter((range) => !unloadedChunkStarts.has(range.start));
+    loaded.forEach((range) => staleChunkStarts.add(range.start));
+    queueDayChunks([
+        ...chunksToLoadNow(loaded, chunkView(affectedDays)),
+        ...ranges.filter((range) => unloadedChunkStarts.has(range.start)),
+    ], { restart: true });
+}
+
+function reloadGroupedShifts(affectedDays = []) {
+    if (!props.groupedShiftsChunk?.start) {
         router.reload({ only: ['groupedShifts', 'groupedShiftsChunk'], preserveScroll: true });
         return;
     }
-    loadDayChunks(prioritizeChunks(chunkRanges(period.start, period.end, period.chunkDays), visibleDays.value));
+    refreshDayChunks(affectedDays);
+}
+
+/** Veraltete Blöcke laden, sobald sie (bzw. ihre gerenderten Nachbartage) in Sicht kommen */
+function loadStaleChunksInView() {
+    if (!staleChunkStarts.size) return;
+    const stale = periodRanges().filter((range) => staleChunkStarts.has(range.start));
+    const due = rangesNearVisibleDays(stale, chunkView());
+    if (due.length) queueDayChunks(prioritizeChunks(due, visibleDays.value), { front: true });
+}
+
+/** Blöcke mit diesen Tagen als veraltet markieren (Broadcast zu einer hier nicht gezeigten Schicht) */
+function markDaysStale(days) {
+    const period = props.groupedShiftsChunk;
+    if (!period?.start) return;
+    chunksOwningDays(periodRanges(), days, period.start, period.end)
+        .filter((range) => !unloadedChunkStarts.has(range.start))
+        .forEach((range) => staleChunkStarts.add(range.start));
+    loadStaleChunksInView();
 }
 
 // Inertia-Reload (Zeitraum/Filter geändert oder Redirect nach einer Aktion): erster Block kommt neu mit
@@ -733,10 +824,10 @@ watch(() => props.groupedShifts, (newVal) => {
         loadRemainingDays();
         return;
     }
-    // Gleicher Zeitraum: ersten Block übernehmen, übrige Tage im Hintergrund aktualisieren
+    // Gleicher Zeitraum: ersten Block übernehmen, übrige Blöcke wie nach einer Aktion auffrischen
     const period = props.groupedShiftsChunk;
     applyDayChunk({ start: period.start, end: period.loadedUntil }, newVal || []);
-    loadDayChunks(chunkRanges(addDays(period.loadedUntil, 1), period.end, period.chunkDays));
+    refreshDayChunks([], { firstBlockFresh: true });
 });
 
 // --- L4: Version counter for cache invalidation ---
@@ -805,11 +896,15 @@ function shiftMovedToAnotherGroup(existing, shiftData, targetRoomId) {
 }
 
 let groupedShiftsReloadTimer = null;
-function scheduleGroupedShiftsReload() {
+const pendingAffectedDays = new Set();
+function scheduleGroupedShiftsReload(affectedDays = []) {
+    affectedDays.filter(Boolean).forEach((day) => pendingAffectedDays.add(day));
     if (groupedShiftsReloadTimer) clearTimeout(groupedShiftsReloadTimer);
     groupedShiftsReloadTimer = setTimeout(() => {
         groupedShiftsReloadTimer = null;
-        reloadGroupedShifts();
+        const days = [...pendingAffectedDays];
+        pendingAffectedDays.clear();
+        reloadGroupedShifts(days);
     }, 300);
 }
 
@@ -827,7 +922,10 @@ function updateShiftLocally(data) {
                 // Raum, Tag, Projekt oder Gruppe geändert: die Schicht gehört in eine andere Gruppierung —
                 // Liste neu laden statt sie an der alten Stelle mit alten Daten stehen zu lassen
                 if (shiftMovedToAnotherGroup(existing, shiftData, targetRoomId)) {
-                    scheduleGroupedShiftsReload();
+                    scheduleGroupedShiftsReload([
+                        existing.start_date ? String(existing.start_date).slice(0, 10) : null,
+                        shiftData.startDate,
+                    ]);
                     return;
                 }
 
@@ -913,6 +1011,9 @@ function updateShiftLocally(data) {
             }
         }
     }
+
+    // Tag/Raum hier (noch) nicht vorhanden, z. B. erste Schicht in einem Raum: Block des Tages neu laden
+    if (shiftData.startDate) markDaysStale([shiftData.startDate]);
 }
 
 function removeShiftLocally(data) {
@@ -951,6 +1052,8 @@ function initDayObserver() {
         if (changed) visibleDays.value = new Set(visibleDays.value);
     }, { rootMargin: '400px 0px' });
 }
+
+watch(visibleDays, loadStaleChunksInView);
 
 const setDayRef = (dayKey, el) => {
     if (el && dayObserver) {
@@ -998,7 +1101,8 @@ onBeforeUnmount(() => {
 onUnmounted(() => {
     if (groupedShiftsReloadTimer) clearTimeout(groupedShiftsReloadTimer);
     // laufendes blockweises Laden verwerfen
-    dayChunkGeneration++;
+    chunkQueue = [];
+    chunkQueueGeneration++;
     cleanupListeners();
     dayObserver?.disconnect();
 });

@@ -1163,6 +1163,7 @@ import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import {can, is} from 'laravel-permission-to-vuejs'
+import {canViewPlanning} from '@/Helper/planningRights.js'
 import {useUserOverviewLayout} from '@/Pages/Shifts/Composables/useUserOverviewLayout.ts'
 import {useSyncedHorizontalScroll} from '@/Pages/Shifts/Composables/useSyncedHorizontalScroll.ts'
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
@@ -2901,7 +2902,7 @@ function startShiftCalendarListener() {
         onWorkerNeedReload: reloadSingleWorker,
         onLookupsReceived: mergeLookups,
         // Geplante Termine nur mit Planungskalender-Recht (wie der Server-Load, Event::visiblePlanningFor)
-        subscribePlanningChannels: is('artwork admin') || can('can see planning calendar') || can('can edit planning calendar'),
+        subscribePlanningChannels: canViewPlanning({ isAdmin: is('artwork admin'), can }),
     })
     shiftCalendarListener.init()
 }

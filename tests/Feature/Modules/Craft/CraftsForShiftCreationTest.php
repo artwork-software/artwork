@@ -6,6 +6,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -51,5 +52,27 @@ final class CraftsForShiftCreationTest extends FeatureTestCase
             $this->assertArrayHasKey('qualifications', $serialized);
             $this->assertArrayNotHasKey('craft_shift_planer', $serialized);
         }
+    }
+
+    #[Test]
+    public function planers_are_not_queried_at_all(): void
+    {
+        $user = User::factory()->create();
+        $open = Craft::factory()->create(['assignable_by_all' => true]);
+        $own = Craft::factory()->create(['assignable_by_all' => false]);
+        $own->craftShiftPlaner()->attach($user->id);
+        $open->craftShiftPlaner()->attach(User::factory()->create()->id);
+
+        $planerQueries = [];
+        DB::listen(static function ($query) use (&$planerQueries): void {
+            if (str_contains($query->sql, 'from `users` inner join `craft_users`')) {
+                $planerQueries[] = $query->sql;
+            }
+        });
+
+        app(CraftService::class)->getCraftsForShiftCreation($user);
+        app(CraftService::class)->getCraftsForShiftCreation($this->adminUser());
+
+        $this->assertSame([], $planerQueries);
     }
 }

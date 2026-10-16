@@ -1131,8 +1131,8 @@ class EventController extends Controller
     private function slimDashboardTaskPeople(iterable $tasks): iterable
     {
         foreach ($tasks as $task) {
-            $task->task_users?->each->setVisible(['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']);
-            $task->user_who_done?->setVisible(['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']);
+            $task->task_users?->each->setVisible(User::AVATAR_FIELDS);
+            $task->user_who_done?->setVisible(User::AVATAR_FIELDS);
         }
 
         return $tasks;

@@ -41,13 +41,22 @@ class InventoryPlanningService
 
         $dates = $this->generateDateRange($start, $end);
 
-        // 1x laden: alles was Availability braucht
+        // 1x laden: nur was Gruppierung und readyQuantity() brauchen. Die Artikel gehen als
+        // {id, name} ans Frontend, daher keine Eigenschaften (room/manufacturer-Appends),
+        // Detail-Status oder Detail-Eigenschaften mehr.
         $articles = $this->filterService->getFilteredArticlesNew($user)
+            ->without('properties')
+            ->select([
+                'inventory_articles.id',
+                'inventory_articles.name',
+                'inventory_articles.quantity',
+                'inventory_articles.is_detailed_quantity',
+                'inventory_articles.inventory_category_id',
+                'inventory_articles.inventory_sub_category_id',
+            ])
             ->with([
-                'detailedArticleQuantities',            // für is_detailed_quantity
-                'detailedArticleQuantities.status',     // Status der Detail-Batches
-                'detailedArticleQuantities.properties', // room/manufacturer-Appends ohne N+1
-                'statusValues'                          // Fallback/klassische Statuswerte
+                'detailedArticleQuantities:id,inventory_article_id,inventory_article_status_id,quantity',
+                'statusValues:inventory_article_statuses.id',
             ])
             ->get();
 
@@ -95,8 +104,9 @@ class InventoryPlanningService
     protected function loadInternalIssuesInRange(array $articleIds, string $rangeStart, string $rangeEnd): Collection
     {
         return InternalIssue::with([
+            // Gelesen werden nur id und pivot.quantity (Verfügbarkeit + Balken).
             'articles' => function ($query) use ($articleIds): void {
-                $query->whereIn('inventory_articles.id', $articleIds);
+                $query->select('inventory_articles.id')->whereIn('inventory_articles.id', $articleIds);
             },
             'project:id,name',
         ])
@@ -117,8 +127,9 @@ class InventoryPlanningService
     protected function loadExternalIssuesInRange(array $articleIds, string $rangeStart, string $rangeEnd): Collection
     {
         return ExternalIssue::with([
+            // Gelesen werden nur id und pivot.quantity (Verfügbarkeit + Balken).
             'articles' => function ($query) use ($articleIds): void {
-                $query->whereIn('inventory_articles.id', $articleIds);
+                $query->select('inventory_articles.id')->whereIn('inventory_articles.id', $articleIds);
             },
             'receivedBy:id,first_name,last_name',
         ])
@@ -238,17 +249,25 @@ class InventoryPlanningService
      * B5: Uses a dictionary index for sub-category lookup (O(1) per insert)
      * instead of `array_search(array_column(...))` which made grouping O(N²).
      *
+     * Die Planungsseite liest je Artikel nur id und name (Zeilentitel, Suche, Zuordnung zu
+     * Verfügbarkeit/Ausgaben); volle Modelle samt Einzelartikeln machten ~85 % des Payloads aus.
+     *
      * @param Collection<int, InventoryArticle> $articles
-     * @return array<string, mixed>
+     * @return array<string, array{
+     *     category: string,
+     *     articles: array<int, array{id: int, name: string}>,
+     *     subcategories: array<int, array{name: string, articles: array<int, array{id: int, name: string}>}>
+     * }>
      */
     protected function groupArticles(Collection $articles): array
     {
         $grouped = [];
         $subIndex = []; // [category][subName] => int (position in $grouped[category]['subcategories'])
 
-        foreach ($articles as $article) {
-            $category = $article->category->name ?? 'Sonstige';
-            $subCategory = $article->subCategory->name ?? null;
+        foreach ($articles as $model) {
+            $category = $model->category->name ?? 'Sonstige';
+            $subCategory = $model->subCategory->name ?? null;
+            $article = ['id' => $model->id, 'name' => $model->name];
 
             if (!isset($grouped[$category])) {
                 $grouped[$category] = ['category' => $category, 'articles' => [], 'subcategories' => []];

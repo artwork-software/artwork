@@ -17,13 +17,19 @@ class ProjectTabDocumentService
 {
     public function __construct(
         private readonly ProjectComponentVisibilityService $projectComponentVisibilityService,
+        private readonly ProjectDocumentPlacementService $placementService,
     ) {
     }
 
+    /**
+     * Dateien eines Upload-Bereichs samt Bereichs-Einstellungen und der Bereiche, die beim Hochladen bzw. danach
+     * als Sichtbarkeit wählbar sind (nur Bereiche in Tabs, die die Person sieht).
+     */
     public function buildDocumentPayload(
         Project $project,
         ?ComponentInTab $componentInTab = null,
-        ?User $user = null
+        ?User $user = null,
+        bool $inFolder = false,
     ): array {
         $scope = $componentInTab?->scope ?? [];
         if ($user !== null) {
@@ -31,13 +37,45 @@ class ProjectTabDocumentService
             $scope = $this->projectComponentVisibilityService->restrictScopeToVisibleTabs($user, $scope);
         }
 
-        $documents = $this->loadDocuments($project, $scope);
+        $placementKey = $componentInTab?->id !== null
+            ? ProjectDocumentPlacementService::keyFor((int) $componentInTab->id, $inFolder)
+            : null;
+        $documents = $this->loadDocuments($project, $scope, $placementKey);
 
         return [
             'documents' => $documents,
             'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
             'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
+            'placement' => $placementKey !== null ? [
+                'key' => $placementKey,
+                'settings' => $this->placementService->find($placementKey)['settings']
+                    ?? $this->placementService->normalizeSettings(null),
+                'uploaded_count' => $project->project_files()->where('uploaded_via', $placementKey)->count(),
+            ] : null,
+            'placements' => $this->selectablePlacements($user),
+            'globalUploadLimits' => $this->placementService->globalLimits(),
         ];
+    }
+
+    /**
+     * @return list<array{key: string, label: string, scope: list<int>}>
+     */
+    private function selectablePlacements(?User $user): array
+    {
+        $visibleTabIds = $user !== null && !$this->isAdmin($user)
+            ? $this->projectComponentVisibilityService->visibleTabIds($user)->map(fn ($id): int => (int) $id)->all()
+            : null;
+
+        return $this->placementService->placements()
+            ->filter(fn (array $placement): bool => $visibleTabIds === null
+                || array_intersect($placement['tab_ids'], $visibleTabIds) !== [])
+            ->map(fn (array $placement): array => [
+                'key' => $placement['key'],
+                'label' => $placement['label'],
+                'scope' => $placement['scope'],
+            ])
+            ->values()
+            ->all();
     }
 
     public function buildAllDocumentsPayload(Project $project, ?User $user = null): array
@@ -64,10 +102,36 @@ class ProjectTabDocumentService
         }
 
         $query = $project->project_files();
-        $this->projectComponentVisibilityService->constrainToVisibleTabs($query, $user);
+        $this->constrainToVisibleDocumentTabs($query, $user);
         $this->constrainToVisibleBudgetDocuments($query, $project, $user);
 
-        return $query->get();
+        return $query->get()->each(fn (ProjectFile $file) => $this->appendVisibleKeys($file));
+    }
+
+    /**
+     * Wie constrainToVisibleTabs(), zusätzlich Dateien, die ausdrücklich in einem Upload-Bereich eines sichtbaren
+     * Tabs angezeigt werden (visible_in).
+     */
+    public function constrainToVisibleDocumentTabs(Builder|Relation $query, User $user): void
+    {
+        if ($this->isAdmin($user)) {
+            return;
+        }
+
+        $visibleTabIds = $this->projectComponentVisibilityService->visibleTabIds($user)
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+        $visibleKeys = $this->placementService->placements()
+            ->filter(fn (array $placement): bool => array_intersect($placement['tab_ids'], $visibleTabIds) !== [])
+            ->pluck('key')
+            ->all();
+
+        $query->where(function (Builder $query) use ($visibleTabIds, $visibleKeys): void {
+            $query->whereIn('tab_id', $visibleTabIds)->orWhereNull('tab_id');
+            foreach ($visibleKeys as $key) {
+                $query->orWhereJsonContains('visible_in', $key);
+            }
+        });
     }
 
     /**
@@ -118,17 +182,32 @@ class ProjectTabDocumentService
         return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
     }
 
-    private function loadDocuments(Project $project, array $scope): Collection
+    private function loadDocuments(Project $project, array $scope, ?string $placementKey = null): Collection
     {
-        if (empty($scope)) {
+        if (empty($scope) && $placementKey === null) {
             return new Collection();
         }
 
-        return $project->project_files()
-            ->whereIn('tab_id', $scope)
+        $query = $project->project_files();
+        if ($placementKey !== null) {
+            $this->placementService->constrainToPlacement($query, $placementKey, array_map('intval', $scope));
+        } else {
+            $query->whereIn('tab_id', $scope);
+        }
+
+        return $query
             // Herkunftsvermerk für Uploads externer Personen (freigegebene Tabs)
             ->with(['externalAccess:id,email,name,crm_contact_id', 'externalAccess.crmContact:id,display_name'])
-            ->get();
+            ->get()
+            ->each(fn (ProjectFile $file) => $this->appendVisibleKeys($file));
+    }
+
+    /**
+     * Bereiche, in denen die Datei erscheint – für das Sichtbarkeits-Badge und die Auswahl "Sichtbar in".
+     */
+    private function appendVisibleKeys(ProjectFile $file): void
+    {
+        $file->setAttribute('visible_keys', $this->placementService->visibleKeysOf($file));
     }
 
     /**

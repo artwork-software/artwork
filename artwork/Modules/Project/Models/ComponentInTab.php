@@ -28,11 +28,14 @@ class ComponentInTab extends Model
         'component_id',
         'order',
         'scope',
-        'note'
+        'note',
+        // Dateiupload: erlaubte Endungen, max. Größe (MB), max. Anzahl (ProjectDocumentPlacementService)
+        'upload_settings',
     ];
 
     protected $casts = [
-        'scope' => 'array'
+        'scope' => 'array',
+        'upload_settings' => 'array',
     ];
 
     protected $with = ['component', 'disclosureComponents'];
@@ -45,6 +48,14 @@ class ComponentInTab extends Model
         return $this->belongsTo(Component::class, 'component_id', 'id', 'component');
     }
 
+
+    /**
+     * @return BelongsTo<ProjectTab, $this>
+     */
+    public function tab(): BelongsTo
+    {
+        return $this->belongsTo(ProjectTab::class, 'project_tab_id');
+    }
 
     /**
      * @return HasMany<DisclosureComponents, $this>

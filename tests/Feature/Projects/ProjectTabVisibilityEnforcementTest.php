@@ -679,6 +679,9 @@ final class ProjectTabVisibilityEnforcementTest extends FeatureTestCase
                 'id' => $file->id,
                 'tab_id' => $this->hiddenTab->id,
                 'project_id' => $this->project->id,
+                // Upload-Bereiche sind nur Schlüssel ("tab:<id>"), keine Inhalte
+                'visible_in' => null,
+                'visibility_changed' => false,
             ],
         ];
 

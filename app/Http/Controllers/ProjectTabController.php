@@ -15,6 +15,7 @@ use Artwork\Modules\Project\TabTemplates\ProjectTabTemplateService;
 use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Artwork\Modules\Project\Services\ComponentUsageService;
+use Artwork\Modules\Project\Services\ProjectDocumentPlacementService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Artwork\Modules\User\Models\User;
@@ -78,7 +79,7 @@ class ProjectTabController extends Controller
                         /** @var \Illuminate\Database\Eloquent\Builder $query */
                         $query
                             ->without(['component', 'disclosureComponents']) // Standard-$with reduzieren
-                            ->select(['id', 'project_tab_id', 'component_id', 'order', 'scope', 'note'])
+                            ->select(['id', 'project_tab_id', 'component_id', 'order', 'scope', 'note', 'upload_settings'])
                             ->orderBy('order')
                             ->with([
                                 // Zugehörige Component minimal laden
@@ -89,7 +90,7 @@ class ProjectTabController extends Controller
                                 // Disclosure-Komponenten inkl. zugehöriger Component
                                 'disclosureComponents' => function ($q): void {
                                     $q->without(['component'])
-                                        ->select(['id', 'disclosure_id', 'component_id', 'order'])
+                                        ->select(['id', 'disclosure_id', 'component_id', 'order', 'upload_settings'])
                                         ->orderBy('order')
                                         ->with([
                                             'component' => function ($qc): void {
@@ -167,6 +168,8 @@ class ProjectTabController extends Controller
             'componentsSpecial' => $componentsSpecial,
             'componentUsages' => $componentUsageService->getUsages(),
             'tabTemplates' => app(ProjectTabTemplateService::class)->listForUi(),
+            // Auswahl für die Upload-Einstellungen der Dateiupload-Komponente
+            'documentUploadLimits' => app(ProjectDocumentPlacementService::class)->globalLimits(),
         ]);
     }
 
@@ -421,6 +424,61 @@ class ProjectTabController extends Controller
         ]);
 
         $this->clearTabSettingsCache();
+    }
+
+    /**
+     * Einstellungen eines Upload-Bereichs der Dateiupload-Komponente (Tab-Platzierung).
+     */
+    public function updateUploadSettings(
+        ComponentInTab $componentInTab,
+        Request $request,
+        ProjectDocumentPlacementService $placementService,
+    ): RedirectResponse {
+        $this->assertDocumentsPlacement($componentInTab->component);
+        $componentInTab->update(['upload_settings' => $this->validatedUploadSettings($request, $placementService)]);
+
+        $this->clearTabSettingsCache();
+
+        return redirect()->back();
+    }
+
+    /**
+     * Einstellungen eines Upload-Bereichs der Dateiupload-Komponente (Platzierung in einem Ordner).
+     */
+    public function updateFolderUploadSettings(
+        DisclosureComponents $disclosureComponent,
+        Request $request,
+        ProjectDocumentPlacementService $placementService,
+    ): RedirectResponse {
+        $this->assertDocumentsPlacement($disclosureComponent->component);
+        $disclosureComponent->update(['upload_settings' => $this->validatedUploadSettings($request, $placementService)]);
+
+        $this->clearTabSettingsCache();
+
+        return redirect()->back();
+    }
+
+    private function assertDocumentsPlacement(?Component $component): void
+    {
+        if ($component?->type !== ProjectTabComponentEnum::PROJECT_DOCUMENTS->value) {
+            throw ValidationException::withMessages(['component' => __('validation.in', ['attribute' => 'component'])]);
+        }
+    }
+
+    /**
+     * @return array{allowed_extensions: list<string>, max_file_size_mb: int|null, max_files: int|null}
+     */
+    private function validatedUploadSettings(Request $request, ProjectDocumentPlacementService $placementService): array
+    {
+        $validated = $request->validate([
+            'allowed_extensions' => ['present', 'array'],
+            'allowed_extensions.*' => ['string', 'max:20'],
+            'max_file_size_mb' => ['nullable', 'integer', 'min:1'],
+            'max_files' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        // nur innerhalb der globalen Freigaben
+        return $placementService->normalizeSettings($validated);
     }
 
     public function addDisclosureComponent(Request $request): void

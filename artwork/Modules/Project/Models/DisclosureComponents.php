@@ -15,11 +15,13 @@ class DisclosureComponents extends Model
         'disclosure_id',
         'component_id',
         'order',
-        'scope'
+        'scope',
+        'upload_settings',
     ];
 
     protected $casts = [
-        'scope' => 'array'
+        'scope' => 'array',
+        'upload_settings' => 'array',
     ];
 
     protected $with = ['component'];
@@ -30,5 +32,15 @@ class DisclosureComponents extends Model
     public function component(): BelongsTo
     {
         return $this->belongsTo(Component::class, 'component_id', 'id');
+    }
+
+    /**
+     * Ordner (DisclosureComponent), in dem die Komponente liegt.
+     *
+     * @return BelongsTo<Component, $this>
+     */
+    public function disclosure(): BelongsTo
+    {
+        return $this->belongsTo(Component::class, 'disclosure_id', 'id');
     }
 }

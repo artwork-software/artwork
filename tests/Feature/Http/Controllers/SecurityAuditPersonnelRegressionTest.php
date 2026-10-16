@@ -237,11 +237,19 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     #[Test]
     public function individual_time_series_can_be_created_for_self_or_with_availability_management(): void
     {
+        // Eigene Zeitreihen nur mit "can enter own individual times" und ab heute (OwnIndividualTimeAccess)
         $self = $this->actingAsUserWith([]);
         $this->post(
             route('individual-time-series.store'),
             $this->seriesPayload([['type' => 'user', 'id' => $self->id]])
-        )->assertRedirect();
+        )->assertForbidden();
+
+        $self = $this->actingAsUserWith([PermissionEnum::CAN_ENTER_OWN_INDIVIDUAL_TIMES]);
+        $this->post(route('individual-time-series.store'), [
+            ...$this->seriesPayload([['type' => 'user', 'id' => $self->id]]),
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addWeek()->toDateString(),
+        ])->assertRedirect();
         $this->assertSame(1, IndividualTimeSeries::query()->count());
 
         $this->actingAsUserWith([PermissionEnum::AVAILABILITY_MANAGEMENT]);

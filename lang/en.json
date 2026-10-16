@@ -9236,5 +9236,7 @@
     "New name for the role “{role}”": "New name for the role “{role}”",
     "Delete the role “{role}”? The contacts stay in the list.": "Delete the role “{role}”? The contacts stay in the list.",
     "Please enter a role name with at most :max characters.": "Please enter a role name with at most :max characters.",
-    "CRM contact list": "CRM contact list"
+    "CRM contact list": "CRM contact list",
+    "Also artists via CRM contact lists": "Also artists via CRM contact lists",
+    "via {list}": "via {list}"
 }

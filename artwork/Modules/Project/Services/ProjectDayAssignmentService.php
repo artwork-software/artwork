@@ -164,7 +164,7 @@ class ProjectDayAssignmentService
                 ->where('is_group', false)
                 ->orderBy('name')
                 ->limit(50)
-                ->get(['id', 'name', 'artists']);
+                ->get(['id', 'name', 'artists', 'linked_artists']);
         }
 
         return $projects
@@ -178,7 +178,7 @@ class ProjectDayAssignmentService
                 return [
                     'id' => $project->id,
                     'name' => $project->name,
-                    'artists' => $project->artists ?: null,
+                    'artists' => $project->artistDisplayText() ?: null,
                     'period_start' => $period ? $period['start']->format('Y-m-d') : null,
                     'period_end' => $period ? $period['end']->format('Y-m-d') : null,
                     'covers_all_days' => $coversAllDays,

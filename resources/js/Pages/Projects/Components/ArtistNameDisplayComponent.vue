@@ -17,13 +17,14 @@
                     <span v-if="artistName">{{ artistName }}</span>
                 </div>
                 <!-- Sidebar: verknüpfte CRM-Künstler*innen nur als Namen anzeigen -->
-                <div v-if="inSidebar && linkedContacts.length > 0" class="mt-1 text-xs !text-white">
-                    {{ linkedContacts.map((contact) => contact.display_name).join(', ') }}
+                <div v-if="inSidebar && (linkedContacts.length > 0 || listArtists.length > 0)" class="mt-1 text-xs !text-white">
+                    {{ [...linkedContacts, ...listArtists].map((contact) => contact.display_name).join(', ') }}
                 </div>
                 <div v-if="!inSidebar" class="mt-2">
                     <CrmArtistLinkManager
                         :project-id="resolvedProjectId"
                         :initial-contacts="linkedContacts"
+                        :initial-list-artists="listArtists"
                         :can-edit="canEditLinks"
                         immediate
                     />
@@ -70,6 +71,7 @@ const loadError = ref(null);
 const loaded = ref(false);
 const artistName = ref(props.project?.artist_name ?? null);
 const linkedContacts = ref([]);
+const listArtists = ref([]);
 
 const resolvedProjectId = computed(() => props.project?.id ?? props.projectId);
 
@@ -100,6 +102,7 @@ async function ensureArtistNameData() {
         const response = await axios.get(route('projects.tabs.artist-name', {project: resolvedProjectId.value}));
         artistName.value = response.data.artist_name ?? null;
         linkedContacts.value = response.data.linked_crm_contacts ?? [];
+        listArtists.value = response.data.list_artists ?? [];
         loaded.value = true;
     } catch (e) {
         loadError.value = 'Failed to load artist name.';

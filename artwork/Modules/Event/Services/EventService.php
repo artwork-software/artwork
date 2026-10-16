@@ -1448,7 +1448,7 @@ readonly class EventService
                     'eventStatusId' => $event->event_status_id,
                     'eventStatusColor' => $event->eventStatus?->color,
                     'eventTypeName' => $eventType?->name,
-                    'projectArtists' => $project?->artists,
+                    'projectArtists' => $project?->artistDisplayText(),
                     'eventTypeAbbreviation' => $eventType?->abbreviation,
                     'eventTypeColor' => $eventType?->hex_code,
                     'created_at' => $event->created_at?->format('d.m.Y, H:i'),

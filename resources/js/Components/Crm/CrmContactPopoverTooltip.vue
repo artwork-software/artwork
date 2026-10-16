@@ -1,6 +1,8 @@
 <template>
     <Popover v-slot="{ open }" class="!ring-0 flex items-center justify-center">
         <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0" @click="calculatePopoverPosition">
+            <!-- Eigener Auslöser (z. B. Künstler*innen-Name im Kalender); sonst der CRM-Avatar -->
+            <slot>
             <!-- CRM-Avatar: typ-farbiger Ring + Badge kennzeichnen den Kontakt als CRM-Eintrag -->
             <span class="relative inline-flex shrink-0" :class="['h-' + height, 'w-' + width, 'min-h-' + height, 'min-w-' + width]">
                 <img
@@ -18,6 +20,7 @@
                     <PropertyIcon :name="badgeIcon" class="h-2.5 w-2.5 text-white" stroke-width="2.5"/>
                 </span>
             </span>
+            </slot>
         </PopoverButton>
         <Teleport to="body">
             <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to" @enter="clampPanelPosition">

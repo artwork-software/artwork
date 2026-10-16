@@ -855,7 +855,7 @@ class BiExportService
                 'project_id' => $project->id,
                 'project_name' => $project->name,
                 'project_state' => $project->status?->name ?? '',
-                'artists' => $project->artists ?? '',
+                'artists' => $project->artistDisplayText(),
                 'cost_center' => $project->costCenter?->name ?? '',
                 'rooms' => $this->getRoomNames($project),
                 'areas' => $this->getAreaNames($project),

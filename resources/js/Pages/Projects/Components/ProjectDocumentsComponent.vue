@@ -149,7 +149,9 @@ async function saveVisibility(keys: string[] | null) {
     }
     savingVisibility.value = true
     try {
-        await axios.patch(route('project_files.visibility', { project_file: file.id }), { visible_in: keys })
+        await axios.patch(route('project_files.visibility', { project_file: file.id }), { visible_in: keys }, {
+            skipErrorToast: true, // Fehler steht am Upload-Feld
+        })
         visibilityTarget.value = null
         await fetchDocuments()
     } catch (error) {

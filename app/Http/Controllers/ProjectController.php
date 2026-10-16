@@ -514,7 +514,10 @@ class ProjectController extends Controller
                         $projectData->icon = $project->icon;
                         break;
                     case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
-                        $projectData->artist_name = $project->artists;
+                        // Freitext plus verknüpfte CRM-Künstler*innen (Hover-Infokarte über linked_artists)
+                        $projectData->artist_name = $project->artistDisplayText();
+                        $projectData->artist_free_text = $project->artists;
+                        $projectData->linked_artists = $project->linked_artists ?? [];
                         break;
                     case ProjectTabComponentEnum::BI_KEY_FIGURES->value:
                         $tickets = $this->biProjectMetricsService->soldTickets($project);

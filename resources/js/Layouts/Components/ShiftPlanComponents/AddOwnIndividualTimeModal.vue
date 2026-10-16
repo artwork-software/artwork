@@ -154,6 +154,8 @@ async function save() {
                 end_time: form.full_day ? null : form.end_time,
                 break_minutes: form.full_day ? null : form.break_minutes,
             }],
+        }, {
+            skipErrorToast: true, // Fehler steht im Modal
         })
         emit('saved')
         emit('closed')

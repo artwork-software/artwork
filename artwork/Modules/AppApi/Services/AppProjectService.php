@@ -84,7 +84,8 @@ class AppProjectService
             'id' => $project->id,
             'name' => $project->name,
             'is_group' => (bool) $project->is_group,
-            'artists' => $project->artists !== '' ? $project->artists : null,
+            // Freitext plus verknüpfte CRM-Künstler*innen
+            'artists' => ($artistText = $project->artistDisplayText()) !== '' ? $artistText : null,
             'state' => $this->serializeState($project->status),
             'team' => $this->serializeTeam($project),
             'can_edit_team' => $user->can('update', $project),

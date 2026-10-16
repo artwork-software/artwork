@@ -88,6 +88,8 @@ class ProjectTabDocumentService
             'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
             'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
             'hiddenTabNames' => $hiddenTabNames,
+            // Namen der Upload-Bereiche für das Badge „Sichtbar in …“
+            'placements' => $this->selectablePlacements($user),
         ];
     }
 

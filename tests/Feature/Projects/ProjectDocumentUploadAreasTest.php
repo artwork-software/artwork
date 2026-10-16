@@ -88,7 +88,10 @@ final class ProjectDocumentUploadAreasTest extends FeatureTestCase
 
         $this->documents($this->areaB)->assertJsonCount(1, 'documents');
         $this->documents($this->areaA)->assertJsonCount(1, 'documents');
-        $this->documents($this->areaA)->assertJsonPath('placements.1.label', 'Presse');
+        // weitere Bereiche aus den Grunddaten der Test-DB können dazukommen
+        $labels = array_column($this->documents($this->areaA)->json('placements'), 'label');
+        $this->assertContains('Technik', $labels);
+        $this->assertContains('Presse', $labels);
     }
 
     #[Test]
@@ -152,6 +155,10 @@ final class ProjectDocumentUploadAreasTest extends FeatureTestCase
         $this->assertCount(
             1,
             app(ProjectTabDocumentService::class)->loadVisibleDocuments($this->project, $user)
+        );
+        $this->assertSame(
+            ['tab:' . $this->areaB->id],
+            app(ProjectTabDocumentService::class)->buildAllDocumentsPayload($this->project, $user)['documents'][0]->visible_keys
         );
     }
 

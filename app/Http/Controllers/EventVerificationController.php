@@ -23,12 +23,17 @@ use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class EventVerificationController extends Controller
 {
+    /** Gründe, warum requestVerificationFor() nichts angefragt hat */
+    private const SKIPPED_NOT_PLANNING = 'not_planning';
+    private const SKIPPED_ALREADY_OPEN = 'already_open';
+    private const SKIPPED_NO_VERIFIERS = 'no_verifiers';
 
     public function __construct(
         private readonly EventVerificationService $eventVerificationService,
@@ -207,23 +212,39 @@ class EventVerificationController extends Controller
         $user = $this->authManager->user();
         abort_unless($this->mayManageVerification($event, $user), 403);
 
-        // Feste Termine haben keine Prüfung (sonst würde confirmEvent eine offene Raumanfrage fest buchen);
-        // eine offene Prüfrunde wird nicht doppelt angelegt (veraltete Ansicht, Doppelklick).
-        // Rückmeldung über den globalen Flash-Toast.
+        // Rückmeldung über den globalen Flash-Toast
+        $message = match ($this->requestVerificationFor($event, $user)) {
+            self::SKIPPED_NOT_PLANNING => __('Only planned events can be sent for verification.'),
+            self::SKIPPED_NO_VERIFIERS => __('No verifiers are assigned to the event type of this event.'),
+            default => null,
+        };
+        if ($message !== null) {
+            session()->flash('error', $message);
+        }
+    }
+
+    /**
+     * Fragt die Prüfung eines Termins an. Feste Termine haben keine Prüfung (sonst würde confirmEvent eine offene
+     * Raumanfrage fest buchen); eine offene Prüfrunde wird nicht doppelt angelegt (veraltete Ansicht, Doppelklick).
+     *
+     * @return self::SKIPPED_*|null Grund, warum nichts angefragt wurde; null = angefragt
+     */
+    private function requestVerificationFor(Event $event, User $user): ?string
+    {
         if (!$event->is_planning) {
-            session()->flash('error', __('Only planned events can be sent for verification.'));
-            return;
+            return self::SKIPPED_NOT_PLANNING;
         }
         if (!$this->eventVerificationService->canRequestVerification($event)) {
-            return;
+            return self::SKIPPED_ALREADY_OPEN;
         }
         if ($this->eventVerificationService->lacksVerifiers($event)) {
-            session()->flash('error', __('No verifiers are assigned to the event type of this event.'));
-            return;
+            return self::SKIPPED_NO_VERIFIERS;
         }
 
         $this->eventVerificationService->requestVerification($event, $user);
         SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
+
+        return null;
     }
 
     public function approved(EventVerification $eventVerification): void
@@ -345,8 +366,10 @@ class EventVerificationController extends Controller
         /** @var User $user */
         $user = $this->authManager->user();
         // Die Auswahl kann feste Termine ("Feste Termine anzeigen") und fremde Termine (nur Sichtrecht) enthalten:
-        // überspringen statt die Anfrage mittendrin mit 403/422 abzubrechen (vorher halb verschickt)
+        // überspringen statt die Anfrage mittendrin mit 403/422 abzubrechen (vorher halb verschickt).
+        // Alle Gründe landen in EINER Meldung – vorher überschrieb jeder Termin den Flash des vorigen.
         $skippedForeignEvents = 0;
+        $skippedWithoutVerifiers = 0;
         foreach ($this->validatedEvents($request) as $event) {
             if (!$event->is_planning) {
                 continue;
@@ -355,18 +378,32 @@ class EventVerificationController extends Controller
                 $skippedForeignEvents++;
                 continue;
             }
-            $this->store($event);
+            if ($this->requestVerificationFor($event, $user) === self::SKIPPED_NO_VERIFIERS) {
+                $skippedWithoutVerifiers++;
+            }
         }
 
+        $messages = [];
+        if ($skippedWithoutVerifiers > 0) {
+            $messages[] = trans_choice(
+                '{1} One event was not sent: no verifiers are assigned to its event type.|'
+                . '[2,*] :count events were not sent: no verifiers are assigned to their event types.',
+                $skippedWithoutVerifiers,
+                ['count' => $skippedWithoutVerifiers]
+            );
+        }
         if ($skippedForeignEvents > 0) {
-            session()->flash('error', trans_choice(
+            $messages[] = trans_choice(
                 '{1} One event of someone else was skipped: '
                 . 'you may only request verification for your own planned events.|'
                 . '[2,*] :count events of others were skipped: '
                 . 'you may only request verification for your own planned events.',
                 $skippedForeignEvents,
                 ['count' => $skippedForeignEvents]
-            ));
+            );
+        }
+        if ($messages !== []) {
+            session()->flash('error', implode(' ', $messages));
         }
     }
 
@@ -429,10 +466,13 @@ class EventVerificationController extends Controller
         $eventIds = $events->pluck('id');
 
         // Je Termin wie die Einzel-Umstellung: Änderungsverlauf, offene Raumanfrage zurücknehmen
-        // (vorher Massen-Update nur von is_planning)
-        foreach ($events as $event) {
-            $this->eventVerificationService->convertToPlanning($event);
-        }
+        // (vorher Massen-Update nur von is_planning). Alles oder nichts: ein Abbruch mittendrin ließ das Projekt
+        // halb umgestellt zurück; die Broadcasts gehen über SafeBroadcast erst nach dem Commit raus.
+        DB::transaction(function () use ($events): void {
+            foreach ($events as $event) {
+                $this->eventVerificationService->convertToPlanning($event);
+            }
+        });
 
         $refreshedEvents = Event::whereIn('id', $eventIds)->get();
         foreach ($refreshedEvents as $event) {

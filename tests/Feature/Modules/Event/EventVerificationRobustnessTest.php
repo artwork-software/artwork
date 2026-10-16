@@ -300,6 +300,106 @@ final class EventVerificationRobustnessTest extends FeatureTestCase
         $this->assertSame(1, $ownEvent->verifications()->count());
     }
 
+    /**
+     * Release-Review 16.10.2026: jeder Termin der Auswahl überschrieb den Flash des vorigen – ein eigener Termin
+     * ohne Prüfende ging neben dem Hinweis auf fremde Termine unter.
+     */
+    #[Test]
+    public function bulk_request_reports_events_without_verifiers_together_with_skipped_foreign_events(): void
+    {
+        [$foreignEvent] = $this->planningEventWithVerifiers('all', 1);
+        [$ownEventWithoutVerifiers] = $this->planningEventWithVerifiers('all', 0);
+        $viewer = $this->actingAsUserWith([PermissionEnum::CAN_SEE_PLANNING_CALENDAR]);
+        $ownEventWithoutVerifiers->update(['user_id' => $viewer->id]);
+
+        $this->post(route('events-verifications.request-verification'), [
+            'events' => [$ownEventWithoutVerifiers->id, $foreignEvent->id],
+        ])->assertSessionHas('error', trans_choice(
+            '{1} One event was not sent: no verifiers are assigned to its event type.|'
+            . '[2,*] :count events were not sent: no verifiers are assigned to their event types.',
+            1
+        ) . ' ' . trans_choice(
+            '{1} One event of someone else was skipped: '
+            . 'you may only request verification for your own planned events.|'
+            . '[2,*] :count events of others were skipped: '
+            . 'you may only request verification for your own planned events.',
+            1
+        ));
+
+        $this->assertSame(0, $foreignEvent->verifications()->count());
+        $this->assertSame(0, $ownEventWithoutVerifiers->verifications()->count());
+    }
+
+    #[Test]
+    public function bulk_request_counts_all_events_without_verifiers_in_one_message(): void
+    {
+        $this->actingAsAdmin();
+        [$firstEvent] = $this->planningEventWithVerifiers('all', 0);
+        [$secondEvent] = $this->planningEventWithVerifiers('any', 0);
+        [$eventWithVerifier] = $this->planningEventWithVerifiers('all', 1);
+
+        $this->post(route('events-verifications.request-verification'), [
+            'events' => [$firstEvent->id, $secondEvent->id, $eventWithVerifier->id],
+        ])->assertSessionHas('error', trans_choice(
+            '{1} One event was not sent: no verifiers are assigned to its event type.|'
+            . '[2,*] :count events were not sent: no verifiers are assigned to their event types.',
+            2,
+            ['count' => 2]
+        ));
+
+        $this->assertSame(1, $eventWithVerifier->verifications()->count());
+    }
+
+    #[Test]
+    public function bulk_request_without_problems_reports_no_error(): void
+    {
+        $this->actingAsAdmin();
+        [$event] = $this->planningEventWithVerifiers('all', 1);
+
+        $this->post(route('events-verifications.request-verification'), ['events' => [$event->id]])
+            ->assertSessionMissing('error');
+
+        $this->assertSame(1, $event->verifications()->count());
+    }
+
+    /**
+     * Release-Review 16.10.2026: die Projekt-Umstellung läuft je Termin – ein Abbruch mittendrin darf das Projekt
+     * nicht halb umgestellt zurücklassen.
+     */
+    #[Test]
+    public function converting_a_project_to_planning_is_all_or_nothing(): void
+    {
+        $this->actingAsAdmin();
+        $firstEvent = Event::factory()->create(['is_planning' => false, 'occupancy_option' => true]);
+        $secondEvent = Event::factory()->create([
+            'project_id' => $firstEvent->project_id,
+            'is_planning' => false,
+            'occupancy_option' => true,
+        ]);
+
+        $realService = app(EventVerificationService::class);
+        $calls = 0;
+        $this->mock(EventVerificationService::class, function ($mock) use ($realService, &$calls): void {
+            $mock->shouldReceive('convertToPlanning')->andReturnUsing(
+                function (Event $event) use ($realService, &$calls): void {
+                    if (++$calls === 2) {
+                        throw new \RuntimeException('Abbruch mitten in der Umstellung');
+                    }
+                    $realService->convertToPlanning($event);
+                }
+            );
+        });
+
+        $this->post(route('projects.convert-to-planning', $firstEvent->project_id))->assertServerError();
+
+        $this->assertSame(2, $calls);
+        foreach ([$firstEvent, $secondEvent] as $event) {
+            $event->refresh();
+            $this->assertFalse((bool) $event->is_planning);
+            $this->assertTrue((bool) $event->occupancy_option);
+        }
+    }
+
     #[Test]
     public function a_rejected_event_is_listed_as_planned_again_so_it_can_be_requested_again(): void
     {

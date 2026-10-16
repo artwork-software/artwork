@@ -325,7 +325,7 @@ class EventController extends Controller
         // Sicherheitskappen für View-Spannen: Tagesansicht bis zu einem Monat
         // (leere Stunden kollabieren clientseitig, ~50k DOM-Knoten bei 31 Tagen gemessen ok)
         $calendarWarningText = '';
-        if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
+        if ($isDailyView && self::calendarDaysBetween($startDate, $endDate) > 30) {
             // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
             $endDate = $startDate->copy()->addDays(30)->endOfDay();
             $calendarWarningText = __('calendar.daily_view_info');
@@ -336,7 +336,7 @@ class EventController extends Controller
             );
         }
 
-        if ($startDate->diffInDays($endDate) > (365 * 2)) {
+        if (self::calendarDaysBetween($startDate, $endDate) > (365 * 2)) {
             $endDate = $startDate->copy()->addYears(2)->endOfDay();
             $calendarWarningText = __('calendar.calendar_limit_two_years');
 
@@ -596,7 +596,7 @@ class EventController extends Controller
         $calendarWarningText = '';
 
         // Tagesansicht bis zu einem Monat (wie im Standard-Kalender)
-        if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
+        if ($isDailyView && self::calendarDaysBetween($startDate, $endDate) > 30) {
             // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
             $endDate = $startDate->copy()->addDays(30)->endOfDay();
             $calendarWarningText = __('calendar.daily_view_info');
@@ -608,7 +608,7 @@ class EventController extends Controller
         }
 
 
-        if ($startDate->diffInDays($endDate) > (365 * 2)) {
+        if (self::calendarDaysBetween($startDate, $endDate) > (365 * 2)) {
             $endDate = $startDate->copy()->addYears(2)->endOfDay();
             $calendarWarningText = __('calendar.calendar_limit_two_years');
             $user->userFilters()->updateOrCreate([
@@ -1108,6 +1108,16 @@ class EventController extends Controller
         }
 
         return [$start, $end];
+    }
+
+    /**
+     * Abstand in Kalendertagen. Das Ende der Kalenderzeiträume liegt auf 23:59:59 (endOfDay); Carbon 3 liefert
+     * diffInDays dann als Bruchzahl (30,99… für 31 Kalendertage) – die Grenze "31 Tage" schlug so schon bei genau
+     * 31 Tagen an (Warnung + Filter bei jedem Aufruf neu gespeichert).
+     */
+    private static function calendarDaysBetween(Carbon $start, Carbon $end): int
+    {
+        return (int) $start->copy()->startOfDay()->diffInDays($end->copy()->startOfDay());
     }
 
     /**

@@ -8316,6 +8316,7 @@
     "A room is required for this event.": "A room is required for this event.",
     "Only planned events can be sent for verification.": "Only planned events can be sent for verification.",
     "No verifiers are assigned to the event type of this event.": "No verifiers are assigned to the event type of this event.",
+    "{1} One event was not sent: no verifiers are assigned to its event type.|[2,*] :count events were not sent: no verifiers are assigned to their event types.": "{1} One event was not sent: no verifiers are assigned to its event type.|[2,*] :count events were not sent: no verifiers are assigned to their event types.",
     "{1} One event of someone else was skipped: you may only request verification for your own planned events.|[2,*] :count events of others were skipped: you may only request verification for your own planned events.": "{1} One event of someone else was skipped: you may only request verification for your own planned events.|[2,*] :count events of others were skipped: you may only request verification for your own planned events.",
     "The room of this event is in the trash. Choose a new room for the copy.": "The room of this event is in the trash. Choose a new room for the copy.",
     "Events always bookable directly": "Events always bookable directly",

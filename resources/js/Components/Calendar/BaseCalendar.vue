@@ -234,10 +234,11 @@
                 <!-- Verifizierungs-Workflow (nur Planungskalender). Bei "Termine immer direkt buchbar"
                      gibt es keine Verifizierung: derselbe Endpunkt übernimmt die Termine sofort als feste Termine. -->
                 <template v-if="isPlanning">
-                    <!-- Prüfung anfragen: "Geplante Termine bearbeiten" (alle) oder eigene Termine (anlegen dürfen nur
-                         Personen mit "Im Planungskalender fest planen" bzw. Raumadmins) – "einsehen" allein reicht nicht -->
+                    <!-- Prüfung anfragen: "Geplante Termine bearbeiten" (alle) oder eigene Termine (anlegen dürfen
+                         Personen mit "Im Planungskalender fest planen" bzw. Raumadmins in ihren Räumen) – "einsehen"
+                         allein reicht nicht; fremde Termine der Auswahl überspringt der Server mit Hinweis -->
                     <FormButton
-                        v-if="isAdmin || can('can edit planning calendar') || can('can plan fixed in planning calendar')"
+                        v-if="showBulkVerificationRequest"
                         :disabled="checkedCount === 0"
                         @click="requestVerification"
                         :text="checkedCount + ' ' + (directBookingOnly ? $t('Confirm as fixed events') : $t('request verification'))"
@@ -405,6 +406,7 @@ import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendar
 import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import {can} from "laravel-permission-to-vuejs";
+import {canRequestVerificationInBulk} from "@/Helper/verificationRights.js";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
@@ -1258,6 +1260,17 @@ const selectedRoomRequestIds = computed(() => {
     return requestIds;
 });
 const hasSelectedRoomRequests = computed(() => selectedRoomRequestIds.value.length > 0);
+
+// Sammel-"Prüfung anfragen": Raumadmins ohne "Im Planungskalender fest planen" legen in ihren Räumen geplante
+// Termine an und dürfen sie als Ersteller:innen anfragen (EventVerificationController::mayManageVerification) –
+// der Knopf fehlte ihnen bisher, obwohl das Kachel-Menü die Anfrage erlaubt
+const showBulkVerificationRequest = computed(() => canRequestVerificationInBulk({
+    isAdmin: isAdmin.value,
+    canEditPlanning: can('can edit planning calendar'),
+    canPlanFixed: can('can plan fixed in planning calendar'),
+    userId: user.value?.id,
+    selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
+}));
 
 // Multi-Edit-Flags direkt auf den (reaktiven) Event-Objekten setzen: nur die
 // betroffenen Terminkacheln lesen considerOnMultiEdit und re-rendern. Das

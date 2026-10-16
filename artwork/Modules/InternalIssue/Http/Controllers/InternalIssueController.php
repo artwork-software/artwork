@@ -72,9 +72,11 @@ class InternalIssueController extends Controller
                 'articles.category',
                 'articles.subCategory',
                 'specialItems',
-                'room',
+                // Liste und Bearbeiten-Dialog lesen vom Raum nur id und Namen — ohne Room::$with
+                // (Admins, Ersteller als volle User-Modelle)
+                'room' => fn ($query) => $query->without(['admins', 'creator']),
                 'project',
-                'responsibleUsers.departments',
+                'responsibleUsers',
             ])
             ->when(!empty($articleIds), function ($q) use ($articleIds): void {
                 $q->whereHas('articles', function ($sub) use ($articleIds): void {
@@ -103,6 +105,10 @@ class InternalIssueController extends Controller
             ->orderBy('start_time');
 
         $issues = $issuesQuery->paginate($entitiesPerPage)->withQueryString();
+        // Verantwortliche nur als Avatar + Tooltip (Kontaktdaten lädt der Tooltip per lazy-load nach)
+        $issues->getCollection()->each(fn (InternalIssue $issue) => $issue->responsibleUsers->each->setVisible(
+            ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']
+        ));
 
         $articlesInFilter = !empty($articleIds)
             ? InventoryArticle::whereIn('id', $articleIds)->get()

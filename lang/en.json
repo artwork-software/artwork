@@ -5203,6 +5203,7 @@
     "Special day: without work the daily target is reduced to 0 or by the weekday average (three-month mode), if the contract has the special day rule active. Hours worked count normally.": "Special day: without work the daily target is reduced to 0 or by the weekday average (three-month mode), if the contract has the special day rule active. Hours worked count normally.",
     "As of: nightly booking up to {0}": "As of: nightly booking up to {0}",
     "The data could not be loaded.": "The data could not be loaded.",
+    "The requested days are outside the selected period.": "The requested days are outside the selected period.",
     "You do not have permission to view this data.": "You do not have permission to view this data.",
     "Counted until": "Counted until",
     "Last nightly calculation": "Last nightly calculation",

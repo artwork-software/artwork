@@ -1367,6 +1367,11 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->name('shifts.plan.list-view')
         ->can('can view shift plan');
 
+    // Weitere Tagesblöcke der Listenansicht (erster Block kommt mit der Seite)
+    Route::get('/shifts/list-view/days', [EventController::class, 'shiftPlanListViewDays'])
+        ->name('shifts.plan.list-view.days')
+        ->can('can view shift plan');
+
     // Wochenstatus: Gewerke × KW (Festschreibung, Anfragen, Änderungen, Verstöße, Besetzung, Frist)
     Route::get('/shifts/week-status', [
         \Artwork\Modules\Shift\Http\Controllers\ShiftWeekStatusController::class,

@@ -23,7 +23,8 @@ class ChecklistTemplateIndexResource extends JsonResource
             'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
-            'user' => $this->user,
+            // nur Avatar + Tooltip (Kontaktdaten lädt der Tooltip per lazy-load nach)
+            'user' => $this->user?->setVisible(['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']),
             'task_templates' => $this->task_templates->map(fn (TaskTemplate $taskTemplate) => [
                 'id' => $taskTemplate->id,
                 'name' => $taskTemplate->name,

@@ -367,6 +367,7 @@
                                                                     </span>
                                                                     <UserPopoverTooltip
                                                                         :user="element.created_by"
+                                                                        lazy-load
                                                                         :id="element.created_by.id + '-room-' + element.id"
                                                                         height="5"
                                                                         width="5"
@@ -509,6 +510,7 @@
                                                                           </span>
                                                                             <UserPopoverTooltip
                                                                                 :user="element.created_by"
+                                                                                lazy-load
                                                                                 :id="element.created_by.id + '-room-' + element.id"
                                                                                 height="5"
                                                                                 width="5"

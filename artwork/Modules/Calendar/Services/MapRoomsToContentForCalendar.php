@@ -114,19 +114,17 @@ trait MapRoomsToContentForCalendar
                 'craft:id,name,abbreviation,color',
                 'shiftsQualifications',
                 'globalQualifications',
-                'users:id,first_name,last_name',
-                'users.globalQualifications:id',
-                'freelancer:id,first_name,last_name',
-                'freelancer.globalQualifications:id',
-                'serviceProvider:id,provider_name',
-                'serviceProvider.globalQualifications:id',
                 'project:id,name',
             ])
             ->orderBy('start')
             ->get();
 
+        // Zählstände per Aggregat statt alle zugewiesenen Personen (samt Pivot und globalen
+        // Qualifikationen) zu hydrieren — die Kachel zeigt nur besetzt/gefordert
+        $workerCounts = app(CalendarShiftWorkerCounts::class)->forShiftIds($shifts->modelKeys());
+
         $shiftDTOs = $shifts
-            ->map(fn(Shift $shift) => CalendarShiftDTO::fromModel($shift))
+            ->map(fn(Shift $shift) => CalendarShiftDTO::fromModel($shift, $workerCounts[$shift->id] ?? [[], [], 0]))
             ->groupBy('roomId');
 
         foreach ($rooms as $room) {

@@ -1645,9 +1645,19 @@ const initializeDailyShiftPlan = async () => {
             isInProjectView: props.isInProjectView,
         }
 
-        const { data: metaData } = await axios.get(route("shift.plan.meta"), {
+        // Meta + Rooms-Batch parallel anstoßen (wie die Wochenansicht) — der Batch hängt nicht vom
+        // Meta-Ergebnis ab, nur die Verarbeitung bleibt sequenziell (Skeleton zuerst)
+        const metaPromise = axios.get(route("shift.plan.meta"), {
             params: baseParams,
         })
+        const batchPromise = axios.get(route("shift.plan.rooms.batch"), {
+            params: baseParams,
+        })
+        // Rejection-Handler sofort anhängen (gegen unhandledrejection, falls der Batch fehlschlägt,
+        // während noch auf Meta gewartet wird); den Fehler wirft das await batchPromise unten trotzdem
+        batchPromise.catch(() => {})
+
+        const { data: metaData } = await metaPromise
 
         const metaRooms = metaData.rooms ?? []
         daysLocal.value = withoutExtraRows(enrichDays(metaData.days ?? []))
@@ -1671,9 +1681,7 @@ const initializeDailyShiftPlan = async () => {
         }
 
         // Single batch request instead of N per-room requests — shares one buildShiftPlanContext
-        const { data: batchData } = await axios.get(route("shift.plan.rooms.batch"), {
-            params: baseParams,
-        })
+        const { data: batchData } = await batchPromise
 
         if (batchData.lookups) mergeLookups(batchData.lookups)
         openViolationsByUser.value = batchData.openViolationsByUser ?? {}
@@ -2287,11 +2295,18 @@ onMounted(async () => {
     // Load shift plan data and crafts in parallel. Die Worker-Daten (shifts.workers)
     // werden hier bewusst NICHT geladen: das Unbesetzt-Dropdown zieht seine Kandidaten
     // aus shifts.crafts, Kollisionen kommen on-demand über shift.check-collisions.
+    // Der Projekt-Schichten-Tab liefert die Gewerke samt zuweisbarer Personen schon als Seiten-Prop
+    // (gleiche Serialisierung) — dann nicht ein zweites Mal laden
+    const pageCraftsCarryPeople = Object.values((page.props.crafts as any) ?? {})
+        .some((craft: any) => Array.isArray(craft?.users))
+
     await Promise.all([
         initializeDailyShiftPlan(),
-        axios.get(route("shifts.crafts"), { params: { lightweight: 1, withPeople: 1 } }).then(({ data }) => {
-            craftsLoaded.value = data.crafts ?? []
-        }).catch(() => { craftsLoaded.value = [] }),
+        pageCraftsCarryPeople
+            ? Promise.resolve()
+            : axios.get(route("shifts.crafts"), { params: { lightweight: 1, withPeople: 1 } }).then(({ data }) => {
+                craftsLoaded.value = data.crafts ?? []
+            }).catch(() => { craftsLoaded.value = [] }),
         loadProjectDayAssignments(),
     ])
 

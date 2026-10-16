@@ -263,4 +263,39 @@ final class CraftAssignableWorkersPayloadTest extends FeatureTestCase
 
         return true;
     }
+
+    /**
+     * Die Tagesansicht des Dienstplans lädt die Gewerke samt Personen über /shifts/crafts?withPeople=1
+     * nach — gleicher Vertrag wie die Seiten-Prop (vorher volle Modelle ohne can_work_shifts).
+     */
+    #[Test]
+    public function crafts_endpoint_with_people_ships_the_same_person_contract(): void
+    {
+        $this->actingAsAdmin();
+
+        $crafts = $this->getJson(route('shifts.crafts', ['lightweight' => 1, 'withPeople' => 1]))
+            ->assertOk()
+            ->json('crafts');
+        $craft = collect($crafts)->firstWhere('id', $this->craft->id);
+
+        $this->assertCount(1, $craft['users']);
+        $this->assertPersonContract($craft['users'][0], 'User');
+        $this->assertQualificationContract($craft['users'][0]['shift_qualifications'], 'User');
+        $this->assertArrayNotHasKey('email', $craft['users'][0]);
+        $this->assertPersonContract($craft['freelancers'][0], 'Freelancer');
+        $this->assertPersonContract($craft['service_providers'][0], 'ServiceProvider');
+        $this->assertArrayHasKey('qualifications', $craft);
+    }
+
+    #[Test]
+    public function crafts_endpoint_without_people_stays_slim(): void
+    {
+        $this->actingAsAdmin();
+
+        $craft = collect($this->getJson(route('shifts.crafts'))->assertOk()->json('crafts'))
+            ->firstWhere('id', $this->craft->id);
+
+        $this->assertArrayNotHasKey('users', $craft);
+        $this->assertArrayHasKey('qualifications', $craft);
+    }
 }

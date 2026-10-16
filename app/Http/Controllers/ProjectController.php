@@ -265,6 +265,36 @@ class ProjectController extends Controller
         );
     }
 
+    /**
+     * Felder, die die Projektübersicht von Team-Mitgliedern liest: SingleProjectInManagement nur die IDs
+     * (Rechte), der Bearbeiten-Dialog Name und Bild der Projektleitung.
+     */
+    private const INDEX_PERSON_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
+
+    /**
+     * Team-Listen der Übersicht (users, writeUsers, managerUsers, access_budget, delete_permission_users) nur
+     * mit den gelesenen Feldern ausliefern — vorher volle User-Modelle inkl. E-Mail, Stundenkonto und aller
+     * Einstellungen, je Projekt mehrfach (Seite mit 100 Projekten: ~4 MB). Die stdClass-Einträge von
+     * mapProjectsToComponents verweisen auf dieselben Modelle.
+     *
+     * @param iterable<Project> $projects
+     */
+    private function slimProjectPeopleForIndex(iterable $projects): void
+    {
+        foreach ($projects as $project) {
+            foreach ($project->getRelations() as $related) {
+                if (!$related instanceof \Illuminate\Support\Collection) {
+                    continue;
+                }
+                foreach ($related as $model) {
+                    if ($model instanceof User) {
+                        $model->setVisible(self::INDEX_PERSON_FIELDS);
+                    }
+                }
+            }
+        }
+    }
+
     public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
 
@@ -327,6 +357,9 @@ class ProjectController extends Controller
             $visibleComponentIds,
             $canSeeBudgetInformations
         );
+
+        $this->slimProjectPeopleForIndex($projects->getCollection());
+        $this->slimProjectPeopleForIndex($pinnedProjects);
 
         return inertia('Projects/NewProjectManagement', [
             'projects' => $projects,
@@ -3160,7 +3193,7 @@ class ProjectController extends Controller
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByPosition(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'currentUserCrafts' => $this->getCurrentUserCraftsForShiftTab($user, $craftService),
+            'currentUserCrafts' => $craftService->getCraftsForShiftCreation($user),
             'shiftTimePresets' => $shiftTimePresetService->getAll(),
             'globalQualifications' => app(GlobalQualificationService::class)->getAll(),
             'shiftGroups' => app(ShiftGroupService::class)->getAllShiftGroups(),
@@ -3439,28 +3472,6 @@ class ProjectController extends Controller
             ->first();
 
         return $groupLink ? Project::find($groupLink->group_id) : null;
-    }
-
-    /**
-     * Get crafts that the current user is allowed to assign in shift planning.
-     */
-    private function getCurrentUserCraftsForShiftTab(
-        User $user,
-        CraftService $craftService
-    ): \Illuminate\Database\Eloquent\Collection {
-        // If user is admin, return all crafts with qualifications
-        if ($user->hasRole('artwork admin')) {
-            return $craftService->getAll(['qualifications']);
-        }
-
-        // Get crafts that are assignable by all (not restricted)
-        $assignableByAllCrafts = $craftService->getAssignableByAllCrafts();
-
-        // Get crafts where user is explicitly allowed (restricted crafts via craft_users table)
-        $userRestrictedCrafts = $user->crafts()->with(['qualifications'])->get();
-
-        // Merge both collections and remove duplicates by craft id
-        return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
     }
 
     public function addTimeLineRow(Event $event): void

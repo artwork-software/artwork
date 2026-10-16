@@ -7,10 +7,12 @@ use Artwork\Modules\Calendar\Traits\SerializesEventRelations;
 use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 
 class BroadcastEventDTOWithVerifications extends Data
 {
+    use TransformsWithoutDataPipeline;
     use SerializesEventRelations;
 
     public function __construct(

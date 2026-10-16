@@ -18,89 +18,102 @@
                 {{ $t('No contact types are allowed for this list yet. Select them in the component settings.') }}
             </p>
 
-            <p v-if="contacts.length === 0" class="mt-2 text-sm italic text-text-subtle">{{ $t('No contacts added yet.') }}</p>
+            <!-- Ohne Rollen: einfache Liste, Sonderrolle „Künstler*in“ als Badge -->
+            <template v-if="!rolesEnabled">
+                <p v-if="contacts.length === 0" class="mt-2 text-sm italic text-text-subtle">{{ $t('No contacts added yet.') }}</p>
+                <ul v-else class="mt-2 space-y-2">
+                    <CrmContactListCard
+                        v-for="contact in contacts"
+                        :key="contact.id"
+                        :contact="contact"
+                        :expanded="isExpanded(contact)"
+                        :can-write="canWrite"
+                        :can-view-crm="canViewCrm"
+                        :can-merge="canMerge"
+                        :show-role-chips="false"
+                        @toggle="toggle(contact)"
+                        @edit="openEdit(contact)"
+                        @edit-roles="openRoles(contact)"
+                        @remove="remove(contact)"
+                        @merge="(duplicate) => merge(duplicate, contact)"
+                    />
+                </ul>
+            </template>
 
-            <ul v-else class="mt-2 space-y-2">
-                <li v-for="contact in contacts" :key="contact.id" class="overflow-hidden rounded-lg border border-border-subtle bg-white">
-                    <div class="flex items-center gap-x-2 px-3 py-2">
-                        <img :src="contact.profile_photo_url" :alt="contact.display_name" class="size-7 shrink-0 rounded-full object-cover" />
-                        <button
-                            type="button"
-                            class="flex min-w-0 flex-1 items-center gap-x-2 text-left"
-                            :aria-expanded="String(isExpanded(contact))"
-                            @click="toggle(contact)"
-                        >
-                            <span class="truncate text-sm font-medium text-text">{{ contact.display_name }}</span>
-                            <span v-if="contact.contact_type" class="inline-flex shrink-0 items-center rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text-muted">
-                                {{ $t(contact.contact_type.name) }}
-                            </span>
-                            <span
-                                v-if="contact.is_external && !contact.reviewed_at"
-                                class="inline-flex shrink-0 items-center gap-1 rounded-full bg-warning-surface px-2 py-0.5 text-xs text-warning"
-                                :title="$t('Added externally by {name} – not yet reviewed', { name: contact.created_by_external?.name ?? '' })"
-                            >
-                                <IconUserExclamation class="size-3.5" stroke-width="1.5" />
-                                {{ $t('External · not reviewed') }}
-                            </span>
-                            <span
-                                v-else-if="contact.is_external"
-                                class="inline-flex shrink-0 items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text-muted"
-                                :title="$t('Added externally by {name}', { name: contact.created_by_external?.name ?? '' })"
-                            >
-                                <IconUserCheck class="size-3.5" stroke-width="1.5" />
-                                {{ $t('External') }}
-                            </span>
-                            <component :is="isExpanded(contact) ? IconChevronUp : IconChevronDown" class="size-4 shrink-0 text-text-subtle" />
-                        </button>
-                        <button v-if="contact.can_edit" type="button" class="shrink-0 text-text-subtle hover:text-text" :title="$t('Edit')" :aria-label="$t('Edit')" @click="openEdit(contact)">
-                            <IconPencil class="size-4" stroke-width="1.5" />
-                        </button>
-                        <button v-if="contact.can_remove" type="button" class="shrink-0 text-text-subtle hover:text-danger" :title="$t('Remove from list')" :aria-label="$t('Remove from list')" @click="remove(contact)">
-                            <IconLinkOff class="size-4" stroke-width="1.5" />
-                        </button>
-                    </div>
-
-                    <!-- Mögliche Dubletten extern angelegter Kontakte -->
-                    <div v-if="contact.possible_duplicates?.length" class="border-t border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
-                        <p class="font-medium">{{ $t('Possible duplicate in the CRM') }}</p>
-                        <div v-for="duplicate in contact.possible_duplicates" :key="duplicate.id" class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <a v-if="canViewCrm" :href="route('crm.contacts.show', duplicate.id)" target="_blank" class="underline">{{ duplicate.display_name }}</a>
-                            <span v-else>{{ duplicate.display_name }}</span>
-                            <button v-if="canMerge" type="button" class="font-medium underline" @click="merge(duplicate, contact)">
-                                {{ $t('Merge into existing contact') }}
+            <!-- Mit Rollen: Gruppen „Künstler*in“, Freitext-Rollen, ohne Rolle -->
+            <div v-else class="mt-2 space-y-4">
+                <section v-for="group in groups" :key="group.key">
+                    <div class="flex items-center justify-between gap-2">
+                        <h4 class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                            <IconPalette v-if="group.key === ARTIST_GROUP" class="size-4 text-accent-700" stroke-width="1.5" />
+                            {{ group.label }}
+                            <span class="font-normal normal-case text-text-subtle">({{ group.contacts.length }})</span>
+                        </h4>
+                        <div v-if="canWrite && group.role" class="flex items-center gap-1">
+                            <button type="button" class="rounded p-1 text-text-subtle hover:text-text" :title="$t('Rename role')" :aria-label="$t('Rename role')" @click="renameRole(group.role)">
+                                <IconPencil class="size-3.5" stroke-width="1.5" />
+                            </button>
+                            <button type="button" class="rounded p-1 text-text-subtle hover:text-danger" :title="$t('Delete role')" :aria-label="$t('Delete role')" @click="deleteRole(group.role)">
+                                <IconTrash class="size-3.5" stroke-width="1.5" />
                             </button>
                         </div>
                     </div>
+                    <ul v-if="group.contacts.length" class="mt-1.5 space-y-2">
+                        <CrmContactListCard
+                            v-for="contact in group.contacts"
+                            :key="`${group.key}-${contact.id}`"
+                            :contact="contact"
+                            :expanded="isExpanded(contact)"
+                            :can-write="canWrite"
+                            :can-view-crm="canViewCrm"
+                            :can-merge="canMerge"
+                            :show-role-chips="false"
+                            :show-artist-badge="group.key !== ARTIST_GROUP"
+                            @toggle="toggle(contact)"
+                            @edit="openEdit(contact)"
+                            @edit-roles="openRoles(contact)"
+                            @remove="remove(contact)"
+                            @merge="(duplicate) => merge(duplicate, contact)"
+                        />
+                    </ul>
+                    <p v-else class="mt-1 text-xs italic text-text-subtle">{{ $t('Nobody assigned yet.') }}</p>
+                    <button
+                        v-if="canWrite && canLinkExisting && group.key !== NO_ROLE_GROUP && !limitReached"
+                        type="button"
+                        class="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-accent-600 hover:underline"
+                        @click="startLink(group.key === ARTIST_GROUP ? { artist: true } : { role: group.role })"
+                    >
+                        <IconLink class="size-3.5" stroke-width="1.5" />
+                        {{ $t('Link CRM contact as “{role}”', { role: group.label }) }}
+                    </button>
+                </section>
 
-                    <div v-if="isExpanded(contact)" class="border-t border-border-subtle px-3 py-2">
-                        <dl v-if="contact.fields.length" class="grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
-                            <div v-for="field in contact.fields" :key="field.property_id">
-                                <dt class="text-xs text-text-subtle">{{ $t(field.name) }}</dt>
-                                <dd class="whitespace-pre-line break-words text-sm text-text">
-                                    <a v-if="field.type === 'link' && isSafeHttpUrl(field.value)" :href="field.value" target="_blank" rel="noopener" class="text-accent-600 hover:underline">{{ field.value }}</a>
-                                    <template v-else>{{ formatValue(field) }}</template>
-                                </dd>
-                            </div>
-                        </dl>
-                        <p v-else class="text-xs text-text-subtle">{{ $t('No information available') }}</p>
-                        <p v-if="contact.is_external" class="mt-2 text-xs text-text-subtle">
-                            {{ $t('Added externally by {name}', { name: contact.created_by_external?.name ?? '' }) }}
-                            <template v-if="contact.reviewed_at"> · {{ $t('confirmed by {name}', { name: contact.reviewed_by ?? '' }) }}</template>
-                        </p>
-                        <a v-if="canViewCrm" :href="route('crm.contacts.show', contact.id)" target="_blank" class="mt-1.5 inline-flex items-center gap-x-1 text-xs text-accent-600 hover:underline">
-                            <IconExternalLink class="size-3.5" stroke-width="1.5" />
-                            {{ $t('Open in CRM') }}
-                        </a>
-                    </div>
-                </li>
-            </ul>
+                <!-- Neue Rolle -->
+                <div v-if="canWrite" class="flex items-end gap-2">
+                    <BaseInput
+                        :id="`crm-contact-list-new-role-${data.id}`"
+                        v-model="newRoleName"
+                        :label="$t('Add role')"
+                        :list="`crm-contact-list-role-suggestions-${data.id}`"
+                        without-translation
+                        class="flex-1"
+                        @keydown.enter.prevent="addRole"
+                    />
+                    <BaseUIButton type="button" variant="secondary" size="sm" :icon="IconPlus" :disabled="!newRoleName.trim()" @click="addRole">
+                        {{ $t('Add role') }}
+                    </BaseUIButton>
+                    <datalist :id="`crm-contact-list-role-suggestions-${data.id}`">
+                        <option v-for="suggestion in roleSuggestions" :key="suggestion" :value="suggestion" />
+                    </datalist>
+                </div>
+            </div>
 
             <p v-if="limitReached" class="mt-2 text-xs text-text-subtle">{{ $t('Maximum number of contacts reached ({max}).', { max: maxContacts }) }}</p>
             <p v-if="actionError" class="mt-2 text-xs text-danger">{{ actionError }}</p>
 
             <!-- Aktionen -->
             <div v-if="canWrite && contactTypes.length && !limitReached" class="mt-3">
-                <div v-if="!showSearch" class="flex flex-wrap items-center gap-2">
+                <div v-if="!linkTarget" class="flex flex-wrap items-center gap-2">
                     <BaseUIButton
                         v-for="type in contactTypes"
                         :key="type.id"
@@ -118,15 +131,25 @@
                         variant="secondary"
                         size="sm"
                         :icon="IconLink"
-                        @click="showSearch = true"
+                        @click="startLink({})"
                     >
                         {{ $t('Link existing CRM contact') }}
                     </BaseUIButton>
                 </div>
                 <div v-else class="relative">
-                    <div class="flex items-center gap-x-2">
+                    <p v-if="linkTargetLabel" class="mb-1 text-xs text-text-muted">{{ $t('Link as “{role}”', { role: linkTargetLabel }) }}</p>
+                    <div class="flex items-end gap-x-2">
+                        <select
+                            v-if="contactTypes.length > 1"
+                            v-model="searchTypeId"
+                            class="h-[42px] shrink-0 rounded-lg border border-border bg-white px-2 text-sm text-text"
+                            :aria-label="$t('Contact type')"
+                        >
+                            <option :value="null">{{ $t('All contact types') }}</option>
+                            <option v-for="type in contactTypes" :key="type.id" :value="type.id">{{ $t(type.name) }}</option>
+                        </select>
                         <BaseInput :id="`crm-contact-list-search-${data.id}`" v-model="searchQuery" :label="$t('Search CRM contact')" without-translation class="w-full" />
-                        <button type="button" class="shrink-0 text-text-subtle hover:text-text-muted" :title="$t('Close')" :aria-label="$t('Close')" @click="closeSearch">
+                        <button type="button" class="mb-2.5 shrink-0 text-text-subtle hover:text-text-muted" :title="$t('Close')" :aria-label="$t('Close')" @click="closeSearch">
                             <IconX class="size-4" stroke-width="1.5" />
                         </button>
                     </div>
@@ -142,7 +165,14 @@
                             >
                                 <img :src="result.profile_photo_url" :alt="result.display_name" class="size-7 rounded-full object-cover" />
                                 <span class="truncate text-text">{{ result.display_name }}</span>
-                                <span v-if="result.contact_type" class="ml-auto shrink-0 text-xs text-text-subtle">{{ $t(result.contact_type.name) }}</span>
+                                <span
+                                    v-if="result.contact_type"
+                                    class="ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs"
+                                    :style="result.contact_type.color ? { backgroundColor: result.contact_type.color + '22', color: result.contact_type.color } : {}"
+                                    :class="result.contact_type.color ? '' : 'bg-surface-sunken text-text-muted'"
+                                >
+                                    {{ $t(result.contact_type.name) }}
+                                </span>
                             </button>
                             <div v-if="searchResults.length === 0" class="px-4 py-3 text-xs text-text-subtle">{{ $t('No results') }}</div>
                         </template>
@@ -160,11 +190,22 @@
             @close="modal = null"
             @saved="onSaved"
         />
+
+        <CrmContactRolesModal
+            v-if="rolesModalContact"
+            :contact="rolesModalContact"
+            :roles="roles"
+            :suggestions="roleSuggestions"
+            :roles-enabled="rolesEnabled"
+            :saving="savingRoles"
+            :error="rolesError"
+            @close="rolesModalContact = null"
+            @save="saveRoles"
+        />
     </div>
 </template>
 
 <script setup>
-import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { computed, inject, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
 import { router, usePage } from '@inertiajs/vue3'
@@ -173,23 +214,24 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import InfoButtonComponent from '@/Pages/Projects/Tab/Components/InfoButtonComponent.vue'
 import CrmContactFormModal from '@/Pages/Projects/Tab/Components/CrmContactFormModal.vue'
+import CrmContactListCard from '@/Pages/Projects/Tab/Components/CrmContactListCard.vue'
+import CrmContactRolesModal from '@/Pages/Projects/Tab/Components/CrmContactRolesModal.vue'
 import { usePermission } from '@/Composeables/Permission.js'
-import { isSafeHttpUrl } from '@/Helper/SafeUrl.js'
 import { useTranslation } from '@/Composeables/Translation.js'
 import {
-    IconChevronDown,
-    IconChevronUp,
-    IconExternalLink,
     IconLink,
-    IconLinkOff,
+    IconPalette,
     IconPencil,
-    IconUserCheck,
-    IconUserExclamation,
+    IconPlus,
+    IconTrash,
     IconUserPlus,
     IconX,
 } from '@tabler/icons-vue'
 
 defineOptions({ name: 'CrmContactListComponent' })
+
+const ARTIST_GROUP = '__artist__'
+const NO_ROLE_GROUP = '__none__'
 
 const props = defineProps({
     data: { type: Object, required: true },
@@ -213,6 +255,9 @@ const maxContacts = ref(null)
 const canWriteServer = ref(false)
 const canLinkExisting = ref(false)
 const canMerge = ref(false)
+const rolesEnabled = ref(false)
+const roles = ref([])
+const roleSuggestions = ref([])
 const loading = ref(true)
 const loadFailed = ref(false)
 const actionError = ref('')
@@ -221,6 +266,30 @@ const modal = ref(null)
 
 const canWrite = computed(() => props.canEditComponent && canWriteServer.value)
 const limitReached = computed(() => maxContacts.value !== null && contacts.value.length >= maxContacts.value)
+
+// Gruppen: Sonderrolle „Künstler*in“ zuerst, dann die Rollen der Liste, zuletzt Kontakte ohne Rolle.
+// Eine Person mit mehreren Rollen steht in jeder ihrer Gruppen.
+const groups = computed(() => {
+    const result = [{
+        key: ARTIST_GROUP,
+        label: $t('Artist'),
+        role: null,
+        contacts: contacts.value.filter((contact) => contact.is_artist),
+    }]
+    for (const role of roles.value) {
+        result.push({
+            key: `role:${role}`,
+            label: role,
+            role,
+            contacts: contacts.value.filter((contact) => (contact.roles ?? []).includes(role)),
+        })
+    }
+    const withoutRole = contacts.value.filter((contact) => !contact.is_artist && !(contact.roles ?? []).length)
+    if (withoutRole.length) {
+        result.push({ key: NO_ROLE_GROUP, label: $t('Without role'), role: null, contacts: withoutRole })
+    }
+    return result
+})
 
 async function load() {
     loading.value = true
@@ -233,6 +302,9 @@ async function load() {
         canWriteServer.value = data.can_write === true
         canLinkExisting.value = data.can_link_existing === true
         canMerge.value = data.can_merge === true
+        rolesEnabled.value = data.roles_enabled === true
+        roles.value = data.roles ?? []
+        roleSuggestions.value = data.role_suggestions ?? []
     } catch (e) {
         loadFailed.value = true
     } finally {
@@ -258,13 +330,17 @@ function openEdit(contact) {
     modal.value = { contactType: contact.contact_type, contact }
 }
 
-function onSaved(saved) {
+function upsertContact(saved) {
     const index = contacts.value.findIndex((c) => c.id === saved.id)
     if (index >= 0) {
         contacts.value.splice(index, 1, saved)
     } else {
         contacts.value.push(saved)
     }
+}
+
+function onSaved(saved) {
+    upsertContact(saved)
 }
 
 async function remove(contact) {
@@ -290,15 +366,97 @@ function merge(existing, contact) {
     })
 }
 
-// Suche bestehender Kontakte (nur erlaubte Typen, ohne bereits verknüpfte)
-const showSearch = ref(false)
+// --- Rollen ---
+const newRoleName = ref('')
+const rolesModalContact = ref(null)
+const savingRoles = ref(false)
+const rolesError = ref('')
+
+function openRoles(contact) {
+    rolesError.value = ''
+    rolesModalContact.value = contact
+}
+
+async function saveRoles(payload) {
+    savingRoles.value = true
+    rolesError.value = ''
+    try {
+        const { data } = await axios.patch(
+            route('projects.components.crm-contacts.entry-roles.update', { ...routeParams.value, crmContact: rolesModalContact.value.id }),
+            payload,
+            { skipErrorToast: true },
+        )
+        upsertContact(data.contact)
+        roles.value = data.roles ?? roles.value
+        rolesModalContact.value = null
+    } catch (e) {
+        rolesError.value = e?.response?.data?.message ?? $t('Failed to save')
+    } finally {
+        savingRoles.value = false
+    }
+}
+
+async function addRole() {
+    const name = newRoleName.value.trim()
+    if (!name) return
+    actionError.value = ''
+    try {
+        const { data } = await axios.post(route('projects.components.crm-contacts.roles.store', routeParams.value), { name }, { skipErrorToast: true })
+        roles.value = data.roles ?? roles.value
+        newRoleName.value = ''
+    } catch (e) {
+        actionError.value = e?.response?.data?.message ?? $t('Failed to save')
+    }
+}
+
+async function renameRole(role) {
+    const newName = window.prompt($t('New name for the role “{role}”', { role }), role)
+    if (!newName || newName.trim() === role) return
+    actionError.value = ''
+    try {
+        const { data } = await axios.patch(route('projects.components.crm-contacts.roles.rename', routeParams.value), { name: role, new_name: newName }, { skipErrorToast: true })
+        roles.value = data.roles ?? roles.value
+        await load()
+    } catch (e) {
+        actionError.value = e?.response?.data?.message ?? $t('Failed to save')
+    }
+}
+
+async function deleteRole(role) {
+    if (!window.confirm($t('Delete the role “{role}”? The contacts stay in the list.', { role }))) return
+    actionError.value = ''
+    try {
+        const { data } = await axios.delete(route('projects.components.crm-contacts.roles.destroy', routeParams.value), { data: { name: role }, skipErrorToast: true })
+        roles.value = data.roles ?? roles.value
+        contacts.value = contacts.value.map((contact) => ({ ...contact, roles: (contact.roles ?? []).filter((r) => r !== role) }))
+    } catch (e) {
+        actionError.value = e?.response?.data?.message ?? $t('Failed to save')
+    }
+}
+
+// --- Suche bestehender Kontakte (erlaubte Typen, ohne bereits verknüpfte; optional als Rolle) ---
+const linkTarget = ref(null) // { role?: string, artist?: boolean }
+const linkTargetLabel = computed(() => {
+    if (!linkTarget.value) return ''
+    if (linkTarget.value.artist) return $t('Artist')
+    return linkTarget.value.role ?? ''
+})
 const searchQuery = ref('')
+const searchTypeId = ref(null)
 const searchResults = ref([])
 const searching = ref(false)
 
-const runSearch = debounce(async (query) => {
+function startLink(target) {
+    linkTarget.value = target
+    searchQuery.value = ''
+    searchResults.value = []
+}
+
+const runSearch = debounce(async (query, typeId) => {
     try {
-        const { data } = await axios.get(route('projects.components.crm-contacts.search', routeParams.value), { params: { search: query } })
+        const { data } = await axios.get(route('projects.components.crm-contacts.search', routeParams.value), {
+            params: { search: query, contact_type_id: typeId ?? undefined },
+        })
         if (query === searchQuery.value) searchResults.value = data ?? []
     } catch (e) {
         searchResults.value = []
@@ -307,37 +465,33 @@ const runSearch = debounce(async (query) => {
     }
 }, 300)
 
-watch(searchQuery, (query) => {
+watch([searchQuery, searchTypeId], ([query, typeId]) => {
     if (!query) {
         searchResults.value = []
         return
     }
     searching.value = true
-    runSearch(query)
+    runSearch(query, typeId)
 })
 
 function closeSearch() {
-    showSearch.value = false
+    linkTarget.value = null
     searchQuery.value = ''
     searchResults.value = []
 }
 
 async function link(result) {
     actionError.value = ''
+    const payload = { crm_contact_id: result.id }
+    if (linkTarget.value?.artist) payload.is_artist = true
+    if (linkTarget.value?.role) payload.roles = [linkTarget.value.role]
     try {
-        const { data } = await axios.post(route('projects.components.crm-contacts.link', routeParams.value), { crm_contact_id: result.id }, { skipErrorToast: true }) // Fehler steht unter der Liste
-        onSaved(data.contact)
+        const { data } = await axios.post(route('projects.components.crm-contacts.link', routeParams.value), payload, { skipErrorToast: true }) // Fehler steht unter der Liste
+        upsertContact(data.contact)
         closeSearch()
     } catch (e) {
         actionError.value = e?.response?.data?.message ?? $t('Failed to save')
     }
-}
-
-function formatValue(field) {
-    if (field.type === 'checkbox') return field.value === '1' ? $t('Yes') : $t('No')
-    if (field.type === 'multiselect') return crmPropertyDisplayText(field.value, field.type)
-    if (field.type === 'date' && field.value) return new Date(field.value).toLocaleDateString()
-    return field.value
 }
 
 // Tab wurde intern bestätigt/zurückgegeben → Prüfstatus der Kontakte neu laden

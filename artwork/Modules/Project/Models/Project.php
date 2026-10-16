@@ -21,6 +21,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\Project\Services\ProjectArtistService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Shift\Models\Shift;
@@ -127,6 +128,8 @@ class Project extends Model
         'gema' => 'boolean',
         'is_group' => 'boolean',
         'marked_as_done' => 'boolean',
+        // verknüpfte CRM-Künstler*innen [{id, name}] – gepflegt von ProjectArtistService (nicht fillable)
+        'linked_artists' => 'array',
     ];
 
     protected $appends = [
@@ -168,6 +171,14 @@ class Project extends Model
     public function artistResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'project_id', 'id');
+    }
+
+    /**
+     * Künstler*innen für die Anzeige: Freitext plus verknüpfte CRM-Künstler*innen (ProjectArtistService).
+     */
+    public function artistDisplayText(): string
+    {
+        return ProjectArtistService::displayText($this->artists, $this->linked_artists);
     }
 
     /**

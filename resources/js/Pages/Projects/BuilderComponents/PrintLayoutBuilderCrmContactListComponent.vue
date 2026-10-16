@@ -8,7 +8,12 @@
             class="break-inside-avoid rounded border border-border-subtle px-3 py-2"
         >
             <div class="flex items-baseline justify-between gap-3">
-                <span class="text-sm font-semibold text-text">{{ contact.display_name }}</span>
+                <span class="text-sm font-semibold text-text">
+                    {{ contact.display_name }}
+                    <span v-if="contact.is_artist || contact.roles?.length" class="font-normal text-text-muted">
+                        · {{ [contact.is_artist ? $t('Artist') : null, ...(contact.roles ?? [])].filter(Boolean).join(', ') }}
+                    </span>
+                </span>
                 <span v-if="contact.contact_type" class="shrink-0 text-[11px] uppercase tracking-wide text-text-subtle">
                     {{ $t(contact.contact_type.name) }}
                 </span>

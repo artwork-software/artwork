@@ -458,10 +458,12 @@ enum ProjectTabComponentEnum: string
                 'availableFields' => [
                     'title' => '',
                     'description' => '',
-                    // Kontakttypen, die in dieser Liste angelegt/verknüpft werden dürfen
+                    // Kontakttypen, die in dieser Liste angelegt/verknüpft werden dürfen (leer = alle)
                     'contact_type_ids' => [],
                     // leer = unbegrenzt
                     'max_contacts' => null,
+                    // Rollen-Gruppen (Freitext) und Sonderrolle „Künstler*in“ (ProjectCrmContactRoleService)
+                    'roles_enabled' => false,
                 ],
             ],
         ];

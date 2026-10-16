@@ -183,7 +183,7 @@ final class ExternalCrmContactListTest extends TestCase
     }
 
     #[Test]
-    public function artists_are_also_linked_as_project_artists(): void
+    public function artists_get_the_artist_role_and_become_project_artists(): void
     {
         $artistType = CrmContactType::withTrashed()->firstOrCreate(
             ['slug' => 'artist'],
@@ -210,9 +210,19 @@ final class ExternalCrmContactListTest extends TestCase
             'property_values' => $values,
         ])->assertCreated()->json('contact.id');
 
-        $this->assertDatabaseHas('crm_contact_project', [
+        // Sonderrolle „Künstler*in“ in der Liste statt eigener Projektkünstler*innen-Verknüpfung
+        $this->assertDatabaseHas('project_component_crm_contacts', [
+            'project_id' => $context['project']->id,
+            'crm_contact_id' => $contactId,
+            'is_artist' => true,
+        ]);
+        $this->assertDatabaseMissing('crm_contact_project', [
             'project_id' => $context['project']->id,
             'crm_contact_id' => $contactId,
         ]);
+        $this->assertSame(
+            [['id' => $contactId, 'name' => 'Compagnie Luna']],
+            $context['project']->fresh()->linked_artists
+        );
     }
 }

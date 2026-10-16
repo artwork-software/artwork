@@ -165,6 +165,7 @@ import { router, usePage } from "@inertiajs/vue3";
 import BuilderTextField from "@/Pages/Projects/BuilderComponents/BuilderTextField.vue";
 import BuilderCheckbox from "@/Pages/Projects/BuilderComponents/BuilderCheckbox.vue";
 import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.vue";
+import BuilderCrmContactListComponent from "@/Pages/Projects/BuilderComponents/BuilderCrmContactListComponent.vue";
 import BuilderLink from "@/Pages/Projects/BuilderComponents/BuilderLinkComponent.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -229,6 +230,7 @@ const componentMapping = {
     BuilderCheckbox,
     BuilderDropDown,
     BuilderCheckboxList: BuilderDropDown,
+    BuilderCrmContactListComponent,
     BuilderLink,
     BuilderBiKeyFiguresDisplay,
 };

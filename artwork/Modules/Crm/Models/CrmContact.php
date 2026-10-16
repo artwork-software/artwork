@@ -8,6 +8,7 @@ use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Services\CrmPropertyFileService;
+use Artwork\Modules\Project\Services\ProjectArtistService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -56,6 +57,18 @@ class CrmContact extends Model
         // request-übergreifend) nach Umbenennung/Löschung leeren
         static::saved(static fn () => InventoryArticle::flushPropertyLookupCaches());
         static::deleted(static fn () => InventoryArticle::flushPropertyLookupCaches());
+
+        // Verknüpfte Projektkünstler*innen stehen mit Namen am Projekt (projects.linked_artists):
+        // nach Umbenennen, Löschen (Papierkorb) und Wiederherstellen neu berechnen
+        $refreshArtists = static function (CrmContact $contact): void {
+            $contactId = (int) $contact->id;
+            DB::afterCommit(static fn () => app(ProjectArtistService::class)->refreshForContact($contactId));
+        };
+        static::updated(static fn (CrmContact $contact) => $contact->wasChanged('display_name')
+            ? $refreshArtists($contact)
+            : null);
+        static::deleted($refreshArtists);
+        static::restored($refreshArtists);
 
         // Beim (Soft-)Löschen eines Kontakts offene externe Zugänge widerrufen –
         // die DB-Cascade auf external_accesses feuert bei Soft-Delete NICHT, sonst

@@ -270,10 +270,24 @@
                                 {{ $t(contactType.name) }}
                             </label>
                         </div>
-                        <p v-if="!textData.contact_type_ids.length" class="mt-1.5 text-xs text-warning">
-                            {{ $t('Select at least one contact type, otherwise no contacts can be added.') }}
+                        <p v-if="!textData.contact_type_ids.length" class="mt-1.5 text-xs text-text-subtle">
+                            {{ $t('Without a selection, contacts of all contact types can be added.') }}
                         </p>
                     </fieldset>
+
+                    <!-- Rollen (CRM-Kontaktliste) -->
+                    <div v-if="'roles_enabled' in textData" class="flex items-center gap-2">
+                        <label class="flex items-center gap-2">
+                            <input v-model="textData.roles_enabled" type="checkbox" class="input-checklist" />
+                            <span class="text-sm text-text-muted">{{ $t('Use roles') }}</span>
+                        </label>
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t(fieldTooltips.roles_enabled)"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
+                        />
+                    </div>
 
                     <!-- Höchstzahl Kontakte (CRM-Kontaktliste) -->
                     <div v-if="'max_contacts' in textData">
@@ -837,7 +851,8 @@ const fieldTooltips = computed(() => {
         description: 'Shown below the heading, also to invited external persons – e.g. what should be entered here.',
         subtitle: 'Optional explanatory text shown directly below the heading, e.g. an introduction to the section.',
         bar_color: 'With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections.',
-        contact_type_ids: 'Only contacts of these types can be added or linked in this list. Each type has its own button and its own form based on the CRM properties of the type.',
+        contact_type_ids: 'Only contacts of these types can be added or linked in this list. Each type has its own button and its own form based on the CRM properties of the type. Without a selection, all contact types are allowed.',
+        roles_enabled: 'Contacts are grouped by freely definable roles in the project. The special role “Artist” marks persons that appear as artists of the project everywhere (calendar, duty roster, exports).',
         max_contacts: 'Leave empty for no limit.',
         label: labelText,
         text: 'If specified, this text is pre-filled in the component when it is created (optional).',
@@ -941,6 +956,7 @@ const barColorSwatches = ['#EB7A3D', '#27233C', '#FFB6E1', '#BFE3F5', '#C8EBC9',
 const FIELD_DEFAULTS_BY_TYPE = {
     Title: { subtitle: '', bar_color: '' },
     DropDown: { multiple: false },
+    CrmContactListComponent: { roles_enabled: false },
 }
 
 /* Vorauswahl bei Mehrfachauswahl (CheckboxList, DropDown mit "multiple"): Liste statt Einzelwert */

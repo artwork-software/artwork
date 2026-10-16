@@ -148,6 +148,7 @@ use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
 use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
@@ -447,7 +448,11 @@ class ProjectController extends Controller
             ->get()
             ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
 
+        // CRM-Kontaktlisten als Spalte: nur Namen, Rollen und Sonderrolle (keine Eigenschaften), ein Query
+        $crmListEntries = $this->overviewCrmListEntries($projects, $components, $visibleComponentIds);
+
         $mapped = $projects->map(function ($project) use (
+            $crmListEntries,
             $components,
             $componentData,
             $componentValues,
@@ -568,6 +573,10 @@ class ProjectController extends Controller
                     $projectData->{$component->type}[$componentFullData->id] =
                         $componentValues->get($componentFullData->id . ':' . $project->id);
                 }
+                if ($componentFullData && $component->type === ProjectTabComponentEnum::CRM_CONTACT_LIST->value) {
+                    $projectData->crm_contact_lists[$componentFullData->id] =
+                        $crmListEntries->get($project->id . ':' . $componentFullData->id, []);
+                }
             }
             $projectData->hiddenComponentIds = array_values(array_unique($hiddenComponentIds));
 
@@ -621,6 +630,42 @@ class ProjectController extends Controller
         return $componentTypes->contains(ProjectTabComponentEnum::PROJECT_PERIOD->value)
             ? $this->getProjectPeriods($projects)
             : [];
+    }
+
+    /**
+     * Einträge der CRM-Kontaktlisten für die Projektübersicht (nur sichtbare Listen-Spalten).
+     *
+     * @return Collection<string, list<array{id: int, display_name: string, roles: list<string>, is_artist: bool, contact_type: array{name: string, color: string|null}|null}>>
+     */
+    private function overviewCrmListEntries($projects, $components, Collection $visibleComponentIds): Collection
+    {
+        $listComponentIds = collect($components)
+            ->where('type', ProjectTabComponentEnum::CRM_CONTACT_LIST->value)
+            ->pluck('component_id')
+            ->filter(fn ($id) => isset($visibleComponentIds[$id]))
+            ->values();
+        if ($listComponentIds->isEmpty()) {
+            return collect();
+        }
+
+        return ProjectComponentCrmContact::query()
+            ->whereIn('project_id', $projects->pluck('id'))
+            ->whereIn('component_id', $listComponentIds)
+            ->whereHas('crmContact')
+            ->with(['crmContact:id,display_name,crm_contact_type_id', 'crmContact.contactType:id,name,color'])
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn (ProjectComponentCrmContact $entry) => $entry->project_id . ':' . $entry->component_id)
+            ->map(fn ($entries) => $entries->map(fn (ProjectComponentCrmContact $entry) => [
+                'id' => $entry->crm_contact_id,
+                'display_name' => (string) $entry->crmContact?->display_name,
+                'roles' => array_values((array) ($entry->roles ?? [])),
+                'is_artist' => (bool) $entry->is_artist,
+                'contact_type' => $entry->crmContact?->contactType ? [
+                    'name' => $entry->crmContact->contactType->name,
+                    'color' => $entry->crmContact->contactType->color,
+                ] : null,
+            ])->values()->all());
     }
 
     /**

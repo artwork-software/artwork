@@ -993,6 +993,11 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             Route::get('/mask', 'mask')->name('mask');
             Route::post('/', 'store')->name('store');
             Route::post('/link', 'link')->name('link');
+            // Rollen: Gruppen der Liste und Rollen/Sonderrolle „Künstler*in“ je Kontakt
+            Route::post('/roles', 'storeRole')->name('roles.store');
+            Route::patch('/roles', 'renameRole')->name('roles.rename');
+            Route::delete('/roles', 'destroyRole')->name('roles.destroy');
+            Route::patch('/{crmContact}/roles', 'updateEntryRoles')->name('entry-roles.update');
             Route::patch('/{crmContact}', 'update')->name('update');
             Route::delete('/{crmContact}', 'destroy')->name('destroy');
         });

@@ -51,6 +51,11 @@
                             {{ contact.contact_type?.name }}
                             <template v-if="contact.created_by_me"> · {{ $t('added by you') }}</template>
                         </span>
+                        <!-- Rollen und Sonderrolle „Künstler*in“ setzt nur das Haus; extern nur zur Info -->
+                        <span v-if="contact.is_artist || contact.roles?.length" class="mt-1 flex flex-wrap gap-1">
+                            <span v-if="contact.is_artist" class="rounded-full bg-accent-50 px-2 py-0.5 text-[11px] text-accent-700">{{ $t('Artist') }}</span>
+                            <span v-for="role in contact.roles ?? []" :key="role" class="rounded-full border border-border-subtle px-2 py-0.5 text-[11px] text-text-muted">{{ role }}</span>
+                        </span>
                     </span>
                     <IconChevronDown class="size-4 shrink-0 text-text-subtle transition-transform" :class="isOpen(contact) ? 'rotate-180' : ''" />
                 </button>

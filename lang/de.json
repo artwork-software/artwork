@@ -9220,7 +9220,6 @@
     "At most {count} file(s) can be uploaded here.": "Hier können höchstens {count} Datei(en) hochgeladen werden.",
     "At most :count file(s) can be uploaded here.": "Hier können höchstens :count Datei(en) hochgeladen werden.",
     "New files visible in": "Neue Dateien sichtbar in",
-    "Standard ({count} areas)": "Standard ({count} Bereiche)",
     "Upload settings": "Upload-Einstellungen",
     "No additional limits": "keine zusätzlichen Grenzen",
     "Limits for this upload area. They apply in addition to the global file settings.": "Grenzen für diesen Upload-Bereich. Sie gelten zusätzlich zu den globalen Dateieinstellungen.",
@@ -9249,5 +9248,6 @@
     "Please enter a role name with at most :max characters.": "Bitte gib einen Rollennamen mit höchstens :max Zeichen ein.",
     "CRM contact list": "CRM-Kontaktliste",
     "Also artists via CRM contact lists": "Ebenfalls Künstler*in über CRM-Kontaktlisten",
-    "via {list}": "über {list}"
+    "via {list}": "über {list}",
+    "Standard ({count} area(s))": "Standard ({count} Bereich(e))"
 }

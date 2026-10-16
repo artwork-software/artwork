@@ -498,7 +498,7 @@ function closePreview() {
                 >
                     <IconEye class="size-3.5" aria-hidden="true" />
                     {{ $t('New files visible in') }}:
-                    {{ uploadVisibleIn === null ? $t('Standard ({count} areas)', { count: defaultVisibleKeys.length }) : uploadVisibleKeys.length }}
+                    {{ uploadVisibleIn === null ? $t('Standard ({count} area(s))', { count: defaultVisibleKeys.length }) : uploadVisibleKeys.length }}
                 </button>
             </div>
             <jet-input-error :message="uploadDocumentFeedback" />

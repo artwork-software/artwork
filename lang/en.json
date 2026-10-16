@@ -9209,7 +9209,6 @@
     "At most {count} file(s) can be uploaded here.": "At most {count} file(s) can be uploaded here.",
     "At most :count file(s) can be uploaded here.": "At most :count file(s) can be uploaded here.",
     "New files visible in": "New files visible in",
-    "Standard ({count} areas)": "Standard ({count} areas)",
     "Upload settings": "Upload settings",
     "No additional limits": "No additional limits",
     "Limits for this upload area. They apply in addition to the global file settings.": "Limits for this upload area. They apply in addition to the global file settings.",
@@ -9238,5 +9237,6 @@
     "Please enter a role name with at most :max characters.": "Please enter a role name with at most :max characters.",
     "CRM contact list": "CRM contact list",
     "Also artists via CRM contact lists": "Also artists via CRM contact lists",
-    "via {list}": "via {list}"
+    "via {list}": "via {list}",
+    "Standard ({count} area(s))": "Standard ({count} area(s))"
 }

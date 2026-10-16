@@ -50,6 +50,7 @@
                                 v-model="form.start_date"
                                 type="date"
                                 :is-small="true"
+                                :min="minDate ?? undefined"
                             />
                         </div>
                         <div class="space-y-1.5">
@@ -62,6 +63,7 @@
                                 v-model="form.end_date"
                                 type="date"
                                 :is-small="true"
+                                :min="form.start_date || minDate || undefined"
                             />
                         </div>
                     </div>
@@ -205,8 +207,8 @@
 
                 <!-- RIGHT: Subjects / Search -->
                 <div class="space-y-5">
-                    <!-- Search -->
-                    <div class="space-y-2 rounded-xl border border-border-subtle bg-white/80 p-4 shadow-sm">
+                    <!-- Search (entfällt, wenn die Person fest vorgegeben ist, z. B. im eigenen Einsatzplan) -->
+                    <div v-if="!lockedSubject" class="space-y-2 rounded-xl border border-border-subtle bg-white/80 p-4 shadow-sm">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 text-xs font-medium text-text-muted">
                                 <PropertyIcon name="IconUserSearch" class="h-4 w-4" />
@@ -333,6 +335,7 @@
                                         {{ subjectTypeLabel(subject.type) }}
                                     </span>
                                     <button
+                                        v-if="!lockedSubject"
                                         type="button"
                                         class="ml-0.5 rounded-full p-0.5 text-text-subtle hover:bg-border-subtle/80 hover:text-text-muted"
                                         @click="removeSubject(subject)"
@@ -417,6 +420,12 @@ const props = defineProps<{
     isInShiftPlan?: boolean;
     seriesUuid?: string | null;
     initialSubject?: Subject | null;
+    // Person fest vorgegeben (eigener Einsatzplan): keine Suche, nicht entfernbar
+    lockedSubject?: boolean;
+    // Vorbelegung für neue Serien (Y-m-d), z. B. der angeklickte Tag
+    initialStartDate?: string | null;
+    // frühester erlaubter Tag (Y-m-d), z. B. heute ohne Verwaltungsrecht
+    minDate?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -479,9 +488,12 @@ const subjects = computed<Subject[]>({
     },
 });
 
+const startsBeforeMinDate = computed(() => !!props.minDate && !!form.start_date && form.start_date < props.minDate);
+
 const canSubmit = computed(() => {
     return (
         !!form.start_date &&
+        !startsBeforeMinDate.value &&
         !!form.end_date &&
         form.weekdays.length > 0 &&
         subjects.value.length > 0 &&
@@ -616,7 +628,7 @@ async function loadSeries(uuid: string) {
 
         // Alle Personen der Serie vorbelegen, damit ein Update die gesamte Serie
         // betrifft und nicht nur die Person, über die das Modal geöffnet wurde.
-        if (Array.isArray(data.subjects) && data.subjects.length > 0) {
+        if (Array.isArray(data.subjects) && data.subjects.length > 0 && !props.lockedSubject) {
             form.subjects = data.subjects;
         }
     } catch (e) {
@@ -628,6 +640,14 @@ onMounted(() => {
     // initialen Subject setzen (z. B. der aktuelle User/Freelancer/Provider)
     if (props.initialSubject) {
         form.subjects = [props.initialSubject];
+    }
+
+    if (!props.seriesUuid && props.initialStartDate) {
+        form.start_date = props.initialStartDate;
+        form.end_date = props.initialStartDate;
+        // ISO-Wochentag des angeklickten Tags vorwählen (1 = Mo … 7 = So)
+        const weekday = new Date(`${props.initialStartDate}T12:00:00`).getDay();
+        form.weekdays = [weekday === 0 ? 7 : weekday];
     }
 
     // existierende Serie laden (Edit-Modus)

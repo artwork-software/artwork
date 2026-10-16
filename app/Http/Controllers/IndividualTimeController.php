@@ -7,6 +7,8 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Events\IndividualTimeChanged;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
+use Artwork\Modules\IndividualTimes\Support\OwnIndividualTimeAccess;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftPlanComment;
 use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
@@ -65,23 +67,40 @@ class IndividualTimeController extends Controller
         // Find the specific model instance by ID
         $modelInstance = $modelClass::findOrFail($request->integer('modelId'));
 
-        // Eigene Zeiten: immer. Fremde User: "can manage availability".
+        $request->validate([
+            'individualTimes' => ['present', 'array'],
+            'individualTimes.*.start_date' => ['required', 'date'],
+        ]);
+
+        $individualTimes = $request->get('individualTimes');
+
+        // Eigene Zeiten: nach OwnIndividualTimeAccess (Recht ab heute, Verwaltungsrechte immer) – geprüft werden
+        // die neuen Tage und bei Änderungen auch der bisherige Tag. Fremde User: "can manage availability".
         // Freelancer/ServiceProvider (= Worker): zusätzlich "can manage workers" (Frontend-Gate).
         $isSelf = $modelInstance instanceof User && (int) $modelInstance->id === (int) auth()->id();
         $isWorker = !($modelInstance instanceof User);
-        abort_unless(
-            $isSelf
-            || (bool) auth()->user()?->can(
-                \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
-            )
-            || ($isWorker && (bool) auth()->user()?->canAny([
-                \Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value,
-                \Artwork\Modules\Permission\Enums\PermissionEnum::EXTERNAL_MANAGER->value,
-            ])),
-            403
-        );
-
-        $individualTimes = $request->get('individualTimes');
+        if ($isSelf) {
+            $existingDates = $modelInstance->individualTimes()
+                ->whereKey(array_filter(array_column($individualTimes, 'id')))
+                ->pluck('start_date')
+                ->all();
+            abort_unless(
+                OwnIndividualTimeAccess::mayEnterOwnTimesOn(
+                    $modelInstance,
+                    [...array_column($individualTimes, 'start_date'), ...$existingDates]
+                ),
+                403
+            );
+        } else {
+            abort_unless(
+                (bool) auth()->user()?->can(PermissionEnum::AVAILABILITY_MANAGEMENT->value)
+                || ($isWorker && (bool) auth()->user()?->canAny([
+                    PermissionEnum::MA_MANAGER->value,
+                    PermissionEnum::EXTERNAL_MANAGER->value,
+                ])),
+                403
+            );
+        }
 
         foreach ($individualTimes as $individualTime) {
             if (!empty($individualTime['id'])) {

@@ -98,6 +98,7 @@
 </template>
 
 <script setup>
+import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 import { IconChevronDown, IconPlus } from '@tabler/icons-vue'
@@ -200,6 +201,7 @@ async function remove(contact) {
 
 function formatValue(field) {
     if (field.type === 'checkbox') return field.value === '1' ? $t('Yes') : $t('No')
+    if (field.type === 'multiselect') return crmPropertyDisplayText(field.value, field.type)
     if (field.type === 'date' && field.value) return new Date(field.value).toLocaleDateString()
     return field.value
 }

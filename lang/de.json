@@ -9196,5 +9196,11 @@
     "No options defined yet.": "Noch keine Optionen angelegt.",
     "The options shown as checkboxes in the project. Several can be selected at the same time.": "Die Optionen, die im Projekt als Checkboxen angezeigt werden. Mehrere können gleichzeitig gewählt werden.",
     "If enabled, several options can be selected in the project. It can only be turned off again as long as no project has several options selected.": "Wenn aktiv, können im Projekt mehrere Optionen gewählt werden. Abschalten geht nur, solange kein Projekt mehrere Optionen gewählt hat.",
-    "Multiple selection cannot be turned off while :count project(s) have several values selected.": "Die Mehrfachauswahl kann nicht abgeschaltet werden, solange :count Projekt(e) mehrere Werte gewählt haben."
+    "Multiple selection cannot be turned off while :count project(s) have several values selected.": "Die Mehrfachauswahl kann nicht abgeschaltet werden, solange :count Projekt(e) mehrere Werte gewählt haben.",
+    "Multiple choice": "Mehrfachauswahl",
+    "Checkboxes": "Checkboxen",
+    "Dropdown with multiple selection": "Dropdown mit Mehrfachauswahl",
+    "A multiple choice property cannot be changed back to another type.": "Eine Mehrfachauswahl lässt sich nicht in einen anderen Typ zurückändern.",
+    "A multiple choice property can only be created from a single choice and cannot be changed back.": "Eine Mehrfachauswahl kann nur aus einer Auswahlbox entstehen und nicht zurückgeändert werden.",
+    "Multiple choice fields: separate several options with a semicolon (;). Every option must match a selection value exactly.": "Mehrfachauswahl-Felder: mehrere Optionen mit Semikolon (;) trennen. Jede Option muss genau einem Auswahlwert entsprechen."
 }

@@ -52,6 +52,7 @@
 </template>
 
 <script setup>
+import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import ExternalAppLayout from '@/Pages/ExternalAccess/Layouts/ExternalAppLayout.vue'
@@ -71,6 +72,9 @@ defineProps({
 function displayValue(property) {
     if (property.input_type === 'checkbox') {
         return property.value === '1' ? $t('Yes') : $t('No')
+    }
+    if (property.input_type === 'multiselect') {
+        return crmPropertyDisplayText(property.value, 'multiselect') || '—'
     }
 
     return property.value === null || property.value === '' ? '—' : property.value

@@ -9185,5 +9185,11 @@
     "No options defined yet.": "No options defined yet.",
     "The options shown as checkboxes in the project. Several can be selected at the same time.": "The options shown as checkboxes in the project. Several can be selected at the same time.",
     "If enabled, several options can be selected in the project. It can only be turned off again as long as no project has several options selected.": "If enabled, several options can be selected in the project. It can only be turned off again as long as no project has several options selected.",
-    "Multiple selection cannot be turned off while :count project(s) have several values selected.": "Multiple selection cannot be turned off while :count project(s) have several values selected."
+    "Multiple selection cannot be turned off while :count project(s) have several values selected.": "Multiple selection cannot be turned off while :count project(s) have several values selected.",
+    "Multiple choice": "Multiple choice",
+    "Checkboxes": "Checkboxes",
+    "Dropdown with multiple selection": "Dropdown with multiple selection",
+    "A multiple choice property cannot be changed back to another type.": "A multiple choice property cannot be changed back to another type.",
+    "A multiple choice property can only be created from a single choice and cannot be changed back.": "A multiple choice property can only be created from a single choice and cannot be changed back.",
+    "Multiple choice fields: separate several options with a semicolon (;). Every option must match a selection value exactly.": "Multiple choice fields: separate several options with a semicolon (;). Every option must match a selection value exactly."
 }

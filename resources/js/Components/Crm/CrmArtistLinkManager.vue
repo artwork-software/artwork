@@ -91,7 +91,7 @@
                                             {{ formatDate(propertyValue(contact.id, property.id)) }}
                                         </template>
                                         <template v-else>
-                                            {{ propertyValue(contact.id, property.id) }}
+                                            {{ crmPropertyDisplayText(propertyValue(contact.id, property.id), property.type) }}
                                         </template>
                                     </dd>
                                 </div>
@@ -193,6 +193,7 @@
 </template>
 
 <script setup>
+import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { ref, computed, watch, onMounted, getCurrentInstance } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';

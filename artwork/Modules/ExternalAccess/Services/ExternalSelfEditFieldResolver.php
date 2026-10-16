@@ -245,7 +245,9 @@ class ExternalSelfEditFieldResolver
                 inputType: self::inputTypeFor($property->type),
                 required: (bool) ($property->contactTypes->first()?->pivot->is_required ?? false),
                 value: $this->displayValueOf($property),
-                options: $property->type === CrmPropertyTypeEnum::SELECT ? self::selectOptionsOf($property) : [],
+                options: in_array($property->type, [CrmPropertyTypeEnum::SELECT, CrmPropertyTypeEnum::MULTISELECT], true)
+                    ? self::selectOptionsOf($property)
+                    : [],
             ))->values()->all();
 
             $sections[] = new SelfEditSection(
@@ -298,6 +300,8 @@ class ExternalSelfEditFieldResolver
             CrmPropertyTypeEnum::NUMBER => 'number',
             CrmPropertyTypeEnum::LINK => 'url',
             CrmPropertyTypeEnum::SELECT => 'select',
+            // Wert als JSON-Liste (CrmPropertyValueFormat), Eingabe als Checkboxen
+            CrmPropertyTypeEnum::MULTISELECT => 'multiselect',
             CrmPropertyTypeEnum::UPLOAD => 'file',
         };
     }

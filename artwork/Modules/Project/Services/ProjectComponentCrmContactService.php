@@ -11,6 +11,7 @@ use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\Crm\Models\CrmPropertyValue;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
+use Artwork\Modules\Crm\Support\CrmPropertyValueFormat;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -219,6 +220,7 @@ class ProjectComponentCrmContactService
                             'name' => $property->name,
                             'type' => $property->type->value,
                             'select_values' => $property->select_values,
+                            'multiselect_display' => $property->multiselect_display,
                             'tooltip_text' => $property->tooltip_text,
                             'is_required' => (bool) ($property->pivot->is_required ?? false),
                         ])
@@ -716,6 +718,11 @@ class ProjectComponentCrmContactService
                 && $property !== null
                 && $property->type !== CrmPropertyTypeEnum::UPLOAD;
             if (!$isWritable) {
+                continue;
+            }
+            if (CrmPropertyValueFormat::isMultiple($property)) {
+                // Mehrfachauswahl: Liste oder JSON-Text → JSON-Liste der gültigen Optionen
+                $values[$propertyId] = CrmPropertyValueFormat::toStorage($property, $value);
                 continue;
             }
             if (is_array($value)) {

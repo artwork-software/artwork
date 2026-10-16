@@ -31,7 +31,8 @@
                 @endif
                 @foreach($properties as $property)
                     @if(in_array('prop_' . $property->id, $columns))
-                        <td>{{ $contact->propertyValues->firstWhere('crm_property_id', $property->id)?->value }}</td>
+                        {{-- Mehrfachauswahl kommagetrennt statt als JSON-Liste --}}
+                        <td>{{ \Artwork\Modules\Crm\Support\CrmPropertyValueFormat::displayText($property, $contact->propertyValues->firstWhere('crm_property_id', $property->id)?->value) }}</td>
                     @endif
                 @endforeach
             </tr>

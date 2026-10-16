@@ -339,6 +339,46 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function multipleSelectionDropdownIsReadOnlyTextInTheAppAndCheckboxListsAreHidden(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id);
+        [$tab, $dropdown] = $this->createTabWithComponent('DropDown', [
+            'data' => ['label' => 'Sparten', 'options' => [['value' => 'Tanz'], ['value' => 'Theater']], 'multiple' => true],
+        ]);
+        $checkboxList = Component::create([
+            'name' => 'Liste',
+            'type' => 'CheckboxList',
+            'data' => ['label' => 'Liste', 'options' => [['value' => 'A']]],
+        ]);
+        ComponentInTab::create(['project_tab_id' => $tab->id, 'component_id' => $checkboxList->id, 'order' => 1]);
+        ProjectComponentValue::create([
+            'project_id' => $project->id,
+            'component_id' => $dropdown->id,
+            'data' => ['selected' => ['Tanz', 'Theater']],
+        ]);
+
+        Passport::actingAs($user, ['app']);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonCount(1, 'components')
+            ->assertJsonPath('components.0.type', 'dropdown')
+            ->assertJsonPath('components.0.value.selected', 'Tanz, Theater')
+            ->assertJsonPath('components.0.is_writable', false);
+
+        $this->patchJson(
+            route('app.v1.projects.component.update', [$project, $tab, $dropdown]),
+            ['data' => ['selected' => 'Tanz']],
+        )->assertForbidden();
+        $this->assertSame(
+            ['Tanz', 'Theater'],
+            ProjectComponentValue::query()->where('component_id', $dropdown->id)->first()->data['selected']
+        );
+    }
+
+    #[Test]
     public function updateRejectsComponentsOfUnwritableTypes(): void
     {
         $user = User::factory()->create();

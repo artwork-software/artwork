@@ -270,6 +270,24 @@ final class UpdateComponentValueTest extends TestCase
     }
 
     #[Test]
+    public function checkbox_list_and_multiple_dropdown_store_lists_externally(): void
+    {
+        ['external' => $external, 'project' => $project, 'tab' => $tab, 'component' => $component]
+            = $this->context('CheckboxList');
+        $component->update(['data' => ['options' => [['value' => 'Bühne'], ['value' => 'Licht']]]]);
+
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['selected' => ['Licht', 'Bühne']]);
+        $this->assertSame(['selected' => ['Bühne', 'Licht']], ProjectComponentValue::first()->data);
+
+        $component->update(['type' => 'DropDown', 'data' => [
+            'options' => [['value' => 'Bühne'], ['value' => 'Licht']],
+            'multiple' => true,
+        ]]);
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['selected' => ['Licht']]);
+        $this->assertSame(['selected' => ['Licht']], ProjectComponentValue::first()->data);
+    }
+
+    #[Test]
     public function link_with_executable_target_is_rejected(): void
     {
         ['external' => $external, 'project' => $project, 'tab' => $tab, 'component' => $component] = $this->context('Link');

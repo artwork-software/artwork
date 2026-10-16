@@ -373,6 +373,25 @@
                         />
                     </div>
 
+                    <!-- Mehrfachauswahl erlauben (DropDown) -->
+                    <div v-if="'multiple' in textData">
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-2">
+                                <input v-model="textData.multiple" type="checkbox" class="input-checklist" />
+                                <span class="text-sm text-text-muted">{{ $t('Allow multiple selection') }}</span>
+                            </label>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t(fieldTooltips.multiple)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
+                        <p v-if="saveErrors['data.multiple']" class="mt-1 text-xs text-danger">
+                            {{ saveErrors['data.multiple'] }}
+                        </p>
+                    </div>
+
                     <!-- Optionen -->
                     <div v-if="Array.isArray(textData.options)">
                         <div class="mb-2 flex items-center gap-x-1.5">
@@ -422,6 +441,20 @@
                         <div v-if="textData.options[0]?.value" class="mt-3">
                             <div class="flex items-center gap-x-2">
                                 <ArtworkBaseListbox
+                                    v-if="defaultSelectionIsMultiple"
+                                    class="grow"
+                                    v-model="defaultSelectionList"
+                                    :items="textData.options"
+                                    :option-label="(o) => `${o.value}`"
+                                    option-key="value"
+                                    by="value"
+                                    multiple
+                                    :placeholder="$t('Default options')"
+                                    :enable-search="true"
+                                    :search-keys="['value']"
+                                />
+                                <ArtworkBaseListbox
+                                    v-else
                                     class="grow"
                                     v-model="textData.selected"
                                     :items="textData.options"
@@ -444,7 +477,7 @@
                                 <button
                                     class="text-xs text-accent-600 hover:text-accent-700 underline underline-offset-2"
                                     type="button"
-                                    @click="textData.selected = ''"
+                                    @click="textData.selected = defaultSelectionIsMultiple ? [] : ''"
                                 >
                                     {{ $t('Remove default option') }}
                                 </button>
@@ -703,6 +736,7 @@ import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import { useTranslation } from "@/Composeables/Translation.js";
+import { allowsMultipleSelection, selectedValues } from '@/Helper/ComponentSelection.js'
 
 const $t = useTranslation()
 
@@ -815,8 +849,11 @@ const fieldTooltips = computed(() => {
         title_size: 'Font size of the heading in the project.',
         showLine: 'Shows a horizontal separator line within the spacing.',
         checked: 'If enabled, the checkbox is checked by default in projects until it is changed there.',
-        options: 'The options available for selection in the dropdown in the project.',
+        options: type === 'CheckboxList'
+            ? 'The options shown as checkboxes in the project. Several can be selected at the same time.'
+            : 'The options available for selection in the dropdown in the project.',
         selected: 'This option is preselected in projects until it is changed there.',
+        multiple: 'If enabled, several options can be selected in the project. It can only be turned off again as long as no project has several options selected.',
     }
 })
 
@@ -903,7 +940,25 @@ const barColorSwatches = ['#EB7A3D', '#27233C', '#FFB6E1', '#BFE3F5', '#C8EBC9',
 /* Felder, die ältere Komponenten eines Typs noch nicht in data haben (Bearbeiten zeigt sie trotzdem an) */
 const FIELD_DEFAULTS_BY_TYPE = {
     Title: { subtitle: '', bar_color: '' },
+    DropDown: { multiple: false },
 }
+
+/* Vorauswahl bei Mehrfachauswahl (CheckboxList, DropDown mit "multiple"): Liste statt Einzelwert */
+const defaultSelectionIsMultiple = computed(() => allowsMultipleSelection(currentTypeName.value, textData))
+const defaultSelectionList = computed({
+    get: () => selectedValues(textData.selected).map((value) => ({ value })),
+    set: (options) => {
+        textData.selected = (options ?? []).map((option) => option?.value ?? option)
+    },
+})
+watch(defaultSelectionIsMultiple, (isMultiple) => {
+    const values = selectedValues(textData.selected)
+    // Einzelauswahl-Listbox arbeitet mit Optionsobjekten (by="value")
+    textData.selected = isMultiple ? values : (values.length ? { value: values[0] } : '')
+})
+
+/* Serverseitige Fehler beim Speichern (z. B. Mehrfachauswahl lässt sich nicht abschalten) */
+const saveErrors = ref({})
 
 /* CRM-Kontaktliste: erlaubte Kontakttypen */
 const crmContactTypeOptions = ref([])
@@ -974,10 +1029,14 @@ function updateOrSaveComponent() {
         }
     }
 
+    saveErrors.value = {}
     const options = {
         preserveState: true,
         preserveScroll: true,
-        onSuccess: () => closeModal()
+        onSuccess: () => closeModal(),
+        onError: (errors) => {
+            saveErrors.value = errors ?? {}
+        },
     }
 
     if (isCreateMode.value) {

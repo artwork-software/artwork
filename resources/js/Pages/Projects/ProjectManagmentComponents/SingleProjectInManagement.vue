@@ -228,6 +228,7 @@ const componentMapping = {
     BuilderTextField,
     BuilderCheckbox,
     BuilderDropDown,
+    BuilderCheckboxList: BuilderDropDown,
     BuilderLink,
     BuilderBiKeyFiguresDisplay,
 };

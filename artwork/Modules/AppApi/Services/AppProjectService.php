@@ -10,6 +10,7 @@ use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ComponentTreeProjector;
+use Artwork\Modules\Project\Support\ComponentSelection;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -145,6 +146,10 @@ class AppProjectService
     private function serializeComponent(User $user, Project $project, Component $component, array $scope): array
     {
         $type = ProjectTabComponentEnum::tryFrom((string) $component->type);
+        // DropDown mit Mehrfachauswahl: die App kennt nur Einzelwerte – sie bekommt die Auswahl als Text
+        // (kommagetrennt) und darf nicht schreiben, damit sie keine Liste mit einem Einzelwert überschreibt.
+        $isMultipleSelection = $type === ProjectTabComponentEnum::DROPDOWN
+            && ComponentSelection::allowsMultiple($component->type, $component->data);
 
         return [
             'component_id' => $component->id,
@@ -155,13 +160,18 @@ class AppProjectService
             // carry the project's stored value.
             'value' => $type?->isAppSystem()
                 ? $this->systemComponentService->valueFor($user, $project, $type, $scope)
-                : $this->dataObjectOrNull($component->projectValue?->data),
+                : ($isMultipleSelection
+                    ? $this->dataObjectOrNull([
+                        'selected' => ComponentSelection::displayText($component->projectValue?->data['selected'] ?? null),
+                    ])
+                    : $this->dataObjectOrNull($component->projectValue?->data)),
             // For system components this means "may write through it" (create
             // events, edit shifts, add comments); custom components combine
             // type writability with the component permission settings.
             'is_writable' => $type?->isAppSystem()
                 ? $this->systemComponentService->isWritable($user, $project, $type)
                 : (($type?->isAppWritable() ?? false)
+                    && !$isMultipleSelection
                     && $user->can('writeComponent', [$project, $component])),
         ];
     }

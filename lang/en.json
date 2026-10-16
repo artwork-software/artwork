@@ -9177,5 +9177,13 @@
     "Enter individual time": "Enter individual time",
     "The time applies immediately and is visible to planners in the duty roster.": "The time applies immediately and is visible to planners in the duty roster.",
     "Enter as recurring series instead": "Enter as recurring series instead",
-    "Do you really want to delete this individual time?": "Do you really want to delete this individual time?"
+    "Do you really want to delete this individual time?": "Do you really want to delete this individual time?",
+    "CheckboxList": "Multiple choice (checkboxes)",
+    "Allow multiple selection": "Allow multiple selection",
+    "Default options": "Default options",
+    "Remove from selection": "Remove from selection",
+    "No options defined yet.": "No options defined yet.",
+    "The options shown as checkboxes in the project. Several can be selected at the same time.": "The options shown as checkboxes in the project. Several can be selected at the same time.",
+    "If enabled, several options can be selected in the project. It can only be turned off again as long as no project has several options selected.": "If enabled, several options can be selected in the project. It can only be turned off again as long as no project has several options selected.",
+    "Multiple selection cannot be turned off while :count project(s) have several values selected.": "Multiple selection cannot be turned off while :count project(s) have several values selected."
 }

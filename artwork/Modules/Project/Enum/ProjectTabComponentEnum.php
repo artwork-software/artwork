@@ -13,6 +13,8 @@ enum ProjectTabComponentEnum: string
     case LINK = 'Link';
 
     case LINK_LIST = 'LinkList';
+    // Mehrfachauswahl als Checkboxen (Wert: selected = Liste von Optionen)
+    case CHECKBOX_LIST = 'CheckboxList';
 
 
     // default tab component types
@@ -70,6 +72,7 @@ enum ProjectTabComponentEnum: string
         self::CHECKBOX,
         self::TEXT_FIELD,
         self::DROPDOWN,
+        self::CHECKBOX_LIST,
         self::TEXT_AREA,
         self::TITLE,
         self::LINK,
@@ -93,6 +96,7 @@ enum ProjectTabComponentEnum: string
         self::CHECKBOX,
         self::TEXT_FIELD,
         self::DROPDOWN,
+        self::CHECKBOX_LIST,
         self::TEXT_AREA,
         self::LINK,
         self::LINK_LIST,
@@ -118,6 +122,7 @@ enum ProjectTabComponentEnum: string
         self::CHECKBOX,
         self::TEXT_FIELD,
         self::DROPDOWN,
+        self::CHECKBOX_LIST,
         self::TEXT_AREA,
         self::TITLE,
         self::LINK,
@@ -389,6 +394,21 @@ enum ProjectTabComponentEnum: string
                         ]
                     ],
                     'selected' => '',
+                    // Mehrfachauswahl erlauben: selected wird zur Liste (ComponentSelection)
+                    'multiple' => false,
+                ]
+            ],
+            self::CHECKBOX_LIST->value => [
+                'name' => self::CHECKBOX_LIST->value,
+                'availableFields' => [
+                    'label' => '',
+                    'options' => [
+                        [
+                            'value' => '',
+                        ]
+                    ],
+                    // Vorauswahl für Projekte ohne eigenen Wert
+                    'selected' => [],
                 ]
             ],
             self::TEXT_AREA->value => [

@@ -468,6 +468,7 @@
     "GET shifts/export/work-time-overview": "forbidden",
     "GET shifts/filters": "allowed",
     "GET shifts/list-view": "forbidden",
+    "GET shifts/list-view/days": "forbidden",
     "GET shifts/presets": "forbidden",
     "GET shifts/view": "forbidden",
     "GET shifts/week-status": "forbidden",

@@ -5251,6 +5251,7 @@
     "Special day: without work the daily target is reduced to 0 or by the weekday average (three-month mode), if the contract has the special day rule active. Hours worked count normally.": "Sondertag: Ohne Arbeit sinkt das Tagessoll auf 0 bzw. um den Wochentagsdurchschnitt (Dreimonatsmodus), sofern der Vertrag die Sondertag-Regel aktiv hat. Geleistete Stunden zählen normal.",
     "As of: nightly booking up to {0}": "Stand: Nachtbuchung bis {0}",
     "The data could not be loaded.": "Die Daten konnten nicht geladen werden.",
+    "The requested days are outside the selected period.": "Die angefragten Tage liegen außerhalb des gewählten Zeitraums.",
     "You do not have permission to view this data.": "Du hast keine Berechtigung, diese Daten zu sehen.",
     "Counted until": "Gezählt bis",
     "Last nightly calculation": "Letzte nächtliche Berechnung",

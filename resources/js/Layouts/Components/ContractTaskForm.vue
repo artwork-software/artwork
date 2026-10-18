@@ -64,7 +64,6 @@
 <script>
 import {IconX} from "@tabler/icons-vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
@@ -75,7 +74,7 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 
 export default {
     name: "ContractTaskForm",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         BaseTextarea,
         BaseInput,

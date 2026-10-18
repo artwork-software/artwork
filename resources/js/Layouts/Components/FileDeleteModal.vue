@@ -40,6 +40,8 @@ export default {
         JetDialogModal,
         IconX
     },
+    // saved: Löschen ist abgeschlossen (Aufrufer laden ihre Liste neu)
+    emits: ['saved'],
     props: {
         file: Object,
         show: Boolean,
@@ -55,10 +57,10 @@ export default {
     methods: {
         destroy() {
             if (this.type === "project") {
-                this.$inertia.delete(`/project_files/${this.file.id}`);
+                this.$inertia.delete(`/project_files/${this.file.id}`, { onFinish: () => this.$emit('saved') });
             }
             else {
-                this.$inertia.delete(`/room_files/${this.file.id}`);
+                this.$inertia.delete(`/room_files/${this.file.id}`, { onFinish: () => this.$emit('saved') });
             }
             this.closeModal()
         },

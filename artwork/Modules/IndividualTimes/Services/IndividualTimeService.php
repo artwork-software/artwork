@@ -53,7 +53,7 @@ class IndividualTimeService
                 Carbon::parse($date)
             );
             $totalMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
-            $workingTimeInMinutes = max(0, $totalMinutes - ($breakMinutes ?? 0));
+            $workingTimeInMinutes = max(0, $totalMinutes - $breakMinutes);
         } else {
             $startTimeConverted = Carbon::parse($date);
             $endTimeConverted = Carbon::parse($date);
@@ -70,7 +70,7 @@ class IndividualTimeService
             'end_date' => $endTimeConverted->format('Y-m-d'),
             'full_day' => $isFullDay,
             'working_time_minutes' => $workingTimeInMinutes,
-            'break_minutes' => $breakMinutes ?? 0,
+            'break_minutes' => $breakMinutes,
         ];
         if (!empty($individualTime->series_uuid)) {
             $updateData['series_uuid'] = null;
@@ -110,7 +110,7 @@ class IndividualTimeService
                 Carbon::parse($date)
             );
             $totalMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
-            $workingTimeInMinutes = max(0, $totalMinutes - ($breakMinutes ?? 0));
+            $workingTimeInMinutes = max(0, $totalMinutes - $breakMinutes);
         } else {
             $startTimeConverted = Carbon::parse($date);
             $endTimeConverted = Carbon::parse($date);
@@ -126,7 +126,7 @@ class IndividualTimeService
             'end_date' => $endTimeConverted->format('Y-m-d'),
             'full_day' => $isFullDay,
             'working_time_minutes' => $workingTimeInMinutes,
-            'break_minutes' => $breakMinutes ?? 0,
+            'break_minutes' => $breakMinutes,
         ];
 
         $result = $this->individualTimeRepository->createNewIndividualTime($modelInstance, $individualTimeObject);

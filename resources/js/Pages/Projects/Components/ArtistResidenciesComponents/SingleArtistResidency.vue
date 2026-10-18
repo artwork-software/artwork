@@ -37,7 +37,7 @@
         <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency.formatted_dates.departure_date }} {{ artist_residency.formatted_dates.departure_time }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency.accommodation?.name ?? $t('Deleted') }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency.room_type?.name ?? '-' }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ calculateTotalCost(artist_residency) }} €</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ calculateTotalCost(artist_residency) }} {{ $currencySymbol() }}</td>
         <td class="px-3 py-4 text-sm text-text-subtle max-w-[200px]">
             <span class="block truncate" v-tooltip.bottom="{ value: artist_residency.description, class: 'aw-tooltip' }">{{ artist_residency.description || '-' }}</span>
         </td>

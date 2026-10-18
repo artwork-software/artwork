@@ -195,7 +195,7 @@
                             <span class="header-title">{{ $title }}</span>
                         </td>
                         <td class="header-center">
-                            <span class="header-subtitle">Erstellt am {{ $created_date }} von {{ $created_by }}</span>
+                            <span class="header-subtitle">{{ __('Created on :date by :name', ['date' => $created_date, 'name' => $created_by]) }}</span>
                         </td>
                         <td class="header-right">
                             @if($bigLogoBase64)

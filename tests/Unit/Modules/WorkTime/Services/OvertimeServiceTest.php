@@ -66,6 +66,52 @@ final class OvertimeServiceTest extends TestCase
     }
 
     #[Test]
+    public function bookings_of_the_same_day_are_summed_into_one_overtime_entry(): void
+    {
+        // Regression: Tages- und Korrekturbuchung desselben Tages sind eigene Zeilen; die Überstunde
+        // nahm nur eine davon (je nach Reihenfolge) statt der Summe wie im Saldo.
+        $user = $this->userWithContract(period: 30);
+        $day = Carbon::now()->startOfDay()->subDay();
+        $this->booking($user, $day, 30);
+        $this->booking($user, $day, 60);
+
+        $this->service->recomputeForUser($user);
+
+        $entry = UserOvertime::where('user_id', $user->id)->sole();
+        $this->assertSame($day->toDateString(), $entry->date->toDateString());
+        $this->assertSame(90, $entry->minutes);
+        $this->assertSame(90, $entry->remaining_minutes);
+    }
+
+    #[Test]
+    public function mixed_signs_on_the_same_day_are_netted(): void
+    {
+        $user = $this->userWithContract(period: 30);
+        $older = Carbon::now()->startOfDay()->subDays(3);
+        $mixedPositive = Carbon::now()->startOfDay()->subDays(2);
+        $mixedNegative = Carbon::now()->startOfDay()->subDay();
+        $this->booking($user, $older, 60);
+        // +120 und −30 am selben Tag -> Überstunde 90, die ältere bleibt unangetastet
+        $this->booking($user, $mixedPositive, 120);
+        $this->booking($user, $mixedPositive, -30);
+        // +20 und −50 am selben Tag -> netto −30 baut FIFO die älteste Überstunde ab
+        $this->booking($user, $mixedNegative, 20);
+        $this->booking($user, $mixedNegative, -50);
+
+        $this->service->recomputeForUser($user);
+
+        $entries = UserOvertime::where('user_id', $user->id)->orderBy('date')->get()
+            ->mapWithKeys(fn (UserOvertime $e): array => [
+                $e->date->toDateString() => [$e->minutes, $e->remaining_minutes],
+            ])
+            ->all();
+        $this->assertSame([
+            $older->toDateString() => [60, 30],
+            $mixedPositive->toDateString() => [90, 90],
+        ], $entries);
+    }
+
+    #[Test]
     public function negative_day_fifo_consumes_overtime_until_compensated(): void
     {
         $user = $this->userWithContract(period: 30);
@@ -107,170 +153,183 @@ final class OvertimeServiceTest extends TestCase
     }
 
     #[Test]
-    public function inactive_rule_creates_no_entries(): void
+    public function inactive_rule_tracks_overtime_without_deadline(): void
     {
+        // Kontoprinzip: Überstunden werden auch ohne Regel geführt – nur ohne Frist (nie auszahlbar)
         $user = $this->userWithContract(active: false, period: 30);
-        $this->booking($user, Carbon::now()->startOfDay(), 120);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(60), 120);
 
         $this->service->recomputeForUser($user);
 
-        $this->assertSame(0, UserOvertime::where('user_id', $user->id)->count());
+        $entry = UserOvertime::where('user_id', $user->id)->sole();
+        $this->assertNull($entry->deadline);
+        $this->assertSame(120, $entry->remaining_minutes);
+        $this->assertSame(UserOvertime::STATUS_OPEN, $entry->status);
     }
 
     #[Test]
-    public function paid_out_minutes_survive_a_recompute(): void
+    public function plus_hours_first_compensate_open_minus_hours(): void
     {
         $user = $this->userWithContract(period: 30);
-        $day = Carbon::now()->startOfDay()->subDays(3);
-
-        $entry = UserOvertime::create([
-            'user_id' => $user->id,
-            'date' => $day->toDateString(),
-            'minutes' => 90,
-            'remaining_minutes' => 0,
-            'paid_out_minutes' => 90,
-            'deadline' => $day->copy()->addDays(30)->toDateString(),
-            'status' => UserOvertime::STATUS_PAID_OUT,
-            'paid_out_at' => Carbon::now(),
-        ]);
-        $this->booking($user, $day, 90);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(5), -120);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(2), 180);
 
         $this->service->recomputeForUser($user);
 
-        $entry->refresh();
+        $entry = UserOvertime::where('user_id', $user->id)->sole();
+        $this->assertSame(60, $entry->minutes);
+        $this->assertSame(60, $entry->remaining_minutes);
+        $ledger = $this->service->ledgerFor($user);
+        $this->assertSame(0, $ledger->debtMinutes());
+        $this->assertSame(60, $ledger->balanceMinutes());
+    }
+
+    #[Test]
+    public function expired_overtime_is_reduced_last_instead_of_creating_minus_hours(): void
+    {
+        // Sonst stünden 120 „auszahlbar“ und 30 Minusstunden nebeneinander – nicht auszahl- und nicht abbaubar
+        $user = $this->userWithContract(period: 5);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(20), 120); // Frist abgelaufen
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(2), -30);
+
+        $ledger = $this->service->ledgerFor($user);
+
+        $this->assertSame(90, $ledger->payableMinutes());
+        $this->assertSame(0, $ledger->debtMinutes());
+        $this->assertSame(90, $ledger->balanceMinutes());
+        $this->assertSame(90, $ledger->payableNowMinutes());
+    }
+
+    #[Test]
+    public function payouts_are_replayed_from_the_payout_history(): void
+    {
+        $user = $this->userWithContract(period: 30);
+        $day = Carbon::now()->startOfDay()->subDays(3);
+        $this->booking($user, $day, 90);
+        OvertimePayout::create([
+            'user_id' => $user->id,
+            'minutes' => 90,
+            'payout_date' => Carbon::today()->toDateString(),
+            'created_by' => User::factory()->create()->id,
+        ]);
+
+        $this->service->recomputeForUser($user);
+        $this->service->recomputeForUser($user);
+
+        $entry = UserOvertime::where('user_id', $user->id)->sole();
         $this->assertSame(UserOvertime::STATUS_PAID_OUT, $entry->status);
         $this->assertSame(0, $entry->remaining_minutes);
         $this->assertSame(90, $entry->paid_out_minutes);
-        $this->assertSame(1, UserOvertime::where('user_id', $user->id)->count());
     }
 
     #[Test]
     public function pay_out_consumes_payable_entries_fifo_and_reduces_balance(): void
     {
-        $user = $this->userWithContract();
+        $user = $this->userWithContract(period: 5);
+        $user->update(['work_time_balance' => 150]);
         $hr = User::factory()->create();
-        $first = UserOvertime::create([
-            'user_id' => $user->id,
-            'date' => Carbon::now()->subDays(20)->toDateString(),
-            'minutes' => 60,
-            'remaining_minutes' => 60,
-            'deadline' => Carbon::now()->subDays(10)->toDateString(),
-            'status' => UserOvertime::STATUS_PAYABLE,
-        ]);
-        $second = UserOvertime::create([
-            'user_id' => $user->id,
-            'date' => Carbon::now()->subDays(15)->toDateString(),
-            'minutes' => 90,
-            'remaining_minutes' => 90,
-            'deadline' => Carbon::now()->subDays(5)->toDateString(),
-            'status' => UserOvertime::STATUS_PAYABLE,
-        ]);
-        $balanceBefore = (int) $user->work_time_balance;
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(20), 60);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(15), 90);
 
         $this->service->payOut($user, 100, $hr->id, 'Paid with March payroll');
 
-        $first->refresh();
-        $second->refresh();
-        $this->assertSame(UserOvertime::STATUS_PAID_OUT, $first->status);
-        $this->assertSame(0, $first->remaining_minutes);
-        $this->assertSame(60, $first->paid_out_minutes);
-        $this->assertSame($hr->id, $first->paid_out_by);
-        $this->assertSame(UserOvertime::STATUS_PAYABLE, $second->status);
-        $this->assertSame(50, $second->remaining_minutes);
-        $this->assertSame(40, $second->paid_out_minutes);
+        $entries = UserOvertime::where('user_id', $user->id)->orderBy('date')->get();
+        $this->assertSame(UserOvertime::STATUS_PAID_OUT, $entries[0]->status);
+        $this->assertSame(0, $entries[0]->remaining_minutes);
+        $this->assertSame(60, $entries[0]->paid_out_minutes);
+        $this->assertSame($hr->id, $entries[0]->paid_out_by);
+        $this->assertSame(UserOvertime::STATUS_PAYABLE, $entries[1]->status);
+        $this->assertSame(50, $entries[1]->remaining_minutes);
+        $this->assertSame(40, $entries[1]->paid_out_minutes);
 
-        $this->assertSame(1, OvertimePayout::where('user_id', $user->id)->count());
-        $payout = OvertimePayout::where('user_id', $user->id)->first();
+        $payout = OvertimePayout::where('user_id', $user->id)->sole();
         $this->assertSame(100, $payout->minutes);
         $this->assertSame($hr->id, $payout->created_by);
         $this->assertSame('Paid with March payroll', $payout->comment);
 
-        $this->assertSame($balanceBefore - 100, (int) $user->fresh()->work_time_balance);
+        $this->assertSame(50, (int) $user->fresh()->work_time_balance);
     }
 
     #[Test]
     public function pay_out_rejects_amount_exceeding_payable_total(): void
     {
-        $user = $this->userWithContract();
-        $hr = User::factory()->create();
-        UserOvertime::create([
-            'user_id' => $user->id,
-            'date' => Carbon::now()->subDays(20)->toDateString(),
-            'minutes' => 60,
-            'remaining_minutes' => 60,
-            'deadline' => Carbon::now()->subDays(10)->toDateString(),
-            'status' => UserOvertime::STATUS_PAYABLE,
-        ]);
+        $user = $this->userWithContract(period: 5);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(20), 60);
 
         $this->expectException(ValidationException::class);
 
-        $this->service->payOut($user, 61, $hr->id, null);
+        $this->service->payOut($user, 61, User::factory()->create()->id, null);
+    }
+
+    #[Test]
+    public function pay_out_only_accepts_todays_date(): void
+    {
+        $user = $this->userWithContract(period: 5);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(20), 60);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->payOut($user, 30, User::factory()->create()->id, null, Carbon::yesterday());
+    }
+
+    #[Test]
+    public function two_payouts_on_one_day_keep_their_own_metadata(): void
+    {
+        $user = $this->userWithContract(period: 5);
+        $first = User::factory()->create();
+        $second = User::factory()->create();
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(20), 60);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(19), 30);
+
+        $this->service->payOut($user, 60, $first->id, 'erste');
+        $this->service->payOut($user, 30, $second->id, 'zweite');
+
+        $entries = UserOvertime::where('user_id', $user->id)->orderBy('date')->get();
+        $this->assertSame([$first->id, 'erste'], [$entries[0]->paid_out_by, $entries[0]->payout_reason]);
+        $this->assertSame([$second->id, 'zweite'], [$entries[1]->paid_out_by, $entries[1]->payout_reason]);
+    }
+
+    #[Test]
+    public function pay_out_requires_an_active_overtime_rule(): void
+    {
+        $user = $this->userWithContract(active: false, period: 5);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(20), 60);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->payOut($user, 10, User::factory()->create()->id, null);
     }
 
     #[Test]
     public function pay_out_does_not_touch_open_entries(): void
     {
-        $user = $this->userWithContract();
-        $hr = User::factory()->create();
-        $payable = UserOvertime::create([
-            'user_id' => $user->id,
-            'date' => Carbon::now()->subDays(20)->toDateString(),
-            'minutes' => 60,
-            'remaining_minutes' => 60,
-            'deadline' => Carbon::now()->subDays(10)->toDateString(),
-            'status' => UserOvertime::STATUS_PAYABLE,
-        ]);
-        $open = UserOvertime::create([
-            'user_id' => $user->id,
-            'date' => Carbon::now()->toDateString(),
-            'minutes' => 120,
-            'remaining_minutes' => 120,
-            'deadline' => Carbon::now()->addDays(10)->toDateString(),
-            'status' => UserOvertime::STATUS_OPEN,
-        ]);
+        $user = $this->userWithContract(period: 5);
+        $this->booking($user, Carbon::now()->startOfDay()->subDays(20), 60);
+        $this->booking($user, Carbon::now()->startOfDay(), 120);
 
-        $this->service->payOut($user, 60, $hr->id, null);
+        $this->service->payOut($user, 60, User::factory()->create()->id, null);
 
-        $this->assertSame(UserOvertime::STATUS_PAID_OUT, $payable->fresh()->status);
-        $open->refresh();
-        $this->assertSame(UserOvertime::STATUS_OPEN, $open->status);
-        $this->assertSame(120, $open->remaining_minutes);
-        $this->assertSame(0, $open->paid_out_minutes);
+        $entries = UserOvertime::where('user_id', $user->id)->orderBy('date')->get();
+        $this->assertSame(UserOvertime::STATUS_PAID_OUT, $entries[0]->status);
+        $this->assertSame(UserOvertime::STATUS_OPEN, $entries[1]->status);
+        $this->assertSame(120, $entries[1]->remaining_minutes);
+        $this->assertSame(0, $entries[1]->paid_out_minutes);
     }
 
     #[Test]
-    public function an_inactive_rule_keeps_existing_open_and_compensated_entries(): void
+    public function a_payable_entry_disappears_when_its_day_is_corrected_to_zero(): void
     {
-        // Zuweisung heute mit overtime_rule_active=false (z. B. nach Vertragswechsel): der Replay beurteilt
-        // keinen Tag — vorhandene Einträge dürfen dann nicht als "veraltet" gelöscht werden.
-        $user = $this->userWithContract(active: false, period: 30);
-        $openDay = Carbon::now()->startOfDay()->subDays(5);
-        $compensatedDay = Carbon::now()->startOfDay()->subDays(10);
-        $this->booking($user, $openDay, 120);
-        $this->booking($user, $compensatedDay, 60);
-        $open = UserOvertime::create([
-            'user_id' => $user->id,
-            'date' => $openDay->toDateString(),
-            'minutes' => 120,
-            'remaining_minutes' => 120,
-            'deadline' => $openDay->copy()->addDays(30)->toDateString(),
-            'status' => UserOvertime::STATUS_OPEN,
-        ]);
-        $compensated = UserOvertime::create([
-            'user_id' => $user->id,
-            'date' => $compensatedDay->toDateString(),
-            'minutes' => 60,
-            'remaining_minutes' => 0,
-            'deadline' => $compensatedDay->copy()->addDays(30)->toDateString(),
-            'status' => UserOvertime::STATUS_COMPENSATED,
-        ]);
+        // Vorher blieb ein auszahlbarer Eintrag "eingefroren" stehen, obwohl der Tag korrigiert war
+        $user = $this->userWithContract(period: 5);
+        $day = Carbon::now()->startOfDay()->subDays(20);
+        $this->booking($user, $day, 120);
+        $this->service->recomputeForUser($user);
+        $this->assertSame(UserOvertime::STATUS_PAYABLE, UserOvertime::where('user_id', $user->id)->sole()->status);
 
+        $this->booking($user, $day, -120);
         $this->service->recomputeForUser($user);
 
-        $this->assertSame(2, UserOvertime::where('user_id', $user->id)->count());
-        $this->assertSame(UserOvertime::STATUS_OPEN, $open->fresh()->status);
-        $this->assertSame(120, $open->fresh()->remaining_minutes);
-        $this->assertSame(UserOvertime::STATUS_COMPENSATED, $compensated->fresh()->status);
+        $this->assertSame(0, UserOvertime::where('user_id', $user->id)->count());
     }
 
     #[Test]

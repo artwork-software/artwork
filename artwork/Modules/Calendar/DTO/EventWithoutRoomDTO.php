@@ -8,10 +8,12 @@ use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 
 class EventWithoutRoomDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
     use SerializesEventRelations;
 
     public function __construct(

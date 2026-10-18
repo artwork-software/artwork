@@ -295,6 +295,29 @@
                             </span>
                         </div>
 
+                        <!-- Ticketverkauf (Artwork-Tickets, nur freigegebene Termine, nur Starttag); Klick öffnet die Gästeliste -->
+                        <button
+                            v-if="ticketSales && !project && zoom_factor >= 0.8"
+                            type="button"
+                            class="mt-0.5 flex cursor-pointer items-center gap-1.5 rounded text-xs/5 hover:underline underline-offset-2"
+                            :title="ticketSalesLabel"
+                            @click.stop="showTicketDetails = true"
+                        >
+                            <component
+                                :is="IconTicket"
+                                class="size-3.5 shrink-0"
+                                stroke-width="2"
+                                :style="{ color: eventTextColor }"
+                            />
+                            <span
+                                class="text-xs/[18px] subpixel-antialiased tabular-nums whitespace-nowrap"
+                                :class="ticketSales.cancelled ? 'line-through' : ''"
+                                :style="{ color: eventTypeTextColor }"
+                            >
+                                {{ ticketSales.sold }} / {{ ticketSales.capacity }}
+                            </span>
+                        </button>
+
                         <!-- Zeit/Optionen Zeile -->
                         <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 @max-[10rem]/tile:flex-wrap!" :class="[isSameDay && !project && !atAGlance ? 'flex-nowrap' : 'flex-wrap']">
                             <component
@@ -461,12 +484,12 @@
                 <!-- Kontext-Menü -->
                 <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150 @max-[10rem]/event:absolute @max-[10rem]/event:top-2 @max-[10rem]/event:right-0.5 @max-[10rem]/tile:absolute @max-[10rem]/tile:top-2 @max-[10rem]/tile:right-0.5">
                     <BaseMenu has-no-offset :dots-color="calSettings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" :title="directBookingOnly ? 'Confirm as fixed event' : 'Request verification'" />
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
-                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
-                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification && canManageVerification" @click="SendEventToVerification" :icon="IconLock" :title="directBookingOnly ? 'Confirm as fixed event' : 'Request verification'" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification && canManageVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
+                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType?.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
+                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType?.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
 
-                        <BaseMenuItem white-menu-background v-if="event.occupancy_option && (isRoomAdmin || hasAdminRole)" @click="$emit('acceptRoomRequest', event)" :icon="IconChecks" title="Accept room request" />
+                        <BaseMenuItem white-menu-background v-if="event.occupancy_option && !event.isPlanning && (isRoomAdmin || hasAdminRole)" @click="$emit('acceptRoomRequest', event)" :icon="IconChecks" title="Accept room request" />
                         <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
                         <BaseMenuItem
                             white-menu-background
@@ -485,26 +508,11 @@
                     </BaseMenu>
                 </div>
 
-                <!-- Properties als Icons -->
-                <div class="grid grid-cols-5 md:grid-cols-2 gap-2 @max-[10rem]/event:hidden @max-[10rem]/tile:flex @max-[10rem]/tile:flex-wrap @max-[10rem]/tile:gap-1.5">
-                    <div v-for="property in event.eventProperties" :key="property.id" class="col-span-1 group/property relative">
-                        <PropertyIcon
-                            :name="property.icon"
-                            class="size-3.5 opacity-90"
-                            :style="{ color: eventTextColor }"
-                        />
-                        <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
-                            <div class="rounded-lg bg-surface-inverse px-3 py-1 text-xs text-white">
-                                {{ property.name }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timeline Icon -->
+                <!-- Timeline Icon: direkt unter dem Kontextmenü statt unten rechts, dort liegt
+                     beim Hovern der „+"-Button der Zelle (CalendarDayRow) darüber -->
                 <div
                     v-if="calSettings.show_timeline"
-                    class="mt-2 cursor-pointer @max-[10rem]/event:hidden @max-[10rem]/tile:mt-0"
+                    class="mb-2 cursor-pointer @max-[10rem]/event:hidden @max-[10rem]/tile:mb-0"
                     data-no-edit-click
                     @click="openTimelineModal"
                 >
@@ -521,6 +529,22 @@
                         }"
                         :class="!event.hasTimelines && !calSettings.high_contrast ? 'text-gray-400' : ''"
                     />
+                </div>
+
+                <!-- Properties als Icons (nur Anzeige, dürfen vom „+"-Button kurz verdeckt werden) -->
+                <div class="grid grid-cols-5 md:grid-cols-2 gap-2 @max-[10rem]/event:hidden @max-[10rem]/tile:flex @max-[10rem]/tile:flex-wrap @max-[10rem]/tile:gap-1.5">
+                    <div v-for="property in event.eventProperties" :key="property.id" class="col-span-1 group/property relative">
+                        <PropertyIcon
+                            :name="property.icon"
+                            class="size-3.5 opacity-90"
+                            :style="{ color: eventTextColor }"
+                        />
+                        <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
+                            <div class="rounded-lg bg-surface-inverse px-3 py-1 text-xs text-white">
+                                {{ property.name }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -676,6 +700,21 @@
                                             />
                                             <span class="subpixel-antialiased">{{ $t('Admission') }} {{ event.admission_time }}</span>
                                         </div>
+
+                                        <!-- Ticketverkauf (Artwork-Tickets) -->
+                                        <button
+                                            v-if="ticketSales"
+                                            type="button"
+                                            class="mt-0.5 flex cursor-pointer items-center gap-1.5 text-xs/5 hover:underline underline-offset-2"
+                                            @click.stop="showTicketDetails = true"
+                                        >
+                                            <component
+                                                :is="IconTicket"
+                                                class="size-3.5 shrink-0"
+                                                stroke-width="2"
+                                            />
+                                            <span class="subpixel-antialiased">{{ ticketSalesLabel }}</span>
+                                        </button>
 
                                         <!-- Zeit -->
                                         <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 flex-wrap">
@@ -933,11 +972,18 @@
             :event="event"
             @close="showSearchTimelinePresetModal = false"
         />
+
+        <TicketingSalesModal
+            v-if="showTicketDetails"
+            :event-id="event.id"
+            :description="eventNameLabel"
+            @close="showTicketDetails = false"
+        />
     </div>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue";
+import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import axios from "axios";
 import {
@@ -955,6 +1001,7 @@ import {
     IconLockOpen,
     IconRepeat,
     IconSquareCheckFilled,
+    IconTicket,
     IconTimeline,
     IconTrash,
     IconUsersGroup,
@@ -1037,6 +1084,12 @@ const CreateTimelinePresetFormEvent = defineAsyncComponent({
 
 const SearchTimelinePresetModal = defineAsyncComponent({
     loader: () => import("@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue"),
+    delay: 200,
+    timeout: 3000,
+});
+
+const TicketingSalesModal = defineAsyncComponent({
+    loader: () => import("@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue"),
     delay: 200,
     timeout: 3000,
 });
@@ -1136,6 +1189,19 @@ const showAdmissionTime = computed(() =>
     && Boolean(props.event.admission_time)
     && isStartDayCell.value
 );
+
+// Verkauft/Plätze aus Artwork-Tickets; BaseCalendar stellt sie bereit, andere Kalender nicht.
+const calendarTicketSales = inject('calendarTicketSales', null);
+const ticketSales = computed(() =>
+    isStartDayCell.value ? calendarTicketSales?.get(props.event.id) ?? null : null
+);
+const showTicketDetails = ref(false);
+const ticketSalesLabel = computed(() => {
+    if (!ticketSales.value) return '';
+    return ticketSales.value.cancelled
+        ? $t('Cancelled in Artwork-Tickets')
+        : $t('{sold} of {capacity} tickets sold', { sold: ticketSales.value.sold, capacity: ticketSales.value.capacity });
+});
 
 // Terminstatus ausgeschrieben: eigene Zeile unter dem Terminnamen (Anzeigeeinstellung, Default AUS)
 const showEventStatusName = computed(() =>
@@ -1365,10 +1431,14 @@ const checkIfMultiEditIsEnabled = computed(() => {
     return false;
 });
 
-const isCreator = computed(() => props.event.created_by.id === currentUserId.value);
+// created_by ist null, wenn die anlegende Person gelöscht wurde
+const isCreator = computed(() => props.event.created_by?.id === currentUserId.value);
+
+// Prüfung anfragen/zurückziehen: dieselbe Schranke wie EventVerificationController (sonst 403 nach dem Klick)
+const canManageVerification = computed(() => props.hasAdminRole || isCreator.value || can('can edit planning calendar'));
 
 const roomCanBeBookedByEveryone = computed(() => {
-    return props.rooms?.find((room) => room.id === props.event.roomId).everyone_can_book;
+    return props.rooms?.find((room) => room.id === props.event.roomId)?.everyone_can_book;
 });
 
 const { backgroundColorWithOpacity, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper();
@@ -1457,10 +1527,10 @@ const heightSubtraction = (event) => {
 const getEditHref = (projectId) => route("projects.tab", { project: projectId, projectTab: props.first_project_tab_id });
 
 const SendEventToVerification = () => {
-    router.post(route("events.sendToVerification", { event: props.event.id }), {
+    // Optionen erst als drittes Argument – vorher landeten sie als Request-Body und die Seite sprang nach oben
+    router.post(route("events.sendToVerification", { event: props.event.id }), {}, {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => {},
     });
 };
 

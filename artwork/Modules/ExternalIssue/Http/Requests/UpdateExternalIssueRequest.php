@@ -59,10 +59,28 @@ class UpdateExternalIssueRequest extends FormRequest
             'articles' => 'nullable|array',
             'articles.*.id' => [
                 'required',
-                \Illuminate\Validation\Rule::exists('inventory_articles', 'id')->whereNull('deleted_at'),
+                // Doppelte Einträge überschrieben sich beim Speichern (letzter gewinnt, Mengen gingen verloren)
+                'distinct',
+                // Bereits verknüpfte Artikel dürfen inzwischen im Papierkorb liegen (bleiben Teil der Ausgabe)
+                \Illuminate\Validation\Rule::exists('inventory_articles', 'id')
+                    ->where(fn ($query) => $query->whereNull('deleted_at')
+                        ->orWhereIn('id', $this->attachedArticleIds())),
             ],
             'articles.*.quantity' => 'required|integer|min:1',
             'special_items_done' => 'boolean',
         ];
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function attachedArticleIds(): array
+    {
+        $issue = $this->route('externalIssue');
+        if ($issue === null) {
+            return [];
+        }
+
+        return $issue->articles()->pluck('inventory_articles.id')->map(fn ($id): int => (int) $id)->all();
     }
 }

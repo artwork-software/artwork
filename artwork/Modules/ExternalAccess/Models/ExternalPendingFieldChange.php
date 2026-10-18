@@ -42,6 +42,9 @@ class ExternalPendingFieldChange extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<ExternalPendingSubmission, $this>
+     */
     public function submission(): BelongsTo
     {
         return $this->belongsTo(ExternalPendingSubmission::class, 'submission_id', 'id', 'submission');

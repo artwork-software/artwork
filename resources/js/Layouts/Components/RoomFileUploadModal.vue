@@ -43,7 +43,7 @@
                     <FormButton
                         :text="$t('Upload document')"
                         @click="storeFiles"
-                        :disabled="files.length < 1"
+                        :disabled="files.length < 1 || isUploading"
                     />
                 </div>
             </div>
@@ -53,7 +53,14 @@
 <script setup>
 import JetInputError from '@/Jetstream/InputError.vue'
 import {ref} from "vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
+import {useTranslation} from "@/Composeables/Translation.js";
+import {
+    inertiaUploadErrorMessage,
+    isInvalidResponse,
+    submitInertiaForm,
+    uploadSequentially,
+} from "@/Helper/sequentialUpload.js";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
@@ -71,6 +78,8 @@ const files = ref([])
 const room_files = ref(null)
 
 const closeModalIfUploaded = ref(false)
+const isUploading = ref(false)
+const $t = useTranslation()
 
 const roomFileForm = useForm({
     file: null
@@ -88,20 +97,17 @@ const upload = (event) => {
     validateType([...event.target.files])
 }
 
+/** Eine Datei hochladen (Promise) – Fehler meldet das Modal selbst (kein globaler alert/Toast). */
 const storeFile = (file) => {
     roomFileForm.file = file
-    roomFileForm.post(route('room_files.store', props.roomId), {
-        preserveState: true,
-        onSuccess: () => {
-            roomFileForm.file = null
-            files.value = []
-            closeModalIfUploaded.value = true;
-        },
-        onError: () => {
-            closeModalIfUploaded.value = false;
-        }
-    })
 
+    return submitInertiaForm(
+        roomFileForm,
+        'post',
+        route('room_files.store', props.roomId),
+        { preserveState: true, preserveScroll: true },
+        { router }
+    )
 }
 
 const validateType = (newFiles) => {
@@ -111,15 +117,39 @@ const validateType = (newFiles) => {
     }
 }
 
-const storeFiles = () => {
-    for (let file of files.value) {
-        storeFile(file)
+/**
+ * Nacheinander hochladen: mehrere .post() derselben useForm brachen sich gegenseitig ab, praktisch kam nur die
+ * letzte Datei an. Fehlgeschlagene (und nach einer ungültigen Antwort übersprungene) Dateien bleiben mit
+ * Meldung stehen; das Modal schließt nur, wenn alles hochgeladen ist.
+ */
+const storeFiles = async () => {
+    // Doppelklick: eine zweite Kette über dieselbe useForm bräche die erste ab
+    if (isUploading.value || files.value.length < 1) {
+        return
+    }
+    isUploading.value = true
+    uploadDocumentFeedback.value = ''
+
+    const { failed, skipped } = await uploadSequentially(
+        [...files.value],
+        (file) => storeFile(file),
+        { stopOnError: isInvalidResponse }
+    )
+
+    isUploading.value = false
+    roomFileForm.file = null
+    files.value = [...failed.map(({ file }) => file), ...skipped]
+
+    if (failed.length > 0) {
+        closeModalIfUploaded.value = false
+        uploadDocumentFeedback.value = failed
+            .map(({ file, error }) => `${file.name}: ${inertiaUploadErrorMessage(error, $t)}`)
+            .join(' ')
+        return
     }
 
-    if(closeModalIfUploaded.value) {
-        closeModalIfUploaded.value = false;
-        props.closeModal();
-    }
+    closeModalIfUploaded.value = true
+    props.closeModal()
 }
 
 </script>

@@ -1,9 +1,9 @@
 <template>
     <ExternalAppLayout :title="`${project.name} — ${tab.name}`">
-        <div class="px-8 py-10 max-w-5xl mx-auto">
+        <div class="px-4 py-6 sm:px-8 sm:py-10 max-w-5xl mx-auto">
             <header class="mb-8">
                 <p class="text-sm text-text-subtle">{{ project.name }}</p>
-                <h1 class="text-2xl font-bold text-text mt-1">{{ tab.name }}</h1>
+                <h1 class="text-xl sm:text-2xl font-bold text-text mt-1 break-words">{{ tab.name }}</h1>
                 <p class="text-xs text-text-subtle mt-2">
                     <span v-if="scope.access_type === 'read'">{{ $t('Read only') }}</span>
                     <span v-else-if="scope.locked">{{ $t('Submitted – read only') }}</span>
@@ -36,7 +36,7 @@
                 <section
                     v-for="section in sections"
                     :key="section.key"
-                    class="rounded-2xl border border-border-subtle bg-white p-5 sm:p-6"
+                    class="rounded-2xl border border-border-subtle bg-white p-4 sm:p-6"
                 >
                     <ExternalComponentRenderer
                         v-if="section.title"
@@ -62,7 +62,7 @@
             </div>
 
             <!-- Absenden: Eingaben sind bereits gespeichert, erst hier wird das Haus benachrichtigt -->
-            <div v-if="scope.access_type === 'write' && !scope.locked && components.length" class="mt-10 rounded-2xl border border-border-subtle bg-white p-5">
+            <div v-if="scope.access_type === 'write' && !scope.locked && components.length" class="mt-8 sm:mt-10 rounded-2xl border border-border-subtle bg-white p-4 sm:p-5">
                 <p v-if="flashStatus" class="mb-4 rounded-xl border border-success-border bg-success-surface px-4 py-3 text-sm text-success">
                     {{ flashStatus }}
                 </p>
@@ -76,7 +76,7 @@
                     <button
                         type="button"
                         :disabled="submitting"
-                        class="shrink-0 rounded-lg bg-surface-inverse px-4 py-2 text-sm font-medium text-white disabled:bg-border-strong disabled:cursor-not-allowed"
+                        class="w-full shrink-0 rounded-lg bg-surface-inverse px-4 py-3 text-base font-medium text-white disabled:bg-border-strong disabled:cursor-not-allowed sm:w-auto sm:py-2 sm:text-sm"
                         @click="submitData"
                     >
                         {{ scope.last_submitted_at ? $t('Submit entered data again') : $t('Submit entered data') }}

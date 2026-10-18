@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Zugriff autorisieren</title>
+    <title>{{ __('Authorize access') }}</title>
     <style>
         body {
             margin: 0;
@@ -74,15 +74,17 @@
 </head>
 <body>
     <div class="card">
-        <h1>{{ $client->name }} möchte auf dein Konto zugreifen</h1>
+        <h1>{{ __(':app wants to access your account', ['app' => $client->name]) }}</h1>
 
         <p>
-            Die Anwendung <strong>{{ $client->name }}</strong> bittet um die Erlaubnis,
-            in deinem Namen auf dein Konto ({{ $user->email }}) zuzugreifen.
+            {!! __('The application :app is asking for permission to access your account (:email) on your behalf.', [
+                'app' => '<strong>' . e($client->name) . '</strong>',
+                'email' => e($user->email),
+            ]) !!}
         </p>
 
         @if (count($scopes) > 0)
-            <p><strong>Diese Anwendung erhält folgende Berechtigungen:</strong></p>
+            <p><strong>{{ __('This application will be granted the following permissions:') }}</strong></p>
             <ul>
                 @foreach ($scopes as $scope)
                     <li>{{ $scope->description }}</li>
@@ -97,14 +99,14 @@
                 <input type="hidden" name="state" value="{{ $request->state }}">
                 <input type="hidden" name="client_id" value="{{ $client->getKey() }}">
                 <input type="hidden" name="auth_token" value="{{ $authToken }}">
-                <button type="submit" class="deny">Ablehnen</button>
+                <button type="submit" class="deny">{{ __('Reject') }}</button>
             </form>
             <form method="post" action="{{ route('passport.authorizations.approve') }}">
                 @csrf
                 <input type="hidden" name="state" value="{{ $request->state }}">
                 <input type="hidden" name="client_id" value="{{ $client->getKey() }}">
                 <input type="hidden" name="auth_token" value="{{ $authToken }}">
-                <button type="submit" class="approve">Genehmigen</button>
+                <button type="submit" class="approve">{{ __('Approve') }}</button>
             </form>
         </div>
     </div>

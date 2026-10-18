@@ -9,6 +9,7 @@ use Artwork\Modules\ExternalAccess\Enums\ExternalAccessType;
 use Artwork\Modules\ExternalAccess\Enums\InviteSource;
 use Artwork\Modules\ExternalAccess\Services\CrmContactEmailResolver;
 use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
+use Artwork\Modules\ExternalAccess\Services\ExternalScopeGrantGuard;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
@@ -81,27 +82,80 @@ class StoreExternalInvitationRequest extends FormRequest
                 }
             }
 
-            if ($this->input('source') !== InviteSource::PROJECT_TAB->value) {
+            $tabScopes = $this->input('tab_scopes', []);
+            $hasTabScopes = is_array($tabScopes) && $tabScopes !== [];
+
+            // Tab-Freigaben hängen immer an einem Projekt – egal, welche Quelle der Client angibt.
+            // Vorher lief die Prüfung nur bei source=project_tab; mit source=crm_index ließ sich so
+            // Schreibzugriff auf Tabs eines fremden Projekts vergeben.
+            if ($this->input('source') !== InviteSource::PROJECT_TAB->value && !$hasTabScopes) {
                 return;
             }
 
             $projectId = $this->input('source_reference_project_id');
             if ($projectId === null) {
+                if ($hasTabScopes) {
+                    $validator->errors()->add(
+                        'source_reference_project_id',
+                        __('You do not have access to the selected project.'),
+                    );
+                }
+
                 return;
             }
 
             $project = Project::query()->find($projectId);
+            $inviter = $this->user();
 
             // ProjectTab is a GLOBAL template (no project_id) — there is no "tab belongs to
             // project" relationship to check. The real guard against cross-project scope
             // injection is that the inviter must be allowed to view the source project.
-            if ($project === null || $this->user()?->cannot('view', $project)) {
+            if ($project === null || !$inviter instanceof User || $inviter->cannot('view', $project)) {
                 $validator->errors()->add(
                     'source_reference_project_id',
                     __('You do not have access to the selected project.'),
                 );
+
+                return;
+            }
+
+            if ($hasTabScopes) {
+                $this->validateTabScopes($validator, $tabScopes, $inviter, $project);
             }
         });
+    }
+
+    /**
+     * Je Tab: die einladende Person muss den Tab selbst sehen dürfen; Schreibzugriff darf nur
+     * vergeben, wer im Projekt schreiben darf (ProjectPolicy::update). Regel: ExternalScopeGrantGuard.
+     *
+     * @param array<int|string, mixed> $tabScopes
+     */
+    private function validateTabScopes(Validator $validator, array $tabScopes, User $inviter, Project $project): void
+    {
+        $grantGuard = app(ExternalScopeGrantGuard::class);
+
+        foreach ($tabScopes as $index => $scope) {
+            if (!is_array($scope)) {
+                continue;
+            }
+
+            $tabId = (int) ($scope['project_tab_id'] ?? 0);
+            if ($tabId > 0 && !$grantGuard->maySeeTab($inviter, $tabId)) {
+                $validator->errors()->add(
+                    "tab_scopes.$index.project_tab_id",
+                    __('You do not have permission to access this project tab.'),
+                );
+            }
+
+            $accessType = ExternalAccessType::tryFrom((string) ($scope['access_type'] ?? ''));
+            if ($accessType !== null && !$grantGuard->mayGrantAccessType($inviter, $project, $accessType)) {
+                $validator->errors()->add(
+                    "tab_scopes.$index.access_type",
+                    __('You do not have write access to this tab.'),
+                );
+            }
+        }
     }
 
     public function toCommand(): InviteExternalCommand

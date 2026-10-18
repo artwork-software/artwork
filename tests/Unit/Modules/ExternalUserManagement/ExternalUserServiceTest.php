@@ -142,6 +142,8 @@ final class ExternalUserServiceTest extends TestCase
             'source_id' => $source->id,
             'user_id' => $user->id,
             'identification' => 'external-user',
+            // schon früher synchronisiert (alte Logik ohne Besitz-Aufzeichnung)
+            'meta_data' => ['security_groups' => ['CN=External Managers']],
         ]);
         ExternalUserGroupMapping::query()->create([
             'source_id' => $source->id,

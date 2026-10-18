@@ -23,7 +23,22 @@ class UpdateContainerCommand extends Command
 
     protected $description = 'Updates the container';
 
-    public function handle(): void
+    /**
+     * Modelle, deren Meilisearch-Index beim Container-Update angelegt und befüllt wird.
+     *
+     * @var array<int, class-string<\Illuminate\Database\Eloquent\Model>>
+     */
+    public const SEARCHABLE_MODELS = [
+        Department::class,
+        MoneySource::class,
+        Project::class,
+        User::class,
+        Freelancer::class,
+        ServiceProvider::class,
+        InventoryArticle::class,
+    ];
+
+    public function handle(): int
     {
         // Muss vor dem Nullen gelesen werden — danach liefert die Config null.
         $database = config('database.connections.mysql.database');
@@ -42,23 +57,26 @@ class UpdateContainerCommand extends Command
         config(['database.connections.mysql.database' => $database]);
 
         $this->line('Migrating');
-        Artisan::call('migrate --force');
+        // Ausgabe und Ergebnis sichtbar machen: der Entrypoint ruft den Befehl mit `|| true` auf, ein
+        // Migrationsfehler soll trotzdem eindeutig im Container-Log stehen und die Folgeschritte stoppen
+        try {
+            $migrateExitCode = Artisan::call('migrate', ['--force' => true]);
+            $this->output->write(Artisan::output());
+        } catch (\Throwable $exception) {
+            $this->output->write(Artisan::output());
+            $this->error('MIGRATION FAILED – container update aborted: ' . $exception->getMessage());
+
+            throw $exception;
+        }
+        if ($migrateExitCode !== self::SUCCESS) {
+            $this->error('MIGRATION FAILED (exit code ' . $migrateExitCode . ') – container update aborted');
+
+            return self::FAILURE;
+        }
 
         $this->line('Adding meili-indexes');
-        foreach (
-            [
-                'departments' => Department::class,
-                'moneysources' => MoneySource::class,
-                'projects' => Project::class,
-                'users' => User::class,
-                'freelancers' => Freelancer::class,
-                'serviceproviders' => ServiceProvider::class,
-                'inventoryarticles' => InventoryArticle::class
-            ] as $key => $model
-        ) {
-            Artisan::call(sprintf('scout:index %s', $key));
-            Artisan::call(sprintf('scout:import %s', str_replace('\\', '\\\\', $model)));
-        }
+        $this->syncMeilisearchIndexes();
+
         if (!Permission::first()) {
             $this->line('Seeding initial data');
             Artisan::call('db:seed:production');
@@ -74,5 +92,20 @@ class UpdateContainerCommand extends Command
         Artisan::call('queue:restart');
 
         $this->line('Container update finished');
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * Legt die Meilisearch-Indizes an und importiert die Datensätze. scout:index bekommt die Modellklasse,
+     * damit der Index genau so heißt, wie Scout ihn beim Suchen anspricht (searchableAs() inkl.
+     * scout.prefix) und modellbezogene index-settings greifen.
+     */
+    private function syncMeilisearchIndexes(): void
+    {
+        foreach (self::SEARCHABLE_MODELS as $model) {
+            Artisan::call('scout:index', ['name' => $model]);
+            Artisan::call('scout:import', ['model' => $model]);
+        }
     }
 }

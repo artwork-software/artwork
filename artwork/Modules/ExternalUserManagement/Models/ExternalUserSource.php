@@ -89,11 +89,17 @@ class ExternalUserSource extends Model
         return $roleId !== null && $roleId !== '' ? (int) $roleId : null;
     }
 
+    /**
+     * @return HasMany<ExternalUser, $this>
+     */
     public function externalUsers(): HasMany
     {
         return $this->hasMany(ExternalUser::class, 'source_id', 'id');
     }
 
+    /**
+     * @return HasMany<ExternalUserGroupMapping, $this>
+     */
     public function groupMappings(): HasMany
     {
         return $this->hasMany(ExternalUserGroupMapping::class, 'source_id', 'id');

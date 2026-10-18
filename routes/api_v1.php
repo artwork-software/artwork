@@ -12,8 +12,11 @@ use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiProjectApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiShiftApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\JwksController;
 use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiWriteScope;
+use Artwork\Modules\Event\Http\Controllers\Api\EventApiController;
+use Artwork\Modules\Event\Http\Controllers\Api\EventStatusApiController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
+use Artwork\Modules\Room\Http\Controllers\Api\RoomApiController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Middleware\CheckToken;
 
@@ -22,10 +25,10 @@ use Laravel\Passport\Http\Middleware\CheckToken;
 | Machine API v1
 |--------------------------------------------------------------------------
 |
-| Versionierte Schnittstelle für externe Systeme (derzeit: der Ticketshop).
+| Versionierte Schnittstelle für externe Systeme (derzeit: Ticketshop, Inventar, Raumbelegung).
 | Registriert in RouteServiceProvider mit Präfix api/v1 und der Middleware-Gruppe api.machine.
 |
-| Reihenfolge der Middleware ist bedeutsam: auth:api muss vor throttle:machine-api und vor der
+| Reihenfolge der Middleware ist bedeutsam: auth:api muss vor throttle:api-token und vor der
 | Scope-Prüfung laufen, sonst ist der Token beim Bilden des Rate-Limit-Schlüssels noch nicht
 | aufgelöst und das Limit fiele auf die IP zurück.
 |
@@ -41,7 +44,7 @@ Route::middleware('throttle:60,1')
     ->get('/ai/jwks', JwksController::class)
     ->name('api.v1.ai.jwks');
 
-Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:machine-api'])->group(function (): void {
+Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:api-token'])->group(function (): void {
     // Chat-Historie fuer artwork-ai. Der Token traegt immer den echten User; jede Abfrage ist auf
     // dessen Gespraeche eingeschraenkt, eine fremde ID liefert 404 statt 403.
     Route::middleware(CheckToken::using('ai:transcript'))->group(function (): void {
@@ -124,7 +127,6 @@ Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:machine-a
         Route::get('/ai/actions/{action}', AiActionApiController::class)
             ->name('api.v1.ai.actions.show');
     });
-
     Route::middleware(CheckToken::using('inventory:read'))->group(function (): void {
         Route::get('/inventory', [InventoryCategoryApiController::class, 'index'])
             ->name('api.v1.inventory.index');
@@ -134,5 +136,18 @@ Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:machine-a
 
         Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show'])
             ->name('api.v1.inventory.articles.show');
+    });
+
+    // Raumbelegung für externe Planungssysteme: Räume, Termine und Terminstatus, nur lesend.
+    // Die Feldnamen der Antworten sind ein Vertrag — nur ergänzen, nie umbenennen.
+    Route::middleware(CheckToken::using('calendar:read'))->group(function (): void {
+        Route::get('/rooms', [RoomApiController::class, 'index'])
+            ->name('api.v1.rooms.index');
+
+        Route::get('/events', [EventApiController::class, 'index'])
+            ->name('api.v1.events.index');
+
+        Route::get('/event-statuses', [EventStatusApiController::class, 'index'])
+            ->name('api.v1.event-statuses.index');
     });
 });

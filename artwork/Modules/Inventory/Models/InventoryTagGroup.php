@@ -15,6 +15,9 @@ class InventoryTagGroup extends Model
         'position',
     ];
 
+    /**
+     * @return HasMany<InventoryTag, $this>
+     */
     public function tags(): HasMany
     {
         return $this->hasMany(InventoryTag::class, 'inventory_tag_group_id', 'id')

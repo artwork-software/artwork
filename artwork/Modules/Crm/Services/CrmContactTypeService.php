@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Crm\Services;
 
+use Artwork\Modules\Crm\Exceptions\CrmSettingLockedException;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Repositories\CrmContactTypeRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -90,13 +91,13 @@ readonly class CrmContactTypeService
     public function destroy(CrmContactType $type): void
     {
         if ($type->is_system) {
-            throw new \RuntimeException('System contact types cannot be deleted.');
+            throw new CrmSettingLockedException(__('System contact types cannot be deleted.'));
         }
 
         // Verhindert verwaiste/unsichtbare Kontakte: ein Typ mit zugeordneten Kontakten
         // darf nicht (soft-)gelöscht werden, sonst verschwinden die Kontakte aus der UI.
         if ($type->contacts()->exists()) {
-            throw new \RuntimeException('Contact types with assigned contacts cannot be deleted.');
+            throw new CrmSettingLockedException(__('Contact types with assigned contacts cannot be deleted.'));
         }
 
         $this->repository->delete($type);

@@ -13,11 +13,17 @@ class CrmPropertyValue extends Model
         'value',
     ];
 
+    /**
+     * @return BelongsTo<CrmContact, $this>
+     */
     public function contact(): BelongsTo
     {
         return $this->belongsTo(CrmContact::class, 'crm_contact_id');
     }
 
+    /**
+     * @return BelongsTo<CrmProperty, $this>
+     */
     public function property(): BelongsTo
     {
         return $this->belongsTo(CrmProperty::class, 'crm_property_id');

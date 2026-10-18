@@ -63,7 +63,6 @@ final class ProjectTabDataEndpointVisibilityTest extends FeatureTestCase
             'bulk edit' => ['projects.tabs.bulk-edit', ProjectTabComponentEnum::BULK_EDIT],
             'calendar' => ['projects.tabs.calendar', ProjectTabComponentEnum::CALENDAR],
             'budget' => ['projects.tabs.budget', ProjectTabComponentEnum::BUDGET],
-            'shift' => ['projects.tabs.shift', ProjectTabComponentEnum::SHIFT_TAB],
             'sage invoices' => ['projects.tabs.sage-invoices', ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW],
         ];
     }
@@ -92,14 +91,6 @@ final class ProjectTabDataEndpointVisibilityTest extends FeatureTestCase
         $this->actingAs($this->readOnlyMember());
 
         $response = $this->getJson(route($routeName, $this->project));
-
-        // Kalender und Schichten scheitern in Feature-Tests an bekannten Fixture-Fehlern im Service
-        // (fehlender Nutzerfilter, Carbon-Typ) — wie in deren Controller-Tests zählt hier die Autorisierung.
-        if (in_array($routeName, ['projects.tabs.calendar', 'projects.tabs.shift'], true)) {
-            $this->assertNotContains($response->getStatusCode(), [302, 401, 403]);
-
-            return;
-        }
 
         $response->assertOk();
     }

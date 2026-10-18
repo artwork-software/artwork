@@ -24,6 +24,9 @@ class MoneySourceReminder extends Model
 
     public $timestamps = false;
 
+    /**
+     * @return BelongsTo<MoneySource, $this>
+     */
     public function moneySource(): BelongsTo
     {
         return $this->belongsTo(

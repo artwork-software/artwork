@@ -5,6 +5,7 @@ namespace Artwork\Modules\System\ApiManagement\Http\Controller;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\System\ApiManagement\Http\Requests\StoreTokenRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Carbon;
 use Laravel\Passport\Token;
 
 /**
@@ -27,7 +28,13 @@ class ApiManagementController extends Controller
             $request->validated('scopes', [])
         );
 
+        // Gilt nur über oauth_access_tokens.expires_at (geprüft im ExtendedTokenValidator); der exp-Claim
+        // im JWT behält Passports Standardlaufzeit. Ein reines Datum aus dem Formular gilt bis Tagesende.
         if ($expiresAt = $request->input('expires_at')) {
+            $expiresAt = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $expiresAt)
+                ? Carbon::parse($expiresAt)->endOfDay()
+                : Carbon::parse($expiresAt);
+
             $result->token?->forceFill(['expires_at' => $expiresAt])->save();
         }
 

@@ -32,14 +32,13 @@
 <script>
 import { Link } from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import ChecklistTemplatesHeader from "@/Pages/ChecklistTemplates/Components/ChecklistTemplatesHeader.vue";
 import SingleChecklistTemplateListView from "@/Pages/ChecklistTemplates/Components/SingleChecklistTemplateListView.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default {
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     name: "Checklist Management",
     props: ['checklist_templates'],
     components: {

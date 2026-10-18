@@ -2,6 +2,7 @@
 // Hört auf Broadcasts und aktualisiert die Events-Liste automatisch
 import { onMounted, onUnmounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { can, is } from 'laravel-permission-to-vuejs';
 
 // eventsRef: Vue ref auf die Events-Liste (eventsRef.value = array)
 // projectId: ref oder getter für die Projekt-ID – nur Events dieses Projekts werden verarbeitet.
@@ -10,7 +11,14 @@ import { usePage } from '@inertiajs/vue3';
 // payload: { event, action: 'created'|'updated'|'deleted' }
 export function useBulkEventsBroadcastUpdater(eventsRef, projectId, options = {}) {
     let channel = null;
+    let planningChannel = null;
     const echo = window.Echo;
+
+    // Geplante Termine kommen vollständig nur auf bulk.events.planning (Planungskalender-Recht); auf bulk.events
+    // steht für sie nur ein Hinweis ohne Inhalt ({id, project_id, redacted: true})
+    function canSeePlannedEvents() {
+        return is('artwork admin') || can('can see planning calendar') || can('can edit planning calendar');
+    }
 
     function getUserBulkSortId() {
         try {
@@ -74,6 +82,14 @@ export function useBulkEventsBroadcastUpdater(eventsRef, projectId, options = {}
 
         const idx = eventsRef.value.findIndex(e => e.id === event.id);
 
+        if (event.redacted) {
+            // Mit Recht kommt der vollständige Termin über den Planungskanal; ohne verschwindet er aus der Liste
+            if (!planningChannel && idx !== -1) {
+                eventsRef.value.splice(idx, 1);
+            }
+            return;
+        }
+
         if (action === 'created' || action === 'updated') {
             if (idx !== -1) {
                 // merge existing with incoming fields but do NOT overwrite start/end with empty/undefined
@@ -115,11 +131,15 @@ export function useBulkEventsBroadcastUpdater(eventsRef, projectId, options = {}
         }
         channel = echo.private('bulk.events')
             .listen('.bulk.event.changed', handleBroadcast);
+        if (canSeePlannedEvents()) {
+            planningChannel = echo.private('bulk.events.planning')
+                .listen('.bulk.event.changed', handleBroadcast);
+        }
     });
 
+    // Nur den eigenen Handler abmelden – Echo.leave schloss den Kanal auch für andere Abonnenten
     onUnmounted(() => {
-        if (echo && channel) {
-            echo.leave('bulk.events');
-        }
+        channel?.stopListening('.bulk.event.changed', handleBroadcast);
+        planningChannel?.stopListening('.bulk.event.changed', handleBroadcast);
     });
 }

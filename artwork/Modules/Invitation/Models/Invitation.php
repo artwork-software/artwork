@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * @property int id
- * @property string email
- * @property string token
- * @property array permissions
- * @property array roles
- * @property Carbon|null expires_at
- * @property string created_at
- * @property string updated_at
+ * @property int $id
+ * @property string $email
+ * @property string $token
+ * @property array $permissions
+ * @property array $roles
+ * @property Carbon|null $expires_at
+ * @property string $created_at
+ * @property string $updated_at
  * @property Collection<Department> $departments
  */
 class Invitation extends Model
@@ -46,6 +46,9 @@ class Invitation extends Model
         return $this->expires_at === null || $this->expires_at->isPast();
     }
 
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);

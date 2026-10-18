@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
+use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmContactTypeService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
@@ -64,10 +65,11 @@ class DocumentRequestController extends Controller
             ->with($eagerLoad)
             ->get();
 
-        // Get requests that are not assigned to any user
-        $unassignedRequests = DocumentRequest::whereNull('requested_id')
-            ->with($eagerLoad)
-            ->get();
+        // Nicht zugewiesene Anfragen nur mit Erstellen-/Bearbeiten-Recht bzw. Admin – vorher gingen sie
+        // an alle in die Seiten-Props, obwohl das Frontend den Tab nur Berechtigten zeigt.
+        $unassignedRequests = $this->canSeeForeignRequests()
+            ? DocumentRequest::whereNull('requested_id')->with($eagerLoad)->get()
+            : collect();
 
         // Offene Anfragen, die anderen Personen zugewiesen sind (unabhängig davon, wer sie erstellt hat).
         // Sichtbarkeit wie beim Tab "Nicht zugewiesen": nur mit Erstellen-/Bearbeiten-Recht bzw. Admin.
@@ -267,6 +269,15 @@ class DocumentRequestController extends Controller
      */
     public function getCrmContactData(DocumentRequest $documentRequest): JsonResponse
     {
+        // Kontaktdaten (inkl. Eigenschaften) nur für Beteiligte oder Berechtigte – vorher ohne Prüfung
+        $userId = Auth::id();
+        abort_unless(
+            (int) $documentRequest->requester_id === $userId
+            || (int) $documentRequest->requested_id === $userId
+            || $this->canSeeForeignRequests(),
+            403
+        );
+
         if (!$documentRequest->crm_contact_id) {
             return response()->json(null);
         }
@@ -284,6 +295,15 @@ class DocumentRequestController extends Controller
         $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
 
         $groups = $this->crmPropertyGroupService->getVisibleForUser($user->id, $deptIds, $isCrmManager);
+        $groups->loadMissing('properties');
+
+        // Werte vertraulicher Gruppen ohne Freigabe nicht ausliefern – vorher wurden nur die
+        // Gruppen gefiltert, die Werte (Stundensatz, Geburtsdatum …) lagen trotzdem im JSON
+        $visiblePropertyIds = $groups->flatMap(fn (CrmPropertyGroup $group) => $group->properties)->pluck('id')->all();
+        $contact->setRelation(
+            'propertyValues',
+            $contact->propertyValues->whereIn('crm_property_id', $visiblePropertyIds)->values()
+        );
 
         return response()->json([
             'contact' => $contact,
@@ -318,14 +338,14 @@ class DocumentRequestController extends Controller
 
         $broadcastMessage = [
             'id' => Str::uuid()->toString(),
-            'type' => 'info',
+            'type' => 'success',
             'message' => $notificationTitle
         ];
 
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => __('View document requests'),
+                'title' => __('View document requests', [], $requestedUser->language),
                 'href' => route('document-requests.index'),
             ]
         ];
@@ -359,7 +379,8 @@ class DocumentRequestController extends Controller
         $notificationTitle = __(
             'notification.document_request.completed',
             [
-                'user' => $requestedUser->first_name . ' ' . $requestedUser->last_name
+                'user' => $requestedUser->first_name . ' ' . $requestedUser->last_name,
+                'title' => $documentRequest->displayTitle(),
             ],
             $requesterUser->language
         );
@@ -373,7 +394,7 @@ class DocumentRequestController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => __('View document requests'),
+                'title' => __('View document requests', [], $requesterUser->language),
                 'href' => route('document-requests.index'),
             ]
         ];

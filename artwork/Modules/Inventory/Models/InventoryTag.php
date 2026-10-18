@@ -26,11 +26,17 @@ class InventoryTag extends Model
         'has_restricted_permissions' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<InventoryTagGroup, $this>
+     */
     public function group(): BelongsTo
     {
         return $this->belongsTo(InventoryTagGroup::class, 'inventory_tag_group_id', 'id');
     }
 
+    /**
+     * @return BelongsToMany<InventoryArticle, $this>
+     */
     public function articles(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -41,6 +47,9 @@ class InventoryTag extends Model
         );
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function allowedUsers(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -51,6 +60,9 @@ class InventoryTag extends Model
         );
     }
 
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
     public function allowedDepartments(): BelongsToMany
     {
         return $this->belongsToMany(

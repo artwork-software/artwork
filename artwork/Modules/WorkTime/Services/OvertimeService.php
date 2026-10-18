@@ -8,11 +8,19 @@ use Artwork\Modules\WorkTime\Models\OvertimePayout;
 use Artwork\Modules\WorkTime\Models\UserOvertime;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
+use Artwork\Modules\WorkTime\Support\OvertimeLedger;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
+/**
+ * Überstunden nach Kontoprinzip (OvertimeLedger): abgeleitet aus Buchungen und Auszahlungen, die Summe
+ * offener Überstunden minus Minusstunden entspricht immer dem Zeitkonto.
+ *
+ * Die Überstundenregel im Vertrag steuert nur noch Frist, „auszahlbar“ und Auszahlung – ohne Regel
+ * werden Überstunden genauso geführt (Auf- und Abbau), nur ohne Frist.
+ */
 class OvertimeService
 {
     public function __construct(private readonly ContractSettingsResolver $contractSettings)
@@ -20,14 +28,48 @@ class OvertimeService
     }
 
     /**
-     * Rebuilds the per-day overtime entries for a user from their WorkTimeBookings, applying FIFO
-     * compensation: negative-balance days consume the oldest still-open overtime first. Idempotent.
-     * Paid-out minutes per entry (manual payouts) are kept and subtracted after the replay.
-     *
-     * Vertragshistorie: Überstundenregel und Abbaufrist werden je Buchungstag aus dem an diesem Tag
-     * gültigen Vertragszeitraum gelesen (ContractSettingsResolver mit Stichtag), nicht aus dem heute
-     * gültigen Satz. Gilt heute kein Zeitraum (Lücke), läuft der Replay trotzdem – Tage ohne aktive
-     * Regel oder ohne Frist erzeugen schlicht keinen Eintrag.
+     * Rechnet das Überstundenkonto einer Person aus Buchungen und Auszahlungen.
+     */
+    public function ledgerFor(User $user): OvertimeLedger
+    {
+        // Cache des Resolvers ist prozesslokal (Queue-Worker): vor dem Replay leeren, damit eine
+        // zwischenzeitlich geänderte Zuweisung nicht mit alten Tageswerten verrechnet wird.
+        $this->contractSettings->flush();
+        $user->loadMissing('contractAssigns.userContract');
+
+        $netChangeByDay = WorkTimeBooking::query()
+            ->where('user_id', $user->id)
+            ->whereNotNull('booking_day')
+            ->selectRaw('DATE(booking_day) as day, SUM(work_time_balance_change) as net')
+            ->groupBy('day')
+            ->pluck('net', 'day')
+            ->map(fn ($net): int => (int) $net)
+            ->all();
+
+        $payouts = OvertimePayout::query()
+            ->where('user_id', $user->id)
+            ->orderBy('payout_date')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (OvertimePayout $payout): array => [
+                'id' => $payout->id,
+                'date' => $payout->payout_date->toDateString(),
+                'minutes' => (int) $payout->minutes,
+            ])
+            ->all();
+
+        return OvertimeLedger::calculate(
+            $netChangeByDay,
+            $payouts,
+            fn (Carbon $day): ?int => $this->compensationPeriodOn($user, $day),
+            now()
+        );
+    }
+
+    /**
+     * Schreibt das Überstundenkonto in user_overtimes (ein Eintrag je Tag mit Überstunden): Grundlage für
+     * Fristwarnungen (OvertimeDeadlineCheck) und Auszahlung. Idempotent; Tage, die keine Überstunden mehr
+     * tragen, werden entfernt – nichts bleibt „eingefroren“ stehen.
      */
     public function recomputeForUser(User $user): void
     {
@@ -35,157 +77,20 @@ class OvertimeService
             return; // Arbeitszeitberechnung aus: Überstunden werden nicht fortgeschrieben
         }
 
-        // Historie einmalig laden: der Resolver löst danach je Tag ohne weitere Abfrage auf.
-        $user->loadMissing('contractAssigns.userContract');
-        if ($user->contractAssigns->isEmpty()) {
-            return; // nie eine Vertragszuweisung → keine Überstundenregel, nichts zu rechnen
-        }
-        // Cache des Resolvers ist prozesslokal (Queue-Worker): vor dem Replay leeren, damit eine
-        // zwischenzeitlich geänderte Zuweisung nicht mit alten Tageswerten verrechnet wird.
-        $this->contractSettings->flush();
+        DB::transaction(function () use ($user): void {
+            // Serialisiert mit payOut(): sonst überschreibt ein paralleler Replay eine frische Auszahlung
+            User::query()->whereKey($user->id)->lockForUpdate()->first();
 
-        $today = now()->startOfDay();
-
-        $bookings = WorkTimeBooking::where('user_id', $user->id)
-            ->whereNotNull('booking_day')
-            ->orderBy('booking_day')
-            ->get();
-
-        $existing = UserOvertime::forUser($user->id)->get()
-            ->keyBy(fn (UserOvertime $e): string => $e->date->toDateString());
-
-        // 1) Build overtime entries for every positive day whose contract period has the rule active.
-        $entries = []; // date(string) => ['minutes','remaining','deadline'(Carbon)]
-        foreach ($bookings as $booking) {
-            $change = (int) $booking->work_time_balance_change;
-            if ($change <= 0) {
-                continue;
-            }
-
-            $day = $booking->booking_day->copy()->startOfDay();
-            $period = $this->compensationPeriodOn($user, $day);
-            if ($period === null) {
-                continue; // an diesem Tag keine aktive Überstundenregel / keine Frist
-            }
-
-            $dateStr = $day->toDateString();
-            $entries[$dateStr] = [
-                'minutes' => $change,
-                'remaining' => $change,
-                'deadline' => $day->copy()->addDays($period),
-            ];
-        }
-
-        // 2) FIFO: apply negative-balance days (under target) to the oldest open entries.
-        foreach ($bookings as $booking) {
-            $change = (int) $booking->work_time_balance_change;
-            if ($change >= 0) {
-                continue;
-            }
-
-            $credit = -$change;
-            $creditDate = $booking->booking_day;
-
-            foreach ($entries as $dateStr => &$entry) {
-                if ($credit <= 0) {
-                    break;
-                }
-                if ($dateStr > $creditDate->toDateString()) {
-                    continue; // overtime accrued after this credit day
-                }
-                if ($entry['deadline']->lt($creditDate)) {
-                    continue; // already expired when this credit occurred
-                }
-                if ($entry['remaining'] <= 0) {
-                    continue;
-                }
-                $take = min($credit, $entry['remaining']);
-                $entry['remaining'] -= $take;
-                $credit -= $take;
-            }
-            unset($entry);
-        }
-
-        // 3) Persist each positive entry with its resulting status. Manual payouts are tracked
-        //    per entry (paid_out_minutes) and reduce the remaining amount after the replay, so a
-        //    recompute never resurrects already paid-out overtime.
-        foreach ($entries as $dateStr => $entry) {
-            $existingEntry = $existing->get($dateStr);
-            $paidOut = (int) ($existingEntry?->paid_out_minutes ?? 0);
-            $remaining = max(0, $entry['remaining'] - $paidOut);
-
-            if ($remaining <= 0) {
-                $status = $paidOut > 0 ? UserOvertime::STATUS_PAID_OUT : UserOvertime::STATUS_COMPENSATED;
-            } else {
-                $status = $entry['deadline']->lt($today)
-                    ? UserOvertime::STATUS_PAYABLE
-                    : UserOvertime::STATUS_OPEN;
-            }
-
-            UserOvertime::updateOrCreate(
-                ['user_id' => $user->id, 'date' => $dateStr],
-                [
-                    'minutes' => $entry['minutes'],
-                    'remaining_minutes' => $remaining,
-                    'deadline' => $entry['deadline']->toDateString(),
-                    'status' => $status,
-                ]
-            );
-        }
-
-        // 4) Remove stale open/compensated entries whose day is no longer a positive overtime day.
-        //    Never delete payable (must be paid out), paid_out or partially paid entries.
-        //    Nur Tage, die der Replay tatsächlich beurteilt hat (Überstundenregel an diesem Tag aktiv),
-        //    dürfen bereinigt werden: Ist die Regel an einem Tag NICHT aktiv (z. B. Zuweisung heute mit
-        //    overtime_rule_active=false, Lücke in der Vertragshistorie), bleibt ein vorhandener Eintrag
-        //    unangetastet — sonst löscht jede Buchung/Zuweisung die gesamte offene Historie der Person.
-        $staleDates = [];
-        foreach ($existing as $dateStr => $existingEntry) {
-            if (isset($entries[$dateStr])) {
-                continue;
-            }
-            if (
-                !in_array($existingEntry->status, [UserOvertime::STATUS_OPEN, UserOvertime::STATUS_COMPENSATED], true)
-                || (int) $existingEntry->paid_out_minutes !== 0
-            ) {
-                continue;
-            }
-            if ($this->compensationPeriodOn($user, $existingEntry->date->copy()->startOfDay()) === null) {
-                continue; // Tag nicht beurteilt → Eintrag bleibt
-            }
-            $staleDates[] = $dateStr;
-        }
-
-        if ($staleDates !== []) {
-            UserOvertime::forUser($user->id)
-                ->whereIn('status', [UserOvertime::STATUS_OPEN, UserOvertime::STATUS_COMPENSATED])
-                ->where('paid_out_minutes', 0)
-                ->whereIn('date', $staleDates)
-                ->delete();
-        }
+            $this->persist($user, $this->ledgerFor($user));
+        });
     }
 
     /**
-     * Abbaufrist in Tagen für einen Buchungstag: null, wenn an diesem Tag keine Überstundenregel aktiv
-     * ist oder keine Frist (> 0) hinterlegt ist – Zuweisung vor Vorlage des am Tag gültigen Zeitraums.
-     */
-    private function compensationPeriodOn(User $user, Carbon $day): ?int
-    {
-        if (!$this->contractSettings->bool($user, 'overtime_rule_active', false, $day)) {
-            return null;
-        }
-
-        $period = $this->contractSettings->int($user, 'overtime_compensation_period', 0, $day);
-
-        return $period > 0 ? $period : null;
-    }
-
-    /**
-     * HR pays out an arbitrary amount of payable overtime. The amount is consumed FIFO from the
-     * oldest payable entries, recorded in the payout history and booked against the user's
-     * work time balance (the actual payment happens outside artwork).
+     * HR zahlt einen frei wählbaren Betrag abgelaufener Überstunden aus – höchstens bis zum positiven
+     * Kontostand und nur bei heute aktiver Überstundenregel. Der Betrag wird in der Historie geführt und
+     * vom Zeitkonto abgezogen (die eigentliche Zahlung erfolgt außerhalb von artwork).
      *
-     * @throws ValidationException when the amount exceeds the payable total
+     * @throws ValidationException
      */
     public function payOut(
         User $user,
@@ -194,17 +99,31 @@ class OvertimeService
         ?string $comment,
         ?Carbon $payoutDate = null
     ): OvertimePayout {
-        $payoutDate ??= Carbon::today();
+        $payoutDate = ($payoutDate ?? Carbon::today())->copy()->startOfDay();
 
         return DB::transaction(function () use ($user, $minutes, $hrUserId, $comment, $payoutDate): OvertimePayout {
-            $payableEntries = UserOvertime::forUser($user->id)
-                ->payable()
-                ->orderBy('date')
-                ->lockForUpdate()
-                ->get();
+            User::query()->whereKey($user->id)->lockForUpdate()->first();
 
-            $payableTotal = (int) $payableEntries->sum('remaining_minutes');
-            if ($minutes > $payableTotal) {
+            if ($minutes < 1) {
+                throw ValidationException::withMessages([
+                    'minutes' => __('Please enter a duration greater than zero.'),
+                ]);
+            }
+            // Nur heute: die Prüfung rechnet mit „heute auszahlbar“; ein rückdatierter Betrag würde im Verlauf an
+            // einem Tag verrechnet, an dem diese Stunden noch gar nicht abgelaufen waren
+            if (!$payoutDate->isSameDay(Carbon::today())) {
+                throw ValidationException::withMessages([
+                    'payout_date' => __('Overtime can only be paid out with today\'s date.'),
+                ]);
+            }
+            if (!$this->ruleActiveToday($user)) {
+                throw ValidationException::withMessages([
+                    'minutes' => __('Overtime can only be paid out with an active overtime rule.'),
+                ]);
+            }
+
+            $ledger = $this->ledgerFor($user);
+            if ($minutes > $ledger->payableNowMinutes()) {
                 throw ValidationException::withMessages([
                     'minutes' => __('The amount exceeds the payable overtime.'),
                 ]);
@@ -218,28 +137,110 @@ class OvertimeService
                 'comment' => $comment,
             ]);
 
-            $left = $minutes;
-            foreach ($payableEntries as $entry) {
-                if ($left <= 0) {
-                    break;
-                }
-                $take = min($left, (int) $entry->remaining_minutes);
-                $entry->paid_out_minutes += $take;
-                $entry->remaining_minutes -= $take;
-                if ($entry->remaining_minutes <= 0) {
-                    $entry->status = UserOvertime::STATUS_PAID_OUT;
-                }
-                $entry->paid_out_by = $hrUserId;
-                $entry->paid_out_at = now();
-                $entry->payout_reason = $comment;
-                $entry->save();
-                $left -= $take;
-            }
-
             // Zeitkonto um die ausgezahlten Minuten reduzieren.
             app(WorkTimeBookingRepository::class)->updateUserBalance($user, -$minutes);
 
+            $this->persist($user, $this->ledgerFor($user));
+
             return $payout;
         });
+    }
+
+    /**
+     * Überstundenregel und Frist heute (Anzeige/Auszahlung).
+     *
+     * @return array{rule_active: bool, compensation_period: int|null}
+     */
+    public function ruleSettingsToday(User $user): array
+    {
+        $this->contractSettings->flush();
+        $active = $this->ruleActiveToday($user);
+        $period = $active ? $this->contractSettings->int($user, 'overtime_compensation_period', 0, Carbon::today()) : 0;
+
+        return ['rule_active' => $active, 'compensation_period' => $period > 0 ? $period : null];
+    }
+
+    private function ruleActiveToday(User $user): bool
+    {
+        return $this->contractSettings->assignFor($user, Carbon::today()) !== null
+            && $this->contractSettings->bool($user, 'overtime_rule_active', false, Carbon::today());
+    }
+
+    /**
+     * Abbaufrist in Tagen für einen Buchungstag: null, wenn an diesem Tag keine Überstundenregel aktiv
+     * ist oder keine Frist (> 0) hinterlegt ist – dann laufen die Überstunden ohne Frist.
+     */
+    private function compensationPeriodOn(User $user, Carbon $day): ?int
+    {
+        if (!$this->contractSettings->bool($user, 'overtime_rule_active', false, $day)) {
+            return null;
+        }
+
+        $period = $this->contractSettings->int($user, 'overtime_compensation_period', 0, $day);
+
+        return $period > 0 ? $period : null;
+    }
+
+    /**
+     * Schreibt nur Abweichungen: vorhandene Einträge einmal laden und vergleichen (statt je Tag eine Abfrage),
+     * neue Tage gesammelt einfügen, Tage ohne Überstunden entfernen.
+     */
+    private function persist(User $user, OvertimeLedger $ledger): void
+    {
+        $payouts = OvertimePayout::query()->where('user_id', $user->id)->get()->keyBy('id');
+        $existing = UserOvertime::forUser($user->id)->get()
+            ->keyBy(fn (UserOvertime $entry): string => $entry->date->toDateString());
+
+        $keepDates = [];
+        $inserts = [];
+        $now = now();
+        foreach ($ledger->accruals() as $accrual) {
+            $keepDates[$accrual['date']] = true;
+            $lastPayout = null;
+            foreach ($accrual['used_by'] as $use) {
+                if ($use['type'] === 'payout') {
+                    $lastPayout = $payouts->get($use['payout_id'] ?? null) ?? $lastPayout;
+                }
+            }
+
+            $attributes = [
+                'minutes' => $accrual['overtime'],
+                'remaining_minutes' => $accrual['remaining'],
+                'paid_out_minutes' => $accrual['paid_out'],
+                'deadline' => $accrual['deadline'],
+                'status' => $accrual['status'],
+                'paid_out_by' => $lastPayout?->created_by,
+                'paid_out_at' => $lastPayout?->created_at,
+                'payout_reason' => $lastPayout?->comment,
+            ];
+
+            $entry = $existing->get($accrual['date']);
+            if ($entry === null) {
+                $inserts[] = $attributes + [
+                    'user_id' => $user->id,
+                    'date' => $accrual['date'],
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+                continue;
+            }
+
+            $entry->fill($attributes);
+            if ($entry->isDirty()) {
+                $entry->save();
+            }
+        }
+
+        foreach (array_chunk($inserts, 500) as $chunk) {
+            UserOvertime::query()->insert($chunk);
+        }
+
+        $staleIds = $existing
+            ->keys()
+            ->reject(fn (string $date): bool => isset($keepDates[$date]))
+            ->map(fn (string $date): int => $existing[$date]->id);
+        if ($staleIds->isNotEmpty()) {
+            UserOvertime::query()->whereIn('id', $staleIds)->delete();
+        }
     }
 }

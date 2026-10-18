@@ -35,8 +35,9 @@
 
             <div v-else>
                 <a
-                    :href="text"
+                    :href="safeLinkTarget(text)"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="text-accent-600 hover:underline"
                     v-if="text && text.length > 0"
                 >
@@ -50,13 +51,15 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import axios from 'axios';
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
+import { createComponentTextSave } from "@/Composeables/componentTextSave.js";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import { IconEdit } from "@tabler/icons-vue";
+import { safeLinkTarget } from "@/Helper/SafeUrl.js";
 
 // Für DevTools
 defineOptions({ name: "LinkComponent" });
@@ -82,37 +85,47 @@ const text = ref(
 // Edit-UI toggeln
 const showTextField = ref(false);
 
-// Listener wie zuvor im mounted
+// Getter: Inertia-Besuche mit preserveState ersetzen props.data, die Komponente bleibt gemountet
+const dataListener = useProjectDataListener(() => props.data, props.projectId);
 onMounted(() => {
-    useProjectDataListener(props.data, props.projectId).init();
+    dataListener.init();
+});
+onBeforeUnmount(() => {
+    dataListener.stop();
 });
 
-// Server-Update mit axios (ohne Page Reload)
-async function updateTextData() {
-    try {
-        await axios.patch(
-            route("project.tab.component.update", {
-                project: props.projectId,
-                component: props.data.id,
-            }),
-            { data: { text: text.value } }
-        );
-        // Edit-Modus schließen nach erfolgreichem Update
+// Nur bei Änderung, nacheinander (neuester Wert gewinnt), eigene Antwort übernehmen. Offener Editor
+// mit ungespeicherter Eingabe wird von Live-Updates nicht überschrieben.
+const textSave = createComponentTextSave({
+    text,
+    isEditing: showTextField,
+    getStoredText: () => (props.data.project_value ? props.data.project_value.data.text : props.data.data.text),
+    dataListener,
+    send: (value) => axios.patch(
+        route("project.tab.component.update", {
+            project: props.projectId,
+            component: props.data.id,
+        }),
+        { data: { text: value } }
+    ),
+    // Edit-Modus schließen nach erfolgreichem Update (außer es wurde inzwischen weitergetippt)
+    afterSaved: () => {
+        if (!textSave.isDirty()) {
+            showTextField.value = false;
+        }
+    },
+});
+
+function updateTextData() {
+    if (!textSave.submit()) {
         showTextField.value = false;
-        // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
-    } catch (error) {
-        console.error('Fehler beim Aktualisieren:', error);
     }
 }
 
 // Deep-Watch: wenn projectData geändert wird, Text synchronisieren
 watch(
     () => props.data,
-    (newVal) => {
-        text.value = newVal.project_value
-            ? newVal.project_value.data.text
-            : newVal.data.text;
-    },
+    () => textSave.syncFromStored(),
     { deep: true }
 );
 </script>

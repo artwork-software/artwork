@@ -19,19 +19,21 @@
                 id="descriptionField"
                 v-model="form.short_description"
                 :label="inputLabel"
-                maxlength="250"
+                :maxlength="maxLength"
+                :error="noteError"
                 @focusout="updateDescription"
             />
             <div class="text-xs text-end text-text-muted">
-                {{ form.short_description.length }} / 250
+                {{ form.short_description.length }} / {{ maxLength }}
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
+import axios from "axios";
+import { extractSaveErrorMessage } from "@/Composeables/BiSaveFeedback.js";
 import Permissions from "@/Mixins/Permissions.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -61,7 +63,7 @@ export default {
             default: false
         }
     },
-    mixins: [IconLib, Permissions],
+    mixins: [Permissions],
     computed: {
         isPivotMode() {
             return this.mode === 'pivot'
@@ -129,6 +131,10 @@ export default {
             }
             return this.shift?.description ?? ''
         },
+        /** Individuelle Notiz (Pivot) max. 250, Schicht-/Vorlagenbeschreibung max. 10.000 Zeichen */
+        maxLength() {
+            return this.isPivotMode ? 250 : 10000
+        },
         cutText() {
             return this.currentText?.length > 70 ? this.currentText.substring(0, 70) + '...' : this.currentText
         }
@@ -136,6 +142,7 @@ export default {
     data(){
         return {
             showTextField: false,
+            noteError: '',
             form: useForm({
                 short_description: this.isPivotMode
                     ? (this.pivotEntity?.pivot?.short_description ?? '')
@@ -144,7 +151,12 @@ export default {
         }
     },
     methods: {
+        /** Erste Validierungsmeldung eines Inertia-Fehlers; das Feld bleibt mit dem Entwurf offen */
+        showErrors(errors, field) {
+            this.noteError = errors?.[field] ?? Object.values(errors ?? {})[0] ?? this.$t('An error has occurred')
+        },
         updateDescription(){
+            this.noteError = ''
             if (!this.canEdit) {
                 this.showTextField = false
                 return
@@ -174,30 +186,40 @@ export default {
                         onSuccess: () => {
                             this.form.defaults({ short_description: this.form.short_description })
                             this.showTextField = false
-                        }
+                        },
+                        onError: (errors) => this.showErrors(errors, 'short_description'),
                     }
                 )
                 return
             }
 
             if (this.isPreset) {
-                this.form.patch(route('preset.shift.update.updateDescription', this.shift.id), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    data: { description: this.form.short_description },
-                    onSuccess: () => {
-                        this.showTextField = false
-                    }
-                })
+                // Inertia ignoriert eine Option "data" – das Feld heißt im Formular short_description,
+                // der Endpunkt erwartet description
+                this.form
+                    .transform((data) => ({ description: data.short_description }))
+                    .patch(route('preset.shift.update.updateDescription', this.shift.id), {
+                        preserveState: true,
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            this.form.defaults({ short_description: this.form.short_description })
+                            this.showTextField = false
+                        },
+                        onError: (errors) => this.showErrors(errors, 'description'),
+                    })
             } else {
-                this.form.patch(route('event.shift.update.updateDescription', this.shift.id), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    data: { description: this.form.short_description },
-                    onSuccess: () => {
+                // JSON-Endpunkt (kein Inertia-Response) → axios, Text lokal übernehmen
+                const description = this.form.short_description
+                // Fehler steht am Feld – kein zusätzlicher globaler Toast
+                axios.patch(route('event.shift.update.updateDescription', this.shift.id), { description }, { skipErrorToast: true })
+                    .then(() => {
+                        this.shift.description = description
+                        this.form.defaults({ short_description: description })
                         this.showTextField = false
-                    }
-                })
+                    })
+                    .catch((error) => {
+                        this.noteError = extractSaveErrorMessage(error) ?? this.$t('An error has occurred')
+                    })
             }
         },
         openTextField(){
@@ -212,10 +234,11 @@ export default {
             // and avoid showing it as dirty immediately.
             this.form.defaults({ short_description: this.currentText })
             this.form.short_description = this.currentText
+            this.noteError = ''
 
             this.showTextField = true
             this.$nextTick(() => {
-                this.$refs.descriptionField.focus()
+                this.$refs.descriptionField?.focus()
             })
         }
     }

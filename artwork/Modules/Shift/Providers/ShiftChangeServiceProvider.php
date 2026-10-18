@@ -10,6 +10,7 @@ use Artwork\Modules\Shift\Observers\ShiftObserver;
 use Artwork\Modules\Shift\Observers\ShiftsQualificationsObserver;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
+use Artwork\Modules\Shift\Support\SafeBroadcastCircuit;
 use Illuminate\Support\ServiceProvider;
 
 class ShiftChangeServiceProvider extends ServiceProvider
@@ -23,6 +24,9 @@ class ShiftChangeServiceProvider extends ServiceProvider
         // scoped statt singleton: Octane/Swoole hält Singletons über Requests hinweg,
         // die memoisierten berechtigten User-IDs müssen aber je Request frisch sein.
         $this->app->scoped(ShiftConfirmationEligibilityService::class);
+
+        // Kurzschluss von SafeBroadcast: je Request/Job frisch (nach einem Broadcast-Fehler keine weiteren Versuche)
+        $this->app->scoped(SafeBroadcastCircuit::class);
     }
 
     public function boot(): void

@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Event\Events;
 
 use App\Http\Resources\MinimalShiftPlanShiftResource;
-use Artwork\Modules\Calendar\DTO\BroadcastEventDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
@@ -23,10 +22,18 @@ class RemoveEvent implements ShouldBroadcastNow
     public $event;
     public $roomId;
 
-    public function __construct(Event $event, int $roomId)
+    /**
+     * @param int|null $roomId Kanal des Raums; Termine ohne Raum haben keinen Raumkanal
+     */
+    public function __construct(Event $event, ?int $roomId)
     {
         $this->event = $event;
         $this->roomId = $roomId;
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return $this->roomId !== null;
     }
 
     public function broadcastAs()
@@ -41,9 +48,13 @@ class RemoveEvent implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
-        $event = $this->event;
+        // Zum Entfernen genügt die Kennung – der volle Termin ging auf dem offenen Raumkanal auch bei geplanten
+        // Terminen an alle (Planungskalender-Recht)
         return [
-            'event' => BroadcastEventDTO::formModel($event),
+            'event' => [
+                'id' => $this->event->id,
+                'roomId' => $this->roomId,
+            ],
         ];
     }
 }

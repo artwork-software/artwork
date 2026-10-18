@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
     MANUAL_BASE_URL,
+    SETTINGS_GUIDE_AREAS_WITHOUT_MANUAL,
     displaySettingsManualPath,
     manualLanguage,
     manualUrl,
@@ -70,6 +71,7 @@ test('every storage key used by a settings banner has a manual page', async () =
             keys.add(match[0]);
         }
     }
-    const missing = [...keys].filter((key) => settingsGuideManualPath(key) === null);
+    const missing = [...keys].filter((key) => settingsGuideManualPath(key) === null
+        && !SETTINGS_GUIDE_AREAS_WITHOUT_MANUAL.includes(key.split('.')[1]));
     assert.deepEqual(missing, []);
 });

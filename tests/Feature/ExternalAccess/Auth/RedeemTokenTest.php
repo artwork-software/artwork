@@ -3,6 +3,7 @@
 namespace Tests\Feature\ExternalAccess\Auth;
 
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
+use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\ExternalAccess\Models\ExternalInvitation;
 use Artwork\Modules\ExternalAccess\Models\ExternalLoginToken;
 use Illuminate\Support\Facades\Auth;
@@ -155,5 +156,72 @@ final class RedeemTokenTest extends TestCase
             ->assertRedirect(route('external.dashboard'));
         $this->assertNotNull($token->fresh()->used_at);
         $this->assertSame($external->id, Auth::guard('external')->id());
+    }
+
+    /**
+     * Reiner Tab-Zugang ohne eigene Datenpflege, wie ihn eine Tab-Einladung anlegt.
+     */
+    private function makeTabOnlyAccess(): ExternalAccess
+    {
+        return ExternalAccess::factory()->create([
+            'crm_contact_id' => null,
+            'crm_access_expires_at' => null,
+        ]);
+    }
+
+    #[Test]
+    public function single_shared_tab_without_crm_access_lands_directly_in_the_tab(): void
+    {
+        $external = $this->makeTabOnlyAccess();
+        $scope = ExternalAccessScope::factory()->write()->create(['external_access_id' => $external->id]);
+        $plain = Str::random(64);
+        $this->makeToken($external, $plain);
+
+        $this->post(route('external.login.redeem.store', ['token' => $plain]))
+            ->assertRedirect(route('external.project.tab.show', [
+                'project' => $scope->project_id,
+                'tab' => $scope->project_tab_id,
+            ]));
+        $this->assertSame($external->id, Auth::guard('external')->id());
+    }
+
+    #[Test]
+    public function several_shared_tabs_land_on_the_dashboard(): void
+    {
+        $external = $this->makeTabOnlyAccess();
+        ExternalAccessScope::factory()->count(2)->create(['external_access_id' => $external->id]);
+        $plain = Str::random(64);
+        $this->makeToken($external, $plain);
+
+        $this->post(route('external.login.redeem.store', ['token' => $plain]))
+            ->assertRedirect(route('external.dashboard'));
+    }
+
+    #[Test]
+    public function single_shared_tab_with_active_crm_access_lands_on_the_dashboard(): void
+    {
+        $external = ExternalAccess::factory()->active()->create();
+        ExternalAccessScope::factory()->create(['external_access_id' => $external->id]);
+        $plain = Str::random(64);
+        $this->makeToken($external, $plain);
+
+        $this->post(route('external.login.redeem.store', ['token' => $plain]))
+            ->assertRedirect(route('external.dashboard'));
+    }
+
+    #[Test]
+    public function expired_second_tab_does_not_count_towards_the_landing_page(): void
+    {
+        $external = $this->makeTabOnlyAccess();
+        $scope = ExternalAccessScope::factory()->create(['external_access_id' => $external->id]);
+        ExternalAccessScope::factory()->expired()->create(['external_access_id' => $external->id]);
+        $plain = Str::random(64);
+        $this->makeToken($external, $plain);
+
+        $this->post(route('external.login.redeem.store', ['token' => $plain]))
+            ->assertRedirect(route('external.project.tab.show', [
+                'project' => $scope->project_id,
+                'tab' => $scope->project_tab_id,
+            ]));
     }
 }

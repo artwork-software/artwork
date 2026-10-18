@@ -85,12 +85,12 @@ final class NotificationMailTemplateTest extends FeatureTestCase
         $this->assertStringContainsString('Betrifft Zeitraum: 04.05.2026 - 10.05.2026', $rendered);
         $this->assertStringContainsString('operation/plan', $rendered);
         $this->assertStringContainsString('start_date=2026-05-04', $rendered);
-        // Die App-URL bleibt als Fallback-Link ("alle Benachrichtigungen") erhalten
-        $this->assertStringContainsString(NotificationMailPresenter::appUrl(), $rendered);
+        // „Alle Benachrichtigungen“ führt ins Benachrichtigungscenter (vorher App-Wurzel)
+        $this->assertStringContainsString(NotificationMailPresenter::notificationsUrl(), $rendered);
     }
 
     #[Test]
-    public function immediate_mail_without_deep_link_falls_back_to_app_url(): void
+    public function immediate_mail_without_deep_link_falls_back_to_the_notification_centre(): void
     {
         $worker = User::factory()->create();
         $body = $this->lockedShiftPayload($worker);
@@ -102,7 +102,7 @@ final class NotificationMailTemplateTest extends FeatureTestCase
 
         $this->assertStringContainsString('Deine Schicht: 06.05.2026 09:00 - 17:00', $rendered);
         $this->assertStringNotContainsString('operation/plan', $rendered);
-        $this->assertStringContainsString('href="' . NotificationMailPresenter::appUrl() . '"', $rendered);
+        $this->assertStringContainsString('href="' . NotificationMailPresenter::notificationsUrl() . '"', $rendered);
     }
 
     #[Test]
@@ -153,7 +153,7 @@ final class NotificationMailTemplateTest extends FeatureTestCase
         ];
         $this->assertSame(['Zeile ohne Link'], NotificationMailPresenter::textLines($description));
         $this->assertSame($appUrl . '/shifts/view', NotificationMailPresenter::primaryLink($description));
-        $this->assertSame($appUrl, NotificationMailPresenter::primaryLink(null));
+        $this->assertSame(NotificationMailPresenter::notificationsUrl(), NotificationMailPresenter::primaryLink(null));
     }
 
     /**
@@ -320,5 +320,23 @@ final class NotificationMailTemplateTest extends FeatureTestCase
                 'de'
             )
         );
+    }
+
+    #[Test]
+    public function mails_with_in_app_actions_link_to_the_notification_centre(): void
+    {
+        $roomRequest = (object) [
+            'buttons' => ['show_in_calendar', 'accept', 'decline'],
+            'description' => [1 => ['type' => 'link', 'title' => 'Bühne', 'href' => 'https://example.org/rooms/1']],
+        ];
+        $roomChange = (object) [
+            'buttons' => [],
+            'description' => [1 => ['type' => 'link', 'title' => 'Bühne', 'href' => 'https://example.org/rooms/1']],
+        ];
+
+        // Annehmen/Ablehnen gibt es nur im Center – der Raumlink führte ins Leere
+        $this->assertSame(NotificationMailPresenter::notificationsUrl(), NotificationMailPresenter::mainLink($roomRequest));
+        $this->assertSame('https://example.org/rooms/1', NotificationMailPresenter::mainLink($roomChange));
+        $this->assertTrue(NotificationMailPresenter::hasMainLink(['buttons' => ['answer'], 'description' => []]));
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InternalIssueFile extends Model
 {
@@ -24,7 +25,10 @@ class InternalIssueFile extends Model
     ];
 
 
-    public function issue()
+    /**
+     * @return BelongsTo<InternalIssue, $this>
+     */
+    public function issue(): BelongsTo
     {
         return $this->belongsTo(InternalIssue::class, 'internal_issue_id');
     }

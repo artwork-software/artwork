@@ -311,6 +311,8 @@
                                 <Link
                                     v-else-if="!item.isMenu && item.has_permission"
                                     :href="item.href"
+                                    :title="isFullSideBar ? undefined : $t(item.name)"
+                                    :aria-label="isFullSideBar ? undefined : $t(item.name)"
                                     :class="[
                                       'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors border-l-2',
                                       isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
@@ -319,11 +321,19 @@
                                         : 'border-transparent text-white hover:bg-white/10 hover:text-white'
                                     ]"
                                 >
-                                    <PropertyIcon
-                                        :name="item.icon"
-                                        :stroke-width="1"
-                                        class="size-6 min-w-6 min-h-6 text-white"
-                                    />
+                                    <span class="relative inline-flex">
+                                        <PropertyIcon
+                                            :name="item.icon"
+                                            :stroke-width="1"
+                                            class="size-6 min-w-6 min-h-6 text-white"
+                                        />
+                                        <span
+                                            v-if="item.showsUnseenNotifications && unseenNotifications"
+                                            class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-danger ring-2 ring-surface-inverse"
+                                        >
+                                            <span class="sr-only">{{ $t('New notifications') }}</span>
+                                        </span>
+                                    </span>
                                     <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
                                 </Link>
 
@@ -499,6 +509,7 @@
 </template>
 
 <script setup>
+import { hasUnseenNotifications } from "@/Helper/notificationIndicator.js";
 
 import {computed, ref} from "vue";
 import {usePage, Link, router} from "@inertiajs/vue3";
@@ -554,6 +565,10 @@ const computedBudgetRoute = computed(() => {
 
     return desiredBudgetRoute
 })
+
+const unseenNotifications = computed(() =>
+    hasUnseenNotifications(usePage().props.auth.user, route().current('notifications.*'))
+)
 
 const moduleIsVisible = (module) => {
     return is('artwork admin') || usePage().props.module_settings[module];
@@ -838,7 +853,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         prefetch: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | change calendar settings | change money source settings | change budget settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager | inventory.settings') || is('artwork admin'),
+        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | change calendar settings | change money source settings | change budget settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager | manage ticketing | inventory.settings') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',
@@ -930,6 +945,13 @@ const navigation = ref([
                 current: route().current('tool.branding'),
                 has_permission: can('change budget settings') || is('artwork admin')
             },
+            {
+                name: 'Artwork-Tickets',
+                href: route('settings.tickets'),
+                icon: 'IconBuildingStore',
+                current: route().current('settings.tickets*'),
+                has_permission: usePage().props.ticketing?.configured && (can('manage ticketing') || is('artwork admin'))
+            },
         ]
     },
     {
@@ -960,6 +982,7 @@ const subNavigation = ref([
         href: route('notifications.index'),
         icon: 'IconBell',
         current: route().current('notifications.*'),
+        showsUnseenNotifications: true,
         isMenu: false,
         showToolTipForItem: false,
         has_permission: true,

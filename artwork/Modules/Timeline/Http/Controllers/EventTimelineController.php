@@ -8,6 +8,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventTimelineService;
 use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
 use Illuminate\Http\Request;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 /**
  * Ablaufplan („Timeline") eines Termins. Die Aktionen lagen historisch im ShiftController,
@@ -59,7 +60,11 @@ class EventTimelineController extends Controller
     private function broadcastEvent(Event $event): void
     {
         $freshEvent = $event->fresh();
+        // Termin inzwischen gelöscht: nichts zu senden (EventCreated verlangt einen Termin)
+        if ($freshEvent === null) {
+            return;
+        }
 
-        broadcast(new EventCreated($freshEvent, $freshEvent?->room_id));
+        SafeBroadcast::send(new EventCreated($freshEvent, $freshEvent->room_id));
     }
 }

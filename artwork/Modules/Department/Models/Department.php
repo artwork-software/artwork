@@ -32,30 +32,45 @@ class Department extends Model
         'svg_name'
     ];
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }
 
 
+    /**
+     * @return BelongsToMany<Invitation, $this>
+     */
     public function invitations(): BelongsToMany
     {
         return $this->belongsToMany(Invitation::class);
     }
 
 
+    /**
+     * @return BelongsToMany<Project, $this>
+     */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class);
     }
 
 
+    /**
+     * @return BelongsToMany<Checklist, $this>
+     */
     public function checklists(): BelongsToMany
     {
         return $this->belongsToMany(Checklist::class);
     }
 
 
+    /**
+     * @return BelongsToMany<ChecklistTemplate, $this>
+     */
     //@todo: fix phpcs error - refactor function name to checklistTemplates
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function checklist_templates(): BelongsToMany
@@ -78,6 +93,9 @@ class Department extends Model
         ];
     }
 
+    /**
+     * @return BelongsToMany<InventoryTag, $this>
+     */
     public function inventoryTagsWithEditPermission(): BelongsToMany
     {
         return $this->belongsToMany(

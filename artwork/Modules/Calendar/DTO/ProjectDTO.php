@@ -5,11 +5,14 @@ namespace Artwork\Modules\Calendar\DTO;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 
 class ProjectDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
+
     public function __construct(
         public int $id,
         public string $name,

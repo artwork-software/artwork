@@ -151,7 +151,7 @@ class InventoryTagManagementService
 
     public function reorderTags(?InventoryTagGroup $group, array $orderedIds): void
     {
-        DB::transaction(function () use ($group, $orderedIds): void {
+        DB::transaction(function () use ($orderedIds): void {
             foreach ($orderedIds as $index => $id) {
                 InventoryTag::whereKey($id)->update([
                     'position' => $index + 1,

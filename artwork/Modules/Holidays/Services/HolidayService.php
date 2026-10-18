@@ -102,6 +102,14 @@ class HolidayService
      * @param bool $schoolHolidays
      * @return string[]
      */
+    /**
+     * Feiertagsnamen in der Instanzsprache (gespeichert wird einmal für alle Nutzer:innen).
+     */
+    private function holidayLanguage(): string
+    {
+        return strtoupper((string) config('app.instance_locale', 'de'));
+    }
+
     public function getHolidaysFromAPI(
         \Illuminate\Support\Collection $selectedSubdivisions,
         bool $publicHolidays,
@@ -115,6 +123,7 @@ class HolidayService
                     now()->startOfYear(),
                     now()->addYears(2)->endOfYear(),
                     $subdivisionModel,
+                    $this->holidayLanguage(),
                 );
                 $data['country'] = $subdivisionModel->country_code;
                 $responses[] = $data;
@@ -125,6 +134,7 @@ class HolidayService
                     now()->startOfYear(),
                     now()->addYears(2)->endOfYear(),
                     $subdivisionModel,
+                    $this->holidayLanguage(),
                 );
                 $data['country'] = $subdivisionModel->country_code;
                 $responses[] = $data;
@@ -256,7 +266,10 @@ class HolidayService
             $lengthInDays = (int) $holidayStart->diffInDays($holidayEnd);
             // Vorjahr mitnehmen: ein Block ab z. B. 30.12. reicht in den Januar des Zeitraums hinein
             for ($year = $rangeStart->year - 1; $year <= $rangeEnd->year; $year++) {
-                $projectedStart = Carbon::create($year, $holidayStart->month, $holidayStart->day)->startOfDay();
+                $projectedStart = Holiday::yearlyStartIn($holidayStart, $year);
+                if ($projectedStart === null) {
+                    continue;
+                }
                 $projectedEnd = $projectedStart->copy()->addDays($lengthInDays);
                 if ($projectedStart->lte($rangeEnd) && $projectedEnd->gte($rangeStart)) {
                     $result->push($this->toCalendarHolidayDto($holiday, $projectedStart, $projectedEnd));

@@ -26,6 +26,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
+use Artwork\Modules\Ticketing\Services\TicketingProductionService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
@@ -50,6 +51,7 @@ class ProjectService
         private readonly UserService $userService,
         private readonly CarbonService $carbonService,
         private readonly ProjectTeamNotificationService $projectTeamNotificationService,
+        private readonly TicketingProductionService $ticketingProductionService,
     ) {
     }
 
@@ -528,6 +530,8 @@ class ProjectService
         if ($table) {
             app()->call([app(TableService::class), 'forceDelete'], ['table' => $table]);
         }
+
+        $this->ticketingProductionService->deleteFilesOf($project);
 
         // force delete the project
         return $project->forceDelete();

@@ -37,6 +37,9 @@ class ShiftsQualifications extends Model
         'overbooked_value'
     ];
 
+    /**
+     * @return BelongsTo<Shift, $this>
+     */
     public function shift(): BelongsTo
     {
         return $this->belongsTo(
@@ -47,6 +50,9 @@ class ShiftsQualifications extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<ShiftQualification, $this>
+     */
     public function shiftQualification(): BelongsTo
     {
         return $this->belongsTo(

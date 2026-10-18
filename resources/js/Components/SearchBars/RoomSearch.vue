@@ -122,7 +122,7 @@ async function fetchRooms(q: string) {
         const { data } = await axios.post(route('room.search'), {
             search: q,
             wantsJson: true,
-        }, { signal: controller.signal })
+        }, { signal: controller.signal, skipErrorToast: true }) // Fehler steht im Dropdown
         results.value = Array.isArray(data) ? data : []
     } catch (e: any) {
         if (e?.name === 'CanceledError' || e?.name === 'AbortError') return

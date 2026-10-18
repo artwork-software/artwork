@@ -5,6 +5,9 @@ namespace Artwork\Modules\Freelancer\Http\Resources;
 use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Freelancer\Models\Freelancer
+ */
 class FreelancerShowResource extends JsonResource
 {
     public static $wrap = null;

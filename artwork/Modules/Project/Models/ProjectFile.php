@@ -11,15 +11,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\FilesystemException;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property int $id
  * @property string $name
  * @property string $basename
  * @property int $project_id
+ * @property int|null $tab_id
+ * @property bool $is_budget_document Budget-Dokument mit Freigabeliste (nur Freigegebene und Admins)
  * @property string $deleted_at
- * @property string $created_at
- * @property string $updated_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  */
 class ProjectFile extends Model
 {
@@ -34,6 +37,11 @@ class ProjectFile extends Model
         'basename',
         'project_id',
         'external_access_id',
+        'is_budget_document',
+    ];
+
+    protected $casts = [
+        'is_budget_document' => 'boolean',
     ];
 
     protected $guarded = [
@@ -49,11 +57,17 @@ class ProjectFile extends Model
 
     private ?int $storedFileSizeInBytes = null;
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function accessingUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }
 
+    /**
+     * @return HasMany<Comment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
@@ -61,6 +75,7 @@ class ProjectFile extends Model
 
     /**
      * Externe Person (Magic-Link-Zugang), die die Datei über einen freigegebenen Tab hochgeladen hat.
+     * @return BelongsTo<\Artwork\Modules\ExternalAccess\Models\ExternalAccess, $this>
      */
     public function externalAccess(): BelongsTo
     {
@@ -98,11 +113,16 @@ class ProjectFile extends Model
         $this->storedFileSizeResolved = true;
 
         try {
-            $this->storedFileSizeInBytes = Storage::fileSize('project_files/' . $this->basename);
+            $this->storedFileSizeInBytes = Storage::fileSize($this->storagePath());
         } catch (FilesystemException) {
             return null;
         }
 
         return $this->storedFileSizeInBytes;
+    }
+
+    public function storagePath(): string
+    {
+        return 'project_files/' . $this->basename;
     }
 }

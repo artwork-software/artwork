@@ -23,14 +23,7 @@ trait MapRoomsToContentForCalendar
 
             $groupedEvents = $room->events->flatMap(
                 function ($eventDTO) {
-                    $eventStart = Carbon::parse($eventDTO->start);
-                    $eventEnd = Carbon::parse($eventDTO->end);
-                    // Defekte Altdaten (Ende vor Start, z.B. 22:00–00:00 am selben Tag)
-                    // ergäben eine leere Periode — mindestens am Starttag anzeigen.
-                    if ($eventEnd->lt($eventStart)) {
-                        $eventEnd = $eventStart;
-                    }
-                    return collect(CarbonPeriod::create($eventStart, $eventEnd))
+                    return collect(EventCalendarDays::between($eventDTO->start, $eventDTO->end))
                         ->map(fn($date) => [
                             'date' => $date->format('d.m.Y'),
                             'event' => $eventDTO,
@@ -121,19 +114,17 @@ trait MapRoomsToContentForCalendar
                 'craft:id,name,abbreviation,color',
                 'shiftsQualifications',
                 'globalQualifications',
-                'users:id,first_name,last_name',
-                'users.globalQualifications:id',
-                'freelancer:id,first_name,last_name',
-                'freelancer.globalQualifications:id',
-                'serviceProvider:id,provider_name',
-                'serviceProvider.globalQualifications:id',
                 'project:id,name',
             ])
             ->orderBy('start')
             ->get();
 
+        // Zählstände per Aggregat statt alle zugewiesenen Personen (samt Pivot und globalen
+        // Qualifikationen) zu hydrieren — die Kachel zeigt nur besetzt/gefordert
+        $workerCounts = app(CalendarShiftWorkerCounts::class)->forShiftIds($shifts->modelKeys());
+
         $shiftDTOs = $shifts
-            ->map(fn(Shift $shift) => CalendarShiftDTO::fromModel($shift))
+            ->map(fn(Shift $shift) => CalendarShiftDTO::fromModel($shift, $workerCounts[$shift->id] ?? [[], [], 0]))
             ->groupBy('roomId');
 
         foreach ($rooms as $room) {

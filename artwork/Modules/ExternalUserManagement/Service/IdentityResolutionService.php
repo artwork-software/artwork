@@ -5,6 +5,7 @@ namespace Artwork\Modules\ExternalUserManagement\Service;
 use Artwork\Modules\ExternalUserManagement\Exceptions\IdentityLinkConflictException;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -24,7 +25,8 @@ class IdentityResolutionService
 {
     public function __construct(
         private readonly UserRepository $userRepository,
-        private readonly AdminLockoutGuard $adminLockoutGuard
+        private readonly AdminLockoutGuard $adminLockoutGuard,
+        private readonly UserService $userService,
     ) {
     }
 
@@ -158,6 +160,10 @@ class IdentityResolutionService
         $user->auth_provider_id = $subjectId;
         $user->auth_provider_issuer = $issuer;
         $this->userRepository->save($user);
+
+        // Ohne Kalendereinstellungen/-filter bricht u. a. der Projekt-Kalendertab ab, ohne
+        // Benachrichtigungseinstellungen kommen keine Mails an – wie bei eingeladenen Konten anlegen.
+        $this->userService->initializeAccountDefaults($user);
 
         $this->assignDefaultRole($user, $source);
 

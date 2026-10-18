@@ -56,11 +56,17 @@ class Task extends Model
         'sent_deadline_tomorrow_notification' => 'boolean'
     ];
 
+    /**
+     * @return BelongsTo<Contract, $this>
+     */
     public function contract(): BelongsTo
     {
         return $this->belongsTo(Contract::class, 'contract_id', 'id', 'contracts');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     //@todo: fix phpcs error - refactor function name to taskUsers
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function task_users(): BelongsToMany
@@ -69,6 +75,9 @@ class Task extends Model
             ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     //@todo: fix phpcs error - refactor function name to userWhoDone
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function user_who_done(): BelongsTo
@@ -76,6 +85,9 @@ class Task extends Model
         return $this->belongsTo(User::class, 'user_id', 'id', 'users');
     }
 
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
     public function checklistDepartments(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -87,9 +99,12 @@ class Task extends Model
         );
     }
 
+    /**
+     * @return BelongsToMany<MoneySourceTask, $this>
+     */
     //@todo: fix phpcs error - refactor function name to moneySourceTask
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function money_source_task()
+    public function money_source_task(): BelongsToMany
     {
         return $this->belongsToMany(MoneySourceTask::class);
     }

@@ -12,6 +12,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,6 +32,11 @@ class EventPlanningCalendarService
         null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): Collection {
         $roomIds = $rooms->pluck('id');
+        // Wie EventCalendarService::filter(): ein reines Datum als Ende meint den ganzen letzten Tag (die
+        // Tagesansicht-/Zwei-Jahres-Kappung liefert Mitternacht → Termine des letzten Tages fehlten)
+        $endDate = $endDate instanceof Carbon
+            ? $endDate->copy()->endOfDay()
+            : Carbon::parse($endDate)->endOfDay();
         $events = Event::select([
                 'id',
                 'start_time',
@@ -46,6 +52,8 @@ class EventPlanningCalendarService
                 'user_id',
                 'occupancy_option',
                 'declined_room_id',
+                'is_series',
+                'series_id',
                 'is_planning'
             ])
             ->with([
@@ -53,8 +61,13 @@ class EventPlanningCalendarService
                 // NICHT vom Event-Model, sondern aus den Bulk-Lookups weiter unten —
                 // pro Event eager zu laden wäre doppelte Hydration ohne Nutzen.
                 'room:id,name',
+                // Wie im Kalender (EventCalendarService::getEventQueryWithData): ohne Laden blieben
+                // Termineigenschaften und Untertermine im Planungskalender leer
+                'eventProperties',
+                'subEvents' => fn ($query) => $query->without('creator'),
             ])
             ->withExists([
+                'timelines',
                 'verifications as has_pending_verification' => fn ($q) => $q->where('status', 'pending'),
             ])
             ->whereIn('room_id', $roomIds)

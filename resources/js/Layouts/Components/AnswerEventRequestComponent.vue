@@ -27,12 +27,11 @@ import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'AnswerEventRequestComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         BaseModal,
         FormButton,

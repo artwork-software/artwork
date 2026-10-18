@@ -31,6 +31,9 @@ class CellCalculation extends Model
         'position'
     ];
 
+    /**
+     * @return BelongsTo<ColumnCell, $this>
+     */
     public function cell(): BelongsTo
     {
         return $this->belongsTo(ColumnCell::class, 'cell_id', 'id', 'cell');

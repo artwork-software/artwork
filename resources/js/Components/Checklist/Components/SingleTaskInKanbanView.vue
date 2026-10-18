@@ -47,6 +47,7 @@
                 <ul class="flex -space-x-3">
                     <li v-for="(user, index) in task.users" :key="user.id">
                         <UserPopoverTooltip
+                            lazy-load
                             :id="`${task.id}-user-${user.id}`"
                             :user="user"
                             height="8"
@@ -76,6 +77,7 @@
                         <div class="flex flex-wrap items-center">
                             <div class="flex">
                             <UserPopoverTooltip
+                                lazy-load
                                 v-if="task.done_by_user"
                                 :user="task.done_by_user"
                                 :id="`${task.id}-doneby`"

@@ -48,6 +48,8 @@
 <script setup>
 import { computed, ref } from "vue";
 import axios from "axios";
+import { extractSaveErrorMessage } from "@/Composeables/BiSaveFeedback.js";
+import { ticketingMoveHeaders } from "@/Composeables/useTicketingMove.js";
 import { useI18n } from "vue-i18n";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -79,16 +81,22 @@ const formatDayLabel = (isoDay) => {
     return `${weekday} ${parts[2]}.${parts[1]}.${parts[0]}`;
 };
 
-const submit = () => {
+const submit = async () => {
     requestError.value = "";
     submitting.value = true;
+    const headers = await ticketingMoveHeaders(props.eventIds);
+    if (!headers) {
+        submitting.value = false;
+        return;
+    }
     axios.post(route("events.multi-cell.move"), {
         events: props.eventIds,
         cell: { day: props.cell.day, room_id: props.cell.room_id },
-    }).then(() => {
+    }, { headers, skipErrorToast: true }).then(() => {
         emit("closed", true);
     }).catch((error) => {
-        requestError.value = error.response?.data?.message ?? $t("An error has occurred");
+        // Fehler steht im Modal – kein zusätzlicher globaler Toast (skipErrorToast)
+        requestError.value = extractSaveErrorMessage(error) ?? $t("An error has occurred");
     }).finally(() => {
         submitting.value = false;
     });

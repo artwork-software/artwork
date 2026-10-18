@@ -39,16 +39,25 @@ class ShiftServiceProvider extends Pivot
         'end_time' => TimeWithoutSeconds::class,
     ];
 
+    /**
+     * @return BelongsTo<Shift, $this>
+     */
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
     }
 
+    /**
+     * @return BelongsTo<ServiceProvider, $this>
+     */
     public function serviceProvider(): BelongsTo
     {
         return $this->belongsTo(ServiceProvider::class);
     }
 
+    /**
+     * @return BelongsTo<ShiftQualification, $this>
+     */
     public function shiftQualification(): BelongsTo
     {
         return $this->belongsTo(ShiftQualification::class);

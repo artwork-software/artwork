@@ -42,13 +42,27 @@ class StoreInventoryArticleRequest extends FormRequest
                 'max:' . $maxImageSizeKb,
                 new InventoryArticleImageDimensions(),
             ],
-            'quantity' => ['required', 'integer'],
+            'quantity' => ['required', 'integer', 'min:0'],
+            'is_detailed_quantity' => ['nullable', 'boolean'],
+            'detailed_article_quantities' => ['nullable', 'array'],
+            'detailed_article_quantities.*.name' => ['required', 'string', 'max:255'],
+            'detailed_article_quantities.*.quantity' => ['required', 'integer', 'min:0'],
+            'detailed_article_quantities.*.description' => ['nullable', 'string'],
+            'detailed_article_quantities.*.properties' => ['nullable', 'array'],
+            'detailed_article_quantities.*.properties.*.id' => [
+                'required',
+                'integer',
+                'exists:inventory_article_properties,id',
+            ],
+            'detailed_article_quantities.*.properties.*.value' => ['nullable', 'max:255'],
             'properties' => ['nullable', 'array'],
             'properties.*.id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
             'properties.*.value' => ['nullable', 'max:255'],
             'main_image_index' => ['required', 'integer'],
             'statusValues' => ['nullable', 'array'],
             'statusValues.*.id' => ['required', 'integer', 'exists:inventory_article_statuses,id'],
+            // Spalte ist varchar und wird per SQL-SUM aufsummiert: nur ganze, nicht negative Mengen
+            'statusValues.*.value' => ['nullable', 'integer', 'min:0'],
 
 
             // 🔹 NEU: Tags am Artikel

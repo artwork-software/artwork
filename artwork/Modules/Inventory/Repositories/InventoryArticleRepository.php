@@ -2,17 +2,21 @@
 
 namespace Artwork\Modules\Inventory\Repositories;
 
+use Carbon\Carbon;
 use App\Jobs\GenerateInventoryArticleImageThumbnail;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
+use Artwork\Core\Database\Repository\SearchesWithSqlFallback;
 use Artwork\Modules\Inventory\Services\InventoryArticleImageService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class InventoryArticleRepository
 {
+    use SearchesWithSqlFallback;
+
     public function __construct(
         private readonly InventoryArticleImageService $imageService
     ) {
@@ -23,9 +27,19 @@ class InventoryArticleRepository
         return InventoryArticle::count();
     }
 
-    public function search(string $term)
+    /**
+     * Meilisearch-Suche; fehlt der Index auf der Instanz noch, per SQL über Name, Inventarnummer und
+     * Beschreibung. Ohne $limit gilt wie bei Meilisearch ein Limit von 20 Treffern.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, InventoryArticle>
+     */
+    public function search(string $term, ?int $limit = null): \Illuminate\Database\Eloquent\Collection
     {
-        return InventoryArticle::search($term)->get();
+        return $this->getScoutResultsOrSqlFallback(
+            InventoryArticle::search($term)->when($limit !== null, fn ($builder) => $builder->take($limit)),
+            $term,
+            ['name', 'inventory_number', 'description']
+        );
     }
 
     /**
@@ -285,7 +299,8 @@ class InventoryArticleRepository
     {
         foreach ($statusValues as $statusValue) {
             $article->statusValues()->attach((int)$statusValue['id'], [
-                'value' => (string)$statusValue['value']
+                // Ganzzahl-Spalte: ein geleertes Feld kommt als null an
+                'value' => (int) ($statusValue['value'] ?? 0)
             ]);
         }
     }
@@ -420,12 +435,24 @@ class InventoryArticleRepository
 
     public function restore(InventoryArticle $article): void
     {
-        $images = $article->images()->withTrashed()->get();
+        // Nur zurückholen, was zusammen mit dem Artikel in den Papierkorb ging. Einzelartikel und
+        // Bilder, die vorher beim Bearbeiten entfernt wurden, bleiben entfernt – sonst passte die
+        // Summe der Einzelbestände nicht mehr zur Gesamtmenge.
+        // Rohwert: deleted_at ist am Model als übersetzter Anzeige-String gecastet
+        $rawDeletedAt = $article->getRawOriginal('deleted_at');
+        $deletedWithArticleSince = $rawDeletedAt ? Carbon::parse($rawDeletedAt)->subMinute() : null;
+        $deletedWithArticle = static fn ($query) => $query->where('deleted_at', '>=', $deletedWithArticleSince);
+
+        $images = $article->images()->onlyTrashed()
+            ->when($deletedWithArticleSince, $deletedWithArticle)
+            ->get();
         foreach ($images as $image) {
             $image->restore();
         }
 
-        $detailedArticles = $article->detailedArticleQuantities()->withTrashed()->get();
+        $detailedArticles = $article->detailedArticleQuantities()->onlyTrashed()
+            ->when($deletedWithArticleSince, $deletedWithArticle)
+            ->get();
 
         foreach ($detailedArticles as $detailedArticle) {
             $detailedArticle->restore();

@@ -7,6 +7,7 @@ use Artwork\Modules\Craft\Http\Requests\CraftUpdateRequest;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Repositories\CraftRepository;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -247,6 +248,26 @@ class CraftService
     public function getAssignableByAllCrafts(): Collection
     {
         return $this->craftRepository->getAssignableByAllCrafts();
+    }
+
+    /**
+     * Gewerke, für die die Person im Schicht-Dialog (AddShiftModal) Schichten anlegen darf: Admins alle,
+     * sonst die für alle planbaren plus die eigenen (craft_users) — jeweils mit Funktionen.
+     *
+     * Ohne die über Craft::$with mitgeladenen Planer:innen (volle User-Modelle): der Dialog liest sie nicht,
+     * sie machten die Prop im Dienstplan um ein Vielfaches größer.
+     */
+    public function getCraftsForShiftCreation(User $user): Collection
+    {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            $crafts = $this->getAll(['qualifications']);
+        } else {
+            $crafts = $this->getAssignableByAllCrafts()
+                ->merge($user->crafts()->with(['qualifications'])->get())
+                ->unique('id');
+        }
+
+        return $crafts->each(static fn (Craft $craft) => $craft->unsetRelation('craftShiftPlaner'));
     }
 
     public function findById(int $id): Craft

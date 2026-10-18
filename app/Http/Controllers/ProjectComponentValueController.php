@@ -2,98 +2,76 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Project\Events\UpdateProjectComponentData;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
+use Artwork\Modules\Project\Services\ProjectComponentValueService;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectComponentValueController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): void
-    {
-        //
+    public function __construct(
+        private readonly ProjectComponentValueService $componentValueService,
+    ) {
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Aktueller Wert einer Komponente im Projekt – für den Broadcast-Listener, der nach data.updated
+     * nur Kennungen bekommt. Gleiche Sichtregel wie die Tab-Ausgabe: Projekt sehen und die Komponente
+     * in einem sichtbaren Tab sehen dürfen (Komponenten-Sichtbeschränkung + Tab-Sichtbarkeit).
      */
-    public function create(): void
-    {
-        //
+    public function value(
+        Project $project,
+        Component $component,
+        ProjectComponentVisibilityService $visibilityService,
+    ): JsonResponse {
+        $this->authorize('view', $project);
+
+        /** @var User $user */
+        $user = Auth::user();
+        abort_unless($visibilityService->canSeeInProject($user, $component), 403);
+
+        return response()->json([
+            'project_value' => ProjectComponentValue::query()
+                ->where('project_id', $project->id)
+                ->where('component_id', $component->id)
+                ->first(),
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Gibt den gespeicherten Wert im Format von project_value zurück: der Speichernde übernimmt ihn
+     * lokal (der Broadcast geht toOthers und trägt nur Kennungen).
      */
-    public function store(Request $request): void
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(ProjectComponentValue $projectComponentValue): void
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ProjectComponentValue $projectComponentValue): void
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Project $project, Component $component): void
-    {
+    public function update(
+        Request $request,
+        Project $project,
+        Component $component,
+        ProjectComponentVisibilityService $visibilityService,
+    ): JsonResponse {
         /** @var \Artwork\Modules\User\Models\User $user */
         $user = $request->user();
 
         // Schreibrecht im Projekt + Komponenten-Einstellung (Spiegel von canEditComponent() im Frontend).
         abort_unless($user->can('writeComponent', [$project, $component]), 403);
+        // Gleiche Sichtregel wie value(): Komponenten in für die Person unsichtbaren Tabs sind nicht
+        // beschreibbar, auch wenn Projekt-Schreibrecht besteht.
+        abort_unless($visibilityService->canSeeInProject($user, $component), 403);
 
-        $value = ProjectComponentValue::where('project_id', $project->id)
-            ->where('component_id', $component->id)->first();
+        $request->validate(['data' => ['present', 'nullable', 'array']]);
 
-        $valueInput = null;
-        if (array_key_exists('text', $request->input('data'))) {
-            // Rohtext; Umbrüche rendert das Frontend per white-space: pre-line.
-            $valueInput = (string) $request->input('data')['text'];
-            // return it ad array to be able to store it in the database
-            $valueInput = ['text' => $valueInput];
-        } else {
-            $valueInput = $request->input('data');
-        }
+        // toOthers: ein eigenes Nachladen könnte inzwischen weiter Getipptes überschreiben.
+        $value = $this->componentValueService->updateValue(
+            $project,
+            $component,
+            $request->input('data'),
+            toOthers: true,
+        );
 
-        if ($value === null) {
-            $value = ProjectComponentValue::create([
-                'project_id' => $project->id,
-                'component_id' => $component->id,
-                'data' => $valueInput,
-            ]);
-        } else {
-            $value->update([
-                'data' => $valueInput,
-            ]);
-        }
-
-        broadcast(new UpdateProjectComponentData($value, $project->id));
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ProjectComponentValue $projectComponentValue): void
-    {
-        //
+        return response()->json(['project_value' => $value]);
     }
 }

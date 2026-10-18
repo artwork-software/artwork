@@ -7,7 +7,6 @@ use App\Http\Requests\StoreGlobalQualificationRequest;
 use App\Http\Requests\UpdateGlobalQualificationRequest;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
-use Artwork\Modules\User\Models\User;
 
 class GlobalQualificationController extends Controller
 {
@@ -71,10 +70,5 @@ class GlobalQualificationController extends Controller
     public function destroy(GlobalQualification $globalQualification): void
     {
         $this->globalQualificationService->delete($globalQualification);
-    }
-
-    public function toggleForUser(GlobalQualification $globalQualification, User $user): void
-    {
-        $this->globalQualificationService->activateOrDeactivateInUser($globalQualification, $user);
     }
 }

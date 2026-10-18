@@ -9,16 +9,16 @@ use Artwork\Modules\Holidays\Seeder\SwissCantoneSeeder;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
-use Artwork\Modules\Notification\Enums\NotificationEnum;
-use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
-use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Sage100\Helpers\PermissionUpdater;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Seeders\ConsolidateShiftsSeeder;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -34,6 +34,7 @@ class UpdateArtwork extends Command
         private readonly SwissCantoneSeeder $swissCantoneSeeder,
         private readonly ConsolidateShiftsSeeder $consolidateShiftsSeeder,
         private readonly PermissionUpdater $sagePermissionUpdater,
+        private readonly UserService $userService,
     ) {
         parent::__construct();
     }
@@ -60,6 +61,7 @@ class UpdateArtwork extends Command
         $this->addRoomTypes();
         $this->addSwissCantons();
         $this->createBasicProductBaskets();
+        $this->initializeMissingAccountDefaults();
         $this->remapShiftEventProjectRelations();
         $this->updateSpecialComponentsSidebarEnabled();
         $this->migrateShiftsWorkers();
@@ -181,62 +183,11 @@ class UpdateArtwork extends Command
     {
         $this->section('Notification Settings');
 
-        NotificationSetting::where('type', 'NOTIFICATION_ROOM_ANSWER')->update([
-            'title' => 'Room requests answered',
-            'description' => 'Find out if your room requests has been answered.',
-        ]);
-
-        $users = User::all();
-        foreach ($users as $user) {
-            $this->addUserNotificationSettings($user);
-        }
-    }
-
-    private function addUserNotificationSettings(User $user): void
-    {
-        $notificationTypes = [
-            NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
-            NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
-            NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED,
-            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
-            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
-            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
-            NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
-        ];
-
-        foreach ($notificationTypes as $enum) {
-            $user->notificationSettings()->updateOrCreate(
-                ['type' => $enum->value],
-                [
-                    'frequency' => NotificationFrequencyEnum::DAILY->value,
-                    'group_type' => $enum->groupType(),
-                    'title' => $enum->title(),
-                    'description' => $enum->description(),
-                    'enabled_email' => true,
-                    'enabled_push' => true,
-                ]
-            );
-        }
-
-        // External access notifications should reach the inviter immediately.
-        $externalNotificationTypes = [
-            NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
-            NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED,
-        ];
-
-        foreach ($externalNotificationTypes as $enum) {
-            $user->notificationSettings()->updateOrCreate(
-                ['type' => $enum->value],
-                [
-                    'frequency' => NotificationFrequencyEnum::IMMEDIATELY->value,
-                    'group_type' => $enum->groupType(),
-                    'title' => $enum->title(),
-                    'description' => $enum->description(),
-                    'enabled_email' => true,
-                    'enabled_push' => true,
-                ]
-            );
-        }
+        // Gruppe/Texte aus dem Enum nachziehen (Sammelmail liest group_type), dann nur fehlende
+        // Einstellungen ergänzen (auch für neue Typen) – Nutzerwahl wird nie überschrieben
+        app(NotificationSettingService::class)->syncTypeMetadata();
+        $created = app(NotificationSettingService::class)->ensureDefaultsForAllUsers();
+        $this->info(sprintf('%d notification setting(s) added', $created));
     }
 
     private function addProjectGroupColumn(): void
@@ -251,9 +202,22 @@ class UpdateArtwork extends Command
         $this->call('artwork:update-service-provider-contacts');
     }
 
+    /**
+     * Inventar-Status nur bei leerer Tabelle (Erstinstallation) anlegen. Der Seeder arbeitet mit
+     * updateOrCreate über den Namen: bei jedem Update ausgeführt, setzte er Reihenfolge, Farbe und
+     * default-Flag zurück und legte einen umbenannten Status (z. B. „Einsatzbereit“) als
+     * Phantom-Status neu an.
+     */
     private function addInventoryArticleStatus(): void
     {
         $this->section('Inventory Article Status');
+
+        if (InventoryArticleStatus::query()->exists()) {
+            $this->info('Inventory article statuses already exist, skipping seeder.');
+
+            return;
+        }
+
         $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
     }
 
@@ -356,57 +320,37 @@ class UpdateArtwork extends Command
         });
     }
 
+    /**
+     * Die Status selbst legt addInventoryArticleStatus() nur bei leerer Tabelle an. Hier wird
+     * lediglich sichergestellt, dass genau ein Status das default-Flag trägt – frühere Updates
+     * haben über den Seeder (updateOrCreate per Name) einen zweiten Standard-Status angelegt.
+     */
     private function addOrderInInventoryStatus(): void
     {
         $this->section('Add Order in Inventory Status');
+        $this->ensureSingleDefaultInventoryStatus();
+    }
 
-        $dataSet = [
-            [
-                'name' => 'Einsatzbereit',
-                'default' => true,
-                'deletable' => false,
-                'color' => '#16A34A',
-                'order' => 1,
-            ],
-            [
-                'name' => 'Defekt',
-                'deletable' => false,
-                'color' => '#EF4444',
-                'order' => 2,
-            ],
-            [
-                'name' => 'Ausgesondert',
-                'deletable' => false,
-                'color' => '#F59E0B',
-                'order' => 4,
-            ],
-            [
-                'name' => 'Nicht auffindbar',
-                'deletable' => false,
-                'color' => '#6B7280',
-                'order' => 3,
-            ],
-            [
-                'name' => 'fest verbaut',
-                'deletable' => false,
-                'color' => '#3B82F6',
-                'order' => 5,
-            ],
-        ];
+    /**
+     * Genau ein Status trägt das default-Flag (er bestimmt die verfügbare Menge). Frühere Updates
+     * konnten einen zweiten anlegen; dann gewinnt der älteste. Fehlt er, wird „Einsatzbereit“
+     * (bzw. der erste Status) Standard.
+     */
+    private function ensureSingleDefaultInventoryStatus(): void
+    {
+        $defaults = InventoryArticleStatus::query()->where('default', true)->orderBy('id')->get();
 
-        foreach ($dataSet as $data) {
-            InventoryArticleStatus::updateOrCreate(
-                [
-                    'name' => $data['name'],
-                ],
-                [
-                    'default' => $data['default'] ?? false,
-                    'deletable' => $data['deletable'] ?? true,
-                    'color' => $data['color'] ?? null,
-                    'order' => $data['order'] ?? 1
-                ]
-            );
+        if ($defaults->isEmpty()) {
+            $fallback = InventoryArticleStatus::query()->where('name', 'Einsatzbereit')->first()
+                ?? InventoryArticleStatus::query()->orderBy('order')->orderBy('id')->first();
+            $fallback?->forceFill(['default' => true])->save();
+
+            return;
         }
+
+        $defaults->slice(1)->each(
+            static fn (InventoryArticleStatus $status) => $status->forceFill(['default' => false])->save()
+        );
     }
 
     /**
@@ -538,6 +482,29 @@ class UpdateArtwork extends Command
                 'name' => 'Standard',
             ]);
         }
+    }
+
+    /**
+     * Per SSO/LDAP angelegte Konten bekamen früher weder Kalendereinstellungen noch
+     * Zeitraumfilter oder Benachrichtigungseinstellungen (Projekt-Kalendertab → 500,
+     * keine Mails). Fehlendes wird hier nachgezogen; Vorhandenes bleibt unverändert.
+     */
+    private function initializeMissingAccountDefaults(): void
+    {
+        $this->section('Initializing missing account defaults');
+
+        $users = User::query()
+            ->whereDoesntHave('calendar_settings')
+            ->orWhereDoesntHave('userFilters', function ($query): void {
+                $query->where('filter_type', UserFilterTypes::CALENDAR_FILTER->value);
+            })
+            ->get();
+
+        foreach ($users as $user) {
+            $this->userService->initializeAccountDefaults($user);
+        }
+
+        $this->info(sprintf('%d account(s) completed', $users->count()));
     }
 
     private function remapShiftEventProjectRelations(): void
@@ -676,6 +643,8 @@ class UpdateArtwork extends Command
                         ->whereNull('crm_contacts.deleted_at')
                         ->whereColumn('crm_contacts.entity_id', "$table.id");
                 })
+                // Platzhalter „Deleted user“ ist keine echte Person und gehört nicht ins CRM
+                ->when($class === User::class, fn ($query) => $query->excludeDeletedPlaceholder())
                 ->get();
 
             foreach ($missing as $entity) {

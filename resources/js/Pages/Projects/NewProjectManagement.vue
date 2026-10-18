@@ -1,5 +1,5 @@
 <template>
-    <AppLayout title="Projektübersicht">
+    <AppLayout :title="$t('Project overview')">
         <div class="w-full px-4 sm:px-6 md:px-6 lg:px-8 pt-6 relative">
             <!-- Headbar (neu): dunkles Band (CI »Bühnenlicht«) -->
             <ToolbarHeader
@@ -262,7 +262,7 @@
         </div>
 
         <!-- Notifications & Modals -->
-        <SideNotification v-if="dropFeedbackShown" type="project_create_success" />
+        <SideNotification v-if="dropFeedbackShown" type="project_create_success" @close="dropFeedbackShown = false" />
 
         <project-create-modal
             v-if="createProject"
@@ -293,16 +293,6 @@
             :title="$t('Project created')"
             :description="$t('The project was successfully created.')"
             :button="$t('Close')"
-        />
-
-        <project-data-edit-modal
-            v-if="editingProject"
-            :show="editingProject"
-            :project="projectToEdit"
-            :group-projects="projectGroups"
-            :current-group="groupPerProject[projectToEdit?.id]"
-            :states="states"
-            @closed="closeEditProjectModal"
         />
 
         <project-history-component
@@ -379,6 +369,7 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router, usePage } from "@inertiajs/vue3";
+import axios from "axios";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {
     IconCheck,
@@ -395,13 +386,12 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import { usePermission } from "@/Composeables/Permission.js";
 import { MenuItem, Switch, SwitchGroup } from "@headlessui/vue";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { useSortEnumTranslation } from "@/Composeables/SortEnumTranslation.js";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
-import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import AddBulkEventsModal from "@/Pages/Projects/Components/AddBulkEventsModal.vue";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
@@ -455,14 +445,23 @@ const showSearchbar = ref(route().params.query?.length > 0);
 const showSuccessModal2 = ref(false);
 const showProjectHistory = ref(false);
 const selectedProjectId = ref(null);
-const editingProject = ref(false);
-const projectToEdit = ref(null);
 const createProject = ref(false);
 const showExportModal = ref(false);
 const page = ref(route().params.page ?? 1);
 const perPage = ref(props.entitiesPerPage ?? 10);
 const showAddBulkEventModal = ref(false);
 const dropFeedbackShown = ref(null);
+let dropFeedbackTimer = null;
+
+// Rückmeldung nach dem Anlegen eines Projekts (ProjectCreateModal emittiert dropFeedback)
+const showDropFeedback = () => {
+    dropFeedbackShown.value = true;
+    clearTimeout(dropFeedbackTimer);
+    dropFeedbackTimer = setTimeout(() => {
+        dropFeedbackShown.value = false;
+    }, 3000);
+};
+onBeforeUnmount(() => clearTimeout(dropFeedbackTimer));
 
 // Bulk selection (move multiple projects to trash)
 const selectionMode = ref(false);
@@ -563,10 +562,6 @@ const closeCreateProjectModal = (showSuccessModalFlag) => {
     createProject.value = false;
     if (showSuccessModalFlag) showAddBulkEventModal.value = true;
 };
-const closeEditProjectModal = () => {
-    editingProject.value = false;
-    projectToEdit.value = null;
-};
 const closeSearchbar = () => {
     showSearchbar.value = !showSearchbar.value;
     project_search.value = "";
@@ -587,32 +582,37 @@ const closeProjectHistoryModal = () => {
 };
 const openExportModal = () => (showExportModal.value = true);
 
-// Filter/Sort -> laden mit Skeleton
-const applyFiltersAndSort = (resetPage = true) => {
+// Filter/Sort -> laden mit Skeleton.
+// Gespeichert wird per axios und danach EINMAL gezielt nachgeladen. Vorher lief router.post:
+// leere Antwort -> Redirect -> kompletter Index, anschließend noch einmal reloadProjects
+// (doppelte Serverarbeit und doppelter Payload pro Klick).
+const saveFilterAndReload = async (payload, resetPage) => {
     isLoading.value = true;
-    router.post(
-        route("projects.filter"),
-        {
-            project_state_ids: props.states.filter((s) => s.clicked).map((s) => s.id),
-            project_filters: {
-                showOnlyMyProjects: getTruthyOrUndefined(showOnlyMyProjects.value),
-                showProjectGroups: getTruthyOrUndefined(showProjectGroups.value),
-                showProjects: getTruthyOrUndefined(showProjects.value),
-                showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
-                showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
-                hideProjectsWithoutEvents: getTruthyOrUndefined(hideProjectsWithoutEvents.value),
-                showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
-                showOnlyWithBiData: getTruthyOrUndefined(showOnlyWithBiData.value),
-            },
-            sort: sortBy.value,
+    try {
+        await axios.post(route("projects.filter"), payload);
+    } catch (error) {
+        // Meldung kommt über den globalen Interceptor
+        isLoading.value = false;
+        return;
+    }
+    reloadProjects(resetPage);
+};
+
+const applyFiltersAndSort = (resetPage = true) => {
+    saveFilterAndReload({
+        project_state_ids: props.states.filter((s) => s.clicked).map((s) => s.id),
+        project_filters: {
+            showOnlyMyProjects: getTruthyOrUndefined(showOnlyMyProjects.value),
+            showProjectGroups: getTruthyOrUndefined(showProjectGroups.value),
+            showProjects: getTruthyOrUndefined(showProjects.value),
+            showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
+            showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
+            hideProjectsWithoutEvents: getTruthyOrUndefined(hideProjectsWithoutEvents.value),
+            showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
+            showOnlyWithBiData: getTruthyOrUndefined(showOnlyWithBiData.value),
         },
-        {
-            preserveState: false,
-            onStart: () => (isLoading.value = true),
-            onFinish: () => (isLoading.value = false),
-            onSuccess: () => reloadProjects(resetPage),
-        }
-    );
+        sort: sortBy.value,
+    }, resetPage);
 };
 
 const resetFilter = () => {
@@ -627,18 +627,7 @@ const resetFilter = () => {
 
     props.states.forEach((s) => (s.clicked = false));
 
-    isLoading.value = true;
-    router.post(route("projects.filter"), {
-        page: 1,
-        entitiesPerPage: perPage.value,
-        query: route().params.query,
-        project_states: undefined,
-        project_filters: undefined,
-        sort: sortBy.value,
-    }, {
-        onStart: () => (isLoading.value = true),
-        onFinish: () => (isLoading.value = false),
-    });
+    saveFilterAndReload({sort: sortBy.value}, true);
 };
 
 const resetSort = () => {

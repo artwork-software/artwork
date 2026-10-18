@@ -34,6 +34,9 @@ class MoneySourceFile extends Model
         'id'
     ];
 
+    /**
+     * @return BelongsTo<MoneySource, $this>
+     */
     //@todo: fix phpcs error - refactor function name to moneySource
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_source(): BelongsTo
@@ -46,6 +49,9 @@ class MoneySourceFile extends Model
         );
     }
 
+    /**
+     * @return HasMany<Comment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);

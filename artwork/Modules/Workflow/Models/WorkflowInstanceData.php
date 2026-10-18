@@ -20,6 +20,9 @@ class WorkflowInstanceData extends Model
         'deprecated_at' => 'datetime'
     ];
 
+    /**
+     * @return BelongsTo<WorkflowInstance, $this>
+     */
     public function workflowInstance(): BelongsTo
     {
         return $this->belongsTo(WorkflowInstance::class, 'workflow_instance_id', 'id', 'workflowInstance');

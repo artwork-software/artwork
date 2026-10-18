@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShiftGroup extends Model
 {
-    /** @use HasFactory<\Database\Factories\ShiftGroupFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\Shift\Models\ShiftGroupFactory> */
     use HasFactory;
 
     protected $fillable = [

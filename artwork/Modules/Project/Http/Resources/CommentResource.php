@@ -5,6 +5,9 @@ namespace Artwork\Modules\Project\Http\Resources;
 use Artwork\Modules\User\Http\Resources\UserIconResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Project\Models\Comment
+ */
 class CommentResource extends JsonResource
 {
     /**

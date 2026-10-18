@@ -220,7 +220,10 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
-import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useBiSaveFeedback, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 const props = defineProps({
     eventData: { type: Array, default: () => [] },
@@ -252,8 +255,8 @@ const sortAsc = ref(false);
 const filterRoomId = ref(null);
 const search = ref('');
 
-const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
-const numberFmt = new Intl.NumberFormat('de-DE');
+const currencyFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency });
+const numberFmt = new Intl.NumberFormat(instanceFormat.numberLocale);
 
 const columns = computed(() => [
     { key: 'name', label: 'Event', translate: true },
@@ -547,7 +550,7 @@ const applyBulk = async () => {
         const requests = [];
         if (Object.keys(data).length > 0) {
             [...selectedIds.value].forEach(eventId => requests.push(
-                axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), { ...data, scope: props.scope })
+                axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), { ...data, scope: props.scope }, BI_REQUEST_CONFIG)
             ));
         }
         if (categoryEntries.length > 0) {
@@ -556,7 +559,7 @@ const applyBulk = async () => {
                 event_id: eventId,
                 quantity: entry.quantity,
             })));
-            requests.push(axios.put(route('projects.bi.upsert-category-values', props.projectId), { values, scope: props.scope }));
+            requests.push(axios.put(route('projects.bi.upsert-category-values', props.projectId), { values, scope: props.scope }, BI_REQUEST_CONFIG));
         }
         const results = await Promise.allSettled(requests);
         const failed = results.filter(r => r.status === 'rejected');
@@ -584,11 +587,11 @@ const saveEventValue = async (eventId, fieldKey, value) => {
                     event_id: eventId,
                     quantity: parsed,
                 }],
-            });
+            }, BI_REQUEST_CONFIG);
         }
         return axios.put(
             route('projects.bi.upsert-event-data', [props.projectId, eventId]),
-            { [fieldKey]: parsed, scope: props.scope }
+            { [fieldKey]: parsed, scope: props.scope }, BI_REQUEST_CONFIG
         );
     });
     // Fehlgeschlagene Zelle rot markieren — der Draft bleibt stehen, der Grund

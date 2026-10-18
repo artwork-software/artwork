@@ -36,7 +36,8 @@ class AreaController extends Controller
                 'rooms' => fn ($query) => $query->orderBy('position')->orderBy('id'),
                 'rooms.categories',
                 'rooms.attributes',
-                'rooms.adjoining_rooms',
+                // Nebenräume liest die Seite nur als IDs — ohne Room::$with (Admins, Ersteller)
+                'rooms.adjoining_rooms' => fn ($query) => $query->without(['admins', 'creator']),
             ])
             ->get();
 

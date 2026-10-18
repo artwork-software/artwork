@@ -78,6 +78,15 @@ class DocumentRequest extends Model
         'id'
     ];
 
+    /**
+     * Bezeichnung für Benachrichtigungen (:title) – Anfragen haben keinen eigenen Titel.
+     */
+    public function displayTitle(): string
+    {
+        return $this->contract_partner
+            ?: ($this->project?->name ?: '#' . $this->id);
+    }
+
     protected $casts = [
         'ksk_liable' => 'boolean',
         'ksk_amount' => 'decimal:2',
@@ -90,6 +99,7 @@ class DocumentRequest extends Model
 
     /**
      * User who created the request
+     * @return BelongsTo<User, $this>
      */
     public function requester(): BelongsTo
     {
@@ -99,6 +109,7 @@ class DocumentRequest extends Model
 
     /**
      * User who should fulfill the request
+     * @return BelongsTo<User, $this>
      */
     public function requested(): BelongsTo
     {
@@ -108,6 +119,7 @@ class DocumentRequest extends Model
 
     /**
      * Associated project
+     * @return BelongsTo<Project, $this>
      */
     public function project(): BelongsTo
     {
@@ -116,6 +128,7 @@ class DocumentRequest extends Model
 
     /**
      * Uploaded contract (when request is fulfilled)
+     * @return BelongsTo<Contract, $this>
      */
     public function contract(): BelongsTo
     {
@@ -124,6 +137,7 @@ class DocumentRequest extends Model
 
     /**
      * Linked CRM contact
+     * @return BelongsTo<CrmContact, $this>
      */
     public function crmContact(): BelongsTo
     {
@@ -132,6 +146,7 @@ class DocumentRequest extends Model
 
     /**
      * Contract type
+     * @return BelongsTo<\Artwork\Modules\Contract\Models\ContractType, $this>
      */
     public function contractType(): BelongsTo
     {
@@ -145,6 +160,7 @@ class DocumentRequest extends Model
 
     /**
      * Company type (legal form)
+     * @return BelongsTo<\Artwork\Modules\CompanyType\Models\CompanyType, $this>
      */
     public function companyType(): BelongsTo
     {

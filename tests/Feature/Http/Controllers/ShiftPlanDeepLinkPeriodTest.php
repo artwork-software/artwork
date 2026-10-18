@@ -68,4 +68,24 @@ final class ShiftPlanDeepLinkPeriodTest extends FeatureTestCase
         $this->assertSame('2026-03-02', $stored->start_date->toDateString());
         $this->assertSame('2026-03-08', $stored->end_date->toDateString());
     }
+
+    #[Test]
+    public function own_operation_plan_opens_the_week_from_a_notification_link(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $admin->workerShiftPlanFilter()->create([
+            'start_date' => '2026-03-02',
+            'end_date' => '2026-03-08',
+        ]);
+
+        // Ziel von „Schicht ansehen“ und Schicht-Mails (ShiftNotificationLinkService)
+        $response = $this->get(\Artwork\Modules\Shift\Services\ShiftNotificationLinkService::ownOperationPlanForDate(
+            $admin,
+            '2026-10-30'
+        ));
+
+        $response->assertOk();
+        $this->assertSame(['2026-10-26', '2026-11-01'], $response->inertiaProps('dateValue'));
+        $this->assertSame('2026-03-02', $admin->workerShiftPlanFilter()->first()->start_date->toDateString());
+    }
 }

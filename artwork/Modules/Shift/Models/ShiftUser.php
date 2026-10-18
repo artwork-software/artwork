@@ -40,16 +40,25 @@ class ShiftUser extends Pivot
     ];
 
 
+    /**
+     * @return BelongsTo<Shift, $this>
+     */
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<ShiftQualification, $this>
+     */
     public function shiftQualification(): BelongsTo
     {
         return $this->belongsTo(ShiftQualification::class);

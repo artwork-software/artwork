@@ -144,3 +144,41 @@ test('dispose removes every handler registered by the instance', async () => {
 
     assert.equal(ctx.echo.handlerCount(), 0);
 });
+
+// Planungskalender ohne „Feste Termine anzeigen“ bzw. Kalender ohne „Geplante Termine anzeigen“: ein live
+// gesendeter Termin, der nicht in die Ansicht gehört, wird nicht eingefügt und eine vorhandene Kachel entfernt
+test('acceptEvent keeps events out of views they do not belong to', async () => {
+    const plannedOnly = (evt) => !!evt.isPlanning;
+    const ctx = await setup({ acceptEvent: plannedOnly });
+    const plannedEvent = { id: 21, roomId: 1, start: '2026-06-08 10:00', end: '2026-06-08 12:00', isPlanning: true };
+
+    ctx.echo.emit('event.room.1', '.event.created', { event: plannedEvent });
+    assert.deepEqual(ctx.data.value[0].content['08.06.2026'].eventIds, [21]);
+
+    // Prüfung genehmigt → fester Termin: verschwindet aus dem Planungskalender
+    ctx.echo.emit('event.room.1', '.event.updated', { event: { ...plannedEvent, isPlanning: false } });
+    assert.deepEqual(ctx.data.value[0].content['08.06.2026'].eventIds, []);
+    assert.equal(ctx.data.value[0].eventsById[21], undefined);
+
+    ctx.echo.emit('event.room.1', '.event.created', { event: { ...plannedEvent, id: 22, isPlanning: false } });
+    assert.deepEqual(ctx.data.value[0].content['08.06.2026'].eventIds, []);
+});
+
+// Geplante Termine: vollständig nur auf event.planning.room.*, auf event.room.* nur als Hinweis ohne Inhalt
+test('redacted planned events are removed without planning channel and wait for it otherwise', async () => {
+    const plannedEvent = { id: 31, roomId: 1, start: '2026-06-08 10:00', end: '2026-06-08 12:00', isPlanning: true };
+    const redacted = { event: { id: 31, roomId: 1, isPlanning: true, redacted: true } };
+
+    const withoutRight = await setup();
+    withoutRight.echo.emit('event.room.1', '.event.created', { event: { ...plannedEvent, isPlanning: false } });
+    withoutRight.echo.emit('event.room.1', '.event.updated', redacted);
+    assert.deepEqual(withoutRight.data.value[0].content['08.06.2026'].eventIds, []);
+
+    const withRight = await setup({ subscribePlanningChannels: true });
+    withRight.echo.emit('event.room.1', '.event.updated', redacted);
+    withRight.echo.emit('event.planning.room.1', '.event.updated', { event: plannedEvent });
+    assert.deepEqual(withRight.data.value[0].content['08.06.2026'].eventIds, [31]);
+    // Hinweis nach dem vollständigen Termin entfernt die Kachel nicht
+    withRight.echo.emit('event.room.1', '.event.updated', redacted);
+    assert.deepEqual(withRight.data.value[0].content['08.06.2026'].eventIds, [31]);
+});

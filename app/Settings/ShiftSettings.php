@@ -48,7 +48,9 @@ class ShiftSettings extends Settings
     // Stundenkonto, Überstunden, nächtliche Buchung). Aus = der Dienstplan dient nur
     // zum Anlegen und Besetzen von Schichten; geplante Stunden bleiben sichtbar,
     // gespeicherte Konten, Muster und Verträge bleiben erhalten.
-    public bool $work_time_accounting_enabled;
+    // Default: Spatie füllt fehlende Werte damit auf – läuft der Code vor der
+    // Settings-Migration, gibt es kein MissingSettings (500)
+    public bool $work_time_accounting_enabled = true;
 
     public static function group(): string
     {

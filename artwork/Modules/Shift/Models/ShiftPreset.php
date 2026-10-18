@@ -29,11 +29,17 @@ class ShiftPreset extends Model
         'shift_preset_group_id'
     ];
 
+    /**
+     * @return HasMany<ShiftPresetTimeline, $this>
+     */
     public function timeline(): HasMany
     {
         return $this->hasMany(ShiftPresetTimeline::class);
     }
 
+    /**
+     * @return HasMany<PresetShift, $this>
+     */
     public function shifts(): HasMany
     {
         return $this->hasMany(PresetShift::class);

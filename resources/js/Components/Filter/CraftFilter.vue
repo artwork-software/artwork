@@ -25,13 +25,11 @@
 </template>
 
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "CraftFilter",
     components: {PropertyIcon},
-    mixins: [IconLib],
     props: {
         is_tiny: {
             type: Boolean,

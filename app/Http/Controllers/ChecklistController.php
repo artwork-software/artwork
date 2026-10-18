@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Events\ChecklistUpdated;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
-use Artwork\Modules\Checklist\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\Task\Http\Requests\DoneOrUndoneTaskRequest;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
@@ -20,6 +21,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -29,7 +31,8 @@ class ChecklistController extends Controller
         private readonly ChecklistService $checklistService,
         private readonly ChangeService $changeService,
         private readonly TaskService $taskService,
-        private readonly AuthManager $authManager
+        private readonly AuthManager $authManager,
+        private readonly ProjectComponentVisibilityService $visibilityService
     ) {
         $this->authorizeResource(Checklist::class);
     }
@@ -47,6 +50,7 @@ class ChecklistController extends Controller
         if ($request->integer('project_id')) {
             $this->authorize('createProperties', Project::find($request->project_id));
         }
+        $this->ensureTabIsVisible($request);
 
         //Check whether checklist should be created on basis of a template
         if ($request->integer('template_id')) {
@@ -152,20 +156,6 @@ class ChecklistController extends Controller
         $checklist->users()->attach($this->authManager->id());
     }
 
-    public function show(Checklist $checklist): Response|ResponseFactory
-    {
-        return inertia('Checklists/Show', [
-            'checklist' => new ChecklistShowResource($checklist),
-        ]);
-    }
-
-    public function edit(Checklist $checklist): Response|ResponseFactory
-    {
-        return inertia('Checklists/Edit', [
-            'checklist' => new ChecklistShowResource($checklist),
-        ]);
-    }
-
     public function update(
         ChecklistUpdateRequest $request,
         Checklist $checklist,
@@ -178,7 +168,8 @@ class ChecklistController extends Controller
             $this->authorize('createProperties', Project::findOrFail($targetProjectId));
             $checklist->project_id = $targetProjectId;
         }
-        if ($request->filled('tab_id')) {
+        if ($request->filled('tab_id') && $request->integer('tab_id') !== (int) $checklist->tab_id) {
+            $this->ensureTabIsVisible($request);
             $checklist->tab_id = $request->integer('tab_id');
         }
 
@@ -201,6 +192,27 @@ class ChecklistController extends Controller
             broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
         }
         return $this->checklistUpdateResponse($request, $checklist);
+    }
+
+    /**
+     * To-do-Listen nur in Tabs anlegen/verschieben, die die Person sehen darf (wie StoreCommentRequest;
+     * Admins passieren über canSeeTab). Bestehende Listen in versteckten Tabs bleiben für
+     * Ersteller:in/Geteilte bearbeitbar, solange der Tab nicht gewechselt wird.
+     *
+     * @throws ValidationException
+     */
+    private function ensureTabIsVisible(Request $request): void
+    {
+        if (!$request->filled('tab_id')) {
+            return;
+        }
+
+        $user = $request->user();
+        if (!$user instanceof User || !$this->visibilityService->canSeeTab($user, $request->integer('tab_id'))) {
+            throw ValidationException::withMessages([
+                'tab_id' => __('You do not have permission to access this project tab.'),
+            ]);
+        }
     }
 
     /**

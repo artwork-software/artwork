@@ -45,4 +45,24 @@ return [
 
     'connection' => env('PASSPORT_CONNECTION'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Extended Tokens (bewusste Ausnahme)
+    |--------------------------------------------------------------------------
+    |
+    | Einzelne Tokens (per jti) werden über ihren signierten exp-Claim hinaus bis zur
+    | angegebenen Deadline akzeptiert. Nur für Integrationen, deren Gegenseite Tokens nicht
+    | rotieren kann — zeitlich begrenzt halten und die Deadline als Termin einplanen.
+    | Signatur- und Revoke-Prüfung bleiben aktiv (Kill-Switch: oauth_access_tokens.revoked = 1).
+    | Solange ein Eintrag aktiv ist, darf das Passport-Keypair nicht rotiert werden.
+    |
+    | Format: JSON-Objekt {"<jti>": "YYYY-MM-DD HH:MM:SS"}. Standard: leer = inaktiv.
+    | Ungültiges JSON oder kein Objekt ergibt ebenfalls eine leere Liste.
+    |
+    */
+
+    'extended_tokens' => is_array($extendedTokens = json_decode((string) env('PASSPORT_EXTENDED_TOKENS', '{}'), true))
+        ? $extendedTokens
+        : [],
+
 ];

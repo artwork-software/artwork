@@ -85,7 +85,6 @@ use App\Http\Controllers\ProjectTab\ProjectCommentController;
 use App\Http\Controllers\ProjectTab\ProjectDocumentsController;
 use App\Http\Controllers\ProjectTab\ProjectMaterialIssueController;
 use App\Http\Controllers\ProjectTab\ProjectShiftContactsController;
-use App\Http\Controllers\ProjectTab\ProjectShiftController;
 use App\Http\Controllers\ProjectTab\ProjectSageInvoiceOverviewController;
 use App\Http\Controllers\ProjectTab\ProjectStatusController;
 use App\Http\Controllers\ProjectTab\ProjectTeamController;
@@ -119,6 +118,7 @@ use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
+use App\Http\Controllers\ToolSettingsFormatsController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiAssistantSettingsController;
@@ -128,6 +128,13 @@ use Artwork\Modules\AiAssistant\Http\Controllers\AiConversationController;
 use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiAssistantIsEnabled;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiSessionController;
 use Artwork\Modules\AiAssistant\Http\Controllers\HelpRedirectController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingCustomerController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingProjectController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingTeamController;
+use Artwork\Modules\Ticketing\Services\TicketingBillingService;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use Artwork\Modules\Mail\Http\Controllers\MailSettingsController;
@@ -439,6 +446,36 @@ Route::group(['middleware' => ['auth']], function (): void {
         ])->name('compensation-day-offs.week-schedule');
     });
 
+    // Artwork-Tickets: eigene Einstellungskategorie mit eigener Berechtigung, ein Tab je Bereich
+    Route::group([
+        'prefix' => 'settings/tickets',
+        'middleware' => 'can:' . PermissionEnum::TICKETING_MANAGE->value,
+    ], function (): void {
+        Route::get('/', [TicketingConnectionController::class, 'index'])->name('settings.tickets');
+        Route::get('/availability', [TicketingConnectionController::class, 'checkAvailability'])
+            ->name('settings.tickets.availability');
+        Route::post('/connection', [TicketingConnectionController::class, 'store'])->name('settings.tickets.connect');
+        Route::delete('/connection', [TicketingConnectionController::class, 'destroy'])->name('settings.tickets.disconnect');
+        Route::get('/billing', [TicketingBillingController::class, 'index'])->name('settings.tickets.billing');
+        // POST: mit PDFs kommt das Formular als multipart, und das liest PHP nur bei POST.
+        Route::post('/billing', [TicketingBillingController::class, 'update'])->name('settings.tickets.billing.save');
+        Route::delete('/billing/documents/{document}', [TicketingBillingController::class, 'removeLegalDocument'])
+            ->whereIn('document', TicketingBillingService::LEGAL_DOCUMENTS)
+            ->name('settings.tickets.billing.documents.remove');
+        Route::post('/billing/stripe-session', [TicketingBillingController::class, 'stripeSession'])
+            ->name('settings.tickets.billing.stripe-session');
+        Route::post('/billing/platform-terms', [TicketingBillingController::class, 'acceptPlatformTerms'])
+            ->name('settings.tickets.billing.platform-terms');
+        Route::get('/rooms', [TicketingConnectionController::class, 'rooms'])->name('settings.tickets.rooms');
+        Route::post('/rooms', [TicketingConnectionController::class, 'syncRooms'])->name('settings.tickets.rooms.sync');
+        Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');
+        Route::post('/reductions', [TicketingConnectionController::class, 'syncReductions'])
+            ->name('settings.tickets.reductions.sync');
+        Route::get('/team', [TicketingTeamController::class, 'index'])->name('settings.tickets.team');
+        Route::post('/team/invitations', [TicketingTeamController::class, 'invite'])
+            ->name('settings.tickets.team.invite');
+    });
+
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
         Route::get('/branding', [ToolSettingsBrandingController::class, 'index'])
@@ -508,6 +545,13 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->name('tool.communication-and-legal');
         Route::patch('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'update'])
             ->name('tool.communication-and-legal.update');
+
+        Route::get('/formats', [ToolSettingsFormatsController::class, 'index'])
+            ->middleware('can:change tool settings')
+            ->name('tool.formats');
+        Route::patch('/formats', [ToolSettingsFormatsController::class, 'update'])
+            ->middleware('can:change tool settings')
+            ->name('tool.formats.update');
 
         Route::patch('/shift/workflow/update', [ShiftController::class, 'updateWorkflowSettings'])
             ->middleware('shift-settings-area:general,edit')
@@ -918,7 +962,8 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::get('/components/{componentInTab}/documents', [ProjectDocumentsController::class, 'index'])
             ->name('projects.tabs.documents');
         Route::get('/all-documents', [ProjectDocumentsController::class, 'all'])
-            ->name('projects.tabs.all-documents');
+            ->name('projects.tabs.all-documents')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS));
         Route::get('/status', [ProjectStatusController::class, 'show'])
             ->name('projects.tabs.status')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::PROJECT_STATUS));
@@ -934,7 +979,8 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::get('/components/{componentInTab}/checklists', [ProjectChecklistController::class, 'index'])
             ->name('projects.tabs.checklists');
         Route::get('/all-checklists', [ProjectChecklistController::class, 'all'])
-            ->name('projects.tabs.all-checklists');
+            ->name('projects.tabs.all-checklists')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::CHECKLIST_ALL));
         Route::get('/material-issues', [ProjectMaterialIssueController::class, 'show'])
             ->name('projects.tabs.material-issues')
             ->middleware(EnsureUserCanSeeProjectComponent::for(
@@ -943,10 +989,26 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::get('/artist-residencies', [ProjectArtistResidenciesController::class, 'show'])
             ->name('projects.tabs.artist-residencies')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::ARTIST_RESIDENCIES));
+        Route::get('/ticketing', [TicketingProjectController::class, 'show'])
+            ->name('projects.tabs.ticketing')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::TICKETING));
+        Route::post('/ticketing/production', [TicketingProjectController::class, 'saveProduction'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.production');
+        Route::put('/ticketing/events', [TicketingProjectController::class, 'saveDraft'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.draft');
+        Route::post('/ticketing/release', [TicketingProjectController::class, 'release'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.release');
+        Route::delete('/ticketing/release', [TicketingProjectController::class, 'withdraw'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.withdraw');
         Route::get('/components/{componentInTab}/comments', [ProjectCommentController::class, 'index'])
             ->name('projects.tabs.comments');
         Route::get('/all-comments', [ProjectCommentController::class, 'all'])
-            ->name('projects.tabs.all-comments');
+            ->name('projects.tabs.all-comments')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::COMMENT_ALL_TAB));
         Route::get('/budget-informations', [ProjectBudgetInformationController::class, 'show'])
             ->name('projects.tabs.budget-informations')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::BUDGET_INFORMATIONS));
@@ -956,12 +1018,10 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::get('/calendar', [ProjectCalendarController::class, 'show'])
             ->name('projects.tabs.calendar')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::CALENDAR));
+        // BudgetTab.vue lädt seine Daten hierüber (route("projects.tabs.budget", …))
         Route::get('/budget', [ProjectBudgetController::class, 'show'])
             ->name('projects.tabs.budget')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::BUDGET));
-        Route::get('/shift', [ProjectShiftController::class, 'show'])
-            ->name('projects.tabs.shift')
-            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SHIFT_TAB));
         Route::get('/sage-invoices', [ProjectSageInvoiceOverviewController::class, 'show'])
             ->name('projects.tabs.sage-invoices')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW));
@@ -1033,10 +1093,8 @@ Route::group(['middleware' => ['auth']], function (): void {
     //Checklists
     Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');
     Route::post('/checklists', [ChecklistController::class, 'store'])->name('checklists.store');
-    Route::get('/checklists/{checklist}', [ChecklistController::class, 'show']);
     Route::post('/checklists/{checklist}/duplicate', [ChecklistController::class, 'duplicate'])
         ->name('checklists.duplicate');
-    Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);
     Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update'])->name('checklists.update');
     Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy'])->name('checklist.destroy');
 
@@ -1234,6 +1292,13 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/calendar/redirect/day/{day}', [EventController::class, 'redirectToCalendarByDay'])
         ->name('calendar.redirect-by-day');
     Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
+    Route::get('/ticketing/calendar-summary', [TicketingCalendarController::class, 'summary'])
+        ->name('ticketing.calendar-summary');
+    Route::get('/ticketing/open', [TicketingCalendarController::class, 'open'])->name('ticketing.open');
+    Route::get('/ticketing/events/{event}/sales', [TicketingCalendarController::class, 'sales'])
+        ->name('ticketing.sales');
+    Route::get('/ticketing/move-check', [TicketingCalendarController::class, 'moveCheck'])
+        ->name('ticketing.move-check');
     Route::get('/response/all/shift-plan-events', [
         EventController::class,
         'shiftPlanEventAPI',
@@ -1352,6 +1417,11 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->name('shifts.plan.list-view')
         ->can('can view shift plan');
 
+    // Weitere Tagesblöcke der Listenansicht (erster Block kommt mit der Seite)
+    Route::get('/shifts/list-view/days', [EventController::class, 'shiftPlanListViewDays'])
+        ->name('shifts.plan.list-view.days')
+        ->can('can view shift plan');
+
     // Wochenstatus: Gewerke × KW (Festschreibung, Anfragen, Änderungen, Verstöße, Besetzung, Frist)
     Route::get('/shifts/week-status', [
         \Artwork\Modules\Shift\Http\Controllers\ShiftWeekStatusController::class,
@@ -1409,12 +1479,6 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->name('shift-worker.confirmation.update');
 
 
-    Route::get('/shifts/view/events-and-workers', [EventController::class, 'getEventsForRoomsByDaysWithUser'])
-        ->name('shifts.events.for-rooms-by-days-and-project')
-        ->can('can view shift plan');
-    Route::get('/shifts/view/events-and-no-workers', [EventController::class, 'getEventsForRoomsByDaysWithoutUser'])
-        ->name('shifts.events.for-rooms-by-days-and-project-no-workers')
-        ->can('can view shift plan');
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])
         ->middleware('shift-settings-area:shift-templates,view')
         ->name('shifts.presets');
@@ -1556,7 +1620,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::patch('/notifications', [NotificationController::class, 'setReadAt'])->name('notifications.setReadAt');
     Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
         ->name('notifications.setReadAtAll');
-    Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
+    Route::patch('/user/settings/bulk', [NotificationController::class, 'bulkUpdate'])->name('notifications.settings.bulk');
+    Route::post('/user/settings/reset', [NotificationController::class, 'resetSettings'])
+        ->name('notifications.settings.reset');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])
         ->name('notifications.settings');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.delete');
@@ -1618,7 +1684,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::post('/contracts/filter/save', [ContractController::class, 'saveFilter'])->name('contracts.filter.save');
 
     //ContractModules
-    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');
     Route::post('/contract_modules/store', [ContractModuleController::class, 'store'])->name('contracts.module.store');
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])
         ->name('contracts.module.download');
@@ -1941,10 +2006,6 @@ Route::group(['middleware' => ['auth']], function (): void {
             'prefix' => 'budget',
             'middleware' => EnsureUserCanAccessProjectBudget::class,
         ], function (): void {
-            // GET
-            Route::get('/cell/comments', [CellCommentsController::class, 'get'])
-                ->name('project.budget.cell.comment.get');
-
             Route::get('/sum-details', [SumDetailsController::class, 'show'])
                 ->name('project.budget.sum-details.show');
 
@@ -2317,7 +2378,6 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->middleware('can:change project settings')->name('contract_types.update');
 
     // CompanyTypes
-    Route::get('/company_types', [CompanyTypeController::class, 'index'])->name('company_types.index');
     Route::post('/company_types', [CompanyTypeController::class, 'store'])
         ->middleware('can:change project settings')->name('company_types.store');
     Route::delete('/company_types/{company_type}', [CompanyTypeController::class, 'destroy'])
@@ -2347,7 +2407,6 @@ Route::group(['middleware' => ['auth']], function (): void {
         [CollectingSocietyController::class, 'update']
     )->middleware('can:change project settings')->name('collecting_societies.update');
     // Currencies
-    Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
     Route::post('/currencies', [CurrencyController::class, 'store'])
         ->middleware('can:change project settings')->name('currencies.store');
     Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])
@@ -2660,6 +2719,10 @@ Route::group(['middleware' => ['auth']], function (): void {
                 Route::post('/tag-groups/store', [InventoryTagGroupController::class, 'store'])
                 ->name('settings.inventory-tag-groups.store');
 
+            // settings.inventory-tag-groups.update (AddEditTagGroupModal)
+                Route::put('/tag-groups/{inventoryTagGroup}/update', [InventoryTagGroupController::class, 'update'])
+                ->name('settings.inventory-tag-groups.update');
+
             // settings.inventory-tags.store
                 Route::post('/store', [InventoryTagController::class, 'store'])
                 ->name('settings.inventory-tags.store');
@@ -2707,10 +2770,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::patch('/shift/preset/{shiftPreset}/update', [ShiftPresetController::class, 'update'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('update.shift.preset');
-    Route::get('/shift/template/search', [
-        ShiftPresetController::class,
-        'search',
-    ])->middleware('shift-settings-area:shift-templates,view')->name('shift.template.search');
     Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.delete.timeline.row');
@@ -2935,6 +2994,10 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::patch('component/{project}/{component}/update', [ProjectComponentValueController::class,
             'update'])
             ->name('project.tab.component.update');
+        // project.tab.component.value — Wert nachladen nach Broadcast (data.updated trägt nur Kennungen)
+        Route::get('component/{project}/{component}/value', [ProjectComponentValueController::class,
+            'value'])
+            ->name('project.tab.component.value');
         Route::group(['prefix' => 'component', 'middleware' => 'can:change project settings'], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])
@@ -3209,6 +3272,11 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
             ->name('articles.destroy');
 
+        // Warnhinweis vor dem Löschen: künftige Ausgaben, in denen der Artikel reserviert ist
+        Route::get('/articles/{inventoryArticle}/future-issues', [InventoryArticleController::class, 'futureIssues'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
+            ->name('articles.future-issues');
+
         // get inventory.articles.trash
         Route::get('/articles/trash', [InventoryArticleController::class, 'indexTrash'])
             ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
@@ -3367,6 +3435,10 @@ Route::group(['middleware' => ['auth']], function (): void {
             CrmContactController::class,
             'tooltipInfo',
         ])->middleware('can:crm.contacts.lookup,crmContact')->name('crm.contacts.tooltip');
+        Route::get('/contacts/{crmContact}/ticketing', [TicketingCustomerController::class, 'show'])
+            ->middleware('can:can view crm')->name('crm.contacts.ticketing');
+        Route::post('/ticketing-customers/sync', [TicketingCustomerController::class, 'sync'])
+            ->middleware('can:crm manager')->name('crm.ticketing-customers.sync');
         Route::get('/contacts/{crmContact}', [
             CrmController::class,
             'show',
@@ -3436,6 +3508,11 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->group(function (): void {
                 Route::get('/', [ExternalSubmissionReviewController::class, 'index'])->name('index');
                 Route::get('{submission}', [ExternalSubmissionReviewController::class, 'show'])->name('show');
+                // Vorgeschlagene Datei einer Upload-Änderung (Prüfrecht im Controller)
+                Route::get('{submission}/changes/{fieldChange}/file', [
+                    ExternalSubmissionReviewController::class,
+                    'proposedFile',
+                ])->whereNumber('fieldChange')->name('proposed-file');
                 Route::post('{submission}/approve-all', [ExternalSubmissionReviewController::class, 'approveAll'])
                     ->name('approve-all');
                 Route::post('{submission}/reject-all', [ExternalSubmissionReviewController::class, 'rejectAll'])
@@ -4005,6 +4082,12 @@ Route::group(['middleware' => ['auth']], function (): void {
         '/users/worktimes/store/{user}',
         [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeBookingController::class, 'store']
     )->middleware('can:can manage workers')->name('users.worktimes.store');
+
+    // users.worktimes.rebook – vergangene Tage nach aktueller Rechnung (neu) buchen
+    Route::post(
+        '/users/worktimes/rebook/{user}',
+        [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeBookingController::class, 'rebook']
+    )->middleware('can:can manage workers')->name('users.worktimes.rebook');
 
     // shifts.requestWorkTimeChange
     Route::post(

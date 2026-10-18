@@ -13,13 +13,16 @@
                         {{ displayUnreadCount }}
                     </div>
                 </div>
-                <div @click="setAllOnRead()"
-                     class="flex cursor-pointer items-center justify-end text-xs/[18px] text-accent-600 mr-8">
+                <button v-if="displayUnreadCount > 0"
+                        type="button"
+                        :disabled="archiving"
+                        @click="setAllOnRead()"
+                        class="flex cursor-pointer items-center justify-end text-xs/[18px] text-accent-600 mr-8 disabled:opacity-50">
                     <img src="/Svgs/IconSvgs/icon_archive_blue.svg"
-                         alt="Archive icon"
+                         alt=""
                          class="h-4 w-4 mr-2"
                          aria-hidden="true"/>{{$t('Archive all')}}
-                </div>
+                </button>
             </div>
             <div v-if="showSection"
                  @mouseover="notification.hovered = true"
@@ -147,12 +150,13 @@
 </template>
 
 <script>
+import { showAppToast } from "@/Helper/appToast.js";
 import {IconChevronDown, IconChevronRight, IconChevronUp} from "@tabler/icons-vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow.vue";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link, useForm} from "@inertiajs/vue3";
+import {Link, router, useForm} from "@inertiajs/vue3";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent.vue";
 import AnswerEventRequestWithRoomChangeComponent
     from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent.vue";
@@ -161,6 +165,7 @@ import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent.vu
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import {applyPageResponse, beginPageRequest, createPagedList} from "@/Helper/pagedNotificationList.js";
 
 export default  {
     name: 'NotificationSectionComponent',
@@ -184,8 +189,8 @@ export default  {
     data() {
         return {
             perPage: 20,
-            unread: { items: [], page: 0, total: 0, lastPage: 1, loading: false },
-            archived: { items: [], page: 0, total: 0, lastPage: 1, loading: false },
+            unread: createPagedList(),
+            archived: createPagedList(),
             archiving: false,
             showSection: true,
             showReadSection: false,
@@ -235,13 +240,27 @@ export default  {
         if (this.showSection && (this.unreadCount || 0) > 0) {
             this.fetchUnread(1);
         }
+        // Aktionen aus einer Benachrichtigung (Rückgabe melden, Annehmen, Absagen …) ändern Einträge,
+        // ohne dass sich die Anzahl ändert – die per axios geladenen Listen blieben dann veraltet.
+        // Nach jeder abgeschlossenen schreibenden Inertia-Aktion die geladenen Listen neu holen.
+        this.removeFinishListener = router.on('finish', (event) => {
+            const visit = event.detail.visit;
+            if (visit.method === 'get' || !visit.completed || visit.cancelled || !this.showSection) {
+                return;
+            }
+            this.scheduleRefresh();
+        });
+    },
+    beforeUnmount() {
+        this.removeFinishListener?.();
+        clearTimeout(this.refreshTimer);
     },
     watch: {
         // After a single archive/delete inside a NotificationBlock the whole page is reloaded via
         // Inertia, refreshing these count props. Re-fetch the visible lists so they stay in sync.
         unreadCount() {
             if (this.showSection) {
-                this.fetchUnread(1);
+                this.scheduleRefresh();
             }
         },
         showSection(open) {
@@ -251,42 +270,68 @@ export default  {
         },
     },
     methods: {
-        async fetchUnread(page = 1) {
-            this.unread.loading = true;
+        /**
+         * Eine Aktion löst mehrere Auslöser aus (Absage-PUT, Benachrichtigung löschen, geänderte
+         * Anzahl) – kurz sammeln und einmal neu laden, statt die Liste bis zu dreimal zu holen.
+         */
+        scheduleRefresh() {
+            clearTimeout(this.refreshTimer);
+            this.refreshTimer = setTimeout(() => this.refreshLoadedLists(), 150);
+        },
+        /**
+         * Geladene Listen neu holen und dabei per „Mehr anzeigen“ nachgeladene Seiten behalten. Startet
+         * währenddessen ein neuer Refresh, bricht dieser ab (siehe pagedNotificationList.js).
+         */
+        async refreshLoadedLists() {
+            const reload = async (status, loadedPages) => {
+                const generation = await this.fetchPage(status, 1);
+                const list = status === 'unread' ? this.unread : this.archived;
+                // nach Archivieren/Löschen kann es weniger Seiten geben als vorher geladen
+                for (let page = 2; generation !== null && page <= Math.min(loadedPages, list.lastPage); page++) {
+                    if (await this.fetchPage(status, page, generation) === null) {
+                        return;
+                    }
+                }
+            };
+            await Promise.all([
+                reload('unread', Math.max(1, this.unread.page)),
+                this.archived.page > 0 ? reload('archived', this.archived.page) : Promise.resolve(),
+            ]);
+        },
+        /**
+         * @returns {Promise<number|null>} Generation der übernommenen Antwort, null = verworfen/fehlgeschlagen
+         */
+        async fetchPage(status, page = 1, expectedGeneration = null) {
+            const list = status === 'unread' ? this.unread : this.archived;
+            const generation = beginPageRequest(list, page, expectedGeneration);
+            if (generation === null) {
+                return null;
+            }
+            list.loading = true;
             try {
                 const { data } = await axios.get(route('notifications.list'), {
-                    params: { groupType: this.groupType, status: 'unread', page, perPage: this.perPage },
+                    params: { groupType: this.groupType, status, page, perPage: this.perPage },
                 });
-                this.unread.items = page === 1 ? data.data : this.unread.items.concat(data.data);
-                this.unread.page = data.current_page;
-                this.unread.lastPage = data.last_page;
-                this.unread.total = data.total;
+                return applyPageResponse(list, generation, data) ? generation : null;
             } catch (err) {
                 console.error(err);
+                return null;
             } finally {
-                this.unread.loading = false;
+                if (generation === list.generation) {
+                    list.loading = false;
+                }
             }
+        },
+        fetchUnread(page = 1) {
+            return this.fetchPage('unread', page);
         },
         loadMoreUnread() {
             if (!this.unread.loading && this.unread.page < this.unread.lastPage) {
                 this.fetchUnread(this.unread.page + 1);
             }
         },
-        async fetchArchived(page = 1) {
-            this.archived.loading = true;
-            try {
-                const { data } = await axios.get(route('notifications.list'), {
-                    params: { groupType: this.groupType, status: 'archived', page, perPage: this.perPage },
-                });
-                this.archived.items = page === 1 ? data.data : this.archived.items.concat(data.data);
-                this.archived.page = data.current_page;
-                this.archived.lastPage = data.last_page;
-                this.archived.total = data.total;
-            } catch (err) {
-                console.error(err);
-            } finally {
-                this.archived.loading = false;
-            }
+        fetchArchived(page = 1) {
+            return this.fetchPage('archived', page);
         },
         loadMoreArchived() {
             if (!this.archived.loading && this.archived.page < this.archived.lastPage) {
@@ -336,6 +381,17 @@ export default  {
             this.notificationToDelete = notification;
             this.deleteComponentVisible = true;
         },
+        reportArchiveResult(result) {
+            if (result?.queued) {
+                showAppToast('success', this.$t('Archiving runs in the background – this may take a moment.'));
+                return;
+            }
+            const parts = [this.$t('{count} notifications archived', { count: result?.archived ?? 0 })];
+            if ((result?.remaining ?? 0) > 0) {
+                parts.push(this.$t('{count} still need an action from you', { count: result.remaining }));
+            }
+            showAppToast('success', parts.join(' · '));
+        },
         async setAllOnRead() {
             if (this.archiving || this.displayUnreadCount === 0) {
                 return;
@@ -345,7 +401,8 @@ export default  {
             // offloaded to a queued job above the backend threshold) instead of shipping all ids.
             this.archiving = true;
             try {
-                await axios.patch(route('notifications.setReadAtAll'), { groupType: this.groupType });
+                const { data } = await axios.patch(route('notifications.setReadAtAll'), { groupType: this.groupType });
+                this.reportArchiveResult(data);
                 await this.fetchUnread(1);
                 if (this.showReadSection) {
                     await this.fetchArchived(1);

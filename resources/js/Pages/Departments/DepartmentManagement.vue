@@ -138,7 +138,7 @@
                                   </label>
                               </div>
                           </div>
-                          <span v-if="form.svg_name === ''" class="text-danger text-xs mt-2">Icon auswählen notwendig*</span>
+                          <span v-if="form.svg_name === ''" class="text-danger text-xs mt-2">{{ $t('Selecting an icon is required') }}*</span>
 
                           <div class="mt-12">
                               <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-2">{{ $t('Add users') }}</div>
@@ -298,7 +298,7 @@ function onPageChange({ page: newPage, pageSize }: { page: number; pageSize: num
     // bestehende Query-Parameter übernehmen (Filter etc.)
     const currentQuery = Object.fromEntries(new URLSearchParams(window.location.search) as any)
     router.get(
-        route('departments.index'),
+        route('departments'),
         { ...currentQuery, page: newPage, per_page: pageSize },
         { preserveState: true, preserveScroll: true, replace: true, only: ['departments'] }
     )

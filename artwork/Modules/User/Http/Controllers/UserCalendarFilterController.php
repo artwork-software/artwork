@@ -4,6 +4,7 @@ namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Enums\UserFilterTypes;
+use Artwork\Modules\User\Http\Requests\UpdateFilterDatesRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
@@ -63,7 +64,7 @@ class UserCalendarFilterController extends Controller
         ]);
     }
 
-    public function updateDates(Request $request, User $user, UserService $userService): void
+    public function updateDates(UpdateFilterDatesRequest $request, User $user, UserService $userService): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
@@ -104,10 +105,16 @@ class UserCalendarFilterController extends Controller
     public function singleValueUpdate(User $user, Request $request): RedirectResponse
     {
         $this->authorize('updateOwnPreferences', $user);
-
-        $user->calendar_filter()->update([
-            $request->key => $request->value
+        // vorher: beliebiger Spaltenname per Query-Builder (500 bei unbekannten Keys, user_id umhängbar)
+        $request->validate([
+            'key' => ['required', 'string', \Illuminate\Validation\Rule::in([
+                'is_loud', 'is_not_loud', 'adjoining_not_loud', 'has_audience', 'has_no_audience',
+                'adjoining_no_audience', 'show_free_rooms', 'show_adjoining_rooms', 'all_day_free',
+                'event_types', 'rooms', 'areas', 'room_attributes', 'room_categories', 'event_properties',
+            ])],
         ]);
+
+        $user->calendar_filter()->first()?->update([$request->string('key')->value() => $request->input('value')]);
 
         return redirect()->back();
     }

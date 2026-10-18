@@ -3,17 +3,28 @@
 namespace Tests\Feature\Http\Controllers\Event;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventProperty;
+use Artwork\Modules\Event\Models\EventStatus;
+use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Notifications\RoomNotification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 final class EventUpdateTest extends FeatureTestCase
 {
+    private Event $roomChangeEvent;
+
+    private EventType $roomChangeEventType;
+
     #[Test]
     public function guest_cannot_update_event(): void
     {
@@ -69,23 +80,108 @@ final class EventUpdateTest extends FeatureTestCase
     }
 
     #[Test]
-    public function room_change_without_notifications_does_not_fail(): void
+    public function room_change_without_notifications_does_not_fail_and_notifies_nobody(): void
     {
         $this->actingAsAdmin();
-        $project = Project::factory()->create();
-        $room = Room::factory()->create();
-        $eventType = EventType::factory()->create();
-        $event = Event::factory()->create(['project_id' => $project->id, 'room_id' => $room->id]);
+        $manager = $this->projectWithManagerForRoomChange();
+        $event = $this->roomChangeEvent;
 
         // Vorher: $projectManagers wurde nur im Benachrichtigungs-Block gesetzt → 500 (Undefined variable)
-        $this->putJson(route('events.update', $event), [
+        $this->putJson(route('events.update', $event), $this->roomChangePayload(true))->assertSuccessful();
+
+        Notification::assertNothingSentTo($manager);
+    }
+
+    #[Test]
+    public function room_change_with_notifications_notifies_the_project_managers(): void
+    {
+        $this->actingAsAdmin();
+        $manager = $this->projectWithManagerForRoomChange();
+
+        $this->putJson(route('events.update', $this->roomChangeEvent), $this->roomChangePayload(false))
+            ->assertSuccessful();
+
+        Notification::assertSentTo(
+            $manager,
+            RoomNotification::class,
+            fn (RoomNotification $notification): bool =>
+                $notification->toArray()->type === NotificationEnum::NOTIFICATION_ROOM_CHANGED
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function bookedEventOf(User $creator, array $attributes = []): Event
+    {
+        // Ohne Projekt: der Project-Observer trägt die handelnde Person als Ersteller:in ein,
+        // was über das Projekt-Schreibrecht jedes Bearbeiten erlauben würde.
+        return Event::factory()->create(array_replace([
+            'user_id' => $creator->id,
+            'project_id' => null,
+            'room_id' => Room::factory()->create(['everyone_can_book' => false])->id,
+            'occupancy_option' => false,
+            'is_planning' => false,
+            'is_series' => false,
+            'start_time' => '2026-11-10 10:00:00',
+            'end_time' => '2026-11-10 12:00:00',
+            'allDay' => false,
+        ], $attributes));
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     * @return array<string, mixed>
+     */
+    private function editPayload(Event $event, array $overrides = []): array
+    {
+        return array_replace([
             'start' => '2026-11-10 10:00',
             'end' => '2026-11-10 12:00',
             'projectIdMandatory' => false,
             'creatingProject' => false,
             'eventNameMandatory' => false,
-            'eventTypeId' => $eventType->id,
-            'roomId' => $room->id,
+            'eventTypeId' => $event->event_type_id,
+            'roomId' => $event->room_id,
+            'title' => $event->name,
+            'eventName' => $event->eventName,
+            'isOption' => false,
+            'audience' => false,
+            'isLoud' => false,
+            'allDay' => false,
+            'isPlanning' => (bool) $event->is_planning,
+            'noNotifications' => true,
+        ], $overrides);
+    }
+
+    private function projectWithManagerForRoomChange(): User
+    {
+        $project = Project::factory()->create();
+        $manager = User::factory()->create();
+        $project->users()->attach($manager->id, ['is_manager' => true]);
+        app(NotificationSettingService::class)->ensureDefaultsForUser($manager);
+        $this->roomChangeEventType = EventType::factory()->create();
+        $this->roomChangeEvent = Event::factory()->create([
+            'project_id' => $project->id,
+            'room_id' => Room::factory()->create()->id,
+        ]);
+
+        return $manager;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function roomChangePayload(bool $noNotifications): array
+    {
+        return [
+            'start' => '2026-11-10 10:00',
+            'end' => '2026-11-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $this->roomChangeEventType->id,
+            'roomId' => $this->roomChangeEvent->room_id,
             'title' => 'Raumwechsel',
             'eventName' => 'Probe',
             'isOption' => false,
@@ -94,9 +190,9 @@ final class EventUpdateTest extends FeatureTestCase
             'allDay' => false,
             'is_series' => false,
             'isPlanning' => false,
-            'noNotifications' => true,
+            'noNotifications' => $noNotifications,
             'roomChange' => true,
-        ])->assertSuccessful();
+        ];
     }
 
     #[Test]
@@ -165,6 +261,119 @@ final class EventUpdateTest extends FeatureTestCase
 
         $this->putJson(route('events.decline', $event), [])
             ->assertUnauthorized();
+    }
+
+    /**
+     * 13.10.2026: Der Anfrage-Status kommt nie vom Client. Vorher machte der Dialog ohne Buchungsrecht aus
+     * einem fest gebuchten (auch geplanten) Termin beim Bearbeiten eine Raumanfrage.
+     */
+    #[Test]
+    public function editing_a_booked_event_as_request_only_creator_keeps_it_booked(): void
+    {
+        $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $event = $this->bookedEventOf($requester);
+
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['isOption' => true, 'eventName' => 'Neu']))
+            ->assertSuccessful();
+
+        $event->refresh();
+        $this->assertSame('Neu', $event->eventName);
+        $this->assertFalse((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function editing_a_booked_planned_event_from_the_calendar_keeps_it_firmly_planned(): void
+    {
+        $creator = $this->actingAsUserWith([
+            PermissionEnum::EVENT_REQUEST,
+            PermissionEnum::CAN_EDIT_PLANNING_CALENDAR,
+            PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR,
+        ]);
+        $event = $this->bookedEventOf($creator, ['is_planning' => true]);
+
+        // Der Kalender-Dialog schickte für geplante Termine isOption=true, weil "Termine fest planen" fehlt
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['isOption' => true, 'eventName' => 'Neu']))
+            ->assertSuccessful();
+
+        $event->refresh();
+        $this->assertSame('Neu', $event->eventName);
+        $this->assertTrue((bool) $event->is_planning);
+        $this->assertFalse((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function editing_an_open_room_request_as_creator_keeps_the_request_open(): void
+    {
+        $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $event = $this->bookedEventOf($requester, ['occupancy_option' => true]);
+
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['isOption' => true, 'eventName' => 'Neu']))
+            ->assertSuccessful();
+
+        $event->refresh();
+        $this->assertSame('Neu', $event->eventName);
+        $this->assertTrue((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function planning_calendar_editor_can_update_a_foreign_planned_event(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]);
+        $event = $this->bookedEventOf(User::factory()->create(), ['is_planning' => true]);
+
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['eventName' => 'Neu']))
+            ->assertSuccessful();
+
+        $this->assertSame('Neu', $event->fresh()->eventName);
+    }
+
+    #[Test]
+    public function planning_calendar_editor_cannot_update_a_foreign_regular_event(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]);
+        $event = $this->bookedEventOf(User::factory()->create());
+
+        $this->putJson(route('events.update', $event), $this->editPayload($event, ['eventName' => 'Neu']))
+            ->assertForbidden();
+    }
+
+    #[Test]
+    public function description_endpoint_reports_the_update_right_of_the_policy(): void
+    {
+        $editor = $this->actingAsUserWith([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]);
+        $planned = $this->bookedEventOf(User::factory()->create(), ['is_planning' => true, 'description' => 'Plan']);
+        $regular = $this->bookedEventOf(User::factory()->create(), ['description' => 'Fest']);
+
+        $this->getJson(route('events.description', $planned))
+            ->assertSuccessful()
+            ->assertJson(['description' => 'Plan', 'can_update' => true]);
+        $this->getJson(route('events.description', $regular))
+            ->assertSuccessful()
+            ->assertJson(['description' => 'Fest', 'can_update' => false]);
+        $this->assertNotNull($editor);
+    }
+
+    #[Test]
+    public function a_planned_event_is_never_an_answerable_room_request(): void
+    {
+        $planner = $this->actingAsUserWith([PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST]);
+        $event = $this->bookedEventOf(User::factory()->create(), ['is_planning' => true, 'occupancy_option' => true]);
+
+        $this->assertTrue(Gate::forUser($planner)->denies('answerRoomRequest', $event));
+        $this->putJson(route('events.accept', $event))->assertForbidden();
+    }
+
+    #[Test]
+    public function migration_turns_planned_room_requests_into_firmly_planned_events(): void
+    {
+        $plannedRequest = Event::factory()->create(['is_planning' => true, 'occupancy_option' => true]);
+        $regularRequest = Event::factory()->create(['is_planning' => false, 'occupancy_option' => true]);
+
+        $migration = require base_path('database/migrations/2026_10_13_100000_planned_events_are_never_room_requests.php');
+        $migration->up();
+
+        $this->assertFalse((bool) $plannedRequest->fresh()->occupancy_option);
+        $this->assertTrue((bool) $regularRequest->fresh()->occupancy_option);
     }
 
     #[Test]
@@ -315,4 +524,131 @@ final class EventUpdateTest extends FeatureTestCase
         $response->assertSuccessful();
     }
 
+    #[Test]
+    public function series_update_moves_all_series_events_and_rejects_unknown_rooms(): void
+    {
+        $this->actingAsAdmin();
+        $series = SeriesEvents::query()->create(['frequency_id' => 1, 'end_date' => '2026-12-31 00:00:00']);
+        $room = Room::factory()->create();
+        $events = collect(['2026-10-06', '2026-10-13'])->map(fn (string $day) => Event::factory()->create([
+            'is_series' => true,
+            'series_id' => $series->id,
+            'room_id' => $room->id,
+            'start_time' => $day . ' 10:00:00',
+            'end_time' => $day . ' 12:00:00',
+        ]));
+
+        // Unbekannter Raum: vorher FK-Fehler mitten in der Schleife (Serie halb geändert).
+        $this->patchJson(route('events.series.update', $events->first()), [
+            'newRoomId' => 999999999,
+            'calculationType' => 1,
+            'value' => 1,
+            'type' => 2,
+        ])->assertUnprocessable()->assertJsonValidationErrors('newRoomId');
+        $this->assertSame('2026-10-06 10:00:00', $events->first()->fresh()->start_time->format('Y-m-d H:i:s'));
+
+        $this->patchJson(route('events.series.update', $events->first()), [
+            'newRoomId' => null,
+            'calculationType' => 1,
+            'value' => 1,
+            'type' => 2,
+        ])->assertSuccessful();
+
+        $this->assertSame('2026-10-07 10:00:00', $events[0]->fresh()->start_time->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-10-14 12:00:00', $events[1]->fresh()->end_time->format('Y-m-d H:i:s'));
+    }
+
+    #[Test]
+    public function fields_a_dialog_does_not_send_stay_unchanged(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create();
+        $eventType = EventType::factory()->create();
+        $status = EventStatus::factory()->create();
+        $property = EventProperty::factory()->create();
+        $event = Event::factory()->create([
+            'room_id' => $room->id,
+            'event_status_id' => $status->id,
+            'admission_time' => '18:30:00',
+        ]);
+        $event->eventProperties()->attach($property->id);
+
+        // Antwort-Dialog / „Termine ohne Raum“ (Benachrichtigungen): ohne Status, Einlass, Eigenschaften
+        $this->putJson(route('events.update', $event), [
+            'start' => '2026-11-10 10:00',
+            'end' => '2026-11-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $eventType->id,
+            'roomId' => $room->id,
+            'title' => 'Antwort',
+            'eventName' => 'Probe',
+            'isOption' => false,
+            'noNotifications' => true,
+        ])->assertSuccessful();
+
+        $event->refresh();
+        $this->assertSame('Probe', $event->eventName);
+        $this->assertSame($status->id, $event->event_status_id);
+        $this->assertSame('18:30', substr((string) $event->admission_time, 0, 5));
+        $this->assertSame([$property->id], $event->eventProperties()->pluck('event_properties.id')->all());
+    }
+
+    #[Test]
+    public function an_explicit_null_project_id_removes_the_project(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create();
+        $eventType = EventType::factory()->create();
+        $event = Event::factory()->create([
+            'room_id' => $room->id,
+            'project_id' => Project::factory()->create()->id,
+        ]);
+
+        // Projekt-Chip „entfernen“ im Termin-Dialog: projectId muss als null ankommen – ein fehlendes
+        // Feld lässt das Projekt seit der Teil-Update-Semantik bewusst stehen
+        $this->putJson(route('events.update', $event), [
+            'start' => '2026-11-10 10:00',
+            'end' => '2026-11-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $eventType->id,
+            'roomId' => $room->id,
+            'title' => 'Ohne Projekt',
+            'isOption' => false,
+            'projectId' => null,
+            'projectName' => '',
+            'noNotifications' => true,
+        ])->assertSuccessful();
+
+        $this->assertNull($event->fresh()->project_id);
+    }
+
+    #[Test]
+    public function an_explicit_null_room_id_removes_the_room(): void
+    {
+        $this->actingAsAdmin();
+        $eventType = EventType::factory()->create();
+        $event = Event::factory()->create(['room_id' => Room::factory()->create()->id]);
+
+        // Raum-Chip „entfernen“ im Termin-Dialog: roomId kommt als null an
+        $this->putJson(route('events.update', $event), [
+            'start' => '2026-11-10 10:00',
+            'end' => '2026-11-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $eventType->id,
+            'roomId' => null,
+            'title' => 'Ohne Raum',
+            'isOption' => false,
+            'projectId' => null,
+            'projectName' => '',
+            'noNotifications' => true,
+        ])->assertSuccessful();
+
+        $this->assertNull($event->fresh()->room_id);
+    }
 }

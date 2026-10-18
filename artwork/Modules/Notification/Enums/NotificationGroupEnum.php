@@ -22,6 +22,26 @@ enum NotificationGroupEnum: string
 
     case EXTERNAL_ACCESS = 'EXTERNAL_ACCESS';
 
+    /**
+     * Reihenfolge in Benachrichtigungscenter und Einstellungen.
+     *
+     * @return array<int, self>
+     */
+    public static function displayOrder(): array
+    {
+        return [
+            self::EVENTS,
+            self::ROOMS,
+            self::TASKS,
+            self::PROJECTS,
+            self::BUDGET,
+            self::SHIFTS,
+            self::INVENTORY,
+            self::DOCUMENTS,
+            self::EXTERNAL_ACCESS,
+        ];
+    }
+
     public function title(): string
     {
         return match ($this) {

@@ -57,9 +57,11 @@ class ServiceProviderRepository extends BaseRepository
     public function scoutSearch(string $query): SupportCollection
     {
         return $this
-            ->getNewModelInstance()
-            ->search($query)
-            ->get()
+            ->getScoutResultsOrSqlFallback(
+                $this->getNewModelInstance()->search($query),
+                $query,
+                ['provider_name', 'work_name', 'email']
+            )
             ->map(
                 fn(ServiceProvider $serviceProvider) => [
                     'id' => $serviceProvider->getAttribute('id'),

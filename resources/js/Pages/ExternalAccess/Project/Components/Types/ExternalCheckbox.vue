@@ -1,12 +1,12 @@
 <template>
     <div>
-        <label :for="inputId" class="inline-flex items-center gap-3 text-sm font-semibold text-text">
+        <label :for="inputId" class="inline-flex items-start gap-3 py-1 text-sm font-semibold text-text">
             <input
                 :id="inputId"
                 v-model="checked"
                 type="checkbox"
                 :disabled="!editable"
-                class="rounded border-border disabled:text-text-subtle disabled:cursor-not-allowed"
+                class="mt-px size-5 shrink-0 rounded border-border disabled:text-text-subtle disabled:cursor-not-allowed sm:mt-0.5 sm:size-4"
                 @change="saveChange"
             />
             <span>{{ label }}</span>

@@ -406,7 +406,7 @@
                 </div>
                 <div>
                     <div class="flex justify-center w-full py-4">
-                        <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || newComment === ''"
+                        <button :disabled="sendingAnswer || this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || newComment === ''"
                                 :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || newComment === '' ? 'bg-text-subtle hover:bg-text-subtle' : ''"
                                 class="bg-accent-600 hover:bg-accent-700 py-2 px-8 rounded-full text-white"
                                 @click="updateAndAnswerEvent()">
@@ -421,6 +421,7 @@
 
 <script>
 import {IconCheck, IconChevronDown, IconChevronUp, IconCircleX, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
+import {parseYmd, toYmd} from "@/Helper/IsoWeek.js";
 
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {
@@ -485,6 +486,7 @@ export default {
     },
     data() {
         return {
+            sendingAnswer: false,
             startDate: null,
             startTime: null,
             endDate: null,
@@ -651,18 +653,38 @@ export default {
 
             this.checkCollisions();
         },
-        closeModal(bool) {
+        resetForm() {
             this.startDate = null;
             this.startTime = null;
             this.endDate = null;
             this.endTime = null;
             this.selectedRoom = null;
             this.selectedProject = null;
-            if(bool){
+        },
+        closeModal(bool) {
+            // Erst nach gespeicherter Antwort „geschlossen“ melden: die Benachrichtigung startet darauf
+            // sofort einen eigenen Inertia-Request (Benachrichtigung entfernen), der diesen sonst
+            // abbrach – die Antwort ging verloren
+            if (bool && this.newComment) {
                 this.$inertia.post(this.route('event.answer', {event: this.event.id}), {
                     comment: this.newComment,
-                }, {preserveState: true, preserveScroll: true})
+                }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.resetForm();
+                        this.$emit('closed', true);
+                    },
+                    // Termin ist gespeichert, nur die Antwort nicht: Dialog offen und ausgefüllt lassen,
+                    // damit erneut gesendet werden kann (Fehlermeldung kommt global)
+                    onFinish: () => {
+                        this.sendingAnswer = false;
+                    },
+                })
+                return;
             }
+            this.sendingAnswer = false;
+            this.resetForm();
             this.$emit('closed', bool);
         },
         formatDate(date, time) {
@@ -683,7 +705,9 @@ export default {
                         end: endFull,
                         currentEventId: this.event.id
                     }
-                }).then(response => this.roomCollisionArray = response.data);
+                }, { skipErrorToast: true }) // Lesezugriff im Hintergrund
+                    .then(response => this.roomCollisionArray = response.data)
+                    .catch(() => { /* Kollisionsanzeige ist best effort */ });
             }
         },
         updateTimes() {
@@ -699,10 +723,13 @@ export default {
                             let startHours = this.startTime.slice(0, 2);
                             if (startHours === '23') {
                                 this.endTime = '00:' + this.startTime.slice(3, 5);
-                                let date = new Date();
-                                this.endDate = new Date(
-                                    date.setDate(new Date(this.endDate).getDate() + 1)
-                                ).toISOString().slice(0, 10);
+                                // Ende = Folgetag des Enddatums (vorher: Tag des Monats auf das
+                                // heutige Datum gesetzt und per UTC formatiert → falscher Monat/Vortag)
+                                const nextDay = parseYmd(this.endDate);
+                                if (nextDay) {
+                                    nextDay.setDate(nextDay.getDate() + 1);
+                                    this.endDate = toYmd(nextDay);
+                                }
                             } else {
                                 this.endTime = this.getNextHourString(this.startTime)
                             }
@@ -763,10 +790,17 @@ export default {
             }
         },
         async updateAndAnswerEvent() {
+            if (this.sendingAnswer) {
+                return;
+            }
+            this.sendingAnswer = true;
             return await axios
                 .put('/events/' + this.event?.id, this.eventData())
                 .then(() => { this.closeModal(true);})
-                .catch(error => this.error = error.response.data.errors);
+                .catch(error => {
+                    this.sendingAnswer = false;
+                    this.error = error.response?.data?.errors;
+                });
         },
         async singleSaveEvent(){
             return await axios
@@ -805,19 +839,6 @@ export default {
             this.selectedProject = project;
             this.projectName = '';
         },
-        toggleAccept(type) {
-            if(type === 'option'){
-                if (this.optionAccept) {
-                    this.accept = false;
-                    this.optionString = options[0].name;
-                }
-            }else{
-                if(this.accept){
-                    this.optionAccept = false;
-                    this.optionString = null;
-                }
-            }
-        },
         eventData() {
             return {
                 title: this.title,
@@ -830,7 +851,7 @@ export default {
                 isLoud: this.isLoud,
                 isOption: this.isOption,
                 eventNameMandatory: this.selectedEventType?.individual_name,
-                projectId: this.selectedProject?.id,
+                projectId: this.selectedProject?.id ?? null,
                 projectName: this.creatingProject ? this.projectName : '',
                 eventTypeId: this.selectedEventType?.id,
                 projectIdMandatory: this.selectedEventType?.project_mandatory && !this.creatingProject,

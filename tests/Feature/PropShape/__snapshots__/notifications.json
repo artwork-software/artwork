@@ -10,6 +10,7 @@
             "relevant_for_inventory": ".",
             "relevant_for_project_period": ".",
             "relevant_for_shift": ".",
+            "relevant_for_ticketing": ".",
             "resource": ".",
             "specific_verifier_id": ".",
             "users": {
@@ -28,46 +29,8 @@
     },
     "projects": {
         "[]": {
-            "categories": "[]",
-            "cost_center": ".",
-            "description": ".",
-            "genres": "[]",
-            "group": {
-                "[]": {
-                    "artists": ".",
-                    "budget_deadline": ".",
-                    "color": ".",
-                    "cost_center_description": ".",
-                    "cost_center_id": ".",
-                    "created_at": ".",
-                    "deleted_at": ".",
-                    "gema": ".",
-                    "icon": ".",
-                    "id": ".",
-                    "is_group": ".",
-                    "key_visual_path": ".",
-                    "marked_as_done": ".",
-                    "name": ".",
-                    "number_of_participants": ".",
-                    "pinned_by_users": ".",
-                    "pivot": {
-                        "group_id": ".",
-                        "project_id": "."
-                    },
-                    "shift_description": ".",
-                    "state": ".",
-                    "updated_at": ".",
-                    "user_id": ".",
-                    "users": "[]"
-                }
-            },
             "id": ".",
-            "is_group": ".",
-            "key_visual_path": ".",
-            "name": ".",
-            "number_of_participants": ".",
-            "sectors": "[]",
-            "shiftDescription": "."
+            "name": "."
         }
     },
     "rooms": {
@@ -89,6 +52,7 @@
             },
             "description": ".",
             "end_date": ".",
+            "everyone_can_book": ".",
             "id": ".",
             "name": ".",
             "resource": ".",

@@ -6,11 +6,15 @@
                 :icon="IconAddressBook"
                 :title="$t('CRM')"
                 v-model="searchInput"
-                :description="contacts?.total ? `${contacts.total} ${$t('Contacts')}` : ''"
                 :search-enabled="true"
                 :search-label="$t('Search contacts')"
                 :search-tooltip="$t('Search')"
             >
+                <template #subtitle>
+                    <span v-if="contacts?.total">{{ contacts.total }} {{ $t('Contacts') }}</span>
+                    <span v-if="contacts?.total && typeHint"> · </span>
+                    <span v-if="typeHint" :class="ticketingSync?.error ? 'text-danger-border' : ''">{{ typeHint }}</span>
+                </template>
                 <template #actions>
                     <!--
                     <button v-if="canImport" class="ui-button flex items-center gap-1.5" @click="showExportModal = true">
@@ -55,12 +59,16 @@
                             {{ activeFilterCount }}
                         </span>
                     </div>
-                    <span v-if="isMirroredType" class="text-xs text-text-inverse-muted">
-                        <template v-if="activeType?.slug === 'user'">{{ $t('Creation only possible in user management') }}</template>
-                        <template v-else-if="activeType?.slug === 'freelancer'">{{ $t('Creation only possible in freelancer management') }}</template>
-                        <template v-else-if="activeType?.slug === 'service_provider'">{{ $t('Creation only possible in service provider management') }}</template>
-                    </span>
-                    <template v-else>
+                    <button
+                        v-if="ticketingSync?.connected && canImport"
+                        class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium disabled:opacity-50"
+                        :disabled="syncRequested || ticketingSync.running"
+                        @click="syncTicketingCustomers"
+                    >
+                        <component :is="IconRefresh" stroke-width="1" class="size-5" />
+                        {{ $t('Sync now') }}
+                    </button>
+                    <template v-if="!isMirroredType">
                         <Link v-if="canImport" :href="route('crm.import')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">
                             <component :is="IconUpload" stroke-width="1" class="size-5" />
                             {{ $t('Import') }}
@@ -315,7 +323,8 @@ import CreateContactModal from '@/Pages/CRM/Components/CreateContactModal.vue'
 import CrmFilterModal from '@/Pages/CRM/Components/CrmFilterModal.vue'
 import CrmExportModal from '@/Pages/CRM/Components/CrmExportModal.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconAddressBook, IconCirclePlus, IconEye, IconTrash, IconUpload, IconDownload, IconUserPlus, IconUserShield, IconUsers } from '@tabler/icons-vue'
+import { isMirroredContactType } from '@/Pages/CRM/mirroredContactTypes.js'
+import { IconAddressBook, IconCirclePlus, IconEye, IconTrash, IconUpload, IconDownload, IconUserPlus, IconUserShield, IconUsers, IconRefresh } from '@tabler/icons-vue'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({
@@ -325,21 +334,49 @@ const props = defineProps({
     canImport: { type: Boolean, default: false },
     importResult: { type: Object, default: null },
     importError: { type: String, default: null },
+    ticketingSync: { type: Object, default: null },
 })
 
 const $t = useTranslation()
 const { can, hasAdminRole } = usePermission(usePage().props)
 const canDeleteContacts = computed(() => hasAdminRole() || can('crm manager'))
 
-const mirroredSlugs = ['user', 'freelancer', 'service_provider']
+const isMirroredType = computed(() => isMirroredContactType(props.activeType?.slug))
 
-const isMirroredType = computed(() => mirroredSlugs.includes(props.activeType?.slug))
+// Unter dem Titel: woher die Kontakte gespiegelter Typen kommen, beim Ticketing-Typ der Stand des Abgleichs
+const typeHint = computed(() => {
+    switch (props.activeType?.slug) {
+        case 'user': return $t('Creation only possible in user management')
+        case 'freelancer': return $t('Creation only possible in freelancer management')
+        case 'service_provider': return $t('Creation only possible in service provider management')
+    }
+    const sync = props.ticketingSync
+    if (!sync) return ''
+    if (sync.error) return $t('Last sync with Artwork-Tickets failed: {message}', { message: sync.error })
+    if (sync.running) return $t('Syncing with Artwork-Tickets …')
+    if (sync.synced_at) return $t('Synced with Artwork-Tickets on {date}', { date: formatDateTime(sync.synced_at) })
+    return $t('Not yet synced with Artwork-Tickets')
+})
 
 const successMessage = ref('')
 const showSuccess = (msg) => {
     successMessage.value = msg
     setTimeout(() => { successMessage.value = '' }, 3000)
 }
+
+const syncRequested = ref(false)
+const syncTicketingCustomers = () => {
+    syncRequested.value = true
+    router.post(route('crm.ticketing-customers.sync'), {}, {
+        preserveScroll: true,
+        onSuccess: () => showSuccess($t('Sync started. New buyers appear here within a few minutes.')),
+        onFinish: () => { syncRequested.value = false },
+    })
+}
+
+const formatDateTime = (iso) => new Date(iso).toLocaleString('de-DE', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+})
 
 const searchInput = ref('')
 const page = ref(props.contacts?.current_page ?? 1)

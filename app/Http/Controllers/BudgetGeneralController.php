@@ -8,7 +8,6 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\ColumnRelevanceService;
-use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Http\Requests\UpdateBudgetColumnSettingRequest;
 use Artwork\Modules\Budget\Models\BudgetColumnSetting;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
@@ -66,8 +65,7 @@ class BudgetGeneralController extends Controller
         Table $table_id,
         SubPosition $sub_position_id,
         int $positionBefore,
-        ColumnCell $columnCell,
-        ColumnService $columnService
+        ColumnCell $columnCell
     ): void {
         if ($request->multiple === false) {
             $this->sage100Service->moveSingleSageDataRowToNewRow(
@@ -75,8 +73,7 @@ class BudgetGeneralController extends Controller
                 $table_id,
                 $sub_position_id,
                 $positionBefore,
-                $columnCell,
-                $columnService
+                $columnCell
             );
         } else {
             $this->sage100Service->moveMultipleSageDataRowToNewRow(
@@ -84,8 +81,7 @@ class BudgetGeneralController extends Controller
                 $table_id,
                 $sub_position_id,
                 $positionBefore,
-                $columnCell,
-                $columnService
+                $columnCell
             );
         }
     }

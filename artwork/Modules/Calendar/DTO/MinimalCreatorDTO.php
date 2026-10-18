@@ -2,10 +2,13 @@
 
 namespace Artwork\Modules\Calendar\DTO;
 
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 
 class MinimalCreatorDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
+
     public function __construct(
         public int $id,
         public string $first_name,

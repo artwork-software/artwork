@@ -126,7 +126,6 @@ import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -143,7 +142,7 @@ const UserShiftInfoModal = defineAsyncComponent({
 
 export default {
     name: "UserShiftPlanFunctionBar",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         UserShiftInfoModal,
         IconAlertTriangle,

@@ -5,6 +5,7 @@ namespace Artwork\Modules\Shift\Models;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -24,6 +25,9 @@ class ShiftPresetTimeline extends Model
         'name',
     ];
 
+    /**
+     * @return HasMany<PresetTimelineTime, $this>
+     */
     public function times(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(PresetTimelineTime::class, 'preset_timeline_id', 'id');

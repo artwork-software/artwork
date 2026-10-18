@@ -2,7 +2,12 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Budget\Models\Column;
+use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -76,5 +81,30 @@ final class MoneySourceControllerTest extends FeatureTestCase
         $response = $this->post(route('money_sources.pin', $source));
 
         $response->assertRedirect();
+    }
+
+    #[Test]
+    public function available_amount_keeps_cents_of_linked_cells(): void
+    {
+        // Zellwerte mit Dezimalkomma wurden per (int) abgeschnitten („1234,56“ → 1234).
+        $this->actingAsAdmin();
+        $moneySource = MoneySource::factory()->create(['is_group' => false, 'amount' => 1000.50]);
+        $table = Table::factory()->create(['is_template' => false]);
+        $column = Column::factory()->create(['table_id' => $table->id, 'position' => 3]);
+        $row = SubPositionRow::factory()->create();
+        ColumnCell::create([
+            'column_id' => $column->id,
+            'sub_position_row_id' => $row->id,
+            'value' => '1234,56',
+            'verified_value' => null,
+            'commented' => false,
+            'linked_money_source_id' => $moneySource->id,
+            'linked_type' => 'EARNING',
+        ]);
+
+        $this->get(route('money_sources.show', $moneySource))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('moneySource.amount_available', fn ($value) => abs((float) $value - 2235.06) < 0.001));
     }
 }

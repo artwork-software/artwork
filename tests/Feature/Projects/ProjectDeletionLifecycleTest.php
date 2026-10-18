@@ -10,7 +10,9 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -115,5 +117,25 @@ final class ProjectDeletionLifecycleTest extends FeatureTestCase
         $this->assertDatabaseMissing('events', ['id' => $event->id]);
         $this->assertDatabaseMissing('shifts', ['id' => $shift->id]);
         $this->assertDatabaseMissing('shift_workers', ['shift_id' => $shift->id]);
+    }
+
+    #[Test]
+    public function force_delete_removes_the_shop_pictures_of_the_project(): void
+    {
+        Storage::fake();
+        $project = Project::factory()->create();
+        $production = TicketingProduction::query()->create(['project_id' => $project->id, 'hero_path' => 'cover.jpg']);
+        $production->images()->create(['path' => 'further.jpg']);
+        Storage::put('public/ticketing/cover.jpg', 'x');
+        Storage::put('public/ticketing/further.jpg', 'x');
+        Storage::put('public/ticketing/other-project.jpg', 'x');
+
+        $this->softDelete($project);
+        app()->call([app(ProjectService::class), 'forceDelete'], ['project' => Project::onlyTrashed()->findOrFail($project->id)]);
+
+        Storage::assertMissing('public/ticketing/cover.jpg');
+        Storage::assertMissing('public/ticketing/further.jpg');
+        Storage::assertExists('public/ticketing/other-project.jpg');
+        $this->assertDatabaseMissing('ticketing_productions', ['project_id' => $project->id]);
     }
 }

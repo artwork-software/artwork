@@ -265,11 +265,11 @@
                         </td>
                         <td class="header-center">
                             @if(!empty($eventTypeFilterNames))
-                                <span class="header-legend">Terminarten: {{ implode(', ', $eventTypeFilterNames) }}</span>
+                                <span class="header-legend">{{ __('Types of events') }}: {{ implode(', ', $eventTypeFilterNames) }}</span>
                             @endif
                         </td>
                         <td class="header-right">
-                            <span class="header-subtitle">Erstellt am {{ $created_date }} von {{ $created_by }}</span>
+                            <span class="header-subtitle">{{ __('Created on :date by :name', ['date' => $created_date, 'name' => $created_by]) }}</span>
                             @if($bigLogoBase64)
                                 <img src="{{ $bigLogoBase64 }}" alt="Logo" style="margin-left: 8px;" />
                             @endif

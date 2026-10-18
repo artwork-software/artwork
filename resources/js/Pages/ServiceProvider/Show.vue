@@ -99,7 +99,7 @@
                             <BaseInput type="email" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Phone number')" />
                         </div>
                         <div class="col-span-full">
-                            <BaseTextarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :label="$t('Note')" :class="checkCanEdit ? 'bg-border-subtle' : ''" />
+                            <BaseTextarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :label="$t('Note')" :maxlength="500" show-counter :class="checkCanEdit ? 'bg-border-subtle' : ''" />
                         </div>
                     </div>
 

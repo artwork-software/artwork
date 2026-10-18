@@ -167,7 +167,6 @@
 
 <script>
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {Link, router} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -175,7 +174,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
-import {IconCalendarMonth} from "@tabler/icons-vue";
+import {IconCalendarMonth, IconPinned} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
@@ -183,13 +182,14 @@ export default {
     components: {
         PropertyIcon,
         IconCalendarMonth,
+        IconPinned,
         ProjectCreateModal,
         ProjectDataEditModal,
         BaseModal, Link, BaseMenu, Menu,
         MenuButton,
         MenuItem,
         MenuItems,},
-    mixins: [IconLib, Permissions],
+    mixins: [Permissions],
     setup() {
         const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken} = useColorHelper();
         return {backgroundColorWithOpacity, TextColorWithDarken};

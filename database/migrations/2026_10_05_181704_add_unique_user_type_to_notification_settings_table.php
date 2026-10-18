@@ -1,0 +1,53 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * notification_settings hatte außer dem Primärschlüssel keinen Index: jeder Versand las die
+ * Einstellung per Full-Scan, und doppelte Zeilen je Person/Typ waren möglich. Dubletten (ältere
+ * Zeile behalten) und Zeilen gelöschter Konten werden vorher entfernt.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Behaltene IDs vorab gruppiert ermitteln – der frühere Self-Join ohne Index wuchs quadratisch
+        DB::statement(
+            'DELETE FROM notification_settings WHERE id NOT IN (
+                SELECT keep_id FROM (
+                    SELECT MIN(id) AS keep_id FROM notification_settings GROUP BY user_id, type
+                ) AS kept
+            )'
+        );
+        DB::table('notification_settings')
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')->from('users')->whereColumn('users.id', 'notification_settings.user_id');
+            })
+            ->delete();
+
+        // Index und Fremdschlüssel einzeln prüfen: wiederholbar, falls ein früherer Lauf nach dem Index abbrach
+        if (!Schema::hasIndex('notification_settings', ['user_id', 'type'], 'unique')) {
+            Schema::table('notification_settings', function (Blueprint $table): void {
+                $table->unique(['user_id', 'type']);
+            });
+        }
+        $hasUserForeignKey = collect(Schema::getForeignKeys('notification_settings'))
+            ->contains(fn (array $foreignKey): bool => $foreignKey['columns'] === ['user_id']);
+        if (!$hasUserForeignKey) {
+            Schema::table('notification_settings', function (Blueprint $table): void {
+                $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        Schema::table('notification_settings', function (Blueprint $table): void {
+            $table->dropForeign(['user_id']);
+            $table->dropUnique(['user_id', 'type']);
+        });
+    }
+};

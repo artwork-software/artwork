@@ -15,6 +15,7 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
+use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Artwork\Modules\User\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
@@ -36,6 +37,16 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
+     * Axios-/Fetch-Aufruf ohne Inertia-Header (JSON-Endpunkte, z. B. Dienstplan-Aktionen, Komponenten der
+     * Projekt-Tabs, Kalender-Monate). Die geteilten Props landen nur in Inertia-Seitenantworten — für diese
+     * Requests liefen die Settings-, Rollen- und Workflow-Abfragen von share() bisher bei jedem Aufruf umsonst.
+     */
+    public static function isPlainXhrRequest(Request $request): bool
+    {
+        return $request->ajax() && !$request->header('X-Inertia');
+    }
+
+    /**
      * @return array<string, mixed>
      * @throws \JsonException
      */
@@ -43,6 +54,10 @@ class HandleInertiaRequests extends Middleware
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function share(Request $request): array
     {
+        if (self::isPlainXhrRequest($request)) {
+            return parent::share($request);
+        }
+
         $generalSettings = app(GeneralSettings::class);
         $generalCalendarSettings = app(GeneralCalendarSettings::class);
         $eventSettings = app(EventSettings::class);
@@ -125,6 +140,7 @@ class HandleInertiaRequests extends Middleware
             $failSave++;
         }
         $sageApiEnabled = app(SageApiSettingsService::class)->isEnabled();
+        $ticketingConnections = app(TicketingConnectionService::class);
 
         $shiftCommitWorkflowEnabled = (bool) $generalSettings->shift_commit_workflow_enabled;
 
@@ -242,6 +258,9 @@ class HandleInertiaRequests extends Middleware
                 'banner' => $banner,
                 'projectNameOfCalendarProject' => $projectName,
                 'businessName' => $generalSettings->business_name,
+                // Regionale Formate der Instanz (Zahlen, Währung, Datum) – resources/js/Helper/instanceFormat.js
+                'instanceFormat' => app(\Artwork\Modules\GeneralSettings\Services\InstanceFormatter::class)
+                    ->toFrontend(),
                 'event_time_length_minutes' => $generalSettings->event_time_length_minutes,
                 'event_start_time' => $generalSettings->event_start_time,
                 'event_all_day_default' => $generalSettings->event_all_day_default,
@@ -287,6 +306,11 @@ class HandleInertiaRequests extends Middleware
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,
+                // Artwork-Tickets: configured = Einstellungen zum Verbinden, active = alles Übrige (Kalender, Termine, Terminarten)
+                'ticketing' => [
+                    'configured' => $ticketingConnections->isConfigured(),
+                    'active' => $ticketingConnections->isActive(),
+                ],
                 // Externe Zugänge: gated Einladen-Buttons und CRM-Verwaltungslinks im Frontend
                 'externalAccessEnabled' => app(ExternalAccessSettingsResolver::class)->isEnabled(),
                 'calendar_settings' => $calendarSettings,

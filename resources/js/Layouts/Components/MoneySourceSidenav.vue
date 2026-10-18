@@ -313,6 +313,9 @@ import { is } from 'laravel-permission-to-vuejs'
 
 // Icons (Tabler)
 import { IconChevronDown, IconUpload, IconDownload, IconCircleX, IconEdit } from '@tabler/icons-vue'
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 /** Props */
 const props = defineProps<{
@@ -357,8 +360,8 @@ const writeUsers = computed(() => (props.users ?? []).filter(u => u.pivot?.write
 
 /** Helpers */
 function formatDate(date: string) {
-    const d = new Date(date)
-    return d.toLocaleString('de-DE', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    // Datumsformat der Instanz plus Uhrzeit; nicht lesbare Werte unverändert anzeigen
+    return instanceFormat.formatDateTime(date) || date
 }
 function isOverdue(date: string) {
     try {
@@ -366,7 +369,7 @@ function isOverdue(date: string) {
     } catch { return false }
 }
 function formatCurrency(val: number) {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(val || 0)
+    return new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency, maximumFractionDigits: 2 }).format(val || 0)
 }
 
 /** File Actions */

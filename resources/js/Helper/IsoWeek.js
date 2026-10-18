@@ -13,6 +13,22 @@ export function toYmd(date) {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
+/**
+ * 'YYYY-MM-DD' (auch mit Zeitanteil, z. B. '2026-03-29T00:00:00.000000Z') → Date um 00:00 lokaler Zeit.
+ * Gegenstück zu toYmd: new Date('2026-03-29') wäre UTC-Mitternacht, lokale Tagesrechnung (setDate)
+ * darauf kippt an der Sommerzeit-Umstellung auf den Vortag.
+ * @returns {Date|null} null bei ungültiger Eingabe
+ */
+export function parseYmd(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value ?? ''))
+    if (!match) {
+        return null
+    }
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+
+    return Number.isNaN(date.getTime()) ? null : date
+}
+
 /** Date → 'DD.MM.YYYY' (Anzeigeformat der App) */
 export function toDmy(date) {
     return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`

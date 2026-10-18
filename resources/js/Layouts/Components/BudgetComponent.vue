@@ -1758,7 +1758,7 @@ export default {
             })
         },
         restoreBudgetTemplate() {
-            router.patch(this.route('project.budget.table.restore', this.table.id), {
+            router.patch(this.route('project.budget.table.restore', this.table.id), {}, {
                 preserveState: true,
                 preserveScroll: true
             })

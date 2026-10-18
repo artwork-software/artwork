@@ -34,11 +34,17 @@ class ProjectPrintLayout extends Model
     ];
 
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'users');
     }
 
+    /**
+     * @return HasMany<PrintLayoutComponents, $this>
+     */
     public function headerComponents(): HasMany
     {
         return $this->hasMany(
@@ -48,6 +54,9 @@ class ProjectPrintLayout extends Model
         )->where('type', 'header');
     }
 
+    /**
+     * @return HasMany<PrintLayoutComponents, $this>
+     */
     public function footerComponents(): HasMany
     {
         return $this->hasMany(
@@ -57,6 +66,9 @@ class ProjectPrintLayout extends Model
         )->where('type', 'footer');
     }
 
+    /**
+     * @return HasMany<PrintLayoutComponents, $this>
+     */
     public function bodyComponents(): HasMany
     {
         return $this->hasMany(
@@ -66,6 +78,9 @@ class ProjectPrintLayout extends Model
         )->where('type', 'body');
     }
 
+    /**
+     * @return HasMany<PrintLayoutComponents, $this>
+     */
     public function components(): HasMany
     {
         return $this->hasMany(

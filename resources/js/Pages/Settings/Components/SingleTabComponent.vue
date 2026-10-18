@@ -6,6 +6,8 @@ import SidebarConfigElement from "@/Pages/Settings/Components/Sidebar/SidebarCon
 import SingleComponent from "@/Pages/Settings/Components/SingleComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import { useTranslation } from "@/Composeables/Translation.js";
 
 import { Switch } from "@headlessui/vue";
 import { router } from "@inertiajs/vue3";
@@ -32,6 +34,9 @@ const dragging = ref(false);
 const showAddEditModal = ref(false);
 const tabClosed = ref(true);
 const showComponentTabCannotBeDeletedModal = ref(false);
+const showDeleteTabModal = ref(false);
+const deletingTab = ref(false);
+const $t = useTranslation();
 
 const lastComponentOrder = computed(() => (props.tab?.components?.length || 0) + 1);
 const componentCount = computed(() => props.tab?.components?.length || 0);
@@ -65,12 +70,36 @@ function updateComponentOrder(components) {
     );
 }
 
+/**
+ * Inhalte eines eingeschränkten Tabs behalten nach dem Löschen ihre Tab-Zuordnung und sind nur noch
+ * für Admins sichtbar (ProjectTabController::destroy) – darauf weist die Bestätigung hin.
+ */
+const deleteTabDescription = computed(() => {
+    const question = $t("Are you sure you want to delete the tab {0}?", [props.tab?.name ?? ""]);
+    if (!isRestricted.value) {
+        return question;
+    }
+
+    return `${question} ${$t("Comments, checklists and documents from this tab will then only be visible to admins.")}`;
+});
+
 function removeTab() {
     if ((props.allTabs?.length || 0) === 1) {
         showComponentTabCannotBeDeletedModal.value = true;
         return;
     }
-    router.delete(route("tab.destroy", { projectTab: props.tab.id }));
+    showDeleteTabModal.value = true;
+}
+
+function confirmRemoveTab() {
+    deletingTab.value = true;
+    router.delete(route("tab.destroy", { projectTab: props.tab.id }), {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingTab.value = false;
+            showDeleteTabModal.value = false;
+        },
+    });
 }
 
 function editTab() {
@@ -332,6 +361,15 @@ function updateDefaultTab() {
 
     <!-- Modals -->
     <AddEditTabModal v-if="showAddEditModal" :tab-to-edit="tab" @close="showAddEditModal = false" />
+
+    <ConfirmDeleteModal
+        v-if="showDeleteTabModal"
+        :title="$t('Delete tab')"
+        :description="deleteTabDescription"
+        :loading="deletingTab"
+        @closed="showDeleteTabModal = false"
+        @delete="confirmRemoveTab"
+    />
 
     <error-component
         v-if="showComponentTabCannotBeDeletedModal"

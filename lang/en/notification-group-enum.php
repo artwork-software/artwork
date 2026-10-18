@@ -10,6 +10,7 @@ return [
         'Shift Planning' => 'Shift Planning',
         'Inventory & Material Issues' => 'Inventory & Material Issues',
         'Documents' => 'Documents',
+        'External access' => 'External access',
     ],
     'description' => [
         'Get notified when someone sends you a document request or when a requested document has been uploaded.' => 'Get notified when someone sends you a document request or when a requested document has been uploaded.',

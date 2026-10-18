@@ -135,6 +135,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import axios from "axios";
+import { ticketingMoveHeaders } from "@/Composeables/useTicketingMove.js";
 
 const { t } = useI18n();
 
@@ -167,14 +168,17 @@ const closeModal = () => {
     emits("close");
 };
 
-const saveSeriesEdit = () => {
+const saveSeriesEdit = async () => {
+    const headers = await ticketingMoveHeaders([props.event.id], { withSeries: true });
+    if (!headers) return;
+
     axios
         .patch(route("events.series.update", props.event.id), {
             newRoomId: selectedRoom.value?.id ?? null,
             calculationType: selectedCalculationType.value.id,
             value: editValue.value,
             type: selectedTimeType.value.id,
-        })
+        }, { headers })
         .then(() => {
             closeModal();
             location.reload();

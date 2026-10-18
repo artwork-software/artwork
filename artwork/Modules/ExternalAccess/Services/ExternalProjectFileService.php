@@ -16,6 +16,7 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -108,7 +109,7 @@ class ExternalProjectFileService
             ])
             ->log('file_uploaded');
 
-        broadcast(new UploadNewDocumentInProject($projectFile, $project->id));
+        SafeBroadcast::send(new UploadNewDocumentInProject($projectFile, $project->id));
 
         return $projectFile;
     }
@@ -155,7 +156,7 @@ class ExternalProjectFileService
             ])
             ->log('file_deleted');
 
-        broadcast(new DeleteDocumentInProject($file, $project->id));
+        SafeBroadcast::send(new DeleteDocumentInProject($file, $project->id));
     }
 
     /**

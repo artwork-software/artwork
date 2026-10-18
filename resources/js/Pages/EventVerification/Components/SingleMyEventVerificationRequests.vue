@@ -12,8 +12,8 @@
             <!-- INFORMATIONEN ANZEIGE -->
             <div class="w-full">
                 <p class="text-sm font-lexend font-semibold text-text"
-                   :style="{color: myRequest.event_type.hex_code}">
-                    {{ myRequest.event_type.name }}: {{ myRequest.eventName ?? myRequest?.project?.name }}
+                   :style="{color: myRequest.event_type?.hex_code}">
+                    {{ myRequest.event_type?.name }}: {{ myRequest.eventName ?? myRequest?.project?.name }}
                 </p>
                 <p class="mt-1 flex items-center gap-x-1 text-xs text-text-subtle">
                     <span class="font-lexend font-bold">{{ $t('Start') }}:</span>

@@ -357,7 +357,7 @@
                              class="flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 py-4 text-sm/5 font-semibold text-text"
                         >
                             <span class="truncate">{{ selectedRoom.name }}</span>
-                            <button class="ml-0.5 text-text-subtle transition hover:text-danger" @click="selectedRoom = null" type="button">
+                            <button class="ml-0.5 text-text-subtle transition hover:text-danger" @click="removeSelectedRoom" type="button">
                                 <IconCircleX class="size-4" />
                             </button>
                         </div>
@@ -640,7 +640,13 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <BaseUIButton type="button" hide-icon @click="closeModal">
+                            <span v-if="ticketsReleased" class="text-xs text-secondary">{{ $t('On sale: time and room changes reach the shop. Buyers are not notified automatically.') }}</span>
+                            <BaseUIButton v-if="ticketsReleased" type="button" hide-icon @click="showTicketDetails = true">
+                                <IconTicket class="size-4" />
+                                {{ $t('Ticket details') }}
+                            </BaseUIButton>
+
+                            <BaseUIButton type="button" hide-icon @click="closeModal(false)">
                                 {{ $t('Cancel') }}
                             </BaseUIButton>
 
@@ -654,6 +660,9 @@
                             >
                                 {{ primaryButtonText }}
                             </BaseUIButton>
+                            <span v-else-if="planningWithoutCreateRight" class="text-xs text-secondary">
+                                {{ $t('You lack the permission "Plan directly in the planning calendar" to create planned events in this room.') }}
+                            </span>
                             <BaseUIButton
                                 v-else
                                 type="button"
@@ -736,7 +745,7 @@
                 </div>
 
                 <div class="mt-3 flex w-full justify-end">
-                    <BaseUIButton type="button" hide-icon @click="closeModal">{{ $t('Close') }}</BaseUIButton>
+                    <BaseUIButton type="button" hide-icon @click="closeModal(false)">{{ $t('Close') }}</BaseUIButton>
                 </div>
             </div>
         </div>
@@ -844,6 +853,14 @@
         </div>
     </ArtworkBaseModal>
 
+    <TicketingSalesModal
+        v-if="showTicketDetails"
+        :event-id="props.event.id"
+        :description="props.event.eventName || props.event.title || ''"
+        @close="showTicketDetails = false"
+    />
+
+
     <!-- Confirm: Verschiebung löst Einzeltag-Projektzuordnungen auf -->
     <ArtworkBaseModal
         v-if="showAssignmentImpactModal"
@@ -912,6 +929,7 @@ import dayjs from 'dayjs'
 import { can } from 'laravel-permission-to-vuejs'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import TicketingSalesModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
@@ -922,9 +940,10 @@ import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vu
 import ProjectSearch from '@/Components/SearchBars/ProjectSearch.vue'
 import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 
-import { IconAlertTriangle, IconArrowsMoveHorizontal, IconCheck, IconChevronUp, IconCircleX, IconRepeat, IconTrash } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconArrowsMoveHorizontal, IconCheck, IconChevronUp, IconCircleX, IconRepeat, IconTicket, IconTrash } from '@tabler/icons-vue'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import { useEvent } from '@/Composeables/Event.js'
+import { ticketingActive, ticketingMoveHeaders } from '@/Composeables/useTicketingMove.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -986,6 +1005,20 @@ const onToggleShiftPeriodOnStartDateChange = () => {
         {shift_period_on_start_date_change: shiftPeriodOnStartDateChange.value}
     ).catch((e) => console.error('shift-period-setting:patch-failed', e))
 }
+
+const showTicketDetails = ref(false)
+/* Only a released date has ticket details; the answer costs nothing when there are none. */
+const ticketsReleased = ref(false)
+watch(() => props.event?.id, async (eventId) => {
+    ticketsReleased.value = false
+    if (!eventId || !ticketingActive()) return
+    try {
+        const { data } = await axios.get(route('ticketing.sales', eventId), { params: { only_state: 1 } })
+        ticketsReleased.value = data.released === true
+    } catch {
+        ticketsReleased.value = false
+    }
+}, { immediate: true })
 
 // --- Wiederholungstermine (KONZEPT_Wiederholungstermine.md)
 const series = ref(false)
@@ -1186,7 +1219,7 @@ async function fetchSeriesPreview() {
             end,
             roomId: selectedRoom.value?.id ?? null,
             ...seriesDefinitionPayload(),
-        })
+        }, { skipErrorToast: true }) // Lesezugriff im Hintergrund (Vorschau beim Tippen)
         seriesPreview.value = data
     } catch {
         seriesPreview.value = null
@@ -1253,7 +1286,7 @@ async function checkSeriesImpact() {
     if (!isSeriesEvent.value || seriesScope.value === 'single' || !series.value || seriesImpactConfirmed) return true
     if (!seriesDefinitionValid.value || !seriesDefinitionChanged()) return true
     try {
-        const { data } = await axios.post(route('events.series.impact', { event: props.event.id }), seriesDefinitionPayload())
+        const { data } = await axios.post(route('events.series.impact', { event: props.event.id }), seriesDefinitionPayload(), { skipErrorToast: true }) // Dry-Run, Speichern meldet selbst
         if (data?.changed && (data.trash > 0 || data.create > 0 || data.rebuild)) {
             seriesImpact.value = data
             showSeriesImpactModal.value = true
@@ -1303,6 +1336,13 @@ const showProjectInfo = ref(Boolean(props.project) || (props.calendarProjectPeri
 const allDayEvent = ref(!!usePage().props.event_all_day_default)
 const selectedProject = ref(null)
 const selectedRoom = ref(null)
+// Nur ein bewusst entfernter Raum wird als null gesendet – ist der Raum des Termins nicht in der
+// Raumliste (z. B. im Papierkorb), bleibt das Feld leer, darf den Raum beim Speichern aber nicht löschen
+const roomRemovedByUser = ref(false)
+function removeSelectedRoom() {
+    selectedRoom.value = null
+    roomRemovedByUser.value = true
+}
 const error = ref(null)
 const creatingProject = ref(false)
 const description = ref(null)
@@ -1333,6 +1373,9 @@ function loadFullDescription() {
             // Nur uebernehmen, wenn zwischenzeitlich niemand getippt hat
             if (!descriptionTouched.value && description.value === prefilled) {
                 description.value = data?.description ?? ''
+            }
+            if (typeof data?.can_update === 'boolean') {
+                canEdit.value = data.can_update
             }
         })
         .catch(() => { descriptionLoadFailed.value = true })
@@ -1384,13 +1427,16 @@ function setEndFromDuration() {
 // --- Computeds
 // Manche Aufrufer liefern rooms als Objekt-Map statt als Array – hier vereinheitlichen
 const roomsList = computed(() => Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms || {}))
+// admins kommt je nach Seite als ID-Liste (Kalender) oder als Personen-Liste (Benachrichtigungen) –
+// vorher nur IDs geprüft, Raumadmins sahen aus der Benachrichtigung nur die Leseansicht
+const adminIdsOf = (room) => (room?.admins ?? []).map((admin) => admin?.id ?? admin)
 const isRoomAdmin = computed(() => {
-    return roomsList.value.find(r => r.id === props.event?.roomId)?.admins?.includes(page.props.auth.user.id) || false
+    return adminIdsOf(roomsList.value.find(r => r.id === props.event?.roomId)).includes(page.props.auth.user.id)
 })
 const isCreator = computed(() => (props.event ? props.event.created_by?.id === page.props.auth.user.id : false))
 const hasAdminRole = () => props.isAdmin || page.props.auth.user?.roles?.some?.(r => r.name?.toLowerCase?.().includes('admin'))
 
-const roomAdminIds = computed(() => selectedRoom.value?.admins ?? [])
+const roomAdminIds = computed(() => adminIdsOf(selectedRoom.value))
 const declinedRoomName = computed(() => {
     if (!declinedRoomId.value) return null
     return roomsList.value.find(r => r.id === Number(declinedRoomId.value))?.name ?? null
@@ -1408,7 +1454,7 @@ const modalTitle = computed(() => {
 const modalDescription = computed(() => {
     if (props.event?.id) {
         if (props.event?.occupancy_option) return $t('Please review the event details and confirm the booking by selecting "Commitments" or "Optional commitment". You can also send a message to the inquirer if needed.')
-        if (props.event?.isPlanning) return $t('This event is marked as planned. You can edit the details, but it will not be visible to regular users until it is confirmed.')
+        if (props.event?.isPlanning) return $t('Here you can view and edit the details of the planned event. Planned events are never room requests; saving keeps the event firmly planned.')
         return $t('Here you can view and edit the details of the event. Make sure to save any changes you make.')
     }
     return props.isPlanning
@@ -1420,10 +1466,17 @@ const modalDescription = computed(() => {
 
 const checkedEventProperties = computed(() => (event_properties ?? []).filter(p => p.checked))
 
-// "Termine immer direkt buchbar" (Instanz-Setting): nie Anfrage-Modus, jede anlegeberechtigte Person bucht direkt
+// Bestehende Termine richten sich nach ihrem eigenen Planungs-Flag, nicht nach dem Kalender, aus dem der
+// Dialog geöffnet wurde (vorher wurde ein geplanter Termin im normalen Kalender wie ein regulärer behandelt).
+const effectiveIsPlanning = computed(() => (props.event?.id ? !!props.event.isPlanning : props.isPlanning))
+
+// "Termine immer direkt buchbar" (Instanz-Setting): nie Anfrage-Modus, jede anlegeberechtigte Person bucht direkt –
+// geplante Termine brauchen auch dann "Im Planungskalender fest planen" (EventPolicy::book)
 const canCreateDirect = computed(
-    () => !!page.props.event_direct_booking_only || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (props.isPlanning ? can('can plan fixed in planning calendar') : can('create events without request'))
+    () => (!!page.props.event_direct_booking_only && !effectiveIsPlanning.value) || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (effectiveIsPlanning.value ? can('can plan fixed in planning calendar') : can('create events without request'))
 )
+// Geplante Termine kennen keine Raumanfrage: ohne Anlegerecht gibt es keinen Anfrage-Button, nur einen Hinweis
+const planningWithoutCreateRight = computed(() => effectiveIsPlanning.value && !canCreateDirect.value)
 
 const isPrimaryDisabled = computed(() => {
     const invalidSeries = series.value && !seriesFieldsLocked.value && !seriesDefinitionValid.value
@@ -1449,7 +1502,7 @@ const requestDisabled = computed(() => {
     const canRequestGlobal = can('request room occupancy')
     const canRequestRoom = isRequestableForRoom.value
     if (!canRequestGlobal && !canRequestRoom && !canCreateDirect.value) return true
-    if (!can('can see planning calendar') && props.isPlanning) return true
+    if (effectiveIsPlanning.value) return true
     return false
 })
 
@@ -1510,7 +1563,10 @@ function findRoomById(rawId) {
     return list.find(r => Number(r?.id) === rid || Number(r?.roomId) === rid) || null
 }
 function openModal() {
+    // Vorläufig aus den Rechten des Clients; für bestehende Termine liefert loadFullDescription das
+    // Ergebnis der EventPolicy (can_update) nach, inkl. Projekt-Schreibrecht.
     canEdit.value = (!props.event?.id) || isCreator.value || isRoomAdmin.value || hasAdminRole() || can('create events without request')
+        || (!!props.event?.isPlanning && can('can edit planning calendar'))
     if (!props.event) {
         selectedEventType.value = props.eventTypes?.[0] ?? null
         selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null
@@ -1623,6 +1679,7 @@ function closeModal(closedOnPurpose = false) {
     descriptionLoadFailed.value = false
     descriptionRequest = null
     selectedProject.value = selectedRoom.value = null
+    roomRemovedByUser.value = false
     selectedEventType.value = props.eventTypes?.[0] ?? null
     selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null
     allDayEvent.value = !!page.props.event_all_day_default
@@ -1658,6 +1715,11 @@ function handleCloseAttempt() {
     // Headless-UI-Falle: Schließt ein innerer Dialog (Warnung, Lösch-/Lösen-Rückfrage) per Klick,
     // wertet der äußere Dialog denselben Klick als „außerhalb“ und würde das Termin-Modal mitschließen.
     if (innerDialogOpen.value || Date.now() < suppressOuterCloseUntil) return
+    // Raumanfrage ist schon gespeichert (Erfolgsanzeige): Schließen wie über „Schließen“, damit der Kalender neu lädt
+    if (requestSubmitted.value) {
+        closeModal(true)
+        return
+    }
     if (!props.event?.id) {
         showDiscardConfirmation.value = true
         return
@@ -1706,7 +1768,7 @@ async function checkCollisions() {
         const startFull = formatDate(startDate.value, startTime.value ?? '00:00')
         const endFull = formatDate(endDate.value, endTime.value ?? '23:59')
         try {
-            const { data } = await axios.post('/collision/room', { params: { start: startFull, end: endFull, currentEventId: props.event?.id ?? null } })
+            const { data } = await axios.post('/collision/room', { params: { start: startFull, end: endFull, currentEventId: props.event?.id ?? null } }, { skipErrorToast: true }) // Lesezugriff im Hintergrund
             roomCollisionArray.value = data
         } catch { /* ignore */ }
     }
@@ -1852,6 +1914,7 @@ function chooseProject(project) {
 }
 function onRoomSelected(room) {
     selectedRoom.value = room
+    roomRemovedByUser.value = false
     checkChanges()
 }
 function errorMsg(field) {
@@ -1868,11 +1931,13 @@ function payload() {
         start: formatDate(startDate.value, allDayEvent.value ? '00:00' : startTime.value),
         end: formatDate(endDate.value, allDayEvent.value ? '23:59' : endTime.value),
         admissionTime: admissionTime.value || null,
-        roomId: selectedRoom.value?.id,
+        // undefined lässt den Raum im Backend unverändert, null entfernt ihn (nur nach Klick auf X)
+        roomId: selectedRoom.value?.id ?? (roomRemovedByUser.value ? null : undefined),
         description: description.value,
         isOption: isOption.value,
         eventNameMandatory: !!selectedEventType.value?.individual_name,
-        projectId: showProjectInfo.value ? selectedProject.value?.id : null,
+        // null statt undefined: ein weggelassenes Feld lässt das Backend unverändert (Projekt entfernen)
+        projectId: showProjectInfo.value ? (selectedProject.value?.id ?? null) : null,
         projectName: showProjectInfo.value ? (creatingProject.value ? projectName.value : '') : '',
         eventTypeId: selectedEventType.value?.id,
         projectIdMandatory: !!(selectedEventType.value?.project_mandatory && !creatingProject.value),
@@ -1921,7 +1986,19 @@ function timingSnapshot() {
         start: formatDate(startDate.value, allDayEvent.value ? '00:00' : startTime.value),
         end: formatDate(endDate.value, allDayEvent.value ? '23:59' : endTime.value),
         projectId: showProjectInfo.value ? (selectedProject.value?.id ?? null) : null,
+        roomId: selectedRoom.value?.id ?? null,
+        admissionTime: admissionTime.value || null,
     }
+}
+
+/** Zeit oder Raum geändert: das, was einen Termin im Verkauf betrifft. */
+function movesTheDate(data) {
+    const before = initialTiming.value
+    return !before ||
+        before.start !== data.start ||
+        before.end !== data.end ||
+        before.roomId !== (data.roomId ?? null) ||
+        before.admissionTime !== data.admissionTime
 }
 
 async function checkProjectAssignmentImpact(data) {
@@ -1983,6 +2060,14 @@ async function doSaveEvent() {
         isLoading.value = false
         return
     }
+    let headers = {}
+    if (props.event?.id && movesTheDate(data)) {
+        headers = await ticketingMoveHeaders([props.event.id], { withSeries: data.seriesScope !== 'single' })
+        if (!headers) {
+            isLoading.value = false
+            return
+        }
+    }
     seriesImpactConfirmed = false
     // Bestätigung gilt nur für genau diesen Speichervorgang — sonst überspringt
     // ein späteres erneutes Verschieben im selben Modal den Precheck stumm
@@ -2006,6 +2091,7 @@ async function doSaveEvent() {
             })
         } else {
             router.put(route('events.update', { event: props.event.id }), data, {
+                headers,
                 preserveScroll: true,
                 preserveState: (pg) => typeof pg?.component === 'undefined',
                 onSuccess: () => {
@@ -2022,7 +2108,7 @@ async function doSaveEvent() {
 
     try {
         if (!props.event?.id) await axios.post('/events', data)
-        else await axios.put(`/events/${props.event.id}`, data)
+        else await axios.put(`/events/${props.event.id}`, data, { headers })
         handleSuccessfulSave()
     } catch (e) {
         isLoading.value = false

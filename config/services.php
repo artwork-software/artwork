@@ -33,4 +33,10 @@ return [
     'sage' => [
         'enabled' => (bool) env('SAGE_API_ENABLED', false),
     ],
+
+    // Artwork-Tickets: set at deploy, the settings page only offers "connect".
+    'tickets' => [
+        'url' => env('TICKETS_URL'),
+        'provisioning_secret' => env('TICKETS_PROVISIONING_SECRET'),
+    ],
 ];

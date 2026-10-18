@@ -1,13 +1,13 @@
 @component('mail::message', ['name' => $name, 'url' => $url, 'page_title' => $page_title])
     <h1 style="margin: 5rem 0 1rem 0; font-size: 2rem;">
-        Passwort zurücksetzen für {{ $page_title }}
+        {{ __('Reset password for :app', ['app' => $page_title]) }}
     </h1>
     <p style="font-weight: 300; margin-bottom: 3em;">
-        Hallo {{ $name }}. Du erhälst diese E-Mail, weil wir eine Anfrage zum Zurücksetzen des Passworts für
-        dein Konto erhalten haben. Der Link zum Zurücksetzen des Passworts wird in 60 Minuten ablaufen. Wenn du keine
-        Passwortrücksetzung angefordert hast, sind keine weiteren Maßnahmen erforderlich. Mit besten Grüßen, artwork.
+        {{ __('Hello :name. You are receiving this email because we received a password reset request for your account.', ['name' => $name]) }}
+        {{ __('The password reset link will expire in 60 minutes. If you did not request a password reset, no further action is required.') }}
+        {{ __('Best regards, :app.', ['app' => 'artwork']) }}
     </p>
     @component('mail::button', ['url' => $url])
-        Passwort zurücksetzen
+        {{ __('Reset password') }}
     @endcomponent
 @endcomponent

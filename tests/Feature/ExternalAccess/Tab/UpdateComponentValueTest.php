@@ -17,6 +17,7 @@ use Artwork\Modules\Project\Models\ProjectTab;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\Response;
@@ -211,6 +212,21 @@ final class UpdateComponentValueTest extends TestCase
     }
 
     #[Test]
+    public function unchanged_values_are_not_broadcast_again(): void
+    {
+        ['external' => $external, 'project' => $project, 'tab' => $tab, 'component' => $component] = $this->context();
+
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => 'gleich']);
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => 'gleich']);
+
+        // Jeder Broadcast löst bei allen internen Betrachtern ein Nachladen aus – nur echte Änderungen senden
+        Event::assertDispatchedTimes(UpdateProjectComponentData::class, 1);
+
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => 'anders']);
+        Event::assertDispatchedTimes(UpdateProjectComponentData::class, 2);
+    }
+
+    #[Test]
     public function concurrent_updates_use_lock_for_update(): void
     {
         // True row-locking concurrency cannot be simulated deterministically in a
@@ -234,5 +250,47 @@ final class UpdateComponentValueTest extends TestCase
         $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => "line1\nline2"]);
 
         $this->assertSame("line1\nline2", ProjectComponentValue::first()->data['text']);
+    }
+
+    #[Test]
+    public function dropdown_value_must_be_one_of_the_configured_options(): void
+    {
+        ['external' => $external, 'project' => $project, 'tab' => $tab, 'component' => $component] = $this->context('DropDown');
+        $component->update(['data' => ['options' => [['value' => 'Ja'], ['value' => 'Nein']]]]);
+
+        try {
+            $this->service()->updateComponentValue($external, $project, $tab, $component, ['selected' => 'Vielleicht']);
+            $this->fail('Expected free text in a dropdown to be rejected');
+        } catch (ValidationException) {
+            $this->assertSame(0, ProjectComponentValue::query()->count());
+        }
+
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['selected' => 'Ja']);
+        $this->assertSame(['selected' => 'Ja'], ProjectComponentValue::first()->data);
+    }
+
+    #[Test]
+    public function link_with_executable_target_is_rejected(): void
+    {
+        ['external' => $external, 'project' => $project, 'tab' => $tab, 'component' => $component] = $this->context('Link');
+
+        $this->expectException(ValidationException::class);
+
+        $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => 'javascript:alert(1)']);
+    }
+
+    #[Test]
+    public function writable_component_without_value_shape_stores_nothing(): void
+    {
+        // Ordner sind extern schreibbar (für ihre Kinder), haben aber selbst keinen Wert
+        ['external' => $external, 'project' => $project, 'tab' => $tab, 'component' => $component]
+            = $this->context('DisclosureComponent');
+
+        try {
+            $this->service()->updateComponentValue($external, $project, $tab, $component, ['anything' => 'x']);
+            $this->fail('Expected value without shape to be rejected');
+        } catch (ValidationException) {
+            $this->assertSame(0, ProjectComponentValue::query()->count());
+        }
     }
 }

@@ -4,7 +4,10 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
 use Artwork\Modules\User\Models\User;
+use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -130,6 +133,73 @@ final class RoomControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function room_create_and_update_validate_their_fields(): void
+    {
+        $this->actingAsAdmin();
+        $area = Area::factory()->create();
+
+        $this->post(route('rooms.store'), ['name' => '', 'area_id' => $area->id])
+            ->assertSessionHasErrors('name');
+        $this->post(route('rooms.store'), ['name' => 'Ohne Areal'])
+            ->assertSessionHasErrors('area_id');
+        // Temporärer Raum ohne Enddatum würde nie automatisch entfernt.
+        $this->post(route('rooms.store'), ['name' => 'Zelt', 'area_id' => $area->id, 'temporary' => true])
+            ->assertSessionHasErrors('end_date');
+        $this->post(route('rooms.store'), [
+            'name' => 'Zelt',
+            'area_id' => $area->id,
+            'temporary' => true,
+            'start_date' => '2026-10-10',
+            'end_date' => '2026-10-01',
+        ])->assertSessionHasErrors('end_date');
+        $this->assertDatabaseMissing('rooms', ['name' => 'Zelt']);
+
+        $this->post(route('rooms.store'), [
+            'name' => 'Zelt',
+            'area_id' => $area->id,
+            'temporary' => true,
+            'start_date' => '2026-10-01',
+            'end_date' => '2026-10-10',
+        ])->assertSessionHasNoErrors()->assertRedirect(route('areas.management'));
+        $this->assertDatabaseHas('rooms', ['name' => 'Zelt', 'area_id' => $area->id]);
+
+        $room = Room::factory()->create(['name' => 'Alt']);
+        $this->patch(route('rooms.update', $room), ['name' => ''])->assertSessionHasErrors('name');
+        $this->assertSame('Alt', $room->fresh()->name);
+    }
+
+    #[Test]
+    public function legacy_temporary_rooms_without_end_date_stay_editable(): void
+    {
+        $this->actingAsAdmin();
+        $legacy = Room::factory()->create(['name' => 'Altes Zelt', 'temporary' => true, 'end_date' => null]);
+        $permanent = Room::factory()->create(['name' => 'Saal', 'temporary' => false, 'end_date' => null]);
+
+        $this->patch(route('rooms.update', $legacy), ['name' => 'Zelt 2', 'temporary' => true, 'end_date' => null])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Zelt 2', $legacy->fresh()->name);
+
+        // wird ein Raum neu temporär, ist das Enddatum weiterhin Pflicht
+        $this->patch(route('rooms.update', $permanent), ['name' => 'Saal', 'temporary' => true, 'end_date' => null])
+            ->assertSessionHasErrors('end_date');
+    }
+
+    #[Test]
+    public function free_rooms_require_a_valid_period_of_at_most_one_year(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson(route('rooms.free'))->assertJsonValidationErrors(['start', 'end']);
+        $this->getJson(route('rooms.free', ['start' => 'kein-datum', 'end' => '2026-10-10']))
+            ->assertJsonValidationErrors('start');
+        $this->getJson(route('rooms.free', ['start' => '2026-01-01', 'end' => '2027-06-01']))
+            ->assertJsonValidationErrors('end');
+        $this->getJson(route('rooms.free', ['start' => '2026-10-01', 'end' => '2026-10-03']))
+            ->assertOk()
+            ->assertJsonStructure(['rooms']);
+    }
+
+    #[Test]
     public function admin_can_update_room(): void
     {
         $this->actingAsAdmin();
@@ -168,6 +238,113 @@ final class RoomControllerTest extends FeatureTestCase
         // Zurück auf "erbt vom Areal" (null)
         $this->patch(route('rooms.update', $room), $payload + ['color' => null])->assertRedirect();
         $this->assertNull($room->fresh()->color);
+    }
+
+    #[Test]
+    public function edit_modals_receive_capacity_and_no_fake_period(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create(['capacity' => 420, 'temporary' => false, 'start_date' => null, 'end_date' => null]);
+
+        $this->get(route('areas.management'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('areas', fn ($areas) => collect($areas)->flatMap(fn ($area) => $area['rooms'])
+                ->contains(fn ($row) => $row['id'] === $room->id
+                    && $row['capacity'] === 420
+                    && $row['start_date_dt_local'] === null
+                    && $row['end_date_dt_local'] === null)));
+
+        $this->get(route('rooms.show', $room))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('room.capacity', 420)
+            ->where('room.start_date_dt_local', null));
+    }
+
+    #[Test]
+    public function update_keeps_relations_that_are_not_sent_and_syncs_sent_ones(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create(['name' => 'Saal']);
+        $neighbour = Room::factory()->create();
+        $category = RoomCategory::query()->create(['name' => 'Bühne']);
+        $attribute = RoomAttribute::factory()->create();
+        $room->adjoining_rooms()->attach($neighbour->id);
+        $room->categories()->attach($category->id);
+        $room->attributes()->attach($attribute->id);
+
+        // Raumseite schickt keine Relationen mit → bleiben erhalten
+        $this->patch(route('rooms.update', $room), ['name' => 'Großer Saal', 'capacity' => 300])
+            ->assertSessionHasNoErrors();
+        $room->refresh();
+        $this->assertSame(300, $room->capacity);
+        $this->assertSame([$neighbour->id], $room->adjoining_rooms()->pluck('rooms.id')->all());
+        $this->assertSame([$category->id], $room->categories()->pluck('room_categories.id')->all());
+        $this->assertSame([$attribute->id], $room->attributes()->pluck('room_attributes.id')->all());
+
+        // explizit leere Listen entfernen weiterhin
+        $this->patch(route('rooms.update', $room), [
+            'name' => 'Großer Saal',
+            'adjoining_rooms' => [],
+            'room_categories' => [],
+            'room_attributes' => [],
+        ])->assertSessionHasNoErrors();
+        $this->assertSame(0, $room->adjoining_rooms()->count());
+        $this->assertSame(0, $room->categories()->count());
+        $this->assertSame(0, $room->attributes()->count());
+    }
+
+    #[Test]
+    public function capacity_can_be_cleared_and_must_be_a_non_negative_integer(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create(['capacity' => 120]);
+
+        $this->patch(route('rooms.update', $room), ['name' => $room->name, 'capacity' => -1])
+            ->assertSessionHasErrors('capacity');
+        $this->patch(route('rooms.update', $room), ['name' => $room->name, 'capacity' => 'viele'])
+            ->assertSessionHasErrors('capacity');
+        $this->assertSame(120, $room->fresh()->capacity);
+
+        $this->patch(route('rooms.update', $room), ['name' => $room->name, 'capacity' => ''])
+            ->assertSessionHasNoErrors();
+        $this->assertNull($room->fresh()->capacity);
+    }
+
+    #[Test]
+    public function period_is_only_stored_for_temporary_rooms(): void
+    {
+        $this->actingAsAdmin();
+        $area = Area::factory()->create();
+        $room = Room::factory()->create([
+            'temporary' => true,
+            'start_date' => '2026-10-01',
+            'end_date' => '2026-10-10',
+        ]);
+
+        $this->patch(route('rooms.update', $room), [
+            'name' => $room->name,
+            'temporary' => false,
+            'start_date' => '2026-10-01',
+            'end_date' => '2026-10-10',
+        ])->assertSessionHasNoErrors();
+        $room->refresh();
+        $this->assertFalse($room->temporary);
+        $this->assertNull($room->start_date);
+        $this->assertNull($room->end_date);
+
+        // ohne temporary im Request bleibt der Zeitraum unangetastet
+        $temporary = Room::factory()->create(['temporary' => true, 'start_date' => '2026-10-01', 'end_date' => '2026-10-10']);
+        $this->patch(route('rooms.update', $temporary), ['name' => 'Zelt'])->assertSessionHasNoErrors();
+        $this->assertSame('2026-10-10', $temporary->fresh()->end_date->toDateString());
+
+        $this->post(route('rooms.store'), [
+            'name' => 'Fester Saal',
+            'area_id' => $area->id,
+            'temporary' => false,
+            'start_date' => '2026-10-01',
+            'end_date' => '2026-10-10',
+        ])->assertSessionHasNoErrors();
+        $stored = Room::query()->where('name', 'Fester Saal')->firstOrFail();
+        $this->assertNull($stored->start_date);
+        $this->assertNull($stored->end_date);
     }
 
     #[Test]

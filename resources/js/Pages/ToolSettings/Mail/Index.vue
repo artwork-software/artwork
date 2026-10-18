@@ -195,7 +195,7 @@ export default defineComponent({
             try {
                 const response = await axios.post(route('tool.mail.test'), {
                     recipient: this.testRecipient,
-                });
+                }, { skipErrorToast: true }); // Ergebnis steht unter dem Formular
 
                 this.testResult = {
                     success: response.data.success,

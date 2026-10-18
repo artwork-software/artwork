@@ -3,12 +3,15 @@
 namespace Artwork\Modules\Shift\Models\Traits;
 
 use Artwork\Modules\Shift\Models\ShiftPlanComment;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 
 trait HasShiftPlanComments
 {
-// Definiere die polymorphe Beziehung
-    public function shiftPlanComments()
+    /**
+     * @return MorphMany<ShiftPlanComment, $this>
+     */
+    public function shiftPlanComments(): MorphMany
     {
         return $this->morphMany(ShiftPlanComment::class, 'commentable');
     }

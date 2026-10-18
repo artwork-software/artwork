@@ -5,6 +5,9 @@ namespace Artwork\Modules\User\Http\Resources;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\User\Models\User
+ */
 class UserWithoutShiftsResource extends JsonResource
 {
     public static $wrap = null;

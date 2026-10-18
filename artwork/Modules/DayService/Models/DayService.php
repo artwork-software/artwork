@@ -27,6 +27,9 @@ class DayService extends Model
         'hex_color',
     ];
 
+    /**
+     * @return MorphToMany<User, $this>
+     */
     // Definieren Sie die Beziehung für jedes Modelltyp separat
     public function users(): MorphToMany
     {
@@ -35,6 +38,9 @@ class DayService extends Model
             ->withPivot('date');
     }
 
+    /**
+     * @return MorphToMany<Freelancer, $this>
+     */
     public function freelancers(): MorphToMany
     {
         return $this->morphedByMany(Freelancer::class, 'day_serviceable')
@@ -42,6 +48,9 @@ class DayService extends Model
             ->withPivot('date');
     }
 
+    /**
+     * @return MorphToMany<ServiceProvider, $this>
+     */
     public function serviceProviders(): MorphToMany
     {
         return $this->morphedByMany(ServiceProvider::class, 'day_serviceable')

@@ -23,8 +23,4 @@ class ShiftPresetRepository extends BaseRepository
         ])->get();
     }
 
-    public function findByName(string $name): Collection
-    {
-        return ShiftPreset::byNameLike($name)->get();
-    }
 }

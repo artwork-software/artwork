@@ -17,6 +17,9 @@ class PdfExportUserFilter extends Model
         'filters' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

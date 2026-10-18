@@ -4,6 +4,7 @@ namespace Artwork\Modules\User\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserWorkTime extends Model
 {
@@ -47,11 +48,17 @@ class UserWorkTime extends Model
         'sunday_hours'
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user_work_times');
     }
 
+    /**
+     * @return BelongsTo<UserWorkTimePattern, $this>
+     */
     public function workTimePattern(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(

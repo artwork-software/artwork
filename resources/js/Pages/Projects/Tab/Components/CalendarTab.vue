@@ -8,7 +8,7 @@
 
             <!-- Error State -->
             <div v-else-if="loadCalendarError" class="pl-16 py-8 text-center text-danger">
-                {{ loadCalendarError }}
+                {{ $t(loadCalendarError) }}
             </div>
 
             <!-- Daily Calendar View -->
@@ -67,9 +67,10 @@
 </template>
 
 <script setup>
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import {provide, ref, onMounted, computed} from "vue";
 import axios from 'axios';
+import { createLatestRequestTracker } from "@/Helper/latestRequest.js";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
@@ -127,8 +128,10 @@ const hasRequiredCalendarData = computed(() => {
     return hasDays && hasRooms && hasCalendar;
 });
 
-async function fetchCalendarData() {
-    if (localCalendarData.value) {
+const calendarRequests = createLatestRequestTracker();
+
+async function fetchCalendarData({ force = false } = {}) {
+    if (localCalendarData.value && !force) {
         return;
     }
 
@@ -137,26 +140,55 @@ async function fetchCalendarData() {
         return;
     }
 
-    isLoadingCalendar.value = true;
-    loadCalendarError.value = '';
+    // Nachladen (force) still im Hintergrund: der Kalender bleibt stehen (Scroll, Multi-Edit-Modus)
+    if (!force) {
+        isLoadingCalendar.value = true;
+        loadCalendarError.value = '';
+    }
 
+    // Überlappende Läufe: nur die zuletzt gestartete Antwort übernehmen, nur sie beendet das Laden
+    const requestId = calendarRequests.begin();
     try {
         const { data } = await axios.get(
             route('projects.tabs.calendar', { project: projectId }),
             { params: { atAGlance: atAGlance.value } }
         );
-        localCalendarData.value = data?.CalendarTab || null;
+        if (!calendarRequests.isLatest(requestId)) {
+            return;
+        }
+        localCalendarData.value = data?.CalendarTab || (force ? localCalendarData.value : null);
     } catch (error) {
+        if (!calendarRequests.isLatest(requestId)) {
+            return;
+        }
         console.error(error);
-        loadCalendarError.value = 'Unable to load calendar data.';
+        if (!force) {
+            loadCalendarError.value = 'Unable to load calendar data.';
+        }
     } finally {
-        isLoadingCalendar.value = false;
+        if (calendarRequests.isLatest(requestId)) {
+            isLoadingCalendar.value = false;
+        }
     }
 }
 
 onMounted(() => {
     fetchCalendarData();
 });
+
+/**
+ * Kalenderdaten nach Mehrfachbearbeitung neu holen: localCalendarData ist eine Kopie, die ein
+ * router.reload nicht erneuert. Kommen die Termine direkt als Prop, lädt die Seite neu.
+ */
+function reloadCalendarData() {
+    if (props.eventsAtAGlance || props.calendar) {
+        router.reload();
+        return;
+    }
+    fetchCalendarData({ force: true });
+}
+
+provide('reloadCalendarTabData', reloadCalendarData);
 
 provide('eventTypes', props.eventTypes ?? effectiveCalendarData.value.eventTypes);
 provide('dateValue', props.dateValue ?? effectiveCalendarData.value.dateValue);

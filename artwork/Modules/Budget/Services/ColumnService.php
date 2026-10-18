@@ -242,9 +242,7 @@ readonly class ColumnService
         BudgetSumDetailsService $budgetSumDetailsService,
         ColumnCellService $columnCellService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): void {
         // Wichtig: table kann softdeleted sein -> withTrashed()
         $table = $column->table()->withTrashed()->first();
@@ -296,16 +294,12 @@ readonly class ColumnService
             function (ColumnCell $columnCell) use (
                 $columnCellService,
                 $cellCommentService,
-                $cellCalculationService,
-                $sageNotAssignedDataService,
-                $sageAssignedDataService
+                $cellCalculationService
             ): void {
                 $columnCellService->restore(
                     $columnCell,
                     $cellCommentService,
-                    $cellCalculationService,
-                    $sageNotAssignedDataService,
-                    $sageAssignedDataService
+                    $cellCalculationService
                 );
             }
         );

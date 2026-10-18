@@ -40,6 +40,7 @@
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 import {usePage} from "@inertiajs/vue3";
 import axios from 'axios';
+import { stopListeningOnPrivateChannel } from "@/Composeables/Listener/echoChannel.js";
 
 export default{
     components: {
@@ -69,7 +70,7 @@ export default{
 
             // 🔥 Broadcast state
             echoChannelName: null,
-            lastReloadAt: 0,
+            budgetReloadQueued: false,
         }
     },
     computed: {
@@ -99,32 +100,52 @@ export default{
 
             this.echoChannelName = `project.${projectId}`;
 
-            // Echo ist meist global (window.Echo). Falls bei dir global: einfach Echo statt window.Echo.
+            // Eigener Handler, damit beim Abmelden nur dieser entfernt wird (Kanal ist geteilt)
+            this.budgetUpdateHandler = (payload) => {
+                // optional: nur reagieren, wenn es wirklich unser Projekt ist
+                if (payload?.projectId && payload.projectId !== projectId) return;
+
+                // Entprellen (trailing, 400 ms) mit maxWait (2 s): mehrere Updates kurz hintereinander →
+                // EIN Nachladen nach dem letzten; bei Dauerfeuer spätestens 2 s nach dem ersten
+                const now = Date.now();
+                if (this.budgetReloadFirstPendingAt == null) {
+                    this.budgetReloadFirstPendingAt = now;
+                }
+                const remainingMaxWait = 2000 - (now - this.budgetReloadFirstPendingAt);
+                clearTimeout(this.budgetReloadTimer);
+                this.budgetReloadTimer = setTimeout(() => {
+                    this.budgetReloadTimer = null;
+                    this.budgetReloadFirstPendingAt = null;
+                    this.fetchBudgetData(true);
+                }, Math.max(0, Math.min(400, remainingMaxWait)));
+            };
             (window.Echo ?? Echo)
                 .private(this.echoChannelName)
-                .listen(".budget.update", (payload) => {
-                    // optional: nur reagieren, wenn es wirklich unser Projekt ist
-                    if (payload?.projectId && payload.projectId !== projectId) return;
-
-                    // optional: kleines Debounce/Throttle gegen Spam
-                    const now = Date.now();
-                    if (now - this.lastReloadAt < 400) return;
-                    this.lastReloadAt = now;
-
-                    this.fetchBudgetData(true);
-                });
+                .listen(".budget.update", this.budgetUpdateHandler);
         },
 
         destroyBudgetBroadcast() {
+            clearTimeout(this.budgetReloadTimer);
+            this.budgetReloadTimer = null;
+            this.budgetReloadFirstPendingAt = null;
+            this.budgetReloadQueued = false;
             if (!this.echoChannelName) return;
 
-            // leave = unsub + cleanup
-            (window.Echo ?? Echo).leave(this.echoChannelName);
+            // Nur den eigenen Handler abmelden – Echo.leave entfernte alle Listener des geteilten Projektkanals
+            if (this.budgetUpdateHandler) {
+                stopListeningOnPrivateChannel(this.echoChannelName, ".budget.update", this.budgetUpdateHandler);
+            }
             this.echoChannelName = null;
+            this.budgetUpdateHandler = null;
         },
 
         async fetchBudgetData(force = false) {
-            if (this.isLoadingBudget) return;
+            if (this.isLoadingBudget) {
+                // Erzwungenes Nachladen während eines laufenden Ladevorgangs nicht verwerfen, sondern
+                // danach einmal nachholen (sonst fehlt eine Änderung, die während des Ladens kam)
+                if (force) this.budgetReloadQueued = true;
+                return;
+            }
             if (!force && this.localBudgetData) return;
 
             const projectId = this.project?.id;
@@ -154,6 +175,10 @@ export default{
                 this.loadBudgetError = this.$t('Unable to load budget data.');
             } finally {
                 this.isLoadingBudget = false;
+                if (this.budgetReloadQueued) {
+                    this.budgetReloadQueued = false;
+                    this.fetchBudgetData(true);
+                }
             }
         },
 

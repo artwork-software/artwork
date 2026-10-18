@@ -8,8 +8,12 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 class TimeAgoCast implements CastsAttributes
 {
     //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceAfterLastUsed, Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceBeforeLastUsed
-    public function get($model, string $key, mixed $value, array $attributes): string
+    public function get($model, string $key, mixed $value, array $attributes): ?string
     {
+        // Carbon::parse(null) wäre „jetzt“ → leerer Zeitstempel erschiene als „vor 0 Sekunden“
+        if ($value === null) {
+            return null;
+        }
         $now = Carbon::now();
         $time = Carbon::parse($value);
         return $time->diffForHumans($now);

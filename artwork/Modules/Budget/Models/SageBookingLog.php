@@ -46,11 +46,17 @@ class SageBookingLog extends Model
         'finished_at' => 'datetime',
     ];
 
+    /**
+     * @return HasMany<SageBookingLogEntry, $this>
+     */
     public function entries(): HasMany
     {
         return $this->hasMany(SageBookingLogEntry::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user');

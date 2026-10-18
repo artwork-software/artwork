@@ -1,6 +1,7 @@
 <script>
 import axios from 'axios';
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
+import {createSerializedSaver} from "@/Helper/serializedSave.js";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 
 export default {
@@ -18,38 +19,59 @@ export default {
             checkedData: {
                 checked: this.data.project_value ? this.data.project_value.data.checked : this.data.data.checked
             },
-            projectData: this.data,
             checked: this.data.project_value?.data?.checked ?? false
         }
     },
     mounted() {
-        useProjectDataListener(this.projectData, this.projectId).init();
+        // Bewusst nicht in data(): Listener und Speicher brauchen keine Reaktivität. Getter: Inertia-Besuche
+        // mit preserveState ersetzen das data-Prop, die Komponente bleibt gemountet.
+        this.dataListener = useProjectDataListener(() => this.data, this.projectId);
+        this.dataListener.init();
+        // Nacheinander speichern: bei schnellem Doppelklick gewinnt sonst ggf. eine ältere Antwort
+        this.checkedSaver = createSerializedSaver({
+            send: (checked) => axios.patch(
+                route('project.tab.component.update', {
+                    project: this.projectId,
+                    component: this.data.id
+                }),
+                { data: { checked } }
+            ),
+            onSaved: (response) => {
+                // Broadcast geht an die anderen – hier und in weiteren Instanzen den gespeicherten Wert übernehmen
+                this.dataListener?.saved(response?.data?.project_value);
+                // Angezeigt wird, was gespeichert ist (ggf. ein neuerer fremder Stand)
+                this.checked = this.storedChecked();
+            },
+            // Zwischenstand steht schon in der DB: übernehmen, Häkchen (neuerer Wert folgt) nicht anfassen
+            onIntermediateSaved: (response) => {
+                this.dataListener?.saved(response?.data?.project_value);
+            },
+            onFailed: (error) => {
+                console.error('Fehler beim Aktualisieren:', error);
+                // Auf den zuletzt ERFOLGREICH gespeicherten Stand zurück (Zwischenerfolge sind übernommen)
+                this.checked = this.storedChecked();
+            },
+        });
+    },
+    beforeUnmount() {
+        this.dataListener?.stop();
     },
     methods: {
-        async updateCheckedData() {
-            try {
-                await axios.patch(
-                    route('project.tab.component.update', {
-                        project: this.projectId,
-                        component: this.data.id
-                    }),
-                    {
-                        data: {
-                            checked: this.checked
-                        }
-                    }
-                );
-                // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
-            } catch (error) {
-                console.error('Fehler beim Aktualisieren:', error);
-            }
+        storedChecked() {
+            return Boolean(this.data.project_value?.data?.checked ?? this.data.data?.checked ?? false);
+        },
+        updateCheckedData() {
+            this.checkedSaver.save(this.checked);
         }
     },
     watch: {
-        // if the data changes, update the text
-        projectData: {
-            handler: function (newVal, oldVal) {
-                this.checked = newVal.project_value ? newVal.project_value.data.checked : newVal.data.checked
+        // Auf das Prop selbst hören (nicht auf eine data()-Kopie): ein ersetztes Objekt kommt sonst nicht an
+        data: {
+            handler: function () {
+                // Laufende eigene Speicherung: Häkchen nicht durch ein Live-Update zurücksetzen
+                // (danach gleicht onSaved/onFailed mit dem gespeicherten Stand ab)
+                if (this.checkedSaver?.isSaving()) return;
+                this.checked = this.storedChecked();
             },
             deep: true
         }

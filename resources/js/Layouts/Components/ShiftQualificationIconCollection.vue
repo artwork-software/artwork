@@ -15,13 +15,37 @@
 </template>
 
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
+import {
+    IconAdjustmentsAlt,
+    IconBell,
+    IconBook,
+    IconBrandRedhat,
+    IconBriefcase,
+    IconCamera,
+    IconClipboard,
+    IconEye,
+    IconMessageDots,
+    IconMovie,
+    IconUser,
+} from "@tabler/icons-vue";
 
 export default {
     name: "ShiftQualificationIconCollection",
+    components: {
+        IconAdjustmentsAlt,
+        IconBell,
+        IconBook,
+        IconBrandRedhat,
+        IconBriefcase,
+        IconCamera,
+        IconClipboard,
+        IconEye,
+        IconMessageDots,
+        IconMovie,
+        IconUser,
+    },
     props: [
         'iconName', 'classes'
     ],
-    mixins: [IconLib],
 }
 </script>

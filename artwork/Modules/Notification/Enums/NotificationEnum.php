@@ -2,9 +2,14 @@
 
 namespace Artwork\Modules\Notification\Enums;
 
+use Artwork\Modules\Budget\Notifications\BudgetVerified;
 use Artwork\Modules\Department\Notifications\TeamNotification;
 use Artwork\Modules\Event\Notifications\ConflictNotification;
 use Artwork\Modules\Event\Notifications\EventNotification;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalAccessExpiringNotification;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification;
+use Artwork\Modules\Inventory\Notifications\InventoryArticleNotification;
 use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Project\Notifications\ProjectNotification;
 use Artwork\Modules\Room\Notifications\RoomNotification;
@@ -98,7 +103,9 @@ enum NotificationEnum: string
     public function groupType(): string
     {
         return match ($this) {
-            self::NOTIFICATION_ROOM_REQUEST,
+            // UPSERT = Antwort auf die EIGENE Anfrage (bestätigt/abgelehnt) → Termine;
+            // ROOM_REQUEST = neue Anfrage an Raumadmins → Räume (vorher vertauscht)
+            self::NOTIFICATION_UPSERT_ROOM_REQUEST,
             self::NOTIFICATION_CONFLICT,
             self::NOTIFICATION_EVENT_CHANGED,
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
@@ -114,7 +121,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_DOCUMENT_REQUEST_CREATED,
             self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "DOCUMENTS",
 
-            self::NOTIFICATION_UPSERT_ROOM_REQUEST,
+            self::NOTIFICATION_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_ANSWER,
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_CHANGED => "ROOMS",
@@ -149,50 +156,143 @@ enum NotificationEnum: string
         };
     }
 
+    /**
+     * Laravel-Notification, die NotificationService::createNotification für diesen Typ verschickt;
+     * null = nur Push-Broadcast und Glocken-Indikator.
+     *
+     * @return class-string<\Artwork\Core\Notifications\BaseNotification>|null
+     */
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function notificationClass(): string
+    public function notificationClass(): ?string
     {
         return match ($this) {
-            self::NOTIFICATION_EVENT_CHANGED => EventNotification::class,
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
-            self::NOTIFICATION_ROOM_REQUEST => RoomRequestNotification::class,
-            self::NOTIFICATION_CONFLICT,
-            self::NOTIFICATION_LOUD_ADJOINING_EVENT => ConflictNotification::class,
-            self::NOTIFICATION_ROOM_ANSWER,
-            self::NOTIFICATION_ROOM_CHANGED => RoomNotification::class,
-            self::NOTIFICATION_TASK_REMINDER => DeadlineNotification::class,
+            self::NOTIFICATION_ROOM_REQUEST,
+            self::NOTIFICATION_ROOM_ANSWER => RoomRequestNotification::class,
+            self::NOTIFICATION_EVENT_CHANGED,
+            self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => EventNotification::class,
             self::NOTIFICATION_NEW_TASK,
             self::NOTIFICATION_TASK_CHANGED => TaskNotification::class,
-            self::NOTIFICATION_PUBLIC_RELEVANT,
-            self::NOTIFICATION_PROJECT => ProjectNotification::class,
+            self::NOTIFICATION_PROJECT,
+            self::NOTIFICATION_PUBLIC_RELEVANT => ProjectNotification::class,
             self::NOTIFICATION_TEAM => TeamNotification::class,
+            self::NOTIFICATION_ROOM_CHANGED => RoomNotification::class,
+            self::NOTIFICATION_CONFLICT,
+            self::NOTIFICATION_LOUD_ADJOINING_EVENT => ConflictNotification::class,
+            self::NOTIFICATION_TASK_REMINDER => DeadlineNotification::class,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED,
-            self::NOTIFICATION_BUDGET_STATE_CHANGED,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED,
             self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
-            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED,
-            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => MoneySourceNotification::class,
-            self::NOTIFICATION_SHIFT_CHANGED,
-            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT,
-            self::NOTIFICATION_SHIFT_INFRINGEMENT,
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED => MoneySourceNotification::class,
+            self::NOTIFICATION_BUDGET_STATE_CHANGED,
+            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED,
+            self::NOTIFICATION_DOCUMENT_REQUEST_CREATED,
+            self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => BudgetVerified::class,
             self::NOTIFICATION_SHIFT_LOCKED,
             self::NOTIFICATION_SHIFT_AVAILABLE,
+            self::NOTIFICATION_SHIFT_CHANGED,
+            self::NOTIFICATION_SHIFT_CONFLICT,
+            self::NOTIFICATION_SHIFT_INFRINGEMENT,
+            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
-            self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
+            self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION => ShiftNotification::class,
+            self::NOTIFICATION_INVENTORY_OVERBOOKED,
+            self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
+            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE => InventoryArticleNotification::class,
+            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED => ExternalCrmSubmissionNotification::class,
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => ExternalTabComponentUpdatedNotification::class,
+            self::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING => ExternalAccessExpiringNotification::class,
+            self::NOTIFICATION_REMINDER_ROOM_REQUEST => null,
+        };
+    }
+
+    /**
+     * Typen, für die nirgends etwas verschickt wird – ihre Einstellungen wären wirkungslose
+     * Schalter. Die Enum-Fälle bleiben, weil Werte in Datenbank/Altbenachrichtigungen stehen.
+     */
+    public function isConfigurable(): bool
+    {
+        return !in_array($this, [
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
+            self::NOTIFICATION_REMINDER_ROOM_REQUEST,
+        ], true);
+    }
+
+    /**
+     * Häufigkeit der E-Mail für neue Einstellungen; Rückmeldungen Externer gehen sofort raus.
+     */
+    public function defaultFrequency(): NotificationFrequencyEnum
+    {
+        return match ($this) {
+            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => NotificationFrequencyEnum::IMMEDIATELY,
+            default => NotificationFrequencyEnum::DAILY,
+        };
+    }
+
+    /**
+     * Modul (ModuleSettings-Eigenschaft), ohne das dieser Typ nie anfällt; null = immer.
+     */
+    public function module(): ?string
+    {
+        return match ($this) {
+            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED => 'sources_of_funding',
+            default => match (NotificationGroupEnum::from($this->groupType())) {
+                NotificationGroupEnum::EVENTS, NotificationGroupEnum::ROOMS => 'room_assignment',
+                NotificationGroupEnum::BUDGET, NotificationGroupEnum::PROJECTS => 'projects',
+                NotificationGroupEnum::DOCUMENTS => 'contracts',
+                NotificationGroupEnum::TASKS => 'tasks',
+                NotificationGroupEnum::SHIFTS => 'shift_plan',
+                NotificationGroupEnum::INVENTORY => 'inventory',
+                NotificationGroupEnum::EXTERNAL_ACCESS => null,
+            },
+        };
+    }
+
+    /**
+     * Geht an Planende: Personen, die fremde Dienstpläne sehen/planen (UserPolicy::canViewForeignRoster),
+     * und Rolleninhaber*innen ohne dieses Recht (Gewerke-Planer*innen, Projektleitungen …) – wer sie
+     * außerdem sehen darf, entscheidet NotificationSettingsPresenter am tatsächlichen Empfängerkreis.
+     * NOTIFICATION_SHIFT_CONFLICT gehört nicht dazu: Den Konflikthinweis bekommt die eingeplante
+     * Person selbst (VacationConflictService, AvailabilityConflictService).
+     */
+    public function isForShiftPlanners(): bool
+    {
+        return in_array($this, [
+            self::NOTIFICATION_SHIFT_INFRINGEMENT,
             self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION,
-            self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
-            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE =>
-                \Artwork\Modules\Inventory\Notifications\InventoryArticleNotification::class,
-            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED =>
-                \Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification::class,
-            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED =>
-                \Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification::class,
-            self::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING =>
-                \Artwork\Modules\ExternalAccess\Notifications\ExternalAccessExpiringNotification::class,
+            self::NOTIFICATION_SHIFT_OPEN_DEMAND,
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
+        ], true);
+    }
+
+    /**
+     * @return array<int, self>
+     */
+    public static function configurableCases(): array
+    {
+        return array_values(array_filter(self::cases(), static fn (self $case): bool => $case->isConfigurable()));
+    }
+
+    /**
+     * Systemmeldungen ohne auslösende Person (Scheduler) gehen auch an den eingeloggten User;
+     * alle anderen nie an den, der sie selbst ausgelöst hat.
+     */
+    public function notifiesActingUser(): bool
+    {
+        return match ($this) {
+            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED,
+            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE => true,
+            default => false,
         };
     }
 
@@ -201,7 +301,7 @@ enum NotificationEnum: string
     {
         return match ($this) {
             self::NOTIFICATION_ROOM_ANSWER => "Room requests answered",
-            self::NOTIFICATION_ROOM_REQUEST => "Room requests confirmed or declined",
+            self::NOTIFICATION_ROOM_REQUEST => "New/modified room request",
             self::NOTIFICATION_CONFLICT => "Event conflicts",
             self::NOTIFICATION_EVENT_CHANGED => "Event changes",
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => "Side events",
@@ -213,7 +313,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED => 'Funding source has reached the set threshold',
             self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Changes to documents and contracts',
 
-            self::NOTIFICATION_UPSERT_ROOM_REQUEST => "New/modified room request",
+            self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Room requests confirmed or declined",
             self::NOTIFICATION_ROOM_CHANGED => "Changes to room",
             self::NOTIFICATION_NEW_TASK => "New tasks",
             self::NOTIFICATION_TASK_REMINDER => "Reminders for Tasks",
@@ -257,8 +357,8 @@ enum NotificationEnum: string
     public function description(): string
     {
         return match ($this) {
-            self::NOTIFICATION_ROOM_ANSWER => "Find out if your room requests has been answered.",
-            self::NOTIFICATION_ROOM_REQUEST => "Find out if your room requests have been confirmed or declined.",
+            self::NOTIFICATION_ROOM_ANSWER => "Find out if your room requests have been answered.",
+            self::NOTIFICATION_ROOM_REQUEST => "Find out if there are new or changed room requests.",
             self::NOTIFICATION_CONFLICT => "Be notified as soon as someone schedules an appointment that conflicts with one of your appointments.",
             self::NOTIFICATION_EVENT_CHANGED => "Find out if there have been any changes to your appointments or if an appointment has been cancelled.",
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => "Find out whether loud events or events with an audience have been set in an adjacent room at the same time as one of your events.",
@@ -270,11 +370,11 @@ enum NotificationEnum: string
             self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED =>
                 'You will be notified as soon as the funding source reaches the defined threshold.',
             self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Find out whether you have received approval for documents or contracts and whether there have been any changes to these documents.',
-            self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Find out if there are new or changed room requests.",
+            self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Find out if your room requests have been confirmed or declined.",
             self::NOTIFICATION_ROOM_CHANGED => "You will be notified as soon as there are changes to your rooms or your room responsibilities.",
             self::NOTIFICATION_NEW_TASK => "Find out if there are new tasks for you or your team.",
-            self::NOTIFICATION_TASK_REMINDER => "Be reminded when tasks become urgent or have already have already exceeded their deadline.",
-            self::NOTIFICATION_TASK_CHANGED => "Find out if there are any changes to your tasks",
+            self::NOTIFICATION_TASK_REMINDER => "Be reminded when tasks become urgent or have already exceeded their deadline.",
+            self::NOTIFICATION_TASK_CHANGED => "Find out if there are any changes to your tasks.",
             self::NOTIFICATION_PROJECT => "Find out if there are any changes in your projects or groups and what role you have in the project team.",
             self::NOTIFICATION_PUBLIC_RELEVANT => 'Be notified as soon as there are changes to your projects that may affect public relations.',
             self::NOTIFICATION_TEAM => "You will be notified as soon as your team membership changes.",

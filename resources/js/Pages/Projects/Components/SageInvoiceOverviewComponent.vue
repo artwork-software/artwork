@@ -209,6 +209,7 @@
 </template>
 
 <script setup>
+import { createInstanceFormatter } from "@/Helper/instanceFormat.js";
 import { computed, onMounted, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
@@ -287,7 +288,7 @@ function formatAmount(value) {
     if (Number.isNaN(number)) {
         return String(value ?? '')
     }
-    return `${number.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EUR`
+    return createInstanceFormatter(usePage().props.instanceFormat).formatCurrency(number)
 }
 
 function openBooking(booking) {

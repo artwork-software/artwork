@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 trait HasWorkflows
 {
+    /**
+     * @return MorphMany<WorkflowInstance, $this>
+     */
     public function workflowInstances(): MorphMany
     {
         return $this->morphMany(WorkflowInstance::class, 'subject');

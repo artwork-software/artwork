@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @property int|null $shift_qualification_id
+ * @property bool $is_overbooked
+ */
 class ShiftWorker extends MorphPivot
 {
     use SoftDeletes;
@@ -45,21 +49,33 @@ class ShiftWorker extends MorphPivot
         });
     }
 
+    /**
+     * @return BelongsTo<Shift, $this>
+     */
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by_user_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function confirmationBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'confirmation_by_user_id');
     }
 
+    /**
+     * @return BelongsTo<ShiftQualification, $this>
+     */
     public function shiftQualification(): BelongsTo
     {
         return $this->belongsTo(ShiftQualification::class);

@@ -30,6 +30,7 @@ final class EventTypeResourceTest extends TestCase
             'individual_name' => false,
             'abbreviation' => 'CN',
             'relevant_for_project_period' => true,
+            'relevant_for_ticketing' => true,
             'verification_mode' => 'standard',
             'relevant_for_shift' => false,
             'relevant_for_inventory' => false,
@@ -45,6 +46,7 @@ final class EventTypeResourceTest extends TestCase
         $this->assertSame('#abcdef', $array['hex_code']);
         $this->assertSame('CN', $array['abbreviation']);
         $this->assertTrue($array['project_mandatory']);
+        $this->assertTrue($array['relevant_for_ticketing']);
         $this->assertCount(1, $array['users']);
         $this->assertSame(7, $array['users'][0]['id']);
         $this->assertSame('Ada Lovelace', $array['users'][0]['full_name']);
@@ -68,6 +70,7 @@ final class EventTypeResourceTest extends TestCase
             'individual_name' => false,
             'abbreviation' => '',
             'relevant_for_project_period' => false,
+            'relevant_for_ticketing' => false,
             'verification_mode' => null,
             'relevant_for_shift' => false,
             'relevant_for_inventory' => false,

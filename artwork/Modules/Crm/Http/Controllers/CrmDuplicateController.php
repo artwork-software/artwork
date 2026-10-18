@@ -13,12 +13,6 @@ use Inertia\Response;
 
 class CrmDuplicateController extends Controller
 {
-    private const MIRRORED_SLUGS = [
-        CrmSystemContactTypeEnum::USER->value,
-        CrmSystemContactTypeEnum::FREELANCER->value,
-        CrmSystemContactTypeEnum::SERVICE_PROVIDER->value,
-    ];
-
     public function __construct(
         private readonly CrmDuplicateService $duplicateService,
     ) {
@@ -42,7 +36,7 @@ class CrmDuplicateController extends Controller
         $primary = CrmContact::with('contactType')->findOrFail($validated['primary_id']);
         $duplicates = CrmContact::whereIn('id', $validated['duplicate_ids'])->get();
 
-        if (in_array($primary->contactType?->slug, self::MIRRORED_SLUGS, true)) {
+        if (CrmSystemContactTypeEnum::isMirrored($primary->contactType?->slug)) {
             abort(422, 'Gespiegelte Kontakte können nicht zusammengeführt werden.');
         }
 

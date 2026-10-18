@@ -130,7 +130,7 @@
                             <component
                                 :is="IconTrash"
                                 class="w-5 h-5 rounded-full cursor-pointer hover:text-danger duration-200 ease-in-out"
-                                @click="showConfirmDelete = true"
+                                @click="openDeleteConfirmation"
                                 v-if="canDeleteArticle"
                             />
                         </div>
@@ -436,7 +436,7 @@
 
         <ConfirmDeleteModal
             :title="$t('Delete article')"
-            :description="$t('Are you sure you want to delete this article?')"
+            :description="deleteDescription"
             z-index="999999"
             @closed="showConfirmDelete = false"
             v-if="showConfirmDelete"
@@ -449,6 +449,7 @@
 import BaseModal from '@/Components/Modals/BaseModal.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import { router, usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { ref, computed } from 'vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
@@ -540,6 +541,23 @@ const responsiveOptions = ref([
 const imageClick = (index) => {
     activeIndex.value = index
     displayCustom.value = true
+}
+
+// Künftige Ausgaben behalten den Artikel auch im Papierkorb – darauf vor dem Löschen hinweisen.
+const futureIssueCount = ref(0)
+const deleteDescription = computed(() => futureIssueCount.value > 0
+    ? $t('This article is reserved in {0} upcoming material issue(s). It stays part of these issues, but no longer counts as available. Delete anyway?', [futureIssueCount.value])
+    : $t('Are you sure you want to delete this article?'))
+
+const openDeleteConfirmation = async () => {
+    futureIssueCount.value = 0
+    try {
+        const {data} = await axios.get(route('articles.future-issues', props.article.id))
+        futureIssueCount.value = Number(data?.count ?? 0)
+    } catch (error) {
+        // Ohne Zahl trotzdem löschen lassen; der Hinweis ist eine Zusatzinfo
+    }
+    showConfirmDelete.value = true
 }
 
 const confirmDelete = () => {

@@ -199,5 +199,17 @@ class AddNewComponents extends Command
         } else {
             $this->info('Component Sage invoice overview already exists');
         }
+
+        if (!Component::query()->where('type', ProjectTabComponentEnum::TICKETING)->first()) {
+            Component::create([
+                'name' => 'Artwork-Tickets',
+                'type' => ProjectTabComponentEnum::TICKETING,
+                'data' => ['icon' => 'IconBuildingStore'],
+                'special' => true,
+                'sidebar_enabled' => false,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+            $this->info('Component Artwork-Tickets added');
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace Artwork\Modules\Crm\Services;
 
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -14,8 +15,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 readonly class CrmImportService
 {
-    private const MIRRORED_SLUGS = ['user', 'freelancer', 'service_provider'];
-
     public function __construct(
         private CrmContactService $contactService,
         private CrmContactTypeService $contactTypeService,
@@ -25,7 +24,7 @@ readonly class CrmImportService
     public function getImportableContactTypes(): \Illuminate\Support\Collection
     {
         return $this->contactTypeService->getActive()
-            ->reject(fn ($type) => in_array($type->slug, self::MIRRORED_SLUGS))
+            ->reject(fn ($type) => CrmSystemContactTypeEnum::isMirrored($type->slug))
             ->values();
     }
 

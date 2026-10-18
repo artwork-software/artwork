@@ -77,6 +77,7 @@ const onSelect = async (event) => {
         const { data } = await axios.post(
             route('inventory-management.articles.property-file.upload'),
             formData,
+            { skipErrorToast: true }, // Fehler steht an der Zelle
         )
         emit('update:modelValue', data.path)
     } catch (e) {

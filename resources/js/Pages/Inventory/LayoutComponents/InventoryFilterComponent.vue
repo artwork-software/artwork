@@ -291,6 +291,7 @@
 import { computed, ref, watch } from "vue"
 import axios from "axios"
 import debounce from "lodash.debounce"
+import { messageForFailedRequest } from "@/Helper/appToast.js"
 import { router, usePage } from "@inertiajs/vue3"
 import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue"
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue"
@@ -581,12 +582,15 @@ const saveFilter = async () => {
             filters: buildCleanFilters(),
             tag_ids: selectedTagIds.value,
             is_default: false,
-        })
+        }, { skipErrorToast: true }) // Fehler steht im Speichern-Bereich
         saveFilterOption.value = false
         saveFilterName.value = ""
         router.reload()
     } catch (e) {
-        presetError.value = $t("Saving failed. Please check your inputs.")
+        // 403/404/5xx/Netzwerk: dieselbe Meldung wie der globale Toast, sonst Eingaben prüfen
+        const status = e?.response?.status
+        const requestMessage = e?.isAxiosError && status !== 422 ? messageForFailedRequest(status) : null
+        presetError.value = requestMessage ? $t(requestMessage) : $t("Saving failed. Please check your inputs.")
         console.error(e)
     } finally {
         isBusy.value = false

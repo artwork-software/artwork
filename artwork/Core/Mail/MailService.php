@@ -39,8 +39,9 @@ class MailService
 
     public function sendExternalUserImported(User $user, ExternalUser $externalUser): void
     {
+        // to($user) statt der Adresse: so greift preferredLocale (Mail in der Sprache der Person)
         $this->mailManager
-            ->to($user->email)
+            ->to($user)
             ->queue((new ExternalUserImported($user, $externalUser))->afterCommit());
     }
 

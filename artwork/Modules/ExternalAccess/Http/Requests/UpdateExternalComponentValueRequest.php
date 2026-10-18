@@ -14,9 +14,8 @@ class UpdateExternalComponentValueRequest extends FormRequest
     }
 
     /**
-     * Generic structural validation only. Per-component-type schema validation is
-     * intentionally out of scope (see work package); the client sends structured
-     * data, defensive normalization happens in the service.
+     * Structural validation only; the per-type check (shared with the internal endpoint)
+     * happens in ProjectComponentValueNormalizer via ExternalComponentValueService.
      *
      * @return array<string, mixed>
      */

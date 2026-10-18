@@ -186,7 +186,7 @@
 
         <!-- Footer ------------------------------------------------------->
         <div class="flex items-center justify-end mt-6">
-            <BaseUIButton :label="$t('Save')" @click="saveCraft" is-add-button/>
+            <BaseUIButton :label="$t('Save')" @click="saveCraft" is-add-button :processing="craft.processing"/>
         </div>
     </ArtworkBaseModal>
 </template>
@@ -291,6 +291,8 @@ function deleteDepartmentManager(user: any) {
 }
 
 function saveCraft() {
+    // Doppelklick legte das Gewerk sonst zweimal an
+    if (craft.processing) return
     // Managers payload
     craft.managersToBeAssigned = []
     managers.value.forEach((manager: any) => {

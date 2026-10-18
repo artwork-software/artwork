@@ -45,6 +45,9 @@ class AvailabilitiesConflict extends Model
         'scheduled_at_casted'
     ];
 
+    /**
+     * @return BelongsTo<Availability, $this>
+     */
     public function availability(): BelongsTo
     {
         return $this->belongsTo(Availability::class, 'availability_id', 'id', 'availabilities');

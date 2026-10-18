@@ -16,14 +16,19 @@ class WorkingHourCacheService
     // v3: Wochen-Payload um planned_formatted/daily_target_formatted/difference_formatted ergänzt
     // v4: Soll ohne Arbeitszeitmuster ist unbekannt (target_unknown/days_without_pattern statt
     //     weekly_working_hours/5) — alte Wochenwerte dürfen nicht weiter ausgeliefert werden
-    private const PREFIX = 'working_hours_v4:';
+    // v5: gebuchte Tage zeigen gebuchtes Soll/Ist (WorkTimeCalculationService), Teilwochen eigener Schlüssel
+    private const PREFIX = 'working_hours_v5:';
 
-    public function getWeeklyData(string $type, int $id, int $year, int $week): ?array
+    /**
+     * $week: ISO-Woche, bei auf den Zeitraum beschnittenen Wochen inkl. Tagesspanne (z. B. "40:2026-10-01:2026-10-04"),
+     * sonst lieferte eine zuerst geladene Teilwoche bis zu 7 Tage lang die Werte für die volle Woche.
+     */
+    public function getWeeklyData(string $type, int $id, int $year, int|string $week): ?array
     {
         return Cache::get($this->key($type, $id, $year, $week));
     }
 
-    public function setWeeklyData(string $type, int $id, int $year, int $week, array $data): void
+    public function setWeeklyData(string $type, int $id, int $year, int|string $week, array $data): void
     {
         Cache::put($this->key($type, $id, $year, $week), $data, self::TTL);
     }
@@ -68,7 +73,7 @@ class WorkingHourCacheService
         };
     }
 
-    private function key(string $type, int $id, int $year, int $week): string
+    private function key(string $type, int $id, int $year, int|string $week): string
     {
         return self::PREFIX . "{$type}:{$id}:v" . $this->version($type, $id) . ":{$year}:{$week}";
     }

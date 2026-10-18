@@ -81,6 +81,7 @@
 </template>
 
 <script setup>
+import { stopListeningOnPrivateChannel } from "@/Composeables/Listener/echoChannel.js";
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -198,19 +199,22 @@ const removeSearch = () => {
 
 // Echo listener for real-time checklist updates
 let echoChannel = null;
+const handleChecklistUpdated = () => {
+    fetchAllChecklists();
+};
 
 onMounted(() => {
     if (props.project?.id) {
-        echoChannel = Echo.private('project.' + props.project.id)
-            .listen('.checklist.updated', () => {
-                fetchAllChecklists();
-            });
+        echoChannel = 'project.' + props.project.id;
+        Echo.private(echoChannel).listen('.checklist.updated', handleChecklistUpdated);
     }
 });
 
+// Nur den eigenen Handler abmelden – Echo.leave entfernte alle Listener des geteilten Projektkanals
 onUnmounted(() => {
-    if (echoChannel && props.project?.id) {
-        Echo.leave('project.' + props.project.id);
+    if (echoChannel) {
+        stopListeningOnPrivateChannel(echoChannel, '.checklist.updated', handleChecklistUpdated);
+        echoChannel = null;
     }
 });
 

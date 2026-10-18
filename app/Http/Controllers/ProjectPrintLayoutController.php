@@ -6,12 +6,14 @@ use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistIndexResource;
 use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Http\Requests\StoreProjectPrintLayoutRequest;
@@ -144,7 +146,6 @@ class ProjectPrintLayoutController extends Controller
         $loadedProjectInformation = [];
         $projectComponents = collect([$project])->map(function ($project) use (
             $projectPrintLayout,
-            $loadedProjectInformation,
             $user
         ) {
             /** @var Project $project */
@@ -157,9 +158,19 @@ class ProjectPrintLayoutController extends Controller
             $projectData->projectGroups = $project->groups;
             $projectData->groupProjects = Project::where('is_group', 1)->get();
             $projectData->projectsOfGroup = $project->projectsOfGroup()->get();
+            // Projektwerte aller Komponenten des Layouts in einer Abfrage statt je Komponente
+            $componentValues = ProjectComponentValue::query()
+                ->where('project_id', $project->id)
+                ->whereIn('component_id', $projectPrintLayout->components->pluck('component_id'))
+                ->get()
+                ->keyBy('component_id');
             foreach ($projectPrintLayout->components as $component) {
-                /** @var Component $componentFullData */
-                $componentFullData = Component::find($component->component_id);
+                /** @var Component|null $componentFullData */
+                $componentFullData = $component->component;
+                if ($componentFullData === null) {
+                    // Komponente inzwischen gelöscht: Platzierung überspringen statt Null-Zugriff
+                    continue;
+                }
                 switch ($componentFullData->type) {
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
                         $projectData->title = $project->name;
@@ -298,10 +309,10 @@ class ProjectPrintLayoutController extends Controller
                         Inertia::share([
                             'user' => array_merge(session('user', []), ['checklist_style' => 'kanban'])
                         ]);
-                        $visibleTabIds = $this->projectComponentVisibilityService->visibleTabIds($user);
+                        // canSeeTab wie constrainToVisibleTabs: Admins sehen auch Checklisten gelöschter Tabs
                         $checklists = $project->checklists->filter(
                             fn ($checklist) => $checklist->tab_id === null ||
-                                $visibleTabIds->contains($checklist->tab_id)
+                                $this->projectComponentVisibilityService->canSeeTab($user, $checklist->tab_id)
                         );
                         $projectData->opened_checklists = $checklists->pluck('id');
                         $userId = Auth::id();
@@ -360,7 +371,10 @@ class ProjectPrintLayoutController extends Controller
                         ];
                         break;
                     case ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS->value:
-                        $projectData->contracts_documents = $project->contracts;
+                        // wie im Projekt-Tab: nur Verträge, die die Person laut ContractPolicy öffnen darf
+                        $projectData->contracts_documents = $project->contracts
+                            ->filter(fn (Contract $contract): bool => $user->can('view', $contract))
+                            ->values();
                         break;
                     case ProjectTabComponentEnum::CRM_CONTACT_LIST->value:
                         // Kontakte der Liste mit den Feldern, die die druckende Person sehen darf
@@ -373,13 +387,9 @@ class ProjectPrintLayoutController extends Controller
 
 
 
-                if ($componentFullData) {
-                    if (!$componentFullData?->special) {
-                        $projectData->{$component->component->type}[$componentFullData->id] =
-                            $componentFullData->projectValue()
-                                ->where('project_id', $project->id)
-                                ->first() ?? $componentFullData->data;
-                    }
+                if (!$componentFullData->special) {
+                    $projectData->{$componentFullData->type}[$componentFullData->id] =
+                        $componentValues->get($componentFullData->id) ?? $componentFullData->data;
                 }
             }
 
@@ -403,13 +413,11 @@ class ProjectPrintLayoutController extends Controller
      */
     private function removeComponentsHiddenFromUser(ProjectPrintLayout $projectPrintLayout, User $user): void
     {
-        $visibleComponentIds = $projectPrintLayout->components
-            ->pluck('component')
-            ->filter()
-            ->unique('id')
-            ->filter(fn (Component $component) => $this->projectComponentVisibilityService
-                ->canSeeInProject($user, $component))
-            ->pluck('id');
+        // Gesammelt geprüft: canSeeInProject je Komponente kostete ~5 Abfragen pro Baustein
+        $visibleComponentIds = $this->projectComponentVisibilityService->visibleInProjectComponentIds(
+            $user,
+            $projectPrintLayout->components->pluck('component')
+        );
 
         foreach (['components', 'headerComponents', 'bodyComponents', 'footerComponents'] as $relation) {
             $projectPrintLayout->setRelation(

@@ -4,6 +4,9 @@ namespace Artwork\Modules\Event\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Event\Models\Event
+ */
 class EventIndexResource extends JsonResource
 {
     public static $wrap = null;

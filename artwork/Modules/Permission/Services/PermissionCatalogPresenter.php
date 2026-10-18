@@ -11,6 +11,7 @@ use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
 use Artwork\Modules\Permission\Catalog\PermissionCatalog;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +24,7 @@ readonly class PermissionCatalogPresenter
     public function __construct(
         private PermissionCatalog $catalog,
         private ModuleSettingsService $moduleSettingsService,
+        private TicketingConnectionService $ticketing,
     ) {
     }
 
@@ -40,7 +42,11 @@ readonly class PermissionCatalogPresenter
     public function present(?User $user = null): array
     {
         return [
-            'modules' => $this->catalog->toArray()->all(),
+            // Die Artwork-Tickets-Rechte gibt es erst, wenn die Instanz dafür eingerichtet ist.
+            'modules' => $this->catalog->toArray()
+                ->reject(fn (array $module): bool => $module['key'] === 'ticketing' && !$this->ticketing->isConfigured())
+                ->values()
+                ->all(),
             'instance' => $this->instanceState(),
             'usage' => $this->usageCounts(),
             'user' => $user === null ? null : [

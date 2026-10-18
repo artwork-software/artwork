@@ -5,6 +5,7 @@ namespace Artwork\Modules\MaterialSet\Models;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MaterialSetItem extends Model
 {
@@ -17,6 +18,9 @@ class MaterialSetItem extends Model
 
     protected $appends = ['name'];
 
+    /**
+     * @return BelongsTo<InventoryArticle, $this>
+     */
     public function article(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(
@@ -27,6 +31,9 @@ class MaterialSetItem extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<MaterialSet, $this>
+     */
     public function set(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(

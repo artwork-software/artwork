@@ -111,6 +111,8 @@
                     </div>
                 </Listbox>
             </div>
+            <!-- z. B. 422, wenn der Tab für die Person nicht (mehr) sichtbar ist -->
+            <p v-if="checklistForm.errors.tab_id" class="mt-2 text-xs text-danger">{{ checklistForm.errors.tab_id }}</p>
 
             <div class="" v-if="selectedTemplate.name === ''">
                 <div class="flex items-center my-2" >

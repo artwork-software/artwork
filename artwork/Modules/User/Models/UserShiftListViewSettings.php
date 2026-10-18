@@ -53,6 +53,9 @@ class UserShiftListViewSettings extends Model
         'hide_shift_row' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'users');

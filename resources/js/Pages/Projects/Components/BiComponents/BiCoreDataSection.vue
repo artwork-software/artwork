@@ -48,7 +48,7 @@
 import { ref, watch } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
-import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useBiSaveFeedback, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     biData: { type: Object, default: null },
@@ -104,7 +104,7 @@ const biSave = useBiSaveFeedback();
 
 const save = async () => {
     const ok = await biSave.run(
-        () => axios.put(route('projects.bi.update-data', props.projectId), localData.value)
+        () => axios.put(route('projects.bi.update-data', props.projectId), localData.value, BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');

@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 trait CanHasDayServices
 {
+    /**
+     * @return MorphToMany<DayService, $this>
+     */
     public function dayServices(): MorphToMany
     {
         return $this->morphToMany(

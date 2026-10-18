@@ -16,7 +16,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property int $minutes
  * @property int $remaining_minutes
  * @property int $paid_out_minutes
- * @property \Illuminate\Support\Carbon $deadline
+ * @property \Illuminate\Support\Carbon|null $deadline Abbaufrist; null = ohne Überstundenregel (keine Frist)
  * @property string $status
  * @property int|null $paid_out_by
  * @property \Illuminate\Support\Carbon|null $paid_out_at
@@ -75,11 +75,17 @@ class UserOvertime extends Model
             ->dontSubmitEmptyLogs();
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function paidOutByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paid_out_by', 'id', 'paidOutByUser');

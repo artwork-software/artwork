@@ -28,7 +28,8 @@ class StoreWorkTimeBookingRequest extends FormRequest
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'date' => 'required|date',
+            // Keine Buchungen in die Zukunft: sie verrechneten heute schon Überstunden eines Tages, der noch kommt
+            'date' => 'required|date|before_or_equal:today',
             // Dauer als "H:MM" ohne Obergrenze bei den Stunden (Salden > 24 h, z. B. Übernahme bei Produktivstart)
             'hours' => ['required', 'string', 'regex:' . self::DURATION_PATTERN],
             'nightly_working_hours' => ['required', 'string', 'regex:' . self::DURATION_PATTERN],

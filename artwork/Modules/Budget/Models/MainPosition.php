@@ -45,16 +45,25 @@ class MainPosition extends Model
 
     protected $appends = [];
 
+    /**
+     * @return HasMany<SubPosition, $this>
+     */
     public function subPositions(): HasMany
     {
         return $this->hasMany(SubPosition::class);
     }
 
+    /**
+     * @return HasOne<MainPositionVerified, $this>
+     */
     public function verified(): HasOne
     {
         return $this->hasOne(MainPositionVerified::class);
     }
 
+    /**
+     * @return HasMany<MainPositionDetails, $this>
+     */
     public function mainPositionSumDetails(): HasMany
     {
         return $this->hasMany(MainPositionDetails::class);

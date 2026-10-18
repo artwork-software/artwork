@@ -57,7 +57,7 @@
                     <div class="justify-end flex w-full my-6">
                         <BaseUIButton
                             :label="$t('Upload document')"
-                            :disabled="files.length < 1"
+                            :disabled="files.length < 1 || isUploading"
                             type="submit"
                             is-add-button
                         />
@@ -71,7 +71,9 @@
 import {IconX} from "@tabler/icons-vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {useForm} from "@inertiajs/vue3";
+import axios from "axios";
+import {uploadErrorMessage} from "@/Composeables/UseUploadErrorMessage.js";
+import {uploadSequentially} from "@/Helper/sequentialUpload.js";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -84,6 +86,8 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "ProjectFileUploadModal",
+    // saved: ein Upload ist abgeschlossen (Aufrufer laden ihre Liste neu)
+    emits: ['saved'],
     mixins: [Permissions],
     props: {
         show: Boolean,
@@ -112,11 +116,7 @@ export default {
             user_query: '',
             user_search_results: [],
             usersWithAccess: [],
-            projectFileForm: useForm({
-                file: null,
-                comment: this.comment,
-                accessibleUsers: this.usersWithAccess
-            })
+            isUploading: false,
         }
     },
     watch: {
@@ -152,15 +152,25 @@ export default {
         upload(event) {
             this.validateType([...event.target.files])
         },
+        /**
+         * Eine Datei hochladen (Promise). project_files.store antwortet ohne Inertia-Seite – wie die
+         * Dokumente-Komponenten per axios statt useForm.
+         */
         storeFile(file) {
-            this.projectFileForm.file = file
-            this.projectFileForm.comment = this.comment
-            const userIds = [];
-            this.usersWithAccess.forEach((user) => {
-                userIds.push(user.id);
-            })
-            this.projectFileForm.accessibleUsers = userIds;
-            this.projectFileForm.post(this.route('project_files.store', this.projectId))
+            const formData = new FormData();
+            formData.append('file', file);
+            if (this.comment) {
+                formData.append('comment', this.comment);
+            }
+            this.usersWithAccess.forEach((user) => formData.append('accessibleUsers[]', String(user.id)));
+            // Budget-Dokument: nur für die Freigabeliste und Admins sichtbar (auch in "Alle Dokumente")
+            formData.append('budgetDocument', '1');
+
+            return axios.post(this.route('project_files.store', this.projectId), formData, {
+                headers: {'Content-Type': 'multipart/form-data'},
+                // Fehler zeigt das Modal je Datei an – kein zusätzlicher globaler Toast
+                skipErrorToast: true,
+            });
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";
@@ -168,11 +178,41 @@ export default {
               this.files.push(file)
             }
         },
-        storeFiles() {
-            for (let file of this.files) {
-                this.storeFile(file)
+        /**
+         * Nacheinander hochladen (parallele Posts brachen sich ab), danach die Liste leeren – erneutes Absenden
+         * legte sonst alles doppelt an. Fehlgeschlagene Dateien bleiben mit Meldung stehen, das Modal bleibt offen.
+         */
+        async storeFiles() {
+            if (this.isUploading || this.files.length < 1) {
+                return;
             }
-            this.closeModal()
+            this.isUploading = true;
+            this.uploadDocumentFeedback = '';
+
+            const { uploaded, failed, skipped } = await uploadSequentially(
+                [...this.files],
+                (file) => this.storeFile(file),
+                // 413: Server lehnt die Größe ab – die übrigen Dateien nicht mehr versuchen
+                { stopOnError: (error) => error?.response?.status === 413 }
+            );
+
+            this.isUploading = false;
+            this.files = [...failed.map(({ file }) => file), ...skipped];
+            if (uploaded.length > 0) {
+                this.$emit('saved');
+            }
+
+            if (failed.length > 0) {
+                const translate = (key, params) => this.$t(key, params);
+                this.uploadDocumentFeedback = failed
+                    .map(({ file, error }) => `${file.name}: ${uploadErrorMessage(error, translate)}`)
+                    .join(' ');
+                return;
+            }
+
+            this.comment = '';
+            this.usersWithAccess = [];
+            this.closeModal();
         }
     }
 }

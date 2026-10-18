@@ -24,6 +24,7 @@ use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 use function Illuminate\Support\defer;
 
@@ -1673,7 +1674,10 @@ class ProjectDayAssignmentService
         // Request nicht blockieren (502-Klasse, gleiches Muster wie die Event-Broadcasts).
         // Der Name dedupliziert mehrere Aufrufe fürs selbe Projekt im selben Request.
         $this->deferAfterCommit(
-            static fn (): mixed => broadcast(new ProjectDayAssignmentsChanged($projectId)),
+            // SafeBroadcast: ein nicht erreichbarer WebSocket-Server wird nur gemeldet (auch nach der Response)
+            static function () use ($projectId): void {
+                SafeBroadcast::send(new ProjectDayAssignmentsChanged($projectId));
+            },
             'project-day-assignments-changed-' . $projectId
         );
     }

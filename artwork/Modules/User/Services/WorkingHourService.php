@@ -250,6 +250,7 @@ class WorkingHourService
      *     weekNumber: string,
      *     year: int,
      *     isoWeek: int,
+     *     cacheWeek: int|string,
      * }>
      */
     private function buildWeekPeriods(Carbon $startDate, Carbon $endDate): array
@@ -267,6 +268,14 @@ class WorkingHourService
                 'year' => (int) $weekStart->format('o'),
                 'isoWeek' => (int) $weekStart->format('W'),
             ];
+            $index = array_key_last($weekPeriods);
+            $isPartial = !$weekPeriods[$index]['actualStart']->isSameDay($weekStart)
+                || !$weekPeriods[$index]['actualEnd']->isSameDay($weekEnd);
+            // Cache-Schlüssel: beschnittene Wochen getrennt von vollen Wochen
+            $weekPeriods[$index]['cacheWeek'] = $isPartial
+                ? $weekPeriods[$index]['isoWeek'] . ':' . $weekPeriods[$index]['actualStart']->toDateString()
+                    . ':' . $weekPeriods[$index]['actualEnd']->toDateString()
+                : $weekPeriods[$index]['isoWeek'];
         }
 
         return $weekPeriods;
@@ -367,7 +376,7 @@ class WorkingHourService
                     $entityType,
                     $userId,
                     $weekPeriod['year'],
-                    $weekPeriod['isoWeek']
+                    $weekPeriod['cacheWeek']
                 );
 
                 if ($cached !== null) {
@@ -396,7 +405,7 @@ class WorkingHourService
                     $entityType,
                     $userId,
                     $weekPeriod['year'],
-                    $weekPeriod['isoWeek'],
+                    $weekPeriod['cacheWeek'],
                     $weekData
                 );
             }
@@ -467,7 +476,7 @@ class WorkingHourService
                 $entityType,
                 $entityId,
                 $wp['year'],
-                $wp['isoWeek']
+                $wp['cacheWeek']
             );
 
             if ($cached !== null) {
@@ -492,7 +501,7 @@ class WorkingHourService
                 $entityType,
                 $entityId,
                 $wp['year'],
-                $wp['isoWeek'],
+                $wp['cacheWeek'],
                 $weekData
             );
         }

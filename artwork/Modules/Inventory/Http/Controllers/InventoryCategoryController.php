@@ -23,6 +23,8 @@ use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
 class InventoryCategoryController extends Controller
@@ -75,17 +77,12 @@ class InventoryCategoryController extends Controller
             }
         };
 
+        // currentCategory/currentSubCategory dienen nur Seitenleiste (Anzahl je Unterkategorie) und
+        // Breadcrumb; die Artikel selbst kommen paginiert über $articles.
         $inventoryCategory?->load([
-            'subcategories' => function ($query): void {
-                $query->orderBy('name');
+            'subcategories' => function ($query) use ($restrictArticles): void {
+                $query->orderBy('name')->withCount(['articles' => $restrictArticles]);
             },
-            'subcategories.articles' => function ($query) use ($restrictArticles): void {
-                $query->orderBy('name');
-                $restrictArticles($query);
-            },
-            'subcategories.articles.category:id,name',
-            'subcategories.articles.subCategory:id,name',
-            'subcategories.articles.properties',
             'subcategories.properties' => function ($query): void {
                 $query->orderBy('name');
             },
@@ -98,13 +95,6 @@ class InventoryCategoryController extends Controller
             'properties' => function ($query): void {
                 $query->orderBy('name');
             },
-            'articles' => function ($query) use ($restrictArticles): void {
-                $query->orderBy('name');
-                $restrictArticles($query);
-            },
-            'articles.category:id,name',
-            'articles.subCategory:id,name',
-            'articles.properties',
         ]);
 
         $filterableProperties = collect();
@@ -246,24 +236,30 @@ class InventoryCategoryController extends Controller
         ]);
     }
 
-    public function destroy(InventoryCategory $inventoryCategory): void
+    public function destroy(InventoryCategory $inventoryCategory): RedirectResponse
     {
-        $inventoryCategory->articles()->each(function (InventoryArticle $article): void {
-            $this->inventoryArticleService->delete($article);
-            $this->inventoryArticleService->forceDelete($article);
-        });
+        // Nur leere Kategorien löschen. Vorher wurden enthaltene Artikel am Papierkorb vorbei
+        // endgültig gelöscht (vergangene Ausgaben verloren ihre Artikel); Papierkorb-Artikel
+        // fielen dem FK-Cascade zum Opfer, ihre Bilder blieben verwaist liegen.
+        $articleCount = InventoryArticle::withTrashed()
+            ->where('inventory_category_id', $inventoryCategory->id)
+            ->count();
+        if ($articleCount > 0) {
+            return Redirect::back()->with(
+                'error',
+                __('This category still contains articles (also in the trash). Move or permanently delete them first.')
+            );
+        }
 
         $inventoryCategory->properties()->detach();
         $inventoryCategory->subcategories()->each(function (InventorySubCategory $subcategory): void {
-            $subcategory->articles()->each(function (InventoryArticle $article): void {
-                $this->inventoryArticleService->delete($article);
-                $this->inventoryArticleService->forceDelete($article);
-            });
             $subcategory->properties()->detach();
             $subcategory->delete();
         });
 
         $inventoryCategory->delete();
+
+        return Redirect::back();
     }
 
     public function getAllCategories()
@@ -271,19 +267,20 @@ class InventoryCategoryController extends Controller
         $user = Auth::user();
 
         // Get filtered article IDs based on user's saved filters (including tags)
+        // null = kein User, nicht filtern; [] = Filter passt auf nichts → keine Artikel
         $filteredArticleIds = $user
             ? $this->filterService
                 ->getFilteredArticlesNew($user)
                 ->pluck('id')
                 ->toArray()
-            : [];
+            : null;
 
         // Load categories with filtered articles
         $categories = InventoryCategory::with([
             'subcategories:id,inventory_category_id,name',
             'subcategories.properties:id,name,type,select_values',
             'articles' => function ($query) use ($filteredArticleIds): void {
-                if (!empty($filteredArticleIds)) {
+                if ($filteredArticleIds !== null) {
                     $query->whereIn('id', $filteredArticleIds);
                 }
                 $query->select('id', 'name', 'inventory_category_id', 'inventory_sub_category_id');

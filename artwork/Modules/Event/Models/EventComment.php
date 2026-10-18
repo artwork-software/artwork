@@ -43,6 +43,9 @@ class EventComment extends Model
         'user'
     ];
 
+    /**
+     * @return BelongsTo<Event, $this>
+     */
     public function event(): BelongsTo
     {
         return $this->belongsTo(
@@ -53,6 +56,9 @@ class EventComment extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(

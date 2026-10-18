@@ -37,16 +37,17 @@ class ArtworkPruneCommand extends PruneCommand
 
     final protected function models(): Collection
     {
-        if (! empty($models = $this->option('model'))) {
-            return collect($models)->filter(function ($model) {
-                return class_exists($model);
-            })->values();
-        }
-
+        $models = $this->option('model');
         $except = $this->option('except');
 
         if (! empty($models) && ! empty($except)) {
             throw new InvalidArgumentException('The --models and --except options cannot be combined.');
+        }
+
+        if (! empty($models)) {
+            return collect($models)->filter(function ($model) {
+                return class_exists($model);
+            })->values();
         }
 
         return $this->getNamespaces()

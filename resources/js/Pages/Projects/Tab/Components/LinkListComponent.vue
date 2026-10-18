@@ -144,11 +144,14 @@
                         <!-- Link with URL -->
                         <a
                             v-if="l.url && l.url.length > 0"
-                            :href="safeHref(l.url)"
+                            :href="safeLinkTarget(l.url)"
                             target="_blank"
                             rel="noopener noreferrer nofollow"
-                            class="block hover:underline cursor-pointer"
-                            :class="inSidebar ? 'text-accent-200 hover:text-accent-100' : 'text-accent-600'"
+                            class="block hover:underline"
+                            :class="[
+                                inSidebar ? 'text-accent-200 hover:text-accent-100' : 'text-accent-600',
+                                { 'cursor-pointer': safeLinkTarget(l.url) },
+                            ]"
                         >
                             {{ l.label && l.label.length > 0 ? l.label : l.url }}
                         </a>
@@ -340,10 +343,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue"
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue"
 import axios from "axios"
+import { useI18n } from "vue-i18n"
 import draggable from "vuedraggable"
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js"
+import { safeLinkTarget } from "@/Helper/SafeUrl.js"
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue"
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue"
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"
@@ -364,6 +369,7 @@ const projectData = computed(() => props.data)
 const showEditor = ref(false)
 const saving = ref(false)
 const error = ref(null)
+const { t } = useI18n()
 const dragging = ref(false)
 
 // Template state
@@ -386,15 +392,24 @@ const isMaxReached = computed(() => links.value.length >= maxItems.value)
 
 const links = ref(readLinks(props.data))
 
+// Getter: Inertia-Besuche mit preserveState ersetzen props.data, die Komponente bleibt gemountet
+const dataListener = useProjectDataListener(() => props.data, props.projectId)
 onMounted(() => {
-    useProjectDataListener(props.data, props.projectId).init()
+    dataListener.init()
     loadTemplates()
+})
+onBeforeUnmount(() => {
+    dataListener.stop()
 })
 
 function toggleEdit() {
     if (!props.canEditComponent) return
     showEditor.value = !showEditor.value
     error.value = null
+    // Beim Öffnen vom aktuellen Stand ausgehen (Live-Updates bei offenem Editor wurden nicht übernommen)
+    if (showEditor.value) {
+        links.value = readLinks(props.data)
+    }
 }
 
 function readLinks(dataObj) {
@@ -438,12 +453,7 @@ function normalizeUrl(url) {
     return u
 }
 
-function safeHref(url) {
-    const u = normalizeUrl(url)
-    // nur http(s)
-    if (!/^https?:\/\//i.test(u)) return "#"
-    return u
-}
+
 
 function cleanLinks(rows) {
     return (rows ?? [])
@@ -463,18 +473,23 @@ async function saveLinks() {
 
     try {
         saving.value = true
-        await axios.patch(
+        const response = await axios.patch(
             route("project.tab.component.update", {
                 project: props.projectId,
                 component: props.data.id,
             }),
-            { data: payload }
+            { data: payload },
+            // Fehler steht direkt am Editor – kein zusätzlicher globaler Toast
+            { skipErrorToast: true }
         )
 
         showEditor.value = false
+        // Anzeige liest props.data.project_value; der Broadcast geht an die anderen – gespeicherten
+        // Wert hier und in weiteren Instanzen übernehmen (sonst alte Links bis zum Neuladen)
+        dataListener.saved(response?.data?.project_value)
     } catch (e) {
         console.error("Fehler beim Aktualisieren:", e)
-        error.value = "Speichern fehlgeschlagen."
+        error.value = t("Saving failed. Please try again.")
     } finally {
         saving.value = false
     }
@@ -598,6 +613,8 @@ async function deleteTemplate(template) {
 watch(
     () => props.data,
     (newVal) => {
+        // Offenen Editor nicht überschreiben – die Anzeige (displayLinks) folgt props.data ohnehin
+        if (showEditor.value) return
         links.value = readLinks(newVal)
     },
     { deep: true }

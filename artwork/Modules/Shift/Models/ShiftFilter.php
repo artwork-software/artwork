@@ -26,16 +26,25 @@ class ShiftFilter extends Model
         'user_id'
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return BelongsToMany<Room, $this>
+     */
     public function rooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'room_shift_filter');
     }
 
+    /**
+     * @return BelongsToMany<EventType, $this>
+     */
     //@todo: fix phpcs error - refactor function name to eventTypes
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function event_types(): BelongsToMany

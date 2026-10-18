@@ -5,6 +5,7 @@ namespace Artwork\Modules\Shift\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShiftPlanRequestChange extends Model
 {
@@ -24,17 +25,26 @@ class ShiftPlanRequestChange extends Model
         'changed_at'    => 'datetime',
     ];
 
-    public function request()
+    /**
+     * @return BelongsTo<ShiftPlanRequest, $this>
+     */
+    public function request(): BelongsTo
     {
         return $this->belongsTo(ShiftPlanRequest::class, 'shift_plan_request_id', 'id', 'shift_plan_requests');
     }
 
-    public function affectedUser()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function affectedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'affected_user_id', 'id', 'users');
     }
 
-    public function changedBy()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function changedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'changed_by_user_id', 'id', 'users');
     }

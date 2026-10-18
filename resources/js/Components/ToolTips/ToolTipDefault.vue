@@ -1,11 +1,9 @@
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "ToolTipDefault",
     components: {PropertyIcon},
-    mixins: [IconLib],
     data() {
         return {
             show: false,

@@ -53,11 +53,17 @@ class Filter extends Model
         'showAdjoiningRooms' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'users');
     }
 
+    /**
+     * @return BelongsToMany<RoomCategory, $this>
+     */
     //@todo: fix phpcs error - refactor function name to roomCategories
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function room_categories(): BelongsToMany
@@ -65,6 +71,9 @@ class Filter extends Model
         return $this->belongsToMany(RoomCategory::class, 'filter_room_category');
     }
 
+    /**
+     * @return BelongsToMany<RoomAttribute, $this>
+     */
     //@todo: fix phpcs error - refactor function name to roomAttributes
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function room_attributes(): BelongsToMany
@@ -72,16 +81,25 @@ class Filter extends Model
         return $this->belongsToMany(RoomAttribute::class, 'filter_room_attribute');
     }
 
+    /**
+     * @return BelongsToMany<Room, $this>
+     */
     public function rooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'filter_room');
     }
 
+    /**
+     * @return BelongsToMany<Area, $this>
+     */
     public function areas(): BelongsToMany
     {
         return $this->belongsToMany(Area::class, 'area_filter');
     }
 
+    /**
+     * @return BelongsToMany<EventType, $this>
+     */
     //@todo: fix phpcs error - refactor function name to eventTypes
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function event_types(): BelongsToMany

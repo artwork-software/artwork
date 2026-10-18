@@ -3,6 +3,9 @@
 namespace Tests\Feature\Modules\WorkTime;
 
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserContractAssign;
+use Artwork\Modules\WorkTime\Models\UserOvertime;
+use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -53,6 +56,28 @@ final class WorkTimeBookingStoreTest extends FeatureTestCase
     }
 
     #[Test]
+    public function manual_booking_rebuilds_overtime_immediately(): void
+    {
+        // Vorher erst mit der nächtlichen Buchung: Überstunden-Tab und Zeitkonto liefen bis dahin auseinander
+        $target = User::factory()->create(['work_time_balance' => 0]);
+        UserContractAssign::factory()->create([
+            'user_id' => $target->id,
+            'overtime_rule_active' => true,
+            'overtime_compensation_period' => 30,
+        ]);
+        $this->actingAsAdmin(User::factory()->create());
+        $day = Carbon::yesterday()->toDateString();
+
+        $this->book($target, ['date' => $day, 'hours' => '53:00'])->assertSuccessful();
+        $this->book($target, ['date' => $day, 'hours' => '10:00'])->assertSuccessful();
+
+        $entry = UserOvertime::where('user_id', $target->id)->sole();
+        $this->assertSame($day, $entry->date->toDateString());
+        $this->assertSame(63 * 60, $entry->minutes);
+        $this->assertSame(63 * 60, (int) $target->fresh()->work_time_balance);
+    }
+
+    #[Test]
     #[DataProvider('invalidDurations')]
     public function invalid_durations_are_rejected(array $payload, string $errorField): void
     {
@@ -72,5 +97,6 @@ final class WorkTimeBookingStoreTest extends FeatureTestCase
         yield 'negative value' => [['hours' => '-5:00'], 'hours'];
         yield 'zero duration' => [['hours' => '0:00'], 'hours'];
         yield 'night exceeds booked hours' => [['hours' => '2:00', 'nightly_working_hours' => '2:30'], 'nightly_working_hours'];
+        yield 'date in the future' => [['date' => '2099-01-01'], 'date'];
     }
 }

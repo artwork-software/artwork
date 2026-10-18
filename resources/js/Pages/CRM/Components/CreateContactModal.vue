@@ -148,9 +148,8 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import CrmPropertyValueInput from '@/Pages/CRM/Components/CrmPropertyValueInput.vue'
+import { isMirroredContactType } from '@/Pages/CRM/mirroredContactTypes.js'
 import { IconChevronDown, IconCheck } from '@tabler/icons-vue'
-
-const mirroredSlugs = ['user', 'freelancer', 'service_provider']
 
 const props = defineProps({
     contactTypes: { type: Array, required: true },
@@ -160,11 +159,11 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const creatableTypes = computed(() => {
-    return props.contactTypes.filter(t => !mirroredSlugs.includes(t.slug))
+    return props.contactTypes.filter(t => !isMirroredContactType(t.slug))
 })
 
 const defaultTypeId = computed(() => {
-    if (props.activeType && !mirroredSlugs.includes(props.activeType.slug)) {
+    if (props.activeType && !isMirroredContactType(props.activeType.slug)) {
         return props.activeType.id
     }
     return creatableTypes.value[0]?.id

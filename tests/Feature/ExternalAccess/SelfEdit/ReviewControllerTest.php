@@ -2,7 +2,11 @@
 
 namespace Tests\Feature\ExternalAccess\SelfEdit;
 
+use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
+use Artwork\Modules\Crm\Models\CrmProperty;
+use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionContext;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionStatus;
 use Artwork\Modules\ExternalAccess\Enums\FieldApprovalStatus;
@@ -11,6 +15,7 @@ use Artwork\Modules\ExternalAccess\Models\ExternalPendingFieldChange;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\User\Models\User;
+use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
@@ -56,6 +61,37 @@ final class ReviewControllerTest extends TestCase
 
         $this->get(route('crm.contacts.external-submissions.show', [$external->crm_contact_id, $submission->id]))
             ->assertOk();
+    }
+
+    #[Test]
+    public function review_page_carries_property_type_and_readable_labels(): void
+    {
+        $inviter = User::factory()->create();
+        [$submission, $freelancer, $external] = $this->pending($inviter);
+        $group = CrmPropertyGroup::query()->create(['name' => 'Allgemein', 'is_confidential' => false]);
+        $checkbox = CrmProperty::query()->create([
+            'crm_property_group_id' => $group->id,
+            'name' => 'Barrierefrei',
+            'type' => CrmPropertyTypeEnum::CHECKBOX->value,
+        ]);
+        ExternalPendingFieldChange::create([
+            'submission_id' => $submission->id,
+            'target_type' => (new CrmContact())->getMorphClass(),
+            'target_id' => $external->crm_contact_id,
+            'field_key' => 'crm_property:' . $checkbox->id,
+            'old_value' => '0',
+            'new_value' => '1',
+            'approval_status' => FieldApprovalStatus::PENDING,
+        ]);
+        $this->actingAs($inviter);
+
+        $this->get(route('crm.contacts.external-submissions.show', [$external->crm_contact_id, $submission->id]))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('submission.field_changes.0.field_type', null)
+                ->where('submission.field_changes.0.field_label', __('ZIP'))
+                ->where('submission.field_changes.1.field_type', 'checkbox')
+                ->where('submission.field_changes.1.field_label', 'Barrierefrei'));
     }
 
     #[Test]

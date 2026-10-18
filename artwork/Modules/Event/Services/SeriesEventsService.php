@@ -15,6 +15,7 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Carbon\Carbon;
@@ -253,14 +254,27 @@ class SeriesEventsService
      *
      * @param array<string, mixed> $definitionInput
      * @param array<int> $propertyIds
+     * @param bool $asRoomRequest neue Termine als Raumanfrage anlegen, auch wenn der Quelltermin fest gebucht
+     *                            ist (Person darf im Raum nur anfragen, Prüfung wie EventController::storeEvent)
      */
-    public function createSeriesForEvent(Event $firstEvent, array $definitionInput, array $propertyIds): SeriesEvents
-    {
+    public function createSeriesForEvent(
+        Event $firstEvent,
+        array $definitionInput,
+        array $propertyIds,
+        bool $asRoomRequest = false
+    ): SeriesEvents {
         $start = Carbon::parse($firstEvent->start_time);
         $end = Carbon::parse($firstEvent->end_time);
         $definition = $this->normalizeDefinition($definitionInput, $start);
 
-        return DB::transaction(function () use ($firstEvent, $start, $end, $definition, $propertyIds): SeriesEvents {
+        return DB::transaction(function () use (
+            $firstEvent,
+            $start,
+            $end,
+            $definition,
+            $propertyIds,
+            $asRoomRequest
+        ): SeriesEvents {
             /** @var SeriesEvents $series */
             $series = SeriesEvents::query()->create($definition);
             $firstEvent->forceFill(['is_series' => true, 'series_id' => $series->id, 'is_series_exception' => false]);
@@ -271,7 +285,14 @@ class SeriesEventsService
                 if ($occurrence['start']->toDateString() === $firstDate) {
                     continue;
                 }
-                $this->cloneForOccurrence($firstEvent, $series, $occurrence['start'], $occurrence['end'], $propertyIds);
+                $this->cloneForOccurrence(
+                    $firstEvent,
+                    $series,
+                    $occurrence['start'],
+                    $occurrence['end'],
+                    $propertyIds,
+                    $asRoomRequest
+                );
             }
 
             return $series;
@@ -282,13 +303,15 @@ class SeriesEventsService
      * Einen Serientermin als Kopie des Quelltermins auf ein neues Datum legen.
      *
      * @param array<int> $propertyIds
+     * @param bool $asRoomRequest Kopie als Raumanfrage anlegen statt den Buchungsstatus der Quelle zu übernehmen
      */
     public function cloneForOccurrence(
         Event $source,
         SeriesEvents $series,
         Carbon $start,
         Carbon $end,
-        array $propertyIds
+        array $propertyIds,
+        bool $asRoomRequest = false
     ): Event {
         /** @var Event $event */
         $event = Event::query()->create([
@@ -298,7 +321,7 @@ class SeriesEventsService
             'start_time' => $start,
             'end_time' => $end,
             'admission_time' => $source->admission_time,
-            'occupancy_option' => $source->occupancy_option,
+            'occupancy_option' => $asRoomRequest || $source->occupancy_option,
             'audience' => $source->audience,
             'is_loud' => $source->is_loud,
             'event_type_id' => $source->event_type_id,
@@ -318,7 +341,9 @@ class SeriesEventsService
             $this->roomRequestNotificationService->notifyRoomAdmins($event);
         }
 
-        broadcast(new EventCreated($event->fresh(), $event->room_id));
+        // Live-Update nach dem Speichern: ein nicht erreichbarer WebSocket-Server darf das Ausrollen (Transaktion)
+        // nicht abbrechen – die Termine sind gespeichert, Kalender holen sie beim nächsten Laden
+        SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
 
         return $event;
     }
@@ -412,6 +437,13 @@ class SeriesEventsService
      *
      * @param array<string, mixed> $changedFields  Nur die tatsächlich geänderten Felder (Dirty-Subset)
      * @param array<int>|null $propertyIds  null = Eigenschaften nicht anfassen
+     * @param bool $roomChangeRequiresRequest  Der Raumwechsel des bearbeiteten Termins wurde mangels Buchungsrecht
+     *                                         zur Raumanfrage (EventController::updateEvent) – dieselbe Entscheidung
+     *                                         gilt für jedes mitverschobene Geschwister
+     * @param array<int, int>|null $deferredRoomRequestEventIds  Übergeben (Array): Raumanfrage-Benachrichtigungen
+     *                                         nicht sofort senden, sondern die Termin-IDs hier sammeln – der Aufrufer
+     *                                         benachrichtigt erst nach einer evtl. folgenden Definitionsänderung,
+     *                                         die Geschwister in den Papierkorb legen kann (sonst doppelte Meldungen)
      * @return int Anzahl aktualisierter Termine
      */
     public function propagateToSiblings(
@@ -421,7 +453,9 @@ class SeriesEventsService
         array $changedFields,
         int $deltaStartMinutes,
         int $deltaEndMinutes,
-        ?array $propertyIds
+        ?array $propertyIds,
+        bool $roomChangeRequiresRequest = false,
+        ?array &$deferredRoomRequestEventIds = null
     ): int {
         if ($scope === self::SCOPE_SINGLE || !$event->series_id) {
             return 0;
@@ -440,6 +474,16 @@ class SeriesEventsService
         foreach ($siblings as $sibling) {
             $sibling->fill($fields);
 
+            // Nur Geschwister, deren Raum sich tatsächlich ändert (abweichende Termine können schon dort liegen)
+            $siblingRoomChanged = $sibling->isDirty('room_id') && $sibling->room_id !== null;
+            if ($siblingRoomChanged && $roomChangeRequiresRequest) {
+                $sibling->fill([
+                    'occupancy_option' => true,
+                    'declined_room_id' => null,
+                    'accepted' => false,
+                ]);
+            }
+
             if ($hasDelta && !$sibling->is_series_exception) {
                 $oldStart = Carbon::parse($sibling->start_time);
                 $newStart = $oldStart->copy()->addMinutes($deltaStartMinutes);
@@ -454,9 +498,20 @@ class SeriesEventsService
                 $this->moveShiftsWithEvent($sibling, $deltaDays);
             }
 
-            $this->eventService->save($sibling);
+            // Erst Eigenschaften, dann speichern: save() sendet das Live-Update – sonst sähen Clients die alten
             if ($propertyIds !== null) {
                 $sibling->eventProperties()->sync($propertyIds);
+            }
+            $this->eventService->save($sibling);
+
+            // Wie beim Einzeltermin: Raumadmins des neuen Raums erhalten die Anfrage, die des alten Raums
+            // verlieren ihre offene Anfrage. Geplante Termine fragen erst beim Umstellen an.
+            if ($siblingRoomChanged && $sibling->occupancy_option && !$sibling->is_planning) {
+                if ($deferredRoomRequestEventIds !== null) {
+                    $deferredRoomRequestEventIds[] = (int) $sibling->id;
+                } else {
+                    $this->roomRequestNotificationService->notifyRoomAdmins($sibling);
+                }
             }
             $updated++;
         }
@@ -687,28 +742,46 @@ class SeriesEventsService
      *
      * @param array<string, mixed> $definitionInput
      * @param array<int> $propertyIds
+     * @param bool $asRoomRequest neu angehängte Termine als Raumanfrage anlegen (siehe createSeriesForEvent)
+     * @param int|null $templateEventId Vorlage für angehängte Termine (aus der Raumrechte-Prüfung des Aufrufers)
      * @return array{trashed:int, created:int, rebuild:bool}
      */
     public function applyDefinitionChange(
         Event $event,
         SeriesEvents $series,
         array $definitionInput,
-        array $propertyIds
+        array $propertyIds,
+        bool $asRoomRequest = false,
+        ?int $templateEventId = null
     ): array {
         $plan = $this->planDefinitionChange($event, $series, $definitionInput);
         if (!$plan['changed']) {
             return ['trashed' => 0, 'created' => 0, 'rebuild' => false];
         }
 
-        return DB::transaction(function () use ($event, $series, $plan, $propertyIds): array {
+        return DB::transaction(function () use (
+            $event,
+            $series,
+            $plan,
+            $propertyIds,
+            $asRoomRequest,
+            $templateEventId
+        ): array {
             $series->fill($plan['definition']);
             $series->save();
 
             $this->trashEvents($plan['toTrash']);
 
-            $template = $plan['rebuild'] ? $event : ($this->latestActiveSibling($series) ?? $event);
+            $template = $plan['rebuild'] ? $event : $this->appendTemplate($event, $series, $templateEventId);
             foreach ($plan['toCreate'] as $occurrence) {
-                $this->cloneForOccurrence($template, $series, $occurrence['start'], $occurrence['end'], $propertyIds);
+                $this->cloneForOccurrence(
+                    $template,
+                    $series,
+                    $occurrence['start'],
+                    $occurrence['end'],
+                    $propertyIds,
+                    $asRoomRequest
+                );
             }
 
             return [
@@ -719,10 +792,37 @@ class SeriesEventsService
         });
     }
 
-    private function latestActiveSibling(SeriesEvents $series): ?Event
+    /**
+     * Vorlage für angehängte Termine: die vorab (Raumrechte-Prüfung) bestimmte, sofern noch aktiv in der Serie –
+     * eine Zeitverschiebung im selben Request kann die Reihenfolge der Termine geändert haben.
+     */
+    private function appendTemplate(Event $event, SeriesEvents $series, ?int $templateEventId): Event
     {
+        if ($templateEventId !== null) {
+            if ($templateEventId === (int) $event->id) {
+                return $event;
+            }
+
+            /** @var Event|null $template */
+            $template = Event::query()->where('series_id', $series->id)->find($templateEventId);
+            if ($template !== null) {
+                return $template;
+            }
+        }
+
+        return $this->latestActiveSibling($series) ?? $event;
+    }
+
+    /**
+     * Letzter aktiver Termin der Serie – Vorlage für angehängte Termine beim Verlängern. Termine ohne Raum
+     * (z. B. abgesagt) nur, wenn kein Termin der Serie einen Raum hat.
+     */
+    public function latestActiveSibling(SeriesEvents $series): ?Event
+    {
+        $query = Event::query()->where('series_id', $series->id)->orderByDesc('start_time');
+
         /** @var Event|null $event */
-        $event = Event::query()->where('series_id', $series->id)->orderByDesc('start_time')->first();
+        $event = (clone $query)->whereNotNull('room_id')->first() ?? $query->first();
 
         return $event;
     }

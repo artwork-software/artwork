@@ -31,11 +31,17 @@ class MainPositionDetails extends Model
         'column_id'
     ];
 
+    /**
+     * @return MorphMany<SumComment, $this>
+     */
     public function comments(): MorphMany
     {
         return $this->morphMany(SumComment::class, 'commentable');
     }
 
+    /**
+     * @return MorphOne<SumMoneySource, $this>
+     */
     public function sumMoneySource(): MorphOne
     {
         return $this->morphOne(SumMoneySource::class, 'sourceable');

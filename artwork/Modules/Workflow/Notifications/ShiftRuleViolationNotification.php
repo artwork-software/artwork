@@ -18,6 +18,12 @@ use stdClass;
  */
 class ShiftRuleViolationNotification extends BaseNotification implements ShouldQueue
 {
+    /**
+     * Verstöße werden bei Re-Checks hart gelöscht; ohne das scheiterte der Queue-Job mit
+     * ModelNotFoundException (failed_jobs) statt still zu entfallen.
+     */
+    public bool $deleteWhenMissingModels = true;
+
     protected ShiftRuleViolation $violation;
     protected string $message;
 
@@ -93,7 +99,8 @@ class ShiftRuleViolationNotification extends BaseNotification implements ShouldQ
         $body->title = __('Shift rule violation detected') . ': ' . $ruleName;
         $body->description = [
             1 => [
-                'type' => 'string',
+                // „link“, damit der Eintrag im Benachrichtigungscenter in den Dienstplan führt
+                'type' => 'link',
                 'title' => $this->message,
                 'href' => $this->getShiftPlanUrl(),
             ],

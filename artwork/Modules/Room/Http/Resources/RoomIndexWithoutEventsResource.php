@@ -6,7 +6,7 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \Room
+ * @mixin \Artwork\Modules\Room\Models\Room
  */
 class RoomIndexWithoutEventsResource extends JsonResource
 {
@@ -31,6 +31,8 @@ class RoomIndexWithoutEventsResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'temporary' => (bool) $this->temporary,
+            // Termin-Dialog (Benachrichtigungen): Direktbuchung möglich?
+            'everyone_can_book' => (bool) $this->everyone_can_book,
             'start_date' => $this->start_date?->format('d.m.Y'),
             'end_date' => $this->end_date?->format('d.m.Y'),
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),

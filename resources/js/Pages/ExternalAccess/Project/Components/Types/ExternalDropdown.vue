@@ -8,7 +8,7 @@
             :id="inputId"
             v-model="selected"
             :disabled="!editable"
-            class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600 disabled:bg-surface-sunken disabled:text-text-subtle"
+            class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600 disabled:bg-surface-sunken disabled:text-text-subtle"
             @change="saveChange"
         >
             <option value="">{{ $t('Please select') }}</option>

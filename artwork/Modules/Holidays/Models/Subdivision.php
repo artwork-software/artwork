@@ -41,6 +41,9 @@ class Subdivision extends Model
 
     protected $guarded = [];
 
+    /**
+     * @return BelongsToMany<Holiday, $this>
+     */
     public function holidays(): BelongsToMany
     {
         return $this->belongsToMany(

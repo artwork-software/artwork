@@ -27,16 +27,25 @@ class BiAudienceCategoryValue extends Model
         'quantity',
     ];
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'id', 'projects');
     }
 
+    /**
+     * @return BelongsTo<BiAudienceCategory, $this>
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(BiAudienceCategory::class, 'bi_audience_category_id', 'id', 'category');
     }
 
+    /**
+     * @return BelongsTo<Event, $this>
+     */
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class, 'event_id', 'id', 'events');

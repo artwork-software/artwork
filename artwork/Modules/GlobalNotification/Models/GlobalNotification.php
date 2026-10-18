@@ -29,6 +29,9 @@ class GlobalNotification extends Model
         'created_by'
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(

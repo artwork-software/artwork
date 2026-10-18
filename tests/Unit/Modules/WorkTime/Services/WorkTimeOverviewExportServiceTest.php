@@ -204,13 +204,82 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
     }
 
     #[Test]
+    public function unbookedDaysOfAPartlyBookedMonthStillCountTheirShifts(): void
+    {
+        // Vorher: sobald ein Monat eine Buchung hatte, fielen die Schichten aller übrigen Tage weg
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->insertBooking($user, '2026-06-01', 480, 480);
+        $this->assignShift($craft, $user, '2026-06-01', '09:00', '18:00'); // gebucht: nicht doppelt
+        $this->assignShift($craft, $user, '2026-06-20', '10:00', '18:00'); // nicht gebucht: 420
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        $this->assertSame(480 + 420, $juneRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(480, $juneRow['cells'][$craft->id]['soll_intern']);
+    }
+
+    #[Test]
+    public function individualTimesOfUnbookedDaysCountOnceInThePrimaryCraft(): void
+    {
+        $craft = Craft::factory()->create(['position' => 1]);
+        $otherCraft = Craft::factory()->create(['position' => 2]);
+        $user = $this->createCraftWorker($craft);
+        $otherCraft->users()->attach($user->id);
+        $user->individualTimes()->create([
+            'title' => 'Probe',
+            'start_date' => '2026-06-10',
+            'end_date' => '2026-06-10',
+            'start_time' => '10:00',
+            'end_time' => '13:00',
+            'full_day' => false,
+            'working_time_minutes' => 180,
+            'break_minutes' => 0,
+        ]);
+
+        $matrix = $this->service->buildMatrix(
+            Carbon::parse('2026-06-01'),
+            Carbon::parse('2026-06-30'),
+            [$craft->id, $otherCraft->id],
+            'en'
+        );
+        $juneRow = $matrix['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        $this->assertSame(180, $juneRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(0, $juneRow['cells'][$otherCraft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function legacyCorrectionBookingsCountTheirDeltaAsActualHours(): void
+    {
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->insertBooking($user, '2026-06-01', 480, 480);
+        WorkTimeBooking::query()->insert([
+            'user_id' => $user->id,
+            'name' => 'adjustment_work_time_change_request_1',
+            'booking_day' => '2026-06-02',
+            'booking_weekday' => 2,
+            'wanted_working_hours' => 0,
+            'worked_hours' => 0,
+            'work_time_balance_change' => 60,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        $this->assertSame(540, $juneRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
     public function itIncludesOverlappingShiftsAndSplitsTheirMinutesAcrossMonths(): void
     {
         $craft = Craft::factory()->create();
         $user = $this->createCraftWorker($craft);
 
-        // Four hours across the month boundary, minus a 60-minute break:
-        // the proportional split assigns 90 worked minutes to each month.
+        // Four hours across the month boundary, minus a 60-minute break: like the time account the break is
+        // deducted on the first day (60 in March), the part after midnight counts fully (120 in April).
         $this->assignShift(
             $craft,
             $user,
@@ -223,12 +292,12 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
 
         $marchRow = $matrix['rows']->first(fn (array $row) => $row['label'] === 'March 2026');
         $aprilRow = $matrix['rows']->first(fn (array $row) => $row['label'] === 'April 2026');
-        $this->assertSame(90, $marchRow['cells'][$craft->id]['ist_intern']);
-        $this->assertSame(90, $aprilRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(60, $marchRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(120, $aprilRow['cells'][$craft->id]['ist_intern']);
 
         $overlapOnlyMatrix = $this->buildMatrix($craft, '2026-04-01', '2026-04-30');
         $overlapOnlyAprilRow = $overlapOnlyMatrix['rows']->first(fn (array $row) => !$row['is_sum']);
-        $this->assertSame(90, $overlapOnlyAprilRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(120, $overlapOnlyAprilRow['cells'][$craft->id]['ist_intern']);
     }
 
     #[Test]
@@ -282,5 +351,186 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
         $mayRow = $matrix['rows']->first(fn (array $row) => !$row['is_sum']);
         $this->assertArrayNotHasKey($otherCraft->id, $mayRow['cells']);
         $this->assertSame(480, $mayRow['total']['ist_intern']);
+    }
+
+    private function giveWeekdayPattern(User $user, string $validFrom = '2026-01-01', ?string $validUntil = null): void
+    {
+        \Artwork\Modules\User\Models\UserWorkTime::query()->insert([
+            'user_id' => $user->id,
+            'monday' => '08:00',
+            'tuesday' => '08:00',
+            'wednesday' => '08:00',
+            'thursday' => '08:00',
+            'friday' => '08:00',
+            'valid_from' => $validFrom,
+            'valid_until' => $validUntil,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    private function insertDailyBooking(User $user, string $day, int $wanted, int $worked, ?int $change = null): void
+    {
+        WorkTimeBooking::query()->insert([
+            'user_id' => $user->id,
+            'name' => 'daily_work_time_booking_' . $day,
+            'booking_day' => $day,
+            'booking_weekday' => Carbon::parse($day)->dayOfWeek,
+            'wanted_working_hours' => $wanted,
+            'worked_hours' => $worked,
+            'work_time_balance_change' => $change ?? $worked - $wanted,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    #[Test]
+    public function theCurrentMonthCountsOnlyPastUnbookedDaysWithTheirTarget(): void
+    {
+        // AZ-2: Ist zählte Schichten künftiger Tage, Soll nur Buchungen (09.10.: Soll 48 h, Ist 176 h)
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->giveWeekdayPattern($user);
+        $this->insertDailyBooking($user, '2026-06-01', 480, 480);
+        $this->assignShift($craft, $user, '2026-06-01', '09:00', '18:00'); // gebucht: zählt aus der Buchung
+        $this->assignShift($craft, $user, '2026-06-03', '10:00', '18:00'); // vergangen, nicht gebucht: 420
+        $this->assignShift($craft, $user, '2026-06-10', '10:00', '18:00'); // heute: noch nicht
+        $this->assignShift($craft, $user, '2026-06-15', '10:00', '18:00'); // künftig: nicht
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        // Soll: gebuchter 01.06. + sechs nicht gebuchte vergangene Werktage (02.–05., 08., 09.) je 8 h
+        $this->assertSame(480 + 6 * 480, $juneRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame(480 + 420, $juneRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function aNeverBookedPastDayCountsTheTargetOfTheWorkTimesTab(): void
+    {
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->giveWeekdayPattern($user, '2026-05-04', '2026-05-04'); // nur Montag, 04.05., hat ein Muster
+        $this->insertDailyBooking($user, '2026-04-30', 0, 0); // Zeitkonto läuft schon vor dem Zeitraum
+        \Artwork\Modules\Vacation\Models\Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-05-04',
+            'full_day' => true,
+            'type' => 'OFF_WORK',
+        ]);
+
+        $mayRow = $this->buildMatrix($craft, '2026-05-01', '2026-05-31')['rows']->first(fn (array $row) => !$row['is_sum']);
+        $tabDay = app(\Artwork\Modules\WorkTime\Services\WorkTimeCalculationService::class)
+            ->dayBreakdown($user, Carbon::parse('2026-05-04'));
+
+        $this->assertSame(480, $mayRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame($tabDay['target'], $mayRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame($tabDay['actual'], $mayRow['cells'][$craft->id]['ist_intern']); // Urlaub: Ist = Soll
+    }
+
+    #[Test]
+    public function aLegacySickRowShowsTheSameTargetAsTheWorkTimesTab(): void
+    {
+        // M4: frühere Krank-Logik (Ist 0, Soll 480, Saldo 0) – Tab zeigt Soll = Ist − Saldo = 0
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->insertDailyBooking($user, '2026-05-04', 480, 0, 0);
+
+        $mayRow = $this->buildMatrix($craft, '2026-05-01', '2026-05-31')['rows']->first(fn (array $row) => !$row['is_sum']);
+        $tabDay = app(\Artwork\Modules\WorkTime\Services\WorkTimeCalculationService::class)
+            ->dayBreakdown($user, Carbon::parse('2026-05-04'));
+
+        $this->assertSame(0, $tabDay['target']);
+        $this->assertSame($tabDay['target'], $mayRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame($tabDay['actual'], $mayRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function aDuplicateDailyRowCountsLikeInTheWorkTimesTab(): void
+    {
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->insertDailyBooking($user, '2026-05-04', 480, 0);
+        $this->insertDailyBooking($user, '2026-05-04', 480, 0);
+
+        $mayRow = $this->buildMatrix($craft, '2026-05-01', '2026-05-31')['rows']->first(fn (array $row) => !$row['is_sum']);
+        $tabDay = app(\Artwork\Modules\WorkTime\Services\WorkTimeCalculationService::class)
+            ->dayBreakdown($user, Carbon::parse('2026-05-04'));
+
+        $this->assertSame($tabDay['target'], $mayRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame($tabDay['actual'], $mayRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function aDayBeforeTheFirstDailyBookingHasNoTargetButKeepsItsShiftMinutes(): void
+    {
+        // Vor Beginn des Zeitkontos (erste Tagesbuchung) kein Soll – wie „nicht gebucht“ im Arbeitszeiten-Tab
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->giveWeekdayPattern($user);
+        $this->assignShift($craft, $user, '2026-06-02', '10:00', '18:00'); // vor Kontobeginn: 420 im Ist
+        \Artwork\Modules\Vacation\Models\Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-06-01',
+            'full_day' => true,
+            'type' => 'OFF_WORK',
+        ]); // vor Kontobeginn: kein soll-neutrales Ist ohne Soll
+        $this->insertDailyBooking($user, '2026-06-03', 480, 480);
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        // Soll: gebuchter 03.06. + nie gebuchte Werktage danach (04., 05., 08., 09.); 01. und 02.06. ohne Soll
+        $this->assertSame(480 + 4 * 480, $juneRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame(480 + 420, $juneRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function aNeverBookedDayAfterTheFirstDailyBookingKeepsItsTarget(): void
+    {
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->giveWeekdayPattern($user, '2026-06-08', '2026-06-09');
+        $this->insertDailyBooking($user, '2026-06-05', 0, 0);
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        // 08. und 09.06. nie gebucht, aber nach Kontobeginn: Soll aus dem Muster
+        $this->assertSame(2 * 480, $juneRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame(0, $juneRow['cells'][$craft->id]['ist_intern']);
+    }
+
+    #[Test]
+    public function aPersonWithoutAnyDailyBookingGetsNoTarget(): void
+    {
+        $this->travelTo(Carbon::parse('2026-06-10 12:00'));
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+        $this->giveWeekdayPattern($user);
+        $this->assignShift($craft, $user, '2026-06-03', '10:00', '18:00');
+        // Korrekturzeile ist keine Tagesbuchung und startet kein Zeitkonto
+        WorkTimeBooking::query()->insert([
+            'user_id' => $user->id,
+            'name' => 'adjustment_work_time_change_request_1',
+            'booking_day' => '2026-06-02',
+            'booking_weekday' => 2,
+            'wanted_working_hours' => 0,
+            'worked_hours' => 0,
+            'work_time_balance_change' => 30,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $juneRow = $this->buildMatrix($craft, '2026-06-01', '2026-06-30')['rows']->first(fn (array $row) => !$row['is_sum']);
+
+        $this->assertSame(0, $juneRow['cells'][$craft->id]['soll_intern']);
+        $this->assertSame(420 + 30, $juneRow['cells'][$craft->id]['ist_intern']);
     }
 }

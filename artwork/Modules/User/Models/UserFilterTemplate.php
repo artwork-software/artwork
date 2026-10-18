@@ -28,10 +28,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class UserFilterTemplate extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserFilterTemplateFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\User\Models\UserFilterTemplateFactory> */
     use HasFactory;
 
-    /** @use HasFactory<\Database\Factories\UserFilterFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -59,6 +58,9 @@ class UserFilterTemplate extends Model
         'project_state_ids' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user');

@@ -65,41 +65,65 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
             ->dontSubmitEmptyLogs();
     }
 
+    /**
+     * @return BelongsTo<ShiftRule, $this>
+     */
     public function shiftRule(): BelongsTo
     {
         return $this->belongsTo(ShiftRule::class, 'shift_rule_id', 'id', 'shiftRule');
     }
 
+    /**
+     * @return BelongsTo<Shift, $this>
+     */
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class, 'shift_id', 'id', 'shift');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function resolvedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by', 'id', 'resolvedByUser');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function createdByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id', 'id', 'createdByUser');
     }
 
+    /**
+     * @return BelongsTo<self, $this>
+     */
     public function parentViolation(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_violation_id', 'id', 'parentViolation');
     }
 
+    /**
+     * @return HasMany<self, $this>
+     */
     public function childViolations(): HasMany
     {
         return $this->hasMany(self::class, 'parent_violation_id');
     }
 
+    /**
+     * @return HasMany<CompensationDayOff, $this>
+     */
     public function compensationDayOffs(): HasMany
     {
         return $this->hasMany(CompensationDayOff::class, 'violation_id');

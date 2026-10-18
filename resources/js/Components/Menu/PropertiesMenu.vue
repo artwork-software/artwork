@@ -27,13 +27,11 @@
 <script>
 import { defineComponent } from 'vue';
 import { Menu, MenuButton, MenuItems } from '@headlessui/vue';
-import IconLib from '@/Mixins/IconLib.vue';
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {Float} from "@headlessui-float/vue";
 
 export default defineComponent({
     name: 'PropertiesMenu',
-    mixins: [IconLib],
     components: {
         Float,
         ToolTipComponent,

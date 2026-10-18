@@ -9,6 +9,7 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Passport\AccessToken;
 
 class RouteServiceProvider extends ServiceProvider
@@ -53,6 +54,11 @@ class RouteServiceProvider extends ServiceProvider
             if ($this->app->environment('local')) {
                 Route::group([], base_path('routes/ai-dev-stub.php'));
             }
+
+            Route::prefix('api/app/v1')
+                ->middleware('api.app')
+                ->name('app.v1.')
+                ->group(base_path('routes/app-api.php'));
         });
 
         Route::bind('projects', function ($value) {
@@ -66,7 +72,25 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        RateLimiter::for('machine-api', function (Request $request) {
+        // Login-Discovery der App: fragt jede bekannte Instanz nach einem E-Mail-Hash. Das
+        // Limit bremst das Abklopfen fremder Adressen, normale Logins brauchen eine Anfrage.
+        RateLimiter::for('app-discover', function (Request $request) {
+            return Limit::perMinute(10)->by('app-discover:ip:' . $request->ip());
+        });
+
+        RateLimiter::for('app-login', function (Request $request) {
+            // Läuft vor der Request-Validierung: Bots posten "email" auch als Array (sonst 500)
+            $email = $request->input('email');
+            $email = Str::lower(is_string($email) ? $email : '');
+            $ip = (string) $request->ip();
+
+            return [
+                Limit::perMinute(10)->by('app-login:ip:' . $ip),
+                Limit::perMinute(5)->by('app-login:identity:' . hash('sha256', $email . '|' . $ip)),
+            ];
+        });
+
+        RateLimiter::for('api-token', function (Request $request) {
             $token = $request->user()?->token();
             $key = $token instanceof AccessToken
                 ? $token->oauth_access_token_id

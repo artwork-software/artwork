@@ -334,11 +334,10 @@ import {Link} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     name: "SingleCalendarEvent",
     components: {
         PropertyIcon,

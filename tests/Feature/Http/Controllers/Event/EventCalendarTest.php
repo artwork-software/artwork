@@ -88,22 +88,6 @@ final class EventCalendarTest extends FeatureTestCase
     }
 
     #[Test]
-    public function guest_cannot_access_events_for_rooms_with_user(): void
-    {
-        $response = $this->get(route('shifts.events.for-rooms-by-days-and-project'));
-
-        $this->assertContains($response->status(), [302, 401, 403]);
-    }
-
-    #[Test]
-    public function guest_cannot_access_events_for_rooms_no_workers(): void
-    {
-        $response = $this->get(route('shifts.events.for-rooms-by-days-and-project-no-workers'));
-
-        $this->assertContains($response->status(), [302, 401, 403]);
-    }
-
-    #[Test]
     public function redirect_to_event_moves_the_week_view_to_the_event_week(): void
     {
         $user = $this->actingAsAdmin();

@@ -436,6 +436,7 @@
 
 <script setup>
 import BulkSingleEvent from "@/Pages/Projects/Components/BulkComponents/BulkSingleEvent.vue";
+import { parseYmd, toYmd } from "@/Helper/IsoWeek.js";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import {
     IconArrowsMoveHorizontal,
@@ -474,6 +475,7 @@ import VueVirtualScroller, {DynamicScroller} from 'vue-virtual-scroller';
 import BulkScrollerItem from '@/Pages/Projects/Components/BulkComponents/BulkScrollerItem.vue';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import axios from 'axios';
+import {rekeyDescriptionEdit, resetDescriptionEdits} from '@/Pages/Projects/Components/BulkComponents/bulkDescriptionEdits.js';
 
 // Bibliotheks-Bug (vue-virtual-scroller 2.0.1): DynamicScroller betreibt intern eine
 // zweite Scroller-Engine, reicht `page-mode` aber nur an die sichtbare weiter. Die interne
@@ -765,6 +767,7 @@ const persistNewEventRow = (base) => {
             if (data?.event?.id) {
                 bumpCreateStamp(data.event.created_at);
                 const row = {...mapPayloadToBulkRow(data.event), isNew: true};
+                rekeyDescriptionEdit(base.localUid, row.id);
                 if (idx !== -1) {
                     events.value[idx] = row;
                 } else {
@@ -784,7 +787,8 @@ const persistNewEventRow = (base) => {
         });
 };
 
-const toISO = (d) => d.toISOString().split('T')[0];
+// lokales Datum: Zeilen entstehen aus new Date() bzw. werden lokal (setDate/setMonth) verschoben
+const toISO = (d) => toYmd(d);
 const formatFullDate = (iso) => new Date(iso).toLocaleDateString('de-DE', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
 });
@@ -993,48 +997,19 @@ const mapBulkEventToModalEvent = (e) => {
     };
 };
 
-const onOpenEventComponent = async (payload) => {
-    // Resolve the event id first
+// Das Termin-Modal wird aus den Bulk-Daten befüllt (einen JSON-Endpunkt für Einzeltermine gibt es nicht).
+const onOpenEventComponent = (payload) => {
     const id = (payload && typeof payload === 'object') ? payload.id : payload;
-    const fallbackModel = () => {
-        if (payload && typeof payload === 'object') {
-            return (payload.start || payload.end) ? payload : mapBulkEventToModalEvent(payload);
-        }
+    let model = null;
+    if (payload && typeof payload === 'object') {
+        model = (payload.start || payload.end) ? payload : mapBulkEventToModalEvent(payload);
+    } else {
         const found = events.value.find(e => e.id == id) ?? null; // loose equality to handle string/number
-        return found ? ((found.start || found.end) ? found : mapBulkEventToModalEvent(found)) : null;
-    };
-
-    try {
-        isLoading.value = true;
-        if (!id) throw new Error('Missing event id');
-        const {data} = await axios.get(route('events.show.json', {event: id}));
-        // Laravel JSON Resource may wrap payload under data
-        const payloadData = data?.data ?? data;
-        if (props.project) payloadData.project = props.project;
-        // Fix: ensure multi-day end date is respected when opening modal from bulk list
-        try {
-            const fb = fallbackModel();
-            if (fb?.start && fb?.end) {
-                const sd = String(fb.start).slice(0, 10);
-                const ed = String(fb.end).slice(0, 10);
-                if (sd && ed && sd !== ed) {
-                    payloadData.start = fb.start;
-                    payloadData.end = fb.end;
-                    payloadData.allDay = fb.allDay;
-                }
-            }
-        } catch { /* ignore */
-        }
-        eventToEdit.value = payloadData;
-        eventComponentIsVisible.value = true;
-    } catch (e) {
-        const model = fallbackModel();
-        if (model && props.project) model.project = props.project;
-        eventToEdit.value = model;
-        eventComponentIsVisible.value = !!model;
-    } finally {
-        isLoading.value = false;
+        model = found ? ((found.start || found.end) ? found : mapBulkEventToModalEvent(found)) : null;
     }
+    if (model && props.project) model.project = props.project;
+    eventToEdit.value = model;
+    eventComponentIsVisible.value = !!model;
 };
 
 const onEventComponentClosed = () => {
@@ -1053,7 +1028,7 @@ const addEmptyEvent = () => {
     let newDate = new Date();
     if (events.value.length > 0) {
         const last = events.value[events.value.length - 1];
-        newDate = new Date(last.day);
+        newDate = parseYmd(last.day) ?? new Date(last.day);
         newDate.setDate(newDate.getDate() + 1);
     }
 
@@ -1108,7 +1083,7 @@ const addEmptyEventForGroup = (groupRow) => {
         const lastEventInGroup = groupEvents[groupEvents.length - 1];
         baseEvent = lastEventInGroup;
 
-        const parsed = lastEventInGroup?.day ? new Date(lastEventInGroup.day) : null;
+        const parsed = lastEventInGroup?.day ? (parseYmd(lastEventInGroup.day) ?? new Date(lastEventInGroup.day)) : null;
         if (parsed && !Number.isNaN(parsed.getTime())) {
             newDate = parsed;
             // When sorting by day, create event on the same day, otherwise add +1 day
@@ -1176,7 +1151,7 @@ const createCopyByEventWithData = (event) => {
     if (!props.isInModal && isCreatingEvent.value) return;
     lastUsedCopyCount.value = event.copyCount;
 
-    let cursor = new Date(event.day);
+    let cursor = parseYmd(event.day) ?? new Date(event.day);
     const createdEvents = [];
     const spanDays = (() => {
         try {
@@ -1192,7 +1167,7 @@ const createCopyByEventWithData = (event) => {
         if (event.copyType.type === 'daily') cursor.setDate(cursor.getDate() + 1);
         else if (event.copyType.type === 'weekly') cursor.setDate(cursor.getDate() + 7);
         else if (event.copyType.type === 'monthly') cursor.setMonth(cursor.getMonth() + 1);
-        else if (event.copyType.type === 'same_day') cursor = new Date(event.day);
+        else if (event.copyType.type === 'same_day') cursor = parseYmd(event.day) ?? new Date(event.day);
 
         const endCursor = new Date(cursor);
         endCursor.setDate(endCursor.getDate() + spanDays);
@@ -1516,6 +1491,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+    resetDescriptionEdits();
     window.removeEventListener('resize', updateBulkFunctionBarHeight);
     window.removeEventListener('scroll', onScrollOrResize);
     window.removeEventListener('resize', onScrollOrResize);

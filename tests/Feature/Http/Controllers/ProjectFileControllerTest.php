@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\User\Models\User;
@@ -159,6 +160,81 @@ final class ProjectFileControllerTest extends FeatureTestCase
 
         $this->delete('/project_files/' . $file->id . '/force_delete')
             ->assertRedirect(route('login'));
+    }
+
+    /**
+     * Ersetzen/Löschen/Freigabeliste setzen Projekt-Schreibrecht voraus: Leserecht (Team ohne
+     * Schreibrecht, globales "view projects") und eine Freigabe reichen nur zum Herunterladen.
+     */
+    #[Test]
+    public function read_only_access_can_download_but_not_change_or_delete_files(): void
+    {
+        $project = Project::factory()->create();
+        $readOnlyMember = User::factory()->create();
+        $project->users()->attach($readOnlyMember->id, ['can_write' => false]);
+        $globalReader = $this->actingAsUserWith(PermissionEnum::PROJECT_VIEW->value);
+        $file = $this->createProjectFile($project);
+        $file->accessingUsers()->attach($readOnlyMember->id);
+
+        foreach ([$readOnlyMember, $globalReader] as $reader) {
+            $this->actingAs($reader);
+            $this->get(route('download_file', $file))->assertOk();
+            $this->post(route('project_files.update', $file), ['accessibleUsers' => []])->assertForbidden();
+            $this->delete(route('project_files.destroy', $file))->assertForbidden();
+        }
+
+        $this->assertNotSoftDeleted($file);
+        $this->assertSame([$readOnlyMember->id], $file->fresh()->accessingUsers->pluck('id')->all());
+    }
+
+    #[Test]
+    public function project_writers_can_delete_files(): void
+    {
+        $project = Project::factory()->create();
+        $writer = User::factory()->create();
+        $project->users()->attach($writer->id, ['can_write' => true]);
+        $file = $this->createProjectFile($project);
+
+        $this->actingAs($writer)->delete(route('project_files.destroy', $file))->assertSuccessful();
+
+        $this->assertSoftDeleted($file);
+    }
+
+    /**
+     * Budget-Dokumente: die Budget-Informationen bieten Personen mit Budgetzugriff Bearbeiten/Löschen an –
+     * auch ohne Projekt-Schreibrecht. Ohne Budget-Rolle bleibt es beim Schreibrecht.
+     */
+    #[Test]
+    public function budget_access_holders_manage_shared_budget_documents_without_write_rights(): void
+    {
+        $project = Project::factory()->create();
+        $budgetMember = User::factory()->create();
+        $project->users()->attach($budgetMember->id, ['can_write' => false, 'access_budget' => true]);
+        $budgetDocument = $this->createProjectFile($project, ['is_budget_document' => true]);
+        $budgetDocument->accessingUsers()->attach($budgetMember->id);
+        $regularFile = $this->createProjectFile($project);
+
+        $this->actingAs($budgetMember);
+        $this->delete(route('project_files.destroy', $regularFile))->assertForbidden();
+        $this->delete(route('project_files.destroy', $budgetDocument))->assertSuccessful();
+
+        $this->assertNotSoftDeleted($regularFile);
+        $this->assertSoftDeleted($budgetDocument);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function createProjectFile(Project $project, array $attributes = []): ProjectFile
+    {
+        $basename = uniqid('file-', true) . '.pdf';
+        Storage::put('project_files/' . $basename, '%PDF-1.4 test');
+
+        return ProjectFile::query()->forceCreate(array_merge([
+            'project_id' => $project->id,
+            'name' => 'doc.pdf',
+            'basename' => $basename,
+        ], $attributes));
     }
 
     private function createAccessibleProjectFile(

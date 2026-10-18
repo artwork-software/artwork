@@ -11,7 +11,7 @@ import MultiAlertComponent from '@/Components/Alerts/MultiAlertComponent.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import InfoButtonComponent from '@/Pages/Projects/Tab/Components/InfoButtonComponent.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import { useProjectDocumentListener } from '@/Composeables/Listener/useProjectDocumentListener.js'
+import { createLatestRequestTracker, useProjectDocumentListener } from '@/Composeables/Listener/useProjectDocumentListener.js'
 import { isInlinePrintableFile, useInlineFilePrinter } from '@/Composeables/useInlineFilePrinter'
 
 /** Optionales Preview (Bilder/PDFs) */
@@ -82,6 +82,9 @@ const canEdit = computed(
 )
 const canEditFull = computed(() => canEdit.value || (effectiveProjectManagerIds.value?.includes(userId.value) ?? false))
 
+// Nur die Antwort der zuletzt gestarteten Anfrage übernehmen (Broadcasts, Uploads, Projektwechsel)
+const documentRequests = createLatestRequestTracker()
+
 watch(
     () => props.project?.id,
     () => {
@@ -97,6 +100,7 @@ async function fetchDocuments() {
         return
     }
 
+    const requestId = documentRequests.begin()
     isLoadingDocuments.value = true
     loadDocumentsError.value = ''
 
@@ -104,6 +108,7 @@ async function fetchDocuments() {
         const { data } = await axios.get(
             route('projects.tabs.all-documents', { project: projectId })
         )
+        if (!documentRequests.isLatest(requestId)) return
         const fetchedDocuments = data?.documents ?? []
         documents.value.splice(0, documents.value.length, ...fetchedDocuments)
 
@@ -117,21 +122,27 @@ async function fetchDocuments() {
 
         hiddenTabNames.value = Array.isArray(data?.hiddenTabNames) ? data.hiddenTabNames : []
     } catch (error) {
+        if (!documentRequests.isLatest(requestId)) return
         console.error(error)
         loadDocumentsError.value = 'Unable to load project documents.'
     } finally {
-        isLoadingDocuments.value = false
+        if (documentRequests.isLatest(requestId)) isLoadingDocuments.value = false
     }
 }
 
+// Broadcasts tragen nur Ids: die Liste wird über den geprüften Endpunkt neu geladen (gebündelt)
+let documentListener: ReturnType<typeof useProjectDocumentListener> | null = null
+
 onMounted(() => {
-    useProjectDocumentListener(documents.value, props.project.id).init()
+    documentListener = useProjectDocumentListener(props.project.id, () => fetchDocuments())
+    documentListener.init()
     window.addEventListener('keydown', onKey)
 })
 
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKey)
     destroyPrintFrame()
+    documentListener?.stop()
 })
 
 /** ---- Upload ---- */
@@ -184,6 +195,7 @@ async function uploadDocumentToProject(file: File) {
     try {
         await axios.post(route('project_files.store', { project: props.project.id }), formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
+            skipErrorToast: true, // Fehler steht am Upload-Feld
         })
         // Erfolgreich: Liste wird vom Listener aktualisiert
     } catch (error: any) {

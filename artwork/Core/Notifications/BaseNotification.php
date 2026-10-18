@@ -7,13 +7,15 @@ use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Config\Repository;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use stdClass;
 
-class BaseNotification extends Notification implements ShouldBroadcast
+/**
+ * Datenbank (immer) und Sofort-Mail (je Einstellung). Der Live-Hinweis läuft separat über
+ * NotificationService::pushToUser (NewNotificationBroadcast auf notifications.{id}).
+ */
+class BaseNotification extends Notification
 {
     use Queueable;
 
@@ -27,11 +29,12 @@ class BaseNotification extends Notification implements ShouldBroadcast
         $this->broadcastMessage = $broadcastMessage;
     }
 
-    public function toBroadcast(): BroadcastMessage
+    /**
+     * @return array<string, mixed>
+     */
+    public function broadcastMessage(): array
     {
-        return new BroadcastMessage([
-            'message' => $this->broadcastMessage
-        ]);
+        return $this->broadcastMessage;
     }
 
     /**
@@ -50,6 +53,8 @@ class BaseNotification extends Notification implements ShouldBroadcast
             return $channels;
         }
 
+        // Mail zuletzt: schlägt der (synchrone) Versand fehl, ist die Datenbank-Benachrichtigung
+        // schon zugestellt.
         if (
             $notificationSetting->getAttribute('enabled_email') &&
             $notificationSetting->getAttribute('frequency') === NotificationFrequencyEnum::IMMEDIATELY
@@ -57,21 +62,7 @@ class BaseNotification extends Notification implements ShouldBroadcast
             $channels[] = 'mail';
         }
 
-        if (!empty($this->broadcastMessage) && $notificationSetting->getAttribute('enabled_push')) {
-            $channels[] = 'broadcast';
-        }
-
         return $channels;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function viaQueues(): array
-    {
-        return [
-            'mail' => 'sync',
-        ];
     }
 
     /**

@@ -3,6 +3,7 @@
  * Boolean-Prop-Kombinatorik. Neue Seite = neue Zeile.
  *
  * reload: true       → router.reload({data: {start, end}}) statt Route-Patch
+ * emit: true         → kein Request; die Komponente meldet 'change' mit [start, end] (ISO)
  * routeName          → Ziggy-Routenname, erhält die User-Id als Parameter
  * preserveState/-Scroll → an router.patch durchgereicht
  */
@@ -34,5 +35,8 @@ export const DATE_RANGE_MODES = {
     },
     'work-times': {
         reload: true,
+    },
+    'local': {
+        emit: true,
     },
 };

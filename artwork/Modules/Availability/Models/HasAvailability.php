@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 trait HasAvailability
 {
+    /**
+     * @return MorphMany<Availability, $this>
+     */
     public function availabilities(): MorphMany
     {
         return $this->morphMany(Availability::class, 'available');

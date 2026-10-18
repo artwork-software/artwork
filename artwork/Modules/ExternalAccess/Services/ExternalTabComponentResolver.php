@@ -8,32 +8,38 @@ use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Services\ComponentTreeProjector;
 
+/**
+ * External audience of the shared component tree: component types that are
+ * not externally readable are filtered out; internal visibility settings
+ * (User/Department) are deliberately ignored — an external link shares the
+ * tab as its owner configured it.
+ */
 class ExternalTabComponentResolver
 {
+    public function __construct(private readonly ComponentTreeProjector $projector)
+    {
+    }
+
     /**
-     * Returns the components of a tab in a structure suitable for the external
-     * view. Component types that are not externally readable are filtered out;
-     * internal visibility settings (User/Department) are deliberately ignored.
-     *
      * @return array<int, array<string, mixed>>
      */
     public function resolveTabComponents(Project $project, ProjectTab $tab): array
     {
-        $componentsInTab = ComponentInTab::query()
-            ->where('project_tab_id', $tab->id)
-            ->with([
+        return $this->projector->project(
+            $tab,
+            [
                 'component.projectValue' => fn ($q) => $q->where('project_id', $project->id),
                 'disclosureComponents.component.projectValue' => fn ($q) => $q->where('project_id', $project->id),
-            ])
-            ->orderBy('order')
-            ->get();
-
-        return $componentsInTab
-            ->filter(fn (ComponentInTab $cit) => $cit->component && $this->isReadable($cit->component))
-            ->values()
-            ->map(fn (ComponentInTab $cit) => $this->serializeComponentInTab($cit))
-            ->toArray();
+            ],
+            fn (Component $component): bool => $this->isReadable($component),
+            fn (
+                Component $component,
+                array $scope,
+                ComponentInTab|DisclosureComponents $context,
+            ): array => $this->serializeComponent($component, $context),
+        );
     }
 
     private function isReadable(Component $component): bool
@@ -53,37 +59,12 @@ class ExternalTabComponentResolver
     /**
      * @return array<string, mixed>
      */
-    private function serializeComponentInTab(ComponentInTab $cit): array
-    {
-        $component = $cit->component;
-
+    private function serializeComponent(
+        Component $component,
+        ComponentInTab|DisclosureComponents $context,
+    ): array {
         return [
-            'component_in_tab_id' => $cit->id,
-            'component_id' => $component->id,
-            'type' => $component->type,
-            'name' => $component->name,
-            'data_schema' => $component->data,
-            'value' => $component->projectValue?->data,
-            'is_writable' => $this->isWritable($component),
-            'note' => $cit->note,
-            // Disclosure components contain sub-components — resolved recursively,
-            // each child filtered by isExternallyReadable as well.
-            'children' => $cit->disclosureComponents
-                ->filter(fn (DisclosureComponents $dc) => $dc->component && $this->isReadable($dc->component))
-                ->values()
-                ->map(fn (DisclosureComponents $dc) => $this->serializeDisclosureChild($dc))
-                ->toArray(),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function serializeDisclosureChild(DisclosureComponents $dc): array
-    {
-        $component = $dc->component;
-
-        return [
+            ...($context instanceof ComponentInTab ? ['component_in_tab_id' => $context->id] : []),
             'component_id' => $component->id,
             'type' => $component->type,
             'name' => $component->name,

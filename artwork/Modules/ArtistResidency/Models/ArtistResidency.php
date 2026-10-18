@@ -15,23 +15,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Date;
 
 /**
- * @property string name
- * @property string first_name
- * @property string last_name
- * @property string phone_number
- * @property string position
- * @property int service_provider_id
- * @property string arrival_date
- * @property string arrival_time
- * @property string departure_date
- * @property string departure_time
- * @property int type_of_room
- * @property float cost_per_night
- * @property float daily_allowance
- * @property float additional_daily_allowance
- * @property int breakfast_count
- * @property float breakfast_deduction_per_day
- * @property string description
+ * @property string $name
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $phone_number
+ * @property string $position
+ * @property int $service_provider_id
+ * @property string $arrival_date
+ * @property string $arrival_time
+ * @property string $departure_date
+ * @property string $departure_time
+ * @property int $type_of_room
+ * @property float $cost_per_night
+ * @property float $daily_allowance
+ * @property float $additional_daily_allowance
+ * @property int $breakfast_count
+ * @property float $breakfast_deduction_per_day
+ * @property string $description
  * @property ServiceProvider serviceProvider
  */
 class ArtistResidency extends Model
@@ -126,6 +126,9 @@ class ArtistResidency extends Model
             ?? $this->artist?->display_name;
     }
 
+    /**
+     * @return BelongsTo<CrmContact, $this>
+     */
     public function artistContact(): BelongsTo
     {
         return $this->belongsTo(
@@ -136,6 +139,9 @@ class ArtistResidency extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<CrmContact, $this>
+     */
     public function accommodationContact(): BelongsTo
     {
         return $this->belongsTo(
@@ -146,11 +152,17 @@ class ArtistResidency extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'id', 'project');
     }
 
+    /**
+     * @return BelongsTo<Accommodation, $this>
+     */
     public function accommodation(): BelongsTo
     {
         return $this->belongsTo(
@@ -161,6 +173,9 @@ class ArtistResidency extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Artist, $this>
+     */
     // artist
     public function artist(): BelongsTo
     {
@@ -172,6 +187,9 @@ class ArtistResidency extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<AccommodationRoomType, $this>
+     */
     public function roomType(): BelongsTo
     {
         return $this->belongsTo(

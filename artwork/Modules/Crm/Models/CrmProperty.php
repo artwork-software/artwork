@@ -29,11 +29,17 @@ class CrmProperty extends Model
         'is_system' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<CrmPropertyGroup, $this>
+     */
     public function group(): BelongsTo
     {
         return $this->belongsTo(CrmPropertyGroup::class, 'crm_property_group_id');
     }
 
+    /**
+     * @return BelongsToMany<CrmContactType, $this>
+     */
     public function contactTypes(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -45,6 +51,9 @@ class CrmProperty extends Model
          ->withPivot(['sort_order', 'is_required', 'show_in_list', 'is_filterable']);
     }
 
+    /**
+     * @return HasMany<CrmPropertyValue, $this>
+     */
     public function values(): HasMany
     {
         return $this->hasMany(CrmPropertyValue::class, 'crm_property_id');

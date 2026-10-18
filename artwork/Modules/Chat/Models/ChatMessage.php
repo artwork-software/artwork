@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ChatMessage extends Model
 {
@@ -29,16 +31,25 @@ class ChatMessage extends Model
         'created_at_time',
     ];
 
+    /**
+     * @return BelongsTo<Chat, $this>
+     */
     public function chat(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Chat::class, 'chat_id', 'id', 'chat');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function sender(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id', 'id', 'sender');
     }
 
+    /**
+     * @return HasMany<ChatMessageRead, $this>
+     */
     public function reads(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ChatMessageRead::class, 'message_id', 'id');

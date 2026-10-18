@@ -85,6 +85,9 @@ class ShiftHistoryController
             ->paginate($perPage);
 
         $items = collect($paginator->items())->map(function ($log) use ($person, $personShiftIds) {
+            // Der Verlauf zeigt nur den Namen der handelnden Person — kein volles User-Modell
+            // (E-Mail, Stundenkonto, Einstellungen) je Eintrag ausliefern
+            $log->causer?->setVisible(['id', 'first_name', 'last_name', 'full_name']);
             $log->setAttribute(
                 'match_reasons',
                 $person ? $this->queryService->matchReasons($log, $person, $personShiftIds) : []

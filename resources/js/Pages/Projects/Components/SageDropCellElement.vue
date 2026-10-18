@@ -1,12 +1,10 @@
 <script>
 import {router} from "@inertiajs/vue3";
-import IconLib from "@/Mixins/IconLib.vue";
 import SageDropMultipleDataSelectModal from "@/Pages/Projects/Components/SageDropMultipleDataSelectModal.vue";
 
 export default {
     name: "SageDropCellElement",
     components: {SageDropMultipleDataSelectModal},
-    mixins: [IconLib],
     props: ['value', 'cell'],
     emits: ['budget-updated'],
     data(){

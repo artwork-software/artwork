@@ -69,6 +69,9 @@ import {
 import BiChart from '@/Artwork/Charts/BiChart.vue';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 const t = useTranslation();
 
@@ -78,12 +81,12 @@ const props = defineProps({
     projectEvents: { type: Array, default: () => [] },
 });
 
-const numberFmt = new Intl.NumberFormat('de-DE');
-const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const numberFmt = new Intl.NumberFormat(instanceFormat.numberLocale);
+const currencyFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency });
 
 const formatInt = (v) => (v === null || v === undefined) ? null : numberFmt.format(v);
 const formatCurrency = (v) => (v === null || v === undefined) ? null : currencyFmt.format(v);
-const formatPercent = (v) => (v === null || v === undefined) ? null : `${Number(v).toFixed(1).replace('.', ',')} %`;
+const formatPercent = (v) => (v === null || v === undefined) ? null : `${instanceFormat.formatNumber(v, 1)} %`;
 
 const kpiTiles = computed(() => {
     const s = props.summary;

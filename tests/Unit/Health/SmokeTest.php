@@ -21,7 +21,11 @@ final class SmokeTest extends TestCase
     #[Test]
     public function database_connection_is_test_database(): void
     {
-        $this->assertSame('artwork_test', config('database.connections.mysql.database'));
+        // Parallele Läufe (--parallel) nutzen je Prozess artwork_test_test_<n>
+        $this->assertMatchesRegularExpression(
+            '/^artwork_test(_test_\d+)?$/',
+            config('database.connections.mysql.database')
+        );
     }
 
     #[Test]

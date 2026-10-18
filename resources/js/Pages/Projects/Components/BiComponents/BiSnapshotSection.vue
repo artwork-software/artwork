@@ -132,6 +132,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { toYmd } from '@/Helper/IsoWeek.js';
 import { usePage } from '@inertiajs/vue3';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -139,7 +140,10 @@ import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue';
 import BiChart from '@/Artwork/Charts/BiChart.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
-import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useBiSaveFeedback, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 const t = useTranslation();
 
@@ -162,7 +166,7 @@ const categoryNameById = computed(() => new Map(
 
 const newName = ref('');
 // Stichtag ist fast immer "heute" → vorbelegen
-const newDate = ref(new Date().toISOString().slice(0, 10));
+const newDate = ref(toYmd(new Date()));
 const expandedId = ref(null);
 const snapshotToDelete = ref(null);
 const compareId = ref(null);
@@ -175,12 +179,12 @@ const scopeItems = [
 const newScope = ref('actual');
 const newScopeItem = computed(() => scopeItems.find(i => i.id === newScope.value) ?? scopeItems[0]);
 
-const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const currencyFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency });
 
 const formatNumber = (value) => {
     const n = Number(value ?? 0);
     if (Number.isNaN(n)) return '0';
-    return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(n);
+    return new Intl.NumberFormat(instanceFormat.numberLocale, { maximumFractionDigits: 2 }).format(n);
 };
 
 const snapshotLabel = (snapshot) => `${snapshot.name} (${formatDate(snapshot.snapshot_date)})`;
@@ -309,12 +313,8 @@ const trendOptions = {
 
 const formatDate = (value) => {
     if (!value) return '-';
-    const date = new Date(value);
-    if (isNaN(date.getTime())) return value;
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
+    // Datumsformat der Instanz (Einstellungen → Tool → Regionale Formate)
+    return instanceFormat.formatDate(value) || value;
 };
 
 const toggleDetail = (id) => {
@@ -330,7 +330,7 @@ const createSnapshot = async () => {
             name: newName.value,
             snapshot_date: newDate.value,
             scope: newScope.value,
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         newName.value = '';
@@ -344,7 +344,7 @@ const deleteSnapshot = async () => {
     snapshotToDelete.value = null;
     if (!snapshotId) return;
     const ok = await biSave.run(
-        () => axios.delete(route('projects.bi.snapshots.destroy', [props.projectId, snapshotId]))
+        () => axios.delete(route('projects.bi.snapshots.destroy', [props.projectId, snapshotId]), BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');

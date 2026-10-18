@@ -54,6 +54,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Contract\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
@@ -94,6 +95,7 @@ use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Events\UpdateBudget;
 use Artwork\Modules\Project\Jobs\ForceDeleteProjectJob;
 use Artwork\Modules\Project\Jobs\SoftDeleteProjectJob;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Exports\DetailedBudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
@@ -114,6 +116,7 @@ use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\Project\Services\ProjectStateService;
+use Artwork\Modules\Project\Services\ProjectTeamService;
 use Artwork\Modules\Project\Models\ProjectManagementBuilder;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
@@ -122,7 +125,6 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ProjectTabService;
-use Artwork\Modules\Project\Events\ProjectTeamUpdated;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
@@ -169,6 +171,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -262,6 +265,36 @@ class ProjectController extends Controller
         );
     }
 
+    /**
+     * Felder, die die Projektübersicht von Team-Mitgliedern liest: SingleProjectInManagement nur die IDs
+     * (Rechte), der Bearbeiten-Dialog Name und Bild der Projektleitung.
+     */
+    private const INDEX_PERSON_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
+
+    /**
+     * Team-Listen der Übersicht (users, writeUsers, managerUsers, access_budget, delete_permission_users) nur
+     * mit den gelesenen Feldern ausliefern — vorher volle User-Modelle inkl. E-Mail, Stundenkonto und aller
+     * Einstellungen, je Projekt mehrfach (Seite mit 100 Projekten: ~4 MB). Die stdClass-Einträge von
+     * mapProjectsToComponents verweisen auf dieselben Modelle.
+     *
+     * @param iterable<Project> $projects
+     */
+    private function slimProjectPeopleForIndex(iterable $projects): void
+    {
+        foreach ($projects as $project) {
+            foreach ($project->getRelations() as $related) {
+                if (!$related instanceof \Illuminate\Support\Collection) {
+                    continue;
+                }
+                foreach ($related as $model) {
+                    if ($model instanceof User) {
+                        $model->setVisible(self::INDEX_PERSON_FIELDS);
+                    }
+                }
+            }
+        }
+    }
+
     public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
 
@@ -302,8 +335,31 @@ class ProjectController extends Controller
             $request->string('query')->toString()
         );
 
-        $pinnedProjectsComponents = $this->mapProjectsToComponents($pinnedProjects, $components, $componentData);
-        $projectComponents = $this->mapProjectsToComponents($projects, $components, $componentData);
+        // Sichtbarkeit hängt an Komponente und Tab, nicht am Projekt: einmal je Person bestimmen
+        $visibleComponentIds = app(ProjectComponentVisibilityService::class)
+            ->visibleInProjectComponentIds($user, $componentData)
+            ->flip();
+        // Gleiche Regel wie der Budget-Informationen-Endpunkt (unabhängig von der Übersichts-Konfiguration)
+        $canSeeBudgetInformations = app(ProjectComponentVisibilityService::class)
+            ->canSeeComponentTypeInProject($user, [ProjectTabComponentEnum::BUDGET_INFORMATIONS->value]);
+
+        $pinnedProjectsComponents = $this->mapProjectsToComponents(
+            $pinnedProjects,
+            $components,
+            $componentData,
+            $visibleComponentIds,
+            $canSeeBudgetInformations
+        );
+        $projectComponents = $this->mapProjectsToComponents(
+            $projects,
+            $components,
+            $componentData,
+            $visibleComponentIds,
+            $canSeeBudgetInformations
+        );
+
+        $this->slimProjectPeopleForIndex($projects->getCollection());
+        $this->slimProjectPeopleForIndex($pinnedProjects);
 
         return inertia('Projects/NewProjectManagement', [
             'projects' => $projects,
@@ -311,30 +367,49 @@ class ProjectController extends Controller
             'components' => $components,
             'pinnedProjects' => $pinnedProjectsComponents,
             'pinnedProjectsAll' => $pinnedProjects,
-            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTab()->getAttribute('id'),
-            'states' => $this->projectStateService->getAll(),
-            'projectGroups' => $this->projectService->getProjectGroups(),
-            'categories' => $this->categoryService->getAll(),
-            'genres' => $this->genreService->getAll(),
-            'sectors' => $this->sectorService->getAll(),
-            'createSettings' => app(ProjectCreateSettings::class),
-            'myLastProject' => $this->projectService->getMyLastProject($this->authManager->id()),
-            'eventTypes' => $this->eventTypeService->getAll(),
-            'rooms' => $this->roomService->getAllWithoutTrashed(),
+            // Stammdaten als Closures: Filter, Suche und Blättern laden per partial reload nur die
+            // Projektlisten nach; eager berechnet liefen diese Abfragen bei jedem Klick mit.
+            'first_project_tab_id' => fn () => $this->projectTabService->getDefaultOrFirstProjectTab()
+                ->getAttribute('id'),
+            'states' => fn () => $this->projectStateService->getAll(),
+            'projectGroups' => fn () => $this->projectService->getProjectGroups(),
+            'categories' => fn () => $this->categoryService->getAll(),
+            'genres' => fn () => $this->genreService->getAll(),
+            'sectors' => fn () => $this->sectorService->getAll(),
+            'createSettings' => fn () => app(ProjectCreateSettings::class),
+            'myLastProject' => fn () => $this->projectService->getMyLastProject($this->authManager->id()),
+            'eventTypes' => fn () => $this->eventTypeService->getAll(),
+            // Nur für das Termine-Modal (Raumauswahl): id/name/position reichen; vorher volle Räume
+            // samt globalem $with (admins, creator).
+            'rooms' => fn () => Room::query()
+                ->without(['admins', 'creator'])
+                ->select(['id', 'name', 'position'])
+                ->get(),
             'projectSortEnumNames' => array_column(ProjectSortEnum::cases(), 'name'),
             'userProjectManagementSetting' => $userProjectManagementSetting,
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'lastProject' => $lastProject = $this->userService->getAuthUser()->lastProject,
-            'lastProjectCanEnter' => $lastProject !== null && $user->can('view', $lastProject),
+            'eventStatuses' => fn () => EventStatus::orderBy('order')->get(),
+            'lastProject' => fn () => $user->lastProject,
+            'lastProjectCanEnter' => fn () => $user->lastProject !== null && $user->can('view', $user->lastProject),
             'entitiesPerPage' => $user->entities_per_page
         ]);
     }
 
     /**
      * Hilfsfunktion zur Vermeidung von Code-Duplikation
+     *
+     * Komponentenwerte und Budget-Informationen gehen nur für betretbare Projekte und für Komponenten
+     * raus, die die Person sehen darf (Komponenten-Berechtigung + Tab-Sichtbarkeit). Ausgeblendete
+     * Spalten listet hiddenComponentIds je Projekt; das Frontend lässt die Zelle leer.
+     *
+     * @param Collection<int, int> $visibleComponentIds Komponenten-ID => Index (geflippt)
      */
-    private function mapProjectsToComponents($projects, $components, $componentData)
-    {
+    private function mapProjectsToComponents(
+        $projects,
+        $components,
+        $componentData,
+        Collection $visibleComponentIds,
+        bool $canSeeBudgetInformations
+    ) {
         // Cache these values outside the loop to avoid N+1 queries
         $firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
         $projectStates = ProjectState::all()->keyBy('id');
@@ -344,13 +419,6 @@ class ProjectController extends Controller
 
         $projectPeriods = $this->prepareProjectsForComponentMapping($projects, $components);
 
-        // Komponentenwerte einmal für alle Projekte laden (statt einer Query pro Projekt × Komponente)
-        $componentValues = ProjectComponentValue::query()
-            ->whereIn('project_id', $projects->pluck('id'))
-            ->whereIn('component_id', collect($componentData)->keys())
-            ->get()
-            ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
-
         // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
         // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
         // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
@@ -358,11 +426,20 @@ class ProjectController extends Controller
         // für Übersicht und Aggregations-Endpunkte); Admins passieren via Gate::before.
         $authUser = Auth::user();
         $canEnterAll = $authUser->canAny(ProjectPolicy::GLOBAL_ENTER_PERMISSIONS);
-        $enterableProjectIds = $canEnterAll ? [] : Project::query()
+        $canWriteAll = $authUser->can(PermissionEnum::WRITE_PROJECTS->value);
+        $enterableProjectIds = $canEnterAll ? collect() : Project::query()
             ->visibleFor($authUser)
             ->whereIn('id', $projects->pluck('id'))
             ->pluck('id')
             ->flip();
+
+        // Komponentenwerte einmal für alle Projekte laden (statt einer Query pro Projekt × Komponente) –
+        // nur betretbare Projekte und sichtbare Komponenten
+        $componentValues = ProjectComponentValue::query()
+            ->whereIn('project_id', $canEnterAll ? $projects->pluck('id') : $enterableProjectIds->keys())
+            ->whereIn('component_id', $visibleComponentIds->keys())
+            ->get()
+            ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
 
         $mapped = $projects->map(function ($project) use (
             $components,
@@ -372,7 +449,11 @@ class ProjectController extends Controller
             $projectStates,
             $projectPeriods,
             $canEnterAll,
-            $enterableProjectIds
+            $enterableProjectIds,
+            $visibleComponentIds,
+            $canSeeBudgetInformations,
+            $canWriteAll,
+            $authUser
         ) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
@@ -380,12 +461,35 @@ class ProjectController extends Controller
             $projectData->updated_at = $project->updated_at;
             $projectData->firstTabId = $firstTabId;
             $projectData->canEnter = $canEnterAll || isset($enterableProjectIds[$project->id]);
+            $hiddenComponentIds = [];
+            if (
+                !$projectData->canEnter ||
+                (!$canSeeBudgetInformations && !$this->mayEditProjectInOverview($project, $authUser, $canWriteAll))
+            ) {
+                $this->hideBudgetInformationOfProject($project);
+            }
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
 
             foreach ($components as $component) {
                 $componentFullData = $componentData[$component->component_id] ?? null;
+                // Projektinhalte (Komponentenwerte, Budget-Informationen): nur mit Zutritt und Sicht
+                $isProjectContent = $componentFullData !== null && (
+                    !$componentFullData->special ||
+                    $component->type === ProjectTabComponentEnum::BUDGET_INFORMATIONS->value
+                );
+                if (
+                    $isProjectContent &&
+                    (!$projectData->canEnter || !isset($visibleComponentIds[$componentFullData->id]))
+                ) {
+                    $hiddenComponentIds[] = $componentFullData->id;
+                    if (!$componentFullData->special) {
+                        // Schlüssel bleibt erhalten: die Builder-Zellen lesen project[Typ][Id]
+                        $projectData->{$component->type}[$componentFullData->id] = null;
+                    }
+                    continue;
+                }
 
                 switch ($component->type) {
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
@@ -459,6 +563,7 @@ class ProjectController extends Controller
                         $componentValues->get($componentFullData->id . ':' . $project->id);
                 }
             }
+            $projectData->hiddenComponentIds = array_values(array_unique($hiddenComponentIds));
 
             return $projectData;
         });
@@ -466,6 +571,30 @@ class ProjectController extends Controller
         $this->unsetHeavyProjectRelations($projects);
 
         return $mapped;
+    }
+
+    /**
+     * Die Projekt-Modelle gehen zusätzlich roh an Inertia (`projects`/`pinnedProjectsAll`): ohne Zutritt
+     * oder ohne Sicht auf die Budget-Informationen keine Kostenträger, GEMA, Beschreibung. Ausnahme:
+     * das Bearbeiten-Modal der Übersicht liest sie und braucht sie bei Schreibrecht (immer mit Zutritt).
+     */
+    private function hideBudgetInformationOfProject(Project $project): void
+    {
+        $project->makeHidden(['cost_center_id', 'gema', 'cost_center_description']);
+        $project->unsetRelation('costCenter');
+    }
+
+    /**
+     * Schreibrecht wie ProjectPolicy::update, aber nur aus den bereits geladenen Relationen (keine Query
+     * pro Projekt). Abteilungen fehlen bewusst: das Frontend bietet "Edit basic data" nur globalen
+     * Schreibrechten und write_auth an (SingleProjectInManagement checkPermission 'edit').
+     */
+    private function mayEditProjectInOverview(Project $project, User $user, bool $canWriteAll): bool
+    {
+        return $canWriteAll ||
+            $project->writeUsers->contains('id', $user->id) ||
+            $project->managerUsers->contains('id', $user->id) ||
+            $project->user_id === $user->id;
     }
 
     /**
@@ -791,7 +920,7 @@ class ProjectController extends Controller
 
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('green');
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
+                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
@@ -879,6 +1008,10 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($mainPosition);
+                return;
+            }
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.delete_verify_request',
@@ -888,7 +1021,7 @@ class ProjectController extends Controller
             $table = $mainPosition->table()->first();
             $project = $table->project()->first();
             // Delete Function Updated to new Notification System
-            $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
+            $this->deleteVerificationRequestNotifications('main', $mainPosition->id);
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
@@ -945,6 +1078,10 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($subPosition);
+                return;
+            }
             $table = $mainPosition->table()->first();
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
@@ -954,7 +1091,7 @@ class ProjectController extends Controller
             );
             $project = $table->project()->first();
             // Delete Function Updated to new Notification System
-            $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
+            $this->deleteVerificationRequestNotifications('sub', $subPosition->id);
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
@@ -1012,13 +1149,38 @@ class ProjectController extends Controller
         //return Redirect::back();
     }
 
-    private function deleteOldNotification($positionId, $requestedId): void
+    /**
+     * Status „angefragt/verifiziert“ ohne zugehörige Anfrage (z. B. Altbestand aus Kopien):
+     * auf „nicht verifiziert“ zurücksetzen, damit die Position wieder bedienbar ist.
+     */
+    private function resetOrphanedVerification(MainPosition|SubPosition $position): void
+    {
+        $position->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+
+        $table = $position instanceof MainPosition ? $position->table : $position->mainPosition->table;
+        broadcast(new UpdateBudget($table->project_id));
+    }
+
+    /**
+     * Offene Prüfanfrage-Benachrichtigung einer Position entfernen (erledigt, zurückgezogen, neu
+     * angefragt). Vorher wurde nach budgetData.requested_by = prüfende Person gefiltert – dort steht
+     * aber die anfragende Person, die Meldung blieb also für immer im Posteingang.
+     */
+    private function deleteVerificationRequestNotifications(string $positionType, int $positionId): void
     {
         DatabaseNotification::query()
-            ->whereJsonContains("data->budgetData->position_id", $positionId)
-            ->whereJsonContains("data->budgetData->requested_by", $requestedId)
+            ->where('data->positionVerifyRequestType', $positionType)
+            // als Zeichenkette: Zeilen mit null bringen MariaDB (strict) sonst beim DELETE zum Abbruch
+            ->where('data->positionVerifyRequestId', (string) $positionId)
             ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
+    }
+
+    private function verificationCounterpartId(object $verifiedRequest): ?int
+    {
+        return Auth::id() === (int) $verifiedRequest->requested
+            ? $verifiedRequest->requested_by
+            : $verifiedRequest->requested;
     }
 
     /**
@@ -1035,12 +1197,20 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
-            $requestedUser = User::find($verifiedRequest->requested);
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($mainPosition);
+                return;
+            }
+            // Die jeweils andere Seite erfährt es (vorher immer die prüfende Person – zog sie die
+            // Anfrage aus ihrer Benachrichtigung zurück, wurde sie selbst benachrichtigt, die
+            // anfragende Person nie)
+            $requestedUser = User::find($this->verificationCounterpartId($verifiedRequest));
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
                 [],
                 $requestedUser?->language ?? 'de'
             );
+            $this->deleteVerificationRequestNotifications('main', $mainPosition->id);
             $this->removeMainPositionCellVerifiedValue($mainPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
@@ -1100,12 +1270,17 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
-            $requestedUser = User::find($verifiedRequest->requested);
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($subPosition);
+                return;
+            }
+            $requestedUser = User::find($this->verificationCounterpartId($verifiedRequest));
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
                 [],
                 $requestedUser?->language ?? 'de'
             );
+            $this->deleteVerificationRequestNotifications('sub', $subPosition->id);
             $this->removeSubPositionCellVerifiedValue($subPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
@@ -1181,10 +1356,9 @@ class ProjectController extends Controller
                 // Notification
                 $notificationTitle = __(
                     'notification.project.budget.add',
-                    [],
+                    ['project' => $project?->name ?? ''],
                     $user->language
                 );
-                $project = $mainPosition->table()->first()->project()->first();
                 $broadcastMessage = [
                     'id' => Str::uuid()->toString(),
                     'type' => 'success',
@@ -1214,7 +1388,7 @@ class ProjectController extends Controller
                 $this->notificationService->setIcon('red');
                 $this->notificationService->setPriority(2);
                 $this->notificationService
-                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->setDescription($notificationDescription);
@@ -1294,15 +1468,15 @@ class ProjectController extends Controller
     public function verifiedSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
+        abort_unless((bool) $subPosition, 404);
+
         $verifiedRequest = $subPosition->verified()->first();
         $this->setSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
 
-        DatabaseNotification::query()
-            ->whereJsonContains("data->budgetData->position_id", $subPosition->id)
-            ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
-            ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
-            ->delete();
+        if ($verifiedRequest) {
+            $this->deleteVerificationRequestNotifications('sub', $subPosition->id);
+        }
 
         $this->changeService->saveFromBuilder(
             $this->changeService
@@ -1551,11 +1725,7 @@ class ProjectController extends Controller
         $verifiedRequest = $mainPosition->verified()->first();
 
         if ($verifiedRequest) {
-            DatabaseNotification::query()
-                ->whereJsonContains("data->budgetData->position_id", $mainPosition->id)
-                ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
-                ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
-                ->delete();
+            $this->deleteVerificationRequestNotifications('main', $mainPosition->id);
         }
 
         $this->changeService->saveFromBuilder(
@@ -1762,9 +1932,7 @@ class ProjectController extends Controller
         BudgetSumDetailsService $budgetSumDetailsService,
         ColumnCellService $columnCellService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): RedirectResponse {
         $table = $column->table()->withTrashed()->first();
         $tableHadRelevantColumn = $table->columns()->where('relevant_for_project_groups', true)->exists();
@@ -1778,9 +1946,7 @@ class ProjectController extends Controller
             $budgetSumDetailsService,
             $columnCellService,
             $cellCommentService,
-            $cellCalculationService,
-            $sageNotAssignedDataService,
-            $sageAssignedDataService
+            $cellCalculationService
         );
 
         // Eine wiederhergestellte Spalte darf der aktuellen budgetrelevanten
@@ -3021,7 +3187,7 @@ class ProjectController extends Controller
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByPosition(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'currentUserCrafts' => $this->getCurrentUserCraftsForShiftTab($user, $craftService),
+            'currentUserCrafts' => $craftService->getCraftsForShiftCreation($user),
             'shiftTimePresets' => $shiftTimePresetService->getAll(),
             'globalQualifications' => app(GlobalQualificationService::class)->getAll(),
             'shiftGroups' => app(ShiftGroupService::class)->getAllShiftGroups(),
@@ -3068,10 +3234,20 @@ class ProjectController extends Controller
     ): array {
         $userId = $authUser?->id;
 
-        // Load contracts for this project with necessary relations
+        // Nur Verträge, die die Person laut ContractPolicy öffnen darf (Ersteller:in, Freigabe an Person
+        // oder Abteilung, Projektleitung; Admins via Gate::before) – wie BudgetInformations.
         $contracts = $project->contracts()
-            ->with(['accessingUsers', 'accessingDepartments', 'contract_type', 'company_type', 'currency'])
+            ->with([
+                'accessingUsers',
+                'accessingDepartments',
+                'contract_type',
+                'company_type',
+                'currency',
+                'project.managerUsers',
+            ])
             ->get()
+            ->filter(fn (Contract $contract): bool => $authUser !== null && $authUser->can('view', $contract))
+            ->values()
             ->map(function ($contract) use ($project) {
                 return [
                     'id' => $contract->id,
@@ -3101,12 +3277,20 @@ class ProjectController extends Controller
                     'ksk_reason' => $contract->ksk_reason,
                     'resident_abroad' => $contract->resident_abroad,
                     'has_foreign_tax' => $contract->foreign_tax,
+                    // ContractEditModal belegt alle Felder vor und sendet sie vollständig zurück – fehlende
+                    // Schlüssel würden beim Speichern die gespeicherten Werte leeren
+                    'foreign_tax' => $contract->foreign_tax,
                     'foreign_tax_amount' => $contract->foreign_tax_amount,
+                    'foreign_tax_city' => $contract->foreign_tax_city,
+                    'foreign_tax_country' => $contract->foreign_tax_country,
                     'foreign_tax_reason' => $contract->foreign_tax_reason,
+                    'contract_state' => $contract->contract_state,
+                    'contract_state_comment' => $contract->contract_state_comment,
                     'reverse_charge_amount' => $contract->reverse_charge_amount,
                     'has_power_of_attorney' => $contract->has_power_of_attorney,
                     'is_freed' => $contract->is_freed,
-                    'deadline_date' => $contract->deadline_date,
+                    // Kalenderdatum (Y-m-d) – ein Carbon-Objekt würde als UTC-Zeitpunkt des Vortags serialisiert
+                    'deadline_date' => $contract->deadline_date?->format('Y-m-d'),
                     'amount' => $contract->amount,
                     'description' => $contract->description,
                     'currency_id' => $contract->currency_id,
@@ -3282,28 +3466,6 @@ class ProjectController extends Controller
             ->first();
 
         return $groupLink ? Project::find($groupLink->group_id) : null;
-    }
-
-    /**
-     * Get crafts that the current user is allowed to assign in shift planning.
-     */
-    private function getCurrentUserCraftsForShiftTab(
-        User $user,
-        CraftService $craftService
-    ): \Illuminate\Database\Eloquent\Collection {
-        // If user is admin, return all crafts with qualifications
-        if ($user->hasRole('artwork admin')) {
-            return $craftService->getAll(['qualifications']);
-        }
-
-        // Get crafts that are assignable by all (not restricted)
-        $assignableByAllCrafts = $craftService->getAssignableByAllCrafts();
-
-        // Get crafts where user is explicitly allowed (restricted crafts via craft_users table)
-        $userRestrictedCrafts = $user->crafts()->with(['qualifications'])->get();
-
-        // Merge both collections and remove duplicates by craft id
-        return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
     }
 
     public function addTimeLineRow(Event $event): void
@@ -3491,27 +3653,16 @@ class ProjectController extends Controller
 
 
 
-    public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
-    {
-        if (!Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            // authorization ("Projektleitung sein" gibt keine Rechte auf fremde Projekte)
-            if (
-                !Auth::user()->canAny([
-                    PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-                    PermissionEnum::WRITE_PROJECTS->value
-                ]) &&
-                $project->access_budget->pluck('id')->doesntContain(Auth::id()) &&
-                $project->managerUsers->pluck('id')->doesntContain(Auth::id()) &&
-                $project->writeUsers->pluck('id')->doesntContain(Auth::id())
-            ) {
-                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
-            }
+    public function updateTeam(
+        Request $request,
+        Project $project,
+        ProjectTeamService $projectTeamService
+    ): JsonResponse|RedirectResponse {
+        // Team setzen = Schreibrecht im Projekt. Vorher genügte "eigene Projekte anlegen" für jedes
+        // fremde Projekt – samt Selbstvergabe von Budgetzugriff und Schreibrecht.
+        if (Gate::denies('update', $project)) {
+            return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
-
-        $projectManagerBefore = $project->managerUsers()->get();
-        $projectBudgetAccessBefore = $project->access_budget()->get();
-        $projectUsers = $project->users()->get();
-        $oldProjectDepartments = $project->departments()->get();
 
         // only persist role ids that actually exist; anything else would linger
         // in the project_user.roles JSON forever (role deletion can't clean it up)
@@ -3525,60 +3676,38 @@ class ProjectController extends Controller
 
                 $pivotData['roles'] = $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all();
 
-                // Projektleitung hat laut ProjectPolicy::update immer Schreibrecht — Pivot spiegelt das,
-                // damit Listen/Exports (writeUsers) nicht vom Frontend-Häkchen abhängen
-                if (!empty($pivotData['is_manager'])) {
-                    $pivotData['can_write'] = true;
-                }
-
-                return $pivotData;
+                return ProjectTeamService::withManagerWriteRight($pivotData);
             }
         );
 
-        $project->users()->sync($assignedUsers);
-        $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
-
-        // CRM-Kontakte im Team nur synchronisieren, wenn das globale Setting aktiv ist und der
-        // Payload den Key enthält — sonst würden bestehende Verknüpfungen still gelöscht
-        if (
-            app(ProjectCreateSettings::class)->crm_contacts_in_team
-            && $request->has('assigned_crm_contact_ids')
-        ) {
-            $assignedCrmContacts = collect($request->assigned_crm_contact_ids)->map(
-                static function ($pivotData) use ($validRoleIds) {
-                    if (!is_array($pivotData)) {
-                        return $pivotData;
-                    }
-
-                    return [
-                        'roles' => $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all(),
-                    ];
-                }
-            );
-
-            $project->teamCrmContacts()->sync($assignedCrmContacts);
-        }
-
-        $newProjectDepartments = $project->departments()->get();
-        $projectUsersAfter = $project->users()->get();
-        $projectManagerAfter = $project->managerUsers()->get();
-        $projectBudgetAccessAfter = $project->access_budget()->get();
-
-        // history functions
-        $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
-        // Get and check project admins, managers and users after update
-        $this->createNotificationProjectMemberChanges(
+        $projectTeamService->applyRosterChange(
             $project,
-            $projectManagerBefore,
-            $projectUsers,
-            $projectUsersAfter,
-            $projectManagerAfter,
-            $projectBudgetAccessBefore,
-            $projectBudgetAccessAfter
-        );
+            static function (Project $project) use ($assignedUsers, $validRoleIds, $request): void {
+                $project->users()->sync($assignedUsers);
+                $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
 
-        // Broadcast team update event
-        broadcast(new ProjectTeamUpdated($project->id));
+                // CRM-Kontakte im Team nur synchronisieren, wenn das globale Setting aktiv ist und der
+                // Payload den Key enthält — sonst würden bestehende Verknüpfungen still gelöscht
+                if (
+                    app(ProjectCreateSettings::class)->crm_contacts_in_team
+                    && $request->has('assigned_crm_contact_ids')
+                ) {
+                    $assignedCrmContacts = collect($request->assigned_crm_contact_ids)->map(
+                        static function ($pivotData) use ($validRoleIds) {
+                            if (!is_array($pivotData)) {
+                                return $pivotData;
+                            }
+
+                            return [
+                                'roles' => $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all(),
+                            ];
+                        }
+                    );
+
+                    $project->teamCrmContacts()->sync($assignedCrmContacts);
+                }
+            }
+        );
 
         return Redirect::back();
     }
@@ -3872,43 +4001,6 @@ class ProjectController extends Controller
         }
     }
 
-    private function checkDepartmentChanges($projectId, $oldDepartments, $newDepartments): void
-    {
-        $oldDepartmentIds = [];
-        $newDepartmentIds = [];
-        $oldDepartmentNames = [];
-        foreach ($oldDepartments as $oldDepartment) {
-            $oldDepartmentIds[] = $oldDepartment->id;
-            $oldDepartmentNames[$oldDepartment->id] = $oldDepartment->name;
-        }
-
-        foreach ($newDepartments as $newDepartment) {
-            $newDepartmentIds[] = $newDepartment->id;
-            if (!in_array($newDepartment->id, $oldDepartmentIds)) {
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($projectId)
-                        ->setTranslationKey('Department added to project team')
-                        ->setTranslationKeyPlaceholderValues([$newDepartment->name])
-                );
-            }
-        }
-
-        foreach ($oldDepartmentIds as $oldDepartmentId) {
-            if (!in_array($oldDepartmentId, $newDepartmentIds)) {
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($projectId)
-                        ->setTranslationKey('Department removed from project team')
-                        ->setTranslationKeyPlaceholderValues([$oldDepartmentNames[$oldDepartmentId]])
-                );
-            }
-        }
-    }
 
     private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription): void
     {
@@ -3945,229 +4037,19 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
-    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    private function createNotificationProjectMemberChanges(
-        Project $project,
-        $projectManagerBefore,
-        $projectUsers,
-        $projectUsersAfter,
-        $projectManagerAfter,
-        $projectBudgetAccessBefore,
-        $projectBudgetAccessAfter
-    ): void {
-        $userIdsBefore = [];
-        $managerIdsBefore = [];
-        $budgetIdsBefore = [];
-        $userIdsAfter = [];
-        $managerIdsAfter = [];
-        $budgetIdsAfter = [];
-
-        foreach ($projectUsers as $projectUser) {
-            $userIdsBefore[$projectUser->id] = $projectUser->id;
-        }
-
-        foreach ($projectManagerBefore as $managerBefore) {
-            $managerIdsBefore[$managerBefore->id] = $managerBefore->id;
-            if (in_array($managerBefore->id, $userIdsBefore)) {
-                unset($userIdsBefore[$managerBefore->id]);
-            }
-        }
-        foreach ($projectBudgetAccessBefore as $budgetBefore) {
-            $budgetIdsBefore[$budgetBefore->id] = $budgetBefore->id;
-            if (in_array($budgetBefore->id, $userIdsBefore)) {
-                unset($userIdsBefore[$budgetBefore->id]);
-            }
-        }
-        foreach ($projectUsersAfter as $projectUserAfter) {
-            $userIdsAfter[$projectUserAfter->id] = $projectUserAfter->id;
-        }
-
-        foreach ($projectManagerAfter as $managerAfter) {
-            $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
-            // if added a new project manager, send notification to this user
-            if (!in_array($managerAfter->id, $managerIdsBefore)) {
-                $notificationTitle = __('notification.project.leader.add', [
-                    'project' => $project->name
-                ], $managerAfter->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($managerAfter);
-                $this->notificationService->createNotification();
-            }
-            if (in_array($managerAfter->id, $userIdsAfter)) {
-                unset($userIdsAfter[$managerAfter->id]);
-            }
-        }
-
-        foreach ($projectBudgetAccessAfter as $budgetAfter) {
-            $budgetIdsAfter[$budgetAfter->id] = $budgetAfter->id;
-            // if added a new project manager, send notification to this user
-            if (!in_array($budgetAfter->id, $budgetIdsBefore)) {
-                $notificationTitle = __('notification.project.budget.add', [
-                    'project' => $project->name
-                ], $budgetAfter->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($budgetAfter);
-                $this->notificationService->createNotification();
-            }
-            if (in_array($budgetAfter->id, $userIdsAfter)) {
-                unset($userIdsAfter[$budgetAfter->id]);
-            }
-        }
-
-        foreach ($managerIdsBefore as $managerBefore) {
-            if (!in_array($managerBefore, $managerIdsAfter)) {
-                $user = User::find($managerBefore);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.leader.remove', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-            }
-        }
-        foreach ($budgetIdsBefore as $budgetBefore) {
-            if (!in_array($budgetBefore, $budgetIdsAfter)) {
-                $user = User::find($budgetBefore);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.budget.remove', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-            }
-        }
-        foreach ($userIdsAfter as $userIdAfter) {
-            if (!in_array($userIdAfter, $userIdsBefore)) {
-                $user = User::find($userIdAfter);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.member.add', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($project->id)
-                        ->setTranslationKey('User added to project team')
-                        ->setTranslationKeyPlaceholderValues([$user->first_name . ' ' . $user->last_name])
-                );
-            }
-        }
-        foreach ($userIdsBefore as $userIdBefore) {
-            if (!in_array($userIdBefore, $userIdsAfter)) {
-                $user = User::find($userIdBefore);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.member.remove', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setType('public_changes')
-                        ->setModelClass(Project::class)
-                        ->setModelId($project->id)
-                        ->setTranslationKey('User removed from project team')
-                        ->setTranslationKeyPlaceholderValues([$user->first_name . ' ' . $user->last_name])
-                );
-            }
-        }
-    }
 
     public function duplicate(
         Project $project,
         Request $request
     ): JsonResponse|RedirectResponse {
-        // authorization ("Projektleitung sein" gibt keine Rechte auf fremde Projekte)
-        if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            if (
-                !Auth::user()->canAny([
-                    PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-                    PermissionEnum::WRITE_PROJECTS->value
-                ]) &&
-                $project->access_budget->pluck('id')->doesntContain(Auth::id()) &&
-                $project->managerUsers->pluck('id')->doesntContain(Auth::id())
-            ) {
-                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
-            }
+        // Duplizieren = Quelle sehen dürfen + Projekte anlegen dürfen oder im Projekt Leitung/Budgetzugriff
+        // haben (vorher reichte "eigene Projekte anlegen" für jedes fremde Projekt, auch ohne Sichtrecht)
+        $mayDuplicate = Gate::allows('create', Project::class)
+            || Auth::user()->can(PermissionEnum::WRITE_PROJECTS->value)
+            || $project->access_budget->contains(Auth::id())
+            || $project->managerUsers->contains(Auth::id());
+        if (Gate::denies('view', $project) || !$mayDuplicate) {
+            return response()->json(['error' => 'Not authorized to duplicate this project.'], 403);
         }
 
         if ($project->departments->isNotEmpty()) {
@@ -4222,9 +4104,11 @@ class ProjectController extends Controller
 
     public function destroy(
         Project $project,
-        Request $request
+        Request $request,
+        TicketingLock $ticketingLock
     ): RedirectResponse {
         $this->authorize('delete', $project);
+        $ticketingLock->assertProjectDeletable($project);
         // Single, consolidated notification instead of one per deleted event.
         $eventCount = $project->events()->count();
 
@@ -4264,7 +4148,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function bulkDestroy(Request $request): RedirectResponse
+    public function bulkDestroy(Request $request, TicketingLock $ticketingLock): RedirectResponse
     {
         $validated = $request->validate([
             'project_ids' => 'required|array|min:1',
@@ -4272,6 +4156,7 @@ class ProjectController extends Controller
         ]);
 
         $projects = Project::whereIn('id', $validated['project_ids'])->get();
+        $projects->each(fn (Project $project) => $ticketingLock->assertProjectDeletable($project));
 
         foreach ($projects as $project) {
             // Skip projects the user is not allowed to delete instead of failing the whole batch.
@@ -4547,9 +4432,7 @@ class ProjectController extends Controller
         SubPositionService $subPositionService,
         BudgetSumDetailsService $budgetSumDetailsService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): RedirectResponse {
 
         $tableService->restore(
@@ -4568,9 +4451,7 @@ class ProjectController extends Controller
             $subPositionService,
             $budgetSumDetailsService,
             $cellCommentService,
-            $cellCalculationService,
-            $sageNotAssignedDataService,
-            $sageAssignedDataService
+            $cellCalculationService
         );
 
         return Redirect::back();
@@ -4730,6 +4611,11 @@ class ProjectController extends Controller
 
     public function downloadKeyVisual(Project $project): StreamedResponse
     {
+        abort_if(
+            blank($project->key_visual_path) || !Storage::exists('public/keyVisual/' . $project->key_visual_path),
+            404
+        );
+
         return Storage::download('public/keyVisual/' . $project->key_visual_path, $project->key_visual_path);
     }
 
@@ -4743,22 +4629,11 @@ class ProjectController extends Controller
 
     /**
      * Bearbeitungsregel für Inhalte, deren Edit-UI über die Komponenten-Einstellung
-     * (canEditComponent) gegated ist: Schreibrecht im Projekt + Komponenten-Einstellung
-     * (ProjectPolicy::writeComponent). Ohne Komponenten-Datensatz greift die
-     * Projekt-Bearbeitungsregel allein.
+     * (canEditComponent) gegated ist (ProjectPolicy::writeComponentType).
      */
     private function authorizeProjectComponentEdit(Project $project, ProjectTabComponentEnum $componentType): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $component = Component::query()->where('type', $componentType->value)->first();
-        abort_unless(
-            $component !== null
-                ? $user->can('writeComponent', [$project, $component])
-                : $user->can('update', $project),
-            403
-        );
+        abort_unless(Auth::user()->can('writeComponentType', [$project, $componentType]), 403);
     }
 
     public function updateShiftDescription(Request $request, Project $project): void
@@ -4842,6 +4717,9 @@ class ProjectController extends Controller
     public function duplicateSubPosition(SubPosition $subPosition, $mainPositionId = null): void
     {
         $newSubPosition = $subPosition->replicate();
+        // Verifizierungen hängen an der Ursprungsposition; ohne Reset wirkte die Kopie
+        // verifiziert, „Verifizierung zurücknehmen“ lief dann ins Leere (500).
+        $newSubPosition->is_verified = BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED;
         $newSubPosition->save();
         $newSubPosition->update(['name' => $subPosition->name . ' ' . __('(Copy)')]);
 
@@ -4853,7 +4731,6 @@ class ProjectController extends Controller
         $rows = $subPosition->subPositionRows()->with('cells')->get();
         foreach ($rows as $subPositionRow) {
             $newSubPositionRow = $subPositionRow->replicate();
-            $newSubPositionRow->name = $subPositionRow->name . ' ' . __('(Copy)');
             $newSubPositionRow->sub_position_id = $newSubPosition->id;
             $newSubPositionRow->save();
             $newSubPositionRow->cells()->forceDelete();
@@ -4875,6 +4752,7 @@ class ProjectController extends Controller
     public function duplicateMainPosition(MainPosition $mainPosition): void
     {
         $newMainPosition = $mainPosition->replicate();
+        $newMainPosition->is_verified = BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED;
         $newMainPosition->save();
         $newMainPosition->update(['name' => $mainPosition->name . ' ' . __('(Copy)')]);
 

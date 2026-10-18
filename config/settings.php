@@ -3,6 +3,7 @@
 use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\ExternalAccess\Settings\ExternalAccessSettings;
 use Artwork\Modules\Mail\Settings\MailSettings;
+use Artwork\Modules\GeneralSettings\Models\FormatSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
@@ -20,6 +21,7 @@ return [
         GeneralCalendarSettings::class,
         ExternalAccessSettings::class,
         MailSettings::class,
+        FormatSettings::class,
     ],
 
     /*

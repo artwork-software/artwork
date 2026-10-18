@@ -60,31 +60,49 @@ class Column extends Model
         'lockedBy'
     ];
 
+    /**
+     * @return BelongsTo<Table, $this>
+     */
     public function table(): BelongsTo
     {
         return $this->belongsTo(Table::class, 'table_id', 'id', 'tables');
     }
 
+    /**
+     * @return HasMany<ColumnCell, $this>
+     */
     public function cells(): HasMany
     {
         return $this->hasMany(ColumnCell::class, 'column_id', 'id');
     }
 
+    /**
+     * @return HasMany<SubPositionSumDetail, $this>
+     */
     public function subPositionSumDetails(): HasMany
     {
         return $this->hasMany(SubPositionSumDetail::class);
     }
 
+    /**
+     * @return HasMany<MainPositionDetails, $this>
+     */
     public function mainPositionSumDetails(): HasMany
     {
         return $this->hasMany(MainPositionDetails::class);
     }
 
+    /**
+     * @return HasMany<BudgetSumDetails, $this>
+     */
     public function budgetSumDetails(): HasMany
     {
         return $this->hasMany(BudgetSumDetails::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function lockedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'locked_by', 'id', 'locked_by');

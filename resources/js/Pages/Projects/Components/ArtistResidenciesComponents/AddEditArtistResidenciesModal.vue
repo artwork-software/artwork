@@ -310,7 +310,7 @@
                                     <div class="rounded-xl border border-border-subtle bg-surface-sunken p-3">
                                         <h4 class="text-sm/5 font-bold text-text-subtle">{{ $t('Costs for overnight stays') }}</h4>
                                         <div class="mt-2 text-sm/5 font-semibold text-text tabular-nums">
-                                            <span class="underline decoration-double underline-offset-2">{{ calculateTotalCost }} €</span>
+                                            <span class="underline decoration-double underline-offset-2">{{ calculateTotalCost }} {{ $currencySymbol() }}</span>
                                         </div>
                                     </div>
 
@@ -357,6 +357,7 @@
                                             <CountUp
                                                 :value="Number(calculateTotalNights())"
                                                 :decimals="0"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -367,8 +368,8 @@
                                             <CountUp
                                                 :value="Number(artistResidency.cost_per_night)"
                                                 :decimals="2"
-                                                suffix=" €"
-                                                locale="de-DE"
+                                                :suffix="' ' + $currencySymbol()"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -379,8 +380,8 @@
                                             <CountUp
                                                 :value="Number(calculateTotalCost)"
                                                 :decimals="2"
-                                                suffix=" €"
-                                                locale="de-DE"
+                                                :suffix="' ' + $currencySymbol()"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -398,6 +399,7 @@
                                             <CountUp
                                                 :value="Number(calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance))"
                                                 :decimals="0"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -408,8 +410,8 @@
                                             <CountUp
                                                 :value="Number(artistResidency.daily_allowance)"
                                                 :decimals="2"
-                                                suffix=" €"
-                                                locale="de-DE"
+                                                :suffix="' ' + $currencySymbol()"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -420,8 +422,8 @@
                                             <CountUp
                                                 :value="Number(calculateTotalDailyAllowance)"
                                                 :decimals="2"
-                                                suffix=" €"
-                                                locale="de-DE"
+                                                :suffix="' ' + $currencySymbol()"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -432,8 +434,8 @@
                                             <CountUp
                                                 :value="Number(calculateBreakfastDeduction)"
                                                 :decimals="2"
-                                                suffix=" €"
-                                                locale="de-DE"
+                                                :suffix="' ' + $currencySymbol()"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-danger"
                                             />
                                         </dd>
@@ -444,8 +446,8 @@
                                             <CountUp
                                                 :value="Number(calculatePayoutPerDiem)"
                                                 :decimals="2"
-                                                suffix=" €"
-                                                locale="de-DE"
+                                                :suffix="' ' + $currencySymbol()"
+                                                :locale="numberLocale"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
@@ -460,8 +462,8 @@
                                     <CountUp
                                         :value="Number(calculateTotalCost) + Number(calculatePayoutPerDiem)"
                                         :decimals="2"
-                                        suffix=" €"
-                                        locale="de-DE"
+                                        :suffix="' ' + $currencySymbol()"
+                                        :locale="numberLocale"
                                         class="tabular-nums text-sm font-bold text-text"
                                     />
                                 </dd>
@@ -522,6 +524,7 @@
 <script setup>
 
 import {useForm, usePage} from "@inertiajs/vue3";
+import { toYmd } from "@/Helper/IsoWeek.js";
 import {computed, ref, watch} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
@@ -536,7 +539,10 @@ import VueDatePicker from "@vuepic/vue-datepicker";
 import CrmPropertyValueInput from "@/Pages/CRM/Components/CrmPropertyValueInput.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {usePermission} from "@/Composeables/Permission.js";
+import {useInstanceFormat} from "@/Composeables/InstanceFormat.js";
 const $t = useTranslation()
+// Zahlen im Format der Instanz (Einstellungen → Regionale Formate)
+const { numberLocale } = useInstanceFormat()
 const { can, hasAdminRole } = usePermission(usePage().props)
 const canManageCrm = computed(() => can('crm manager') || hasAdminRole())
 
@@ -1026,8 +1032,8 @@ const handleShortcut = (value) => {
 // watch dateValuePicker and update it to start and end date of artistResidency
 watch(dateValuePicker, (newValue) => {
     if (newValue.length === 2) {
-        artistResidency.arrival_date = newValue[0] ? newValue[0].toISOString().slice(0, 10) : '';
-        artistResidency.departure_date = newValue[1] ? newValue[1].toISOString().slice(0, 10) : '';
+        artistResidency.arrival_date = newValue[0] ? toYmd(newValue[0]) : '';
+        artistResidency.departure_date = newValue[1] ? toYmd(newValue[1]) : '';
     }
 }, { immediate: true });
 

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import pusher from 'pusher-js';
+import {messageForFailedRequest, shouldHandleSessionExpiry, shouldToastAxiosError, showAppToast, t} from './Helper/appToast';
 
 
 /**
@@ -17,9 +18,17 @@ window.axios.interceptors.response.use(
     response => response,
     error => {
         const status = error.response?.status
-        if (status === 401 || status === 419) {
-            alert('Deine Sitzung ist abgelaufen. Die Seite wird neu geladen, damit du dich wieder einloggen kannst.')
+        // Inertia-Requests meldet der 'invalid'-Handler in app.js (sonst zwei Alerts)
+        if (shouldHandleSessionExpiry(error)) {
+            alert(t('Your session has expired. The page will reload so you can sign in again.'))
             window.location.reload()
+        } else if (shouldToastAxiosError(error)) {
+            // Viele Speicher-/Löschaktionen fangen Fehler nur per console.error ab;
+            // ohne diese Meldung sähe die Aktion erfolgreich aus.
+            const message = messageForFailedRequest(status)
+            if (message) {
+                showAppToast('error', t(message))
+            }
         }
         return Promise.reject(error)
     }

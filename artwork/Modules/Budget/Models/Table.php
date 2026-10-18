@@ -38,11 +38,17 @@ class Table extends Model
 
     protected $appends = [];
 
+    /**
+     * @return HasMany<Column, $this>
+     */
     public function columns(): HasMany
     {
         return $this->hasMany(Column::class, 'table_id', 'id');
     }
 
+    /**
+     * @return HasMany<MainPosition, $this>
+     */
     public function mainPositions(): HasMany
     {
         return $this->hasMany(MainPosition::class, 'table_id', 'id');

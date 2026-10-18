@@ -7,7 +7,7 @@ use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Contacts\Models\Contact;
-use Database\Factories\ContactFactory;
+use Database\Factories\Artwork\Modules\Contacts\Models\ContactFactory;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;

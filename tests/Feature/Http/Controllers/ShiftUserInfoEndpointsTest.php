@@ -5,6 +5,9 @@ namespace Tests\Feature\Http\Controllers;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
+use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
+use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -73,6 +76,16 @@ final class ShiftUserInfoEndpointsTest extends FeatureTestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        // Zeitkonto läuft schon (erste Tagesbuchung vor dem Zeitraum) – davor gäbe es kein Soll
+        WorkTimeBooking::create([
+            'user_id' => $user->id,
+            'name' => WorkTimeBookingRepository::dailyBookingName(Carbon::parse('2026-05-29')),
+            'booking_day' => '2026-05-29',
+            'booking_weekday' => 5,
+            'wanted_working_hours' => 480,
+            'worked_hours' => 480,
+            'work_time_balance_change' => 0,
+        ]);
 
         $response = $this->getJson(route('shift.user-info.worktimes', [
             'user' => $user->id,
@@ -92,6 +105,67 @@ final class ShiftUserInfoEndpointsTest extends FeatureTestCase
         $this->assertFalse($days['2026-06-01']['target_unknown']);
         $this->assertFalse($response->json('totals.target_unknown'));
         $this->assertArrayHasKey('reduction_reason', $days['2026-06-01']);
+    }
+
+    #[Test]
+    public function worktimes_endpoint_marks_past_days_missing_from_the_time_account(): void
+    {
+        // Nächtliche Buchung bucht nur "heute": vergangene Tage ohne Tagesbuchung (Muster rückwirkend
+        // angelegt) zeigt die Übersicht mit Soll an, im Zeitkonto fehlen sie -> Hinweis + Abweichung.
+        $this->travelTo(Carbon::parse('2026-09-03 12:00'));
+        $this->actingAsAdmin();
+        $user = User::factory()->create(['can_work_shifts' => true]);
+        UserWorkTime::query()->insert([
+            'user_id' => $user->id,
+            'monday' => '02:00',
+            'tuesday' => '02:00',
+            'wednesday' => '02:00',
+            'thursday' => '02:00',
+            'friday' => '02:00',
+            'valid_from' => '2026-08-01',
+            'valid_until' => null,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $book = static fn (string $day, string $name, int $worked, int $wanted): WorkTimeBooking =>
+            WorkTimeBooking::create([
+                'user_id' => $user->id,
+                'name' => $name,
+                'booking_day' => $day,
+                'booking_weekday' => Carbon::parse($day)->dayOfWeek,
+                'wanted_working_hours' => $wanted,
+                'worked_hours' => $worked,
+                'work_time_balance_change' => $worked - $wanted,
+            ]);
+        // Fr 28.08.: erste Tagesbuchung – ab hier läuft das Zeitkonto (davor gibt es keinen „nicht gebucht“-Hinweis)
+        $book('2026-08-28', WorkTimeBookingRepository::dailyBookingName(Carbon::parse('2026-08-28')), 0, 120);
+        // Di 01.09.: nur manuelle Nachbuchung (Soll 0) -> Zeitkonto +63 h, Übersicht +61 h
+        $book('2026-09-01', 'manual_booking', 63 * 60, 0);
+        // Mi 02.09.: reguläre Tagesbuchung ohne Arbeit -> deckungsgleich mit der aktuellen Rechnung
+        $book('2026-09-02', WorkTimeBookingRepository::dailyBookingName(Carbon::parse('2026-09-02')), 0, 120);
+
+        $response = $this->getJson(route('shift.user-info.worktimes', [
+            'user' => $user->id,
+            'start' => '2026-08-29',
+            'end' => '2026-09-04',
+        ]))->assertOk();
+
+        $days = collect($response->json('workTimes'))->flatten(1)->keyBy('date');
+        $this->assertFalse($days['2026-08-30']['needs_rebooking']);  // Sonntag ohne Soll: keine Abweichung
+        $this->assertTrue($days['2026-08-31']['needs_rebooking']);   // Montag ohne jede Buchung
+        $this->assertSame('not_booked', $days['2026-08-31']['rebook_reason']);
+        $this->assertSame(-120, $days['2026-08-31']['rebook_difference_minutes']);
+        // nur manuelle Buchung: Anzeige 63 h Ist (manuell kommt zu den Schichten hinzu), Tagesbuchung fehlt
+        $this->assertSame(63 * 60, $days['2026-09-01']['worked_hours']);
+        $this->assertSame(-120, $days['2026-09-01']['rebook_difference_minutes']);
+        $this->assertFalse($days['2026-09-02']['needs_rebooking']);  // Tagesbuchung vorhanden, deckungsgleich
+        $this->assertFalse($days['2026-09-03']['needs_rebooking']);  // heute: Buchung folgt nachts
+        $this->assertFalse($days['2026-09-04']['needs_rebooking']);  // Zukunft
+        $response->assertJsonPath('totals.rebook_days', 2)
+            ->assertJsonPath('totals.rebook_dates', ['2026-08-31', '2026-09-01'])
+            ->assertJsonPath('totals.rebook_difference_minutes', -240)
+            ->assertJsonPath('totals.rebook_difference_signed', "\u{2212}4:00 h");
     }
 
     #[Test]

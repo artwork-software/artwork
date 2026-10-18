@@ -16,6 +16,8 @@ use Throwable;
 
 abstract class BaseRepository
 {
+    use SearchesWithSqlFallback;
+
     public function getNewModelInstance(): Model|Pivot|DatabaseNotification|CanSubstituteBaseModel
     {
         throw new BadMethodCallException(

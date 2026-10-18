@@ -97,11 +97,10 @@
 import {IconX} from "@tabler/icons-vue";
 
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "CalendarFilterTagComponent",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         IconX
     },

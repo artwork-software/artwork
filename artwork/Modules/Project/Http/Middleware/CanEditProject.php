@@ -7,36 +7,27 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class CanEditProject
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     * @param  \Closure(\Illuminate\Http\Request): Response  $next
      */
-    public function handle(Request $request, Closure $next): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+    public function handle(Request $request, Closure $next): Response
     {
         $project = $request->route('project');
+        $user = Auth::user();
 
         if (
-            Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
-            || Auth::user()->hasPermissionTo(PermissionEnum::WRITE_PROJECTS->value)
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->hasPermissionTo(PermissionEnum::WRITE_PROJECTS->value)
+            || $project->users()->where('users.id', $user->id)->first()?->pivot->can_write
         ) {
             return $next($request);
         }
 
-        if ($project->users()->where('users.id', Auth::id())->first() === null) {
-            return redirect()->back();
-        }
-
-        if ($project->users()->where('users.id', Auth::id())->first()) {
-            if ($project->users()->where('users.id', Auth::id())->first()->pivot->can_write) {
-                return $next($request);
-            }
-        }
-        return redirect()->back();
+        // Ein JSON-Aufruf kann mit einer Weiterleitung nichts anfangen.
+        return $request->expectsJson() ? abort(403) : redirect()->back();
     }
 }

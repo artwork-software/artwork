@@ -25,6 +25,9 @@ class WorkflowInstance extends Model
         'completed_at' => 'datetime'
     ];
 
+    /**
+     * @return BelongsTo<WorkflowDefinitionConfig, $this>
+     */
     public function workflowDefinitionConfig(): BelongsTo
     {
         return $this->belongsTo(
@@ -40,11 +43,17 @@ class WorkflowInstance extends Model
         return $this->morphTo();
     }
 
+    /**
+     * @return HasMany<WorkflowInstanceData, $this>
+     */
     public function workflowInstanceData(): HasMany
     {
         return $this->hasMany(WorkflowInstanceData::class);
     }
 
+    /**
+     * @return HasOne<WorkflowInstanceData, $this>
+     */
     public function currentData(): HasOne
     {
         return $this->hasOne(WorkflowInstanceData::class)
@@ -52,6 +61,9 @@ class WorkflowInstance extends Model
             ->latest('created_at');
     }
 
+    /**
+     * @return HasMany<WorkflowLog, $this>
+     */
     public function workflowLogs(): HasMany
     {
         return $this->hasMany(WorkflowLog::class);

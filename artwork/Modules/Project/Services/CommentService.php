@@ -10,6 +10,7 @@ use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Repositories\CommentRepository;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -110,7 +111,12 @@ readonly class CommentService
     public function forceDelete(Comment $comment): void
     {
         //$this->historyService->createHistory($comment->project->id, 'Comment force deleted');
-        broadcast(new DeleteCommendInProject($comment, $comment->project->id));
+        // Erst löschen, dann senden: die Clients laden die Liste auf das Event hin neu
+        $projectId = $comment->project_id;
         $comment->forceDelete();
+        if ($projectId !== null) {
+            // Live-Update darf das bereits erfolgte Löschen nicht in eine 500 verwandeln (WebSocket-Ausfall)
+            SafeBroadcast::send(new DeleteCommendInProject($comment, (int) $projectId));
+        }
     }
 }

@@ -372,6 +372,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
+import { shiftPlanFlashOnlyReload } from '@/Helper/shiftPlanReloads.js';
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
@@ -502,8 +503,6 @@ const roomId = computed(() => {
 });
 const roomLabel = computed(() => (typeof props.room === "object" ? (props.room?.roomName) : String(props.room ?? "—")));
 const setTab = (t) => (tab.value = t)
-
-const t = (key) => (typeof window !== "undefined" && typeof $t === "function" ? $t(key) : key) // optional falls du $t nicht importierst
 
 function toMinutes(hhmm) {
     if (!hhmm) return null;
@@ -662,6 +661,10 @@ function apply() {
         },
         {
             preserveScroll: true,
+            // ohne preserveState mountete der Redirect die ganze Seite neu (Dienstplan lud alle
+            // Räume/Personen nach); die neuen Schichten kommen über flash.shiftPlanUpdate
+            preserveState: true,
+            ...shiftPlanFlashOnlyReload(usePage().component),
             onFinish: () => {
                 processing.value = false;
             },

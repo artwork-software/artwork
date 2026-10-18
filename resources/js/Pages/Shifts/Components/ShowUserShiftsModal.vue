@@ -97,6 +97,7 @@
                                         :shift="shift"
                                         @shiftDeleted="handleShiftDeleted"
                                         @confirmation-changed="emit('desiresReload')"
+                                        @individual-time-saved="emit('desiresReload')"
                                     />
                                 </div>
                             </template>
@@ -432,7 +433,7 @@
                         >
                             <div class="w-full px-3 py-4 bg-accent-50 hover:bg-accent-100 border border-dashed border-accent-200 rounded-lg mt-1 transition-colors">
                                 <AlertComponent
-                                    text="Es wurden noch keine Zeiten festgelegt. Klicke hier um Zeiten zu erstellen"
+                                    :text="$t('No times have been set yet. Click here to create times')"
                                     show-icon
                                     icon-size="h-4 w-4"
                                 />
@@ -968,6 +969,7 @@ import {
     ListboxOptions,
 } from '@headlessui/vue';
 import axios from 'axios';
+import { failedRequestMessage } from '@/Helper/appToast.js';
 import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 
@@ -1078,6 +1080,7 @@ async function deleteAssignment(assignment, wholeGroup) {
     try {
         await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: assignment.id }), {
             params: { whole_group: wholeGroup },
+            skipErrorToast: true, // Fehler steht über den Zuordnungen
         });
 
         localAssignmentsForDay.value = wholeGroup
@@ -1086,7 +1089,7 @@ async function deleteAssignment(assignment, wholeGroup) {
 
         emit('desiresReload');
     } catch (error) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error);
+        projectAssignmentError.value = failedRequestMessage(error);
         await refreshAssignmentsForDay().catch(() => {});
     } finally {
         projectAssignmentActionKey.value = null;
@@ -1098,7 +1101,7 @@ async function acceptAssignmentWish(assignment) {
     projectAssignmentActionKey.value = `accept:${assignment.id}`;
     projectAssignmentError.value = '';
     try {
-        await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: assignment.id }));
+        await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: assignment.id }), {}, { skipErrorToast: true }); // Fehler steht über den Zuordnungen
 
         localAssignmentsForDay.value = localAssignmentsForDay.value.map(a =>
             a.group_id === assignment.group_id ? { ...a, type: 'binding' } : a,
@@ -1106,7 +1109,7 @@ async function acceptAssignmentWish(assignment) {
 
         emit('desiresReload');
     } catch (error) {
-        projectAssignmentError.value = error?.response?.data?.message ?? String(error);
+        projectAssignmentError.value = failedRequestMessage(error);
         await refreshAssignmentsForDay().catch(() => {});
     } finally {
         projectAssignmentActionKey.value = null;
@@ -1656,26 +1659,28 @@ function openHistory() {
     });
 }
 
+// axios statt Inertia-Visit: der Endpunkt antwortet ohne Inhalt, ein Inertia-Visit liefe danach
+// über den Redirect auf die komplette Dienstplanseite. Grid und Personenzeile aktualisiert der
+// Broadcast (.shift-remove-entity).
 function removeUserFromShift(shiftId, usersPivotId) {
-    router.delete(
-        route('shift.removeUserByType', {
-            usersPivotId,
-            userType: props.user.type,
-        }),
-        {
-            data: {
-                removeFromSingleShift: true,
+    axios
+        .delete(
+            route('shift.removeUserByType', {
+                usersPivotId,
+                userType: props.user.type,
+            }),
+            {
+                data: {
+                    removeFromSingleShift: true,
+                },
             },
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                document.getElementById('shift-' + shiftId)?.remove();
-            },
-            onFinish: () => {
-                document.getElementById('shift-' + shiftId)?.remove();
-            },
-        },
-    );
+        )
+        .then(() => {
+            document.getElementById('shift-' + shiftId)?.remove();
+        })
+        .catch(() => {
+            // Fehlermeldung zeigt der globale axios-Interceptor
+        });
 }
 
 function submitDeleteUserFromShift() {
@@ -1745,10 +1750,38 @@ function sendIndividualTimes() {
 }
 
 function revokeCompensationDay(id) {
+    // preserveState: ohne würde der Visit den kompletten Dienstplan neu mounten (alle Daten neu laden);
+    // Inertia bleibt hier für die Erfolgs-/Fehlermeldung (Flash)
     router.post(route('compensation-day-offs.revoke', { compensationDayOff: id }), {}, {
         preserveScroll: true,
+        preserveState: true,
         onSuccess: () => emit('desiresReload'),
     });
+}
+
+// axios statt Inertia-Visit: der Endpunkt antwortet ohne Inhalt, ein Inertia-Visit liefe danach
+// über den Redirect auf die komplette Dienstplanseite (voller Controller-Durchlauf + Props-Tausch).
+function saveVacationStatus(url) {
+    axios
+        .patch(url, {
+            checked: checked.value,
+            day: props.day.fullDay,
+            vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+            dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
+            // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
+            // daher hier nie automatisch detachen.
+            remove_from_shifts: false,
+        })
+        .then(() => {
+            // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+            // verfügbar"-Hervorhebung sofort aktualisieren
+            emit('desiresReload');
+            closeModal(true);
+        })
+        .catch(() => {
+            // Fehlermeldung zeigt der globale axios-Interceptor; erneutes Speichern erlauben
+            isSaving.value = false;
+        });
 }
 
 function sendCheckVacation() {
@@ -1764,7 +1797,7 @@ function sendCheckVacation() {
         return;
     }
 
-    // Unveränderter Status: der Vacation-Patch (voller Inertia-Visit) wäre ein
+    // Unveränderter Status: der Vacation-Patch wäre ein
     // No-op — überspringen, damit das Modal nach dem Speichern schneller schließt.
     const statusUnchanged =
         checked.value?.type === vacationTypeBeforeUpdate.value?.type &&
@@ -1776,78 +1809,11 @@ function sendCheckVacation() {
     }
 
     if (props.user.type === 0) {
-        router.patch(
-            route('user.check.vacation', { user: props.user.element.id }),
-            {
-                checked: checked.value,
-                day: props.day.fullDay,
-                vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
-                dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
-                // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
-                // daher hier nie automatisch detachen.
-                remove_from_shifts: false,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
-                    // verfügbar"-Hervorhebung sofort aktualisieren
-                    emit('desiresReload');
-                    closeModal(true);
-                },
-            },
-        );
+        saveVacationStatus(route('user.check.vacation', { user: props.user.element.id }));
     } else if (props.user.type === 2) {
-        router.patch(
-            route('service_provider.check.vacation', {
-                service_provider: props.user.element.id,
-            }),
-            {
-                checked: checked.value,
-                day: props.day.fullDay,
-                vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
-                dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
-                // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
-                // daher hier nie automatisch detachen.
-                remove_from_shifts: false,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
-                    // verfügbar"-Hervorhebung sofort aktualisieren
-                    emit('desiresReload');
-                    closeModal(true);
-                },
-            },
-        );
+        saveVacationStatus(route('service_provider.check.vacation', { service_provider: props.user.element.id }));
     } else {
-        router.patch(
-            route('freelancer.check.vacation', {
-                freelancer: props.user.element.id,
-            }),
-            {
-                checked: checked.value,
-                day: props.day.fullDay,
-                vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
-                dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
-                // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
-                // daher hier nie automatisch detachen.
-                remove_from_shifts: false,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
-                    // verfügbar"-Hervorhebung sofort aktualisieren
-                    emit('desiresReload');
-                    closeModal(true);
-                },
-            },
-        );
+        saveVacationStatus(route('freelancer.check.vacation', { freelancer: props.user.element.id }));
     }
 }
 

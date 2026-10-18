@@ -61,6 +61,9 @@ class SageNotAssignedData extends Model implements CollectiveBooking
         'parent_booking_id',
     ];
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'id', 'projects');

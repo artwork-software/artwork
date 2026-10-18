@@ -60,11 +60,17 @@ class Craft extends Model
 
     protected $with = ['craftShiftPlaner'];
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function craftShiftPlaner(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'craft_users', 'craft_id', 'user_id');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function craftInventoryPlaner(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'craft_users_inventory', 'craft_id', 'user_id');
@@ -75,11 +81,17 @@ class Craft extends Model
         return $builder->where('assignable_by_all', '=', true);
     }
 
+    /**
+     * @return HasMany<Shift, $this>
+     */
     public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class, 'craft_id', 'id');
     }
 
+    /**
+     * @return BelongsToMany<ShiftQualification, $this>
+     */
     public function qualifications(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -90,6 +102,9 @@ class Craft extends Model
         );
     }
 
+    /**
+     * @return MorphToMany<User, $this>
+     */
     public function users(): MorphToMany
     {
         return $this->morphedByMany(User::class, 'craftable')
@@ -99,6 +114,9 @@ class Craft extends Model
             ])->with(['shiftQualifications']);
     }
 
+    /**
+     * @return MorphToMany<Freelancer, $this>
+     */
     public function freelancers(): MorphToMany
     {
         return $this->morphedByMany(Freelancer::class, 'craftable')
@@ -106,6 +124,9 @@ class Craft extends Model
             ->with(['shiftQualifications']);
     }
 
+    /**
+     * @return MorphToMany<ServiceProvider, $this>
+     */
     public function serviceProviders(): MorphToMany
     {
         return $this->morphedByMany(ServiceProvider::class, 'craftable')
@@ -113,21 +134,33 @@ class Craft extends Model
             ->with(['shiftQualifications']);
     }
 
+    /**
+     * @return MorphToMany<User, $this>
+     */
     public function managingUsers(): MorphToMany
     {
         return $this->morphedByMany(User::class, 'craft_manager');
     }
 
+    /**
+     * @return MorphToMany<Freelancer, $this>
+     */
     public function managingFreelancers(): MorphToMany
     {
         return $this->morphedByMany(Freelancer::class, 'craft_manager');
     }
 
+    /**
+     * @return MorphToMany<ServiceProvider, $this>
+     */
     public function managingServiceProviders(): MorphToMany
     {
         return $this->morphedByMany(ServiceProvider::class, 'craft_manager');
     }
 
+    /**
+     * @return HasMany<ShiftPlanRequest, $this>
+     */
     public function shiftPlanRequests(): HasMany
     {
         return $this->hasMany(

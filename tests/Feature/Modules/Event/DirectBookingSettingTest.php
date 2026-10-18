@@ -86,11 +86,31 @@ final class DirectBookingSettingTest extends FeatureTestCase
         $this->assertTrue((bool) Event::query()->where('room_id', $room->id)->firstOrFail()->occupancy_option);
     }
 
+    /**
+     * Entscheidung 14.10.2026: "Planungskalender einsehen" erlaubt nur das Sehen – geplante Termine anlegen braucht
+     * auch bei "Termine immer direkt buchbar" "Im Planungskalender fest planen" (vorher genügte das Sichtrecht).
+     */
     #[Test]
-    public function planned_event_is_booked_directly_without_fixed_planning_permission(): void
+    public function planned_events_need_the_fixed_planning_permission_even_with_direct_booking(): void
     {
         $this->setDirectBooking(true);
         $this->actingAsUserWith([PermissionEnum::CAN_SEE_PLANNING_CALENDAR]);
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+        $eventType = EventType::factory()->create();
+
+        $this->postJson(route('events.store'), $this->storePayload($eventType, $room, ['isPlanning' => true]))
+            ->assertForbidden();
+        $this->assertSame(0, Event::query()->where('room_id', $room->id)->count());
+    }
+
+    #[Test]
+    public function planned_event_is_booked_directly_with_fixed_planning_permission(): void
+    {
+        $this->setDirectBooking(true);
+        $this->actingAsUserWith([
+            PermissionEnum::CAN_SEE_PLANNING_CALENDAR,
+            PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR,
+        ]);
         $room = Room::factory()->create(['everyone_can_book' => false]);
         $eventType = EventType::factory()->create();
 
@@ -259,15 +279,22 @@ final class DirectBookingSettingTest extends FeatureTestCase
             [
             PermissionEnum::EVENT_REQUEST,
             PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST,
-            PermissionEnum::CAN_SEE_PLANNING_CALENDAR,
-            PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR,
             ] as $permission
         ) {
             $definition = $catalog->definition($permission);
             $this->assertNotNull($definition?->supersededBy, $permission->value);
             $this->assertSame('event_direct_booking_only', $definition->supersededBy->value);
         }
-        $this->assertNull($catalog->definition(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR)?->supersededBy);
+        // Planungskalender-Rechte gelten unverändert weiter (Entscheidung 14.10.2026)
+        foreach (
+            [
+            PermissionEnum::CAN_SEE_PLANNING_CALENDAR,
+            PermissionEnum::CAN_EDIT_PLANNING_CALENDAR,
+            PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR,
+            ] as $permission
+        ) {
+            $this->assertNull($catalog->definition($permission)?->supersededBy, $permission->value);
+        }
 
         $state = app(PermissionCatalogPresenter::class)->instanceState();
         $this->assertTrue($state['settings']['event_direct_booking_only']);

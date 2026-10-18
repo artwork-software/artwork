@@ -15,7 +15,9 @@ class RemoveTemporaryRoomsCommand extends Command
 
     public function handle(): int
     {
-        $rooms = Room::where('end_date', '<=', Carbon::now())->where('temporary', true)->get();
+        // end_date kommt aus einem Datumsfeld (00:00 Uhr) und ist der letzte gültige Tag:
+        // erst entfernen, wenn dieser Tag vorbei ist, nicht schon am Morgen des Tages.
+        $rooms = Room::where('end_date', '<', Carbon::today())->where('temporary', true)->get();
 
         foreach ($rooms as $room) {
             $this->info('Room ' . $room->name . ' deleted');

@@ -325,6 +325,7 @@
 
 <script setup>
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
+import { toYmd } from "@/Helper/IsoWeek.js";
 import {computed, inject, nextTick, ref, unref, watch} from "vue";
 import {
     IconChevronLeft,
@@ -597,8 +598,8 @@ const jumpToCurrentWeek = () => {
     const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
     currentWeekEnd.setDate(today.getDate() + daysToSunday);
 
-    dateValueCopy.value[0] = currentWeekStart.toISOString().slice(0, 10);
-    dateValueCopy.value[1] = currentWeekEnd.toISOString().slice(0, 10);
+    dateValueCopy.value[0] = toYmd(currentWeekStart);
+    dateValueCopy.value[1] = toYmd(currentWeekEnd);
     updateTimes();
 }
 

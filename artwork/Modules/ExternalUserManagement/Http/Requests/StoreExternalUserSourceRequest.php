@@ -4,18 +4,21 @@ namespace Artwork\Modules\ExternalUserManagement\Http\Requests;
 
 use Artwork\Core\Validation\Rules\PublicUrlRule;
 use Artwork\Modules\ExternalUserManagement\Api\LdapApi;
+use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreExternalUserSourceRequest extends FormRequest
 {
+    use RestrictsAdminRoleMapping;
+
     /**
-     * Determine if the user is authorized to make this request.
+     * Quellen anlegen/ändern (inkl. Aktivieren) nur als artwork-Admin – siehe ExternalUserSourcePolicy.
      */
     public function authorize(): bool
     {
-        return $this->user()->can('change tool settings');
+        return $this->user()?->can('manage', ExternalUserSource::class) ?? false;
     }
 
     /**
@@ -58,7 +61,7 @@ class StoreExternalUserSourceRequest extends FormRequest
             'config.groups_claim' => ['nullable', 'string', 'max:100'],
             'config.allowed_domains' => ['nullable', 'array'],
             'config.allowed_domains.*' => ['string', 'max:255'],
-            'config.default_role_id' => ['nullable', 'integer', 'exists:roles,id'],
+            'config.default_role_id' => ['nullable', 'integer', 'exists:roles,id', $this->adminRoleRule()],
         ];
 
         // Discovery-URL wird für Google/Microsoft aus dem Preset abgeleitet und
@@ -107,7 +110,7 @@ class StoreExternalUserSourceRequest extends FormRequest
                 'max:100',
                 Rule::in(LdapApi::ALLOWED_IDENTIFIER_ATTRIBUTES),
             ],
-            'config.default_role_id' => ['nullable', 'integer', 'exists:roles,id'],
+            'config.default_role_id' => ['nullable', 'integer', 'exists:roles,id', $this->adminRoleRule()],
         ];
     }
 }

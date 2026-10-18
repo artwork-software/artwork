@@ -60,6 +60,9 @@ class SubEvent extends Model
 
     protected $appends = ['formattedDates'];
 
+    /**
+     * @return BelongsTo<EventType, $this>
+     */
     public function type(): BelongsTo
     {
         return $this->belongsTo(
@@ -70,6 +73,9 @@ class SubEvent extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Event, $this>
+     */
     public function event(): BelongsTo
     {
         return $this->belongsTo(
@@ -80,6 +86,9 @@ class SubEvent extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(
@@ -90,6 +99,9 @@ class SubEvent extends Model
         );
     }
 
+    /**
+     * @return BelongsToMany<EventProperty, $this>
+     */
     public function eventProperties(): BelongsToMany
     {
         return $this->belongsToMany(EventProperty::class);

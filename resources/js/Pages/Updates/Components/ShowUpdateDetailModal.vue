@@ -75,7 +75,7 @@
         <div class="mt-3">
             <div v-if="item.properties.some(property => property.title === 'Update Datum')">
                 <div class="text-sm/5 font-semibold text-text">
-                    <span>Update Datum: </span>
+                    <span>{{ $t('Update date') }}: </span>
                     <span>{{ convertDate(item.properties.find(property => property.title === 'Update Datum')?.rawContent?.start) }} </span>
                     <span v-if="item.properties.find(property => property.title === 'Update Datum')?.rawContent?.end"> - {{ convertDate(item.properties.find(property => property.title === 'Update Datum')?.rawContent?.end) }} </span>
                 </div>

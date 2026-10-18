@@ -415,7 +415,7 @@ class ContractService
             );
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
-                'type' => 'green',
+                'type' => 'success',
                 'message' => $notificationTitle
             ];
             $notificationDescription = [
@@ -463,7 +463,7 @@ class ContractService
 
                 $notificationTitle = __(
                     'notification.document_request.completed',
-                    ['user' => $uploaderName],
+                    ['user' => $uploaderName, 'title' => $documentRequest->displayTitle()],
                     $requester->language
                 );
 
@@ -477,7 +477,8 @@ class ContractService
                     1 => [
                         'type' => 'string',
                         'title' => __('notification.document_request.completed_description', [
-                            'user' => $uploaderName
+                            'user' => $uploaderName,
+                            'title' => $documentRequest->displayTitle(),
                         ], $requester->language),
                         'href' => null
                     ],

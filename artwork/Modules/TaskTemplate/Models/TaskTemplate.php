@@ -40,6 +40,9 @@ class TaskTemplate extends Model
         'deadline_days_after_creation' => 'integer'
     ];
 
+    /**
+     * @return BelongsTo<ChecklistTemplate, $this>
+     */
     //@todo: fix phpcs error - refactor function name to checklistTemplate
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function checklist_template(): BelongsTo
@@ -52,6 +55,9 @@ class TaskTemplate extends Model
         );
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     //@todo: fix phpcs error - refactor function name to taskUsers
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function task_users(): BelongsToMany

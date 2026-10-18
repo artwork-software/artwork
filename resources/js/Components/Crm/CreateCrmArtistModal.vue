@@ -135,7 +135,7 @@ async function submit() {
             crm_contact_type_id: contactType.value.id,
             display_name: displayName.value.trim(),
             property_values: propertyValues.value,
-        });
+        }, { skipErrorToast: true }); // Fehler steht im Modal
         emit('created', response.data);
         emit('close');
     } catch (e) {
@@ -146,7 +146,7 @@ async function submit() {
             }
             errors.value = serverErrors;
         } else {
-            errors.value = { display_name: $t('Failed to load data') };
+            errors.value = { display_name: e?.response?.data?.message ?? $t('Failed to save') };
         }
     } finally {
         submitting.value = false;

@@ -1,5 +1,6 @@
 <script setup>
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
+import { requiresScope } from "@/Pages/Projects/Tab/projectTabComponentRules.js";
 import DropComponentsToolTip from "@/Components/ToolTips/DropComponentsToolTip.vue";
 import AddComponentToTargetModal from "@/Pages/Settings/Components/AddComponentToTargetModal.vue";
 import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
@@ -78,9 +79,7 @@ const isFolder = computed(() => props.component.type === "DisclosureComponent");
 const folderLabel = computed(() => props.component?.data?.label || null);
 
 // Komponenten, die nach dem Ablegen eine Tab-Auswahl (Scope) benötigen
-const needsScope = computed(() =>
-    ["ProjectDocumentsComponent", "CommentTab", "ChecklistComponent"].includes(props.component.type)
-);
+const needsScope = computed(() => requiresScope(props.component.type));
 
 const usageTooltip = computed(() =>
     props.usages

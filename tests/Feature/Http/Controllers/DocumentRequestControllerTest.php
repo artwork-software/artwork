@@ -2,6 +2,11 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Models\CrmContactType;
+use Artwork\Modules\Crm\Models\CrmProperty;
+use Artwork\Modules\Crm\Models\CrmPropertyGroup;
+use Artwork\Modules\Crm\Models\CrmPropertyValue;
 use Artwork\Modules\DocumentRequest\Models\DocumentRequest;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
@@ -136,5 +141,99 @@ final class DocumentRequestControllerTest extends FeatureTestCase
 
         $response->assertRedirect();
         $this->assertSoftDeleted('document_requests', ['id' => $documentRequest->id]);
+    }
+
+    #[Test]
+    public function unassigned_requests_are_only_sent_to_users_who_may_see_foreign_requests(): void
+    {
+        DocumentRequest::factory()->create(['requested_id' => null, 'status' => DocumentRequest::STATUS_OPEN]);
+
+        // Vorher in den Props für alle, das Frontend blendete nur den Tab aus
+        $this->actingAs(User::factory()->create());
+        $this->get(route('document-requests.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->has('unassignedRequests', 0));
+
+        $this->actingAsUserWith(PermissionEnum::DOCUMENT_REQUEST_EDIT->value);
+        $this->get(route('document-requests.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where(
+                'unassignedRequests',
+                fn ($requests) => count($requests) >= 1
+            ));
+    }
+
+    #[Test]
+    public function crm_contact_data_is_only_returned_to_involved_or_authorised_users(): void
+    {
+        $requester = User::factory()->create();
+        $request = DocumentRequest::factory()->create(['requester_id' => $requester->id, 'requested_id' => null]);
+
+        // Vorher ohne jede Prüfung abrufbar
+        $this->actingAs(User::factory()->create());
+        $this->getJson(route('document-requests.crm-contact', $request))->assertForbidden();
+
+        $this->actingAs($requester);
+        $this->getJson(route('document-requests.crm-contact', $request))->assertOk();
+
+        $this->actingAsUserWith(PermissionEnum::DOCUMENT_REQUEST_EDIT->value);
+        $this->getJson(route('document-requests.crm-contact', $request))->assertOk();
+    }
+
+    #[Test]
+    public function crm_contact_data_hides_values_of_confidential_groups_without_release(): void
+    {
+        $type = CrmContactType::query()->create(['name' => 'Künstler*in', 'slug' => 'docreq-' . uniqid()]);
+        $contact = CrmContact::query()->create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => 'Ada Vertraulich',
+            'is_active' => true,
+        ]);
+
+        $publicGroup = CrmPropertyGroup::query()->create(['name' => 'Öffentlich', 'is_confidential' => false]);
+        $publicProperty = CrmProperty::query()->create([
+            'crm_property_group_id' => $publicGroup->id,
+            'name' => 'Stadt',
+            'type' => 'text',
+        ]);
+        $confidentialGroup = CrmPropertyGroup::query()->create(['name' => 'Honorar', 'is_confidential' => true]);
+        $confidentialProperty = CrmProperty::query()->create([
+            'crm_property_group_id' => $confidentialGroup->id,
+            'name' => 'Stundensatz',
+            'type' => 'text',
+        ]);
+        CrmPropertyValue::query()->create([
+            'crm_contact_id' => $contact->id,
+            'crm_property_id' => $publicProperty->id,
+            'value' => 'Hamburg',
+        ]);
+        CrmPropertyValue::query()->create([
+            'crm_contact_id' => $contact->id,
+            'crm_property_id' => $confidentialProperty->id,
+            'value' => '95 EUR',
+        ]);
+
+        $requester = User::factory()->create();
+        $request = DocumentRequest::factory()->create([
+            'requester_id' => $requester->id,
+            'requested_id' => null,
+            'crm_contact_id' => $contact->id,
+        ]);
+
+        // Vorher lag der Stundensatz im JSON, nur die Gruppe war ausgeblendet
+        $this->actingAs($requester);
+        $response = $this->getJson(route('document-requests.crm-contact', $request))->assertOk();
+        $values = collect($response->json('contact.property_values'))->pluck('value', 'crm_property_id');
+        $this->assertSame('Hamburg', $values->get($publicProperty->id));
+        $this->assertFalse($values->has($confidentialProperty->id));
+        $this->assertStringNotContainsString('95 EUR', $response->getContent());
+
+        // CRM-Verwaltung sieht vertrauliche Gruppen und deren Werte weiterhin
+        $this->actingAsUserWith([
+            PermissionEnum::DOCUMENT_REQUEST_EDIT->value,
+            PermissionEnum::CRM_MANAGER->value,
+        ]);
+        $response = $this->getJson(route('document-requests.crm-contact', $request))->assertOk();
+        $values = collect($response->json('contact.property_values'))->pluck('value', 'crm_property_id');
+        $this->assertSame('95 EUR', $values->get($confidentialProperty->id));
+        $this->assertSame('Hamburg', $values->get($publicProperty->id));
     }
 }

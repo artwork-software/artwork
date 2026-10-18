@@ -2,32 +2,20 @@
 
 namespace Artwork\Modules\Notification\Services;
 
-use Artwork\Modules\Budget\Notifications\BudgetVerified;
-use Artwork\Modules\Department\Notifications\TeamNotification;
+use Illuminate\Notifications\Notification as LaravelNotification;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Event\Notifications\ConflictNotification;
-use Artwork\Modules\Event\Notifications\EventNotification;
 use Artwork\Modules\Event\Services\EventService;
-use Artwork\Modules\Inventory\Notifications\InventoryArticleNotification;
-use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Events\NewNotificationBroadcast;
-use Artwork\Modules\ExternalAccess\Notifications\ExternalAccessExpiringNotification;
-use Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification;
-use Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification;
-use Artwork\Modules\Project\Notifications\ProjectNotification;
-use Artwork\Modules\Room\Notifications\RoomNotification;
 use Artwork\Modules\Room\Notifications\RoomRequestNotification;
 use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\Shift\Notifications\ShiftNotification;
-use Artwork\Modules\Task\Notifications\DeadlineNotification;
-use Artwork\Modules\Task\Notifications\TaskNotification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Support\Facades\Notification;
 use stdClass;
 
@@ -37,11 +25,11 @@ class NotificationService
 
     public ?NotificationEnum $notificationConstEnum = null;
 
-    public string $title;
+    public string $title = '';
 
     public array|null $description = [];
 
-    public string $icon = 'green';
+    public string $icon = 'gray';
 
     public array $buttons = [];
 
@@ -103,7 +91,7 @@ class NotificationService
         $this->shiftId = $shiftId;
     }
 
-    public function getNotificationTo(): User
+    public function getNotificationTo(): ?User
     {
         return $this->notificationTo;
     }
@@ -321,6 +309,19 @@ class NotificationService
         $this->createdBy = $createdBy;
     }
 
+    /**
+     * Farbe des Benachrichtigungs-Icons; nur Varianten mit SVG (public/Svgs/IconSvgs).
+     */
+    private function displayIcon(): string
+    {
+        return match ($this->getIcon()) {
+            'red', 'warning' => 'red',
+            'green' => 'green',
+            'blue', 'workflow' => 'blue',
+            default => 'gray',
+        };
+    }
+
     public function clearNotificationData(): void
     {
         $this->setTitle('');
@@ -343,6 +344,8 @@ class NotificationService
         $this->setPositionVerifyRequestId(null);
         $this->setPositionVerifyRequestType(null);
         $this->setCreatedBy(null);
+        $this->setPriority(0);
+        $this->notificationTo = null;
     }
 
     /**
@@ -357,12 +360,31 @@ class NotificationService
         return $user instanceof User ? $user : null;
     }
 
+    /**
+     * Nur, was die Kopfzeile braucht. Vorher landete das ganze User-Modell (E-Mail, Telefon,
+     * Stundenkonto, Login-IDs …) in notifications.data und ging so an alle Empfänger*innen;
+     * Kontaktdaten lädt der Tooltip rechtegeprüft nach (user.tooltip.info).
+     *
+     * @return array{id: int, first_name: ?string, last_name: ?string, profile_photo_url: ?string}|null
+     */
+    private function creatorSummary(?User $creator): ?array
+    {
+        if ($creator === null) {
+            return null;
+        }
+
+        return [
+            'id' => $creator->id,
+            'first_name' => $creator->first_name,
+            'last_name' => $creator->last_name,
+            'profile_photo_url' => $creator->profile_photo_url,
+        ];
+    }
+
     private function actingUserId(): ?int
     {
         return $this->actingUser()?->id;
     }
-    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function createNotification(): void
     {
         if (!$this->getNotificationTo()) {
@@ -370,7 +392,8 @@ class NotificationService
         }
 
         $body = new stdClass();
-        $body->icon = 'gray';
+        // vorher fest 'gray' – die gesetzte Statusfarbe kam nie an
+        $body->icon = $this->displayIcon();
         $body->priority = $this->getPriority();
         $body->groupType = $this->getNotificationConstEnum()->groupType();
         $body->type = $this->getNotificationConstEnum();
@@ -386,7 +409,7 @@ class NotificationService
         $body->projectId = $this->getProjectId();
         $body->departmentId = $this->departmentId;
         $body->taskId = $this->getTaskId();
-        $body->created_by = $this->createdBy ?? $this->actingUser()?->withoutRelations();
+        $body->created_by = $this->creatorSummary($this->createdBy ?? $this->actingUser());
         $body->created_at = Carbon::now()->translatedFormat('d.m.Y H:i');
         $body->budgetData = $this->getBudgetData();
         $body->notificationKey = $this->getNotificationKey();
@@ -394,199 +417,65 @@ class NotificationService
         $body->positionVerifyRequestId = $this->getPositionVerifyRequestId();
         $body->positionVerifyRequestType = $this->getPositionVerifyRequestType();
 
-        switch ($this->getNotificationConstEnum()) {
-            case NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
-            case NotificationEnum::NOTIFICATION_ROOM_REQUEST:
-            case NotificationEnum::NOTIFICATION_ROOM_ANSWER:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new RoomRequestNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_EVENT_CHANGED:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new EventNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_NEW_TASK:
-            case NotificationEnum::NOTIFICATION_TASK_CHANGED:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new TaskNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_PROJECT:
-            case NotificationEnum::NOTIFICATION_PUBLIC_RELEVANT:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new ProjectNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_TEAM:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new TeamNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_ROOM_CHANGED:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new RoomNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_CONFLICT:
-            case NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new ConflictNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_TASK_REMINDER:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new DeadlineNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
-            case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new MoneySourceNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION:
-            case NotificationEnum::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED:
-                Notification::send(
-                    $this->getNotificationTo(),
-                    new MoneySourceNotification($body, $this->getBroadcastMessage())
-                );
-                break;
-            case NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
-            case NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new BudgetVerified($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_SHIFT_LOCKED:
-            case NotificationEnum::NOTIFICATION_SHIFT_AVAILABLE:
-            case NotificationEnum::NOTIFICATION_SHIFT_CHANGED:
-            case NotificationEnum::NOTIFICATION_SHIFT_CONFLICT:
-            case NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT:
-            case NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT:
-            case NotificationEnum::NOTIFICATION_SHIFT_OPEN_DEMAND:
-            case NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED:
-            case NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED:
-            case NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST:
-            case NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST:
-            case NotificationEnum::NOTIFICATION_SHIFT_WORKER_CONFIRMATION:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new ShiftNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new EventNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED:
-            case NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new InventoryArticleNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE:
-                // Kommt aus einem Scheduled Command (kein Auth-User) — immer senden.
-                Notification::send(
-                    $this->getNotificationTo(),
-                    new InventoryArticleNotification($body, $this->getBroadcastMessage())
-                );
-                break;
-            case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_CREATED:
-            case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new BudgetVerified($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new ExternalCrmSubmissionNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new ExternalTabComponentUpdatedNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
-            case NotificationEnum::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING:
-                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
-                        $this->getNotificationTo(),
-                        new ExternalAccessExpiringNotification($body, $this->getBroadcastMessage())
-                    );
-                }
-                break;
+        $type = $this->getNotificationConstEnum();
+        $notificationClass = $type->notificationClass();
+        // Handelnd ist auch die Person, die eine geplante Änderung ausgelöst hat (Scheduler ohne Auth) –
+        // sonst bekam sie ihre eigenen Projekt-/Termin-/Aufgabenänderungen gemeldet
+        $actingUserId = $this->createdBy?->id ?? $this->actingUserId();
+        $isDelivered = $notificationClass !== null &&
+            ($type->notifiesActingUser() || $this->getNotificationTo()->id !== $actingUserId);
+
+        if ($isDelivered) {
+            $this->sendNotification(
+                $this->getNotificationTo(),
+                new $notificationClass($body, $this->getBroadcastMessage() ?? [])
+            );
         }
 
-        $this->sendBroadcastMessage($this->getNotificationTo());
-
-
-        $this->userService->updateCurrentUserShowNotificationIndicator(
-            $this->getNotificationTo(),
-            true
-        );
+        // Live-Toast bewusst auch für die handelnde Person (Rückmeldung, z. B. Planer-Warnungen);
+        // die Glocke nur, wenn wirklich ein Eintrag im Benachrichtigungscenter entstanden ist
+        $this->broadcastLiveHint($this->getNotificationTo(), $type, $this->getBroadcastMessage() ?? [], $isDelivered);
+        if ($isDelivered) {
+            $this->userService->updateCurrentUserShowNotificationIndicator($this->getNotificationTo(), true);
+        }
     }
 
-    private function sendBroadcastMessage(User $user): void
+    /**
+     * Zugestellte Benachrichtigung, die nicht über createNotification läuft (z. B.
+     * Schichtregel-Verstöße): Live-Toast gemäß Einstellung „Push“ plus Glocke.
+     *
+     * @param array<string, mixed> $broadcastMessage
+     */
+    public function pushToUser(User $user, NotificationEnum $type, array $broadcastMessage): void
     {
-        $notificationSetting = $user->notificationSettings()
-            ->where('type', $this->getNotificationConstEnum())
-            ->first();
+        $this->broadcastLiveHint($user, $type, $broadcastMessage, true);
+        $this->userService->updateCurrentUserShowNotificationIndicator($user, true);
+    }
 
-        if ($notificationSetting?->getAttribute('enabled_push')) {
-            if ($this->getBroadcastMessage()) {
-                broadcast(new NewNotificationBroadcast($user, $this->getBroadcastMessage()));
-            }
+    /**
+     * @param array<string, mixed> $broadcastMessage
+     */
+    private function broadcastLiveHint(
+        User $user,
+        NotificationEnum $type,
+        array $broadcastMessage,
+        bool $delivered
+    ): void {
+        if ($broadcastMessage === []) {
+            return;
         }
+
+        $pushEnabled = (bool) $user->notificationSettings()->where('type', $type->value)->value('enabled_push');
+        if (!$pushEnabled) {
+            return;
+        }
+
+        // Wie bei den Sofort-Mails: ist der WebSocket-Server nicht erreichbar, fällt nur der
+        // Live-Hinweis aus – nicht die bereits gespeicherte Aktion (vorher 500 nach dem Speichern).
+        // SafeBroadcast: gemeinsamer Kurzschluss mit den Termin-/Schicht-Broadcasts (kein Timeout je Hinweis
+        // bei hängendem Server) und in Transaktionen erst nach dem Commit (kein Hinweis zu zurückgerollten Daten).
+        // delivered: nur dann setzt das Frontend den Glocken-Punkt (Rückmeldung an Handelnde ohne Eintrag)
+        SafeBroadcast::send(new NewNotificationBroadcast($user, $broadcastMessage + ['delivered' => $delivered]));
     }
 
     public function checkIfUserInMoreThanTenShifts(User $user, Shift $shift): stdClass
@@ -680,7 +569,7 @@ class NotificationService
     ): bool {
         $existingNotification = DB::table('notifications')
             ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->where('notifiable_id', $recipientUserId)
             ->whereNull('data->handledStatus')
             ->first();
@@ -689,28 +578,45 @@ class NotificationService
             return false;
         }
 
-        $data = json_decode($existingNotification->data, true);
+        $this->markRoomRequestNotificationModified(
+            (string) $existingNotification->id,
+            json_decode($existingNotification->data, true),
+            $newDescription
+        );
+
+        return true;
+    }
+
+    /**
+     * Offene Raumanfrage als „geändert“ kennzeichnen und neu als ungelesen zeigen (Update über den Primärschlüssel).
+     *
+     * @param array<string, mixed> $data
+     * @param array<int, array<string, mixed>> $newDescription
+     */
+    public function markRoomRequestNotificationModified(
+        string $notificationId,
+        array $data,
+        array $newDescription
+    ): void {
         $data['isModified'] = true;
         $data['modifiedAt'] = now()->translatedFormat('d.m.Y H:i');
         $data['modifiedCount'] = ($data['modifiedCount'] ?? 0) + 1;
         $data['description'] = $newDescription;
 
         DB::table('notifications')
-            ->where('id', $existingNotification->id)
+            ->where('id', $notificationId)
             ->update([
                 'data' => json_encode($data),
                 'updated_at' => now(),
                 'read_at' => null,
             ]);
-
-        return true;
     }
 
     public function updateRoomRequestNotificationStatus(int $eventId, string $status, ?User $handledBy = null): void
     {
         $notifications = DB::table('notifications')
             ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->get();
 
         foreach ($notifications as $notification) {
@@ -727,11 +633,174 @@ class NotificationService
         }
     }
 
+    /**
+     * Offene Raumanfrage-Benachrichtigungen als erledigt markieren, wenn die Anfrage nicht über
+     * Annehmen/Ablehnen endet (Termin gelöscht, Direktbuchung aktiviert). Sonst blieben Annehmen/
+     * Ablehnen stehen – Ablehnen hätte dann einer bestätigten Buchung den Raum entzogen.
+     */
+    public function markOpenRoomRequestsHandled(int $eventId, string $status, ?User $handledBy = null): void
+    {
+        $notifications = DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', (string) $eventId)
+            ->whereNull('data->handledStatus')
+            ->get();
+
+        foreach ($notifications as $notification) {
+            $data = json_decode($notification->data, true);
+            $data['handledStatus'] = $status;
+            $data['handledBy'] = $handledBy
+                ? ['id' => $handledBy->id, 'name' => $handledBy->display_name]
+                : null;
+            $data['handledAt'] = now()->translatedFormat('d.m.Y H:i');
+            $data['buttons'] = [];
+            DB::table('notifications')
+                ->where('id', $notification->id)
+                ->update(['data' => json_encode($data)]);
+        }
+    }
+
+    /**
+     * Massenvariante von markOpenRoomRequestsHandled() + deleteUpsertRoomRequestNotificationByEventId() für
+     * Bulk-/Projektlöschungen: data->eventId hat keinen Index, je Termin zwei Abfragen bedeuteten je Termin zwei
+     * Full-Scans auf notifications. Hier ein Scan je 500 Termine.
+     * JSON_VALID zuerst: im Strict-Mode bricht JSON_EXTRACT (auch im DELETE) sonst an einer ungültigen Zeile ab.
+     *
+     * @param array<int, int> $eventIds
+     */
+    public function closeRoomRequestNotificationsForDeletedEvents(
+        array $eventIds,
+        string $status,
+        ?User $handledBy = null
+    ): void {
+        $eventIds = array_values(array_unique(array_map('intval', $eventIds)));
+        if ($eventIds === []) {
+            return;
+        }
+
+        foreach (array_chunk($eventIds, 500) as $eventIdChunk) {
+            $eventIdStrings = array_map('strval', $eventIdChunk);
+
+            DB::table('notifications')
+                ->whereRaw('JSON_VALID(data)')
+                ->where('type', RoomRequestNotification::class)
+                ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST->value)
+                ->whereIn('data->eventId', $eventIdStrings)
+                ->delete();
+
+            $openNotifications = DB::table('notifications')
+                ->whereRaw('JSON_VALID(data)')
+                ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+                ->whereIn('data->eventId', $eventIdStrings)
+                ->whereNull('data->handledStatus')
+                ->get(['id', 'data']);
+
+            foreach ($openNotifications as $notification) {
+                $data = json_decode($notification->data, true);
+                $data['handledStatus'] = $status;
+                $data['handledBy'] = $handledBy
+                    ? ['id' => $handledBy->id, 'name' => $handledBy->display_name]
+                    : null;
+                $data['handledAt'] = now()->translatedFormat('d.m.Y H:i');
+                $data['buttons'] = [];
+                DB::table('notifications')
+                    ->where('id', $notification->id)
+                    ->update(['data' => json_encode($data)]);
+            }
+        }
+    }
+
+    /**
+     * Raumanfrage-Meldungen mehrerer Termine in einem Scan je 500 Termine (data->eventId hat keinen Index), nach
+     * Termin gruppiert, jüngste zuerst. Ohne $includeHandled nur offene Anfragen.
+     *
+     * @param array<int, int> $eventIds
+     * @return array<int, list<array{id: string, notifiable_id: int, data: array<string, mixed>}>>
+     */
+    public function roomRequestNotificationsByEvent(array $eventIds, bool $includeHandled): array
+    {
+        $eventIds = array_values(array_unique(array_map('intval', $eventIds)));
+        $notificationsByEvent = [];
+
+        foreach (array_chunk($eventIds, 500) as $eventIdChunk) {
+            $query = DB::table('notifications')
+                ->whereRaw('JSON_VALID(data)')
+                ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+                ->whereIn('data->eventId', array_map('strval', $eventIdChunk));
+            if (!$includeHandled) {
+                $query->whereNull('data->handledStatus');
+            }
+
+            $notifications = $query
+                ->orderByDesc('updated_at')
+                ->orderByDesc('created_at')
+                ->get(['id', 'notifiable_id', 'data']);
+
+            foreach ($notifications as $notification) {
+                $data = json_decode($notification->data, true);
+                $notificationsByEvent[(int) ($data['eventId'] ?? 0)][] = [
+                    'id' => (string) $notification->id,
+                    'notifiable_id' => (int) $notification->notifiable_id,
+                    'data' => $data,
+                ];
+            }
+        }
+
+        return $notificationsByEvent;
+    }
+
+    /**
+     * Gegenstück zu closeRoomRequestNotificationsForDeletedEvents() beim Wiederherstellen: Annehmen/Ablehnen
+     * zurück, Erledigt-Vermerk entfernen, wieder ungelesen – ein Update je 500 Meldungen.
+     *
+     * @param array<int, string> $notificationIds
+     */
+    public function reopenRoomRequestNotificationsByIds(array $notificationIds): void
+    {
+        foreach (array_chunk(array_values(array_unique($notificationIds)), 500) as $notificationIdChunk) {
+            DB::table('notifications')
+                ->whereIn('id', $notificationIdChunk)
+                ->update([
+                    'data' => DB::raw(
+                        "JSON_SET(JSON_REMOVE(data, '$.handledStatus', '$.handledBy', '$.handledAt'), "
+                        . "'$.buttons', JSON_ARRAY('show_in_calendar', 'accept', 'decline'))"
+                    ),
+                    'updated_at' => now(),
+                    'read_at' => null,
+                ]);
+        }
+    }
+
+    /**
+     * @param array<int, string> $notificationIds
+     */
+    public function deleteRoomRequestNotificationsByIds(array $notificationIds): void
+    {
+        foreach (array_chunk(array_values(array_unique($notificationIds)), 500) as $notificationIdChunk) {
+            DB::table('notifications')->whereIn('id', $notificationIdChunk)->delete();
+        }
+    }
+
+    /**
+     * Nach einem Raumwechsel der offenen Anfrage: Admins des alten Raums verlieren ihre Anfrage.
+     *
+     * @param array<int, int> $keepRecipientIds
+     */
+    public function deleteUnhandledRoomRequestNotificationsExcept(int $eventId, array $keepRecipientIds): void
+    {
+        DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', (string) $eventId)
+            ->whereNull('data->handledStatus')
+            ->whereNotIn('notifiable_id', $keepRecipientIds)
+            ->delete();
+    }
+
     public function deleteUnhandledRoomRequestNotificationsByEventId(int $eventId): void
     {
         DB::table('notifications')
             ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->whereNull('data->handledStatus')
             ->delete();
     }
@@ -741,7 +810,21 @@ class NotificationService
         DB::table('notifications')
             ->where('type', RoomRequestNotification::class)
             ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->delete();
+    }
+
+    /**
+     * Sofort-Mails laufen synchron im Request. Ist der Mailserver nicht
+     * erreichbar, soll nur die Mail ausfallen und gemeldet werden – nicht die Aktion,
+     * die die Benachrichtigung ausgelöst hat (Termin speichern, Raumanfrage …).
+     */
+    private function sendNotification(User $notifiable, LaravelNotification $notification): void
+    {
+        try {
+            Notification::send($notifiable, $notification);
+        } catch (TransportExceptionInterface $exception) {
+            report($exception);
+        }
     }
 }

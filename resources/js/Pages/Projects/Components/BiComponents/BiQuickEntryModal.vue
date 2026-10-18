@@ -64,7 +64,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
-import { extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
+import { extractSaveErrorMessage, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
 import { useTranslation } from '@/Composeables/Translation.js';
 
 const t = useTranslation();
@@ -133,7 +133,7 @@ const save = async () => {
         }
     });
     try {
-        await axios.put(route('projects.bi.update-data', props.projectId), payload);
+        await axios.put(route('projects.bi.update-data', props.projectId), payload, BI_REQUEST_CONFIG);
         emit('saved', props.projectName);
     } catch (error) {
         console.error('Error saving BI quick entry', error);

@@ -21,6 +21,9 @@ class AvailabilitySeries extends Model
         'end_date',
     ];
 
+    /**
+     * @return HasMany<Availability, $this>
+     */
     public function availabilities(): HasMany
     {
         return $this->hasMany(Availability::class, 'series_id', 'id')->without('series');

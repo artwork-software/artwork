@@ -61,6 +61,7 @@ import ColorPickerComponent from '@/Components/Globale/ColorPickerComponent.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import { computed } from 'vue';
 import { useTranslation } from '@/Composeables/Translation.js';
+import { BI_REQUEST_CONFIG, extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     tag: { type: Object, default: null },
@@ -97,14 +98,14 @@ const save = async () => {
     errorMessage.value = '';
     try {
         if (props.tag) {
-            await axios.put(route('bi.tags.update', props.tag.id), tagForm.value);
+            await axios.put(route('bi.tags.update', props.tag.id), tagForm.value, BI_REQUEST_CONFIG);
         } else {
-            await axios.post(route('bi.tags.store'), tagForm.value);
+            await axios.post(route('bi.tags.store'), tagForm.value, BI_REQUEST_CONFIG);
         }
         emit('close', true);
     } catch (error) {
-        const errors = error.response?.data?.errors;
-        errorMessage.value = (errors && Object.values(errors).flat()[0]) ?? error.response?.data?.message ?? error.message;
+        // Fehler steht im Modal (BI_REQUEST_CONFIG unterdrückt den globalen Toast)
+        errorMessage.value = extractSaveErrorMessage(error) ?? t('An error has occurred');
     } finally {
         saving.value = false;
     }

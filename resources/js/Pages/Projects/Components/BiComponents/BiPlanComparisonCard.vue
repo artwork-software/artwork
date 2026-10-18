@@ -65,6 +65,9 @@
 import { computed, ref } from 'vue';
 import BiChart from '@/Artwork/Charts/BiChart.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 const t = useTranslation();
 
@@ -75,9 +78,9 @@ const props = defineProps({
     projectEvents: { type: Array, default: () => [] },
 });
 
-const numberFmt = new Intl.NumberFormat('de-DE');
-const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
-const percentFmt = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
+const numberFmt = new Intl.NumberFormat(instanceFormat.numberLocale);
+const currencyFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency });
+const percentFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { maximumFractionDigits: 1 });
 
 const metricOptions = [
     { key: 'visitors', label: 'Visitors' },

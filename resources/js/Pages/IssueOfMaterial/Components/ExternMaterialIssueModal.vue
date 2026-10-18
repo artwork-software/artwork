@@ -112,6 +112,22 @@
                         <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.return_date">{{ externMaterialIssueForm.errors.return_date }}</p>
                         <p class="text-xs font-medium text-danger mt-1" v-if="isReturnDateBeforeIssueDate">{{ $t('Return date cannot be earlier than issue date') }}</p>
                     </div>
+                    <!-- Seit 10/2026: externe Ausgaben blockieren die Artikel bis zur bestätigten Rückgabe -->
+                    <div class="md:col-span-4">
+                        <BaseAlertComponent
+                            v-if="externMaterialIssue?.overdue_unreturned"
+                            type="warning"
+                            class="!mb-0"
+                            :title="$t('Return open – material blocked')"
+                            :message="$t('The return date has passed and no return has been entered yet. The articles stay reserved until the return is entered.')"
+                        />
+                        <BaseAlertComponent
+                            v-else
+                            type="info"
+                            class="!mb-0"
+                            :message="$t('The articles stay reserved until the return is confirmed – even after the return date. Use “Enter return” as soon as the material is back.')"
+                        />
+                    </div>
 
 
                     <div class="md:col-span-2">
@@ -205,7 +221,7 @@
                                             <div class="text-xs text-text-subtle line-clamp-2" v-if="article.description">{{ article.description }}</div>
                                             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
                                                 <template v-for="(status, i) in article.status_values" :key="i">
-                                                    <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
+                                                    <div v-if="status.default" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
                                                         <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
                                                         <span class="tabular-nums">{{ status.name }}</span>
                                                         <span class="tabular-nums">{{ article.availableStock?.ready ?? status.pivot.value ?? 0 }}</span>

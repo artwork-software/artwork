@@ -4,6 +4,9 @@ namespace Artwork\Modules\Room\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Room\Models\Room
+ */
 class RoomPdfResource extends JsonResource
 {
     public static $wrap = null;

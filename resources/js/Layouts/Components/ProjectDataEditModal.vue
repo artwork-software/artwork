@@ -211,7 +211,6 @@ import {
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/vue3";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
@@ -222,8 +221,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 export default {
     mixins: [
-        Permissions,
-        IconLib
+        Permissions
     ],
     setup() {
         const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken} = useColorHelper();

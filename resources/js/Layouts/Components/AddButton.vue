@@ -28,13 +28,12 @@
 import {IconCirclePlus} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 
 export default {
     name: "AddButton",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {PropertyIcon, Button, IconCirclePlus},
     props: {
         text: String,

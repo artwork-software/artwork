@@ -51,6 +51,9 @@ class SageBookingLogEntry extends Model
         'created_at' => 'datetime',
     ];
 
+    /**
+     * @return BelongsTo<SageBookingLog, $this>
+     */
     public function log(): BelongsTo
     {
         return $this->belongsTo(SageBookingLog::class, 'sage_booking_log_id', 'id', 'log');

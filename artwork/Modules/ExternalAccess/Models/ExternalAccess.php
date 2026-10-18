@@ -64,31 +64,49 @@ class ExternalAccess extends Model implements AuthenticatableContract, Authoriza
         return ExternalAccessFactory::new();
     }
 
+    /**
+     * @return BelongsTo<CrmContact, $this>
+     */
     public function crmContact(): BelongsTo
     {
         return $this->belongsTo(CrmContact::class, 'crm_contact_id', 'id', 'crmContact');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function invitedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by_user_id', 'id', 'invitedBy');
     }
 
+    /**
+     * @return HasMany<ExternalAccessScope, $this>
+     */
     public function scopes(): HasMany
     {
         return $this->hasMany(ExternalAccessScope::class, 'external_access_id');
     }
 
+    /**
+     * @return HasMany<ExternalLoginToken, $this>
+     */
     public function loginTokens(): HasMany
     {
         return $this->hasMany(ExternalLoginToken::class, 'external_access_id');
     }
 
+    /**
+     * @return HasMany<ExternalInvitation, $this>
+     */
     public function invitations(): HasMany
     {
         return $this->hasMany(ExternalInvitation::class, 'external_access_id');
     }
 
+    /**
+     * @return HasMany<ExternalPendingSubmission, $this>
+     */
     public function pendingSubmissions(): HasMany
     {
         return $this->hasMany(ExternalPendingSubmission::class, 'external_access_id');

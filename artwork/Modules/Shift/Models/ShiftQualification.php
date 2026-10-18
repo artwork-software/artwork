@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * @property string $icon
@@ -37,6 +38,9 @@ class ShiftQualification extends Model
         'position' => 'integer'
     ];
 
+    /**
+     * @return HasMany<ShiftsQualifications, $this>
+     */
     public function shiftsQualifications(): HasMany
     {
         return $this->hasMany(ShiftsQualifications::class);
@@ -67,6 +71,9 @@ class ShiftQualification extends Model
         return $builder->where('name', 'Meister');
     }
 
+    /**
+     * @return MorphToMany<\Artwork\Modules\User\Models\User, $this>
+     */
     public function qualifiables(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(
@@ -77,6 +84,9 @@ class ShiftQualification extends Model
             'qualifiable_id'
         )->withPivot('craft_id');
     }
+    /**
+     * @return MorphToMany<\Artwork\Modules\Freelancer\Models\Freelancer, $this>
+     */
     public function freelancersMorph(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(
@@ -87,6 +97,9 @@ class ShiftQualification extends Model
             'qualifiable_id'
         )->withPivot('craft_id');
     }
+    /**
+     * @return MorphToMany<\Artwork\Modules\ServiceProvider\Models\ServiceProvider, $this>
+     */
     public function serviceProvidersMorph(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(

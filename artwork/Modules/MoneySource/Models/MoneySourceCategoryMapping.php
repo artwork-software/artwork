@@ -12,6 +12,9 @@ class MoneySourceCategoryMapping extends Pivot
 {
     use HasFactory;
 
+    // Die Tabelle hat keine Zeitstempel-Spalten (direktes create() scheiterte sonst)
+    public $timestamps = false;
+
     protected $fillable = [
         'money_source_id',
         'money_source_category_id'
@@ -19,11 +22,17 @@ class MoneySourceCategoryMapping extends Pivot
 
     protected $table = 'money_source_category_mappings';
 
+    /**
+     * @return BelongsTo<MoneySource, $this>
+     */
     public function moneySource(): BelongsTo
     {
         return $this->belongsTo(MoneySource::class);
     }
 
+    /**
+     * @return BelongsTo<MoneySourceCategory, $this>
+     */
     public function moneySourceCategory(): BelongsTo
     {
         return $this->belongsTo(MoneySourceCategory::class);

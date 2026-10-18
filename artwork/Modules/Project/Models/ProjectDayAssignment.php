@@ -50,16 +50,25 @@ class ProjectDayAssignment extends Model
         'is_full_period' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'id', 'project');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by', 'id', 'createdBy');
     }
 
+    /**
+     * @return BelongsTo<Shift, $this>
+     */
     public function supersededByShift(): BelongsTo
     {
         return $this->belongsTo(Shift::class, 'superseded_by_shift_id', 'id', 'supersededByShift');

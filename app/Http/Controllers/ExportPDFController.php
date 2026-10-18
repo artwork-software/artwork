@@ -62,19 +62,27 @@ class ExportPDFController extends Controller
 
     public function createPDF(Request $request): Response
     {
+        $this->validateCalendarExportInput($request, [
+            'start' => ['nullable', 'date'],
+            'end' => ['nullable', 'date'],
+        ]);
+
         /** @var User $user */
         $user = $this->authManager->guard()->user();
-        $userFilter = $user->userFilters()->calendarFilter()->first();
+        // Ohne Kalenderfilter (Konto hat den Kalender nie geöffnet) gilt der Standardzeitraum.
+        [$defaultStartDate, $defaultEndDate] = $this->userService->getUserCalendarFilterDatesOrDefault(
+            $user->userFilters()->calendarFilter()->first() ?? new UserFilter()
+        );
 
         $projectId = $request->get('project');
 
         $startDate = $request->get('start') ?
             Carbon::parse($request->get('start'))->startOfDay() :
-            $userFilter->start_date;
+            $defaultStartDate;
 
         $endDate = $request->get('end') ?
             Carbon::parse($request->get('end'))->endOfDay() :
-            $userFilter->end_date;
+            $defaultEndDate;
 
 
         // Anzeigeeinstellungen: Kalender-Settings des Users als Default, Export-Modal
@@ -84,7 +92,8 @@ class ExportPDFController extends Controller
             $user->getAttribute('calendar_settings')
         );
         $userCalendarSettings = $displaySettings->settings();
-        $filterData   = $request->filter;
+        // explizites null (erlaubt laut Validierung) wie „kein Filter“ behandeln
+        $filterData   = $request->input('filter') ?? [];
 
         $userCalendarFilter = new UserFilter($filterData);
         $userCalendarFilter->exists = false;
@@ -710,6 +719,20 @@ class ExportPDFController extends Controller
 
 
     /**
+     * Gemeinsame Eingaben der Kalender-PDF-Exporte. Fehlende/ungültige Werte führten vorher
+     * zu 500 (TypeError bei fehlendem Filter, unbekanntes Projekt, unparsbares Datum).
+     *
+     * @param array<string, array<int, string>> $additionalRules
+     */
+    private function validateCalendarExportInput(Request $request, array $additionalRules = []): void
+    {
+        $request->validate(array_merge([
+            'project' => ['nullable', 'integer', 'exists:projects,id'],
+            'filter' => ['nullable', 'array'],
+        ], $additionalRules));
+    }
+
+    /**
      * `displaySettings` aus dem Request; alte Payloads (colorSource/includeDayRemarks)
      * werden auf die entsprechenden Flags gemappt, damit noch offene Tabs weiter funktionieren.
      *
@@ -761,9 +784,10 @@ class ExportPDFController extends Controller
 
     public function createMonthlyPDF(Request $request): Response
     {
+        $this->validateCalendarExportInput($request);
+
         /** @var User $user */
         $user = $this->authManager->guard()->user();
-        $userFilter = $user->userFilters()->calendarFilter()->first();
 
         $projectId = $request->get('project');
         $displaySettings = EventExportDisplaySettings::fromRequest(
@@ -771,7 +795,7 @@ class ExportPDFController extends Controller
             $user->getAttribute('calendar_settings')
         );
         $userCalendarSettings = $displaySettings->settings();
-        $filterData = $request->filter;
+        $filterData = $request->input('filter') ?? [];
         $userCalendarFilter = new UserFilter($filterData);
         $userCalendarFilter->exists = false;
 

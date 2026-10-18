@@ -40,6 +40,9 @@ class ExternalUserGroupMapping extends Model
         'include_nested_groups' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<ExternalUserSource, $this>
+     */
     public function source(): BelongsTo
     {
         return $this->belongsTo(ExternalUserSource::class, 'source_id', 'id', 'source');

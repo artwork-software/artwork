@@ -5,6 +5,9 @@ namespace Artwork\Modules\ServiceProvider\Http\Resources;
 use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\ServiceProvider\Models\ServiceProvider
+ */
 class ServiceProviderShowResource extends JsonResource
 {
     public static $wrap = null;

@@ -218,6 +218,11 @@
                 />
             </div>
 
+            <TicketingCustomerPanel
+                v-if="contact.contact_type?.slug === 'ticketing' && activeTab === 'info' && $page.props.ticketing?.active"
+                :contact-id="contact.id"
+            />
+
             <!-- Room Types (for Accommodation type) -->
             <div v-if="contact.contact_type?.slug === 'accommodation' && activeTab === 'info'" class="mt-8">
                 <h2 class="text-lg font-semibold mb-4">{{ $t('Room types') }}</h2>
@@ -327,7 +332,12 @@
                     <component :is="IconInfoCircle" class="h-5 w-5 text-accent-500" />
                     <div class="ml-3">
                         <p class="text-sm text-accent-700">
-                            {{ $t('This contact is linked to a user account. Changes must be made in the user profile.') }}
+                            <template v-if="contact.contact_type?.slug === 'ticketing'">
+                                {{ $t('This contact is synced from Artwork-Tickets and cannot be edited here.') }}
+                            </template>
+                            <template v-else>
+                                {{ $t('This contact is linked to a user account. Changes must be made in the user profile.') }}
+                            </template>
                             <Link v-if="sourceProfileUrl" :href="sourceProfileUrl" class="font-medium underline hover:text-accent-700">
                                 {{ $t('Open profile') }}
                             </Link>
@@ -355,6 +365,7 @@ import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import CrmPropertyGroupSection from '@/Pages/CRM/Components/CrmPropertyGroupSection.vue'
 import ChangeContactTypeModal from '@/Pages/CRM/Components/ChangeContactTypeModal.vue'
 import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
+import TicketingCustomerPanel from '@/Pages/CRM/Components/TicketingCustomerPanel.vue'
 import { usePermission } from '@/Composeables/Permission.js'
 import {
     IconArrowLeft, IconEdit, IconCheck, IconInfoCircle, IconTrash, IconCirclePlus, IconX,
@@ -363,6 +374,7 @@ import {
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
+import { isMirroredContactType } from '@/Pages/CRM/mirroredContactTypes.js'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({
@@ -467,9 +479,7 @@ const toggleEditing = () => {
     }
 }
 
-const isReadOnly = computed(() => {
-    return ['user', 'freelancer', 'service_provider'].includes(props.contact.contact_type?.slug)
-})
+const isReadOnly = computed(() => isMirroredContactType(props.contact.contact_type?.slug))
 
 // Build pivot map from contact type properties (contains is_required etc.)
 const contactTypePivotMap = computed(() => {

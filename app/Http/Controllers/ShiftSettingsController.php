@@ -24,6 +24,9 @@ use Throwable;
 
 class ShiftSettingsController extends Controller
 {
+    /** Gelesene Personenfelder der Schichteinstellungen (Listen, AddCraftsModal) */
+    private const PERSON_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
+
     public function __construct(
         private readonly Redirector $redirector,
         private readonly ResponseFactory $responseFactory,
@@ -42,20 +45,42 @@ class ShiftSettingsController extends Controller
                 'start_night_time' => substr((string) $generalSettings->start_night_time, 0, 5),
                 'end_night_time' => substr((string) $generalSettings->end_night_time, 0, 5),
             ],
-            'crafts' => Craft::query()
-                ->with('managingUsers', 'managingFreelancers', 'managingServiceProviders', 'qualifications')
-                ->orderBy('position')
-                ->get(),
+            'crafts' => $this->craftsForSettings(),
             'eventTypes' => EventType::all(),
-            'usersWithPermission' => User::permission(PermissionEnum::SHIFT_PLANNER->value)->get(),
+            // Auswahlliste der Planer:innen (AddCraftsModal): Name, Bild — keine vollen User-Modelle
+            'usersWithPermission' => User::permission(PermissionEnum::SHIFT_PLANNER->value)->get()
+                ->each->setVisible(self::PERSON_FIELDS),
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByPosition(),
             'shiftTimePresets' => ShiftTimePreset::all(),
             'shiftSettings' => $shiftSettings,
             'shiftCommitWorkflowUsers' => ShiftCommitWorkflowUser::with('user')
                 ->orderBy('user_id')
-                ->get(),
+                ->get()
+                ->each(static fn (ShiftCommitWorkflowUser $workflowUser) => $workflowUser->user
+                    ?->setVisible(self::PERSON_FIELDS)),
             'globalQualifications' => $this->globalQualificationService->getAll(),
         ]);
+    }
+
+    /**
+     * Gewerke für die Einstellungen: Planer:innen schlank (CraftService::PLANER_VISIBLE), Gewerksleitungen
+     * mit Pivot (AddCraftsModal baut daraus manager_id/manager_type) — keine vollen User-Modelle.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Craft>
+     */
+    private function craftsForSettings(): \Illuminate\Database\Eloquent\Collection
+    {
+        $crafts = Craft::query()
+            ->with('managingUsers', 'managingFreelancers', 'managingServiceProviders', 'qualifications')
+            ->orderBy('position')
+            ->get();
+
+        foreach ($crafts as $craft) {
+            \Artwork\Modules\Craft\Services\CraftService::slimPlaners($craft);
+            $craft->managingUsers->each->setVisible([...self::PERSON_FIELDS, 'type', 'pivot']);
+        }
+
+        return $crafts;
     }
 
     public function updateShiftSettingsUseFirstNameForSort(

@@ -259,7 +259,7 @@
 
 <script setup>
 import {computed, onMounted, onUnmounted, ref} from "vue";
-import {router, Link, useForm} from "@inertiajs/vue3";
+import {router, Link, useForm, usePage} from "@inertiajs/vue3";
 import {IconCheck, IconX, IconCalendar} from "@tabler/icons-vue";
 import BaseEventVerificationLayout from "@/Pages/EventVerification/BaseEventVerificationLayout.vue";
 import PageTitle from "@/Artwork/Titles/PageTitle.vue";
@@ -361,20 +361,35 @@ const declineRequest = () => {
 // Listen for real-time updates on room channels
 const subscribedChannels = ref([]);
 
+// Neue/zurückgezogene/erledigte Prüfanfragen (BroadcastToReloadEventVerificationRequests) – der Listener
+// lag nur auf "Gesendet", die Eingangsliste der Prüfenden blieb bis zum Neuladen veraltet
+const verificationChannelName = `event-verification-index.${usePage().props.auth.user.id}`;
+const reloadVerificationRequests = () => {
+    router.reload({ only: ['verificationRequests'], preserveScroll: true });
+};
+
 onMounted(() => {
+    window.Echo.private(verificationChannelName)
+        .listen('.reload-event-verification-requests', reloadVerificationRequests);
+
     const roomIds = Object.keys(props.roomBookingRequests);
     roomIds.forEach(roomId => {
         const channel = window.Echo.private(`event.room.${roomId}`);
-        channel.listen('.event.created', () => {
-            router.reload({ preserveScroll: true });
-        });
+        channel.listen('.event.created', reloadPage);
         subscribedChannels.value.push({ roomId, channel });
     });
 });
 
+function reloadPage() {
+    router.reload({ preserveScroll: true });
+}
+
 onUnmounted(() => {
-    subscribedChannels.value.forEach(({ roomId }) => {
-        window.Echo.leave(`event.room.${roomId}`);
+    window.Echo.private(verificationChannelName)
+        .stopListening('.reload-event-verification-requests', reloadVerificationRequests);
+    // Nur den eigenen Handler abmelden – Echo.leave schloss den Raumkanal auch für andere Abonnenten
+    subscribedChannels.value.forEach(({ channel }) => {
+        channel.stopListening('.event.created', reloadPage);
     });
 });
 </script>

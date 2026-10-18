@@ -11,6 +11,7 @@
                 rows="3"
                 class="w-full"
                 maxlength="1000"
+                show-counter
                 :label="$t('Note for the requesting person (optional)')"
                 v-model="comment"
             />

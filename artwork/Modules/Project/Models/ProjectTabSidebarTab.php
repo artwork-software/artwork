@@ -21,11 +21,17 @@ class ProjectTabSidebarTab extends Model
 
     protected $with = ['componentsInSidebar'];
 
+    /**
+     * @return BelongsTo<ProjectTab, $this>
+     */
     public function projectTab(): BelongsTo
     {
         return $this->belongsTo(ProjectTab::class, 'project_tab_id', 'id', 'project_tab');
     }
 
+    /**
+     * @return HasMany<SidebarTabComponent, $this>
+     */
     public function componentsInSidebar(): HasMany
     {
         return $this->hasMany(SidebarTabComponent::class, 'project_tab_sidebar_id', 'id')->orderBy('order');

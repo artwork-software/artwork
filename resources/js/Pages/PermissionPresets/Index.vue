@@ -95,7 +95,7 @@
         v-if="showPermissionPresetSuccessModal"
         title="Erfolg"
         :description="showPermissionPresetSuccessModal"
-        button="Schließen"
+        :button="$t('Close')"
         @closed="closePermissionPresetSuccessModal"
     />
 

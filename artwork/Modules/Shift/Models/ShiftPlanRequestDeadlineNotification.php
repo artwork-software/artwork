@@ -23,6 +23,9 @@ class ShiftPlanRequestDeadlineNotification extends Model
         'year',
     ];
 
+    /**
+     * @return BelongsTo<Craft, $this>
+     */
     public function craft(): BelongsTo
     {
         return $this->belongsTo(Craft::class);

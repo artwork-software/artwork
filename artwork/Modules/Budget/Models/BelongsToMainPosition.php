@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 trait BelongsToMainPosition
 {
+    /**
+     * @return BelongsTo<MainPosition, $this>
+     */
     public function mainPosition(): BelongsTo
     {
         return $this->belongsTo(MainPosition::class, 'main_position_id', 'id', 'mainPosition');

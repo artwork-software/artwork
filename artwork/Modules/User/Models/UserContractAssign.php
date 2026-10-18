@@ -3,8 +3,6 @@
 namespace Artwork\Modules\User\Models;
 
 use Artwork\Modules\Shift\Services\ShiftRuleRevalidationService;
-use Database\Factories\UserContractAssignFactory;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,11 +29,6 @@ use Illuminate\Database\Eloquent\Builder;
 class UserContractAssign extends Model
 {
     use HasFactory;
-
-    protected static function newFactory(): Factory
-    {
-        return UserContractAssignFactory::new();
-    }
 
     /**
      * Vertragszuweisung erstellt/geändert/gelöscht: Regeln der Person neu prüfen (Queue-Job,
@@ -188,6 +181,9 @@ class UserContractAssign extends Model
     ];
 
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(
@@ -198,6 +194,9 @@ class UserContractAssign extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<UserContract, $this>
+     */
     public function userContract(): BelongsTo
     {
         return $this->belongsTo(

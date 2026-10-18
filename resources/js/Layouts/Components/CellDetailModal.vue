@@ -403,6 +403,7 @@
 </template>
 
 <script>
+import { createInstanceFormatter } from "@/Helper/instanceFormat.js";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {
     IconLock,
@@ -681,6 +682,8 @@ export default {
                     route('project.budget.cell.comment.store', { columnCell: this.cell.id }),
                     { description: this.newComment },
                     {
+                        // Fehler zeigt das Modal selbst (errorMessage)
+                        skipErrorToast: true,
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json'
@@ -721,6 +724,8 @@ export default {
                 await axios.delete(
                     route('project.budget.cell.comment.delete', { cellComment: comment.id }),
                     {
+                        // Fehler zeigt das Modal selbst (errorMessage)
+                        skipErrorToast: true,
                         headers: {
                             'Accept': 'application/json'
                         }
@@ -848,6 +853,8 @@ export default {
                         calculations: calculationsWithCellId,
                     },
                     {
+                        // Fehler zeigt das Modal selbst (errorMessage)
+                        skipErrorToast: true,
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json'
@@ -885,6 +892,8 @@ export default {
                         money_source_id: this.isLinked ? this.selectedMoneySource?.id : null
                     },
                     {
+                        // Fehler zeigt das Modal selbst (errorMessage)
+                        skipErrorToast: true,
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json'
@@ -907,21 +916,12 @@ export default {
         },
 
         formatCurrency(value) {
-            return new Intl.NumberFormat('de-DE', {
-                style: 'currency',
-                currency: 'EUR'
-            }).format(value);
+            return createInstanceFormatter(this.$page.props.instanceFormat).formatCurrency(value);
         },
 
         formatDate(date) {
-            const dateObj = new Date(date);
-            return dateObj.toLocaleString('de-DE', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            // Datumsformat der Instanz (Einstellungen → Tool → Regionale Formate) plus Uhrzeit
+            return createInstanceFormatter(this.$page.props.instanceFormat).formatDateTime(date);
         }
     }
 };

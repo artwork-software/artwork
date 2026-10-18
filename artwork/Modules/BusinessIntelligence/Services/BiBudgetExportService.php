@@ -240,17 +240,17 @@ class BiBudgetExportService
             $key = 'value_col_' . $index;
             $rowColumns[] = $key;
             $rowLabels[$key] = $name;
-            $rowFormats[$key] = '#,##0.00 "€"';
+            $rowFormats[$key] = BiProjectExport::FORMAT_CURRENCY;
         }
         // Der Wert der budgetrelevanten Spalte je Zeile - projektübergreifend
         // vergleichbar, auch wenn die Wertspalten unterschiedlich benannt sind.
         $rowColumns[] = 'relevant_value';
         $rowLabels['relevant_value'] = __('Preview (budget-relevant)');
-        $rowFormats['relevant_value'] = '#,##0.00 "€"';
+        $rowFormats['relevant_value'] = BiProjectExport::FORMAT_CURRENCY;
         if ($sageEnabled) {
             $rowColumns[] = 'sage_actual';
             $rowLabels['sage_actual'] = __('Sage actual');
-            $rowFormats['sage_actual'] = '#,##0.00 "€"';
+            $rowFormats['sage_actual'] = BiProjectExport::FORMAT_CURRENCY;
         }
 
         $bookingColumns = [
@@ -281,7 +281,7 @@ class BiBudgetExportService
                 $bookingColumns,
                 $bookingLabels,
                 __('Sage bookings'),
-                ['betrag' => '#,##0.00 "€"']
+                ['betrag' => BiProjectExport::FORMAT_CURRENCY]
             );
         }
 

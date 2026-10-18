@@ -95,11 +95,17 @@ class Availability extends Model
             : $this->conflicts()->exists();
     }
 
+    /**
+     * @return HasOne<AvailabilitySeries, $this>
+     */
     public function series(): HasOne
     {
         return $this->hasOne(AvailabilitySeries::class, 'id', 'series_id');
     }
 
+    /**
+     * @return HasMany<AvailabilitiesConflict, $this>
+     */
     public function conflicts(): HasMany
     {
         return $this->hasMany(AvailabilitiesConflict::class, 'availability_id', 'id');

@@ -7,7 +7,6 @@ use Artwork\Core\Database\Models\CanSubstituteBaseModel;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
-use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventProperty;
@@ -455,12 +454,7 @@ class EventRepository extends BaseRepository
                     ]);
                 }
 
-                broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
-                    $event->fresh(),
-                    'updated'
-                ));
-
-                broadcast(new EventCreated($event->fresh(), $event->room_id));
+                // Live-Updates sendet der Aufrufer nach der Response (EventController::bulkMultiEditEvent)
             }
         });
     }

@@ -3,16 +3,7 @@
         <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Creditor') }}</span>
         <span class="text-sm/5 font-bold text-text-subtle text-black">{{ booking.kreditor }}</span>
         <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Amount') }}</span>
-        <span class="text-sm/5 font-bold text-text-subtle text-black">{{
-                Number(
-                    String(booking.buchungsbetrag).replace(',', '.')
-                ).toLocaleString(
-                    'de-DE',
-                    {
-                        minimumFractionDigits: 2
-                    }
-                )
-            }} EUR</span>
+        <span class="text-sm/5 font-bold text-text-subtle text-black">{{ toCurrencyString(booking.buchungsbetrag) }} {{ $currencySymbol() }}</span>
         <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Booking text') }}</span>
         <span class="text-sm/5 font-bold text-text-subtle text-black">{{ booking.buchungstext }}</span>
         <span class="text-sm/5 font-bold text-text-subtle mt-4">{{ $t('Document number') }}</span>

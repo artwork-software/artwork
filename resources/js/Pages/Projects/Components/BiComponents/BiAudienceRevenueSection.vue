@@ -220,7 +220,10 @@ import SwitchDualLabel from '@/Artwork/Toggles/SwitchDualLabel.vue';
 import BiEventMetricsTable from '@/Pages/Projects/Components/BiComponents/BiEventMetricsTable.vue';
 import BiModeSwitchModal from '@/Pages/Projects/Components/BiComponents/BiModeSwitchModal.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
-import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useBiSaveFeedback, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 const t = useTranslation();
 const biSave = useBiSaveFeedback();
@@ -383,7 +386,7 @@ const saveCategoryTotal = async (category) => {
                 event_id: null,
                 quantity: raw === '' || raw === null || raw === undefined ? null : Number(raw),
             }],
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');
@@ -420,7 +423,7 @@ const adoptCostSuggestion = async () => {
             costs_total: costSuggestion.value,
             costs_source: props.scope === 'plan' ? 'budget_expense' : 'sage',
             scope: props.scope,
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');
@@ -434,7 +437,7 @@ const adoptRevenueSuggestion = async () => {
             revenue_total: revenueSuggestion.value,
             revenue_source: props.scope === 'plan' ? 'budget_income' : 'sage',
             scope: props.scope,
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');
@@ -467,8 +470,8 @@ const effectiveCapacities = computed(() => {
     return result;
 });
 
-const numberFmt = new Intl.NumberFormat('de-DE');
-const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const numberFmt = new Intl.NumberFormat(instanceFormat.numberLocale);
+const currencyFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency });
 
 const formatInt = (v) => numberFmt.format(v ?? 0);
 
@@ -510,7 +513,7 @@ const confirmModeSwitch = async () => {
     const previousMode = modes[metric.key];
     modes[metric.key] = mode;
     const ok = await biSave.run(
-        () => axios.put(route(metric.switchRoute, props.projectId), { mode, scope: props.scope })
+        () => axios.put(route(metric.switchRoute, props.projectId), { mode, scope: props.scope }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');
@@ -526,7 +529,7 @@ const toggleNotApplicable = async (metric, value) => {
         () => axios.put(route('projects.bi.update-data', props.projectId), {
             [metric.naField]: value,
             scope: props.scope,
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');
@@ -540,7 +543,7 @@ const saveTotal = async (metric) => {
         () => axios.put(route('projects.bi.update-data', props.projectId), {
             [metric.totalField]: totals[metric.key] === '' ? null : totals[metric.key],
             scope: props.scope,
-        })
+        }, BI_REQUEST_CONFIG)
     );
     if (ok) {
         emit('updated');

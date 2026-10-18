@@ -24,75 +24,173 @@ class WorkTimeBookingRepository
     }
 
     /**
-     * Perform user booking + balance update in a transaction.
-     *
-     * @param User $user
-     * @param Carbon $date
-     * @param int $weekdayIndex
-     * @param array<string, mixed> $bookingData
-     * @param int|null $balanceDelta
-     * @return void
+     * Eindeutiger Name der nächtlichen Tagesbuchung (seit Einführung unverändert).
      */
-    public function storeBookingAndUpdateBalanceInTransaction(
-        User $user,
-        Carbon $date,
-        int $weekdayIndex,
-        array $bookingData,
-        ?int $balanceDelta = null
-    ): void {
-        DB::transaction(function () use ($user, $date, $weekdayIndex, $bookingData, $balanceDelta): void {
-            $this->storeOrUpdateBooking($user, $date, $weekdayIndex, $bookingData);
+    public static function dailyBookingName(Carbon $date): string
+    {
+        return 'daily_work_time_booking_' . $date->toDateString();
+    }
 
-            if ($balanceDelta !== null && $balanceDelta !== 0) {
-                $this->updateUserBalance($user, $balanceDelta);
+    /**
+     * Tagesbuchung schreiben und Saldo um das Delta zur bisherigen Tageszeile ändern – Delta INNERHALB der
+     * Transaktion nach Sperre der User-Zeile ermitteln. Sonst rechnen zwei gleichzeitige Läufe (Nachtlauf über
+     * Mitternacht + „Tag neu buchen“, zwei Tabs) gegen denselben Altwert und buchen das Delta doppelt.
+     * Die Sperre zuerst auf die User-Zeile verhindert zudem den S→X-Deadlock aus FK-Insert + increment.
+     *
+     * @param array<string, mixed> $bookingData muss work_time_balance_change enthalten
+     * @return int gebuchtes Delta
+     */
+    public function bookDailyWithLockedBalance(User $user, Carbon $date, array $bookingData): int
+    {
+        return DB::transaction(function () use ($user, $date, $bookingData): int {
+            User::query()->whereKey($user->id)->lockForUpdate()->first();
+
+            $previous = $this->getPreviousBooking($user, $date);
+            $delta = (int) $bookingData['work_time_balance_change']
+                - (int) ($previous?->work_time_balance_change ?? 0);
+
+            // Bestehende Zeile (bei Altdaten-Duplikaten die älteste, wie in der Anzeige) gezielt aktualisieren
+            $attributes = array_merge($bookingData, ['booking_weekday' => $date->dayOfWeek]);
+            if ($previous !== null) {
+                $previous->update($attributes);
+            } else {
+                $user->workTimeBookings()->create(
+                    array_merge($attributes, ['booking_day' => $date->toDateString()])
+                );
             }
+            if ($delta !== 0) {
+                $this->updateUserBalance($user, $delta);
+            }
+
+            return $delta;
         });
     }
 
     /**
-     * Fetch the work time booking entry for a specific user on a specific day.
+     * Schichtänderung auf eine vorhandene Tagesbuchung buchen: nur die übergebenen Deltas (Ist, Soll, Nacht)
+     * kommen zur Tageszeile hinzu, andere Abweichungen des Tages bleiben unberührt. Unter derselben Sperre wie
+     * bookDailyWithLockedBalance.
      *
-     * @param User $user
-     * @param Carbon $date
-     * @param int $weekdayIndex
-     * @return WorkTimeBooking|null
+     * @return int|null gebuchtes Saldo-Delta; null = an diesem Tag gibt es keine Tagesbuchung
      */
-    public function getPreviousBooking(User $user, Carbon $date, int $weekdayIndex): ?WorkTimeBooking
+    public function adjustDailyBookingWithLockedBalance(
+        User $user,
+        Carbon $date,
+        int $workedDelta,
+        int $wantedDelta,
+        int $nightDelta
+    ): ?int {
+        return DB::transaction(function () use ($user, $date, $workedDelta, $wantedDelta, $nightDelta): ?int {
+            User::query()->whereKey($user->id)->lockForUpdate()->first();
+
+            $previous = $this->getPreviousBooking($user, $date);
+            if ($previous === null) {
+                return null;
+            }
+
+            $delta = $workedDelta - $wantedDelta;
+            $previous->update([
+                'worked_hours' => (int) $previous->worked_hours + $workedDelta,
+                'wanted_working_hours' => (int) $previous->wanted_working_hours + $wantedDelta,
+                'nightly_working_hours' => max(0, (int) $previous->nightly_working_hours + $nightDelta),
+                'work_time_balance_change' => (int) $previous->work_time_balance_change + $delta,
+            ]);
+            if ($delta !== 0) {
+                $this->updateUserBalance($user, $delta);
+            }
+
+            return $delta;
+        });
+    }
+
+    /**
+     * Beginn des Zeitkontos einer Person: Tag der ersten Tagesbuchung (Name daily_work_time_booking_… oder
+     * Altzeile ohne Namen), 'Y-m-d' oder null, wenn die Person noch nie per Tagesbuchung gebucht wurde.
+     */
+    public function firstDailyBookingDay(User $user): ?string
+    {
+        $firstDay = WorkTimeBooking::query()
+            ->where('user_id', $user->id)
+            ->where(fn ($query) => $query
+                ->whereNull('name')
+                ->orWhere('name', 'like', 'daily\\_work\\_time\\_booking\\_%'))
+            ->min('booking_day');
+
+        return $firstDay === null ? null : substr((string) $firstDay, 0, 10);
+    }
+
+    /**
+     * Beginn des Zeitkontos mehrerer Personen in EINER Abfrage (wie firstDailyBookingDay je Person).
+     * Personen ohne jede Tagesbuchung fehlen im Ergebnis.
+     *
+     * @param array<int> $userIds
+     * @return array<int, string> [userId] => 'Y-m-d'
+     */
+    public function firstDailyBookingDaysByUser(array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        return WorkTimeBooking::query()
+            ->toBase()
+            ->whereIn('user_id', $userIds)
+            ->where(fn ($query) => $query
+                ->whereNull('name')
+                ->orWhere('name', 'like', 'daily\\_work\\_time\\_booking\\_%'))
+            ->groupBy('user_id')
+            ->selectRaw('user_id, MIN(booking_day) as first_day')
+            ->get()
+            ->mapWithKeys(fn (object $row): array => [(int) $row->user_id => substr((string) $row->first_day, 0, 10)])
+            ->all();
+    }
+
+    /**
+     * Nächtliche Tagesbuchung einer Person für einen Tag. Gesucht wird über den Namen: Korrektur- und
+     * manuelle Buchungen desselben Tages sind eigene Zeilen und dürfen hier nicht gefunden werden
+     * (sonst verrechnet der Re-Run ihren Betrag und überschreibt die Zeile).
+     */
+    public function getPreviousBooking(User $user, Carbon $date): ?WorkTimeBooking
     {
         return $user->workTimeBookings()
             ->where('booking_day', $date->toDateString())
-            ->where('booking_weekday', $weekdayIndex)
+            ->where('name', self::dailyBookingName($date))
+            ->orderBy('id') // bei Altdaten-Duplikaten immer dieselbe Zeile wie die Anzeige
             ->first();
     }
 
     /**
-     * Store or update a daily work time booking for a user.
+     * Korrektur-/Einzelbuchung immer als eigene Zeile, inkl. Saldo-Delta, atomar.
      *
-     * @param User $user
-     * @param Carbon $date
-     * @param int $weekdayIndex
      * @param array<string, mixed> $data
-     * @return WorkTimeBooking
      */
-    public function storeOrUpdateBooking(User $user, Carbon $date, int $weekdayIndex, array $data): WorkTimeBooking
-    {
-        return $user->workTimeBookings()->updateOrCreate(
-            ['booking_day' => $date->toDateString(), 'booking_weekday' => $weekdayIndex],
-            $data
-        );
+    public function createBookingAndUpdateBalanceInTransaction(
+        User $user,
+        array $data,
+        int $balanceDelta
+    ): WorkTimeBooking {
+        return DB::transaction(function () use ($user, $data, $balanceDelta): WorkTimeBooking {
+            // Gleiche Sperrreihenfolge wie die Tagesbuchung (User zuerst) – kein Deadlock bei parallelem Lauf
+            User::query()->whereKey($user->id)->lockForUpdate()->first();
+            $booking = $user->workTimeBookings()->create($data);
+
+            if ($balanceDelta !== 0) {
+                $this->updateUserBalance($user, $balanceDelta);
+            }
+
+            return $booking;
+        });
     }
 
     /**
-     * Update a user's work time balance by a delta.
-     *
-     * @param User $user
-     * @param int $delta
-     * @return bool
+     * Atomar in der Datenbank (work_time_balance = work_time_balance + delta): Nächtliche Buchung, manuelle
+     * Buchung und Auszahlung arbeiten mit unterschiedlich alten User-Models und überschrieben sich sonst.
      */
     public function updateUserBalance(User $user, int $delta): bool
     {
-        $user->work_time_balance += $delta;
-        return $user->save();
+        $user->increment('work_time_balance', $delta);
+
+        return true;
     }
 
     /**

@@ -81,18 +81,6 @@ class UserService
             ($user = $this->userRepository->getNewModelInstance())->fill($attributes)
         );
 
-        foreach ($this->notificationSettingService->getNotificationEnumCases() as $notificationType) {
-            $this->notificationSettingService->create(
-                [
-                    'user_id' => $user->getAttribute('id'),
-                    'group_type' => $notificationType->groupType(),
-                    'type' => $notificationType->value,
-                    'title' => $notificationType->title(),
-                    'description' => $notificationType->description()
-                ]
-            );
-        }
-
         $this->statefulGuard->login($user);
 
         $this->broadcastManager->event(new UserUpdated())->toOthers();
@@ -106,37 +94,59 @@ class UserService
         $user->assignRole(...$roles);
         $user->givePermissionTo(...$permissions);
         $user->forgetCachedShareData();
-        $user->calendar_settings()->create();
-        $user->userFilters()->create([
-            'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
-            'start_date' => Carbon::now()->startOfDay(),
-            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
-        ]);
-
-        $user->userFilters()->create([
-            'filter_type' => UserFilterTypes::PLANNING_FILTER->value,
-            'start_date' => Carbon::now()->startOfDay(),
-            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
-        ]);
-
-        $user->userFilters()->create([
-            'filter_type' => UserFilterTypes::SHIFT_FILTER->value,
-            'start_date' => Carbon::now()->startOfDay(),
-            'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
-        ]);
-
-        $this->userUserManagementSettingService->updateOrCreateIfNecessary(
-            $user,
-            $this->userUserManagementSettingService->getDefaults()
-        );
-        $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
-            $user,
-            $this->userProjectManagementSettingService->getDefaults()
-        );
-
-        $this->productBasketService->createBasisBasket($user);
+        $this->initializeAccountDefaults($user);
 
         return $user;
+    }
+
+    /**
+     * Legt alles an, was ein Konto für die Grundfunktionen braucht: Benachrichtigungs-
+     * einstellungen je Typ, Kalendereinstellungen, die Zeitraumfilter von Kalender,
+     * Planungskalender und Dienstplan, die Verwaltungs-Spalteneinstellungen und den
+     * Warenkorb. Idempotent, damit derselbe Weg auch für per SSO/LDAP angelegte Konten
+     * und zum Nachziehen fehlender Einträge im Update taugt.
+     */
+    public function initializeAccountDefaults(User $user): void
+    {
+        $this->notificationSettingService->ensureDefaultsForUser($user);
+
+        if (!$user->calendar_settings()->exists()) {
+            $user->calendar_settings()->create();
+        }
+
+        foreach (
+            [
+                UserFilterTypes::CALENDAR_FILTER,
+                UserFilterTypes::PLANNING_FILTER,
+                UserFilterTypes::SHIFT_FILTER,
+            ] as $filterType
+        ) {
+            $user->userFilters()->firstOrCreate(
+                ['filter_type' => $filterType->value],
+                [
+                    'start_date' => Carbon::now()->startOfDay(),
+                    'end_date' => Carbon::now()->addWeeks(2)->endOfDay(),
+                ]
+            );
+        }
+
+        // updateOrCreateIfNecessary überschreibt vorhandene Einstellungen, daher nur bei Fehlen.
+        if ($this->userUserManagementSettingService->getFromUser($user) === null) {
+            $this->userUserManagementSettingService->updateOrCreateIfNecessary(
+                $user,
+                $this->userUserManagementSettingService->getDefaults()
+            );
+        }
+        if ($this->userProjectManagementSettingService->getFromUser($user) === null) {
+            $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
+                $user,
+                $this->userProjectManagementSettingService->getDefaults()
+            );
+        }
+
+        if (!$user->productBasket()->exists()) {
+            $this->productBasketService->createBasisBasket($user);
+        }
     }
 
     public function searchUsers(string $search): \Illuminate\Support\Collection
@@ -367,12 +377,22 @@ class UserService
      * Zeitraum bei "Zeitraum in allen Ansichten teilen" auf alle Ansichten.
      *
      * @param array<string, mixed> $resetAttributes weitere Filterspalten, die zurückgesetzt werden
+     * @param bool $planningCalendar Filter des Planungskalenders statt des Kalenders
      */
-    public function focusCalendarOnPeriod(User $user, Carbon $start, Carbon $end, array $resetAttributes = []): void
-    {
-        $filterType = $user->getAttribute('calendar_daily_view')
-            ? UserFilterTypes::CALENDAR_DAILY_FILTER
-            : UserFilterTypes::CALENDAR_FILTER;
+    public function focusCalendarOnPeriod(
+        User $user,
+        Carbon $start,
+        Carbon $end,
+        array $resetAttributes = [],
+        bool $planningCalendar = false,
+    ): void {
+        $isDailyView = (bool) $user->getAttribute('calendar_daily_view');
+        $filterType = match (true) {
+            $planningCalendar && $isDailyView => UserFilterTypes::PLANNING_DAILY_FILTER,
+            $planningCalendar => UserFilterTypes::PLANNING_FILTER,
+            $isDailyView => UserFilterTypes::CALENDAR_DAILY_FILTER,
+            default => UserFilterTypes::CALENDAR_FILTER,
+        };
 
         $startDate = $start->format('Y-m-d');
         $endDate = $end->format('Y-m-d');
@@ -501,7 +521,7 @@ class UserService
 
         // Ensure dates are valid Carbon instances
         if (!$startDate instanceof Carbon) {
-            $startDate = $now ?? $this->carbonService->getNow();
+            $startDate = $now;
         }
         if (!$endDate instanceof Carbon) {
             $endDate = $this->carbonService->cloneAndAddWeek($startDate);

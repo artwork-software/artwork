@@ -2,11 +2,14 @@
 
 namespace Artwork\Modules\Calendar\DTO;
 
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 
 class RoomDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
+
     public function __construct(
         public int $id,
         public string $name,

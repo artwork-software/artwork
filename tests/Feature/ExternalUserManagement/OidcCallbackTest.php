@@ -4,6 +4,7 @@ namespace Tests\Feature\ExternalUserManagement;
 
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Service\OidcService;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
 use PHPUnit\Framework\Attributes\Test;
@@ -65,6 +66,15 @@ final class OidcCallbackTest extends FeatureTestCase
         $this->assertSame('subject-123', $user->auth_provider_id);
         $this->assertNotNull($user->email_verified_at);
         $this->assertTrue(Auth::id() === $user->id);
+
+        // Provisionierte Konten brauchen dieselbe Grundausstattung wie eingeladene.
+        $this->assertTrue($user->calendar_settings()->exists());
+        $this->assertTrue($user->userFilters()->calendarFilter()->exists());
+        $this->assertSame(
+            count(NotificationEnum::configurableCases()),
+            $user->notificationSettings()->count()
+        );
+        $this->assertTrue($user->productBasket()->exists());
     }
 
     #[Test]

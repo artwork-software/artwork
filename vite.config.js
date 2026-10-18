@@ -4,7 +4,6 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from "@tailwindcss/vite";
 import viteCompression from 'vite-plugin-compression'
-import Components from 'unplugin-vue-components/vite'
 
 const port = 5173;
 // DDEV_PRIMARY_URL includes the router port when it is non-standard (e.g. :8443).
@@ -65,6 +64,14 @@ function tablerIconsSync() {
 
 export default defineConfig({
     envPrefix: 'ARTWORK_NEVER_EXPOSE_',
+    // Die Sprachdateien (~8.500 Keys) werden nur als Ganzes (default) gebraucht. Als String +
+    // JSON.parse parst der Browser sie deutlich schneller als ein JS-Objektliteral mit
+    // einem Named Export je Key – das bremste jeden Kaltstart vor dem Mount. stringify greift
+    // in Vite 7 nur ohne namedExports (JSON wird nirgends per Named Import genutzt).
+    json: {
+        namedExports: false,
+        stringify: true,
+    },
     build: {
         // for modern browsers / node versions — ESNext includes top-level await
         target: 'esnext',
@@ -102,9 +109,6 @@ export default defineConfig({
                     includeAbsolute: false,
                 },
             },
-        }),
-        Components({
-            dts: 'resources/types/components.d.ts',
         }),
         tailwindcss(),
         viteCompression({ algorithm: 'brotliCompress', ext: '.br', deleteOriginFile: false }),

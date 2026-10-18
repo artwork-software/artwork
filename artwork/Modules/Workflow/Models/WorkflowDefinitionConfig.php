@@ -19,11 +19,17 @@ class WorkflowDefinitionConfig extends Model
         'deprecated_at' => 'datetime'
     ];
 
+    /**
+     * @return BelongsTo<WorkflowDefinition, $this>
+     */
     public function workflowDefinition(): BelongsTo
     {
         return $this->belongsTo(WorkflowDefinition::class, 'workflow_definition_id', 'id', 'workflowDefinition');
     }
 
+    /**
+     * @return HasMany<WorkflowInstance, $this>
+     */
     public function workflowInstances(): HasMany
     {
         return $this->hasMany(WorkflowInstance::class);

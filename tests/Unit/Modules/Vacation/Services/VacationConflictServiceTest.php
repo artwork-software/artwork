@@ -3,6 +3,10 @@
 namespace Tests\Unit\Modules\Vacation\Services;
 
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use PHPUnit\Framework\Attributes\Test;
@@ -49,5 +53,33 @@ final class VacationConflictServiceTest extends TestCase
         );
 
         $this->assertTrue(true);
+    }
+
+    #[Test]
+    public function a_conflict_with_an_unknown_scheduler_is_recorded_instead_of_failing(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $worker = User::factory()->create()->fresh();
+        $day = '2026-11-12';
+        $shift = Shift::factory()->create([
+            'event_id' => null, 'start_date' => $day, 'end_date' => $day, 'committing_user_id' => null,
+        ]);
+        // Zuweisung ohne erfasste einteilende Person (Altbestand)
+        $shift->users()->attach($worker->id, ['shift_qualification_id' => ShiftQualification::factory()->create()->id]);
+        \Artwork\Modules\Shift\Models\ShiftWorker::query()->where('shift_id', $shift->id)->update(['assigned_by_user_id' => null]);
+        Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $worker->id,
+            'date' => $day,
+            // Factory würfelt sonst „ganztägig“ – ohne Uhrzeit überschneidet sich nichts (wackelnder Test)
+            'full_day' => true,
+            'is_series' => false,
+        ]);
+
+        // vorher: user_name NOT NULL → QueryException, Abwesenheit eintragen endete mit 500
+        $this->service->checkVacationConflictsShifts($shift->fresh(), app(NotificationService::class), $worker);
+
+        $conflict = VacationConflict::query()->where('shift_id', $shift->id)->sole();
+        $this->assertNull($conflict->user_name);
     }
 }

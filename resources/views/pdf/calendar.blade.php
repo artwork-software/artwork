@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Kalender</title>
+    <title>{{ __('Calendar') }}</title>
     @php
         $scaleFactor = match(strtolower($paperSize ?? 'a4')) {
             'a3' => 1.4,
@@ -317,11 +317,11 @@
 
         // Zeitstring
         if ($allDay) {
-            $timeString = 'Ganztägig';
+            $timeString = __('All day');
         } else {
             if ($isMultiDay) {
                 if (!$isStartDay && !$isEndDay) {
-                    $timeString = 'Ganztägig';
+                    $timeString = __('All day');
                 } elseif ($isStartDay && !$isEndDay) {
                     $timeString = $start->format('H:i') . '–24:00';
                 } elseif (!$isStartDay && $isEndDay) {
@@ -612,13 +612,13 @@
                         <div class="title">{{ $title ?? 'Raumbelegung' }}</div>
                         <div class="subtitle">
                             @if($firstDay && $lastDay)
-                                Zeitraum: {{ $firstDay }} – {{ $lastDay }}
+                                {{ __('Time period') }}: {{ $firstDay }} – {{ $lastDay }}
                             @endif
                         </div>
                     </td>
                     <td class="header-right">
-                        <div class="chunk-info">Erstellt von {{ $created_by }}</div>
-                        <div class="chunk-info">Erstellt am {{ \Illuminate\Support\Carbon::now()->format('d.m.Y H:i') }}</div>
+                        <div class="chunk-info">{{ __('Created by') }} {{ $created_by }}</div>
+                        <div class="chunk-info">{{ __('Created on') }} {{ \Illuminate\Support\Carbon::now()->format('d.m.Y H:i') }}</div>
                     </td>
                 </tr>
             </table>
@@ -628,11 +628,11 @@
                 <thead>
                 <tr>
                     <th class="th-room-head" style="text-align:center; vertical-align:middle; font-size:{{ $s(9) }}; font-weight:700;">
-                        Raum
+                        {{ __('Room') }}
                     </th>
 
                     <th class="th-room-head time-col-bg" style="padding: 1px; font-size: {{ $s(9) }}; font-weight: 700; line-height: 1.2; background-color:#f4f4f5; text-align:center; vertical-align:middle; white-space:nowrap;">
-                        Zeit
+                        {{ __('Time') }}
                     </th>
 
                     @foreach($daysPage as $dayInfo)
@@ -655,7 +655,7 @@
                     <tr>
                         <th colspan="2"
                             style="font-size:{{ $s(7) }}; font-weight:700; padding:2px 3px; text-align:right; vertical-align:top; background-color:#fef9ec; border-bottom:1px solid rgba(64,64,64,0.35);">
-                            Tagesbemerkungen
+                            {{ __('Day remarks') }}
                         </th>
                         @foreach($daysPage as $dayInfo)
                             <td style="font-size:{{ $s(7) }}; line-height:1.25; padding:2px 3px; text-align:left; vertical-align:top; background-color:#fef9ec; border-bottom:1px solid rgba(64,64,64,0.35); word-wrap:break-word;">
@@ -686,9 +686,9 @@
                         {{-- Zeitspalte (Linien exakt wie Day-Cells) --}}
                         <td class="td-time time-col-bg" style="height: {{ $hDay }}px; background-color:#f4f4f5;">
                             <div class="time-wrap" style="height: {{ $hDay }}px;">
-                                <div class="time-block" style="height: {{ $hMorning }}px; border-bottom: 1px solid rgba(64,64,64,0.35);">Morgens</div>
-                                <div class="time-block" style="height: {{ $hNoon }}px; border-bottom: 1px solid rgba(64,64,64,0.35);">Mittags</div>
-                                <div class="time-block" style="height: {{ $hEvening }}px;">Abends</div>
+                                <div class="time-block" style="height: {{ $hMorning }}px; border-bottom: 1px solid rgba(64,64,64,0.35);">{{ __('In the morning') }}</div>
+                                <div class="time-block" style="height: {{ $hNoon }}px; border-bottom: 1px solid rgba(64,64,64,0.35);">{{ __('At noon') }}</div>
+                                <div class="time-block" style="height: {{ $hEvening }}px;">{{ __('In the evening') }}</div>
                             </div>
                         </td>
 

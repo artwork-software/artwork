@@ -15,6 +15,9 @@ use Illuminate\Support\Collection;
 
 trait HasShifts
 {
+    /**
+     * @return MorphToMany<Shift, $this>
+     */
     public function shifts(): MorphToMany
     {
         return $this->morphToMany(
@@ -44,6 +47,9 @@ trait HasShifts
             ]);
     }
 
+    /**
+     * @return MorphToMany<ShiftQualification, $this>
+     */
     public function shiftQualifications(): MorphToMany
     {
         return $this->morphToMany(
@@ -55,6 +61,9 @@ trait HasShifts
         )->withPivot('craft_id');
     }
 
+    /**
+     * @return MorphToMany<GlobalQualification, $this>
+     */
     public function globalQualifications(): MorphToMany
     {
         return $this->morphToMany(
@@ -107,11 +116,17 @@ trait HasShifts
         return $builder->where('can_work_shifts', true);
     }
 
+    /**
+     * @return MorphToMany<Craft, $this>
+     */
     public function assignedCrafts(): MorphToMany
     {
         return $this->morphToMany(Craft::class, 'craftable')->with('qualifications');
     }
 
+    /**
+     * @return MorphToMany<Craft, $this>
+     */
     public function managingCrafts(): MorphToMany
     {
         return $this->morphToMany(Craft::class, 'craft_manager');
@@ -143,6 +158,9 @@ trait HasShifts
         return $this->assignedCrafts()->pluck('crafts.id')->toArray();
     }
 
+    /**
+     * @return MorphToMany<Craft, $this>
+     */
     public function craftsToManage(): MorphToMany
     {
         return $this->morphToMany(Craft::class, 'craft_manager');

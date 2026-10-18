@@ -40,7 +40,6 @@
 </template>
 
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import axios from "axios";
@@ -54,7 +53,7 @@ export default {
             required: true
         },
     },
-    mixins: [IconLib, Permissions],
+    mixins: [Permissions],
     computed: {
         isDescriptionTruncated() {
             return this.event.description?.length > 70;

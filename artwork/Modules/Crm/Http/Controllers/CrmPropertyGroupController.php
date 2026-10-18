@@ -6,8 +6,12 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Crm\Events\CrmSettingsChanged;
 use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 
 class CrmPropertyGroupController extends Controller
 {
@@ -24,7 +28,7 @@ class CrmPropertyGroupController extends Controller
             'color' => 'nullable|string',
             'is_confidential' => 'boolean',
             'permissions' => 'nullable|array',
-            'permissions.*.permissionable_type' => 'required|string',
+            'permissions.*.permissionable_type' => ['required', 'string', $this->permissionableTypes()],
             'permissions.*.permissionable_id' => 'required|integer',
             'permissions.*.can_view' => 'boolean',
             'permissions.*.can_edit' => 'boolean',
@@ -50,7 +54,7 @@ class CrmPropertyGroupController extends Controller
             'is_confidential' => 'sometimes|boolean',
             'sort_order' => 'sometimes|integer',
             'permissions' => 'nullable|array',
-            'permissions.*.permissionable_type' => 'required|string',
+            'permissions.*.permissionable_type' => ['required', 'string', $this->permissionableTypes()],
             'permissions.*.permissionable_id' => 'required|integer',
             'permissions.*.can_view' => 'boolean',
             'permissions.*.can_edit' => 'boolean',
@@ -95,11 +99,19 @@ class CrmPropertyGroupController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * Gruppenrechte gehen nur an User oder Abteilungen (vorher: beliebige Morph-Klasse).
+     */
+    private function permissionableTypes(): In
+    {
+        return Rule::in([(new User())->getMorphClass(), (new Department())->getMorphClass()]);
+    }
+
     public function updatePermissions(Request $request, CrmPropertyGroup $crmPropertyGroup): RedirectResponse
     {
         $validated = $request->validate([
             'permissions' => 'array',
-            'permissions.*.permissionable_type' => 'required|string',
+            'permissions.*.permissionable_type' => ['required', 'string', $this->permissionableTypes()],
             'permissions.*.permissionable_id' => 'required|integer',
             'permissions.*.can_view' => 'boolean',
             'permissions.*.can_edit' => 'boolean',

@@ -59,7 +59,6 @@
 
 <script>
 import {Popover, PopoverButton, PopoverPanel} from '@headlessui/vue'
-import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import {router, usePage} from "@inertiajs/vue3";
@@ -74,7 +73,7 @@ const lazyUserDetailsPending = new Set();
 
 export default {
     name: "UserPopoverTooltip",
-    mixins: [IconLib, Permissions],
+    mixins: [Permissions],
     setup() {
         const { can, hasAdminRole } = usePermission(usePage().props);
         return { can, hasAdminRole };

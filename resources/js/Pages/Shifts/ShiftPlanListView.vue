@@ -479,6 +479,15 @@
                         </template>
                         <div v-else style="min-height: 100px" />
                     </div>
+                    <!-- Weitere Tage werden blockweise nachgeladen (erste Woche kommt mit der Seite) -->
+                    <div v-if="loadingMoreDays" class="flex items-center justify-center gap-2 py-6 text-text-subtle text-sm">
+                        <span class="inline-block h-3 w-3 rounded-full border-2 border-border-strong border-t-transparent animate-spin"></span>
+                        {{ $t('Loading...') }}
+                    </div>
+                    <div v-else-if="dayChunkFailed" class="flex items-center justify-center gap-3 py-6 text-text-subtle text-sm">
+                        {{ $t('The data could not be loaded.') }}
+                        <button type="button" class="underline text-text" @click="reloadGroupedShifts()">{{ $t('Try again') }}</button>
+                    </div>
                 </template>
 
                 <div v-else class="flex items-center justify-center py-20 text-text-subtle text-sm">
@@ -553,11 +562,13 @@
 
 <script setup>
 import {ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, onUnmounted, nextTick, defineAsyncComponent} from 'vue';
+import { parseYmd, toYmd } from '@/Helper/IsoWeek.js';
 import {Link, router, usePage} from '@inertiajs/vue3';
 import NotificationToast from '@/Artwork/Feedback/NotificationToast.vue';
 import {useI18n} from 'vue-i18n';
 import {usePermission} from '@/Composeables/Permission.js';
 import axios from 'axios';
+import {chunkRanges, mergeDayChunk, ownedRange, prioritizeChunks, addDays} from '@/Helper/listViewChunks.js';
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue';
 import ShiftPlanListViewFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanListViewFunctionBar.vue';
 import BaseMenu from '@/Components/Menu/BaseMenu.vue';
@@ -598,6 +609,8 @@ const {can, hasAdminRole} = usePermission(usePage().props);
 
 const props = defineProps({
     groupedShifts: Array,
+    // Zeitraum + bereits geladener erster Block: {start, end, loadedUntil, chunkDays}
+    groupedShiftsChunk: Object,
     dateValue: Array,
     listViewSettings: Object,
     user_filters: Object,
@@ -636,12 +649,94 @@ watch(() => [props.crafts, props.shiftGroups], buildLookups);
 // --- L3: Local reactive copy of groupedShifts + WebSocket listeners ---
 const localGroupedShifts = shallowRef(props.groupedShifts || []);
 
-// Sync when Inertia reloads (date change, filter changes)
-watch(() => props.groupedShifts, (newVal) => {
-    localGroupedShifts.value = newVal || [];
+// --- Blockweises Laden: die Seite bringt die erste Woche, der Rest kommt über shifts.plan.list-view.days ---
+const loadingMoreDays = ref(false);
+const dayChunkFailed = ref(false);
+let dayChunkGeneration = 0;
+// Zeitraum + Einstellungen, für die die geladenen Tage gelten — ändern sie sich, wird neu aufgebaut
+const chunkPeriodKey = () => JSON.stringify([
+    props.groupedShiftsChunk?.start,
+    props.groupedShiftsChunk?.end,
+    props.user_filters,
+    props.listViewSettings,
+]);
+let loadedPeriodKey = chunkPeriodKey();
+
+function applyDayChunk(chunk, days) {
+    const period = props.groupedShiftsChunk;
+    localGroupedShifts.value = mergeDayChunk(localGroupedShifts.value, days, ownedRange(chunk, period.start, period.end));
     shiftsVersion.value++;
-    // Neu hinzugekommene Räume (Raumwechsel, Filter) ebenfalls abonnieren
-    setupListeners();
+    subscribeMissingRooms();
+}
+
+/**
+ * Blöcke nacheinander laden und einsortieren. Bricht ab, sobald ein neuerer Ladevorgang startet oder
+ * der Server einen anderen Zeitraum meldet (z. B. in einem anderen Tab geändert).
+ */
+async function loadDayChunks(ranges) {
+    const generation = ++dayChunkGeneration;
+    dayChunkFailed.value = false;
+    if (!ranges.length) {
+        loadingMoreDays.value = false;
+        return;
+    }
+    loadingMoreDays.value = true;
+    try {
+        for (const range of ranges) {
+            const { data } = await axios.get(route('shifts.plan.list-view.days'), {
+                params: { chunk_start: range.start, chunk_end: range.end },
+            });
+            if (generation !== dayChunkGeneration) return;
+            const period = props.groupedShiftsChunk;
+            if (data.start !== period?.start || data.end !== period?.end) {
+                router.reload({ preserveScroll: true });
+                return;
+            }
+            applyDayChunk({ start: data.chunkStart, end: data.chunkEnd }, data.groupedShifts || []);
+        }
+    } catch (error) {
+        if (generation === dayChunkGeneration) dayChunkFailed.value = true;
+    } finally {
+        if (generation === dayChunkGeneration) loadingMoreDays.value = false;
+    }
+}
+
+/** Restliche Tage nach dem mit der Seite gelieferten ersten Block laden */
+function loadRemainingDays() {
+    const period = props.groupedShiftsChunk;
+    if (!period?.loadedUntil) return;
+    loadDayChunks(chunkRanges(addDays(period.loadedUntil, 1), period.end, period.chunkDays));
+}
+
+/**
+ * Nach Aktionen alle Tage neu laden — blockweise, sichtbare Tage zuerst, jeder Block ersetzt nur seine
+ * Tage (kein Komplett-Neuaufbau, kein Springen der Ansicht).
+ */
+function reloadGroupedShifts() {
+    const period = props.groupedShiftsChunk;
+    if (!period?.start) {
+        router.reload({ only: ['groupedShifts', 'groupedShiftsChunk'], preserveScroll: true });
+        return;
+    }
+    loadDayChunks(prioritizeChunks(chunkRanges(period.start, period.end, period.chunkDays), visibleDays.value));
+}
+
+// Inertia-Reload (Zeitraum/Filter geändert oder Redirect nach einer Aktion): erster Block kommt neu mit
+watch(() => props.groupedShifts, (newVal) => {
+    const periodKey = chunkPeriodKey();
+    if (periodKey !== loadedPeriodKey) {
+        loadedPeriodKey = periodKey;
+        localGroupedShifts.value = newVal || [];
+        shiftsVersion.value++;
+        // Neu hinzugekommene Räume (Raumwechsel, Filter) ebenfalls abonnieren
+        setupListeners();
+        loadRemainingDays();
+        return;
+    }
+    // Gleicher Zeitraum: ersten Block übernehmen, übrige Tage im Hintergrund aktualisieren
+    const period = props.groupedShiftsChunk;
+    applyDayChunk({ start: period.start, end: period.loadedUntil }, newVal || []);
+    loadDayChunks(chunkRanges(addDays(period.loadedUntil, 1), period.end, period.chunkDays));
 });
 
 // --- L4: Version counter for cache invalidation ---
@@ -674,6 +769,28 @@ function setupListeners() {
     }
 }
 
+// Räume aus nachgeladenen Blöcken zusätzlich abonnieren (ohne bestehende Abos neu aufzubauen)
+function subscribeMissingRooms() {
+    for (const dayData of localGroupedShifts.value) {
+        for (const roomData of dayData.rooms || []) {
+            const roomId = roomData.room_id;
+            if (!roomId || activeChannels.has(`shift-plan.room.${roomId}`)) continue;
+            const shiftChannel = `shift-plan.room.${roomId}`;
+            const destroyChannel = `destroy.events.room.${roomId}`;
+            activeChannels.add(shiftChannel);
+            activeChannels.add(destroyChannel);
+            window.Echo.private(shiftChannel)
+                .listen('.shift-created', (data) => updateShiftLocally(data))
+                .listen('.shift-assign-entity', (data) => updateShiftLocally(data))
+                .listen('.shift-remove-entity', (data) => updateShiftLocally(data))
+                .listen('.shift-updated', (data) => updateShiftLocally(data))
+                .listen('.shift-updated.in.event', (data) => updateShiftLocally(data));
+            window.Echo.private(destroyChannel)
+                .listen('.shift-destroyed.in.event', (data) => removeShiftLocally(data));
+        }
+    }
+}
+
 function cleanupListeners() {
     for (const ch of activeChannels) window.Echo.leave(ch);
     activeChannels.clear();
@@ -692,7 +809,7 @@ function scheduleGroupedShiftsReload() {
     if (groupedShiftsReloadTimer) clearTimeout(groupedShiftsReloadTimer);
     groupedShiftsReloadTimer = setTimeout(() => {
         groupedShiftsReloadTimer = null;
-        router.reload({ only: ['groupedShifts'], preserveScroll: true });
+        reloadGroupedShifts();
     }, 300);
 }
 
@@ -859,6 +976,7 @@ const dayHeaderStickyTop = computed(() => {
 onMounted(() => {
     initDayObserver();
     setupListeners();
+    loadRemainingDays();
     nextTick(() => {
         const el = functionBarRef.value?.$el || functionBarRef.value;
         if (el) {
@@ -879,6 +997,8 @@ onBeforeUnmount(() => {
 
 onUnmounted(() => {
     if (groupedShiftsReloadTimer) clearTimeout(groupedShiftsReloadTimer);
+    // laufendes blockweises Laden verwerfen
+    dayChunkGeneration++;
     cleanupListeners();
     dayObserver?.disconnect();
 });
@@ -916,7 +1036,9 @@ const hideShiftRow = computed(() =>
 const normalizeShift = (shift) => shift;
 
 const hasContent = computed(() => {
-    return localGroupedShifts.value && localGroupedShifts.value.length > 0;
+    return (localGroupedShifts.value && localGroupedShifts.value.length > 0)
+        || loadingMoreDays.value
+        || dayChunkFailed.value;
 });
 
 const formatDayHeader = (dateString) => {
@@ -1101,7 +1223,7 @@ const groupShiftsByShiftGroup = (shifts) => {
 
 // Navigation to shift plan (always weekly view) with highlight + scroll
 const navigateToShiftPlan = async (shift, dayString) => {
-    const shiftDate = new Date(dayString);
+    const shiftDate = parseYmd(dayString) ?? new Date(dayString);
     const dayOfWeek = shiftDate.getDay();
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
@@ -1117,8 +1239,8 @@ const navigateToShiftPlan = async (shift, dayString) => {
     await axios.patch(route('user.update.daily_view', userId), { daily_view: false, context: 'shift_plan' });
 
     router.patch(route('update.user.shift.calendar.filter.dates', userId), {
-        start_date: monday.toISOString().slice(0, 10),
-        end_date: sunday.toISOString().slice(0, 10),
+        start_date: toYmd(monday),
+        end_date: toYmd(sunday),
         isDailyView: false,
     }, {
         preserveState: false,
@@ -1151,7 +1273,7 @@ const closeAddShiftModal = () => {
     roomForShiftAdd.value = null;
     dayForShiftAdd.value = null;
     shiftGroupForShiftAdd.value = null;
-    router.reload({ only: ['groupedShifts'], preserveScroll: true });
+    reloadGroupedShifts();
 };
 
 // Add event for room/day
@@ -1165,7 +1287,7 @@ const closeAddEventModal = () => {
     showAddEventModal.value = false;
     roomForEventAdd.value = null;
     dayForEventAdd.value = null;
-    router.reload({ only: ['groupedShifts'], preserveScroll: true });
+    reloadGroupedShifts();
 };
 
 // Multi-edit
@@ -1195,9 +1317,9 @@ const showBulkActionError = (error) => {
 const deleteSelectedShifts = () => {
     axios.post(route('shifts.multi.delete'), {
         shift_ids: selectedShiftIds.value,
-    }).then(() => {
+    }, { skipErrorToast: true }).then(() => { // Fehler zeigt showBulkActionError
         selectedShiftIds.value = [];
-        router.reload({ only: ['groupedShifts'], preserveScroll: true });
+        reloadGroupedShifts();
     }).catch(showBulkActionError).finally(() => {
         showDeleteConfirm.value = false;
     });
@@ -1212,9 +1334,9 @@ const duplicateSelectedShifts = () => {
     duplicateInFlight.value = true;
     axios.post(route('shifts.multi.duplicate'), {
         shift_ids: selectedShiftIds.value,
-    }).then(() => {
+    }, { skipErrorToast: true }).then(() => { // Fehler zeigt showBulkActionError
         selectedShiftIds.value = [];
-        router.reload({ only: ['groupedShifts'], preserveScroll: true });
+        reloadGroupedShifts();
     }).catch(showBulkActionError).finally(() => {
         duplicateInFlight.value = false;
     });

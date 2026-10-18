@@ -128,9 +128,11 @@ class FreelancerRepository extends BaseRepository
     public function scoutSearch(string $search): SupportCollection
     {
         return $this
-            ->getNewModelInstance()
-            ->search($search)
-            ->get()
+            ->getScoutResultsOrSqlFallback(
+                $this->getNewModelInstance()->search($search),
+                $search,
+                ['first_name', 'last_name', 'work_name', 'email']
+            )
             ->map(
                 fn(Freelancer $freelancer) => [
                     'id' => $freelancer->getAttribute('id'),

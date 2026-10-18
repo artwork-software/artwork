@@ -92,6 +92,12 @@ const SETTINGS_GUIDE_PAGES = {
 };
 
 /**
+ * Settings areas whose guide banner deliberately has no manual page yet
+ * (the banner then shows no manual link).
+ */
+export const SETTINGS_GUIDE_AREAS_WITHOUT_MANUAL = ['tickets'];
+
+/**
  * Manual page for a settings guide banner, derived from its storage key.
  *
  * @param {string|null} storageKey e.g. 'settings-guide.shift.rules'

@@ -37,7 +37,7 @@
                     type="number"
                     id="breakfast_deduction"
                     v-model="form.breakfast_deduction_per_day"
-                    :label="$t('Deduction per breakfast') + ' (€)'"
+                    :label="$t('Deduction per breakfast') + ' (' + $currencySymbol() + ')'"
                     :step="0.01"
                 />
             </div>
@@ -47,7 +47,7 @@
                     type="number"
                     id="daily_allowance_default"
                     v-model="form.artist_residency_daily_allowance_default"
-                    :label="$t('Default daily allowance') + ' (€)'"
+                    :label="$t('Default daily allowance') + ' (' + $currencySymbol() + ')'"
                     :step="0.01"
                 />
                 <p class="text-xs text-text-subtle mt-1">

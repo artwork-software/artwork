@@ -24,6 +24,9 @@ class DisclosureComponents extends Model
 
     protected $with = ['component'];
 
+    /**
+     * @return BelongsTo<Component, $this>
+     */
     public function component(): BelongsTo
     {
         return $this->belongsTo(Component::class, 'component_id', 'id');

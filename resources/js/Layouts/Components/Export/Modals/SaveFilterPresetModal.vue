@@ -95,7 +95,7 @@ const savePreset = async () => {
         const response = await axios.post(route('pdf-export-user-filters.store'), {
             name: presetName.value.trim(),
             filters: props.filterData
-        })
+        }, { skipErrorToast: true }) // Fehler steht am Namensfeld
 
         if (response.data.ok) {
             emit('saved', response.data.filter)

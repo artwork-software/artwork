@@ -190,6 +190,8 @@
 <script setup>
 import { computed, ref } from "vue";
 import axios from "axios";
+import { extractSaveErrorMessage } from "@/Composeables/BiSaveFeedback.js";
+import { ticketingMoveHeaders } from "@/Composeables/useTicketingMove.js";
 import { useI18n } from "vue-i18n";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
@@ -292,9 +294,14 @@ const isValid = computed(() => {
 const requestError = ref("");
 const submitting = ref(false);
 
-const save = () => {
+const save = async () => {
     requestError.value = "";
     submitting.value = true;
+    const headers = await ticketingMoveHeaders(props.checkedEvents);
+    if (!headers) {
+        submitting.value = false;
+        return;
+    }
     axios.patch(route("multi-edit.save"), {
         events: props.checkedEvents,
         newRoomId: selectedRoom.value?.id ? selectedRoom.value.id : null,
@@ -302,10 +309,11 @@ const save = () => {
         value: timeMode.value === "offset" ? offsetNumber.value : 0,
         type: selectedUnit.value?.id ?? 2,
         date: timeMode.value === "date" ? fixedDate.value : null,
-    }).then(() => {
+    }, { headers, skipErrorToast: true }).then(() => {
         emit("closed", true);
     }).catch((error) => {
-        requestError.value = error.response?.data?.message ?? $t("An error has occurred");
+        // Fehler steht im Modal – kein zusätzlicher globaler Toast (skipErrorToast)
+        requestError.value = extractSaveErrorMessage(error) ?? $t("An error has occurred");
     }).finally(() => {
         submitting.value = false;
     });

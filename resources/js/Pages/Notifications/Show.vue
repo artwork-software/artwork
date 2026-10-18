@@ -11,23 +11,14 @@
             </div>
             <div class=" mt-8">
                 <div class="mb-4 border-border-subtle ">
-                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
-                        <li class="mr-2" role="presentation">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+                        <li v-for="tab in tabs" :key="tab.key" class="mr-2" role="presentation">
                             <button
-                                :class="[openTab === 'notifications' ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold uppercase']"
-                                @click="openTab = 'notifications'">{{$t('Notifications')}}
-                            </button>
-                        </li>
-                        <li class="mr-2" role="presentation">
-                            <button
-                                :class="[openTab === 'mailSettings' ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold uppercase']"
-                                @click="openTab = 'mailSettings'">{{$t('E-mail settings')}}
-                            </button>
-                        </li>
-                        <li class="mr-2" role="presentation">
-                            <button
-                                :class="[openTab === 'pushSettings' ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold uppercase']"
-                                @click="openTab = 'pushSettings'">{{ $t('Push settings')}}
+                                type="button"
+                                role="tab"
+                                :aria-selected="openTab === tab.key"
+                                :class="[openTab === tab.key ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold']"
+                                @click="switchTab(tab.key)">{{ $t(tab.label) }}
                             </button>
                         </li>
                     </ul>
@@ -201,18 +192,9 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="openTab === 'mailSettings'">
-                        <p class="text-sm text-text-subtle dark:text-text-subtle mb-20">
-                            <NotificationFrequencySettings :group-types="groupTypes"
-                                                           :notification-frequencies="notificationFrequencies"
-                                                           :notificationSettings="notificationSettings"/>
-                        </p>
-                    </div>
-                    <div v-if="openTab === 'pushSettings'">
-                        <p class="text-sm text-text-subtle dark:text-text-subtle mb-20">
-                            <NotificationPushSettings :group-types="groupTypes"
-                                                      :notificationSettings="notificationSettings"/>
-                        </p>
+                    <div v-if="openTab === 'settings'" class="mb-20">
+                        <NotificationSettingsPanel :groups="notificationSettingGroups"
+                                                   :frequencies="notificationFrequencies"/>
                     </div>
                 </div>
             </div>
@@ -250,9 +232,9 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue";
-import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings.vue";
+import NotificationSettingsPanel from "@/Layouts/Components/NotificationComponents/NotificationSettingsPanel.vue";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent.vue";
-import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings.vue";
+import {resetNotificationArrived} from "@/Helper/notificationIndicator.js";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
@@ -265,9 +247,8 @@ export default defineComponent({
         NotificationBlock,
         SecondaryButton,
         GlobalNotificationModal,
-        NotificationPushSettings,
         NotificationSectionComponent,
-        NotificationFrequencySettings,
+        NotificationSettingsPanel,
         TeamIconCollection,
         UserTooltip,
         SvgCollection,
@@ -311,9 +292,8 @@ export default defineComponent({
         'rooms',
         'eventTypes',
         'projects',
-        'notificationSettings',
+        'notificationSettingGroups',
         'notificationFrequencies',
-        'groupTypes',
         'event',
         'project',
         'wantedSplit',
@@ -324,9 +304,18 @@ export default defineComponent({
         'first_project_calendar_tab_id',
         'eventStatuses'
     ],
+    mounted() {
+        // Center besucht: live gesetzter Glocken-Punkt gilt als gesehen
+        resetNotificationArrived();
+    },
     data() {
         return {
-            openTab: 'notifications',
+            // Reiter per URL verlinkbar (?tab=settings), z. B. aus Benachrichtigungen und E-Mails
+            openTab: new URLSearchParams(window.location.search).get('tab') === 'settings' ? 'settings' : 'notifications',
+            tabs: [
+                { key: 'notifications', label: 'Notifications' },
+                { key: 'settings', label: 'Settings' },
+            ],
             showRoomsAndEvents: true,
             showRoomsAndRoomRequests: true,
             deleteComponentVisible: false,
@@ -340,6 +329,17 @@ export default defineComponent({
         }
     },
     methods: {
+        switchTab(key) {
+            this.openTab = key;
+            const url = new URL(window.location.href);
+            if (key === 'settings') {
+                url.searchParams.set('tab', 'settings');
+            } else {
+                url.searchParams.delete('tab');
+                url.searchParams.delete('type');
+            }
+            window.history.replaceState(window.history.state, '', url);
+        },
         formatDate(isoDate) {
             if (isoDate?.split('T').length > 1) {
                 return isoDate.split('T')[0].substring(8, 10) + '.' +

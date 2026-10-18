@@ -152,11 +152,6 @@
                                 >
                                     {{ $t('Edit') }}
                                 </button>
-                                <!-- Optional: Details/Route-Button falls vorhanden
-                                <Link :href="route('material-sets.show', set.id)" class="rounded-lg px-2.5 py-1.5 text-sm font-medium text-accent-700 ring-1 ring-inset ring-accent-200">
-                                  {{ $t('Open') }}
-                                </Link>
-                                -->
                             </div>
                         </article>
                     </div>

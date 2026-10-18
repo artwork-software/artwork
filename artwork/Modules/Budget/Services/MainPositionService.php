@@ -185,9 +185,7 @@ readonly class MainPositionService
         MainPositionDetailsService $mainPositionDetailsService,
         SubPositionService $subPositionService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): void {
         if (($mainPositionVerified = $mainPosition->verified) instanceof MainPositionVerified) {
             $mainPositionVerifiedService->restore($mainPositionVerified);
@@ -218,9 +216,7 @@ readonly class MainPositionService
                 $columnCellService,
                 $subPositionService,
                 $cellCommentService,
-                $cellCalculationService,
-                $sageNotAssignedDataService,
-                $sageAssignedDataService
+                $cellCalculationService
             ): void {
                 $subPositionService->restore(
                     $subPosition,
@@ -232,9 +228,7 @@ readonly class MainPositionService
                     $rowCommentService,
                     $columnCellService,
                     $cellCommentService,
-                    $cellCalculationService,
-                    $sageNotAssignedDataService,
-                    $sageAssignedDataService
+                    $cellCalculationService
                 );
             }
         );

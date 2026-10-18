@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\SetDeveloperEnvironment;
 use App\Http\Middleware\UpdateUserStatus;
 use Artwork\Core\Api\Middleware\ApiAccessLog;
+use Artwork\Core\Api\Middleware\ForceJsonResponse;
 use Artwork\Core\Http\Middleware\Authenticate;
 use Artwork\Core\Http\Middleware\EncryptCookies;
 use Artwork\Core\Http\Middleware\HandleInertiaRequests;
@@ -80,10 +81,18 @@ class Kernel extends HttpKernel
         // Stack für die versionierte Maschinen-API (/api/v1). Bewusst ohne Sanctums
         // EnsureFrontendRequestsAreStateful — hier authentifiziert ausschließlich ein Bearer-Token,
         // keine Session. Ebenso ohne throttle:api, weil dessen 60/min pro Benutzer gelten und damit
-        // das feinere Limit pro Token (throttle:machine-api) überstimmen würden.
+        // das feinere Limit pro Token (throttle:api-token) überstimmen würden.
         'api.machine' => [
+            ForceJsonResponse::class,
             SubstituteBindings::class,
             ApiAccessLog::class,
+        ],
+
+        // Stack der App (/api/app/v1): wie api.machine reines Bearer-Token-Auth, aber ohne
+        // ApiAccessLog — das Protokoll gehört zu den Maschinen-Schlüsseln der Schnittstellen-Seite,
+        // Geräte-Tokens tauchen dort nicht auf.
+        'api.app' => [
+            SubstituteBindings::class,
         ],
 
         // Isolated stack for external-access (magic-link) users.

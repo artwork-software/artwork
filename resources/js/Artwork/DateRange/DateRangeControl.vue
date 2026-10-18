@@ -1,6 +1,6 @@
 <template>
     <div v-if="!project" ref="rootEl" class="inline-flex items-center" @keydown="onRootKeydown">
-        <div class="inline-flex items-stretch bg-surface border border-border-subtle/80 rounded-xl shadow-raised overflow-hidden">
+        <div class="inline-flex items-stretch bg-surface overflow-hidden" :class="compact ? 'h-7 rounded-md border border-border' : 'border border-border-subtle/80 rounded-xl shadow-raised'">
             <button v-if="showNavigation"
                     type="button"
                     class="w-7 flex items-center justify-center text-text-muted hover:bg-surface-sunken transition duration-200 border-r border-border-subtle"
@@ -8,27 +8,29 @@
                     @click="shiftRange(-1)">
                 <IconChevronLeft class="h-4 w-4" stroke-width="2"/>
             </button>
-            <div ref="triggerEl" class="flex items-center gap-x-1 px-1.5 py-1 text-sm">
+            <div ref="triggerEl" class="flex items-center gap-x-1 px-1.5" :class="compact ? 'text-xs' : 'py-1 text-sm'">
                 <button type="button"
                         class="p-1 rounded-lg hover:bg-surface-sunken transition duration-150 shrink-0"
                         :title="$t('Select period')"
                         aria-haspopup="dialog"
                         :aria-expanded="open"
                         @click="togglePopover()">
-                    <IconCalendar class="h-4 w-4 text-accent-600" stroke-width="1.8"/>
+                    <IconCalendar class="text-accent-600" :class="compact ? 'size-3.5' : 'h-4 w-4'" stroke-width="1.8"/>
                 </button>
-                <span class="text-xs text-text-subtle shrink-0">{{ weekdayShort(appliedStart) }}</span>
+                <span v-if="!compact" class="text-xs text-text-subtle shrink-0">{{ weekdayShort(appliedStart) }}</span>
                 <input v-model="inlineStart"
                        type="date"
-                       class="drc-date-input w-[5.9rem] border-0 bg-transparent p-0 text-sm font-semibold tabular-nums cursor-text rounded"
+                       class="drc-date-input border-0 bg-transparent p-0 tabular-nums cursor-text rounded"
+                       :class="compact ? 'w-[5.4rem] text-xs font-medium' : 'w-[5.9rem] text-sm font-semibold'"
                        :aria-label="$t('Start date')"
                        @focusout="onInlineFocusOut"
                        @keydown.enter.prevent="$event.target.blur()"/>
                 <span class="text-text-subtle shrink-0">–</span>
-                <span class="text-xs text-text-subtle shrink-0">{{ weekdayShort(appliedEnd) }}</span>
+                <span v-if="!compact" class="text-xs text-text-subtle shrink-0">{{ weekdayShort(appliedEnd) }}</span>
                 <input v-model="inlineEnd"
                        type="date"
-                       class="drc-date-input w-[5.9rem] border-0 bg-transparent p-0 text-sm font-semibold tabular-nums cursor-text rounded"
+                       class="drc-date-input border-0 bg-transparent p-0 tabular-nums cursor-text rounded"
+                       :class="compact ? 'w-[5.4rem] text-xs font-medium' : 'w-[5.9rem] text-sm font-semibold'"
                        :aria-label="$t('End date')"
                        @focusout="onInlineFocusOut"
                        @keydown.enter.prevent="$event.target.blur()"/>
@@ -38,7 +40,7 @@
                         aria-haspopup="dialog"
                         :aria-expanded="open"
                         @click="togglePopover()">
-                    <span class="text-xs text-text-subtle whitespace-nowrap tabular-nums">{{ rangeMeta }}</span>
+                    <span class="text-xs text-text-subtle whitespace-nowrap tabular-nums">{{ compact ? rangeDayCount : rangeMeta }}</span>
                     <IconChevronDown class="h-3.5 w-3.5 text-text-subtle transition-transform duration-150"
                                      :class="open ? 'rotate-180' : ''" stroke-width="2.2"/>
                 </button>
@@ -229,7 +231,14 @@ const props = defineProps({
         type: Function,
         default: null,
     },
+    /** Kompakte 28px-Pille für Filterleisten: ohne Wochentage und KW, nur die Tageszahl */
+    compact: {
+        type: Boolean,
+        default: false,
+    },
 });
+
+const emit = defineEmits(['change']);
 
 // ---------- Datums-Helfer (Strings 'YYYY-MM-DD' <-> Date auf 12:00 lokal, TZ-sicher) ----------
 const DAY_MS = 86400000;
@@ -321,6 +330,10 @@ watch(() => props.dateValueArray, (value) => {
 }, {deep: true});
 
 // ---------- Anzeige in der Pill ----------
+const rangeDayCount = computed(() => {
+    const count = daysBetween(appliedStart.value, appliedEnd.value) + 1;
+    return `${count} ${count === 1 ? $t('Day') : $t('Days')}`;
+});
 const rangeMeta = computed(() => {
     const kwStart = isoWeek(appliedStart.value);
     const kwEnd = isoWeek(appliedEnd.value);
@@ -375,6 +388,11 @@ function submitRange(start, end) {
     appliedStart.value = start;
     appliedEnd.value = end;
     syncInline();
+
+    if (config.emit) {
+        emit('change', [toIso(start), toIso(end)]);
+        return;
+    }
 
     if (config.reload) {
         router.reload({

@@ -56,16 +56,25 @@ class CompensationDayOff extends Model
         'for_holiday' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user');
     }
 
+    /**
+     * @return BelongsTo<ShiftRuleViolation, $this>
+     */
     public function violation(): BelongsTo
     {
         return $this->belongsTo(ShiftRuleViolation::class, 'violation_id', 'id', 'violation');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function grantedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'granted_by', 'id', 'grantedByUser');

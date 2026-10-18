@@ -16,7 +16,7 @@
                     v-model="displayName"
                     type="text"
                     maxlength="255"
-                    class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
+                    class="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
                 />
                 <p v-if="errors.display_name" class="mt-1 text-xs text-danger">{{ errors.display_name }}</p>
             </div>
@@ -124,8 +124,9 @@ async function save() {
             ? await axios.patch(
                 route('external.project.tab.crm-contacts.update', { ...props.routeParams, crmContact: props.contact.id }),
                 payload,
+                { skipErrorToast: true }, // Fehler steht im Modal
             )
-            : await axios.post(route('external.project.tab.crm-contacts.store', props.routeParams), payload)
+            : await axios.post(route('external.project.tab.crm-contacts.store', props.routeParams), payload, { skipErrorToast: true })
         emit('saved', data.contact)
         emit('close')
     } catch (e) {

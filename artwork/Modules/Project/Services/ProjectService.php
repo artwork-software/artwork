@@ -776,6 +776,7 @@ class ProjectService
     public function syncCrmArtistContacts(Project $project, array $crmContactIds): void
     {
         $project->crmContacts()->sync($this->filterArtistCrmContactIds($crmContactIds));
+        app(ProjectArtistService::class)->refresh($project->id);
     }
 
     /**

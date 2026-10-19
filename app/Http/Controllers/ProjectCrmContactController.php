@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectArtistService;
 use Artwork\Modules\Project\Services\ProjectTabArtistNameService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,6 +32,7 @@ class ProjectCrmContactController extends Controller
         }
 
         $project->crmContacts()->syncWithoutDetaching([$crmContact->id]);
+        app(ProjectArtistService::class)->refresh($project->id);
 
         return response()->json([
             'linked_crm_contacts' => $this->projectTabArtistNameService->mapLinkedCrmContacts($project),
@@ -42,6 +44,7 @@ class ProjectCrmContactController extends Controller
         $this->authorize('update', $project);
 
         $project->crmContacts()->detach($crmContact->id);
+        app(ProjectArtistService::class)->refresh($project->id);
 
         return response()->json([
             'linked_crm_contacts' => $this->projectTabArtistNameService->mapLinkedCrmContacts($project),

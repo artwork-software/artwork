@@ -62,6 +62,7 @@ use Artwork\Modules\ModuleSettings\Http\Policies\ModuleSettingsPolicy;
 use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
 use Artwork\Modules\Project\Policies\CommentPolicy;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -245,7 +246,25 @@ class AuthServiceProvider extends ServiceProvider
                     return false;
                 }
 
-                return $crmContact->teamProjects()
+                if (
+                    $crmContact->teamProjects()
+                        ->get()
+                        ->contains(static fn ($project): bool => $user->can('view', $project))
+                ) {
+                    return true;
+                }
+
+                // Projektkünstler*innen (Komponente „Projektkünstler*in“ oder Sonderrolle in einer Kontaktliste):
+                // Infokarte für alle, die das Projekt sehen (Kalender, Dienstplan, Übersicht)
+                $artistProjectIds = $crmContact->projects()->pluck('projects.id')
+                    ->merge(ProjectComponentCrmContact::query()
+                        ->where('crm_contact_id', $crmContact->id)
+                        ->where('is_artist', true)
+                        ->pluck('project_id'))
+                    ->unique();
+
+                return Project::query()
+                    ->whereIn('id', $artistProjectIds)
                     ->get()
                     ->contains(static fn ($project): bool => $user->can('view', $project));
             }

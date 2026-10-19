@@ -71,7 +71,7 @@
                             :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 font-bold']"
                             v-tooltip.bottom="{ value: project.artistNames, class: 'aw-tooltip' }"
                         >
-                            {{ project.artistNames }}
+                            <ProjectArtistNames :text="project.artistNames" :linked-artists="project.linkedArtists ?? []" />
                         </div>
                         <!-- Eventtyp-Abbreviation: Eventname + Termineigenschaften oben rechts (wie im FullEventInCalendar) -->
                         <div class="flex items-start justify-between gap-x-1">
@@ -209,6 +209,7 @@
 
 <script setup>
 
+import ProjectArtistNames from '@/Components/Crm/ProjectArtistNames.vue'
 import { ref, computed, defineAsyncComponent } from "vue";
 import axios from "axios";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";

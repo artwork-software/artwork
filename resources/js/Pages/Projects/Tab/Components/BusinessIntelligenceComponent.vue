@@ -312,6 +312,7 @@
 </template>
 
 <script setup>
+import { selectedValues } from '@/Helper/ComponentSelection.js';
 import { computed, ref, onMounted, nextTick } from 'vue';
 import { usePage } from "@inertiajs/vue3";
 import {
@@ -471,7 +472,7 @@ const customFieldsCompleteness = computed(() => {
         const data = biCustomFieldValues.value[field.id]?.data;
         if (!data) return false;
         if (field.type === 'Checkbox') return true;
-        if (field.type === 'DropDown') return !!data.selected;
+        if (field.type === 'DropDown') return selectedValues(data.selected).length > 0;
         return !!(data.text && String(data.text).trim() !== '');
     }).length;
     return { filled, total: biCustomFields.value.length };

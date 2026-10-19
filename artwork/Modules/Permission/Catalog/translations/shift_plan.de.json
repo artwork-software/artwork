@@ -126,5 +126,12 @@
     "Shift setting \"Shift confirmation by employees\" enabled": "Schichteinstellung „Schichtbestätigung durch Mitarbeitende“ aktiv",
     "People without this permission are not asked and show no reply status. Planners may record the reply on behalf of a person with this permission.": "Personen ohne dieses Recht werden nicht gefragt und zeigen keinen Antwortstatus. Planer*innen können die Antwort stellvertretend für eine Person mit diesem Recht erfassen.",
     "Can accept or decline own shift assignments": "Kann eigene Schichtzuweisungen zu- oder absagen",
-    "Accept or decline own shifts (also provisional ones), optionally with a comment": "Eigene Schichten zu- oder absagen (auch vorläufige), optional mit Kommentar"
+    "Accept or decline own shifts (also provisional ones), optionally with a comment": "Eigene Schichten zu- oder absagen (auch vorläufige), optional mit Kommentar",
+    "Enter own individual times": "Darf eigene individuelle Zeiten eintragen",
+    "Can enter individual times for themselves in the own roster": "Kann im eigenen Einsatzplan individuelle Zeiten für sich selbst eintragen",
+    "Plus button per day in the own roster": "Plus-Button pro Tag im eigenen Einsatzplan",
+    "Edit and delete own individual times": "Eigene individuelle Zeiten bearbeiten und löschen",
+    "Create, edit and delete own individual times from today on, also as a recurring series": "Eigene individuelle Zeiten ab heute anlegen, bearbeiten und löschen, auch als wiederkehrende Zeitreihe",
+    "Entries apply immediately without approval": "Einträge gelten sofort, ohne Freigabe",
+    "Past days stay reserved for people with \"Manage availability of others\" or \"Plan shifts\".": "Vergangene Tage bleiben Personen mit „Verfügbarkeiten anderer pflegen“ oder „Schichten planen“ vorbehalten."
 }

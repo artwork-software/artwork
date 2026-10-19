@@ -306,6 +306,7 @@
 </template>
 
 <script setup>
+import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { ref, watch, computed, onMounted } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
@@ -445,6 +446,9 @@ const formatCellValue = (type, raw) => {
     }
     if (type === 'checkbox') {
         return raw === '1' ? '✓' : '—'
+    }
+    if (type === 'multiselect') {
+        return crmPropertyDisplayText(raw, type) || '-'
     }
     return raw
 }

@@ -55,7 +55,10 @@ class IndividualTimeSeriesController extends Controller
         // subjects: [{type: "user"|"freelancer"|"service_provider", id: 123}, ...]
         $subjectsInput = collect($data['subjects']);
 
-        $this->authorize('createForSubjects', [IndividualTimeSeries::class, $subjectsInput->all()]);
+        $this->authorize(
+            'createForSubjects',
+            [IndividualTimeSeries::class, $subjectsInput->all(), (string) $data['start_date']]
+        );
 
         // Zeit-Subjekte aus DB laden
         $timeables = $this->resolveTimeables($subjectsInput);
@@ -163,7 +166,7 @@ class IndividualTimeSeriesController extends Controller
     {
         $data = $this->validatePayload($request);
 
-        $this->authorize('update', [$series, $data['subjects']]);
+        $this->authorize('update', [$series, $data['subjects'], (string) $data['start_date']]);
 
         // Wer bearbeitet?
         $createdBy = $this->auth->id();

@@ -13,11 +13,15 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Events\DeleteDocumentInProject;
 use Artwork\Modules\Project\Events\UploadNewDocumentInProject;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
+use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Services\ProjectDocumentPlacementService;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -38,6 +42,7 @@ class ExternalProjectFileService
         protected readonly GeneralSettingsService $generalSettingsService,
         private readonly ExternalAccessSettingsResolver $settingsResolver,
         private readonly ExternalScopeResolver $scopeResolver,
+        private readonly ProjectDocumentPlacementService $placementService,
     ) {
     }
 
@@ -80,6 +85,12 @@ class ExternalProjectFileService
         $this->assertDocumentComponentInTab($component, $tab);
         $this->handleFile(ArtworkFileTypes::PROJECT, $file);
 
+        // Grenzen des Upload-Bereichs (Platzierung der Komponente in diesem Tab) wie intern
+        $placementKey = $this->placementKeyInTab($component, $tab);
+        if ($placementKey !== null) {
+            $this->placementService->assertUploadAllowed($project, $placementKey, $file);
+        }
+
         if (!Storage::exists('project_files')) {
             Storage::makeDirectory('project_files');
         }
@@ -91,6 +102,7 @@ class ExternalProjectFileService
         /** @var ProjectFile $projectFile */
         $projectFile = $project->project_files()->create([
             'tab_id' => $tab->id,
+            'uploaded_via' => $placementKey,
             'name' => $originalName,
             'basename' => $basename,
             'external_access_id' => $external->id,
@@ -175,9 +187,52 @@ class ExternalProjectFileService
         ];
     }
 
+    /**
+     * Dateien des Tabs: Standard-Sichtbarkeit über den Upload-Tab, sonst ausdrücklich in einem Upload-Bereich
+     * dieses Tabs sichtbar (visible_in).
+     */
     private function filesQuery(Project $project, ProjectTab $tab)
     {
-        return $project->project_files()->where('tab_id', $tab->id);
+        $keysInTab = $this->placementService->placements()
+            ->filter(fn (array $placement): bool => in_array((int) $tab->id, $placement['tab_ids'], true))
+            ->pluck('key')
+            ->all();
+
+        return $project->project_files()->where(function (Builder $query) use ($tab, $keysInTab): void {
+            $query->where(fn (Builder $legacy) => $legacy->whereNull('visible_in')->where('tab_id', $tab->id));
+            foreach ($keysInTab as $key) {
+                $query->orWhereJsonContains('visible_in', $key);
+            }
+        });
+    }
+
+    /**
+     * Upload-Bereich der Komponente in diesem Tab (direkt im Tab oder in einem Ordner des Tabs).
+     */
+    private function placementKeyInTab(Component $component, ProjectTab $tab): ?string
+    {
+        $tabPlacementId = ComponentInTab::query()
+            ->without(['component', 'disclosureComponents'])
+            ->where('project_tab_id', $tab->id)
+            ->where('component_id', $component->id)
+            ->value('id');
+        if ($tabPlacementId !== null) {
+            return ProjectDocumentPlacementService::keyFor((int) $tabPlacementId, false);
+        }
+
+        $folderPlacementId = DisclosureComponents::query()
+            ->without('component')
+            ->where('component_id', $component->id)
+            ->whereIn(
+                'disclosure_id',
+                ComponentInTab::query()->without(['component', 'disclosureComponents'])
+                    ->where('project_tab_id', $tab->id)->select('component_id')
+            )
+            ->value('id');
+
+        return $folderPlacementId !== null
+            ? ProjectDocumentPlacementService::keyFor((int) $folderPlacementId, true)
+            : null;
     }
 
     private function assertDocumentComponentInTab(Component $component, ProjectTab $tab): void

@@ -31,6 +31,7 @@ export const COMPONENT_ICONS = {
     TextArea: 'IconArticle',
     Title: 'IconHeading',
     DropDown: 'IconSelect',
+    CheckboxList: 'IconListCheck',
     Link: 'IconLink',
     LinkList: 'IconLink',
     ProjectStateComponent: 'IconPlaystationCircle',

@@ -18,7 +18,8 @@ import {
 import { isInlinePrintableFile, useInlineFilePrinter } from '@/Composeables/useInlineFilePrinter'
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
 import FilePreview from '@/Artwork/Files/FilePreview.vue'
-import { IconFileUpload, IconFileText, IconPrinter } from '@tabler/icons-vue'
+import DocumentVisibilityModal from '@/Pages/Projects/Components/DocumentVisibilityModal.vue'
+import { IconFileUpload, IconFileText, IconPrinter, IconEye } from '@tabler/icons-vue'
 
 interface ProjectFile {
     id?: number | string
@@ -29,6 +30,20 @@ interface ProjectFile {
     mime_type?: string | null
     external_access?: { id: number, email: string, crm_contact?: { id: number, display_name: string } | null } | null
     url?: string | null
+    visible_keys?: string[]
+    tab_id?: number | null
+}
+
+interface UploadPlacement {
+    key: string
+    label: string
+    scope: number[]
+}
+
+interface UploadSettings {
+    allowed_extensions: string[]
+    max_file_size_mb: number | null
+    max_files: number | null
 }
 
 const props = defineProps<{
@@ -87,6 +102,82 @@ const canEditFull = computed(() =>
     canEdit.value || (effectiveProjectManagerIds.value?.includes(userId.value ?? -1) ?? false)
 )
 
+// Upload-Bereich dieser Platzierung (Dateiupload-Komponente): Grenzen und "Sichtbar in"
+const placement = ref<{ key: string, settings: UploadSettings, uploaded_count: number } | null>(null)
+const placements = ref<UploadPlacement[]>([])
+const placementLabels = computed(() => new Map(placements.value.map((p) => [p.key, p.label])))
+function defaultKeysForTab(tabId: number | string | null | undefined) {
+    if (tabId === null || tabId === undefined) return []
+    return placements.value.filter((p) => p.scope.map(Number).includes(Number(tabId))).map((p) => p.key)
+}
+const defaultVisibleKeys = computed(() => defaultKeysForTab(props.tab_id))
+// null = Standard (alle Bereiche, deren Tab-Auswahl diesen Tab enthält)
+const uploadVisibleIn = ref<string[] | null>(null)
+const uploadVisibleKeys = computed(() => uploadVisibleIn.value ?? defaultVisibleKeys.value)
+const visibilityTarget = ref<{ file: ProjectFile | null } | null>(null)
+const savingVisibility = ref(false)
+
+const uploadLimitText = computed(() => {
+    const settings = placement.value?.settings
+    if (!settings) return ''
+    const parts: string[] = []
+    if (settings.allowed_extensions?.length) parts.push(settings.allowed_extensions.map((e) => '.' + e).join(', '))
+    if (settings.max_file_size_mb) parts.push($t('max. {size} MB per file', { size: settings.max_file_size_mb }))
+    if (settings.max_files) parts.push($t('{count} of {max} files uploaded', { count: placement.value?.uploaded_count ?? 0, max: settings.max_files }))
+    return parts.join(' · ')
+})
+
+function otherVisibleKeys(file: ProjectFile) {
+    return (file.visible_keys ?? []).filter((key) => key !== placement.value?.key)
+}
+function visibilityBadgeText(file: ProjectFile) {
+    const others = otherVisibleKeys(file).length
+    return others === 0 ? $t('Only here') : $t('Also in {count} other area(s)', { count: others })
+}
+function visibilityBadgeTitle(file: ProjectFile) {
+    return otherVisibleKeys(file).map((key) => placementLabels.value.get(key) || key).join(', ')
+}
+
+function openUploadVisibility() { visibilityTarget.value = { file: null } }
+function openFileVisibility(file: ProjectFile) { visibilityTarget.value = { file } }
+async function saveVisibility(keys: string[] | null) {
+    const file = visibilityTarget.value?.file
+    if (!file) {
+        uploadVisibleIn.value = keys
+        visibilityTarget.value = null
+        return
+    }
+    savingVisibility.value = true
+    try {
+        await axios.patch(route('project_files.visibility', { project_file: file.id }), { visible_in: keys }, {
+            skipErrorToast: true, // Fehler steht am Upload-Feld
+        })
+        visibilityTarget.value = null
+        await fetchDocuments()
+    } catch (error) {
+        uploadDocumentFeedback.value = uploadErrorMessage(error, $t)
+    } finally {
+        savingVisibility.value = false
+    }
+}
+
+// Bereichs-Grenzen schon im Browser prüfen (serverseitig gilt dieselbe Prüfung)
+function placementRejection(file: File, alreadyUploaded: number): string | null {
+    const settings = placement.value?.settings
+    if (!settings) return null
+    const extension = (file.name.split('.').pop() ?? '').toLowerCase()
+    if (settings.allowed_extensions?.length && !settings.allowed_extensions.includes(extension)) {
+        return $t('Only these file types are allowed here: {types}', { types: settings.allowed_extensions.join(', ') })
+    }
+    if (settings.max_file_size_mb && file.size > settings.max_file_size_mb * 1048576) {
+        return $t('The file is larger than {size} MB.', { size: settings.max_file_size_mb })
+    }
+    if (settings.max_files && alreadyUploaded >= settings.max_files) {
+        return $t('At most {count} file(s) can be uploaded here.', { count: settings.max_files })
+    }
+    return null
+}
+
 const isLoadingDocuments = ref(false)
 const loadDocumentsError = ref('')
 
@@ -98,7 +189,7 @@ const documentRequests = createLatestRequestTracker()
 onMounted(() => {
     if (props.project?.id) {
         documentListener = useProjectDocumentListener(props.project.id, () => fetchDocuments(), {
-            isRelevant: (document) => isDocumentInScope(props.component?.scope)(document),
+            isRelevant: (document) => isDocumentInScope(props.component?.scope, placement.value?.key ?? null)(document),
         })
         documentListener.init()
     }
@@ -152,6 +243,9 @@ async function fetchDocuments() {
         if (Array.isArray(data?.projectManagerIds)) {
             remoteProjectManagerIds.value = data.projectManagerIds
         }
+
+        placement.value = data?.placement ?? null
+        placements.value = Array.isArray(data?.placements) ? data.placements : []
     } catch (error) {
         if (!documentRequests.isLatest(requestId)) return
         console.error(error)
@@ -184,8 +278,18 @@ async function validateTypeAndUpload(files: File[]) {
     isUploading.value = true
     uploadedCount.value = 0
     totalToUpload.value = files.length
+    let alreadyUploaded = placement.value?.uploaded_count ?? 0
+    const rejected: string[] = []
     for (const f of files) {
-        try { await uploadDocumentToProject(f); uploadedCount.value++ } catch {}
+        const rejection = placementRejection(f, alreadyUploaded)
+        if (rejection) {
+            rejected.push(`${f.name}: ${rejection}`)
+            continue
+        }
+        try { await uploadDocumentToProject(f); uploadedCount.value++; alreadyUploaded++ } catch {}
+    }
+    if (rejected.length) {
+        uploadDocumentFeedback.value = rejected.join(' · ')
     }
     isUploading.value = false
     await fetchDocuments()
@@ -194,6 +298,13 @@ async function uploadDocumentToProject(file: File) {
     const formData = new FormData()
     formData.append('file', file)
     if (props.tab_id) formData.append('tabId', String(props.tab_id))
+    if (placement.value?.key && props.tab_id) {
+        formData.append('placementKey', placement.value.key)
+        // nur bei geänderter Auswahl mitschicken; sonst bleibt die Datei beim Standard (Tab-Auswahl)
+        if (uploadVisibleIn.value !== null) {
+            uploadVisibleIn.value.forEach((key) => formData.append('visibleIn[]', key))
+        }
+    }
     try {
         await axios.post(route('project_files.store', { project: props.project.id }), formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
@@ -320,10 +431,10 @@ function closePreview() {
             <div>
                 <h3 class="font-medium text-lg subpixel-antialiased">
                     <template v-if="scopeTabNames">
-                        {{ $t('Documents from Tabs') }}: {{ scopeTabNames }}
+                        {{ $t('File upload from tabs') }}: {{ scopeTabNames }}
                     </template>
                     <template v-else>
-                        {{ $t('Documents') }}
+                        {{ $t('File upload') }}
                     </template>
                 </h3>
                 <p class="text-xs text-text-subtle subpixel-antialiased mt-0.5">
@@ -368,7 +479,28 @@ function closePreview() {
                 </div>
                 <span class="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/5" />
             </div>
-            <input ref="fileInputEl" type="file" multiple class="hidden" @change="uploadChosenDocuments" />
+            <input
+                ref="fileInputEl"
+                type="file"
+                multiple
+                class="hidden"
+                :accept="placement?.settings?.allowed_extensions?.length ? placement.settings.allowed_extensions.map((e) => '.' + e).join(',') : undefined"
+                @change="uploadChosenDocuments"
+            />
+            <div v-if="placement" class="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-text-subtle">
+                <span v-if="uploadLimitText">{{ uploadLimitText }}</span>
+                <span v-else />
+                <button
+                    v-if="placements.length > 1"
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 ring-1 ring-inset ring-border hover:bg-surface-sunken"
+                    @click="openUploadVisibility"
+                >
+                    <IconEye class="size-3.5" aria-hidden="true" />
+                    {{ $t('New files visible in') }}:
+                    {{ uploadVisibleIn === null ? $t('Standard ({count} area(s))', { count: defaultVisibleKeys.length }) : uploadVisibleKeys.length }}
+                </button>
+            </div>
             <jet-input-error :message="uploadDocumentFeedback" />
         </div>
 
@@ -401,6 +533,21 @@ function closePreview() {
                                   • <span>{{ $t('Uploaded') }}:</span>
                                   <time :datetime="file.created_at">{{ formatDate(file.created_at) }}</time>
                                 </span>
+                                <component
+                                    :is="canEditFull ? 'button' : 'span'"
+                                    v-if="placement && placements.length > 1 && file.visible_keys"
+                                    :type="canEditFull ? 'button' : undefined"
+                                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+                                    :class="[
+                                        otherVisibleKeys(file).length ? 'bg-accent-50 text-accent-700' : 'bg-surface-sunken text-text-muted',
+                                        canEditFull ? 'hover:ring-1 hover:ring-accent-200' : '',
+                                    ]"
+                                    :title="visibilityBadgeTitle(file)"
+                                    @click="canEditFull && openFileVisibility(file)"
+                                >
+                                    <IconEye class="size-3" aria-hidden="true" />
+                                    {{ visibilityBadgeText(file) }}
+                                </component>
                                 <span
                                     v-if="file.external_access"
                                     class="inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-[11px] font-medium text-warning"
@@ -437,6 +584,18 @@ function closePreview() {
                 {{ $t('No files available') }}
             </div>
         </div>
+
+        <DocumentVisibilityModal
+            v-if="visibilityTarget"
+            :placements="placements"
+            :selected-keys="visibilityTarget.file ? (visibilityTarget.file.visible_keys ?? []) : uploadVisibleKeys"
+            :default-keys="visibilityTarget.file ? defaultKeysForTab(visibilityTarget.file.tab_id) : defaultVisibleKeys"
+            :current-key="placement?.key ?? null"
+            :file-name="visibilityTarget.file?.name ?? ''"
+            :saving="savingVisibility"
+            @close="visibilityTarget = null"
+            @save="saveVisibility"
+        />
 
         <!-- Delete modal -->
         <ConfirmDeleteModal

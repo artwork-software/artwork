@@ -993,6 +993,11 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             Route::get('/mask', 'mask')->name('mask');
             Route::post('/', 'store')->name('store');
             Route::post('/link', 'link')->name('link');
+            // Rollen: Gruppen der Liste und Rollen/Sonderrolle „Künstler*in“ je Kontakt
+            Route::post('/roles', 'storeRole')->name('roles.store');
+            Route::patch('/roles', 'renameRole')->name('roles.rename');
+            Route::delete('/roles', 'destroyRole')->name('roles.destroy');
+            Route::patch('/{crmContact}/roles', 'updateEntryRoles')->name('entry-roles.update');
             Route::patch('/{crmContact}', 'update')->name('update');
             Route::delete('/{crmContact}', 'destroy')->name('destroy');
         });
@@ -1023,6 +1028,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
     Route::post('/project_files/{project_file}', [ProjectFileController::class, 'update'])
         ->name('project_files.update');
+    // "Sichtbar in" der Dateiupload-Komponente
+    Route::patch('/project_files/{project_file}/visibility', [ProjectFileController::class, 'updateVisibility'])
+        ->name('project_files.visibility');
     Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');
     Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy'])
         ->name('project_files.destroy');
@@ -2935,6 +2943,16 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
                 ProjectTabController::class,
                 'updateComponentScope'
             ])->name('tab.update.component.scope');
+
+            // Upload-Bereiche der Dateiupload-Komponente: erlaubte Typen, Größe, Anzahl
+            Route::patch('/component-in-tab/{componentInTab}/upload-settings', [
+                ProjectTabController::class,
+                'updateUploadSettings'
+            ])->name('tab.update.component.upload-settings');
+            Route::patch('/disclosure-component/{disclosureComponent}/upload-settings', [
+                ProjectTabController::class,
+                'updateFolderUploadSettings'
+            ])->name('tab.update.disclosure-component.upload-settings');
 
             // patch tab.update.default
             Route::patch('/{projectTab}/update/default', [ProjectTabController::class, 'updateDefault'])

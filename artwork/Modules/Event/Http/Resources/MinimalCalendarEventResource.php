@@ -99,7 +99,8 @@ class MinimalCalendarEventResource extends JsonResource
 
         return [
             $project->getAttribute('name'),
-            $project->getAttribute('artists'),
+            // Freitext plus verknüpfte CRM-Künstler*innen
+            $project->artistDisplayText(),
             $projectStateColor,
             $this->determineProjectLeaders($project->getAttribute('managerUsers')->all())
         ];

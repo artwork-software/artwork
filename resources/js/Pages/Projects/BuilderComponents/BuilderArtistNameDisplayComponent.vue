@@ -5,13 +5,14 @@
             v-tooltip.top="{ value: artistText, appendTo: 'body', class: 'aw-tooltip' }"
             class="font-lexend font-black tracking-wide text-sm text-text truncate"
         >
-            {{ artistText }}
+            <ProjectArtistNames :text="artistText" :linked-artists="project?.linked_artists ?? []" />
         </div>
     </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import ProjectArtistNames from '@/Components/Crm/ProjectArtistNames.vue'
 
 const props = defineProps({
     project: {

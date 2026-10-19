@@ -140,6 +140,22 @@ return new PermissionModuleDefinition(
             note: 'People without this permission are not asked and show no reply status. Planners may record the reply on behalf of a person with this permission.',
         ),
         new PermissionDefinition(
+            name: PermissionEnum::CAN_ENTER_OWN_INDIVIDUAL_TIMES,
+            title: 'Enter own individual times',
+            effect: 'Can enter individual times for themselves in the own roster',
+            unlocks: ['Plus button per day in the own roster', 'Edit and delete own individual times'],
+            allows: [
+                'Create, edit and delete own individual times from today on, also as a recurring series',
+                'Entries apply immediately without approval',
+            ],
+            requires: [
+                $module,
+                Requirement::permission(PermissionEnum::CAN_VIEW_OWN_ROSTER),
+            ],
+            personas: [Persona::BASIS],
+            note: 'Past days stay reserved for people with "Manage availability of others" or "Plan shifts".',
+        ),
+        new PermissionDefinition(
             name: PermissionEnum::CAN_SUBSCRIBE_SHIFT_CALENDAR,
             title: 'Subscribe to roster calendar',
             effect: 'Can subscribe to the own roster as a calendar (ICS)',

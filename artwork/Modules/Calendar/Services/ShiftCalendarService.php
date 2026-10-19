@@ -198,6 +198,7 @@ class ShiftCalendarService
         $projectSelect = ['id','name','state','is_group','icon','color'];
         if ($withArtists) {
             $projectSelect[] = 'artists';
+            $projectSelect[] = 'linked_artists';
         }
 
         $projectWith = [
@@ -385,7 +386,9 @@ class ShiftCalendarService
                 'name' => $statusModel->name,
                 'color' => $statusModel->color,
             ] : null,
-            'artistNames' => $project->artists ?? null,
+            // Freitext plus verknüpfte CRM-Künstler*innen; linkedArtists für die Infokarte
+            'artistNames' => ($artistText = $project->artistDisplayText()) !== '' ? $artistText : null,
+            'linkedArtists' => $project->linked_artists,
             // Bewusst ohne E-Mail: Kontaktdaten (inkl. Privacy-Flags) lädt das
             // UserPopoverTooltip lazy über user.tooltip.info nach.
             'leaders' => $project->relationLoaded('managerUsers')

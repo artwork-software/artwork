@@ -11,6 +11,7 @@ use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\Crm\Models\CrmPropertyValue;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
+use Artwork\Modules\Crm\Support\CrmPropertyValueFormat;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -62,6 +63,7 @@ class ProjectComponentCrmContactService
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
         private readonly DatabaseManager $db,
+        private readonly ProjectCrmContactRoleService $roleService,
     ) {
     }
 
@@ -72,6 +74,7 @@ class ProjectComponentCrmContactService
 
     /**
      * Kontakttypen, die in dieser Komponente angelegt/verknüpft werden dürfen (in Typ-Reihenfolge).
+     * Ohne Auswahl in den Einstellungen gelten alle frei anlegbaren Typen.
      *
      * @return Collection<int, CrmContactType>
      */
@@ -83,7 +86,7 @@ class ProjectComponentCrmContactService
         ));
 
         if ($ids === []) {
-            return collect();
+            return $this->selectableContactTypes();
         }
 
         return CrmContactType::query()
@@ -219,6 +222,7 @@ class ProjectComponentCrmContactService
                             'name' => $property->name,
                             'type' => $property->type->value,
                             'select_values' => $property->select_values,
+                            'multiselect_display' => $property->multiselect_display,
                             'tooltip_text' => $property->tooltip_text,
                             'is_required' => (bool) ($property->pivot->is_required ?? false),
                         ])
@@ -246,6 +250,8 @@ class ProjectComponentCrmContactService
         string $displayName,
         array $propertyValues,
         User|ExternalAccess $actor,
+        ?array $roles = null,
+        ?bool $isArtist = null,
     ): ProjectComponentCrmContact {
         $this->assertTypeAllowed($component, $contactType);
 
@@ -260,6 +266,8 @@ class ProjectComponentCrmContactService
             $displayName,
             $values,
             $actor,
+            $roles,
+            $isArtist,
         ): ProjectComponentCrmContact {
             $this->assertCapacity($project, $component);
 
@@ -282,9 +290,13 @@ class ProjectComponentCrmContactService
                 // intern Angelegtes gilt als geprüft, extern Angelegtes erst mit der Bestätigung des Tabs
                 'reviewed_at' => $isExternal ? null : now(),
                 'reviewed_by_user_id' => $isExternal ? null : $actor->id,
+                // Sonderrolle „Künstler*in“: bei Kontakten vom Typ Künstler*in vorbelegt; Rollen nur intern
+                'is_artist' => $isExternal || $isArtist === null ? $this->isArtistType($contactType) : $isArtist,
             ]);
 
-            $this->linkAsProjectArtist($project, $contact, $contactType);
+            if (!$isExternal && $roles !== null) {
+                $this->roleService->assignToEntry($entry, $roles, null);
+            }
             $this->logProjectHistory(
                 $project,
                 $actor,
@@ -304,6 +316,8 @@ class ProjectComponentCrmContactService
         Component $component,
         CrmContact $contact,
         User $actor,
+        ?array $roles = null,
+        ?bool $isArtist = null,
     ): ProjectComponentCrmContact {
         $contact->loadMissing('contactType');
         if ($contact->contactType === null) {
@@ -313,6 +327,15 @@ class ProjectComponentCrmContactService
 
         $existing = $this->findEntry($project, $component, $contact);
         if ($existing !== null) {
+            // erneut „als Rolle verknüpfen“: Rolle ergänzen statt einer zweiten Zeile
+            if ($roles !== null || $isArtist !== null) {
+                $this->roleService->assignToEntry(
+                    $existing,
+                    $roles !== null ? [...(array) $existing->roles, ...$roles] : null,
+                    $isArtist === true ? true : null,
+                );
+            }
+
             return $existing;
         }
 
@@ -321,6 +344,8 @@ class ProjectComponentCrmContactService
             $component,
             $contact,
             $actor,
+            $roles,
+            $isArtist,
         ): ProjectComponentCrmContact {
             $this->assertCapacity($project, $component);
 
@@ -331,9 +356,12 @@ class ProjectComponentCrmContactService
                 'created_by_user_id' => $actor->id,
                 'reviewed_at' => now(),
                 'reviewed_by_user_id' => $actor->id,
+                'is_artist' => $isArtist ?? $this->isArtistType($contact->contactType),
             ]);
 
-            $this->linkAsProjectArtist($project, $contact, $contact->contactType);
+            if ($roles !== null) {
+                $this->roleService->assignToEntry($entry, $roles, null);
+            }
             $this->logProjectHistory(
                 $project,
                 $actor,
@@ -402,7 +430,6 @@ class ProjectComponentCrmContactService
 
             if ($actor instanceof ExternalAccess) {
                 if (!$this->isUsedElsewhere($contact, $project)) {
-                    $project->crmContacts()->detach($contact->id);
                     $contact->delete();
                 }
                 $this->logProjectHistory(
@@ -468,9 +495,17 @@ class ProjectComponentCrmContactService
      *
      * @return Collection<int, CrmContact>
      */
-    public function searchLinkable(Project $project, Component $component, string $search): Collection
-    {
+    public function searchLinkable(
+        Project $project,
+        Component $component,
+        string $search,
+        ?int $contactTypeId = null,
+    ): Collection {
         $typeIds = $this->allowedContactTypes($component)->pluck('id')->all();
+        // Filter nach Kontakttyp im Auswahldialog (nur innerhalb der erlaubten Typen)
+        if ($contactTypeId !== null) {
+            $typeIds = array_values(array_intersect($typeIds, [$contactTypeId]));
+        }
         if ($typeIds === []) {
             return collect();
         }
@@ -582,6 +617,8 @@ class ProjectComponentCrmContactService
             'contact_type' => $contact->contactType ? $this->serializeContactType($contact->contactType) : null,
             'fields' => $fields,
             'values' => (object) $values,
+            'roles' => array_values((array) ($entry->roles ?? [])),
+            'is_artist' => (bool) $entry->is_artist,
             'created_at' => $entry->created_at?->toIso8601String(),
             'created_by_external' => $createdByExternal !== null && !$isExternalViewer
                 ? ['id' => $createdByExternal->id, 'name' => $createdByExternal->displayName()]
@@ -718,6 +755,11 @@ class ProjectComponentCrmContactService
             if (!$isWritable) {
                 continue;
             }
+            if (CrmPropertyValueFormat::isMultiple($property)) {
+                // Mehrfachauswahl: Liste oder JSON-Text → JSON-Liste der gültigen Optionen
+                $values[$propertyId] = CrmPropertyValueFormat::toStorage($property, $value);
+                continue;
+            }
             if (is_array($value)) {
                 continue;
             }
@@ -803,13 +845,12 @@ class ProjectComponentCrmContactService
     }
 
     /**
-     * Künstler*innen erscheinen zusätzlich als Projekt-Künstler*innen (Projektsuche, Kopfdaten).
+     * Kontakte vom Typ Künstler*in bekommen in Kontaktlisten die Sonderrolle „Künstler*in“ vorbelegt (sie
+     * sind damit Projektkünstler*innen); intern lässt sie sich ab- und für andere Typen zuschalten.
      */
-    private function linkAsProjectArtist(Project $project, CrmContact $contact, CrmContactType $contactType): void
+    private function isArtistType(?CrmContactType $contactType): bool
     {
-        if ($contactType->slug === CrmSystemContactTypeEnum::ARTIST->value) {
-            $project->crmContacts()->syncWithoutDetaching([$contact->id]);
-        }
+        return $contactType?->slug === CrmSystemContactTypeEnum::ARTIST->value;
     }
 
     /**

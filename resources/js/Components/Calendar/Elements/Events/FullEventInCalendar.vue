@@ -207,7 +207,7 @@
 
                             <!-- Artists -->
                             <div v-if="calSettings.project_artists && event.project?.artistNames" :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 font-bold']">
-                                {{ event.project?.artistNames }}
+                                <ProjectArtistNames :text="event.project?.artistNames" :linked-artists="event.project?.linkedArtists ?? []" />
                             </div>
 
                             <!-- Eventname -->
@@ -660,7 +660,7 @@
                                         <div class="relative space-y-0.5">
                                             <!-- Artists -->
                                             <div v-if="calSettings.project_artists && event.project?.artistNames" class="truncate text-xs/5 font-bold">
-                                                {{ event.project?.artistNames }}
+                                                <ProjectArtistNames :text="event.project?.artistNames" :linked-artists="event.project?.linkedArtists ?? []" />
                                             </div>
                                             <!-- Eventname -->
                                             <div v-if="calSettings.event_name && event.eventName" class="truncate text-xs/4 font-semibold">
@@ -983,6 +983,7 @@
 </template>
 
 <script setup>
+import ProjectArtistNames from '@/Components/Crm/ProjectArtistNames.vue'
 import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import axios from "axios";

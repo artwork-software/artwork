@@ -112,6 +112,26 @@ final class CrmMultiselectPropertyTest extends FeatureTestCase
     }
 
     #[Test]
+    public function converting_to_multiple_choice_keeps_values_of_renamed_options(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::CRM_MANAGER->value);
+        $property = CrmProperty::factory()->create([
+            'type' => CrmPropertyTypeEnum::SELECT->value,
+            'select_values' => ['Tanz', 'Theater'],
+        ]);
+        $renamed = $this->contactWith($property, 'Tanz');
+        $empty = $this->contactWith($property, '');
+
+        $this->patch(route('crm.properties.update', $property), [
+            'type' => 'multiselect',
+            'select_values' => ['Dance', 'Theater'],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('["Tanz"]', $this->storedValue($renamed, $property));
+        $this->assertNull($this->storedValue($empty, $property));
+    }
+
+    #[Test]
     public function display_text_joins_options(): void
     {
         $this->assertSame('Tanz, Theater', CrmPropertyValueFormat::displayText('multiselect', '["Tanz","Theater"]'));

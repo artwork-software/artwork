@@ -68,8 +68,12 @@ class IndividualTimeController extends Controller
         $modelInstance = $modelClass::findOrFail($request->integer('modelId'));
 
         $request->validate([
-            'individualTimes' => ['present', 'array'],
+            'individualTimes' => ['present', 'array', 'max:400'],
             'individualTimes.*.start_date' => ['required', 'date'],
+            'individualTimes.*.title' => ['nullable', 'string', 'max:255'],
+            'individualTimes.*.start_time' => ['nullable', 'date_format:H:i,H:i:s'],
+            'individualTimes.*.end_time' => ['nullable', 'date_format:H:i,H:i:s'],
+            'individualTimes.*.break_minutes' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $individualTimes = $request->get('individualTimes');

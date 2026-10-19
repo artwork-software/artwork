@@ -60,6 +60,26 @@ final class ProjectComponentMultipleSelectionTest extends FeatureTestCase
     }
 
     #[Test]
+    public function stale_entries_of_a_renamed_option_do_not_block_saving(): void
+    {
+        $dropdown = $this->makeComponent('DropDown', [
+            'options' => [['value' => 'A'], ['value' => 'B']],
+            'multiple' => true,
+        ]);
+        $this->patchValue($dropdown, ['selected' => ['A', 'B']])->assertOk();
+
+        // Option "B" wird in "C" umbenannt; die Auswahl schickt den Altwert beim nächsten Klick mit
+        $dropdown->update(['data' => [...$dropdown->data, 'options' => [['value' => 'A'], ['value' => 'C']]]]);
+
+        $this->patchValue($dropdown, ['selected' => ['A', 'B', 'C']])->assertOk();
+        $this->assertSame(['selected' => ['A', 'C']], $this->storedData($dropdown));
+
+        // erfundene Werte bleiben ungültig
+        $this->patchValue($dropdown, ['selected' => ['A', 'X']])->assertUnprocessable();
+        $this->assertSame(['selected' => ['A', 'C']], $this->storedData($dropdown));
+    }
+
+    #[Test]
     public function turning_multiple_selection_on_converts_existing_single_values(): void
     {
         $dropdown = $this->makeComponent('DropDown', ['options' => [['value' => 'Tanz'], ['value' => 'Theater']]]);

@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\DB;
  * Die verknüpften Kontakte stehen zusätzlich als `projects.linked_artists` ([{id, name}]) am Projekt, damit
  * alle Anzeigen (Kalender, Dienstplan, Exporte, Druck, Übersicht, BI, App) sie ohne weitere Abfragen lesen
  * können. refresh() muss nach jeder Änderung an den Quellen laufen (Verknüpfen/Entfernen, Sonderrolle,
- * Umbenennen/Löschen/Zusammenführen von Kontakten).
+ * Umbenennen/Löschen/Zusammenführen von Kontakten, Prüfung externer Einträge).
+ *
+ * Von Externen angelegte Listeneinträge zählen erst nach der internen Prüfung (reviewed_at), sonst stünde
+ * ein ungeprüfter Name sofort in Kalender, Dienstplan und Exporten.
  */
 class ProjectArtistService
 {
@@ -40,6 +43,11 @@ class ProjectArtistService
             ->join('crm_contacts', 'crm_contacts.id', '=', 'project_component_crm_contacts.crm_contact_id')
             ->whereIn('project_component_crm_contacts.project_id', $projectIds)
             ->where('project_component_crm_contacts.is_artist', true)
+            // Von Externen angelegte Einträge erst nach interner Prüfung anzeigen
+            ->where(function ($query): void {
+                $query->whereNull('project_component_crm_contacts.created_by_external_access_id')
+                    ->orWhereNotNull('project_component_crm_contacts.reviewed_at');
+            })
             ->whereNull('crm_contacts.deleted_at')
             ->orderBy('project_component_crm_contacts.id')
             ->get(['project_component_crm_contacts.project_id', 'crm_contacts.id', 'crm_contacts.display_name']);
@@ -67,14 +75,37 @@ class ProjectArtistService
      */
     public function refreshForContact(int $contactId): void
     {
-        $this->refresh(array_merge(
+        $this->refresh($this->projectIdsOfContact($contactId));
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function projectIdsOfContact(int $contactId): array
+    {
+        return array_values(array_unique(array_map('intval', array_merge(
             DB::table('crm_contact_project')->where('crm_contact_id', $contactId)->pluck('project_id')->all(),
             DB::table('project_component_crm_contacts')
                 ->where('crm_contact_id', $contactId)
                 ->where('is_artist', true)
                 ->pluck('project_id')
                 ->all(),
-        ));
+        ))));
+    }
+
+    /**
+     * Projekte mit Künstler*innen aus Listen dieser Komponente (vor dem Löschen der Komponente sammeln:
+     * die FK-Cascade auf component_id umgeht die Model-Events der Listeneinträge).
+     *
+     * @return list<int>
+     */
+    public function projectIdsOfComponent(int $componentId): array
+    {
+        return array_values(array_unique(array_map('intval', DB::table('project_component_crm_contacts')
+            ->where('component_id', $componentId)
+            ->where('is_artist', true)
+            ->pluck('project_id')
+            ->all())));
     }
 
     /**

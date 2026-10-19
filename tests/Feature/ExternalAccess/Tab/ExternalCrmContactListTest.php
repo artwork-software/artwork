@@ -6,6 +6,7 @@ use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
+use Artwork\Modules\Project\Services\ProjectComponentCrmContactService;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\ExternalAccess\CrmContactListFixtures;
 use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
@@ -247,6 +248,16 @@ final class ExternalCrmContactListTest extends TestCase
             'project_id' => $context['project']->id,
             'crm_contact_id' => $contactId,
         ]);
+        // Erst nach der internen Prüfung erscheint der Name überall (Kalender, Dienstplan, Exporte …)
+        $this->assertNull($context['project']->fresh()->linked_artists);
+
+        app(ProjectComponentCrmContactService::class)->markReviewedForExternal(
+            $context['project'],
+            $context['tab'],
+            $context['external'],
+            $context['inviter'],
+        );
+
         $this->assertSame(
             [['id' => $contactId, 'name' => 'Compagnie Luna']],
             $context['project']->fresh()->linked_artists

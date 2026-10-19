@@ -200,9 +200,15 @@ class ExternalProjectFileService
 
         return $project->project_files()->where(function (Builder $query) use ($tab, $keysInTab): void {
             $query->where(fn (Builder $legacy) => $legacy->whereNull('visible_in')->where('tab_id', $tab->id));
-            foreach ($keysInTab as $key) {
-                $query->orWhereJsonContains('visible_in', $key);
-            }
+            // Dateien ohne Tab (Budget-Dokumente) gehören nie zu einem Upload-Bereich
+            $query->orWhere(function (Builder $explicit) use ($keysInTab): void {
+                $explicit->whereNotNull('tab_id')->where(function (Builder $keys) use ($keysInTab): void {
+                    $keys->whereRaw('1 = 0');
+                    foreach ($keysInTab as $key) {
+                        $keys->orWhereJsonContains('visible_in', $key);
+                    }
+                });
+            });
         });
     }
 

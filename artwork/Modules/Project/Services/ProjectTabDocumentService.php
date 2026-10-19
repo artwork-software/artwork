@@ -78,6 +78,20 @@ class ProjectTabDocumentService
             ->all();
     }
 
+    /**
+     * Schlüssel der Upload-Bereiche, die die Person für "Sichtbar in" wählen darf (null = alle, Admins).
+     *
+     * @return list<string>|null
+     */
+    public function selectablePlacementKeys(User $user): ?array
+    {
+        if ($this->isAdmin($user)) {
+            return null;
+        }
+
+        return array_column($this->selectablePlacements($user), 'key');
+    }
+
     public function buildAllDocumentsPayload(Project $project, ?User $user = null): array
     {
         $documents = $this->loadVisibleDocuments($project, $user);

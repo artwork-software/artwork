@@ -533,7 +533,7 @@ class EventController extends Controller
         return Event::query()
             ->hasNoRoom()
             ->with([
-                'project:id,name,state,artists,is_group,color,icon',
+                'project:id,name,state,artists,linked_artists,is_group,color,icon',
                 'project.status:id,name,color',
                 'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path',
                 'project.groups',

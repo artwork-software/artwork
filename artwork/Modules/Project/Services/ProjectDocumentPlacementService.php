@@ -186,21 +186,44 @@ class ProjectDocumentPlacementService
     /**
      * Gewählte Bereiche prüfen; entspricht die Auswahl dem Standard, wird null gespeichert (bleibt dynamisch).
      *
+     * Nur Dateien aus einem Tab haben Upload-Bereiche: Budget-Dokumente und andere Dateien ohne Tab dürfen
+     * nicht über "Sichtbar in" in Bereichslisten (und bei Externen) auftauchen. Eine leere Auswahl würde die
+     * Datei aus allen Bereichen entfernen und ist deshalb ungültig. $selectableKeys begrenzt die Auswahl auf
+     * Bereiche, die die handelnde Person sieht (null = keine Begrenzung).
+     *
      * @param array<int, mixed>|null $keys
+     * @param list<string>|null $selectableKeys
      * @return list<string>|null
      * @throws ValidationException
      */
-    public function normalizeVisibleIn(?array $keys, ?int $tabId): ?array
+    public function normalizeVisibleIn(?array $keys, ?int $tabId, ?array $selectableKeys = null): ?array
     {
         if ($keys === null) {
             return null;
+        }
+
+        $invalid = fn (): ValidationException => ValidationException::withMessages([
+            'visible_in' => __('validation.in', ['attribute' => 'visible_in']),
+        ]);
+
+        if ($tabId === null || $keys === []) {
+            throw $invalid();
+        }
+
+        foreach ($keys as $key) {
+            if (!is_string($key) && !is_int($key)) {
+                throw $invalid();
+            }
         }
 
         $keys = array_values(array_unique(array_map('strval', $keys)));
         $known = $this->placements()->pluck('key')->all();
         foreach ($keys as $key) {
             if (!in_array($key, $known, true)) {
-                throw ValidationException::withMessages(['visible_in' => __('validation.in', ['attribute' => 'visible_in'])]);
+                throw $invalid();
+            }
+            if ($selectableKeys !== null && !in_array($key, $selectableKeys, true)) {
+                throw $invalid();
             }
         }
 
@@ -222,7 +245,10 @@ class ProjectDocumentPlacementService
         $query->where(function (Builder $query) use ($key, $scope): void {
             $query->where(function (Builder $legacy) use ($scope): void {
                 $legacy->whereNull('visible_in')->whereIn('tab_id', $scope === [] ? [0] : $scope);
-            })->orWhereJsonContains('visible_in', $key);
+            })->orWhere(function (Builder $explicit) use ($key): void {
+                // Dateien ohne Tab (Budget-Dokumente) gehören nie zu einem Upload-Bereich
+                $explicit->whereNotNull('tab_id')->whereJsonContains('visible_in', $key);
+            });
         });
     }
 
@@ -312,7 +338,11 @@ class ProjectDocumentPlacementService
     {
         $settings = $this->generalSettingsService->getAllowedProjectFileMimeTypes();
         $allowed = (array) ($settings['mime_types'] ?? []);
-        $all = array_keys(array_merge(MimeTypeList::MIME_TYPES, MimeTypeList::IMAGE_MIME_TYPES));
+        // "*" ist in der Auswahlliste nur der Platzhalter "alle", keine Endung
+        $all = array_values(array_diff(
+            array_keys(array_merge(MimeTypeList::MIME_TYPES, MimeTypeList::IMAGE_MIME_TYPES)),
+            ['*']
+        ));
 
         return [
             'extensions' => array_values(in_array('*', $allowed, true)

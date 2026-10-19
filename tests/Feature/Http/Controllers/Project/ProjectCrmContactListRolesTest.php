@@ -160,6 +160,53 @@ final class ProjectCrmContactListRolesTest extends TestCase
                 ->where('linkedProjects.0.list_links.0.is_artist', true));
     }
 
+    #[Test]
+    public function deleting_the_contact_for_good_removes_it_from_the_project_artists(): void
+    {
+        $context = $this->rolesContext();
+        $contact = $this->preLinkedContact($context, 'Compagnie Luna');
+        $this->entry($context, $contact)->update(['is_artist' => true]);
+        $project = $context['project'];
+        $this->assertSame('Compagnie Luna', $project->fresh()->linked_artists[0]['name']);
+
+        // z. B. beim Löschen von User/Freelancer/Dienstleister (gespiegelter Kontakt, FK-Cascade)
+        $contact->forceDelete();
+
+        $this->assertNull($project->fresh()->linked_artists);
+    }
+
+    #[Test]
+    public function deleting_the_list_component_removes_its_project_artists(): void
+    {
+        $context = $this->rolesContext();
+        $contact = $this->preLinkedContact($context, 'Compagnie Luna');
+        $this->entry($context, $contact)->update(['is_artist' => true]);
+        $this->assertNotNull($context['project']->fresh()->linked_artists);
+
+        $this->actingAsAdmin();
+        $this->delete(route('component.destroy', $context['component']))->assertSuccessful();
+
+        $this->assertNull($context['project']->fresh()->linked_artists);
+    }
+
+    #[Test]
+    public function readers_cannot_change_roles_or_the_artist_role(): void
+    {
+        $context = $this->rolesContext();
+        $contact = $this->preLinkedContact($context, 'Compagnie Luna');
+        $reader = $this->actingAsUserWith([]);
+        $context['project']->users()->attach($reader->id, ['can_write' => false]);
+
+        $this->postJson(route('projects.components.crm-contacts.roles.store', $this->params($context)), ['name' => 'Regie'])
+            ->assertForbidden();
+        $this->patchJson(route('projects.components.crm-contacts.entry-roles.update', $this->params($context, ['crmContact' => $contact->id])), [
+            'is_artist' => true,
+        ])->assertForbidden();
+
+        $this->assertFalse($this->entry($context, $contact)->fresh()->is_artist);
+        $this->assertNull($context['project']->fresh()->linked_artists);
+    }
+
     private function rolesContext(): array
     {
         $context = $this->crmContactListContext();

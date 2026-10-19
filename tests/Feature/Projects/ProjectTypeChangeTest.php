@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Projects;
 
+use Artwork\Modules\Budget\Services\BudgetCacheService;
 use Artwork\Modules\Project\Models\Project;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
@@ -57,6 +58,40 @@ final class ProjectTypeChangeTest extends FeatureTestCase
             $this->assertNotSoftDeleted('projects', ['id' => $subProject->id]);
         }
         $this->assertSame(['Project group converted to project'], $this->historyTranslationKeys($group));
+    }
+
+    #[Test]
+    public function converting_drops_the_cached_budget_payloads_of_all_involved_projects(): void
+    {
+        // array-Store: der file-Cache der DDEV-Umgebung ist mit der laufenden App geteilt
+        config(['cache.default' => 'array']);
+        $budgetCache = app(BudgetCacheService::class);
+        $this->actingAsAdmin();
+
+        $group = Project::factory()->create(['is_group' => true]);
+        $subProjects = Project::factory()->count(2)->create(['is_group' => false]);
+        $group->projectsOfGroup()->attach($subProjects->pluck('id'));
+        foreach ([$group, ...$subProjects] as $project) {
+            $budgetCache->setBudgetPayload($project->id, ['cached' => true]);
+        }
+
+        $this->patch(route('projects.update.type', $group), ['is_group' => false])->assertRedirect();
+
+        foreach ([$group, ...$subProjects] as $project) {
+            $this->assertNull($budgetCache->getBudgetPayload($project->id));
+        }
+
+        // Projekt → Gruppe: die bisherige Gruppe verliert die Summen des Projekts
+        $otherGroup = Project::factory()->create(['is_group' => true]);
+        $member = $subProjects->first();
+        $otherGroup->projectsOfGroup()->attach($member->id);
+        $budgetCache->setBudgetPayload($otherGroup->id, ['cached' => true]);
+        $budgetCache->setBudgetPayload($member->id, ['cached' => true]);
+
+        $this->patch(route('projects.update.type', $member), ['is_group' => true])->assertRedirect();
+
+        $this->assertNull($budgetCache->getBudgetPayload($otherGroup->id));
+        $this->assertNull($budgetCache->getBudgetPayload($member->id));
     }
 
     #[Test]

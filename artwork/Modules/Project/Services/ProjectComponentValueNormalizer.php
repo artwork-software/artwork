@@ -25,10 +25,11 @@ class ProjectComponentValueNormalizer
 
     /**
      * @param array<string, mixed>|null $data
+     * @param array<string, mixed>|null $previousData bisher gespeicherter Wert (für veraltete Auswahl-Einträge)
      * @return array<string, mixed>
      * @throws ValidationException
      */
-    public function normalize(Component $component, ?array $data): array
+    public function normalize(Component $component, ?array $data, ?array $previousData = null): array
     {
         $data ??= [];
 
@@ -39,10 +40,12 @@ class ProjectComponentValueNormalizer
             ProjectTabComponentEnum::CHECKBOX => ['checked' => $this->checked($data)],
             ProjectTabComponentEnum::DROPDOWN => [
                 'selected' => ComponentSelection::allowsMultiple($component->type, $component->data)
-                    ? $this->selectedList($component, $data)
+                    ? $this->selectedList($component, $data, $previousData)
                     : $this->selected($component, $data),
             ],
-            ProjectTabComponentEnum::CHECKBOX_LIST => ['selected' => $this->selectedList($component, $data)],
+            ProjectTabComponentEnum::CHECKBOX_LIST => [
+                'selected' => $this->selectedList($component, $data, $previousData),
+            ],
             ProjectTabComponentEnum::LINK_LIST => ['links' => $this->links($component, $data)],
             default => throw ValidationException::withMessages([
                 'data' => __('This component has no editable value.'),
@@ -139,10 +142,14 @@ class ProjectComponentValueNormalizer
      * Mehrfachauswahl: Liste (leer = nichts gewählt); ein einzelner Wert älterer Clients zählt als Liste mit
      * einem Eintrag. Jeder Eintrag muss eine der hinterlegten Optionen sein, Reihenfolge wie die Optionen.
      *
+     * Ausnahme: bereits gespeicherte Einträge, die keine Option mehr sind (Option umbenannt/entfernt), fallen
+     * still weg. Die Auswahl schickt sie beim nächsten Klick mit – ein Fehler würde jedes Speichern blockieren.
+     *
      * @param array<string, mixed> $data
+     * @param array<string, mixed>|null $previousData
      * @return list<string>
      */
-    private function selectedList(Component $component, array $data): array
+    private function selectedList(Component $component, array $data, ?array $previousData = null): array
     {
         $raw = $data['selected'] ?? [];
         if (!is_array($raw) && !is_scalar($raw) && $raw !== null) {
@@ -153,9 +160,10 @@ class ProjectComponentValueNormalizer
 
         $selected = ComponentSelection::values($raw);
         $options = $this->dropdownOptions($component);
+        $previouslySelected = ComponentSelection::values($previousData['selected'] ?? []);
 
         foreach ($selected as $value) {
-            if (!in_array($value, $options, true)) {
+            if (!in_array($value, $options, true) && !in_array($value, $previouslySelected, true)) {
                 throw ValidationException::withMessages([
                     'data.selected' => __('validation.in', ['attribute' => 'selected']),
                 ]);

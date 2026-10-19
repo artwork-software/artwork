@@ -64,6 +64,7 @@ class ProjectComponentCrmContactService
         private readonly CrmPropertyGroupService $propertyGroupService,
         private readonly DatabaseManager $db,
         private readonly ProjectCrmContactRoleService $roleService,
+        private readonly ProjectArtistService $projectArtistService,
     ) {
     }
 
@@ -461,12 +462,20 @@ class ProjectComponentCrmContactService
         ExternalAccess $external,
         User $reviewer,
     ): int {
-        return ProjectComponentCrmContact::query()
+        $reviewed = ProjectComponentCrmContact::query()
             ->where('project_id', $project->id)
             ->whereIn('component_id', $this->componentIdsInTab($tab))
             ->where('created_by_external_access_id', $external->id)
             ->whereNull('reviewed_at')
             ->update(['reviewed_at' => now(), 'reviewed_by_user_id' => $reviewer->id]);
+
+        // Massen-Update ohne Model-Events: geprüfte Künstler*innen erscheinen erst jetzt am Projekt
+        if ($reviewed > 0) {
+            $projectId = (int) $project->id;
+            $this->db->afterCommit(fn () => $this->projectArtistService->refresh($projectId));
+        }
+
+        return $reviewed;
     }
 
     public function countCreatedByExternal(Project $project, ProjectTab $tab, ExternalAccess $external): int

@@ -112,6 +112,51 @@ final class OwnIndividualTimeAccessTest extends FeatureTestCase
         $this->assertGreaterThan(0, $user->individualTimes()->whereNotNull('series_uuid')->count());
     }
 
+    #[Test]
+    public function series_cannot_span_more_than_two_years(): void
+    {
+        $user = $this->actingAsUserWith(PermissionEnum::CAN_ENTER_OWN_INDIVIDUAL_TIMES->value);
+        $payload = $this->seriesPayload($user, now());
+        $payload['end_date'] = now()->addYears(50)->toDateString();
+
+        $this->post(route('individual-time-series.store'), $payload)->assertSessionHasErrors('end_date');
+
+        $this->assertSame(0, $user->individualTimes()->count());
+    }
+
+    #[Test]
+    public function own_time_fields_are_validated(): void
+    {
+        $user = $this->actingAsUserWith(PermissionEnum::CAN_ENTER_OWN_INDIVIDUAL_TIMES->value);
+        $base = [
+            'modelType' => 0,
+            'modelId' => $user->id,
+        ];
+        $time = [
+            'title' => 'Probe',
+            'start_time' => '09:00',
+            'end_time' => '12:00',
+            'start_date' => now()->toDateString(),
+            'break_minutes' => 0,
+        ];
+
+        $this->postJson(route('add.update.individualTimesAndShiftPlanComment'), [
+            ...$base,
+            'individualTimes' => [[...$time, 'break_minutes' => -100000]],
+        ])->assertUnprocessable()->assertJsonValidationErrors('individualTimes.0.break_minutes');
+        $this->postJson(route('add.update.individualTimesAndShiftPlanComment'), [
+            ...$base,
+            'individualTimes' => [[...$time, 'start_time' => 'abc']],
+        ])->assertUnprocessable()->assertJsonValidationErrors('individualTimes.0.start_time');
+        $this->assertSame(0, $user->individualTimes()->count());
+
+        // gespeicherte Zeiten kommen beim Bearbeiten mit Sekunden zurück
+        $this->postJson(route('add.update.individualTimesAndShiftPlanComment'), [
+            ...$base,
+            'individualTimes' => [[...$time, 'start_time' => '09:00:00', 'end_time' => '12:00:00']],
+        ])->assertOk();
+    }
+
     private function storeOwnTime(User $user, string $date): \Illuminate\Testing\TestResponse
     {
         return $this->post(route('add.update.individualTimesAndShiftPlanComment'), [

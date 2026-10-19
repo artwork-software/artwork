@@ -42,8 +42,9 @@ final class ProjectDocumentUploadAreasTest extends FeatureTestCase
         $settings->save();
 
         $this->project = Project::factory()->create();
-        $this->tabA = ProjectTab::factory()->create(['name' => 'Technik', 'visible_for_all' => true]);
-        $this->tabB = ProjectTab::factory()->create(['name' => 'Presse', 'visible_for_all' => true]);
+        // feste Reihenfolge: die Bereichs-Nummerierung folgt der Tab-Reihenfolge
+        $this->tabA = ProjectTab::factory()->create(['name' => 'Technik', 'visible_for_all' => true, 'order' => 1]);
+        $this->tabB = ProjectTab::factory()->create(['name' => 'Presse', 'visible_for_all' => true, 'order' => 2]);
         $component = Component::create([
             'name' => 'Project Documents',
             'type' => ProjectTabComponentEnum::PROJECT_DOCUMENTS->value,
@@ -173,6 +174,93 @@ final class ProjectDocumentUploadAreasTest extends FeatureTestCase
             ['tab:' . $this->areaB->id],
             app(ProjectTabDocumentService::class)->buildAllDocumentsPayload($this->project, $user)['documents'][0]->visible_keys
         );
+    }
+
+    #[Test]
+    public function upload_cannot_be_shown_in_areas_of_tabs_the_user_cannot_see(): void
+    {
+        $this->tabB->update(['visible_for_all' => false]);
+        $user = $this->actingAsUserWith(PermissionEnum::PROJECT_VIEW->value);
+        $this->project->users()->attach($user->id);
+
+        $this->upload('rider.pdf', ['visibleIn' => ['tab:' . $this->areaA->id, 'tab:' . $this->areaB->id]])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('visible_in');
+        $this->assertSame(0, ProjectFile::query()->count());
+
+        $this->upload('rider.pdf', ['visibleIn' => ['tab:' . $this->areaA->id]])->assertOk();
+    }
+
+    #[Test]
+    public function visibility_change_keeps_already_set_hidden_areas_but_cannot_add_new_ones(): void
+    {
+        $this->actingAsAdmin();
+        $this->upload('rider.pdf', ['visibleIn' => ['tab:' . $this->areaA->id, 'tab:' . $this->areaB->id]])->assertOk();
+        $file = ProjectFile::query()->firstOrFail();
+        $tabC = ProjectTab::factory()->create(['name' => 'Intern', 'visible_for_all' => false]);
+        $areaC = ComponentInTab::create([
+            'project_tab_id' => $tabC->id,
+            'component_id' => $this->areaA->component_id,
+            'order' => 0,
+            'scope' => [$tabC->id],
+        ]);
+
+        $this->tabB->update(['visible_for_all' => false]);
+        $user = $this->actingAsUserWith(PermissionEnum::PROJECT_VIEW->value);
+        $this->project->users()->attach($user->id, ['access_budget' => false, 'is_manager' => false, 'can_write' => true]);
+
+        $this->patchJson(route('project_files.visibility', $file), [
+            'visible_in' => ['tab:' . $this->areaA->id, 'tab:' . $areaC->id],
+        ])->assertUnprocessable();
+
+        // bereits gesetzter Bereich im unsichtbaren Tab darf in der Auswahl bleiben
+        $this->patchJson(route('project_files.visibility', $file), [
+            'visible_in' => ['tab:' . $this->areaB->id],
+        ])->assertOk();
+        $this->assertSame(['tab:' . $this->areaB->id], $file->fresh()->visible_in);
+    }
+
+    #[Test]
+    public function budget_documents_never_appear_in_upload_areas(): void
+    {
+        $this->actingAsAdmin();
+        $budgetDocument = $this->project->project_files()->create([
+            'tab_id' => null,
+            'name' => 'kalkulation.pdf',
+            'basename' => 'kalkulation.pdf',
+            'is_budget_document' => true,
+        ]);
+
+        $this->patchJson(route('project_files.visibility', $budgetDocument), [
+            'visible_in' => ['tab:' . $this->areaA->id],
+        ])->assertUnprocessable();
+        $this->assertNull($budgetDocument->fresh()->visible_in);
+
+        // auch bei bereits gesetztem visible_in (Altbestand) nicht in der Bereichsliste
+        $budgetDocument->forceFill(['visible_in' => ['tab:' . $this->areaA->id]])->save();
+        $this->documents($this->areaA)->assertJsonCount(0, 'documents');
+    }
+
+    #[Test]
+    public function malformed_visibility_selection_is_rejected(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->upload('rider.pdf', ['visibleIn' => [['nested']]])->assertUnprocessable();
+
+        $this->upload('rider.pdf')->assertOk();
+        $file = ProjectFile::query()->firstOrFail();
+        $this->patchJson(route('project_files.visibility', $file), ['visible_in' => []])->assertUnprocessable();
+        $this->assertNull($file->fresh()->visible_in);
+    }
+
+    #[Test]
+    public function wildcard_is_not_offered_as_file_extension(): void
+    {
+        $extensions = app(ProjectDocumentPlacementService::class)->globalLimits()['extensions'];
+
+        $this->assertNotContains('*', $extensions);
+        $this->assertContains('pdf', $extensions);
     }
 
     /**

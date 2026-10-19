@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Services;
 
+use Artwork\Modules\Budget\Services\BudgetCacheService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Budget\Services\ColumnRelevanceService;
@@ -53,6 +54,7 @@ class ProjectService
         private readonly CarbonService $carbonService,
         private readonly ProjectTeamNotificationService $projectTeamNotificationService,
         private readonly TicketingProductionService $ticketingProductionService,
+        private readonly BudgetCacheService $budgetCacheService,
     ) {
     }
 
@@ -939,9 +941,19 @@ class ProjectService
      * Projekt → Gruppe: bisherige Gruppenzugehörigkeiten werden gelöst (Gruppen lassen sich
      * nicht verschachteln). Gruppe → Projekt: die Verbindung zu den Unterprojekten wird gelöst,
      * die Unterprojekte selbst bleiben als eigenständige Projekte erhalten.
+     *
+     * Die Budget-Payloads aller beteiligten Projekte (eigenes, bisherige Gruppen, bisherige Unterprojekte)
+     * enthalten Gruppensummen bzw. die Spalte "Unterprojekte" und werden deshalb verworfen. Die IDs werden
+     * vor dem Lösen gesammelt, danach wären die alten Verbindungen nicht mehr auffindbar.
      */
     public function changeProjectType(Project $project, bool $isGroup): Project
     {
+        $affectedProjectIds = array_values(array_unique([
+            $project->id,
+            ...$project->groups()->pluck('projects.id')->all(),
+            ...$project->projectsOfGroup()->pluck('projects.id')->all(),
+        ]));
+
         DB::transaction(function () use ($project, $isGroup): void {
             if ($isGroup) {
                 $project->groups()->detach();
@@ -951,6 +963,10 @@ class ProjectService
 
             $this->projectRepository->update($project, ['is_group' => $isGroup]);
         });
+
+        foreach ($affectedProjectIds as $affectedProjectId) {
+            $this->budgetCacheService->forgetBudgetPayload((int) $affectedProjectId);
+        }
 
         return $project;
     }

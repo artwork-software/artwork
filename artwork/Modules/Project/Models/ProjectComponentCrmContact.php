@@ -68,9 +68,11 @@ class ProjectComponentCrmContact extends Model
         };
 
         static::created(fn (self $entry) => $entry->is_artist ? $refresh($entry) : null);
-        static::updated(fn (self $entry) => $entry->wasChanged(['is_artist', 'crm_contact_id', 'project_id'])
-            ? $refresh($entry)
-            : null);
+        static::updated(
+            fn (self $entry) => $entry->wasChanged(['is_artist', 'crm_contact_id', 'project_id', 'reviewed_at'])
+                ? $refresh($entry)
+                : null
+        );
         static::deleted(fn (self $entry) => $entry->is_artist ? $refresh($entry) : null);
     }
 

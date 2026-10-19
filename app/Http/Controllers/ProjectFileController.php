@@ -17,6 +17,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectDocumentPlacementService;
+use Artwork\Modules\Project\Services\ProjectTabDocumentService;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -55,6 +56,7 @@ class ProjectFileController extends Controller
         private readonly ProjectTabService $projectTabService,
         protected readonly GeneralSettingsService $generalSettingsService,
         private readonly ProjectDocumentPlacementService $placementService,
+        private readonly ProjectTabDocumentService $projectTabDocumentService,
     ) {
     }
 
@@ -79,7 +81,11 @@ class ProjectFileController extends Controller
         if ($placementKey !== null) {
             $this->placementService->assertUploadAllowed($project, $placementKey, $file);
             $visibleIn = $request->has('visibleIn')
-                ? $this->placementService->normalizeVisibleIn((array) $request->input('visibleIn', []), $tabId)
+                ? $this->placementService->normalizeVisibleIn(
+                    (array) $request->input('visibleIn', []),
+                    $tabId,
+                    $this->projectTabDocumentService->selectablePlacementKeys($request->user()),
+                )
                 : null;
         }
 
@@ -207,8 +213,21 @@ class ProjectFileController extends Controller
             'visible_in.*' => ['string'],
         ]);
 
+        // Bereiche in Tabs, die die Person nicht sieht, darf sie nicht neu wählen; bereits gesetzte bleiben erlaubt
+        $selectableKeys = $this->projectTabDocumentService->selectablePlacementKeys($request->user());
+        if ($selectableKeys !== null) {
+            $selectableKeys = array_values(array_unique([
+                ...$selectableKeys,
+                ...$this->placementService->visibleKeysOf($projectFile),
+            ]));
+        }
+
         $projectFile->update([
-            'visible_in' => $this->placementService->normalizeVisibleIn($request->input('visible_in'), $projectFile->tab_id),
+            'visible_in' => $this->placementService->normalizeVisibleIn(
+                $request->input('visible_in'),
+                $projectFile->tab_id,
+                $selectableKeys,
+            ),
         ]);
 
         SafeBroadcast::send(new UploadNewDocumentInProject($projectFile, (int) $projectFile->project_id, true));

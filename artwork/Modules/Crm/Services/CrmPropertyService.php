@@ -61,10 +61,12 @@ readonly class CrmPropertyService
             $updated = $this->repository->update($property, $data);
 
             if ($convertsToMultiselect) {
-                // Einfachauswahl → Mehrfachauswahl: jeder Wert wird zur Liste mit einem Eintrag
-                $property->refresh();
-                $property->values()->each(function (CrmPropertyValue $value) use ($property): void {
-                    $value->update(['value' => CrmPropertyValueFormat::toStorage($property, $value->value)]);
+                // Einfachauswahl → Mehrfachauswahl: jeder Wert wird zur Liste mit einem Eintrag. Bewusst ohne
+                // Abgleich mit den Optionen: im selben Speichern umbenannte Optionen oder Altwerte, die nie eine
+                // Option waren, gingen sonst still verloren (zurückwandeln ist gesperrt).
+                $property->values()->each(function (CrmPropertyValue $value): void {
+                    $current = trim((string) $value->value);
+                    $value->update(['value' => $current === '' ? null : CrmPropertyValueFormat::encode([$current])]);
                 });
             }
 

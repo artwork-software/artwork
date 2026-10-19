@@ -104,7 +104,7 @@ class ProjectDocumentPlacementService
             ];
         });
 
-        return $this->placements = $tabPlacements->concat($folderPlacements)
+        $sorted = $tabPlacements->concat($folderPlacements)
             ->sortBy([fn (array $a, array $b): int => $a['order'] <=> $b['order']])
             ->map(function (array $placement): array {
                 unset($placement['order']);
@@ -112,6 +112,20 @@ class ProjectDocumentPlacementService
                 return $placement;
             })
             ->values();
+
+        // Gleichnamige Bereiche (mehrere Platzierungen in einem Tab, gleich benannte Tabs) durchnummerieren
+        $labelCounts = $sorted->countBy('label');
+        $seen = [];
+
+        return $this->placements = $sorted->map(function (array $placement) use ($labelCounts, &$seen): array {
+            $label = $placement['label'];
+            if (($labelCounts[$label] ?? 0) > 1) {
+                $seen[$label] = ($seen[$label] ?? 0) + 1;
+                $placement['label'] = $label . ' (' . $seen[$label] . ')';
+            }
+
+            return $placement;
+        });
     }
 
     /**

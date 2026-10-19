@@ -10,6 +10,7 @@ use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Services\ProjectDocumentPlacementService;
 use Artwork\Modules\Project\Services\ProjectTabDocumentService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Testing\TestResponse;
@@ -92,6 +93,18 @@ final class ProjectDocumentUploadAreasTest extends FeatureTestCase
         $labels = array_column($this->documents($this->areaA)->json('placements'), 'label');
         $this->assertContains('Technik', $labels);
         $this->assertContains('Presse', $labels);
+    }
+
+    #[Test]
+    public function areas_with_the_same_name_are_numbered(): void
+    {
+        $this->actingAsAdmin();
+        $this->tabB->update(['name' => 'Technik']);
+
+        $labels = array_column(app(ProjectDocumentPlacementService::class)->placements()->all(), 'label', 'key');
+
+        $this->assertSame('Technik (1)', $labels['tab:' . $this->areaA->id]);
+        $this->assertSame('Technik (2)', $labels['tab:' . $this->areaB->id]);
     }
 
     #[Test]

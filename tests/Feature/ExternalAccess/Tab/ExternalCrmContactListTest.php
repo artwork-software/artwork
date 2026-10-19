@@ -79,6 +79,33 @@ final class ExternalCrmContactListTest extends TestCase
     }
 
     #[Test]
+    public function externals_see_roles_but_cannot_set_them(): void
+    {
+        $context = $this->crmContactListContext();
+        $contact = $this->preLinkedContact($context);
+        ProjectComponentCrmContact::query()->where('crm_contact_id', $contact->id)
+            ->update(['roles' => json_encode(['Technik']), 'is_artist' => true]);
+        $this->actingAs($context['external'], 'external');
+
+        $this->getJson(route('external.project.tab.crm-contacts.index', $this->externalRouteParams($context)))
+            ->assertOk()
+            ->assertJsonPath('contacts.0.roles', ['Technik'])
+            ->assertJsonPath('contacts.0.is_artist', true);
+
+        // Rollen/Sonderrolle aus dem Request werden extern ignoriert
+        $createdId = $this->postJson(route('external.project.tab.crm-contacts.store', $this->externalRouteParams($context)), [
+            'crm_contact_type_id' => $context['type']->id,
+            'display_name' => 'Neue Person',
+            'property_values' => [$context['phone']->id => '0151 1'],
+            'roles' => ['Leitung'],
+            'is_artist' => true,
+        ])->assertCreated()->json('contact.id');
+        $entry = ProjectComponentCrmContact::query()->where('crm_contact_id', $createdId)->firstOrFail();
+        $this->assertNull($entry->roles);
+        $this->assertFalse($entry->is_artist);
+    }
+
+    #[Test]
     public function public_mandatory_fields_are_enforced(): void
     {
         $context = $this->crmContactListContext();

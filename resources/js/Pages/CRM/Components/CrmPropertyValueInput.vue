@@ -203,7 +203,7 @@
 
 <script setup>
 import { decodeMultiselect, encodeMultiselect } from '@/Helper/CrmPropertyValue.js'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
@@ -255,12 +255,19 @@ const onSelectChange = (option) => {
 }
 
 // -- Multiselect helpers (Wert = JSON-Text der Liste, leer = '') --
-const multiselectValues = computed(() => decodeMultiselect(props.value))
+// Lokaler Stand: Eltern speichern teils verzögert (CRM-Detailseite) und reichen bis zum Neuladen den alten Wert
+// durch – sonst ginge bei schnellem Anklicken mehrerer Optionen die vorige Auswahl verloren.
+const multiselectValues = ref(decodeMultiselect(props.value))
+watch(() => props.value, (value) => {
+    multiselectValues.value = decodeMultiselect(value)
+})
 const multiselectSelectedOptions = computed(() =>
     selectOptions.value.filter((option) => multiselectValues.value.includes(option.id))
 )
 const emitMultiselect = (values) => {
-    emit('update:value', encodeMultiselect(values, selectOptions.value.map((option) => option.id)) ?? '')
+    const encoded = encodeMultiselect(values, selectOptions.value.map((option) => option.id))
+    multiselectValues.value = decodeMultiselect(encoded)
+    emit('update:value', encoded ?? '')
 }
 const toggleMultiselectOption = (optionId, checked) => {
     emitMultiselect(checked

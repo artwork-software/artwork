@@ -532,7 +532,10 @@ class ProjectController extends Controller
                         $projectData->state = $projectStates->get($project->state);
                         break;
                     case ProjectTabComponentEnum::PROJECT_GROUP->value:
-                        $projectData->group = $project->groups;
+                        // Zelle zeigt nur Gruppennamen; volle Gruppen-Modelle (samt users) blähen das Payload auf
+                        $projectData->group = $project->groups
+                            ->map(fn (Project $group): array => ['id' => $group->id, 'name' => $group->name])
+                            ->values();
                         $projectData->is_group = $project->is_group;
                         $projectData
                             ->projects_of_group_count = $project

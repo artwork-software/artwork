@@ -151,6 +151,7 @@ import BuilderProjectTeamComponent from "@/Pages/Projects/BuilderComponents/Buil
 import BuilderActionsComponent from "@/Pages/Projects/BuilderComponents/BuilderActionsComponent.vue";
 import BuilderTextArea from "@/Pages/Projects/BuilderComponents/BuilderTextArea.vue";
 import BuilderProjectStateComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectStateComponent.vue";
+import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectGroupComponent.vue";
 import BuilderShiftContactPersonsComponent from "@/Pages/Projects/BuilderComponents/BuilderShiftContactPersonsComponent.vue";
 import BuilderRelevantDatesForShiftPlanningComponent from "@/Pages/Projects/BuilderComponents/BuilderRelevantDatesForShiftPlanningComponent.vue";
 import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderComponents/BuilderGeneralShiftInformationComponent.vue";
@@ -219,6 +220,7 @@ const componentMapping = {
     BuilderActionsComponent,
     BuilderTextArea,
     BuilderProjectStateComponent,
+    BuilderProjectGroupComponent,
     BuilderShiftContactPersonsComponent,
     BuilderRelevantDatesForShiftPlanningComponent,
     BuilderGeneralShiftInformationComponent,

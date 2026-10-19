@@ -9249,5 +9249,12 @@
     "CRM contact list": "CRM-Kontaktliste",
     "Also artists via CRM contact lists": "Ebenfalls Künstler*in über CRM-Kontaktlisten",
     "via {list}": "über {list}",
-    "Standard ({count} area(s))": "Standard ({count} Bereich(e))"
+    "Standard ({count} area(s))": "Standard ({count} Bereich(e))",
+    "No events in the selected period": "Keine Termine im ausgewählten Zeitraum",
+    "There are no events in the selected period yet. Because \"Hide unoccupied rooms\" is active in the display settings, rooms without events are not shown.": "Im ausgewählten Zeitraum gibt es noch keine Termine. Da in den Anzeigeeinstellungen „Leere Räume ausblenden“ aktiv ist, werden Räume ohne Termine nicht angezeigt.",
+    "A filter is also active — only events matching the filter count as occupancy.": "Zusätzlich ist ein Filter aktiv – nur Termine, die zum Filter passen, gelten als Belegung.",
+    "No rooms match the current filter": "Kein Raum passt zum aktuellen Filter",
+    "The active filter hides all rooms. Adjust or reset the filter to show rooms again.": "Der aktive Filter blendet alle Räume aus. Passe den Filter an oder setze ihn zurück, um wieder Räume zu sehen.",
+    "No rooms available": "Keine Räume vorhanden",
+    "There are no rooms you can see in the calendar yet. Rooms are created in the room management.": "Es gibt noch keine Räume, die im Kalender angezeigt werden können. Räume werden in der Raumverwaltung angelegt."
 }

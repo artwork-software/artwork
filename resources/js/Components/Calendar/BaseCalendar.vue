@@ -48,6 +48,13 @@
                 </div>
             </div>
         </div>
+        <!-- Leerzustand: kein Raum sichtbar (z. B. "Leere Räume ausblenden" ohne Termine im Zeitraum) -->
+        <CalendarEmptyState
+            :rooms-count="roomsCount"
+            :hide-unoccupied-rooms="hideUnoccupiedRooms"
+            :filters-active="calendarFiltersActive"
+            :top-offset="topbarHeight"
+        />
         <!-- Grid -->
         <div :style="{ paddingTop: topbarHeight + 'px' }">
             <!-- Monatsansicht -->
@@ -393,7 +400,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, provide, reactive, ref, shallowRef, triggerRef, watch} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, provide, reactive, ref, shallowRef, triggerRef, unref, watch} from "vue";
 import { toYmd } from "@/Helper/IsoWeek.js";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
@@ -414,6 +421,8 @@ import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextCompo
 // stehen, sonst springt die Scroll-Höhe beim Nachladen der Zeilen-Chunks.
 import CalendarDayRow from "@/Components/Calendar/Elements/CalendarDayRow.vue";
 import {cellKey, dayKey, deKeyToIso, itemsInCell} from "@/Components/Calendar/calendarCellItems.js";
+import CalendarEmptyState from "@/Components/Calendar/Elements/CalendarEmptyState.vue";
+import {hasActiveCalendarFilters} from "@/Components/Calendar/calendarEmptyState.js";
 
 const props = defineProps({
     rooms: { type: Object, required: true },
@@ -545,6 +554,18 @@ const directBookingOnly = computed(() => !!usePage().props.event_direct_booking_
 
 const first_project_calendar_tab_id = inject("first_project_calendar_tab_id");
 const first_project_tab_id = inject("first_project_tab_id");
+const injectedUserFilters = inject("user_filters", null);
+
+// Leerzustand: Räume kommen serverseitig bereits gefiltert (Filter + "Leere Räume ausblenden"
+// der jeweils aktiven Ansicht — Tagesansicht hat eigene Anzeigeeinstellungen)
+const roomsCount = computed(() => Array.isArray(props.rooms) ? props.rooms.length : Object.keys(props.rooms ?? {}).length);
+const hideUnoccupiedRooms = computed(() => {
+    const viewSettings = isDaily.value
+        ? (page.props.daily_view_calendar_settings ?? user.value.daily_view_calendar_settings)
+        : (settings.value ?? page.props.calendar_settings);
+    return !!viewSettings?.hide_unoccupied_rooms;
+});
+const calendarFiltersActive = computed(() => hasActiveCalendarFilters(unref(injectedUserFilters)));
 const eventTypes = inject("eventTypes");
 
 const fontSizeCalc = computed(() => `max(calc(${zoom_factor.value} * 0.875rem), 10px)`);

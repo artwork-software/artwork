@@ -9238,5 +9238,12 @@
     "CRM contact list": "CRM contact list",
     "Also artists via CRM contact lists": "Also artists via CRM contact lists",
     "via {list}": "via {list}",
-    "Standard ({count} area(s))": "Standard ({count} area(s))"
+    "Standard ({count} area(s))": "Standard ({count} area(s))",
+    "No events in the selected period": "No events in the selected period",
+    "There are no events in the selected period yet. Because \"Hide unoccupied rooms\" is active in the display settings, rooms without events are not shown.": "There are no events in the selected period yet. Because \"Hide unoccupied rooms\" is active in the display settings, rooms without events are not shown.",
+    "A filter is also active — only events matching the filter count as occupancy.": "A filter is also active — only events matching the filter count as occupancy.",
+    "No rooms match the current filter": "No rooms match the current filter",
+    "The active filter hides all rooms. Adjust or reset the filter to show rooms again.": "The active filter hides all rooms. Adjust or reset the filter to show rooms again.",
+    "No rooms available": "No rooms available",
+    "There are no rooms you can see in the calendar yet. Rooms are created in the room management.": "There are no rooms you can see in the calendar yet. Rooms are created in the room management."
 }

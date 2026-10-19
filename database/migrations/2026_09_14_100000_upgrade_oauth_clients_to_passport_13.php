@@ -22,16 +22,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasColumn('oauth_clients', 'grant_types')) {
+        // Merkmal des neuen Schemas ist owner_type, nicht grant_types: 2026_10_12_100000 ergaenzt
+        // grant_types auch im Alt-Schema. Laeuft jene vor dieser (Release-Reihenfolge), sind die
+        // dort gesetzten grant_types bereits korrekt und werden unten nur uebernommen.
+        if (Schema::hasColumn('oauth_clients', 'owner_type')) {
             return;
         }
 
-        Schema::table('oauth_clients', function (Blueprint $table): void {
+        $hasGrantTypes = Schema::hasColumn('oauth_clients', 'grant_types');
+
+        Schema::table('oauth_clients', function (Blueprint $table) use ($hasGrantTypes): void {
             $table->nullableMorphs('owner', null, 'user_id');
 
-            $table->after('provider', function (Blueprint $table): void {
+            $table->after('provider', function (Blueprint $table) use ($hasGrantTypes): void {
                 $table->text('redirect_uris')->nullable();
-                $table->text('grant_types')->nullable();
+
+                if (!$hasGrantTypes) {
+                    $table->text('grant_types')->nullable();
+                }
             });
         });
 

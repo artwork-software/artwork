@@ -135,7 +135,7 @@
                                         />
 
                                         <p v-if="turn.status === 'cancelled'" class="text-xs text-text-subtle">
-                                            {{ $t('Cancelled') }}
+                                            {{ $t('Aborted') }}
                                         </p>
 
                                         <AiChoiceList

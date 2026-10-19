@@ -108,7 +108,7 @@ class AiAssistantServiceProvider extends ServiceProvider
     }
 
     /**
-     * Konzept 0.2 §4: 10 Anfragen pro Minute und User. Muster: 'machine-api' in
+     * Konzept 0.2 §4: 10 Anfragen pro Minute und User. Muster: 'api-token' in
      * app/Providers/RouteServiceProvider.php, dort aber auf die Token-ID gekeyed — hier auf die
      * User-ID, weil der Endpunkt unter dem Web-Guard laeuft.
      */

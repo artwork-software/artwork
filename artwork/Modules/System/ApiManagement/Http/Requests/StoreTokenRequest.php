@@ -28,8 +28,7 @@ class StoreTokenRequest extends FormRequest
             'scopes' => 'required|array|min:1',
             // ai:*-Scopes sind hier nicht wählbar: ein Kunden-Key lebt ein Jahr und hinge an keiner
             // Session — damit ließe sich der KI-Dienst ohne Session-Bindung ansprechen (Konzept C2 §3).
-            'scopes.*' => ['string', Rule::in(AiScopes::excludeFrom(Passport::scopeIds()))],
-            'scopes.*' => ['string', Rule::in(MachineScopes::ids())],
+            'scopes.*' => ['string', Rule::in(AiScopes::excludeFrom(MachineScopes::ids()))],
         ];
     }
 }

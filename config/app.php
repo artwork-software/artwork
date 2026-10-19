@@ -21,6 +21,8 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
     'use_chat_module' => env('USE_CHAT_MODULE', false),
     'notion_api_token' => env('NOTION_API_TOKEN', ''),
+    // Installierte artwork-Version (Datei VERSION, beim Release hochzählen); passt zum Changelog
+    'version' => \Artwork\Core\Version\InstalledVersion::fromFile(base_path('VERSION')),
     /*
     |--------------------------------------------------------------------------
     | Application Environment

@@ -9267,5 +9267,9 @@
     "Converting it into a project removes the connection to its subprojects.": "Converting it into a project removes the connection to its subprojects.",
     "Convert it into a project group to assign subprojects to it.": "Convert it into a project group to assign subprojects to it.",
     "Project converted to project group": "Project converted to project group",
-    "Project group converted to project": "Project group converted to project"
+    "Project group converted to project": "Project group converted to project",
+    "Installed version": "Installed version",
+    "unknown": "unknown",
+    "Changelog": "Changelog",
+    "If the changelog lists a newer version, its changes are not live on your installation yet.": "If the changelog lists a newer version, its changes are not live on your installation yet."
 }

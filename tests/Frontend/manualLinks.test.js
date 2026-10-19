@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
     MANUAL_BASE_URL,
     SETTINGS_GUIDE_AREAS_WITHOUT_MANUAL,
+    changelogManualPath,
     displaySettingsManualPath,
     manualLanguage,
     manualUrl,
@@ -74,4 +75,18 @@ test('every storage key used by a settings banner has a manual page', async () =
     const missing = [...keys].filter((key) => settingsGuideManualPath(key) === null
         && !SETTINGS_GUIDE_AREAS_WITHOUT_MANUAL.includes(key.split('.')[1]));
     assert.deepEqual(missing, []);
+});
+
+test('installed version links to its changelog page, everything else to the overview', () => {
+    assert.equal(changelogManualPath('1.8.1'), 'changelog/v1.8.1');
+    assert.equal(changelogManualPath('1.7'), 'changelog/v1.7');
+    assert.equal(changelogManualPath(' v1.8.0 '), 'changelog/v1.8.0');
+    assert.equal(changelogManualPath('1.9.0-dev'), 'changelog');
+    assert.equal(changelogManualPath(''), 'changelog');
+    assert.equal(changelogManualPath(null), 'changelog');
+    assert.equal(changelogManualPath(undefined), 'changelog');
+    assert.equal(
+        manualUrl(changelogManualPath('1.8.1'), 'en'),
+        `${MANUAL_BASE_URL}/en/docs/changelog/v1.8.1`,
+    );
 });

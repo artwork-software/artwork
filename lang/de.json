@@ -9278,5 +9278,9 @@
     "Converting it into a project removes the connection to its subprojects.": "Beim Umwandeln in ein Projekt geht die Verbindung zu den Unterprojekten verloren.",
     "Convert it into a project group to assign subprojects to it.": "Wandle es in eine Projektgruppe um, um ihm Unterprojekte zuzuordnen.",
     "Project converted to project group": "Projekt in Projektgruppe umgewandelt",
-    "Project group converted to project": "Projektgruppe in Projekt umgewandelt"
+    "Project group converted to project": "Projektgruppe in Projekt umgewandelt",
+    "Installed version": "Installierte Version",
+    "unknown": "unbekannt",
+    "Changelog": "Changelog",
+    "If the changelog lists a newer version, its changes are not live on your installation yet.": "Steht im Changelog eine neuere Version, sind deren Änderungen bei euch noch nicht eingespielt."
 }

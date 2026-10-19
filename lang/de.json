@@ -9256,5 +9256,10 @@
     "No rooms match the current filter": "Kein Raum passt zum aktuellen Filter",
     "The active filter hides all rooms. Adjust or reset the filter to show rooms again.": "Der aktive Filter blendet alle Räume aus. Passe den Filter an oder setze ihn zurück, um wieder Räume zu sehen.",
     "No rooms available": "Keine Räume vorhanden",
-    "There are no rooms you can see in the calendar yet. Rooms are created in the room management.": "Es gibt noch keine Räume, die im Kalender angezeigt werden können. Räume werden in der Raumverwaltung angelegt."
+    "There are no rooms you can see in the calendar yet. Rooms are created in the room management.": "Es gibt noch keine Räume, die im Kalender angezeigt werden können. Räume werden in der Raumverwaltung angelegt.",
+    "All shifts are hidden": "Alle Schichten sind ausgeblendet",
+    "There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.": "Im ausgewählten Zeitraum gibt es Schichten, aber die aktuellen Filter und Anzeigeeinstellungen blenden alle aus. Passe sie an, um die Schichten wieder zu sehen.",
+    "A filter is active — shifts outside the filter are not shown.": "Ein Filter ist aktiv — Schichten außerhalb des Filters werden nicht angezeigt.",
+    "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.": "„Nur Schichten anzeigen, die nicht voll besetzt sind“ ist aktiv — voll besetzte Schichten werden ausgeblendet.",
+    "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.": "„Unbesetzte Tage ausblenden“ ist in den Anzeigeeinstellungen aktiv — Tage ohne sichtbare Schichten oder Termine werden ausgeblendet."
 }

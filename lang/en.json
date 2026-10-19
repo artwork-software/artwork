@@ -9245,5 +9245,10 @@
     "No rooms match the current filter": "No rooms match the current filter",
     "The active filter hides all rooms. Adjust or reset the filter to show rooms again.": "The active filter hides all rooms. Adjust or reset the filter to show rooms again.",
     "No rooms available": "No rooms available",
-    "There are no rooms you can see in the calendar yet. Rooms are created in the room management.": "There are no rooms you can see in the calendar yet. Rooms are created in the room management."
+    "There are no rooms you can see in the calendar yet. Rooms are created in the room management.": "There are no rooms you can see in the calendar yet. Rooms are created in the room management.",
+    "All shifts are hidden": "All shifts are hidden",
+    "There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.": "There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.",
+    "A filter is active — shifts outside the filter are not shown.": "A filter is active — shifts outside the filter are not shown.",
+    "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.": "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.",
+    "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.": "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden."
 }

@@ -871,6 +871,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->middleware(CanEditProject::class);
 
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::patch('/projects/{project}/type', [ProjectController::class, 'updateType'])
+        ->name('projects.update.type');
     Route::patch('/projects/{project}/shiftDescription', [ProjectController::class, 'updateShiftDescription'])
         ->name('projects.update.shift_description');
     Route::patch('/projects/{project}/shiftContacts', [ProjectController::class, 'updateShiftContacts'])

@@ -20,6 +20,36 @@
                         icon="IconInfoCircle"
                     />
                 </div>
+                <!-- Typwechsel nur in „Basisdaten bearbeiten“ und nur mit Bestätigung (Kundenwunsch) -->
+                <div v-if="project" class="mx-6 mt-5 mb-1 flex items-center justify-between gap-x-4 rounded-lg border border-border-subtle bg-surface-sunken px-4 py-3">
+                    <div class="min-w-0">
+                        <div class="text-sm/5 font-semibold text-text">
+                            {{ project.is_group ? t('This is a project group') : t('This is a project') }}
+                        </div>
+                        <p class="text-xs text-text-subtle">
+                            {{ project.is_group
+                                ? t('Converting it into a project removes the connection to its subprojects.')
+                                : t('Convert it into a project group to assign subprojects to it.') }}
+                        </p>
+                    </div>
+                    <BaseUIButton
+                        class="shrink-0"
+                        :label="project.is_group ? 'Convert to project' : 'Convert to project group'"
+                        use-translation
+                        variant="secondary"
+                        size="sm"
+                        icon="IconTransform"
+                        @click="showProjectTypeChangeConfirm = true"
+                    />
+                </div>
+                <ProjectTypeChangeConfirmModal
+                    v-if="project && showProjectTypeChangeConfirm"
+                    :project="project"
+                    :projects-of-group="projectsOfGroup"
+                    :processing="projectTypeChangeProcessing"
+                    @confirm="changeProjectType"
+                    @close="showProjectTypeChangeConfirm = false"
+                />
                 <div v-if="!createProjectGroup">
                     <div>
                         <div>
@@ -353,7 +383,7 @@
 import Input from "@/Layouts/Components/InputComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import ProjectPropertiesChecklist from "@/Layouts/Components/ProjectPropertiesChecklist.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import {
     Listbox,
     ListboxButton,
@@ -379,6 +409,7 @@ import LastedProjects from "@/Artwork/LastedProjects.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import CrmArtistLinkManager from "@/Components/Crm/CrmArtistLinkManager.vue";
+import ProjectTypeChangeConfirmModal from "@/Layouts/Components/ProjectTypeChangeConfirmModal.vue";
 
 // Define props
 const props = defineProps({
@@ -611,6 +642,27 @@ const addProjectToProjectGroup = (project) => {
 
 const deleteProjectFromProjectGroup = (index) => {
     projectGroupProjects.value.splice(index, 1);
+};
+
+const showProjectTypeChangeConfirm = ref(false);
+const projectTypeChangeProcessing = ref(false);
+
+// Modal danach schließen: das Formular (isGroup, Unterprojekte) beruht noch auf dem alten Typ
+const changeProjectType = () => {
+    if (projectTypeChangeProcessing.value) {
+        return;
+    }
+    router.patch(route('projects.update.type', props.project.id), {
+        is_group: !props.project.is_group,
+    }, {
+        preserveScroll: true,
+        onStart: () => projectTypeChangeProcessing.value = true,
+        onFinish: () => projectTypeChangeProcessing.value = false,
+        onSuccess: () => {
+            showProjectTypeChangeConfirm.value = false;
+            emit('closeCreateProjectModal', false);
+        },
+    });
 };
 
 const handleStateChange = (stateId) => {

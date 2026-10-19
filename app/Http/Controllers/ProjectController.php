@@ -3708,7 +3708,35 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * Schaltet zwischen Projekt und Projektgruppe um (nur aus „Basisdaten bearbeiten“ mit Bestätigung).
+     */
+    public function updateType(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorize('update', $project);
 
+        $isGroup = (bool) $request->validate(['is_group' => ['required', 'boolean']])['is_group'];
+
+        if ((bool) $project->is_group === $isGroup) {
+            return Redirect::back();
+        }
+
+        $this->projectService->changeProjectType($project, $isGroup);
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('public_changes')
+                ->setModelClass(Project::class)
+                ->setModelId($project->id)
+                ->setTranslationKey(
+                    $isGroup ? 'Project converted to project group' : 'Project group converted to project'
+                )
+        );
+        $this->setPublicChangesNotification($project->id);
+
+        return Redirect::back();
+    }
 
     public function updateTeam(
         Request $request,

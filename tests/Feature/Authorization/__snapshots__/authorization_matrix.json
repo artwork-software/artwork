@@ -698,6 +698,7 @@
     "PATCH projects/{project}/shiftDescription": "forbidden",
     "PATCH projects/{project}/shiftRelevantEventTypes": "forbidden",
     "PATCH projects/{project}/team": "forbidden",
+    "PATCH projects/{project}/type": "forbidden",
     "PATCH projects/{project}/updateDescription": "forbidden",
     "PATCH rooms/{id}/restore": "forbidden",
     "PATCH rooms/{room}": "forbidden",

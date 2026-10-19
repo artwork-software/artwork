@@ -42,6 +42,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as IlluminateCollection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProjectService
 {
@@ -929,6 +930,28 @@ class ProjectService
     public function updateProject(Project $project, array $data): Project
     {
         $this->projectRepository->update($project, $data);
+        return $project;
+    }
+
+    /**
+     * Wandelt ein Projekt in eine Projektgruppe um oder umgekehrt.
+     *
+     * Projekt → Gruppe: bisherige Gruppenzugehörigkeiten werden gelöst (Gruppen lassen sich
+     * nicht verschachteln). Gruppe → Projekt: die Verbindung zu den Unterprojekten wird gelöst,
+     * die Unterprojekte selbst bleiben als eigenständige Projekte erhalten.
+     */
+    public function changeProjectType(Project $project, bool $isGroup): Project
+    {
+        DB::transaction(function () use ($project, $isGroup): void {
+            if ($isGroup) {
+                $project->groups()->detach();
+            } else {
+                $project->projectsOfGroup()->detach();
+            }
+
+            $this->projectRepository->update($project, ['is_group' => $isGroup]);
+        });
+
         return $project;
     }
 

@@ -12,6 +12,7 @@ use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Exports\BudgetExport;
+use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\Column;
@@ -3196,6 +3197,10 @@ class ProjectController extends Controller
                 'changer'    => $this->resolveHistoryChanger($activity),
             ];
         })->all();
+
+        if (!EnsureUserCanAccessProjectBudget::canAccessProjectBudget(Auth::user(), $project)) {
+            $history = app(ChangeService::class)->withoutBudgetEntries($history);
+        }
 
          $access_budget = $project->access_budget;
 

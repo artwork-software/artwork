@@ -218,7 +218,8 @@ use Inertia\Inertia;
 
 Route::get('/', [AppController::class, 'index']);
 
-Route::get('/password_feedback', [AppController::class, 'getPasswordScore']);
+// POST statt GET: das Passwort darf nicht in Access-Logs/Traces landen. Gedrosselt, weil zxcvbn teuer ist.
+Route::post('/password_feedback', [AppController::class, 'getPasswordScore'])->middleware('throttle:60,1');
 
 Route::get('/setup', [AppController::class, 'showSetupPage'])->name('setup');
 Route::post('/setup', [AppController::class, 'createAdmin'])
@@ -3127,6 +3128,12 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             '/calendar/abo/{userCalenderAbo}/update',
             [UserCalenderAboController::class, 'update']
         )->name('user.calendar.abo.update');
+
+        // user.calendar.abo.renew — Widerruf: neuer Feed-Token, alter Link wird ungültig
+        Route::delete(
+            '/calendar/abo/{userCalenderAbo}/renew',
+            [UserCalenderAboController::class, 'destroy']
+        )->name('user.calendar.abo.renew');
     });
 
     Route::resource('project-roles', ProjectRoleController::class)

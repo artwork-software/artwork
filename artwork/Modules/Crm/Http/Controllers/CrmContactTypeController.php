@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Artwork\Core\Validation\Rules\IconNameRule;
 use Artwork\Modules\Crm\Events\CrmSettingsChanged;
 use Artwork\Modules\Crm\Models\CrmContactType;
@@ -23,7 +24,7 @@ class CrmContactTypeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'icon' => ['nullable', 'string', new IconNameRule()],
-            'color' => 'nullable|string',
+            'color' => ['nullable', 'string', new HexColorRule()],
             'properties' => 'sometimes|array',
             'properties.*.id' => 'required|integer|exists:crm_properties,id',
             'properties.*.is_required' => 'boolean',
@@ -67,7 +68,7 @@ class CrmContactTypeController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'icon' => ['nullable', 'string', new IconNameRule()],
-            'color' => 'nullable|string',
+            'color' => ['nullable', 'string', new HexColorRule()],
             'is_active' => 'sometimes|boolean',
             'sort_order' => 'sometimes|integer',
             'properties' => 'sometimes|array',

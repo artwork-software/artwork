@@ -38,7 +38,9 @@ class AppController extends Controller
 
     public function getPasswordScore(Request $request): int
     {
-        return (new Zxcvbn())->passwordStrength((string) $request->input('password'))['score'];
+        $validated = $request->validate(['password' => ['required', 'string', 'max:255']]);
+
+        return (new Zxcvbn())->passwordStrength($validated['password'])['score'];
     }
 
     //@todo: fix phpcs error - refactor function name to toggleHints

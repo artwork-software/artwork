@@ -46,7 +46,8 @@ class UserShowResource extends JsonResource
             'work_description' => $this->work_description,
             // Wochenstunden laut heute gültigem Arbeitszeitmuster (null ohne Muster); die Spalte
             // users.weekly_working_hours wird nicht mehr gepflegt und hier bewusst nicht ausgeliefert
-            'weekly_working_hours' => $this->resource instanceof User
+            // Vertragsdaten wie Gage und Beschäftigungszeitraum: nur eigene oder mit Personalverwaltung.
+            'weekly_working_hours' => $this->resource instanceof User && ($isSelf || $canViewTerms)
                 ? app(WorkTimeCalculationService::class)->currentWeeklyHours($this->resource)
                 : null,
             'salary_per_hour' => $canViewTerms ? $this->salary_per_hour : null,

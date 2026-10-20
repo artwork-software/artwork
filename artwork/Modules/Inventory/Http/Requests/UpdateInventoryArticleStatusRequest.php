@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateInventoryArticleStatusRequest extends FormRequest
@@ -23,7 +24,7 @@ class UpdateInventoryArticleStatusRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'color' => 'required|string|max:7',
+            'color' => ['required', 'string', 'max:7', new HexColorRule()],
         ];
     }
 }

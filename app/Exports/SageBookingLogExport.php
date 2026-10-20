@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Artwork\Core\Excel\SafeValueBinder;
 use Artwork\Modules\Budget\Models\SageBookingLog;
 use Artwork\Modules\Budget\Models\SageBookingLogEntry;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -55,6 +56,19 @@ class SageBookingLogExport implements FromQuery, WithHeadings, WithMapping
      */
     // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Interface WithMapping::map($row) erlaubt keinen engeren Typ
     public function map($row): array
+    {
+        // CSV kennt keine Text-Zellen: Texte aus Sage, die wie eine Formel beginnen, bekommen ein '
+        // vorangestellt, damit Excel sie beim Öffnen nicht ausführt (SafeValueBinder greift nur bei XLSX).
+        return array_map(
+            static fn ($value) => is_string($value) && SafeValueBinder::isFormulaLike($value) ? "'" . $value : $value,
+            $this->columns($row)
+        );
+    }
+
+    /**
+     * @return array<int, string|null>
+     */
+    private function columns(SageBookingLogEntry $row): array
     {
         return [
             $row->created_at?->format('d.m.Y H:i:s'),

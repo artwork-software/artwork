@@ -6,6 +6,7 @@ use App\Http\Middleware\SetDeveloperEnvironment;
 use App\Http\Middleware\UpdateUserStatus;
 use Artwork\Core\Api\Middleware\ApiAccessLog;
 use Artwork\Core\Api\Middleware\ForceJsonResponse;
+use Artwork\Core\Api\Middleware\RejectTransientTokens;
 use Artwork\Core\Http\Middleware\Authenticate;
 use Artwork\Core\Http\Middleware\EncryptCookies;
 use Artwork\Core\Http\Middleware\GuardInsecureDefaults;
@@ -87,6 +88,7 @@ class Kernel extends HttpKernel
         // das feinere Limit pro Token (throttle:api-token) überstimmen würden.
         'api.machine' => [
             ForceJsonResponse::class,
+            RejectTransientTokens::class,
             SubstituteBindings::class,
             ApiAccessLog::class,
         ],
@@ -95,6 +97,7 @@ class Kernel extends HttpKernel
         // ApiAccessLog — das Protokoll gehört zu den Maschinen-Schlüsseln der Schnittstellen-Seite,
         // Geräte-Tokens tauchen dort nicht auf.
         'api.app' => [
+            RejectTransientTokens::class,
             SubstituteBindings::class,
         ],
 

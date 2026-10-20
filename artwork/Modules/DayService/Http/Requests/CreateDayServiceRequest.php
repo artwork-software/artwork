@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\DayService\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Artwork\Core\Validation\Rules\IconNameRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -17,7 +18,7 @@ class CreateDayServiceRequest extends FormRequest
         return [
             'name' => 'required',
             'icon' => ['required', 'string', new IconNameRule()],
-            'hex_color' => 'required',
+            'hex_color' => ['required', 'string', new HexColorRule()],
         ];
     }
 

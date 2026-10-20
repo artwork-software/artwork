@@ -9318,5 +9318,8 @@
     "common, organizations and consumers are not allowed because any Microsoft account could sign in through them.": "common, organizations und consumers sind nicht erlaubt, weil sich darüber beliebige Microsoft-Konten anmelden könnten.",
     "Optional. If set, the sync and the directory sign-in only accept people with an email address from these domains. Leave empty to allow all domains.": "Optional. Wenn gesetzt, übernehmen Sync und Verzeichnis-Anmeldung nur Personen mit einer E-Mail-Adresse aus diesen Domains. Leer lassen, um alle Domains zuzulassen.",
     "Your own team membership can only be changed by another person with team management rights.": "Deine eigene Teamzugehörigkeit kann nur eine andere Person mit Rechten zur Teamverwaltung ändern.",
-    "The last admin cannot lose the admin role.": "Die letzte Person mit Admin-Rolle kann die Rolle nicht verlieren. Vergib die Rolle zuerst an eine weitere Person."
+    "The last admin cannot lose the admin role.": "Die letzte Person mit Admin-Rolle kann die Rolle nicht verlieren. Vergib die Rolle zuerst an eine weitere Person.",
+    "The guest list and revenue are only visible to people who can see the ticketing component.": "Gästeliste und Umsatz sehen nur Personen mit Zugriff auf die Ticketing-Komponente.",
+    "The selected color is invalid.": "Die gewählte Farbe ist ungültig.",
+    "The selected icon is invalid.": "Das gewählte Icon ist ungültig."
 }

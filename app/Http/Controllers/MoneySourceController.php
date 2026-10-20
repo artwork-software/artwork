@@ -70,12 +70,14 @@ class MoneySourceController extends Controller
     }
 
     /**
-     * @return MoneySource[]
+     * Auswahlliste für Budget-Zellen und Gruppen: nur Kennung, Name und Gruppen-Flag. Betrag, Geldgeber
+     * und Förderzeitraum sieht nur, wer die Finanzierungsquelle selbst öffnen darf.
+     *
+     * @return array<int, array{id: int, name: string, is_group: mixed}>
      * @throws AuthorizationException
      */
     public function search(SearchRequest $request): array
     {
-        $filteredObjects = [];
         $this->authorize('viewAny', User::class);
 
         $query = $request->input('query');
@@ -92,29 +94,23 @@ class MoneySourceController extends Controller
             }
         }
 
-        if ($request->input('type') === 'single') {
-            foreach ($moneySources as $moneySource) {
-                if ($moneySource->is_group === 1 || $moneySource->is_group === true) {
-                    continue;
-                }
-                $filteredObjects[] = $moneySource;
-            }
-            return $filteredObjects;
-        } elseif ($request->input('type') === 'group') {
-            foreach ($moneySources as $moneySource) {
-                if ($moneySource->is_group === 1 || $moneySource->is_group === true) {
-                    $filteredObjects[] = $moneySource;
-                }
-            }
-            return $filteredObjects;
-        } else {
-            foreach ($moneySources as $moneySource) {
-                if ($moneySource->projects->contains($request->input('projectId'))) {
-                    $filteredObjects[] = $moneySource;
-                }
-            }
-            return $filteredObjects;
-        }
+        $isGroup = static fn (MoneySource $moneySource): bool => (bool) $moneySource->is_group;
+        $filtered = match ($request->input('type')) {
+            'single' => $moneySources->reject($isGroup),
+            'group' => $moneySources->filter($isGroup),
+            default => $moneySources->filter(
+                fn (MoneySource $moneySource): bool => $moneySource->projects->contains($request->input('projectId'))
+            ),
+        };
+
+        return $filtered
+            ->map(static fn (MoneySource $moneySource): array => [
+                'id' => $moneySource->id,
+                'name' => $moneySource->name,
+                'is_group' => $moneySource->is_group,
+            ])
+            ->values()
+            ->all();
     }
 
     public function create(): void

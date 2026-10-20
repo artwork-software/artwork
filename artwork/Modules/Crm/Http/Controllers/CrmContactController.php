@@ -208,7 +208,8 @@ class CrmContactController extends Controller
         $validated = $request->validate([
             'crm_contact_type_id' => 'required|exists:crm_contact_types,id',
             'display_name' => 'required|string|max:255',
-            'profile_image' => 'nullable|string',
+            // Kein freier Bildpfad: das Profilbild kommt nur über den Upload-Endpunkt (sonst Verweis
+            // auf beliebige Dateien der public-Disk).
             'is_active' => 'boolean',
             'property_values' => 'array',
             'property_values.*' => 'nullable',

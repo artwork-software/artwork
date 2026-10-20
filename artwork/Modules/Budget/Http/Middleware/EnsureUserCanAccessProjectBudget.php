@@ -98,6 +98,29 @@ class EnsureUserCanAccessProjectBudget
             ->exists();
     }
 
+    /**
+     * Budgetzugriff auf genau dieses Projekt: Admin, globale Budgetrechte oder access_budget im Team.
+     */
+    public static function canAccessProjectBudget(?User $user, Project $project): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        if (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->can(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value)
+        ) {
+            return true;
+        }
+
+        if ($project->relationLoaded('access_budget')) {
+            return $project->access_budget->contains('id', $user->id);
+        }
+
+        return $project->access_budget()->where('users.id', $user->id)->exists();
+    }
+
     public function handle(Request $request, Closure $next): mixed
     {
         $user = $request->user();

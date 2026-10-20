@@ -33,6 +33,13 @@ class RouteServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
+        // Links und Weiterleitungen nie aus dem Host-Header bauen: sonst landen in synchron
+        // versandten Mails (z. B. Login-Links) Adressen eines fremden Hosts. Eine lokale APP_URL
+        // (häufig unverändert aus der .env.example) würde dagegen jede Weiterleitung kaputt machen.
+        if ($this->app->isProduction() && $this->hasPublicAppUrl()) {
+            \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
+        }
+
         $this->routes(function (): void {
             // Vor routes/api.php registriert, damit die versionierten Pfade zuerst greifen.
             Route::prefix('api/v1')
@@ -70,7 +77,11 @@ class RouteServiceProvider extends ServiceProvider
         // Login-Discovery der App: fragt jede bekannte Instanz nach einem E-Mail-Hash. Das
         // Limit bremst das Abklopfen fremder Adressen, normale Logins brauchen eine Anfrage.
         RateLimiter::for('app-discover', function (Request $request) {
-            return Limit::perMinute(10)->by('app-discover:ip:' . $request->ip());
+            // Die App fragt pro Anmeldung einmal; die Stundengrenze bremst das Durchprobieren von Adressen.
+            return [
+                Limit::perMinute(10)->by('app-discover:ip:' . $request->ip()),
+                Limit::perHour(60)->by('app-discover:ip-hour:' . $request->ip()),
+            ];
         });
 
         RateLimiter::for('app-login', function (Request $request) {
@@ -93,5 +104,18 @@ class RouteServiceProvider extends ServiceProvider
 
             return Limit::perMinute(120)->by($key);
         });
+    }
+
+    /**
+     * Nur Loopback-/Entwicklungsadressen gelten als „nicht gesetzt“; Intranet-Namen und -IPs sind legitim.
+     */
+    private function hasPublicAppUrl(): bool
+    {
+        $host = strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST));
+
+        return $host !== ''
+            && !in_array($host, ['localhost', '127.0.0.1', '::1', '[::1]'], true)
+            && !str_ends_with($host, '.localhost')
+            && !str_ends_with($host, '.test');
     }
 }

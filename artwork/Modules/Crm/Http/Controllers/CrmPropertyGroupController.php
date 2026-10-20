@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Artwork\Core\Validation\Rules\IconNameRule;
 use Artwork\Modules\Crm\Events\CrmSettingsChanged;
 use Artwork\Modules\Crm\Models\CrmPropertyGroup;
@@ -26,7 +27,7 @@ class CrmPropertyGroupController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'icon' => ['nullable', 'string', new IconNameRule()],
-            'color' => 'nullable|string',
+            'color' => ['nullable', 'string', new HexColorRule()],
             'is_confidential' => 'boolean',
             'permissions' => 'nullable|array',
             'permissions.*.permissionable_type' => ['required', 'string', $this->permissionableTypes()],
@@ -51,7 +52,7 @@ class CrmPropertyGroupController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'icon' => ['nullable', 'string', new IconNameRule()],
-            'color' => 'nullable|string',
+            'color' => ['nullable', 'string', new HexColorRule()],
             'is_confidential' => 'sometimes|boolean',
             'sort_order' => 'sometimes|integer',
             'permissions' => 'nullable|array',

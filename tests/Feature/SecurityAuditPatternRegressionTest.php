@@ -57,7 +57,9 @@ final class SecurityAuditPatternRegressionTest extends FeatureTestCase
             $this->assertArrayHasKey('email', $array);
         }
 
-        // Profilseite gibt die Felder weiterhin explizit aus.
+        // Profilseite gibt die Felder weiterhin explizit aus – für Personen, die die Konditionen
+        // bearbeiten dürfen (Audit 20.10.2026, M15).
+        $this->actingAsAdmin();
         $resource = FreelancerShowResource::make($freelancer->fresh())->resolve();
         $this->assertSame('Tagessatz', $resource['salary_description']);
         $this->assertSame('intern', $resource['note']);

@@ -44,7 +44,8 @@ class ProjectComponentCrmContactController extends Controller
     {
         $this->assertCrmContactList($component);
         $user = $this->user($request);
-        abort_unless($user->can('view', $project), 403);
+        // Wie jede Tab-Komponente: Projekt sehen UND die Komponente sehen dürfen
+        abort_unless($user->can('viewComponent', [$project, $component]), 403);
 
         $canWrite = $user->can('writeComponent', [$project, $component]);
         $visiblePropertyIds = $this->service->visiblePropertyIdsFor($user);

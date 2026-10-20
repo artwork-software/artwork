@@ -15,7 +15,11 @@
 
             <BaseChip v-if="sales.status === 'cancelled'" variant="warning" class="self-start">{{ $t('Cancelled in Artwork-Tickets') }}</BaseChip>
 
-            <div class="overflow-x-auto rounded-lg border border-border-subtle bg-surface">
+            <p v-if="sales.guests_hidden" class="text-sm text-text-subtle">
+                {{ $t('The guest list and revenue are only visible to people who can see the ticketing component.') }}
+            </p>
+
+            <div v-else class="overflow-x-auto rounded-lg border border-border-subtle bg-surface">
                 <table class="w-full min-w-[640px] border-collapse">
                     <thead>
                         <tr class="font-lexend text-xs font-medium text-text-subtle">
@@ -90,7 +94,8 @@ const stats = computed(() => [
     { label: t('Places'), value: sales.value.capacity },
     { label: t('Free'), value: Math.max(0, sales.value.capacity - sales.value.sold) },
     { label: t('Checked in'), value: sales.value.checkedInCount },
-    { label: t('Revenue'), value: formatEuro(sales.value.revenueCents) },
+    // Umsatz liefert das Backend nur mit Sicht auf die Ticketing-Komponente
+    ...(sales.value.guests_hidden ? [] : [{ label: t('Revenue'), value: formatEuro(sales.value.revenueCents) }]),
 ])
 
 function formatTime(value) {

@@ -888,6 +888,11 @@ class UserController extends Controller
             return null;
         }
 
+        // Fremde Soll/Ist-Werte wie beim Stundenkonto nur mit „Stunden sehen“ oder Personalverwaltung.
+        if (!$this->mayViewHourAccount($user)) {
+            return null;
+        }
+
         try {
             $start = Carbon::parse((string) $dateValue[0])->startOfDay();
             $end = Carbon::parse((string) $dateValue[1])->startOfDay();
@@ -1086,14 +1091,19 @@ class UserController extends Controller
      */
     private function authorizeHourAccountAccess(User $user): void
     {
+        abort_unless($this->mayViewHourAccount($user), 403);
+    }
+
+    private function mayViewHourAccount(User $user): bool
+    {
         $viewer = Auth::user();
-        abort_unless(
+
+        return $viewer !== null && (
             $viewer->id === $user->id
             || $viewer->canAny([
                 PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value,
                 PermissionEnum::MA_MANAGER->value,
-            ]),
-            403
+            ])
         );
     }
 

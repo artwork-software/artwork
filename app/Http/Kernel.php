@@ -42,6 +42,7 @@ use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Throwable;
 
 class Kernel extends HttpKernel
 {
@@ -148,4 +149,40 @@ class Kernel extends HttpKernel
         'external.scoped' => \Artwork\Modules\ExternalAccess\Http\Middleware\EnsureScopedAccess::class,
         'external.crm' => \Artwork\Modules\ExternalAccess\Http\Middleware\EnsureCrmAccessActive::class,
     ];
+
+    /**
+     * Wie der Framework-Kernel, aber jede Middleware einzeln abgesichert: terminate() läuft, nachdem die Antwort
+     * gesendet wurde. Eine Exception hier (auch schon beim Neubau der Middleware, z. B. Passports CheckToken, das
+     * den ResourceServer samt OAuth-Key-Prüfung braucht) endete sonst als "headers already sent"-Fatal, verdeckte
+     * die Ursache und übersprang die übrigen terminate()-Aufrufe. Bei Laravel-Upgrades gegen
+     * Illuminate\Foundation\Http\Kernel::terminateMiddleware() abgleichen.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \Symfony\Component\HttpFoundation\Response $response
+     */
+    protected function terminateMiddleware($request, $response): void
+    {
+        $middlewares = $this->app->shouldSkipMiddleware() ? [] : array_merge(
+            $this->gatherRouteMiddleware($request),
+            $this->middleware
+        );
+
+        foreach ($middlewares as $middleware) {
+            if (!is_string($middleware)) {
+                continue;
+            }
+
+            try {
+                [$name] = $this->parseMiddleware($middleware);
+
+                $instance = $this->app->make($name);
+
+                if (method_exists($instance, 'terminate')) {
+                    $instance->terminate($request, $response);
+                }
+            } catch (Throwable $throwable) {
+                report($throwable);
+            }
+        }
+    }
 }

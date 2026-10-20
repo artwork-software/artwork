@@ -12,6 +12,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftPlanComment;
 use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Illuminate\Http\Request;
@@ -277,7 +278,7 @@ class IndividualTimeController extends Controller
         $workerType = $this->resolveWorkerType($owner);
 
         dispatch(function () use ($ownerId, $workerType): void {
-            broadcast(new IndividualTimeChanged($ownerId, $workerType));
+            SafeBroadcast::send(new IndividualTimeChanged($ownerId, $workerType));
         })->afterResponse();
     }
 }

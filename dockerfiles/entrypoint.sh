@@ -52,6 +52,10 @@ fi
 chown -R www-data:www-data /var/www/html/storage/
 chown -R www-data:www-data /var/www/html/bootstrap/cache
 
+# Passport/league-oauth2 verlangt 600/660 für die OAuth-Keys; bei 644 bricht jeder API-Request mit 500 ab.
+# Fehlen die Keys (z. B. per PASSPORT_*_KEY aus der .env), schlägt chmod fehl – das ist gewollt egal.
+chmod 600 /var/www/html/storage/oauth-private.key /var/www/html/storage/oauth-public.key 2>/dev/null || true
+
 touch /tmp/init_ready
 
 exec "$@"

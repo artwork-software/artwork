@@ -10,6 +10,7 @@ use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -446,7 +447,7 @@ class ShiftPlanRequestService
                 foreach ($shifts as $shift) {
                     $roomId = $shift->room_id ?? $shift->event?->room_id;
                     if ($roomId !== null) {
-                        broadcast(new UpdateShiftInShiftPlan($shift, $roomId));
+                        SafeBroadcast::send(new UpdateShiftInShiftPlan($shift, $roomId));
                     }
                 }
             })->afterResponse();

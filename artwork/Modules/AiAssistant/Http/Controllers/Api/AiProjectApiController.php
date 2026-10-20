@@ -46,6 +46,6 @@ class AiProjectApiController extends Controller
         abort_if($model === null, Response::HTTP_NOT_FOUND);
         abort_unless($this->policy->view($request->user(), $model), Response::HTTP_NOT_FOUND);
 
-        return $this->service->detail($model);
+        return $this->service->detail($model, $request->user());
     }
 }

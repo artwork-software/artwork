@@ -60,6 +60,26 @@ final class OpenApiDataSchemasTest extends TestCase
             '/api/v1/ai/rooms' => 'AiRoomListData',
             '/api/v1/ai/event-types' => 'AiEventTypeListData',
             '/api/v1/ai/actions/{action}' => 'AiPendingActionData',
+            '/api/v1/ai/people' => 'AiPersonListData',
+            '/api/v1/ai/people/{type}/{id}/workload' => 'AiPersonWorkloadData',
+            '/api/v1/ai/events/{event}/shifts' => 'AiEventShiftsData',
+            '/api/v1/ai/shifts/open' => 'AiOpenShiftListData',
+            '/api/v1/ai/shifts/{shift}/candidates' => 'AiShiftCandidateListData',
+            '/api/v1/ai/shift-rule-violations' => 'AiRuleViolationListData',
+            '/api/v1/ai/crafts' => 'AiCraftListData',
+            '/api/v1/ai/crafts/{craft}/capacity' => 'AiCraftCapacityData',
+            '/api/v1/ai/day-overview' => 'AiDayOverviewData',
+            '/api/v1/ai/projects/{project}/budget-summary' => 'AiBudgetSummaryData',
+            '/api/v1/ai/absences' => 'AiPersonAbsencesListData',
+            '/api/v1/ai/me/tasks' => 'AiTaskListData',
+            '/api/v1/ai/rooms/conflicts' => 'AiRoomConflictListData',
+            '/api/v1/ai/people/{type}/{id}/work-time' => 'AiWorkTimeData',
+            '/api/v1/ai/contracts' => 'AiContractListData',
+            '/api/v1/ai/work-time/overview' => 'AiWorkTimeOverviewData',
+            '/api/v1/ai/rooms/utilization' => 'AiRoomUtilizationListData',
+            '/api/v1/ai/checklists' => 'AiChecklistListData',
+            '/api/v1/ai/qualifications' => 'AiQualificationListData',
+            '/api/v1/ai/project-states' => 'AiProjectStateListData',
         ];
 
         foreach ($expected as $path => $schema) {
@@ -78,8 +98,17 @@ final class OpenApiDataSchemasTest extends TestCase
         $paths = $this->contract()['paths'] ?? [];
 
         $expected = [
-            '/api/v1/ai/events/batch' => ['post', 'delete'],
+            '/api/v1/ai/events/batch' => ['post', 'delete', 'patch'],
             '/api/v1/ai/events/{event}' => ['patch'],
+            '/api/v1/ai/shift-assignments' => ['post'],
+            '/api/v1/ai/shift-assignments/remove' => ['post'],
+            '/api/v1/ai/shift-assignments/bulk' => ['post'],
+            '/api/v1/ai/tasks/{task}' => ['patch'],
+            '/api/v1/ai/shift-assignments/replace' => ['post'],
+            '/api/v1/ai/tasks' => ['post'],
+            '/api/v1/ai/absences' => ['post'],
+            '/api/v1/ai/shifts' => ['post'],
+            '/api/v1/ai/shifts/copy' => ['post'],
         ];
 
         foreach ($expected as $path => $methods) {
@@ -92,6 +121,27 @@ final class OpenApiDataSchemasTest extends TestCase
                 $this->assertContains('#/components/schemas/AiWritePreviewData', $refs, "{$method} {$path}");
                 $this->assertContains('#/components/schemas/AiWriteResultData', $refs, "{$method} {$path}");
             }
+        }
+    }
+
+    #[Test]
+    public function the_shift_suggestion_is_part_of_the_contract(): void
+    {
+        $paths = $this->contract()['paths'] ?? [];
+
+        foreach (
+            [
+                '/api/v1/ai/shift-plan/suggest' => 'AiShiftSuggestionData',
+                '/api/v1/ai/shift-plan/staff-event' => 'AiEventStaffingData',
+                '/api/v1/ai/people/common-free-slots' => 'AiCommonSlotsData',
+                '/api/v1/ai/shift-plan/replacements' => 'AiReplacementSuggestionData',
+            ] as $path => $schema
+        ) {
+            $this->assertSame(
+                '#/components/schemas/' . $schema,
+                $paths[$path]['post']['responses']['200']['content']['application/json']['schema']['$ref'] ?? '',
+                $path
+            );
         }
     }
 

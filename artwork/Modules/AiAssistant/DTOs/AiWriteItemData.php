@@ -6,6 +6,8 @@ use Spatie\LaravelData\Data;
 
 /**
  * Ein Objekt, das angelegt, geaendert oder geloescht wuerde (core-write-endpoints-dry-run).
+ *
+ * `person` nur bei `assign_shifts_bulk` (ai-scenarios-3 S3), sonst null.
  */
 class AiWriteItemData extends Data
 {
@@ -18,6 +20,7 @@ class AiWriteItemData extends Data
         public ?string $end,
         public ?AiRefData $room,
         public array $conflicts,
+        public ?AiPersonRefData $person = null,
     ) {
     }
 }

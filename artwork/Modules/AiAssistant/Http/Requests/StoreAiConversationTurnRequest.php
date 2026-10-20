@@ -3,7 +3,15 @@
 namespace Artwork\Modules\AiAssistant\Http\Requests;
 
 use Artwork\Modules\AiAssistant\Models\AiConversationTurn;
+use Artwork\Modules\AiAssistant\Services\AiAbsenceWriteService;
 use Artwork\Modules\AiAssistant\Services\AiEventWriteService;
+use Artwork\Modules\AiAssistant\Services\AiShiftAssignmentWriteService;
+use Artwork\Modules\AiAssistant\Services\AiShiftBulkAssignmentWriteService;
+use Artwork\Modules\AiAssistant\Services\AiShiftCreateWriteService;
+use Artwork\Modules\AiAssistant\Services\AiShiftReplaceWriteService;
+use Artwork\Modules\AiAssistant\Services\AiShiftUnassignWriteService;
+use Artwork\Modules\AiAssistant\Services\AiTaskCreateService;
+use Artwork\Modules\AiAssistant\Services\AiTaskService;
 use Artwork\Modules\AiAssistant\Support\AiActionHash;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\Validator;
@@ -36,6 +44,16 @@ class StoreAiConversationTurnRequest extends FormRequest
         AiEventWriteService::TOOL_CREATE,
         AiEventWriteService::TOOL_UPDATE,
         AiEventWriteService::TOOL_DELETE,
+        AiShiftAssignmentWriteService::TOOL_ASSIGN,
+        AiShiftUnassignWriteService::TOOL_UNASSIGN,
+        AiShiftBulkAssignmentWriteService::TOOL_BULK,
+        AiTaskService::TOOL_UPDATE,
+        AiShiftReplaceWriteService::TOOL_REPLACE,
+        AiAbsenceWriteService::TOOL_CREATE,
+        AiTaskCreateService::TOOL_CREATE,
+        AiEventWriteService::TOOL_UPDATE_BATCH,
+        AiShiftCreateWriteService::TOOL_CREATE,
+        AiShiftCreateWriteService::TOOL_COPY,
     ];
 
     public function authorize(): bool

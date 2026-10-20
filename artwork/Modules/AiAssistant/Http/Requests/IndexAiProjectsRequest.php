@@ -32,6 +32,12 @@ class IndexAiProjectsRequest extends FormRequest
             'from' => ['nullable', 'date', 'required_with:to'],
             'to' => ['nullable', 'date', 'required_with:from', 'after_or_equal:from'],
             'limit' => ['nullable', 'integer', 'min:1'],
+            // ai-scenarios-4 S18 (additiv)
+            'budget_deadline_from' => ['nullable', 'date_format:Y-m-d'],
+            'budget_deadline_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:budget_deadline_from'],
+            'state_id' => ['nullable', 'integer'],
+            'marked_as_done' => ['nullable', 'boolean'],
+            'manager_id' => ['nullable', 'integer'],
         ];
     }
 

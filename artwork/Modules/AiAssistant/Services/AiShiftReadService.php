@@ -7,6 +7,12 @@ use Artwork\Modules\AiAssistant\DTOs\AiAbsenceData;
 use Artwork\Modules\AiAssistant\DTOs\AiAbsenceListData;
 use Artwork\Modules\AiAssistant\DTOs\AiAvailabilityData;
 use Artwork\Modules\AiAssistant\DTOs\AiAvailabilityListData;
+use Artwork\Modules\AiAssistant\DTOs\AiEventShiftAssigneeData;
+use Artwork\Modules\AiAssistant\DTOs\AiEventShiftData;
+use Artwork\Modules\AiAssistant\DTOs\AiEventShiftQualificationData;
+use Artwork\Modules\AiAssistant\DTOs\AiEventShiftsData;
+use Artwork\Modules\AiAssistant\DTOs\AiEventShiftsEventData;
+use Artwork\Modules\AiAssistant\DTOs\AiEventShiftsSummaryData;
 use Artwork\Modules\AiAssistant\DTOs\AiPeriodData;
 use Artwork\Modules\AiAssistant\DTOs\AiRefData;
 use Artwork\Modules\AiAssistant\DTOs\AiScheduleData;
@@ -19,6 +25,7 @@ use Artwork\Modules\AiAssistant\DTOs\AiShiftPlanShiftData;
 use Artwork\Modules\AiAssistant\Support\AiText;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -101,6 +108,90 @@ class AiShiftReadService
             total: $total,
             limit: $limit,
             truncated: $total > $limit,
+        );
+    }
+
+    /**
+     * Schichten eines Termins mit Besetzung (ai-shift-planning, Erweiterung 2). Gelesen wird ueber
+     * `Shift::visibleFor()`; der Aufrufer hat „Schichtplan einsehen" bereits geprueft.
+     */
+    public function eventShifts(User $user, Event $event): AiEventShiftsData
+    {
+        /** @var Collection<int, Shift> $shifts */
+        $shifts = Shift::query()
+            ->visibleFor($user)
+            ->where('event_id', $event->id)
+            ->with(['craft', 'users', 'freelancer', 'serviceProvider'])
+            ->orderBy('start_date')
+            ->orderBy('start')
+            ->get();
+
+        $staffing = $this->staffingByShift($shifts->modelKeys());
+        $names = $this->qualificationNames();
+        $entries = [];
+        $totals = ['required' => 0, 'staffed' => 0, 'open' => 0];
+
+        foreach ($shifts as $shift) {
+            $interval = ShiftAssignmentPreflightService::resolveInterval(
+                $shift->start_date,
+                $shift->start,
+                $shift->end_date ?: $shift->start_date,
+                $shift->end,
+            );
+            $qualifications = [];
+
+            foreach ($staffing[$shift->id] ?? [] as $qualificationId => $counts) {
+                $open = max(0, $counts['required'] - $counts['staffed']);
+                $totals['required'] += $counts['required'];
+                $totals['staffed'] += min($counts['staffed'], $counts['required']);
+                $totals['open'] += $open;
+
+                $qualifications[] = new AiEventShiftQualificationData(
+                    id: $qualificationId,
+                    name: AiText::truncate($names[$qualificationId] ?? null),
+                    required: $counts['required'],
+                    staffed: $counts['staffed'],
+                    open: $open,
+                );
+            }
+
+            $entries[] = new AiEventShiftData(
+                id: $shift->id,
+                craft: AiRefData::make($shift->craft_id, $shift->craft?->name),
+                start: $this->iso($interval[0] ?? null),
+                end: $this->iso($interval[1] ?? null),
+                committed: (bool) $shift->is_committed,
+                qualifications: $qualifications,
+                assignees: array_map(
+                    static fn (AiShiftPlanAssigneeData $assignee): AiEventShiftAssigneeData
+                        => new AiEventShiftAssigneeData(
+                            name: $assignee->display_name,
+                            qualification: $assignee->qualification,
+                        ),
+                    $this->assignees($shift, $names)
+                ),
+            );
+        }
+
+        $timezone = (string) config('app.timezone');
+
+        return new AiEventShiftsData(
+            event: new AiEventShiftsEventData(
+                id: $event->id,
+                name: AiText::truncate($event->eventName ?: $event->name),
+                start: $event->start_time?->copy()->setTimezone($timezone)->toIso8601String(),
+                end: $event->end_time?->copy()->setTimezone($timezone)->toIso8601String(),
+                room: AiRefData::make($event->room_id, $event->room?->name),
+                project: AiRefData::make($event->project_id, $event->project?->name),
+            ),
+            shifts: $entries,
+            summary: new AiEventShiftsSummaryData(
+                shifts: count($entries),
+                required: $totals['required'],
+                staffed: $totals['staffed'],
+                open: $totals['open'],
+                fully_staffed: $totals['open'] === 0,
+            ),
         );
     }
 

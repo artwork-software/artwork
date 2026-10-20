@@ -8,10 +8,17 @@ use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventWriteApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiInventoryApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiLookupApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiPeopleApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiProjectApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiScenarioApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiScenarioFourApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiScenarioFourReadApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiShiftApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiShiftInsightsApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiShiftPlanningApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\JwksController;
 use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiWriteScope;
+use Artwork\Modules\AiAssistant\Services\AiPeopleService;
 use Artwork\Modules\Event\Http\Controllers\Api\EventApiController;
 use Artwork\Modules\Event\Http\Controllers\Api\EventStatusApiController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
@@ -104,6 +111,91 @@ Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:api-token
 
         Route::get('/ai/event-types', [AiLookupApiController::class, 'eventTypes'])
             ->name('api.v1.ai.event-types.index');
+
+        // Schichtplanung (ai-shift-planning): nur mit "Schichten planen", Gewerks-Scope des Planers.
+        // Der Vorschlag ist ein POST, schreibt aber nichts (Transaktion mit Rollback, ohne Events).
+        Route::get('/ai/people', [AiPeopleApiController::class, 'index'])
+            ->name('api.v1.ai.people.index');
+
+        Route::get('/ai/people/{type}/{id}/workload', [AiPeopleApiController::class, 'workload'])
+            ->whereIn('type', AiPeopleService::TYPES)
+            ->whereNumber('id')
+            ->name('api.v1.ai.people.workload');
+
+        Route::post('/ai/shift-plan/suggest', [AiShiftPlanningApiController::class, 'suggest'])
+            ->name('api.v1.ai.shift-plan.suggest');
+
+        Route::get('/ai/events/{event}/shifts', [AiShiftApiController::class, 'eventShifts'])
+            ->whereNumber('event')
+            ->name('api.v1.ai.events.shifts');
+
+        Route::get('/ai/shifts/open', [AiShiftInsightsApiController::class, 'openShifts'])
+            ->name('api.v1.ai.shifts.open');
+
+        Route::get('/ai/shifts/{shift}/candidates', [AiShiftInsightsApiController::class, 'candidates'])
+            ->whereNumber('shift')
+            ->name('api.v1.ai.shifts.candidates');
+
+        Route::get('/ai/shift-rule-violations', [AiShiftInsightsApiController::class, 'violations'])
+            ->name('api.v1.ai.shift-rule-violations.index');
+
+        Route::get('/ai/crafts', [AiShiftInsightsApiController::class, 'crafts'])
+            ->name('api.v1.ai.crafts.index');
+
+        Route::get('/ai/crafts/{craft}/capacity', [AiShiftInsightsApiController::class, 'capacity'])
+            ->whereNumber('craft')
+            ->name('api.v1.ai.crafts.capacity');
+
+        // Alltagsszenarien (ai-scenarios-3 S1–S7).
+        Route::get('/ai/day-overview', [AiScenarioApiController::class, 'dayOverview'])
+            ->name('api.v1.ai.day-overview');
+
+        Route::get('/ai/projects/{project}/budget-summary', [AiScenarioApiController::class, 'budgetSummary'])
+            ->whereNumber('project')
+            ->name('api.v1.ai.projects.budget-summary');
+
+        Route::post('/ai/shift-plan/staff-event', [AiScenarioApiController::class, 'staffEvent'])
+            ->name('api.v1.ai.shift-plan.staff-event');
+
+        Route::get('/ai/absences', [AiScenarioApiController::class, 'absences'])
+            ->name('api.v1.ai.absences.index');
+
+        Route::get('/ai/me/tasks', [AiScenarioApiController::class, 'myTasks'])
+            ->name('api.v1.ai.me.tasks');
+
+        Route::get('/ai/rooms/conflicts', [AiScenarioApiController::class, 'roomConflicts'])
+            ->name('api.v1.ai.rooms.conflicts');
+
+        Route::get('/ai/people/{type}/{id}/work-time', [AiScenarioApiController::class, 'workTime'])
+            ->whereIn('type', AiPeopleService::TYPES)
+            ->whereNumber('id')
+            ->name('api.v1.ai.people.work-time');
+
+        // Ausfall ersetzen — Vorschlag (ai-scenarios-4 S9), schreibt nichts.
+        Route::post('/ai/shift-plan/replacements', [AiScenarioFourApiController::class, 'replacements'])
+            ->name('api.v1.ai.shift-plan.replacements');
+
+        // Auswertungen und Lookups (ai-scenarios-4 S10/S13/S14–S18).
+        Route::post('/ai/people/common-free-slots', [AiScenarioFourReadApiController::class, 'commonFreeSlots'])
+            ->name('api.v1.ai.people.common-free-slots');
+
+        Route::get('/ai/contracts', [AiScenarioFourReadApiController::class, 'contracts'])
+            ->name('api.v1.ai.contracts.index');
+
+        Route::get('/ai/work-time/overview', [AiScenarioFourReadApiController::class, 'workTimeOverview'])
+            ->name('api.v1.ai.work-time.overview');
+
+        Route::get('/ai/rooms/utilization', [AiScenarioFourReadApiController::class, 'roomUtilization'])
+            ->name('api.v1.ai.rooms.utilization');
+
+        Route::get('/ai/checklists', [AiLookupApiController::class, 'checklists'])
+            ->name('api.v1.ai.checklists.index');
+
+        Route::get('/ai/qualifications', [AiLookupApiController::class, 'qualifications'])
+            ->name('api.v1.ai.qualifications.index');
+
+        Route::get('/ai/project-states', [AiLookupApiController::class, 'projectStates'])
+            ->name('api.v1.ai.project-states.index');
     });
 
     // Schreib-Endpunkte (Stufe C, Konzept W1). Statt CheckToken steht hier EnsureAiWriteScope:
@@ -119,6 +211,38 @@ Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:api-token
 
         Route::delete('/ai/events/batch', [AiEventWriteApiController::class, 'destroyBatch'])
             ->name('api.v1.ai.events.batch.destroy');
+
+        Route::post('/ai/shift-assignments', [AiShiftPlanningApiController::class, 'assign'])
+            ->name('api.v1.ai.shift-assignments.store');
+
+        Route::post('/ai/shift-assignments/remove', [AiShiftPlanningApiController::class, 'unassign'])
+            ->name('api.v1.ai.shift-assignments.remove');
+
+        Route::post('/ai/shift-assignments/bulk', [AiScenarioApiController::class, 'bulkAssign'])
+            ->name('api.v1.ai.shift-assignments.bulk');
+
+        Route::patch('/ai/tasks/{task}', [AiScenarioApiController::class, 'updateTask'])
+            ->whereNumber('task')
+            ->name('api.v1.ai.tasks.update');
+
+        // ai-scenarios-4 S9–S13.
+        Route::post('/ai/shift-assignments/replace', [AiScenarioFourApiController::class, 'replace'])
+            ->name('api.v1.ai.shift-assignments.replace');
+
+        Route::post('/ai/tasks', [AiScenarioFourApiController::class, 'storeTask'])
+            ->name('api.v1.ai.tasks.store');
+
+        Route::post('/ai/absences', [AiScenarioFourApiController::class, 'storeAbsence'])
+            ->name('api.v1.ai.absences.store');
+
+        Route::patch('/ai/events/batch', [AiScenarioFourApiController::class, 'updateEvents'])
+            ->name('api.v1.ai.events.batch.update');
+
+        Route::post('/ai/shifts', [AiScenarioFourApiController::class, 'storeShifts'])
+            ->name('api.v1.ai.shifts.store');
+
+        Route::post('/ai/shifts/copy', [AiScenarioFourApiController::class, 'copyShifts'])
+            ->name('api.v1.ai.shifts.copy');
     });
 
     // Die bestaetigte Aktion selbst — artwork-ai holt sie im Confirm-Turn (W2 §4). Braucht ein

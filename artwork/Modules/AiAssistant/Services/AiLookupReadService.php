@@ -2,16 +2,26 @@
 
 namespace Artwork\Modules\AiAssistant\Services;
 
+use Artwork\Modules\AiAssistant\DTOs\AiChecklistData;
+use Artwork\Modules\AiAssistant\DTOs\AiChecklistListData;
 use Artwork\Modules\AiAssistant\DTOs\AiEventTypeData;
 use Artwork\Modules\AiAssistant\DTOs\AiEventTypeListData;
+use Artwork\Modules\AiAssistant\DTOs\AiProjectStateListData;
+use Artwork\Modules\AiAssistant\DTOs\AiQualificationListData;
 use Artwork\Modules\AiAssistant\DTOs\AiRefData;
 use Artwork\Modules\AiAssistant\DTOs\AiRoomData;
 use Artwork\Modules\AiAssistant\DTOs\AiRoomListData;
 use Artwork\Modules\AiAssistant\Support\AiText;
+use Artwork\Modules\AiAssistant\Support\WebGuardScope;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Raeume und Terminarten nachschlagen (core-api-lookups; Konzept B1 §3, W1 §1).
@@ -95,6 +105,101 @@ class AiLookupReadService
             limit: $limit,
             truncated: $total > $limit,
         );
+    }
+
+    /**
+     * Checklisten, in die die Person Aufgaben legen kann (ai-scenarios-4 S10, Lookup).
+     *
+     * Vorauswahl: eigene Listen, mit der Person geteilte, Listen mit einer ihr zugewiesenen Aufgabe und
+     * Listen in Projekten, die sie sieht (`Project::visibleFor`); danach `ChecklistPolicy::view` im
+     * Guard `web` (inkl. Tab-Sichtbarkeit). Fremde private Listen anderer Personen ohne Projekt
+     * erscheinen damit auch fuer Inhaber:innen globaler Checklisten-Rechte nicht — das Lookup dient dem
+     * Anlegen eigener Aufgaben.
+     */
+    public function checklists(User $user, ?int $projectId, ?string $search, ?int $limit): AiChecklistListData
+    {
+        $limit = $this->limit($limit);
+
+        $candidates = Checklist::query()
+            ->where(static function (Builder $access) use ($user): void {
+                $access->where('user_id', $user->id)
+                    ->orWhereHas('users', static fn (Builder $users) => $users->where('users.id', $user->id))
+                    ->orWhereHas(
+                        'tasks.task_users',
+                        static fn (Builder $users) => $users->where('users.id', $user->id)
+                    )
+                    ->orWhereIn('project_id', Project::query()->visibleFor($user)->select('projects.id'));
+            })
+            ->when($projectId !== null, static fn (Builder $builder) => $builder->where('project_id', $projectId))
+            ->when(
+                $search !== null,
+                fn (Builder $builder) => $builder->where('name', 'like', $this->contains((string) $search))
+            )
+            ->with(['project', 'users', 'tasks.task_users'])
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get()
+            ->filter(static fn (Checklist $checklist): bool => WebGuardScope::run(
+                static fn (): bool => Gate::forUser($user)->allows('view', $checklist)
+            ))
+            ->values();
+
+        return new AiChecklistListData(
+            data: $candidates->take($limit)->map(static fn (Checklist $checklist) => new AiChecklistData(
+                id: (int) $checklist->id,
+                name: AiText::truncate($checklist->name),
+                project: AiRefData::make($checklist->project_id, $checklist->project?->name),
+                private: (bool) $checklist->private,
+            ))->all(),
+            total: $candidates->count(),
+            limit: $limit,
+            truncated: $candidates->count() > $limit,
+        );
+    }
+
+    /**
+     * Funktionen (Schicht-Qualifikationen) nachschlagen (ai-scenarios-4 S13).
+     */
+    public function qualifications(?string $search, ?int $limit): AiQualificationListData
+    {
+        [$data, $total, $limit] = $this->named(ShiftQualification::query(), $search, $limit);
+
+        return new AiQualificationListData($data, $total, $limit, $total > $limit);
+    }
+
+    /**
+     * Projektstatus nachschlagen (ai-scenarios-4 S18).
+     */
+    public function projectStates(?string $search, ?int $limit): AiProjectStateListData
+    {
+        [$data, $total, $limit] = $this->named(ProjectState::query(), $search, $limit);
+
+        return new AiProjectStateListData($data, $total, $limit, $total > $limit);
+    }
+
+    /**
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     * @param Builder<TModel> $query
+     * @return array{0: list<AiRefData>, 1: int, 2: int}
+     */
+    private function named(Builder $query, ?string $search, ?int $limit): array
+    {
+        $limit = $this->limit($limit);
+        $query->when(
+            $search !== null,
+            fn (Builder $builder) => $builder->where('name', 'like', $this->contains((string) $search))
+        );
+        $total = (clone $query)->count();
+
+        $data = $query->orderBy('name')->orderBy('id')->limit($limit)->get(['id', 'name'])
+            ->map(static fn (\Illuminate\Database\Eloquent\Model $row): AiRefData => new AiRefData(
+                (int) $row->getKey(),
+                AiText::truncate((string) $row->getAttribute('name'))
+            ))
+            ->values()
+            ->all();
+
+        return [$data, $total, $limit];
     }
 
     /**

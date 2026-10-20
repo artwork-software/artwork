@@ -14,6 +14,10 @@ use Artwork\Modules\User\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\AiAssistant\Support\WebGuardScope;
+use Illuminate\Support\Facades\Gate;
+use Artwork\Modules\AiAssistant\DTOs\AiRefData;
 
 /**
  * Lesezugriffe auf Projekte fuer artwork-ai (core-api-context-projects; Konzept B1 §3–4).
@@ -27,7 +31,7 @@ class AiProjectReadService
     private const NEXT_EVENTS = 5;
 
     /**
-     * @param array{q?: string|null, state?: int|null, from?: string|null, to?: string|null, limit?: int|null} $filters
+     * @param array<string, mixed> $filters
      */
     public function search(User $user, array $filters): AiProjectListData
     {
@@ -50,6 +54,8 @@ class AiProjectReadService
                 ($filters['state'] ?? null) !== null,
                 fn (Builder $builder) => $builder->where('state', $filters['state'])
             );
+
+        $this->applyScenarioFourFilters($query, $filters);
 
         $periodFilter = $this->periodFilter($filters);
 
@@ -76,6 +82,13 @@ class AiProjectReadService
                 period: $periods[$project->id] ?? new AiPeriodData(null, null),
                 room_count: $counts[$project->id]['rooms'] ?? 0,
                 event_count: $counts[$project->id]['events'] ?? 0,
+                state_id: ($project->getAttributes()['state'] ?? null) === null
+                    ? null
+                    : (int) $project->getAttributes()['state'],
+                budget_deadline: $project->budget_deadline
+                    ? CarbonImmutable::parse($project->budget_deadline)->toDateString()
+                    : null,
+                marked_as_done: (bool) $project->marked_as_done,
             ))->all(),
             total: $total,
             limit: $limit,
@@ -83,7 +96,7 @@ class AiProjectReadService
         );
     }
 
-    public function detail(Project $project): AiProjectDetailData
+    public function detail(Project $project, ?User $user = null): AiProjectDetailData
     {
         $project->loadMissing('status');
         $counts = $this->eventAndRoomCounts([$project->id]);
@@ -106,7 +119,38 @@ class AiProjectReadService
             event_count: $counts[$project->id]['events'] ?? 0,
             room_count: $counts[$project->id]['rooms'] ?? 0,
             next_events: $nextEvents->map(AiEventBriefData::fromModel(...))->all(),
+            managers: $project->managerUsers()->get()->map(
+                static fn (User $manager): AiRefData => new AiRefData(
+                    (int) $manager->id,
+                    AiText::truncate(trim($manager->getFullNameAttribute()))
+                )
+            )->values()->all(),
+            budget_deadline: $project->budget_deadline
+                ? CarbonImmutable::parse($project->budget_deadline)->toDateString()
+                : null,
+            marked_as_done: (bool) $project->marked_as_done,
+            is_group: (bool) $project->is_group,
+            open_tasks: $user === null ? 0 : $this->visibleOpenTasks($project, $user),
         );
+    }
+
+    /**
+     * Offene Aufgaben in Checklisten des Projekts, die die Person sehen darf (`ChecklistPolicy::view`
+     * im Guard `web`, inkl. Tab-Sichtbarkeit) — ai-scenarios-3 S8.
+     */
+    private function visibleOpenTasks(Project $project, User $user): int
+    {
+        $checklists = Checklist::query()
+            ->where('project_id', $project->id)
+            ->withCount(['tasks' => static fn ($query) => $query->where('done', false)])
+            ->with(['project', 'users', 'tasks.task_users'])
+            ->get();
+
+        return (int) $checklists
+            ->filter(static fn (Checklist $checklist): bool => WebGuardScope::run(
+                static fn (): bool => Gate::forUser($user)->allows('view', $checklist)
+            ))
+            ->sum('tasks_count');
     }
 
     /**
@@ -179,6 +223,39 @@ class AiProjectReadService
                 (int) $row->project_id => ['events' => (int) $row->event_count, 'rooms' => (int) $row->room_count],
             ])
             ->all();
+    }
+
+    /**
+     * Filter aus ai-scenarios-4 S18 (rein additiv): Budget-Deadline von/bis (`Y-m-d`, einzeln oder
+     * gemeinsam), Status (`state_id`, gleichbedeutend mit dem aelteren `state`), erledigt
+     * (`marked_as_done`) und Projektleitung (`manager_id`, Pivot `is_manager`).
+     *
+     * @param Builder<Project> $query
+     * @param array<string, mixed> $filters
+     */
+    private function applyScenarioFourFilters(Builder $query, array $filters): void
+    {
+        $from = $filters['budget_deadline_from'] ?? null;
+        $to = $filters['budget_deadline_to'] ?? null;
+        $stateId = $filters['state_id'] ?? null;
+        $done = $filters['marked_as_done'] ?? null;
+        $managerId = $filters['manager_id'] ?? null;
+
+        $query
+            ->when($from !== null, static fn (Builder $builder) => $builder->whereNotNull('budget_deadline')
+                ->whereDate('budget_deadline', '>=', (string) $from))
+            ->when($to !== null, static fn (Builder $builder) => $builder->whereNotNull('budget_deadline')
+                ->whereDate('budget_deadline', '<=', (string) $to))
+            ->when($stateId !== null, static fn (Builder $builder) => $builder->where('state', (int) $stateId))
+            ->when($done !== null, static fn (Builder $builder) => $builder->where(
+                static fn (Builder $sub) => (bool) $done
+                    ? $sub->where('marked_as_done', true)
+                    : $sub->where('marked_as_done', false)->orWhereNull('marked_as_done')
+            ))
+            ->when($managerId !== null, static fn (Builder $builder) => $builder->whereHas(
+                'managerUsers',
+                static fn (Builder $managers) => $managers->where('users.id', (int) $managerId)
+            ));
     }
 
     /**

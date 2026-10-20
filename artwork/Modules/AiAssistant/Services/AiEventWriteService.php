@@ -20,6 +20,7 @@ use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -47,6 +48,8 @@ class AiEventWriteService
     public const TOOL_UPDATE = 'update_event';
 
     public const TOOL_DELETE = 'delete_events';
+
+    public const TOOL_UPDATE_BATCH = 'update_events';
 
     public function __construct(
         private readonly EventService $eventService,
@@ -135,12 +138,15 @@ class AiEventWriteService
         abort_if($event === null, Response::HTTP_NOT_FOUND);
 
         $conflicts = $this->policyConflicts($user, $event, 'update');
+        $this->assertEndDayNotBeforeStart($event, $changes);
         $this->assertExecutable($user, $intent, self::TOOL_UPDATE, $conflicts);
+        $originalEndDay = CarbonImmutable::parse($event->end_time)->toDateString();
 
         // getRawOriginal(), nicht getOriginal(): letzteres wendet die Casts an und liefert Carbon-
         // Objekte, die als JSON zu ISO-Strings werden — MySQL nimmt die beim Zurueckschreiben
         // nicht an. Roh gespeichert passt der Zustand wieder in die Spalten (core-undo).
         $beforeState = $event->getRawOriginal();
+        $shiftStates = $this->shiftStates([$event]);
 
         return $this->perform(
             $user,
@@ -155,19 +161,333 @@ class AiEventWriteService
                 fn (Event $updated): AiWriteItemData => $this->itemFor(
                     $updated,
                     'update',
-                    array_merge($conflicts, $this->collisionConflicts($updated))
+                    array_merge(
+                        $conflicts,
+                        $this->collisionConflicts($updated),
+                        $this->shiftHints($updated, $originalEndDay)
+                    )
                 ),
                 $events
             ),
-            static fn (array $events): array => array_map(
-                static fn (Event $updated): array => [
-                    'model_type' => Event::class,
-                    'model_id' => $updated->id,
-                    'action' => 'update',
-                    'before_state' => $beforeState,
-                ],
-                $events
+            fn (array $events): array => array_merge(
+                array_map(
+                    static fn (Event $updated): array => [
+                        'model_type' => Event::class,
+                        'model_id' => $updated->id,
+                        'action' => 'update',
+                        'before_state' => $beforeState,
+                    ],
+                    $events
+                ),
+                $this->movedShiftItems($shiftStates)
             ),
+        );
+    }
+
+    /**
+     * Termine gesammelt verschieben (ai-scenarios-4 S12, Werkzeug `update_events`): je Termin derselbe
+     * Weg und dieselben Rechte wie `update()` (`updateBulkEvent()` der Oberflaeche, Kollisionen im
+     * Zielraum), alles in **einer** Transaktion und einem Batch.
+     *
+     * Der Bulk-Service der Oberflaeche setzt beim Verschieben das **Datum** der Schichten am Termin
+     * auf den neuen Starttag (Uhrzeiten bleiben). Die Vorschau sagt das (`shifts_moved`) bzw. weist
+     * darauf hin, dass Schichten bei reiner Zeitverschiebung nicht mitgehen (`shifts_not_moved`).
+     * Undo setzt Termine **und** mitverschobene Schichten zurueck.
+     *
+     * @param list<int> $eventIds
+     */
+    public function updateBatch(
+        User $user,
+        array $eventIds,
+        ?int $shiftMinutes,
+        ?string $moveToDay,
+        ?int $roomId,
+        AiWriteIntent $intent
+    ): AiWritePreviewData|AiWriteResultData {
+        $events = Event::query()
+            ->visibleFor($user)
+            ->whereIn('id', $eventIds)
+            ->with(['room', 'shifts'])
+            ->orderBy('start_time')
+            ->get();
+        abort_if($events->count() !== count($eventIds), Response::HTTP_NOT_FOUND);
+
+        if ($roomId !== null) {
+            abort_if(Room::query()->whereKey($roomId)->doesntExist(), Response::HTTP_NOT_FOUND);
+        }
+
+        $conflicts = [];
+        $changes = [];
+        $before = [];
+
+        foreach ($events as $event) {
+            $conflicts[$event->id] = $this->policyConflicts($user, $event, 'update');
+            $changes[$event->id] = $this->movedChanges($event, $shiftMinutes, $moveToDay, $roomId);
+            $before[$event->id] = [
+                'state' => $event->getRawOriginal(),
+                'label' => $this->whenLabel($event),
+            ];
+
+            if ($changes[$event->id] === null) {
+                $conflicts[$event->id][] = new AiWriteConflictData(
+                    AiWriteConflictData::INVALID_MOVE,
+                    'Ganztaegige Termine lassen sich nur um ganze Tage verschieben.',
+                    AiRefData::make($event->id, AiText::truncate($event->eventName ?: $event->name))
+                );
+            }
+        }
+
+        $this->assertBatchExecutable($user, $intent, $conflicts);
+        $shiftStates = $this->shiftStates($events->all());
+
+        return $this->perform(
+            $user,
+            $intent,
+            self::TOOL_UPDATE_BATCH,
+            function () use ($events, $changes): array {
+                $updated = [];
+
+                foreach ($events as $event) {
+                    if ($changes[$event->id] !== null) {
+                        $this->eventService->updateBulkEvent(
+                            collect($this->updatePayload($event, $changes[$event->id])),
+                            $event
+                        );
+                    }
+                    $updated[] = $event->refresh();
+                }
+
+                return $updated;
+            },
+            fn (array $updated): array => array_map(
+                fn (Event $event): AiWriteItemData => $this->movedItem(
+                    $event,
+                    $before[$event->id]['label'],
+                    array_merge(
+                        $conflicts[$event->id],
+                        $this->collisionConflicts($event),
+                        $this->shiftMoveHints($event, $shiftStates)
+                    )
+                ),
+                $updated
+            ),
+            fn (array $updated): array => array_merge(
+                array_map(
+                    static fn (Event $event): array => [
+                        'model_type' => Event::class,
+                        'model_id' => $event->id,
+                        'action' => 'update',
+                        'before_state' => $before[$event->id]['state'],
+                    ],
+                    $updated
+                ),
+                $this->movedShiftItems($shiftStates)
+            ),
+        );
+    }
+
+    /**
+     * Neue Werte fuer `updatePayload()`; `null`, wenn ein ganztaegiger Termin um keinen ganzen Tag
+     * verschoben werden soll.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function movedChanges(Event $event, ?int $shiftMinutes, ?string $moveToDay, ?int $roomId): ?array
+    {
+        $timezone = (string) config('app.timezone');
+        $start = CarbonImmutable::parse($event->start_time)->setTimezone($timezone);
+        $end = CarbonImmutable::parse($event->end_time)->setTimezone($timezone);
+        $allDay = (bool) $event->allDay;
+
+        if ($moveToDay !== null) {
+            $days = (int) $start->startOfDay()->diffInDays(CarbonImmutable::parse($moveToDay, $timezone), false);
+            $start = $start->addDays($days);
+            $end = $end->addDays($days);
+        }
+
+        if ($shiftMinutes !== null) {
+            if ($allDay && $shiftMinutes % 1440 !== 0) {
+                return null;
+            }
+            $start = $start->addMinutes($shiftMinutes);
+            $end = $end->addMinutes($shiftMinutes);
+        }
+
+        $changes = $roomId === null ? [] : ['room_id' => $roomId];
+
+        if ($moveToDay === null && $shiftMinutes === null) {
+            return $changes;
+        }
+
+        $changes['day'] = $start->toDateString();
+        if (!$allDay) {
+            $changes['start_time'] = $start->format('H:i');
+            $changes['end_time'] = $end->format('H:i');
+        }
+        if ($end->toDateString() !== $start->toDateString()) {
+            $changes['end_day'] = $end->toDateString();
+        }
+
+        return $changes;
+    }
+
+    /**
+     * Schichten der Termine mit ihrem Rohzustand vorher (fuer Undo und Hinweise).
+     *
+     * @param list<Event> $events
+     * @return array<int, array{event_id: int, state: array<string, mixed>}>
+     */
+    private function shiftStates(array $events): array
+    {
+        $states = [];
+
+        foreach ($events as $event) {
+            foreach (Shift::query()->where('event_id', $event->id)->get() as $shift) {
+                $states[(int) $shift->id] = ['event_id' => (int) $event->id, 'state' => $shift->getRawOriginal()];
+            }
+        }
+
+        return $states;
+    }
+
+    /**
+     * Batch-Items fuer Schichten, deren Datum der Bulk-Service mitverschoben hat.
+     *
+     * @param array<int, array{event_id: int, state: array<string, mixed>}> $shiftStates
+     * @return list<array{model_type: string, model_id: int, action: string, before_state: array<string, mixed>}>
+     */
+    private function movedShiftItems(array $shiftStates): array
+    {
+        $items = [];
+
+        foreach ($this->movedShiftIds($shiftStates) as $shiftId) {
+            $items[] = [
+                'model_type' => Shift::class,
+                'model_id' => $shiftId,
+                'action' => 'update',
+                'before_state' => $shiftStates[$shiftId]['state'],
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param array<int, array{event_id: int, state: array<string, mixed>}> $shiftStates
+     * @return list<int>
+     */
+    private function movedShiftIds(array $shiftStates, ?int $eventId = null): array
+    {
+        $moved = [];
+
+        foreach (Shift::query()->whereIn('id', array_keys($shiftStates))->get() as $shift) {
+            $state = $shiftStates[(int) $shift->id];
+            if ($eventId !== null && $state['event_id'] !== $eventId) {
+                continue;
+            }
+
+            $now = $shift->getRawOriginal();
+            if (
+                (string) ($now['start_date'] ?? '') !== (string) ($state['state']['start_date'] ?? '')
+                || (string) ($now['end_date'] ?? '') !== (string) ($state['state']['end_date'] ?? '')
+            ) {
+                $moved[] = (int) $shift->id;
+            }
+        }
+
+        return $moved;
+    }
+
+    /**
+     * @param array<int, array{event_id: int, state: array<string, mixed>}> $shiftStates
+     * @return list<AiWriteConflictData>
+     */
+    private function shiftMoveHints(Event $event, array $shiftStates): array
+    {
+        $count = count(array_filter(
+            $shiftStates,
+            static fn (array $state): bool => $state['event_id'] === (int) $event->id
+        ));
+
+        if ($count === 0) {
+            return [];
+        }
+
+        $moved = count($this->movedShiftIds($shiftStates, (int) $event->id));
+        $ref = AiRefData::make($event->id, AiText::truncate($event->eventName ?: $event->name));
+
+        return [$moved > 0
+            ? new AiWriteConflictData(
+                AiWriteConflictData::SHIFTS_MOVED,
+                "{$moved} Schicht(en) wandern auf den neuen Tag mit (nur das Datum, die Uhrzeiten bleiben).",
+                $ref
+            )
+            : new AiWriteConflictData(
+                AiWriteConflictData::SHIFTS_NOT_MOVED,
+                "{$count} Schicht(en) am Termin werden nicht mitverschoben.",
+                $ref
+            )];
+    }
+
+    private function whenLabel(Event $event): string
+    {
+        if ($event->start_time === null) {
+            return '';
+        }
+
+        $timezone = (string) config('app.timezone');
+        $start = CarbonImmutable::parse($event->start_time)->setTimezone($timezone);
+
+        return (bool) $event->allDay
+            ? $start->format('d.m.Y') . ' (ganztaegig)'
+            : $start->format('d.m.Y H:i') . '–'
+                . CarbonImmutable::parse($event->end_time)->setTimezone($timezone)->format('H:i');
+    }
+
+    /**
+     * @param list<AiWriteConflictData> $conflicts
+     */
+    private function movedItem(Event $event, string $oldLabel, array $conflicts): AiWriteItemData
+    {
+        $item = $this->itemFor($event, 'update', $conflicts);
+        $room = $event->room?->name;
+
+        return new AiWriteItemData(
+            action: 'update',
+            id: $item->id,
+            label: AiText::truncate(
+                ($event->eventName ?: $event->name) . ': ' . $oldLabel . ' → ' . $this->whenLabel($event)
+                . ($room === null ? '' : ' (' . $room . ')')
+            ),
+            start: $item->start,
+            end: $item->end,
+            room: AiRefData::make($event->room_id, $room),
+            conflicts: $item->conflicts,
+        );
+    }
+
+    /**
+     * @param array<int, list<AiWriteConflictData>> $conflicts
+     */
+    private function assertBatchExecutable(User $user, AiWriteIntent $intent, array $conflicts): void
+    {
+        if ($intent->dryRun) {
+            return;
+        }
+
+        $all = array_merge([], ...array_values($conflicts));
+        $types = array_column(array_map(static fn (AiWriteConflictData $conflict): array => [
+            'type' => $conflict->type,
+        ], $all), 'type');
+
+        abort_if(in_array(AiWriteConflictData::MISSING_PERMISSION, $types, true), Response::HTTP_FORBIDDEN);
+
+        $this->actionGuard->assertExecutable($user, (string) $intent->actionId, self::TOOL_UPDATE_BATCH, $intent->args);
+
+        abort_if(
+            in_array(AiWriteConflictData::INVALID_MOVE, $types, true),
+            Response::HTTP_UNPROCESSABLE_ENTITY,
+            'Ganztaegige Termine lassen sich nur um ganze Tage verschieben.'
         );
     }
 
@@ -371,14 +691,85 @@ class AiEventWriteService
      */
     private function updatePayload(Event $event, array $changes): array
     {
+        $day = $changes['day'] ?? CarbonImmutable::parse($event->start_time)->toDateString();
+
         return [
             'name' => $changes['name'] ?? ($event->eventName ?: $event->name),
-            'day' => $changes['day'] ?? CarbonImmutable::parse($event->start_time)->toDateString(),
+            'day' => $day,
             ...$this->updateTimes($event, $changes),
+            'end_day' => $this->endDay($event, $changes, $day),
             'type' => ['id' => $changes['type_id'] ?? $event->event_type_id],
             'room' => ['id' => $changes['room_id'] ?? $event->room_id],
             'is_planning' => (bool) $event->is_planning,
         ];
+    }
+
+    /**
+     * Enddatum fuer den Bulk-Service (`updateBulkEvent()` kennt `end_day` fuer mehrtaegige Termine).
+     *
+     * Ohne `end_day` im Aufruf behaelt ein mehrtaegiger Termin seine Laenge in Tagen (auch wenn er
+     * verschoben wird) — der Bulk-Service machte sonst aus jeder Aenderung einen eintaegigen Termin.
+     * Eintaegige Termine bekommen kein `end_day` (bisheriges Verhalten; Mitternachtstermine regelt
+     * `processEventTimes()`).
+     *
+     * @param array<string, mixed> $changes
+     */
+    private function endDay(Event $event, array $changes, string $day): ?string
+    {
+        if (isset($changes['end_day'])) {
+            return (string) $changes['end_day'];
+        }
+
+        $start = CarbonImmutable::parse($event->start_time)->startOfDay();
+        $end = CarbonImmutable::parse($event->end_time);
+        $spanDays = (int) $start->diffInDays($end->startOfDay());
+        $startTime = CarbonImmutable::parse($event->start_time)->format('H:i');
+        $overnight = $spanDays === 1 && $end->format('H:i') <= $startTime;
+
+        if ($spanDays < 1 || $overnight) {
+            return null;
+        }
+
+        return CarbonImmutable::parse($day)->addDays($spanDays)->toDateString();
+    }
+
+    /**
+     * @param array<string, mixed> $changes
+     */
+    private function assertEndDayNotBeforeStart(Event $event, array $changes): void
+    {
+        if (!isset($changes['end_day'])) {
+            return;
+        }
+
+        $day = $changes['day'] ?? CarbonImmutable::parse($event->start_time)->toDateString();
+
+        abort_if(
+            (string) $changes['end_day'] < (string) $day,
+            Response::HTTP_UNPROCESSABLE_ENTITY,
+            'end_day darf nicht vor dem Starttag liegen.'
+        );
+    }
+
+    /**
+     * Hinweis, wenn sich das Enddatum eines Termins mit Schichten aendert: die Schichten werden nicht
+     * automatisch verlaengert (ai-shift-planning, Erweiterung 3).
+     *
+     * @return list<AiWriteConflictData>
+     */
+    private function shiftHints(Event $event, string $originalEndDay): array
+    {
+        $newEndDay = CarbonImmutable::parse($event->end_time)->toDateString();
+
+        if ($newEndDay === $originalEndDay || !$event->shifts()->exists()) {
+            return [];
+        }
+
+        return [new AiWriteConflictData(
+            AiWriteConflictData::SHIFTS_NOT_EXTENDED,
+            'Der Termin endet jetzt an einem anderen Tag; seine Schichten werden nicht automatisch angepasst.',
+            AiRefData::make($event->id, AiText::truncate($event->eventName ?: $event->name))
+        )];
     }
 
     /**

@@ -23,6 +23,7 @@ use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Repositories\ShiftWorkerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
@@ -695,7 +696,10 @@ class ShiftWorkerService
         }
 
         if ($worker instanceof User) {
-            broadcast(new ShiftAssigned($worker, $shift));
+            // SafeBroadcast: in einer offenen Transaktion erst nach dem Commit (KI-Zuweisung bricht bei
+            // einem Regelverstoss noch ab), und ein nicht erreichbarer WebSocket-Server macht die schon
+            // gespeicherte Zuweisung nicht zu einer 500.
+            SafeBroadcast::send(new ShiftAssigned($worker, $shift));
         }
     }
 

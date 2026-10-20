@@ -11,6 +11,9 @@ namespace Artwork\Modules\AiAssistant\Http\Requests;
  * `all_day` (core-api-lookups) hat drei Zustaende: `true` macht den Termin ganztaegig, `false`
  * nimmt ihm diese Eigenschaft, und ohne das Feld bleibt sie, wie sie ist. Es faellt deshalb nicht
  * unter das `array_filter` in `changes()`.
+ *
+ * `end_day` (ai-shift-planning, Erweiterung 3) macht den Termin mehrtaegig; dass es nicht vor `day`
+ * bzw. dem Starttag liegt, prueft `AiEventWriteService` (422).
  */
 class UpdateAiEventRequest extends AiWriteRequest
 {
@@ -27,6 +30,9 @@ class UpdateAiEventRequest extends AiWriteRequest
             'room_id' => ['nullable', 'integer'],
             'type_id' => ['nullable', 'integer'],
             'all_day' => ['nullable', 'boolean'],
+            // Mehrtaegige Termine (ai-shift-planning, Erweiterung 3): das Ende liegt an `end_day` um
+            // `end_time`. `>= day` bzw. Starttag prueft `AiEventWriteService` (422).
+            'end_day' => ['nullable', 'date_format:Y-m-d'],
         ]);
     }
 
@@ -41,6 +47,7 @@ class UpdateAiEventRequest extends AiWriteRequest
                 'day' => $this->validated('day'),
                 'start_time' => $this->validated('start_time'),
                 'end_time' => $this->validated('end_time'),
+                'end_day' => $this->validated('end_day'),
                 'room_id' => $this->validated('room_id'),
                 'type_id' => $this->validated('type_id'),
             ],

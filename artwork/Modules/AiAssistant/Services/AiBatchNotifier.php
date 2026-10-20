@@ -9,6 +9,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabService;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -59,8 +60,10 @@ class AiBatchNotifier
         }
 
         // Ein payloadloser Refresh fuer den ganzen Batch statt eines Broadcasts je Termin (W4 §2).
-        // Dasselbe Muster wie `EventService::deleteAll()`.
-        broadcast(new OccupancyUpdated())->toOthers();
+        // Dasselbe Muster wie `EventService::deleteAll()`, aber ueber `SafeBroadcast`: ein nicht
+        // erreichbarer WebSocket-Server macht die bereits gespeicherte Aktion sonst zu einer 500,
+        // und in einer offenen Transaktion wird erst nach dem Commit gesendet (ai-shift-planning, 6).
+        SafeBroadcast::send(new OccupancyUpdated(), true);
     }
 
     /**

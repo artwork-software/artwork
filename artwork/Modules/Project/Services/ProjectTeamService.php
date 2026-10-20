@@ -6,8 +6,10 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Events\ProjectTeamUpdated;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectUserPivot;
 use Artwork\Modules\User\Models\User;
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
@@ -38,6 +40,48 @@ class ProjectTeamService
     {
         if (!empty($pivot['is_manager'])) {
             $pivot['can_write'] = true;
+        }
+
+        return $pivot;
+    }
+
+    /**
+     * Budget- und Löschrecht im Projekt vergeben nur Projektleitung, Ersteller:in und Personen mit
+     * den passenden globalen Rechten (Admins über Gate::before). Projektleitung bekommt nur, wer
+     * „Projekte verwalten“ hat – wie im Team-Dropdown. Unzulässige Änderungen behalten den
+     * gespeicherten Wert; neue Mitglieder starten ohne diese Rechte.
+     *
+     * @param array<string, mixed> $pivot
+     * @return array<string, mixed>
+     */
+    public function restrictPrivilegedRights(
+        Project $project,
+        User $actor,
+        int $memberId,
+        array $pivot,
+        ?ProjectUserPivot $current
+    ): array {
+        $isLeadOrCreator = $project->user_id === $actor->id
+            || $project->users()->whereKey($actor->id)->wherePivot('is_manager', true)->exists();
+        $mayGrant = [
+            'access_budget' => $isLeadOrCreator
+                || $actor->canAny([
+                    PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
+                    PermissionEnum::PROJECT_MANAGEMENT->value,
+                ]),
+            'delete_permission' => $isLeadOrCreator
+                || $actor->canAny([PermissionEnum::PROJECT_DELETE->value, PermissionEnum::PROJECT_MANAGEMENT->value]),
+        ];
+
+        foreach ($mayGrant as $right => $allowed) {
+            if (!$allowed && array_key_exists($right, $pivot)) {
+                $pivot[$right] = (bool) ($current?->getAttribute($right) ?? false);
+            }
+        }
+
+        $becomesManager = !empty($pivot['is_manager']) && !$current?->getAttribute('is_manager');
+        if ($becomesManager && !User::query()->find($memberId)?->can(PermissionEnum::PROJECT_MANAGEMENT->value)) {
+            $pivot['is_manager'] = false;
         }
 
         return $pivot;

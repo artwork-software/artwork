@@ -15,9 +15,10 @@
 // um, so dass auch dort nur die tatsaechlich benutzten Module im Graph landen.
 
 import { defineComponent, h, shallowRef } from 'vue'
-import { FALLBACK_SLUG, toSlug } from '@/Composeables/tablerIconNames'
+import { FALLBACK_SLUG, safeSlug, toSlug } from '@/Composeables/tablerIconNames'
+import { parseSvgShapes } from '@/Composeables/tablerSvgShapes'
 
-export { ALIASES, FALLBACK_SLUG, slugFromExportName, toSlug, toExportName, toDisplayName } from '@/Composeables/tablerIconNames'
+export { ALIASES, FALLBACK_SLUG, safeSlug, slugFromExportName, toSlug, toExportName, toDisplayName } from '@/Composeables/tablerIconNames'
 
 const BASE = '/build/icons/tabler'
 
@@ -25,22 +26,13 @@ const svgCache = new Map()
 const compCache = new Map()
 let namesPromise = null
 
-function parseSvg(text) {
-    const viewBox = text.match(/viewBox="([^"]+)"/)?.[1] ?? '0 0 24 24'
-    const inner = text
-        .replace(/^[\s\S]*?<svg[^>]*>/, '')
-        .replace(/<\/svg>\s*$/, '')
-        .trim()
-
-    return { viewBox, inner }
-}
-
-function fetchSvg(slug) {
+function fetchSvg(rawSlug) {
+    const slug = safeSlug(rawSlug)
     if (svgCache.has(slug)) return svgCache.get(slug)
 
     const promise = fetch(`${BASE}/${slug}.svg`)
         .then(r => (r.ok ? r.text() : null))
-        .then(text => (text ? parseSvg(text) : null))
+        .then(text => (text ? parseSvgShapes(text) : null))
         .catch(() => null)
 
     svgCache.set(slug, promise)
@@ -87,8 +79,7 @@ export function iconComponent(nameLike) {
                 'stroke-linejoin': 'round',
                 // Aufrufer gewinnt: class, stroke-width, style, aria-* ueberschreiben die Defaults
                 ...attrs,
-                innerHTML: data.value?.inner ?? '',
-            })
+            }, (data.value?.shapes ?? []).map(shape => h(shape.tag, shape.attrs)))
         },
     })
 

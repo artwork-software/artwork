@@ -306,7 +306,7 @@
             // Linker Block (Name, Projekt)
             echo        '<div class="event-left">';
             if ($abbr) {
-                echo '<span class="event-abbr">'.$abbr.'</span>: ';
+                echo '<span class="event-abbr">'.e($abbr).'</span>: ';
             }
             echo        e($name);
             if ($projectNm) {

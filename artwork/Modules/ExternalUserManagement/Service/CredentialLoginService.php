@@ -124,7 +124,7 @@ class CredentialLoginService
             $existsInIdp = true;
             $resolvedEmail = $profile['email'] ?? $email;
 
-            if (!$this->emailDomainAllowed($source, $resolvedEmail)) {
+            if (!$source->allowsEmailDomain($resolvedEmail, true)) {
                 return null;
             }
 
@@ -195,30 +195,5 @@ class CredentialLoginService
         } catch (\Throwable $e) {
             report($e);
         }
-    }
-
-    /**
-     * Optionale, pro-Quelle konfigurierte E-Mail-Domain-Allowlist.
-     * Ohne Allowlist ist jede Domain zugelassen.
-     */
-    private function emailDomainAllowed(ExternalUserSource $source, ?string $email): bool
-    {
-        $allowed = $source->config['allowed_domains'] ?? [];
-
-        if (empty($allowed)) {
-            return true;
-        }
-
-        if ($email === null || $email === '') {
-            return false;
-        }
-
-        $domain = strtolower(substr(strrchr($email, '@') ?: '@', 1));
-        $allowed = array_map(
-            static fn ($entry): string => strtolower(ltrim(trim((string) $entry), '@')),
-            (array) $allowed
-        );
-
-        return in_array($domain, $allowed, true);
     }
 }

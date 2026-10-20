@@ -29,7 +29,7 @@ class UpdateInventoryArticleRequest extends FormRequest
             'is_detailed_quantity' => ['required', 'boolean'],
 
             'images' => ['nullable', 'array'],
-            'images.*' => ['nullable', 'image', 'max:' . $maxImageSizeKb, new SafeUploadFile(), new InventoryArticleImageDimensions()],
+            'images.*' => ['bail', 'nullable', 'image', 'max:' . $maxImageSizeKb, new SafeUploadFile(), new InventoryArticleImageDimensions()],
             'newImages' => ['nullable', 'array'],
             // Laravel's 'image' rule plus HEIC/HEIF (iPhone photos) — those
             // get converted to JPEG on upload (InventoryArticleImageService).

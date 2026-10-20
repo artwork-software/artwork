@@ -13,7 +13,7 @@ final class AppControllerTest extends FeatureTestCase
     #[Test]
     public function password_feedback_returns_integer_score_for_strong_password(): void
     {
-        $response = $this->get('/password_feedback?password=' . urlencode('CorrectHorseBatteryStaple-9!'));
+        $response = $this->post('/password_feedback', ['password' => 'CorrectHorseBatteryStaple-9!']);
 
         $response->assertOk();
         $this->assertIsNumeric($response->getContent());
@@ -24,10 +24,17 @@ final class AppControllerTest extends FeatureTestCase
     #[Test]
     public function password_feedback_returns_low_score_for_weak_password(): void
     {
-        $response = $this->get('/password_feedback?password=password');
+        $response = $this->post('/password_feedback', ['password' => 'password']);
 
         $response->assertOk();
         $this->assertLessThanOrEqual(2, (int) $response->getContent());
+    }
+
+    #[Test]
+    public function password_feedback_no_longer_accepts_the_password_in_the_url(): void
+    {
+        $this->get('/password_feedback?password=secret')->assertMethodNotAllowed();
+        $this->postJson('/password_feedback', ['password' => str_repeat('a', 256)])->assertUnprocessable();
     }
 
     #[Test]

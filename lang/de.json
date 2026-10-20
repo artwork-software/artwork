@@ -9309,5 +9309,17 @@
     "The login email address of your :app account was changed. Messages are now sent to the new address.": "Die Login-E-Mail-Adresse deines :app-Kontos wurde geändert. Nachrichten gehen ab jetzt an die neue Adresse.",
     "If you did not make this change, please contact your administration immediately.": "Falls du das nicht warst, wende dich bitte sofort an deine Administration.",
     "Enter the password again when changing the Sage host.": "Gib beim Wechsel des Sage-Hosts das Passwort erneut ein.",
-    "The Sage host must be an https address.": "Der Sage-Host muss eine https-Adresse sein."
+    "The Sage host must be an https address.": "Der Sage-Host muss eine https-Adresse sein.",
+    "Multi-tenant endpoints (common, organizations, consumers) are not allowed. Enter your own tenant ID.": "Multi-Tenant-Endpunkte (common, organizations, consumers) sind nicht erlaubt. Bitte die eigene Tenant-ID eintragen.",
+    "Only the immutable claims sub or oid can be used as identifier.": "Als Kennung sind nur die unveränderlichen Claims sub oder oid erlaubt.",
+    "This connection identifies people by a claim they can change themselves. Recommended: sub or oid. After switching, people already linked must be linked again – only switch in coordination with your identity provider.": "Diese Verbindung erkennt Personen an einem Merkmal, das sie selbst ändern können. Empfohlen: sub oder oid. Nach dem Umstellen müssen bereits verknüpfte Personen neu verknüpft werden – nur in Absprache mit dem Identity Provider umstellen.",
+    "Trust email addresses from this identity provider": "E-Mail-Adressen dieses Identity Providers vertrauen",
+    "Without this option, new accounts are only created if the identity provider confirms the email address (email_verified). Microsoft Entra usually does not send this confirmation – enable the option only if the connection is limited to your own tenant or directory.": "Ohne diese Option werden neue Konten nur angelegt, wenn der Identity Provider die E-Mail-Adresse als bestätigt meldet (email_verified). Microsoft Entra schickt diese Bestätigung meist nicht – die Option nur einschalten, wenn die Verbindung auf den eigenen Tenant bzw. das eigene Verzeichnis beschränkt ist.",
+    "common, organizations and consumers are not allowed because any Microsoft account could sign in through them.": "common, organizations und consumers sind nicht erlaubt, weil sich darüber beliebige Microsoft-Konten anmelden könnten.",
+    "Optional. If set, the sync and the directory sign-in only accept people with an email address from these domains. Leave empty to allow all domains.": "Optional. Wenn gesetzt, übernehmen Sync und Verzeichnis-Anmeldung nur Personen mit einer E-Mail-Adresse aus diesen Domains. Leer lassen, um alle Domains zuzulassen.",
+    "Your own team membership can only be changed by another person with team management rights.": "Deine eigene Teamzugehörigkeit kann nur eine andere Person mit Rechten zur Teamverwaltung ändern.",
+    "The last admin cannot lose the admin role.": "Die letzte Person mit Admin-Rolle kann die Rolle nicht verlieren. Vergib die Rolle zuerst an eine weitere Person.",
+    "The guest list and revenue are only visible to people who can see the ticketing component.": "Gästeliste und Umsatz sehen nur Personen mit Zugriff auf die Ticketing-Komponente.",
+    "The selected color is invalid.": "Die gewählte Farbe ist ungültig.",
+    "The selected icon is invalid.": "Das gewählte Icon ist ungültig."
 }

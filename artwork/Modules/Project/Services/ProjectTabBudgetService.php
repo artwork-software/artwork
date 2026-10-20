@@ -6,6 +6,7 @@ use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectTabBudgetService
 {
@@ -22,17 +23,19 @@ class ProjectTabBudgetService
             $loadedProjectInformation
         );
 
+        // Private E-Mail/Telefon nur wie in UserIndexResource: maskiert je nach betrachtender Person
+        $viewer = Auth::user();
         $usersData = $project->users->map(
             fn (User $user) => [
                 'id'                  => $user->id,
                 'first_name'          => $user->first_name,
                 'last_name'           => $user->last_name,
                 'profile_photo_url'   => $user->profile_photo_url,
-                'email'               => $user->email,
+                'email'               => $user->visibleEmailFor($viewer),
                 'departments'         => $user->departments,
                 'position'            => $user->position,
                 'business'            => $user->business,
-                'phone_number'        => $user->phone_number,
+                'phone_number'        => $user->visiblePhoneNumberFor($viewer),
                 'project_management'  => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
                 'pivot_access_budget' => (bool) ($user->pivot?->access_budget),
                 'pivot_is_manager'    => (bool) ($user->pivot?->is_manager),

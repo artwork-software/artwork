@@ -888,6 +888,11 @@ class UserController extends Controller
             return null;
         }
 
+        // Fremde Soll/Ist-Werte wie beim Stundenkonto nur mit „Stunden sehen“ oder Personalverwaltung.
+        if (!$this->mayViewHourAccount($user)) {
+            return null;
+        }
+
         try {
             $start = Carbon::parse((string) $dateValue[0])->startOfDay();
             $end = Carbon::parse((string) $dateValue[1])->startOfDay();
@@ -1086,14 +1091,19 @@ class UserController extends Controller
      */
     private function authorizeHourAccountAccess(User $user): void
     {
+        abort_unless($this->mayViewHourAccount($user), 403);
+    }
+
+    private function mayViewHourAccount(User $user): bool
+    {
         $viewer = Auth::user();
-        abort_unless(
+
+        return $viewer !== null && (
             $viewer->id === $user->id
             || $viewer->canAny([
                 PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value,
                 PermissionEnum::MA_MANAGER->value,
-            ]),
-            403
+            ])
         );
     }
 
@@ -1623,9 +1633,18 @@ class UserController extends Controller
         }
 
         $roomAdminTeamLocked = false;
+        $ownTeamsLocked = false;
         if (Auth::user()->canAny([PermissionEnum::TEAM_UPDATE->value, PermissionEnum::MA_MANAGER->value])) {
             $requestedIds = collect($request->departments)->map(fn ($department) => (int) $department['id']);
             $currentIds = $user->departments()->pluck('departments.id')->map(fn ($id) => (int) $id);
+
+            // Teams tragen Rechte (Projekt-Schreibrecht, Raumadmin, Verträge): die eigene Zugehörigkeit
+            // ändert nur eine andere Person, Admins ausgenommen.
+            $teamsChanged = $requestedIds->sort()->values()->all() !== $currentIds->sort()->values()->all();
+            if ($isSelf && !$actorIsAdmin && $teamsChanged) {
+                $ownTeamsLocked = true;
+                $requestedIds = $currentIds;
+            }
 
             // Teams mit Raumadmin-Zugriff nur mit dem Recht, Räume zu bearbeiten (DepartmentPolicy) –
             // ohne bleibt die Mitgliedschaft in diesen Teams unverändert
@@ -1646,6 +1665,10 @@ class UserController extends Controller
         }
 
         Session::put('locale', $user->language);
+
+        if ($ownTeamsLocked) {
+            return Redirect::back()->with('error', __(DepartmentPolicy::OWN_TEAMS_LOCKED_MESSAGE));
+        }
 
         if ($roomAdminTeamLocked) {
             return Redirect::back()->with('error', __(DepartmentPolicy::ROOM_ADMIN_TEAM_LOCKED_MESSAGE));
@@ -1698,6 +1721,13 @@ class UserController extends Controller
                     $rolesToGrant[] = $roleToGrant;
                 }
             }
+        }
+
+        if (
+            !in_array(RoleEnum::ARTWORK_ADMIN->value, $rolesToGrant, true)
+            && app(UserService::class)->isLastAdmin($user)
+        ) {
+            return Redirect::back()->with('error', __('The last admin cannot lose the admin role.'));
         }
 
         // Der Rechte-Tab speichert bei jedem Klick sofort; schnelle Klickfolgen erzeugen parallele Requests.

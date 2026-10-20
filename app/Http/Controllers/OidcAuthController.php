@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Providers\RouteServiceProvider;
+use Artwork\Modules\ExternalUserManagement\Exceptions\ExternalIdentityDeletedException;
+use Artwork\Modules\ExternalUserManagement\Exceptions\UnverifiedExternalEmailException;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserGroupMappingService;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserService;
 use Artwork\Modules\ExternalUserManagement\Service\OidcService;
+use Artwork\Modules\ExternalUserManagement\Support\OidcProviderPreset;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +31,8 @@ class OidcAuthController extends Controller
     {
         $this->assertUsableSource($externalUserSource);
 
-        return $this->oidcService->redirect($externalUserSource);
+        return $this->multiTenantRejection($externalUserSource)
+            ?? $this->oidcService->redirect($externalUserSource);
     }
 
     /**
@@ -39,6 +43,12 @@ class OidcAuthController extends Controller
     public function callback(ExternalUserSource $externalUserSource): RedirectResponse
     {
         $this->assertUsableSource($externalUserSource);
+
+        $rejection = $this->multiTenantRejection($externalUserSource);
+
+        if ($rejection !== null) {
+            return $rejection;
+        }
 
         try {
             $claims = $this->oidcService->userFromCallback($externalUserSource);
@@ -58,7 +68,8 @@ class OidcAuthController extends Controller
             ]);
         }
 
-        if (!$this->emailDomainAllowed($externalUserSource, $email)) {
+        // Eine leere Allowlist verweigert den Zugriff sicherheitshalber vollständig.
+        if (!$externalUserSource->allowsEmailDomain($email, false)) {
             return redirect()->route('login')->withErrors([
                 'email' => __('flash-messages.oidc.error.domain_not_allowed'),
             ]);
@@ -92,6 +103,14 @@ class OidcAuthController extends Controller
 
                 return $user;
             });
+        } catch (UnverifiedExternalEmailException) {
+            return redirect()->route('login')->withErrors([
+                'email' => __('flash-messages.oidc.error.email_not_verified'),
+            ]);
+        } catch (ExternalIdentityDeletedException) {
+            return redirect()->route('login')->withErrors([
+                'email' => __('flash-messages.oidc.error.account_deleted'),
+            ]);
         } catch (\Throwable $e) {
             report($e);
 
@@ -116,23 +135,17 @@ class OidcAuthController extends Controller
     }
 
     /**
-     * Erzwingt die pro-Quelle konfigurierte E-Mail-Domain-Allowlist.
-     * Eine leere Allowlist verweigert den Zugriff sicherheitshalber vollständig.
+     * Über common/organizations/consumers könnten sich Konten aus beliebigen fremden
+     * Entra-Tenants anmelden; solche Bestandsquellen werden nicht mehr bedient.
      */
-    private function emailDomainAllowed(ExternalUserSource $source, string $email): bool
+    private function multiTenantRejection(ExternalUserSource $source): ?RedirectResponse
     {
-        $allowed = $source->config['allowed_domains'] ?? [];
-
-        if (empty($allowed)) {
-            return false;
+        if (!OidcProviderPreset::isMultiTenant($source->config ?? [])) {
+            return null;
         }
 
-        $domain = strtolower(substr(strrchr($email, '@') ?: '@', 1));
-        $allowed = array_map(
-            static fn ($entry): string => strtolower(ltrim(trim((string) $entry), '@')),
-            (array) $allowed
-        );
-
-        return in_array($domain, $allowed, true);
+        return redirect()->route('login')->withErrors([
+            'email' => __('flash-messages.oidc.error.multi_tenant_not_allowed'),
+        ]);
     }
 }

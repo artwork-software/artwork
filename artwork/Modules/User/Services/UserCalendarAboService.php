@@ -62,6 +62,14 @@ readonly class UserCalendarAboService
     }
 
 
+    public function renewToken(UserCalendarAbo $calendarAbo): UserCalendarAbo
+    {
+        $calendarAbo->calendar_abo_id = (string) Str::uuid();
+        $this->userCalendarAboRepository->save($calendarAbo);
+
+        return $calendarAbo;
+    }
+
     public function updateByRequest(array $data, UserCalendarAbo $calendarAbo): void
     {
         $calendarAbo->fill($data);
@@ -70,7 +78,9 @@ readonly class UserCalendarAboService
 
     public function getFilteredEventsQuery(UserCalendarAbo $calendarAbo): Builder
     {
+        // Planungstermine sind noch nicht bestätigt und gehören nicht in externe Kalender-Apps.
         $q = Event::query()
+            ->isNotPlanning()
             ->with(['room', 'project', 'creator'])
             ->orderBy('start_time');
 

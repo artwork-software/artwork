@@ -1317,6 +1317,8 @@ final class AppProjectTest extends TestCase
         $project->users()->attach($user->id, ['can_write' => true]);
         $role = ProjectRole::create(['name' => 'Technik']);
         $colleague = User::factory()->create();
+        // Projektleitung nur für Personen mit „Projekte verwalten“ (Audit 20.10.2026, M4)
+        $colleague->givePermissionTo(PermissionEnum::PROJECT_MANAGEMENT->value);
         $project->users()->attach($colleague->id, [
             'can_write' => true,
             'access_budget' => true,

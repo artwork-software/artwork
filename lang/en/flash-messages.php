@@ -169,7 +169,10 @@ return [
             'authentication_failed' => 'Authentication via the identity provider failed. Please try again.',
             'missing_email' => 'The identity provider did not return an email address. Login is not possible.',
             'domain_not_allowed' => 'Your email domain is not allowed for this login.',
-            'password_login_disabled' => 'This account signs in through your identity provider. Please use the SSO button.'
+            'password_login_disabled' => 'This account signs in through your identity provider. Please use the SSO button.',
+            'email_not_verified' => 'Your identity provider did not report your email address as verified. Please contact your administrator.',
+            'account_deleted' => 'Your artwork account was deleted. Please contact your administrator if you need access again.',
+            'multi_tenant_not_allowed' => 'This sign-in is misconfigured (multi-tenant endpoint). Please contact your administrator.'
         ]
     ]
 ];

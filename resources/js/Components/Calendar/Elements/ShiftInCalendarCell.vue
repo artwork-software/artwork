@@ -7,7 +7,7 @@
         v-if="isCompactView"
         class="w-full flex items-center gap-x-1 rounded-sm border px-1 h-6 select-none overflow-hidden"
         :class="canPlanShifts && !isFollowUpDay ? 'cursor-pointer' : ''"
-        :style="{ backgroundColor: `${craftColor}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : craftColor }"
+        :style="cardBackgroundStyle"
         :title="compactTitle"
         @click="onCompactClick"
     >
@@ -26,7 +26,7 @@
         v-else
         class="w-full rounded-sm select-none border font-lexend"
         :class="adaptsToTileWidth ? '@container/shift overflow-hidden' : ''"
-        :style="{ backgroundColor: `${craftColor}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : craftColor, zoom: contentZoom }"
+        :style="{ ...cardBackgroundStyle, zoom: contentZoom }"
     >
         <div class="flex flex-col w-full">
             <!-- Zeile 1: Gewerkkürzel + Zeit-Pill + Menü -->
@@ -243,6 +243,16 @@ const onShiftModalClosed = (success = false, savedShift = null) => {
 };
 
 const craftColor = computed(() => props.shift?.craft?.color ?? "#999999");
+// Gewerkfarbe halbtransparent auf deckender Fläche: Wochenend-/Feiertagstönung und
+// Feiertags-Schraffur der Tageszeile scheinen sonst durch (Termine liegen ebenso deckend darüber).
+const cardBackgroundStyle = computed(() => {
+    const tint = `${craftColor.value}${isFollowUpDay.value ? '30' : '50'}`;
+    return {
+        backgroundColor: 'var(--color-surface)',
+        backgroundImage: `linear-gradient(${tint}, ${tint})`,
+        borderColor: isFollowUpDay.value ? '#d1d5db' : craftColor.value,
+    };
+});
 const craftAbbreviation = computed(() => props.shift?.craft?.abbreviation ?? "");
 const craftTitleFull = computed(() => {
     const craft = props.shift?.craft;

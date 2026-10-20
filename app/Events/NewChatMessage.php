@@ -31,12 +31,21 @@ class NewChatMessage implements ShouldBroadcastNow
         return new PrivateChannel('chat.' . $this->chatId);
     }
 
+    /**
+     * Absender:in nur als festes Mini-Array: die Maskierung privater Kontaktdaten im User-Model
+     * richtet sich nach der auslösenden Person, nicht nach den Empfänger:innen des Broadcasts.
+     */
     public function broadcastWith()
     {
+        $message = $this->message
+            ->load(['sender'])
+            ->append(['created_at_iso', 'created_at_date', 'created_at_time']);
+        $sender = $message->sender;
+
         return [
-            'message' => $this->message
-                ->load(['sender'])
-                ->append(['created_at_iso', 'created_at_date', 'created_at_time']),
+            'message' => array_merge($message->withoutRelations()->toArray(), [
+                'sender' => $sender ? ChatCreated::participantPayload($sender) : null,
+            ]),
         ];
     }
 

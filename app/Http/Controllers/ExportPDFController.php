@@ -1061,8 +1061,14 @@ class ExportPDFController extends Controller
 
         $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
         // Soll je Monat aus dem Arbeitszeitmuster (WorkTimeCalculationService, inkl. Sondertage);
-        // kein Muster an mindestens einem Monatstag -> Soll unbekannt (keine Soll-/Differenzzeile)
-        $targetBreakdown = $type === 'user' && $worker instanceof User && WorkTimeAccounting::isEnabled()
+        // kein Muster an mindestens einem Monatstag -> Soll unbekannt (keine Soll-/Differenzzeile).
+        // Fremde Soll-/Differenzwerte wie beim Stundenkonto nur mit „Stunden sehen“ oder Personalverwaltung.
+        $mayViewTarget = $isOwnPlan || $authUser->canAny([
+            PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value,
+            PermissionEnum::MA_MANAGER->value,
+        ]);
+        $withTarget = $mayViewTarget && $type === 'user' && $worker instanceof User && WorkTimeAccounting::isEnabled();
+        $targetBreakdown = $withTarget
             ? app(\Artwork\Modules\WorkTime\Services\WorkTimeCalculationService::class)
                 ->breakdownForRange($worker, $gridStart->copy(), $gridEnd->copy())
             : null;

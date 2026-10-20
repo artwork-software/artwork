@@ -4,6 +4,7 @@ namespace Artwork\Modules\System\ApiManagement\Http\Controller;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\System\ApiManagement\Http\Requests\StoreTokenRequest;
+use Artwork\Modules\System\ApiManagement\Support\MachineScopes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Laravel\Passport\Token;
@@ -49,7 +50,11 @@ class ApiManagementController extends Controller
     {
         $this->authorize('delete', Token::class);
 
-        $token = Token::find($id);
+        // Nur Maschinen-Tokens, wie in der Liste: App-Anmeldungen gehören den Personen selbst.
+        $token = Token::query()
+            ->whereKey($id)
+            ->whereJsonDoesntContain('scopes', MachineScopes::APP_SCOPE)
+            ->first();
 
         if (!$token) {
             return back()->with('error', __('Token not found.'));

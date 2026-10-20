@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,7 +22,7 @@ class UpdateShiftRuleRequest extends FormRequest
             'period_weeks' => $this->ruleTypeHasPeriodWeeks()
                 ? 'required|integer|min:2|max:104'
                 : 'nullable|integer',
-            'warning_color' => 'required|string|max:7',
+            'warning_color' => ['required', 'string', 'max:7', new HexColorRule()],
             'default_compensation_days' => 'nullable|numeric|min:0.5',
             'default_compensation_deadline_days' => 'nullable|integer|min:1',
             'contract_ids' => 'nullable|array',

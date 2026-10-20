@@ -364,7 +364,7 @@
                 </template>
 
                 <BaseUIButton
-                    v-if="can('teammanagement') || can('can manage workers') || hasAdminRole()"
+                    v-if="canEditTeams"
                     @click="openChangeTeamsModal"
                     hide-icon
                 >
@@ -376,7 +376,7 @@
                 </BaseUIButton>
 
                 <button
-                    v-if="(can('teammanagement') || can('can manage workers')) && userForm.departments.length || hasAdminRole()"
+                    v-if="canEditTeams && (userForm.departments.length || hasAdminRole())"
                     @click="deleteFromAllDepartments"
                     class="inline-flex items-center gap-2 rounded-xl border border-danger-border bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger transition hover:bg-danger-surface"
                 >
@@ -384,6 +384,9 @@
                     {{ $t('Remove user from all teams') }}
                 </button>
             </div>
+            <p v-if="isOwnProfileWithoutTeamRights" class="mt-3 text-xs text-text-subtle">
+                {{ $t('Your own team membership can only be changed by another person with team management rights.') }}
+            </p>
         </section>
 
         <!-- MODALS -->
@@ -522,6 +525,12 @@ const page = usePage()
 const hasAdminRole = () => (is('artwork admin'))
 const isSignedInUser = () => props.user_to_edit?.id === page.props?.auth?.user?.id
 const canEditPreferences = computed(() => isSignedInUser() || can('can manage workers') || hasAdminRole())
+
+// Teams tragen Rechte (Projekt-Schreibrecht, Raumadmin, Verträge) – die eigene Zugehörigkeit
+// ändert deshalb nur eine andere Person (Admins ausgenommen), wie im Backend (updateUserDetails).
+const hasTeamRights = computed(() => can('teammanagement') || can('can manage workers') || hasAdminRole())
+const canEditTeams = computed(() => hasTeamRights.value && (!isSignedInUser() || hasAdminRole()))
+const isOwnProfileWithoutTeamRights = computed(() => hasTeamRights.value && !canEditTeams.value)
 
 /* ----- UI State ----- */
 const successSaved = ref(false)

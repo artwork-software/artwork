@@ -10,6 +10,7 @@ use Artwork\Modules\IndividualTimes\Models\IndividualTimeSeries;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\ProjectRole;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftFilter;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
@@ -153,6 +154,43 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
             [PermissionEnum::PROJECT_MANAGEMENT->value, PermissionEnum::SHIFT_PLANNER->value],
             $invitation->permissions
         );
+    }
+
+    #[Test]
+    public function invitations_cannot_put_new_accounts_into_room_admin_teams_without_room_rights(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::MA_MANAGER]);
+        $roomAdminTeam = Department::factory()->create();
+        Room::factory()->create()->departments()->attach($roomAdminTeam->id, ['is_admin' => true, 'can_request' => false]);
+        $plainTeam = Department::factory()->create();
+
+        $this->postJson(route('invitations.store'), [
+            'user_emails' => ['invitee@example.test'],
+            'roles' => [],
+            'permissions' => [],
+            'departments' => [['id' => $roomAdminTeam->id], ['id' => $plainTeam->id]],
+        ])->assertRedirect(route('users'));
+
+        $invitation = Invitation::query()->where('email', 'invitee@example.test')->firstOrFail();
+        $this->assertSame([$plainTeam->id], $invitation->departments()->pluck('departments.id')->all());
+    }
+
+    #[Test]
+    public function invitations_keep_room_admin_teams_for_inviters_with_room_rights(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::MA_MANAGER, PermissionEnum::ROOM_UPDATE]);
+        $roomAdminTeam = Department::factory()->create();
+        Room::factory()->create()->departments()->attach($roomAdminTeam->id, ['is_admin' => true, 'can_request' => false]);
+
+        $this->postJson(route('invitations.store'), [
+            'user_emails' => ['invitee@example.test'],
+            'roles' => [],
+            'permissions' => [],
+            'departments' => [['id' => $roomAdminTeam->id]],
+        ])->assertRedirect(route('users'));
+
+        $invitation = Invitation::query()->where('email', 'invitee@example.test')->firstOrFail();
+        $this->assertSame([$roomAdminTeam->id], $invitation->departments()->pluck('departments.id')->all());
     }
 
     #[Test]

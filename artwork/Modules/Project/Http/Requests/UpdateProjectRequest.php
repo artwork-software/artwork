@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Project\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -31,8 +33,8 @@ class UpdateProjectRequest extends FormRequest
             'assigned_departments' => ['sometimes', 'array'],
             'assigned_departments.?' => ['exists:departments,id'],
             'budget_deadline' => 'nullable|date',
-            'color' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'icon' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'color' => ['sometimes', 'nullable', 'string', 'max:255', new HexColorRule()],
+            'icon' => ['sometimes', 'nullable', 'string', 'max:255', new IconNameRule()],
         ];
     }
 }

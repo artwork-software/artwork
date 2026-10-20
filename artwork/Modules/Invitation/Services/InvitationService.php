@@ -4,6 +4,7 @@ namespace Artwork\Modules\Invitation\Services;
 
 use Artwork\Core\Mail\MailService;
 use Artwork\Core\Str\StrService;
+use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Invitation\Repositories\InvitationRepository;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -12,6 +13,7 @@ use Artwork\Modules\User\Services\UserService;
 use Illuminate\Hashing\HashManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Gate;
 use Psr\Log\LoggerInterface;
 
 class InvitationService
@@ -58,6 +60,7 @@ class InvitationService
     ): void {
         $admin_user = $this->userService->getAuthUser();
         $permissions = $this->filterGrantablePermissions($permissions, $admin_user);
+        $departmentIds = $this->filterGrantableDepartmentIds($departmentIds, $admin_user);
 
         foreach ($userEmails as $email) {
             do {
@@ -135,6 +138,29 @@ class InvitationService
         }
 
         return array_values(array_unique(array_intersect($permissions, $inviter->allPermissions())));
+    }
+
+    /**
+     * Teams mit Raumadmin-Zugriff vergeben Raumadmin-Rechte. Wie beim Bearbeiten von Nutzer*innen und Teams
+     * (DepartmentPolicy::changeRoomAdminMembers) braucht es dafür das Recht, Räume zu bearbeiten – sonst
+     * ließe sich die Sperre über eine Einladung an eine eigene Zweitadresse umgehen.
+     */
+    public function filterGrantableDepartmentIds(SupportCollection $departmentIds, ?User $inviter): SupportCollection
+    {
+        if ($inviter === null) {
+            return collect();
+        }
+
+        return collect(
+            Department::query()
+                ->whereIn('id', $departmentIds->filter()->all())
+                ->get()
+                ->filter(fn (Department $department) => Gate::forUser($inviter)->allows(
+                    'changeRoomAdminMembers',
+                    $department
+                ))
+                ->modelKeys()
+        );
     }
 
     public function newExpiresAt(): Carbon

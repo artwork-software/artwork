@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateEventStatusRequest extends FormRequest
@@ -23,7 +24,7 @@ class CreateEventStatusRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'color' => 'required|string|max:255',
+            'color' => ['required', 'string', 'max:255', new HexColorRule()],
             'default' => 'required|boolean',
         ];
     }

@@ -713,6 +713,9 @@ class EventController extends Controller
                 ->merge(EventType::where('specific_verifier_id', $user->id)->pluck('id'))
                 ->unique()
                 ->values(),
+            // "Prüfung anfragen" übernimmt Termine dieser Terminarten sofort fest → Knopf heißt "Genehmigen"
+            'approvedOnRequestEventTypeIds' => app(EventVerificationService::class)
+                ->eventTypeIdsApprovedOnRequestBy($user),
             'filterType' => $planningFilterType,
             'isDailyView' => $isDailyView,
             'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)

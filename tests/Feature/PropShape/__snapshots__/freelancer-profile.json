@@ -194,11 +194,9 @@
                 "commit_request_deadline_days": ".",
                 "craft_shift_planer": {
                     "[]": {
-                        "ad_identifier": ".",
                         "ad_managed": ".",
                         "at_a_glance": ".",
                         "auth_provider": ".",
-                        "auth_provider_id": ".",
                         "auth_provider_issuer": ".",
                         "bulk_column_size": {
                             "[]": "."
@@ -227,11 +225,8 @@
                         "email": ".",
                         "email_private": ".",
                         "email_verified_at": ".",
-                        "employEnd": ".",
-                        "employStart": ".",
                         "entities_per_page": ".",
                         "first_name": ".",
-                        "formated_work_time_balance": ".",
                         "full_name": ".",
                         "goto_mode": ".",
                         "id": ".",
@@ -239,7 +234,6 @@
                         "inventory_hide_images": ".",
                         "inventory_sort_column_id": ".",
                         "inventory_sort_direction": ".",
-                        "is_developer": ".",
                         "is_freelancer": ".",
                         "is_sidebar_opened": ".",
                         "is_time_preset_open": ".",
@@ -273,14 +267,12 @@
                         "show_qualifications": "[]",
                         "sort_type_shift_tab": ".",
                         "sort_workers_by_qualification": ".",
-                        "temporary": ".",
                         "toggle_hints": ".",
                         "type": ".",
                         "updated_at": ".",
                         "use_chat": ".",
                         "work_description": ".",
                         "work_name": ".",
-                        "work_time_balance": ".",
                         "zoom_factor": "."
                     }
                 },

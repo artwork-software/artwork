@@ -351,6 +351,94 @@ class EventVerificationService
             return;
         }
 
+        $this->notifyCreatorAboutApproval($event, $eventCreator, $notificationTitle);
+    }
+
+    /**
+     * Admins übernehmen geplante Termine direkt fest (Entscheidung 20.10.2026) – mit oder ohne offene Prüfrunde.
+     * Die Zustimmung läuft auf die Admin-Person; die übrigen offenen Prüfungen der Runde entfallen, auch im
+     * Modus "alle".
+     */
+    public function approveAsAdmin(Event $event, User $admin): void
+    {
+        $openRound = $event->verifications()->where('status', 'pending')->first();
+        $ownOpenVerification = $openRound === null ? null : $event->verifications()
+            ->where('uuid', $openRound->uuid)
+            ->where('status', 'pending')
+            ->where('verifier_type', User::class)
+            ->where('verifier_id', $admin->id)
+            ->first();
+
+        if ($ownOpenVerification !== null) {
+            $ownOpenVerification->update(['status' => 'approved']);
+        } else {
+            $event->verifications()->create([
+                'uuid' => $openRound?->uuid ?? Str::uuid()->toString(),
+                'verifier_type' => User::class,
+                'verifier_id' => $admin->id,
+                'status' => 'approved',
+                'request_user_id' => $openRound?->request_user_id ?? $admin->id,
+            ]);
+        }
+
+        if ($openRound !== null) {
+            $this->closeOpenVerificationsOfRound($event, $openRound->uuid);
+        }
+        $this->confirmEvent($event);
+
+        $eventCreator = $event->creator;
+        if ($eventCreator === null || $eventCreator->id === $admin->id) {
+            return;
+        }
+
+        $this->notifyCreatorAboutApproval(
+            $event,
+            $eventCreator,
+            __('notification.request-verification.approved-finished', [], $eventCreator->language),
+        );
+    }
+
+    /**
+     * Ob "Prüfung anfragen" den geplanten Termin für diese Person sofort fest übernimmt (siehe
+     * requestVerification): Terminart ohne Prüfung bzw. ohne Terminart, festgelegte Prüfperson oder Modus "eine
+     * Person" mit der Person in der Liste.
+     */
+    public function approvesOnRequest(Event $event, User $user): bool
+    {
+        $eventType = $event->event_type;
+        if (
+            $eventType === null
+            || $eventType->verification_mode === 'none'
+            || $this->eventSettingsService->alwaysDirectBooking()
+        ) {
+            return true;
+        }
+
+        return match ($eventType->verification_mode) {
+            'specific', 'any' => $this->verifiersOf($eventType)->contains('id', $user->id),
+            default => false,
+        };
+    }
+
+    /**
+     * Terminarten, deren geplante Termine die Person per Anfrage sofort fest übernimmt – Spiegel von
+     * approvesOnRequest() für das Frontend (Beschriftung "Genehmigen" statt "Prüfung anfragen").
+     *
+     * @return Collection<int, int>
+     */
+    public function eventTypeIdsApprovedOnRequestBy(User $user): Collection
+    {
+        return EventType::query()
+            ->where('verification_mode', 'none')
+            ->orWhere(fn ($query) => $query->where('verification_mode', 'specific')
+                ->where('specific_verifier_id', $user->id))
+            ->orWhere(fn ($query) => $query->where('verification_mode', 'any')
+                ->whereHas('verifiers', fn ($verifierQuery) => $verifierQuery->where('users.id', $user->id)))
+            ->pluck('id');
+    }
+
+    private function notifyCreatorAboutApproval(Event $event, User $eventCreator, string $notificationTitle): void
+    {
         // "Gesendet"-Ansicht der anfragenden Person live aktualisieren
         $this->broadcastReload($eventCreator);
 
@@ -497,19 +585,8 @@ class EventVerificationService
 
         $verifiers = $this->verifiersOf($eventType);
 
-        if ($eventType->verification_mode === 'specific' && $eventType->specificVerifier?->id === $user->id) {
-            $event->verifications()->create([
-                'uuid' => $uuid,
-                'verifier_type' => get_class($user),
-                'verifier_id' => $user->id,
-                'status' => 'approved',
-                'request_user_id' => $user->id,
-            ]);
-            $this->confirmEvent($event);
-            return;
-        }
-
-        if ($eventType->verification_mode === 'any' && $verifiers->contains('id', $user->id)) {
+        // Festgelegte Prüfperson bzw. Modus "eine Person" mit der Person in der Liste: sofort genehmigt
+        if ($this->approvesOnRequest($event, $user)) {
             $event->verifications()->create([
                 'uuid' => $uuid,
                 'verifier_type' => get_class($user),

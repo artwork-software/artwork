@@ -9,6 +9,7 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Department\Policies\DepartmentPolicy;
 use Artwork\Modules\Department\Services\DepartmentService;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
@@ -78,6 +79,13 @@ class DepartmentController extends Controller
             || $currentUserIds->diff($requestedUserIds)->isNotEmpty();
         if ($membersChange && Gate::denies('changeRoomAdminMembers', $department)) {
             return Redirect::back()->with('error', __(DepartmentPolicy::ROOM_ADMIN_TEAM_LOCKED_MESSAGE));
+        }
+
+        // Teams tragen Rechte: die eigene Zugehörigkeit ändert nur eine andere Person, Admins ausgenommen.
+        $actor = $updateDepartmentRequest->user();
+        $ownMembershipChange = $requestedUserIds->contains($actor->id) !== $currentUserIds->contains($actor->id);
+        if ($ownMembershipChange && !$actor->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return Redirect::back()->with('error', __(DepartmentPolicy::OWN_TEAMS_LOCKED_MESSAGE));
         }
 
         $this->departmentService->updateByRequest(

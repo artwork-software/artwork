@@ -195,7 +195,7 @@ export default defineComponent({
         'form.password': {
             handler() {
                 if (this.form.password.length > 0) {
-                    axios.get('/password_feedback', {params: {password: this.form.password}})
+                    axios.post('/password_feedback', {password: this.form.password}, {skipErrorToast: true})
                         .then(response => this.pw_feedback = response.data)
                 }
             },

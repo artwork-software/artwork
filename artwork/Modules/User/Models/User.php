@@ -351,8 +351,9 @@ class User extends Model implements
     ];
 
     /**
-     * Gehaltsfelder sind versteckt; legitime Ausgabe nur über UserShowResource (greift direkt auf das
-     * Attribut zu) hinter der Vertrags-Sichtprüfung.
+     * Gehalts-, Vertrags- und Zeitkontofelder sowie IdP-Kennungen sind versteckt: rohe User-Models
+     * landen in Suchen, Chats, Broadcasts und Verläufen. Legitime Ausgabe nur über Resources (z. B.
+     * UserShowResource, greift direkt auf das Attribut zu) hinter der jeweiligen Sichtprüfung.
      */
     protected $hidden = [
         'password',
@@ -363,13 +364,19 @@ class User extends Model implements
         'salary_description',
         'weekly_working_hours',
         'is_deleted_placeholder',
+        'work_time_balance',
+        'employStart',
+        'employEnd',
+        'temporary',
+        'auth_provider_id',
+        'ad_identifier',
+        'is_developer',
     ];
 
     protected $appends = [
         'profile_photo_url',
         'full_name',
         'type',
-        'formated_work_time_balance',
     ];
 
     /**
@@ -927,8 +934,10 @@ class User extends Model implements
             'profile_photo_path' => $this->profile_photo_path,
             'position' => $this->position,
             'business' => $this->business,
-            'phone_number' => $this->phone_number,
-            'email' => $this->email,
+            // Als privat markierte Kontaktdaten nicht in den Suchindex: sonst ließe sich über die Suche
+            // prüfen, wem eine Adresse/Nummer gehört.
+            'phone_number' => $this->phone_private ? null : $this->phone_number,
+            'email' => $this->email_private ? null : $this->email,
             'use_chat' => $this->use_chat,
         ];
     }

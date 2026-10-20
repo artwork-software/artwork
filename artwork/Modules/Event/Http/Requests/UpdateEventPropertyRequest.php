@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Http\Requests;
 
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateEventPropertyRequest extends FormRequest
@@ -23,7 +24,7 @@ class UpdateEventPropertyRequest extends FormRequest
     {
         return [
             'id' => 'required|integer|exists:event_properties,id',
-            'icon' => 'required|string|max:255',
+            'icon' => ['required', 'string', 'max:255', new IconNameRule()],
             'name' => 'required|string|max:255'
         ];
     }

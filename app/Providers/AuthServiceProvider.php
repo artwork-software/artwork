@@ -86,6 +86,7 @@ use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Artwork\Modules\Webhook\Policies\WebhookEndpointPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Horizon\Horizon;
 use Laravel\Passport\Bridge\AccessTokenRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\Token;
@@ -269,6 +270,17 @@ class AuthServiceProvider extends ServiceProvider
                     ->contains(static fn ($project): bool => $user->can('view', $project));
             }
         );
+
+        // Horizon zeigt Job-Payloads (u. a. Magic-Link-Tokens). Ohne eigenes Gate wäre das Dashboard
+        // bei APP_ENV=local anonym offen und sonst für niemanden; daher nur für artwork-Admins.
+        Gate::define('viewHorizon', static function (?User $user = null): bool {
+            return $user?->hasRole(RoleEnum::ARTWORK_ADMIN->value) ?? false;
+        });
+        Horizon::auth(static function ($request): bool {
+            $user = $request->user();
+
+            return $user instanceof User && Gate::forUser($user)->allows('viewHorizon');
+        });
 
         // Dienstplaner-Berechtigung als benanntes Gate — die eine Definition
         // für Web und App (Admins via Gate::before).

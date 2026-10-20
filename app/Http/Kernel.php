@@ -8,6 +8,7 @@ use Artwork\Core\Api\Middleware\ApiAccessLog;
 use Artwork\Core\Api\Middleware\ForceJsonResponse;
 use Artwork\Core\Http\Middleware\Authenticate;
 use Artwork\Core\Http\Middleware\EncryptCookies;
+use Artwork\Core\Http\Middleware\GuardInsecureDefaults;
 use Artwork\Core\Http\Middleware\HandleInertiaRequests;
 use Artwork\Core\Http\Middleware\Localization;
 use Artwork\Core\Http\Middleware\PreventRequestsDuringMaintenance;
@@ -48,6 +49,7 @@ class Kernel extends HttpKernel
 {
     protected $middleware = [
         TrustProxies::class,
+        GuardInsecureDefaults::class,
         HandleCors::class,
         PreventRequestsDuringMaintenance::class,
         ValidatePostSize::class,

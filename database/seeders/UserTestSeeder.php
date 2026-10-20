@@ -28,6 +28,12 @@ class UserTestSeeder extends Seeder
      */
     public function run(): void
     {
+        // 200 Konten mit dem Passwort "password": nur für lokale Entwicklung und Tests.
+        if (!app()->environment(['local', 'testing'])) {
+            $this->command?->error('UserTestSeeder runs only with APP_ENV=local or testing.');
+            return;
+        }
+
         $faker = Faker::create();
 
         $craftIds = Craft::pluck('id')->toArray();

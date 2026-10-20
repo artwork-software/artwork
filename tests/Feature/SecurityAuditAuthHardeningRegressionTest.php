@@ -33,6 +33,12 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
 
     private function runInProduction(): void
     {
+        // phpunit.xml-Key und Reverb-Default sind öffentlich bekannt; in production sperrt
+        // GuardInsecureDefaults sonst jeden Request mit 503.
+        config([
+            'app.key' => 'base64:' . base64_encode(random_bytes(32)),
+            'reverb.apps.apps' => [['key' => 'k', 'secret' => Str::random(48), 'app_id' => 'artwork']],
+        ]);
         $this->app->detectEnvironment(static fn (): string => 'production');
     }
 
@@ -281,7 +287,10 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
 
     private function setupPayload(string $email): array
     {
+        config(['security.setup_token' => 'setup-token-for-tests']);
+
         return [
+            'setup_token' => 'setup-token-for-tests',
             'first_name' => 'Erste',
             'last_name' => 'Admin',
             'email' => $email,

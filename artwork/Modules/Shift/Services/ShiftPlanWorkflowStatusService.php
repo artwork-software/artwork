@@ -32,6 +32,9 @@ class ShiftPlanWorkflowStatusService
         ServiceProvider::class => 'service_provider',
     ];
 
+    /** @var array<string, string> */
+    private array $weekNumberCache = [];
+
     /**
      * @param class-string|null $onlyEmployableType Zusammen mit $onlyEmployableId: nur Schichten
      *                                              dieser einen Person laden (Einzel-Reload)
@@ -219,6 +222,9 @@ class ShiftPlanWorkflowStatusService
      */
     private function weekNumber(mixed $date): string
     {
-        return ltrim(Carbon::parse($date)->format('W'), '0');
+        // Je Schicht × Person aufgerufen (Monatsansicht: mehrere tausend Mal) — Ergebnis je Datum merken
+        $key = $date instanceof \DateTimeInterface ? $date->format('Y-m-d H:i:s') : (string) $date;
+
+        return $this->weekNumberCache[$key] ??= ltrim(Carbon::parse($date)->format('W'), '0');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Invitation\Http\Requests;
 
+use Artwork\Core\Validation\Rules\NotReservedUserEmail;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Closure;
@@ -17,7 +18,7 @@ class StoreInvitationRequest extends FormRequest
     {
         return [
             'user_emails' => 'required|array',
-            'user_emails.*' => 'email|unique:users,email',
+            'user_emails.*' => ['email', 'unique:users,email', new NotReservedUserEmail()],
             'permissions' => 'array',
             'permissions.*' => ['string', Rule::enum(PermissionEnum::class)],
             'roles' => 'array',

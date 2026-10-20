@@ -60,15 +60,16 @@ final class SecurityAuditCalendarShiftVisibilityTest extends TestCase
     {
         $room = $this->createRoomWithEventAndShift(isPlanning: true);
 
+        // Planungskalender liest seine eigene Einstellungszeile
         $user = $this->actingAsUserWith([PermissionEnum::CAN_SEE_PLANNING_CALENDAR]);
-        $user->calendar_settings()->updateOrCreate([], ['work_shifts' => true]);
+        $user->calendarSettingsFor(true, false)->update(['work_shifts' => true]);
         $this->assertSame(0, $this->countShiftsInCalendarPayload($room, isPlanning: true));
 
         $viewer = $this->actingAsUserWith([
             PermissionEnum::CAN_SEE_PLANNING_CALENDAR,
             PermissionEnum::VIEW_SHIFT_PLAN,
         ]);
-        $viewer->calendar_settings()->updateOrCreate([], ['work_shifts' => true]);
+        $viewer->calendarSettingsFor(true, false)->update(['work_shifts' => true]);
         $this->assertSame(1, $this->countShiftsInCalendarPayload($room, isPlanning: true));
     }
 

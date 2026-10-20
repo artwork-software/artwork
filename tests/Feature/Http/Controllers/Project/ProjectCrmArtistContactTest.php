@@ -5,6 +5,7 @@ namespace Tests\Feature\Http\Controllers\Project;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectArtistService;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -111,6 +112,8 @@ final class ProjectCrmArtistContactTest extends FeatureTestCase
         $project = Project::factory()->create(['name' => 'Projekt ohne Namenstreffer']);
         $contact = $this->createArtistContact('Zufallsname Xyzabc');
         $project->crmContacts()->attach($contact->id);
+        // Anzeige-Namen stehen an projects.linked_artists (die Verknüpfungs-Endpunkte aktualisieren sie)
+        app(ProjectArtistService::class)->refresh($project->id);
 
         $response = $this->getJson(route('projects.search', ['query' => 'Xyzabc']));
 

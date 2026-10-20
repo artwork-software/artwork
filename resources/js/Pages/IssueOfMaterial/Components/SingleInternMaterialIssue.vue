@@ -67,6 +67,7 @@
         <div class="col-span-2">
             <div class="flex -space-x-2 items-center">
                 <UserPopoverTooltip
+                    lazy-load
                     v-for="user in issueOfMaterial.responsible_users"
                     :key="user.id"
                     :user="user"
@@ -189,7 +190,7 @@ const deleteIssue = () => {
 };
 
 const setSpecialItemsDone = () => {
-    router.post(route('issue-of-material.set-special-items-done', props.issueOfMaterial.id), {
+    router.post(route('issue-of-material.set-special-items-done', props.issueOfMaterial.id), {}, {
         preserveState: true, preserveScroll: true
     });
 };

@@ -18,6 +18,7 @@ final class MigrateToCrmCommandTest extends FeatureTestCase
     {
         $placeholder = User::factory()->create([
             'email' => config('artwork.deleted_user_email', 'deleted-user@artwork.local'),
+            'is_deleted_placeholder' => true,
         ]);
         $realUser = User::factory()->create();
 

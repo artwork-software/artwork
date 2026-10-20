@@ -7,10 +7,12 @@ use Artwork\Modules\Calendar\Traits\SerializesEventRelations;
 use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 
 class BroadcastEventDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
     use SerializesEventRelations;
 
     public function __construct(
@@ -40,6 +42,10 @@ class BroadcastEventDTO extends Data
         public ?bool $hasVerification = false,
         public ?Collection $timelines = new Collection(),
         public ?bool $hasTimelines = false,
+        // Wie beim ersten Laden (EventDTO/EventDTOWithVerifications): ohne fehlten nach einem Live-Update
+        // die Einlasszeile und die Serien-Zuordnung in der Kachel
+        public ?string $admission_time = null,
+        public ?int $series_id = null,
     ) {
     }
 
@@ -64,7 +70,7 @@ class BroadcastEventDTO extends Data
                 'hex_code' => $event->event_type->hex_code,
             ] : null,
             shifts: MinimalShiftPlanShiftResource::collection($event->shifts)->resolve(),
-            allDay: $event->allDay,
+            allDay: (bool) $event->allDay,
             roomId: $event->room_id,
             roomName: $event->room?->name,
             startHour: $event->startHour,
@@ -91,6 +97,9 @@ class BroadcastEventDTO extends Data
             hasVerification: $event->getAttribute('has_verification') ?? false,
             timelines: $event->timelines ?? new Collection(),
             hasTimelines: $event->hasTimelines(),
+            // TIME-Spalte ("HH:mm:ss") → "HH:mm"
+            admission_time: $event->admission_time ? substr($event->admission_time, 0, 5) : null,
+            series_id: $event->series_id,
         );
     }
 }

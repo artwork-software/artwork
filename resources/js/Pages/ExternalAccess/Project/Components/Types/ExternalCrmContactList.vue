@@ -51,6 +51,11 @@
                             {{ contact.contact_type?.name }}
                             <template v-if="contact.created_by_me"> · {{ $t('added by you') }}</template>
                         </span>
+                        <!-- Rollen und Sonderrolle „Künstler*in“ setzt nur das Haus; extern nur zur Info -->
+                        <span v-if="contact.is_artist || contact.roles?.length" class="mt-1 flex flex-wrap gap-1">
+                            <span v-if="contact.is_artist" class="rounded-full bg-accent-50 px-2 py-0.5 text-[11px] text-accent-700">{{ $t('Artist') }}</span>
+                            <span v-for="role in contact.roles ?? []" :key="role" class="rounded-full border border-border-subtle px-2 py-0.5 text-[11px] text-text-muted">{{ role }}</span>
+                        </span>
                     </span>
                     <IconChevronDown class="size-4 shrink-0 text-text-subtle transition-transform" :class="isOpen(contact) ? 'rotate-180' : ''" />
                 </button>
@@ -98,6 +103,7 @@
 </template>
 
 <script setup>
+import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 import { IconChevronDown, IconPlus } from '@tabler/icons-vue'
@@ -200,6 +206,7 @@ async function remove(contact) {
 
 function formatValue(field) {
     if (field.type === 'checkbox') return field.value === '1' ? $t('Yes') : $t('No')
+    if (field.type === 'multiselect') return crmPropertyDisplayText(field.value, field.type)
     if (field.type === 'date' && field.value) return new Date(field.value).toLocaleDateString()
     return field.value
 }

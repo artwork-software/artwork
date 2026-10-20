@@ -77,6 +77,7 @@
 
 <script setup>
 
+import { holidayStripes, isSingleDayHoliday, pickDayHolidays, withAlpha } from '@/Helper/holidayTint.js';
 import {computed} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
@@ -126,27 +127,26 @@ const dayYear = computed(() => (props.day?.withoutFormat ?? '').slice(0, 4));
 // Regeln wie die Tageszeile im Grid: Feiertag schlägt Wochenende, eintägige
 // Feiertage deutlich, mehrtägige Zeiträume/Ferien nur sehr dezent, Wochenenden
 // im Ferienzeitraum als kräftigere Abstufung derselben Farbe).
-const tintColor = computed(() => {
+const tint = computed(() => {
     const day = props.day;
     if (!day || day.isExtraRow) return null;
-    const holidays = day.holidays ?? [];
-    const singleDayHoliday = holidays.find(
-        (holiday) => holiday?.color && (!holiday.end_date || holiday.end_date === holiday.date)
-    );
-    const coloredHoliday = singleDayHoliday ?? holidays.find((holiday) => holiday?.color);
-    if (coloredHoliday) {
+    const picked = pickDayHolidays(day.holidays);
+    if (picked) {
         let alpha;
-        if (singleDayHoliday) {
+        if (isSingleDayHoliday(picked.primary)) {
             alpha = calendarSettings.value.high_contrast ? '59' : '33';
         } else if (day.isWeekend) {
             alpha = calendarSettings.value.high_contrast ? '66' : '40';
         } else {
             alpha = calendarSettings.value.high_contrast ? '33' : '1A';
         }
-        return `${coloredHoliday.color}${alpha}`;
+        return {
+            color: withAlpha(picked.primary.color, alpha),
+            stripes: picked.secondary ? withAlpha(picked.secondary.color, calendarSettings.value.high_contrast ? '80' : '59') : null,
+        };
     }
     if (day.isWeekend) {
-        return calendarSettings.value.high_contrast ? '#dbeafe' : '#eff6ff';
+        return { color: calendarSettings.value.high_contrast ? '#dbeafe' : '#eff6ff', stripes: null };
     }
     return null;
 });
@@ -168,7 +168,13 @@ const containerStyle = computed(() => {
         // backgroundColor: die Tint-Farben sind teils halbtransparent (Ferien
         // 10 % Alpha) — als alleiniger Hintergrund würde die sticky Spalte
         // beim X-Scrollen durchsichtig und die Termine schienen durch.
-        ...(tintColor.value ? { backgroundImage: `linear-gradient(${tintColor.value}, ${tintColor.value})` } : {}),
+        // Zweite Feiertagsfarbe als Schraffur obenauf
+        ...(tint.value ? {
+            backgroundImage: [
+                tint.value.stripes ? holidayStripes(tint.value.stripes) : null,
+                `linear-gradient(${tint.value.color}, ${tint.value.color})`,
+            ].filter(Boolean).join(', '),
+        } : {}),
     };
 });
 

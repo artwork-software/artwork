@@ -83,6 +83,7 @@
 
 <script>
 import {defineComponent} from 'vue';
+import {artistDisplayText} from '@/Helper/ProjectArtists.js';
 import {can, is} from 'laravel-permission-to-vuejs';
 import ProjectCreateModal from '@/Layouts/Components/ProjectCreateModal.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
@@ -198,12 +199,14 @@ export default defineComponent({
                 });
             }
 
-            if (this.project?.artists) {
+            // Freitext plus verknüpfte CRM-Künstler*innen (Komponente und Sonderrolle in Kontaktlisten)
+            const artists = artistDisplayText(this.project?.artists, this.project?.linked_artists)
+            if (artists) {
                 rows.push({
                     key: 'artists',
                     label: this.$t('Artists'),
                     type: 'text',
-                    value: this.project.artists
+                    value: artists
                 });
             }
 

@@ -12,14 +12,18 @@ use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 
 readonly class ShiftListViewSerializer
 {
-    public function serializeShift(Shift $shift): array
+    /**
+     * @param (callable(Shift, mixed): ?string)|null $unavailableStatusFor Vorberechneter Verfügbarkeitsstatus je
+     *        Schicht und Person (Listenansicht prüft ihn schon beim Filtern) — ohne Angabe wird er hier ermittelt.
+     */
+    public function serializeShift(Shift $shift, ?callable $unavailableStatusFor = null): array
     {
         return [
             'id' => $shift->id,
             'start' => (string) $shift->start,
             'end' => (string) $shift->end,
-            'start_date' => $shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : '',
-            'end_date' => $shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : '',
+            'start_date' => self::dateString($shift, 'start_date'),
+            'end_date' => self::dateString($shift, 'end_date'),
             'break_minutes' => $shift->break_minutes,
             'description' => $shift->description,
             'craft_id' => $shift->craft_id,
@@ -53,9 +57,14 @@ readonly class ShiftListViewSerializer
                 ] : null,
             ] : null,
             'workers' => [
-                ...$this->serializeListViewWorkers($shift->users, 'user', $shift),
-                ...$this->serializeListViewWorkers($shift->freelancer, 'freelancer', $shift),
-                ...$this->serializeListViewWorkers($shift->serviceProvider, 'service_provider', $shift),
+                ...$this->serializeListViewWorkers($shift->users, 'user', $shift, $unavailableStatusFor),
+                ...$this->serializeListViewWorkers($shift->freelancer, 'freelancer', $shift, $unavailableStatusFor),
+                ...$this->serializeListViewWorkers(
+                    $shift->serviceProvider,
+                    'service_provider',
+                    $shift,
+                    $unavailableStatusFor
+                ),
             ],
             'shifts_qualifications' => $shift->shiftsQualifications->map(fn ($sq) => [
                 'id' => $sq->id,
@@ -71,10 +80,14 @@ readonly class ShiftListViewSerializer
         ];
     }
 
+    /**
+     * @param (callable(Shift, mixed): ?string)|null $unavailableStatusFor
+     */
     public function serializeListViewWorkers(
         EloquentCollection|SupportCollection|null $workers,
         string $type,
-        ?Shift $shift = null
+        ?Shift $shift = null,
+        ?callable $unavailableStatusFor = null
     ): array {
         if ($workers === null || $workers->isEmpty()) {
             return [];
@@ -82,10 +95,12 @@ readonly class ShiftListViewSerializer
 
         $confirmationEligibility = app(ShiftConfirmationEligibilityService::class);
 
-        return $workers->map(function ($worker) use ($type, $shift, $confirmationEligibility) {
-            $unavailableStatus = $shift !== null
-                ? ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $worker)
-                : null;
+        return $workers->map(function ($worker) use ($type, $shift, $confirmationEligibility, $unavailableStatusFor) {
+            $unavailableStatus = match (true) {
+                $shift === null => null,
+                $unavailableStatusFor !== null => $unavailableStatusFor($shift, $worker),
+                default => ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $worker),
+            };
 
             $data = [
                 'id' => $worker->id,
@@ -148,5 +163,20 @@ readonly class ShiftListViewSerializer
                 'name' => $event->project->name,
             ] : null,
         ];
+    }
+
+    /**
+     * 'Y-m-d' aus dem Rohattribut — gleiches Ergebnis wie Carbon::parse($shift->start_date)->toDateString(),
+     * ohne für jede Schicht über den datetime-Cast ein Carbon-Objekt zu erzeugen.
+     */
+    private static function dateString(Shift $shift, string $attribute): string
+    {
+        $raw = $shift->getAttributes()[$attribute] ?? null;
+
+        return match (true) {
+            $raw === null || $raw === '' => '',
+            is_string($raw) && preg_match('/^\d{4}-\d{2}-\d{2}(?:$|[ T])/', $raw) === 1 => substr($raw, 0, 10),
+            default => Carbon::parse($raw)->toDateString(),
+        };
     }
 }

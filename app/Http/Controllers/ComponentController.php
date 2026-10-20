@@ -6,6 +6,8 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Http\Requests\StoreComponentRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateComponentRequest;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Services\ComponentSelectionModeService;
+use Artwork\Modules\Project\Services\ProjectArtistService;
 use Artwork\Modules\Project\Services\ComponentUsageService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
@@ -115,6 +117,9 @@ class ComponentController extends Controller
 
     public function update(UpdateComponentRequest $request, Component $component): void
     {
+        // Mehrfachauswahl am DropDown umschalten: Werte umwandeln bzw. Ausschalten bei Mehrfachwerten verhindern
+        app(ComponentSelectionModeService::class)->applyChange($component, $request->input('data'));
+
         $component->users()->detach();
         foreach ($request->get('users', []) as $user) {
             $component->users()->attach($user['user_id'], ['can_write' => $user['can_write']]);
@@ -139,8 +144,10 @@ class ComponentController extends Controller
         Cache::forget('print_layout_all_components');
     }
 
-    public function destroy(Component $component): void
+    public function destroy(Component $component, ProjectArtistService $projectArtistService): void
     {
+        $artistProjectIds = $projectArtistService->projectIdsOfComponent((int) $component->id);
+
         $component->users()->detach();
         $component->departments()->detach();
         $component->componentInDisclosures()->delete();
@@ -169,6 +176,8 @@ class ComponentController extends Controller
         }
 
         $component->delete();
+
+        $projectArtistService->refresh($artistProjectIds);
 
         // Cache invalidieren, damit gelöschte Komponenten nicht weiter angezeigt werden (Einstellungen + Tab-Palette)
         Cache::forget('settings_components_not_special_component_settings');

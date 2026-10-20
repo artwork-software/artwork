@@ -9,6 +9,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Illuminate\Support\Arr;
 
 class ProjectTabBulkEditService
 {
@@ -28,7 +29,9 @@ class ProjectTabBulkEditService
         $eventsQuery = $project->events()
             ->with([
                 'event_type',
-                'room',
+                // Room::$with lädt admins + creator (volle User-Modelle) — die Bulk-Ansicht liest vom Raum
+                // nur id/name/position; mitserialisiert waren das ~6 KB je Termin
+                'room' => fn ($query) => $query->without(['admins', 'creator']),
                 'eventStatus',
                 'creator',
                 'project.status',
@@ -74,7 +77,9 @@ class ProjectTabBulkEditService
         $eventsUnsorted = $eventsQuery->get()->map(
             /** @return array<string,mixed> */
             fn (Event $event) => array_merge(
-                $event->toArray(),
+                // 'creator' (volles User-Modell inkl. E-Mail, Stundenkonto, Einstellungen) wird nicht
+                // ausgeliefert: das Frontend nutzt nur das schlanke created_by der Minimal-Resource
+                Arr::except($event->toArray(), ['creator']),
                 MinimalCalendarEventResource::make($event)->resolve()
             )
         );

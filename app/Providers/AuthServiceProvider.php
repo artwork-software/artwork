@@ -62,6 +62,7 @@ use Artwork\Modules\ModuleSettings\Http\Policies\ModuleSettingsPolicy;
 use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
 use Artwork\Modules\Project\Policies\CommentPolicy;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -85,6 +86,7 @@ use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Artwork\Modules\Webhook\Policies\WebhookEndpointPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Horizon\Horizon;
 use Laravel\Passport\Bridge\AccessTokenRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\Token;
@@ -245,11 +247,40 @@ class AuthServiceProvider extends ServiceProvider
                     return false;
                 }
 
-                return $crmContact->teamProjects()
+                if (
+                    $crmContact->teamProjects()
+                        ->get()
+                        ->contains(static fn ($project): bool => $user->can('view', $project))
+                ) {
+                    return true;
+                }
+
+                // Projektkünstler*innen (Komponente „Projektkünstler*in“ oder Sonderrolle in einer Kontaktliste):
+                // Infokarte für alle, die das Projekt sehen (Kalender, Dienstplan, Übersicht)
+                $artistProjectIds = $crmContact->projects()->pluck('projects.id')
+                    ->merge(ProjectComponentCrmContact::query()
+                        ->where('crm_contact_id', $crmContact->id)
+                        ->where('is_artist', true)
+                        ->pluck('project_id'))
+                    ->unique();
+
+                return Project::query()
+                    ->whereIn('id', $artistProjectIds)
                     ->get()
                     ->contains(static fn ($project): bool => $user->can('view', $project));
             }
         );
+
+        // Horizon zeigt Job-Payloads (u. a. Magic-Link-Tokens). Ohne eigenes Gate wäre das Dashboard
+        // bei APP_ENV=local anonym offen und sonst für niemanden; daher nur für artwork-Admins.
+        Gate::define('viewHorizon', static function (?User $user = null): bool {
+            return $user?->hasRole(RoleEnum::ARTWORK_ADMIN->value) ?? false;
+        });
+        Horizon::auth(static function ($request): bool {
+            $user = $request->user();
+
+            return $user instanceof User && Gate::forUser($user)->allows('viewHorizon');
+        });
 
         // Dienstplaner-Berechtigung als benanntes Gate — die eine Definition
         // für Web und App (Admins via Gate::before).

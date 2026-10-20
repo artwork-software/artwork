@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use App\Events\UserStatusUpdated;
 use App\Events\UserWentOffline;
 use Artwork\Modules\Event\Events\BulkEventChanged;
+use Artwork\Modules\Event\Events\EventCreated;
+use Artwork\Modules\Event\Events\EventUpdated;
+use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\IndividualTimes\Events\IndividualTimeChanged;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -14,10 +17,13 @@ use Artwork\Modules\Shift\Events\MultiShiftCreateInShiftPlan;
 use Artwork\Modules\Shift\Events\ShiftAssigned;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Events\WorkerAvailabilityChanged;
+use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Bus;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -177,6 +183,88 @@ final class SecurityAuditBroadcastRegressionTest extends TestCase
         }
 
         $this->authorizeChannel('private-event.room.999999999')->assertForbidden();
+    }
+
+    // ---------------------------------------------------------------- Planungstermine (14.10.2026)
+
+    #[Test]
+    public function planning_channels_require_the_planning_calendar_permission(): void
+    {
+        $room = Room::factory()->create();
+        $planningChannels = ['private-bulk.events.planning', "private-event.planning.room.{$room->id}"];
+
+        $this->actingAsUserWith([]);
+        foreach ($planningChannels as $channel) {
+            $this->authorizeChannel($channel)->assertForbidden();
+        }
+
+        $this->actingAsUserWith([PermissionEnum::CAN_SEE_PLANNING_CALENDAR]);
+        foreach ($planningChannels as $channel) {
+            $this->authorizeChannel($channel)->assertOk();
+        }
+        $this->authorizeChannel('private-event.planning.room.999999999')->assertForbidden();
+    }
+
+    #[Test]
+    public function planned_events_reach_the_open_channels_only_without_content(): void
+    {
+        $room = Room::factory()->create();
+        $planned = Event::factory()->create([
+            'room_id' => $room->id,
+            'is_planning' => true,
+            'eventName' => 'GeheimePlanung',
+            'name' => 'GeheimePlanung',
+        ]);
+
+        foreach ([
+            new EventCreated($planned, $room->id),
+            new EventUpdated($planned, $room->id),
+            new BulkEventChanged($planned, 'updated'),
+        ] as $broadcast) {
+            $this->assertStringNotContainsString('planning', $broadcast->broadcastOn()->name);
+            $payload = json_encode($broadcast->broadcastWith());
+            $this->assertStringNotContainsString('GeheimePlanung', $payload, $broadcast::class);
+            $this->assertTrue($broadcast->broadcastWith()['event']['redacted'], $broadcast::class);
+
+            $companion = $broadcast->planningCompanion();
+            $this->assertNotNull($companion, $broadcast::class);
+            $this->assertStringContainsString('planning', $companion->broadcastOn()->name);
+            $this->assertStringContainsString('GeheimePlanung', json_encode($companion->broadcastWith()));
+        }
+
+        $bulkPayload = json_decode(json_encode(BulkEventChanged::eventPayload($planned->fresh())), true);
+        $this->assertSame(['id', 'name', 'position'], array_keys($bulkPayload['room']));
+
+        $removal = json_encode((new RemoveEvent($planned, $room->id))->broadcastWith());
+        $this->assertStringNotContainsString('GeheimePlanung', $removal);
+    }
+
+    #[Test]
+    public function fixed_events_have_no_planning_companion(): void
+    {
+        $fixed = Event::factory()->create(['is_planning' => false]);
+
+        $this->assertNull((new EventCreated($fixed, $fixed->room_id))->planningCompanion());
+        $payload = json_decode(json_encode((new EventCreated($fixed, $fixed->room_id))->broadcastWith()), true);
+        $this->assertArrayNotHasKey('redacted', $payload['event']);
+        $this->assertSame($fixed->id, $payload['event']['id']);
+    }
+
+    #[Test]
+    public function safe_broadcast_sends_the_planning_companion_too(): void
+    {
+        Bus::fake();
+        $planned = Event::factory()->create(['is_planning' => true]);
+
+        SafeBroadcast::send(new EventUpdated($planned, $planned->room_id));
+
+        $channels = Bus::dispatched(BroadcastEvent::class)
+            ->map(fn (BroadcastEvent $job) => $job->event->broadcastOn()->name)
+            ->all();
+        $this->assertSame([
+            "private-event.room.{$planned->room_id}",
+            "private-event.planning.room.{$planned->room_id}",
+        ], $channels);
     }
 
     // ---------------------------------------------------------------- Payload / Kanaltyp

@@ -5,9 +5,11 @@ namespace Artwork\Modules\Project\Models;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Project\Services\ProjectArtistService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Ein CRM-Kontakt in einer Komponente „CRM-Kontaktliste“ eines Projekts.
@@ -16,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $project_id
  * @property int $component_id
  * @property int $crm_contact_id
+ * @property list<string>|null $roles Freitext-Rollen in dieser Liste
+ * @property bool $is_artist Sonderrolle „Künstler*in“ (= Projektkünstler*in)
  * @property int|null $created_by_user_id
  * @property int|null $created_by_external_access_id
  * @property Carbon|null $reviewed_at
@@ -35,6 +39,8 @@ class ProjectComponentCrmContact extends Model
         'project_id',
         'component_id',
         'crm_contact_id',
+        'roles',
+        'is_artist',
         'created_by_user_id',
         'created_by_external_access_id',
         'reviewed_at',
@@ -45,7 +51,29 @@ class ProjectComponentCrmContact extends Model
     {
         return [
             'reviewed_at' => 'datetime',
+            'roles' => 'array',
+            'is_artist' => 'boolean',
         ];
+    }
+
+    /**
+     * Sonderrolle „Künstler*in“ ändert die Projektkünstler*innen (projects.linked_artists): nach jedem
+     * Anlegen/Ändern/Entfernen neu berechnen – nach dem Commit, damit die Liste den gespeicherten Stand zeigt.
+     */
+    protected static function booted(): void
+    {
+        $refresh = static function (self $entry): void {
+            $projectId = (int) $entry->project_id;
+            DB::afterCommit(static fn () => app(ProjectArtistService::class)->refresh($projectId));
+        };
+
+        static::created(fn (self $entry) => $entry->is_artist ? $refresh($entry) : null);
+        static::updated(
+            fn (self $entry) => $entry->wasChanged(['is_artist', 'crm_contact_id', 'project_id', 'reviewed_at'])
+                ? $refresh($entry)
+                : null
+        );
+        static::deleted(fn (self $entry) => $entry->is_artist ? $refresh($entry) : null);
     }
 
     /**

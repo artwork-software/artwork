@@ -2,6 +2,7 @@
 import { ref, reactive, computed, watch, onMounted, toRef, nextTick, defineAsyncComponent } from 'vue'
 import { parseYmd, toYmd } from '@/Helper/IsoWeek.js'
 import { router, useForm, usePage } from '@inertiajs/vue3'
+import { shiftPlanFlashOnlyReload } from '@/Helper/shiftPlanReloads.js'
 import axios from 'axios'
 import { failedRequestMessage } from '@/Helper/appToast.js'
 import { useI18n } from 'vue-i18n'
@@ -1046,6 +1047,7 @@ function saveShift() {
         shiftForm.post(route('event.shift.store.multi.add'), {
             preserveScroll: true,
             preserveState: true,
+            ...shiftPlanFlashOnlyReload(page.component),
             // flash.shiftPlanUpdate = neu angelegte Schichten → Ansicht zeigt sie sofort (nicht nur per WebSocket)
             onSuccess: (page) => { shiftForm.reset(); closeModal(true, page?.props?.flash?.shiftPlanUpdate ?? null) },
             onError: (e) => applyServerErrors(e),
@@ -1057,6 +1059,7 @@ function saveShift() {
         shiftForm.post(route('event.shift.store.without.event'), {
             preserveScroll: true,
             preserveState: true,
+            ...shiftPlanFlashOnlyReload(page.component),
             onSuccess: (page) => { shiftForm.reset(); closeModal(true, page?.props?.flash?.shiftPlanUpdate ?? null) },
             onError: (e) => applyServerErrors(e),
         })

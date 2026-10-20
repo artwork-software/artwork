@@ -148,6 +148,7 @@ use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
 use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
@@ -265,6 +266,36 @@ class ProjectController extends Controller
         );
     }
 
+    /**
+     * Felder, die die Projektübersicht von Team-Mitgliedern liest: SingleProjectInManagement nur die IDs
+     * (Rechte), der Bearbeiten-Dialog Name und Bild der Projektleitung.
+     */
+    private const INDEX_PERSON_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
+
+    /**
+     * Team-Listen der Übersicht (users, writeUsers, managerUsers, access_budget, delete_permission_users) nur
+     * mit den gelesenen Feldern ausliefern — vorher volle User-Modelle inkl. E-Mail, Stundenkonto und aller
+     * Einstellungen, je Projekt mehrfach (Seite mit 100 Projekten: ~4 MB). Die stdClass-Einträge von
+     * mapProjectsToComponents verweisen auf dieselben Modelle.
+     *
+     * @param iterable<Project> $projects
+     */
+    private function slimProjectPeopleForIndex(iterable $projects): void
+    {
+        foreach ($projects as $project) {
+            foreach ($project->getRelations() as $related) {
+                if (!$related instanceof \Illuminate\Support\Collection) {
+                    continue;
+                }
+                foreach ($related as $model) {
+                    if ($model instanceof User) {
+                        $model->setVisible(self::INDEX_PERSON_FIELDS);
+                    }
+                }
+            }
+        }
+    }
+
     public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
 
@@ -327,6 +358,9 @@ class ProjectController extends Controller
             $visibleComponentIds,
             $canSeeBudgetInformations
         );
+
+        $this->slimProjectPeopleForIndex($projects->getCollection());
+        $this->slimProjectPeopleForIndex($pinnedProjects);
 
         return inertia('Projects/NewProjectManagement', [
             'projects' => $projects,
@@ -414,7 +448,11 @@ class ProjectController extends Controller
             ->get()
             ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
 
+        // CRM-Kontaktlisten als Spalte: nur Namen, Rollen und Sonderrolle (keine Eigenschaften), ein Query
+        $crmListEntries = $this->overviewCrmListEntries($projects, $components, $visibleComponentIds);
+
         $mapped = $projects->map(function ($project) use (
+            $crmListEntries,
             $components,
             $componentData,
             $componentValues,
@@ -476,7 +514,10 @@ class ProjectController extends Controller
                         $projectData->icon = $project->icon;
                         break;
                     case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
-                        $projectData->artist_name = $project->artists;
+                        // Freitext plus verknüpfte CRM-Künstler*innen (Hover-Infokarte über linked_artists)
+                        $projectData->artist_name = $project->artistDisplayText();
+                        $projectData->artist_free_text = $project->artists;
+                        $projectData->linked_artists = $project->linked_artists ?? [];
                         break;
                     case ProjectTabComponentEnum::BI_KEY_FIGURES->value:
                         $tickets = $this->biProjectMetricsService->soldTickets($project);
@@ -491,7 +532,10 @@ class ProjectController extends Controller
                         $projectData->state = $projectStates->get($project->state);
                         break;
                     case ProjectTabComponentEnum::PROJECT_GROUP->value:
-                        $projectData->group = $project->groups;
+                        // Zelle zeigt nur Gruppennamen; volle Gruppen-Modelle (samt users) blähen das Payload auf
+                        $projectData->group = $project->groups
+                            ->map(fn (Project $group): array => ['id' => $group->id, 'name' => $group->name])
+                            ->values();
                         $projectData->is_group = $project->is_group;
                         $projectData
                             ->projects_of_group_count = $project
@@ -534,6 +578,10 @@ class ProjectController extends Controller
                 if ($componentFullData && !$componentFullData->special) {
                     $projectData->{$component->type}[$componentFullData->id] =
                         $componentValues->get($componentFullData->id . ':' . $project->id);
+                }
+                if ($componentFullData && $component->type === ProjectTabComponentEnum::CRM_CONTACT_LIST->value) {
+                    $projectData->crm_contact_lists[$componentFullData->id] =
+                        $crmListEntries->get($project->id . ':' . $componentFullData->id, []);
                 }
             }
             $projectData->hiddenComponentIds = array_values(array_unique($hiddenComponentIds));
@@ -588,6 +636,42 @@ class ProjectController extends Controller
         return $componentTypes->contains(ProjectTabComponentEnum::PROJECT_PERIOD->value)
             ? $this->getProjectPeriods($projects)
             : [];
+    }
+
+    /**
+     * Einträge der CRM-Kontaktlisten für die Projektübersicht (nur sichtbare Listen-Spalten).
+     *
+     * @return Collection<string, list<array{id: int, display_name: string, roles: list<string>, is_artist: bool, contact_type: array{name: string, color: string|null}|null}>>
+     */
+    private function overviewCrmListEntries($projects, $components, Collection $visibleComponentIds): Collection
+    {
+        $listComponentIds = collect($components)
+            ->where('type', ProjectTabComponentEnum::CRM_CONTACT_LIST->value)
+            ->pluck('component_id')
+            ->filter(fn ($id) => isset($visibleComponentIds[$id]))
+            ->values();
+        if ($listComponentIds->isEmpty()) {
+            return collect();
+        }
+
+        return ProjectComponentCrmContact::query()
+            ->whereIn('project_id', $projects->pluck('id'))
+            ->whereIn('component_id', $listComponentIds)
+            ->whereHas('crmContact')
+            ->with(['crmContact:id,display_name,crm_contact_type_id', 'crmContact.contactType:id,name,color'])
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn (ProjectComponentCrmContact $entry) => $entry->project_id . ':' . $entry->component_id)
+            ->map(fn ($entries) => $entries->map(fn (ProjectComponentCrmContact $entry) => [
+                'id' => $entry->crm_contact_id,
+                'display_name' => (string) $entry->crmContact?->display_name,
+                'roles' => array_values((array) ($entry->roles ?? [])),
+                'is_artist' => (bool) $entry->is_artist,
+                'contact_type' => $entry->crmContact?->contactType ? [
+                    'name' => $entry->crmContact->contactType->name,
+                    'color' => $entry->crmContact->contactType->color,
+                ] : null,
+            ])->values()->all());
     }
 
     /**
@@ -2108,12 +2192,18 @@ class ProjectController extends Controller
                 $moneySourceCalculationService,
                 $notificationService
             ): void {
-                if ($moneySource = MoneySource::find($linkedMoneySourceId)) {
-                    $moneySourceThresholdReminderService->handleThresholdReminders(
-                        $moneySource,
-                        $moneySourceCalculationService,
-                        $notificationService
-                    );
+                // Läuft in der Terminate-Phase: eine Exception hier würde nach bereits gesendeter
+                // Antwort als "headers already sent"-Fatal enden und die eigentliche Ursache verdecken.
+                try {
+                    if ($moneySource = MoneySource::find($linkedMoneySourceId)) {
+                        $moneySourceThresholdReminderService->handleThresholdReminders(
+                            $moneySource,
+                            $moneySourceCalculationService,
+                            $notificationService
+                        );
+                    }
+                } catch (Throwable $throwable) {
+                    report($throwable);
                 }
             })->afterResponse();
         }
@@ -2862,7 +2952,7 @@ class ProjectController extends Controller
         $headerObject->projectGenres     = $project->genres;
         $headerObject->projectSectors    = $project->sectors;
 
-        $headerObject->rooms = Room::select('id', 'name')->whereNull('deleted_at')->get();
+        $headerObject->rooms = Room::listWithEffectiveAdminIds(['id', 'name', 'everyone_can_book']);
 
         $headerObject->projectState = $project->state;
 
@@ -3027,16 +3117,17 @@ class ProjectController extends Controller
                 $userCalendarSettings,
                 $startDate,
                 $endDate,
-                true
+                true,
+                isShiftPlan: true
             );
 
             $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
                 id: $room->id,
                 name: $room->name,
                 has_events: $room->events_count > 0,
-                admins: $room->admins->pluck('id')->toArray(),
+                admins: $room->effectiveAdminIds(),
                 everyone_can_book: $room->everyone_can_book,
-                requestable_by: $room->requestableBy->pluck('id')->toArray(),
+                requestable_by: $room->effectiveRequestableByIds(),
             ));
 
             $dateValue = [
@@ -3160,7 +3251,7 @@ class ProjectController extends Controller
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByPosition(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'currentUserCrafts' => $this->getCurrentUserCraftsForShiftTab($user, $craftService),
+            'currentUserCrafts' => $craftService->getCraftsForShiftCreation($user),
             'shiftTimePresets' => $shiftTimePresetService->getAll(),
             'globalQualifications' => app(GlobalQualificationService::class)->getAll(),
             'shiftGroups' => app(ShiftGroupService::class)->getAllShiftGroups(),
@@ -3441,28 +3532,6 @@ class ProjectController extends Controller
         return $groupLink ? Project::find($groupLink->group_id) : null;
     }
 
-    /**
-     * Get crafts that the current user is allowed to assign in shift planning.
-     */
-    private function getCurrentUserCraftsForShiftTab(
-        User $user,
-        CraftService $craftService
-    ): \Illuminate\Database\Eloquent\Collection {
-        // If user is admin, return all crafts with qualifications
-        if ($user->hasRole('artwork admin')) {
-            return $craftService->getAll(['qualifications']);
-        }
-
-        // Get crafts that are assignable by all (not restricted)
-        $assignableByAllCrafts = $craftService->getAssignableByAllCrafts();
-
-        // Get crafts where user is explicitly allowed (restricted crafts via craft_users table)
-        $userRestrictedCrafts = $user->crafts()->with(['qualifications'])->get();
-
-        // Merge both collections and remove duplicates by craft id
-        return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
-    }
-
     public function addTimeLineRow(Event $event): void
     {
         $this->authorizeTimelineEdit($event);
@@ -3646,7 +3715,35 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * Schaltet zwischen Projekt und Projektgruppe um (nur aus „Basisdaten bearbeiten“ mit Bestätigung).
+     */
+    public function updateType(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorize('update', $project);
 
+        $isGroup = (bool) $request->validate(['is_group' => ['required', 'boolean']])['is_group'];
+
+        if ((bool) $project->is_group === $isGroup) {
+            return Redirect::back();
+        }
+
+        $this->projectService->changeProjectType($project, $isGroup);
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('public_changes')
+                ->setModelClass(Project::class)
+                ->setModelId($project->id)
+                ->setTranslationKey(
+                    $isGroup ? 'Project converted to project group' : 'Project group converted to project'
+                )
+        );
+        $this->setPublicChangesNotification($project->id);
+
+        return Redirect::back();
+    }
 
     public function updateTeam(
         Request $request,

@@ -1470,9 +1470,10 @@ const checkedEventProperties = computed(() => (event_properties ?? []).filter(p 
 // Dialog geöffnet wurde (vorher wurde ein geplanter Termin im normalen Kalender wie ein regulärer behandelt).
 const effectiveIsPlanning = computed(() => (props.event?.id ? !!props.event.isPlanning : props.isPlanning))
 
-// "Termine immer direkt buchbar" (Instanz-Setting): nie Anfrage-Modus, jede anlegeberechtigte Person bucht direkt
+// "Termine immer direkt buchbar" (Instanz-Setting): nie Anfrage-Modus, jede anlegeberechtigte Person bucht direkt –
+// geplante Termine brauchen auch dann "Im Planungskalender fest planen" (EventPolicy::book)
 const canCreateDirect = computed(
-    () => !!page.props.event_direct_booking_only || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (effectiveIsPlanning.value ? can('can plan fixed in planning calendar') : can('create events without request'))
+    () => (!!page.props.event_direct_booking_only && !effectiveIsPlanning.value) || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (effectiveIsPlanning.value ? can('can plan fixed in planning calendar') : can('create events without request'))
 )
 // Geplante Termine kennen keine Raumanfrage: ohne Anlegerecht gibt es keinen Anfrage-Button, nur einen Hinweis
 const planningWithoutCreateRight = computed(() => effectiveIsPlanning.value && !canCreateDirect.value)
@@ -1961,6 +1962,8 @@ function payload() {
     }
 }
 async function updateOrCreateEvent(isOptionParam = false) {
+    // Läuft schon ein Speichervorgang, legt ein zweiter Klick sonst einen zweiten Termin an
+    if (isLoading.value) return
     isOption.value = isOptionParam
 
     if (allDayEvent.value) {
@@ -2041,14 +2044,19 @@ async function confirmAssignmentImpactAndSave() {
 }
 
 async function doSaveEvent() {
+    if (isLoading.value) return
+    // Vor dem ersten await sperren: solange die Beschreibung nachlädt, war der
+    // Speichern-Button sonst noch klickbar und schickte den Termin doppelt
+    isLoading.value = true
+
     // Alle Speicherwege laufen hier durch: ohne geladenen Volltext wuerde
     // payload() eine leere Beschreibung schicken und den Text loeschen.
     if (!await ensureDescriptionLoaded()) {
+        isLoading.value = false
         error.value = { description: $t('The description could not be loaded. Please reopen the event before saving.') }
         return
     }
 
-    isLoading.value = true
     const data = payload()
 
     if (!(await checkSeriesImpact())) {

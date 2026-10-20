@@ -24,6 +24,15 @@ class SpecialDayService
     /** @var Collection<int, Holiday>|null */
     private ?Collection $flaggedHolidays = null;
 
+    /**
+     * @var array<int, array{holiday: Holiday, start: Carbon, startTimestamp: int, endTimestamp: int,
+     *     yearly: bool, spanDays: int}>|null
+     */
+    private ?array $holidayBounds = null;
+
+    /** @var array<int, array<int, array{0: int, 1: int}|null>> [Index in holidayBounds][Jahr] */
+    private array $yearlyBoundsCache = [];
+
     /** @var array<string, bool> */
     private array $dateCache = [];
 
@@ -123,52 +132,111 @@ class SpecialDayService
     public function flush(): void
     {
         $this->flaggedHolidays = null;
+        $this->holidayBounds = null;
+        $this->yearlyBoundsCache = [];
         $this->dateCache = [];
         $this->userRuleCache = [];
     }
 
     private function matchingHoliday(Carbon $day): ?Holiday
     {
-        foreach ($this->flaggedHolidays() as $holiday) {
-            if ($this->holidayCoversDay($holiday, $day)) {
-                return $holiday;
+        $dayTimestamp = $day->getTimestamp();
+
+        foreach ($this->holidayBounds() as $index => $bounds) {
+            if ($this->holidayCoversDay($index, $bounds, $day, $dayTimestamp)) {
+                return $bounds['holiday'];
             }
         }
 
         return null;
     }
 
-    private function holidayCoversDay(Holiday $holiday, Carbon $day): bool
+    /**
+     * @param array{holiday: Holiday, start: Carbon, startTimestamp: int, endTimestamp: int, yearly: bool,
+     *     spanDays: int} $bounds
+     */
+    private function holidayCoversDay(int $index, array $bounds, Carbon $day, int $dayTimestamp): bool
     {
-        if (!$holiday->date) {
-            return false;
-        }
-
-        $start = Carbon::parse($holiday->date)->startOfDay();
-        $end = $holiday->end_date ? Carbon::parse($holiday->end_date)->startOfDay() : $start->copy();
-
-        if ($end->lt($start)) {
-            $end = $start->copy();
-        }
-
-        if (!$holiday->yearly) {
-            return $day->betweenIncluded($start, $end);
+        if (!$bounds['yearly']) {
+            return $dayTimestamp >= $bounds['startTimestamp'] && $dayTimestamp <= $bounds['endTimestamp'];
         }
 
         // Jährlich: Block mit gleicher Länge in das Jahr des geprüften Tags bzw. – für Blöcke über den
         // Jahreswechsel (31.12.–02.01.) – in das Vorjahr legen.
-        $spanDays = (int) $start->diffInDays($end);
         foreach ([$day->year, $day->year - 1] as $candidateYear) {
-            $candidateStart = Holiday::yearlyStartIn($start, $candidateYear);
+            $candidate = $this->yearlyBoundsIn($index, $bounds, $candidateYear);
             if (
-                $candidateStart !== null &&
-                $day->betweenIncluded($candidateStart, $candidateStart->copy()->addDays($spanDays))
+                $candidate !== null
+                && $dayTimestamp >= $candidate[0]
+                && $dayTimestamp <= $candidate[1]
             ) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Grenzen der Sondertage einmal je Service-Instanz auflösen: matchingHoliday() läuft je Tag über
+     * alle Sondertage (Regelprüfung: Kontextfenster bis ~1 Jahr × alle Einträge) — das Parsen der
+     * Datumswerte je Tag × Eintrag kostete bei Zuweisungen mehrere hundert Millisekunden.
+     *
+     * @return array<int, array{holiday: Holiday, start: Carbon, startTimestamp: int, endTimestamp: int,
+     *     yearly: bool, spanDays: int}>
+     */
+    private function holidayBounds(): array
+    {
+        if ($this->holidayBounds !== null) {
+            return $this->holidayBounds;
+        }
+
+        $this->holidayBounds = [];
+        foreach ($this->flaggedHolidays() as $holiday) {
+            if (!$holiday->date) {
+                continue;
+            }
+
+            $start = Carbon::parse($holiday->date)->startOfDay();
+            $end = $holiday->end_date ? Carbon::parse($holiday->end_date)->startOfDay() : $start->copy();
+
+            if ($end->lt($start)) {
+                $end = $start->copy();
+            }
+
+            $this->holidayBounds[] = [
+                'holiday' => $holiday,
+                'start' => $start,
+                'startTimestamp' => $start->getTimestamp(),
+                'endTimestamp' => $end->getTimestamp(),
+                'yearly' => (bool) $holiday->yearly,
+                'spanDays' => (int) $start->diffInDays($end),
+            ];
+        }
+
+        return $this->holidayBounds;
+    }
+
+    /**
+     * Grenzen eines jährlichen Sondertags im Kandidatenjahr (gecacht je Eintrag und Jahr).
+     *
+     * @param array{start: Carbon, spanDays: int} $bounds
+     * @return array{0: int, 1: int}|null [Start-, End-Timestamp] oder null (29.02. im Nicht-Schaltjahr)
+     */
+    private function yearlyBoundsIn(int $index, array $bounds, int $year): ?array
+    {
+        if (array_key_exists($year, $this->yearlyBoundsCache[$index] ?? [])) {
+            return $this->yearlyBoundsCache[$index][$year];
+        }
+
+        $candidateStart = Holiday::yearlyStartIn($bounds['start'], $year);
+
+        return $this->yearlyBoundsCache[$index][$year] = $candidateStart === null
+            ? null
+            : [
+                $candidateStart->getTimestamp(),
+                $candidateStart->copy()->addDays($bounds['spanDays'])->getTimestamp(),
+            ];
     }
 
     /**

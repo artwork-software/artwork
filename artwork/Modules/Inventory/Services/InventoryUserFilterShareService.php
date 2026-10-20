@@ -68,20 +68,44 @@ class InventoryUserFilterShareService
             'filterable_properties' => $filterableProperties,
             'user_filter' => $userFilterArr,
 
-            // bereits vorhanden:
-            'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
+            // rooms/users/manufacturers als schlanke Arrays (toBase: Global Scopes wie SoftDeletes
+            // greifen weiter): das Frontend liest nur diese Felder. Als Modelle kamen Room::$with
+            // (admins/creator) bzw. die User-/CrmContact-Appends (profile_photo_url, full_name,
+            // formated_work_time_balance …) mit — bei den Nutzern ~45 KB je Seitenaufruf.
+            'rooms' => Room::query()
+                ->toBase()
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (object $room): array => ['id' => (int) $room->id, 'name' => $room->name])
+                ->all(),
 
-            // NEU:
             'projects' => Project::select('id', 'name')->orderBy('name')->get(),
-            'users' => User::select('id', 'first_name', 'last_name')->orderBy('first_name')->get(),
+            'users' => User::query()
+                ->toBase()
+                ->select('id', 'first_name', 'last_name')
+                ->orderBy('first_name')
+                ->get()
+                ->map(fn (object $user): array => [
+                    'id' => (int) $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                ])
+                ->all(),
             'manufacturers' => CrmContact::query()
                     ->whereHas(
                         'contactType',
                         fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value)
                     )
+                    ->toBase()
                     ->select('id', 'display_name as name')
                     ->orderBy('display_name')
-                    ->get(),
+                    ->get()
+                    ->map(fn (object $manufacturer): array => [
+                        'id' => (int) $manufacturer->id,
+                        'name' => $manufacturer->name,
+                    ])
+                    ->all(),
 
             // Tags für Filter
             'tags' => InventoryTag::select('id', 'name', 'color', 'inventory_tag_group_id')->orderBy('position')->get(),

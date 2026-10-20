@@ -12,7 +12,8 @@ use Tests\TestCase;
 
 /**
  * Serien-Policy spiegelt die Regel des Einzel-Endpunkts (IndividualTimeController::store):
- * eigene Zeiten immer, fremde Nutzer*innen nur mit "can manage availability",
+ * eigene Zeiten mit "can enter own individual times" ab heute bzw. mit Verwaltungsrechten an jedem Tag,
+ * fremde Nutzer*innen nur mit "can manage availability",
  * Freelancer/Dienstleister zusätzlich mit "can manage workers"/"can manage external workers".
  */
 final class IndividualTimeSeriesPolicyTest extends TestCase
@@ -26,9 +27,40 @@ final class IndividualTimeSeriesPolicyTest extends TestCase
     }
 
     #[Test]
-    public function users_may_create_series_for_themselves_only(): void
+    public function users_without_permission_may_not_create_own_series(): void
     {
         $user = User::factory()->create();
+
+        $this->assertFalse($this->policy->createForSubjects($user, [['type' => 'user', 'id' => $user->id]]));
+    }
+
+    #[Test]
+    public function own_time_permission_allows_own_series_from_today_on(): void
+    {
+        $user = $this->userWith(PermissionEnum::CAN_ENTER_OWN_INDIVIDUAL_TIMES);
+        $self = [['type' => 'user', 'id' => $user->id]];
+
+        $this->assertTrue($this->policy->createForSubjects($user, $self, now()->toDateString()));
+        $this->assertTrue($this->policy->createForSubjects($user, $self, now()->addWeek()->toDateString()));
+        $this->assertFalse($this->policy->createForSubjects($user, $self, now()->subDay()->toDateString()));
+    }
+
+    #[Test]
+    public function management_rights_allow_own_series_on_past_days(): void
+    {
+        $planner = $this->userWith(PermissionEnum::SHIFT_PLANNER);
+
+        $this->assertTrue($this->policy->createForSubjects(
+            $planner,
+            [['type' => 'user', 'id' => $planner->id]],
+            now()->subMonth()->toDateString()
+        ));
+    }
+
+    #[Test]
+    public function users_may_create_series_for_themselves_only(): void
+    {
+        $user = $this->userWith(PermissionEnum::CAN_ENTER_OWN_INDIVIDUAL_TIMES);
         $other = User::factory()->create();
 
         $this->assertTrue($this->policy->createForSubjects($user, [['type' => 'user', 'id' => $user->id]]));

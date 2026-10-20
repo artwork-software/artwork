@@ -91,6 +91,8 @@ enum PermissionEnum : string
     case CAN_SUBSCRIBE_SHIFT_CALENDAR = 'can subscribe shift calendar';
     // Opt-in je Person für die Schichtbestätigung (Zu-/Absage eigener Zuweisungen)
     case CAN_RESPOND_TO_SHIFT_ASSIGNMENTS = 'can respond to shift assignments';
+    // Eigene individuelle Zeiten im eigenen Einsatzplan anlegen/bearbeiten/löschen (ab heute)
+    case CAN_ENTER_OWN_INDIVIDUAL_TIMES = 'can enter own individual times';
 
     case CAN_VIEW_SHIFT_USER_KPIS = 'can view shift user kpis';
 

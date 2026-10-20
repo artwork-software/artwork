@@ -62,7 +62,7 @@ const props = defineProps({
 const showConfirmDeleteModal = ref(false)
 
 const restoreArticle = () => {
-    router.patch(route('articles.restore', {inventoryArticle: props.article.id}), {
+    router.patch(route('articles.restore', {inventoryArticle: props.article.id}), {}, {
         preserveState: true,
         preserveScroll: true,
     })

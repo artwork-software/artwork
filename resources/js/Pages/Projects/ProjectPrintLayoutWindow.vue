@@ -218,6 +218,7 @@ const componentMapping = {
     BuilderTextField,
     BuilderCheckbox,
     BuilderDropDown,
+    BuilderCheckboxList: BuilderDropDown,
     BuilderTitle,
     BuilderProjectGroupComponent,
     BuilderSeparatorComponent,

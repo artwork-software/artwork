@@ -30,7 +30,7 @@ class ProjectTabChecklistService
             ?->opened_checklists ?? [];
 
         $checklistTemplates = ChecklistTemplateIndexResource::collection(
-            ChecklistTemplate::all()
+            ChecklistTemplate::with(['task_templates', 'user', 'users'])->get()
         )->resolve();
 
         $publicChecklists = $this->getFilteredChecklists($project, $scope, false, $userId, $user);

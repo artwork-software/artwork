@@ -35,6 +35,7 @@ class SageApiSettings extends Model
     ];
 
     protected $casts = [
+        'password' => 'encrypted',
         'enabled' => 'boolean',
         'verify_ssl' => 'boolean',
     ];

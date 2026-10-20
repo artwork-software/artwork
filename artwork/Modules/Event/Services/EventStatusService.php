@@ -6,7 +6,8 @@ use App\Settings\EventSettings;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Repositories\EventStatusRepository;
-use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Illuminate\Http\Request;
 
 readonly class EventStatusService
@@ -58,13 +59,9 @@ readonly class EventStatusService
                 $event->update(['event_status_id' => 1]);
             });
         } else {
-            // setze den Status in den Calendar Settings der user auf false bei use_event_status_color
-            $users = User::all();
-
-            $users->each(function ($user): void {
-                /** @var User $user */
-                $user->calendar_settings()->update(['use_event_status_color' => false]);
-            });
+            // Statusfarbe in allen Einstellungszeilen abschalten (Kalender und Planungskalender, je auch Tagesansicht)
+            UserCalendarSettings::query()->update(['use_event_status_color' => false]);
+            UserDailyViewCalendarSettings::query()->update(['use_event_status_color' => false]);
         }
     }
 

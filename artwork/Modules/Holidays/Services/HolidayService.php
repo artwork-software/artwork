@@ -233,7 +233,7 @@ class HolidayService
         $rangeStart = $start->copy()->startOfDay();
         $rangeEnd = $end->copy()->startOfDay();
 
-        $holidays = Holiday::select(['id','name','date','end_date','color','yearly','treatAsSpecialDay'])
+        $holidays = Holiday::select(['id','name','date','end_date','color','yearly','treatAsSpecialDay','from_api'])
             ->where(function (Builder $q) use ($rangeStart, $rangeEnd): void {
                 $q->where('yearly', true)
                     ->orWhere(function (Builder $fixed) use ($rangeStart, $rangeEnd): void {
@@ -289,6 +289,7 @@ class HolidayService
             color: $holiday->color,
             subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
             treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
+            from_api: (bool) $holiday->from_api,
         );
     }
 }

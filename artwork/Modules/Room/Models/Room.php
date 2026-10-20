@@ -6,6 +6,7 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Models\BelongsToArea;
+use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;
@@ -175,6 +176,164 @@ class Room extends Model
     {
         return $this->belongsToMany(User::class, 'room_user', 'room_id')
             ->wherePivot('can_request', true);
+    }
+
+    /**
+     * Teams mit Raumzugriff (department_room): alle Mitglieder gelten wie direkt eingetragene Personen.
+     * @return BelongsToMany<Department, $this>
+     */
+    public function departments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'department_room')
+            ->withPivot('is_admin', 'can_request')
+            ->withTimestamps();
+    }
+
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
+    public function adminDepartments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'department_room')
+            ->wherePivot('is_admin', true);
+    }
+
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
+    public function requestableByDepartments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'department_room')
+            ->wherePivot('can_request', true);
+    }
+
+    /**
+     * Räume, die die Person verwaltet – direkt (room_user.is_admin) oder über ein Admin-Team.
+     * @param Builder<Room> $query
+     */
+    public function scopeAdministeredBy(Builder $query, int $userId): void
+    {
+        $query->where(function (Builder $query) use ($userId): void {
+            $query->whereHas('admins', fn (Builder $q) => $q->where('users.id', $userId))
+                ->orWhereHas('adminDepartments.users', fn (Builder $q) => $q->where('users.id', $userId));
+        });
+    }
+
+    /**
+     * Räume, in denen die Person Belegungen anfragen darf – direkt oder über ein Team.
+     * @param Builder<Room> $query
+     */
+    public function scopeRequestableByUser(Builder $query, int $userId): void
+    {
+        $query->where(function (Builder $query) use ($userId): void {
+            $query->whereHas('requestableBy', fn (Builder $q) => $q->where('users.id', $userId))
+                ->orWhereHas('requestableByDepartments.users', fn (Builder $q) => $q->where('users.id', $userId));
+        });
+    }
+
+    public function isAdministeredBy(User|int $user): bool
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+        if ($this->relationLoaded('admins') && $this->relationLoaded('adminDepartments')) {
+            return in_array($userId, $this->effectiveAdminIds(), true);
+        }
+
+        return static::query()->whereKey($this->getKey())->administeredBy($userId)->exists();
+    }
+
+    public function isRequestableBy(User|int $user): bool
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+
+        return static::query()->whereKey($this->getKey())->requestableByUser($userId)->exists();
+    }
+
+    /**
+     * Hat der Raum überhaupt Raumadmins (Person oder Team mit Mitgliedern)? Ohne sie entscheidet die Person,
+     * die den Raum angelegt hat.
+     */
+    public function hasAnyAdmin(): bool
+    {
+        return $this->admins()->exists() || $this->adminDepartments()->whereHas('users')->exists();
+    }
+
+    /**
+     * IDs aller Raumadmins inkl. Team-Mitgliedern (Payloads ans Frontend, Benachrichtigungen).
+     * @return array<int, int>
+     */
+    public function effectiveAdminIds(): array
+    {
+        $this->loadMissing(['admins:id', 'adminDepartments.users:id']);
+
+        return $this->admins->pluck('id')
+            ->merge($this->adminDepartments->flatMap(fn (Department $department) => $department->users->pluck('id')))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Schlanke Raumliste fürs Frontend: gewählte Spalten plus `admins` als [{id}] inkl. Mitgliedern der
+     * Admin-Teams (adminIdsOf / roomAdminRights.js), ohne volle User-Modelle aus Room::$with.
+     * @param array<int, string> $columns
+     * @return Collection<int, array<string, mixed>>
+     */
+    public static function listWithEffectiveAdminIds(array $columns): Collection
+    {
+        return static::query()
+            ->select(array_values(array_unique(['id', ...$columns])))
+            ->without(['creator', 'admins'])
+            ->with(['admins:id', 'adminDepartments.users:id'])
+            ->get()
+            ->map(static fn (Room $room): array => [
+                ...$room->only($columns),
+                'admins' => array_map(static fn (int $id): array => ['id' => $id], $room->effectiveAdminIds()),
+            ])
+            ->values();
+    }
+
+    /**
+     * IDs aller Anfrageberechtigten inkl. Team-Mitgliedern.
+     * @return array<int, int>
+     */
+    public function effectiveRequestableByIds(): array
+    {
+        $this->loadMissing(['requestableBy:id', 'requestableByDepartments.users:id']);
+
+        return $this->requestableBy->pluck('id')
+            ->merge($this->requestableByDepartments->flatMap(
+                fn (Department $department) => $department->users->pluck('id')
+            ))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Raumadmins inkl. Team-Mitgliedern aus den (geladenen) Relationen – für Payloads mit Namen/Avatar.
+     * @return Collection<int, User>
+     */
+    public function effectiveAdminUsers(): Collection
+    {
+        $this->loadMissing(['adminDepartments.users:id,first_name,last_name,profile_photo_path']);
+
+        return collect($this->admins->all())
+            ->merge($this->adminDepartments->flatMap(fn (Department $department) => $department->users->all()))
+            ->unique('id')
+            ->values();
+    }
+
+    /**
+     * Alle Raumadmins inkl. Team-Mitgliedern als User (Benachrichtigungen).
+     * @return Collection<int, User>
+     */
+    public function effectiveAdmins(): Collection
+    {
+        $ids = $this->effectiveAdminIds();
+
+        return $ids === [] ? collect() : User::query()->whereIn('id', $ids)->get();
     }
 
     /**

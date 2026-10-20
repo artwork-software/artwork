@@ -3,8 +3,8 @@
         <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
             <div class="p-1 rounded-lg w-1" :class="statuses[eventVerification.status]"></div>
             <div class="w-full">
-                <p class="text-sm font-lexend font-semibold text-text" :style="{color: eventVerification?.event?.event_type.hex_code}">
-                    {{ eventVerification?.event?.event_type.abbreviation }}: {{ eventVerification?.event?.eventName ?? eventVerification?.event?.project?.name }}
+                <p class="text-sm font-lexend font-semibold text-text" :style="{color: eventVerification?.event?.event_type?.hex_code}">
+                    {{ eventVerification?.event?.event_type?.abbreviation }}: {{ eventVerification?.event?.eventName ?? eventVerification?.event?.project?.name }}
                 </p>
                 <p class="mt-1 flex items-center gap-x-1 text-xs text-text-subtle">
                     <span class="font-lexend font-bold">{{ $t('Start') }}:</span>
@@ -96,12 +96,11 @@
 
 <script setup>
 
-import {router, usePage} from "@inertiajs/vue3";
+import {router} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {defineAsyncComponent, ref} from "vue";
 import BaseCard from "@/Artwork/Cards/BaseCard.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import dayjs from "dayjs";
 import {IconBan, IconCalendar, IconCheckbox} from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -132,87 +131,10 @@ const approveRequest = () => {
     })
 }
 
+// Zeitraum und Ziel (Planungskalender bzw. Kalender) bestimmt der Server – vorher wurde hier start_time
+// ("25. Oct 2025 09:00") per Regex zerlegt und bei unbekanntem Format gar nicht navigiert
 const openPlanningCalendarWithEventId = () => {
-    const startTime = props.eventVerification?.event?.start_time;
-
-    if (!startTime || typeof startTime !== 'string') {
-        console.error('Missing or invalid start_time:', startTime);
-        return;
-    }
-
-    // Erwartet Format: "25. Jul 2025 09:00"
-    const parts = startTime.match(/^(\d{1,2})\. (\w{3}) (\d{4}) (\d{2}):(\d{2})$/);
-    if (!parts) {
-        console.error('Unrecognized date format:', startTime);
-        return;
-    }
-
-    const [_, day, monthStr, year, hour, minute] = parts;
-
-    const months = {
-        Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-        Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
-    };
-
-    const month = months[monthStr];
-    if (month === undefined) {
-        console.error('Unknown month abbreviation:', monthStr);
-        return;
-    }
-
-    const eventStartDate = new Date(
-        parseInt(year),
-        month,
-        parseInt(day),
-        parseInt(hour),
-        parseInt(minute)
-    );
-
-    if (isNaN(eventStartDate.getTime())) {
-        console.error('Parsed date is invalid:', eventStartDate);
-        return;
-    }
-
-    // Start of week (Monday)
-    const startOfWeek = new Date(eventStartDate);
-    const dayOfWeek = eventStartDate.getDay();
-    const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    startOfWeek.setDate(eventStartDate.getDate() + offset);
-
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-    const formatDate = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-
-    const startDate = formatDate(startOfWeek);
-    const endDate = formatDate(endOfWeek);
-
-
     router.get(route('event-verifications.redirect-to-calendar', props.eventVerification.event.id))
-    /*
-
-    router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
-        start_date: startDate,
-        end_date: endDate,
-    }, {
-        preserveScroll: true,
-        preserveState: false,
-        onSuccess: () => {
-            router.visit(route('planning-event-calendar.index', {
-                highlightEventId: props.eventVerification.event.id
-            }), {
-                preserveScroll: true,
-                preserveState: false,
-            });
-        }
-    });
-
-     */
 };
 
 

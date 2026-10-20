@@ -404,7 +404,8 @@ const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
         {
             use_project_time_period: enabled,
             project_id: projectId,
-            is_daily_view: props.dailyView
+            is_daily_view: props.dailyView,
+            is_planning: props.isPlanning
         },
         {
             preserveState: false

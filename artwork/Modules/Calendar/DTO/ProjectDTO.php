@@ -5,11 +5,14 @@ namespace Artwork\Modules\Calendar\DTO;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 
 class ProjectDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
+
     public function __construct(
         public int $id,
         public string $name,
@@ -23,6 +26,8 @@ class ProjectDTO extends Data
         public ?array $group = null,
         public ?array $userIds = null,
         public ?string $mainCategoryColor = null,
+        // verknüpfte CRM-Künstler*innen [{id, name}] für Hover/Infokarte (artistNames enthält sie schon als Text)
+        public ?array $linkedArtists = null,
     ) {
     }
 
@@ -41,7 +46,7 @@ class ProjectDTO extends Data
                 'name' => $statusModel->name,
                 'color' => $statusModel->color,
             ] : null,
-            $project->artists,
+            $project->artistDisplayText(),
             $userCalendarSettings?->project_management ?
                 self::serializeLeaders($project->managerUsers) :
                 Lazy::inertia(fn () => self::serializeLeaders($project->managerUsers)),
@@ -57,6 +62,7 @@ class ProjectDTO extends Data
                 ->all() : null,
             $project->users->pluck('id')->toArray(),
             $project->categories->firstWhere('pivot.is_main', true)?->color,
+            $project->linked_artists,
         );
     }
 
@@ -73,7 +79,7 @@ class ProjectDTO extends Data
                 'name' => $statusModel->name,
                 'color' => $statusModel->color,
             ] : null,
-            artistNames: $project->artists,
+            artistNames: $project->artistDisplayText(),
             leaders: [],
             color: $project->color,
             icon: $project->icon,
@@ -89,6 +95,7 @@ class ProjectDTO extends Data
             mainCategoryColor: $project->relationLoaded('categories')
                 ? $project->categories->firstWhere('pivot.is_main', true)?->color
                 : null,
+            linkedArtists: $project->linked_artists,
         );
     }
 

@@ -8,11 +8,13 @@ use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 
 class EventDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
     use SerializesEventRelations;
 
     public bool $isMinimal = false; // this is used by frontend, dont remove it

@@ -187,6 +187,28 @@ final class AppControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function toggle_use_project_period_redirects_to_the_calendar(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->patch(
+            route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+            ['use_project_time_period' => false, 'project_id' => 0]
+        )->assertRedirect(route('events'));
+    }
+
+    #[Test]
+    public function toggle_use_project_period_stays_in_the_planning_calendar(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->patch(
+            route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+            ['use_project_time_period' => false, 'project_id' => 0, 'is_planning' => true]
+        )->assertRedirect(route('planning-event-calendar.index'));
+    }
+
+    #[Test]
     public function setup_create_admin_is_forbidden_when_setup_already_finished(): void
     {
         // Account-Takeover-Schutz: auf einer fertig eingerichteten Instanz darf der

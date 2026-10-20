@@ -236,7 +236,7 @@ const deleteIssue = () => {
 };
 
 const setSpecialItemsDone = () => {
-    router.post(route('extern-issue-of-material.set-special-items-done', props.externMaterialIssue.id), {
+    router.post(route('extern-issue-of-material.set-special-items-done', props.externMaterialIssue.id), {}, {
         preserveState: true, preserveScroll: true
     });
 };

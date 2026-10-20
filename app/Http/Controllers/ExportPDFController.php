@@ -541,7 +541,8 @@ class ExportPDFController extends Controller
             $startDate,
             $endDate,
             true,
-            $project
+            $project,
+            isShiftPlan: true
         );
 
         $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(

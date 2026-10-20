@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\GetShiftPlanWorkersRequest;
 use App\Settings\EventSettings;
 use App\Settings\ShiftSettings;
+use Artwork\Core\Http\Inertia\PlainDataProp;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
 use Artwork\Core\Services\HelperService;
@@ -18,6 +19,7 @@ use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\EventPlanningCalendarService;
+use Artwork\Modules\Event\Services\EventVerificationService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftPlanService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -128,6 +130,10 @@ use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 
 class EventController extends Controller
 {
+    /** Tage je Block der Dienstplan-Listenansicht (erster Block mit der Seite, Rest nachgeladen) */
+    private const SHIFT_LIST_VIEW_CHUNK_DAYS = 7;
+    private const SHIFT_LIST_VIEW_MAX_CHUNK_DAYS = 31;
+
     private const MAX_MULTI_CELL_TARGETS = 250;
     private const MAX_MULTI_CELL_SOURCE_EVENTS = 50;
     private const MAX_MULTI_CELL_DUPLICATES = 500;
@@ -319,9 +325,9 @@ class EventController extends Controller
         // Sicherheitskappen für View-Spannen: Tagesansicht bis zu einem Monat
         // (leere Stunden kollabieren clientseitig, ~50k DOM-Knoten bei 31 Tagen gemessen ok)
         $calendarWarningText = '';
-        if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
+        if ($isDailyView && self::calendarDaysBetween($startDate, $endDate) > 30) {
             // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
-            $endDate = $startDate->copy()->addDays(30);
+            $endDate = $startDate->copy()->addDays(30)->endOfDay();
             $calendarWarningText = __('calendar.daily_view_info');
 
             $user->userFilters()->updateOrCreate(
@@ -330,8 +336,8 @@ class EventController extends Controller
             );
         }
 
-        if ($startDate->diffInDays($endDate) > (365 * 2)) {
-            $endDate = $startDate->copy()->addYears(2);
+        if (self::calendarDaysBetween($startDate, $endDate) > (365 * 2)) {
+            $endDate = $startDate->copy()->addYears(2)->endOfDay();
             $calendarWarningText = __('calendar.calendar_limit_two_years');
 
             $user->userFilters()->updateOrCreate(
@@ -364,7 +370,8 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
-            false // Calendar view: only events determine occupancy
+            // Schicht-Karten („Schichten anzeigen“) belegen den Raum wie Termine
+            CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
         );
 
         // Transform Room models to RoomDTOs for frontend compatibility
@@ -372,9 +379,9 @@ class EventController extends Controller
             id: $room->id,
             name: $room->name,
             has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray(),
+            admins: $room->effectiveAdminIds(),
             everyone_can_book: $room->everyone_can_book,
-            requestable_by: $room->requestableBy->pluck('id')->toArray(),
+            requestable_by: $room->effectiveRequestableByIds(),
         ));
 
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
@@ -426,7 +433,7 @@ class EventController extends Controller
                     ->get()
                 : [],
             'currentUserCrafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
-                ? $this->getCurrentUserCrafts($user)
+                ? $this->craftService->getCraftsForShiftCreation($user)
                 : [],
             'shiftTimePresets' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftTimePresetService->getAll()
@@ -443,21 +450,12 @@ class EventController extends Controller
         $user = $this->authManager->user();
         $isDailyView = (bool) $user->getAttribute('calendar_daily_view');
 
-        if ($isDailyView) {
-            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
-            }
-        } else {
-            $userCalendarSettings = $user->getAttribute('calendar_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->calendar_settings()->create();
-            }
-        }
-
         $isPlanning           = $request->boolean('isPlanning', false);
         // Gleiche Schranke wie viewPlanningCalendar(): die Daten-API darf nicht mehr zeigen als die Seite.
         abort_if($isPlanning && !$user->can('viewPlanning', Event::class), 403);
+
+        // Planungskalender und Kalender haben je eine eigene Einstellungszeile
+        $userCalendarSettings = $user->calendarSettingsFor($isPlanning, $isDailyView);
 
         if ($isPlanning) {
             $filterType = $isDailyView
@@ -487,7 +485,9 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
-            false // Calendar API: only events determine occupancy
+            // Schicht-Karten („Schichten anzeigen“) belegen den Raum wie Termine
+            CalendarShiftVisibility::isEnabled($user, $userCalendarSettings),
+            isPlanningCalendar: $isPlanning
         );
 
         $calendar = ($isPlanning
@@ -522,12 +522,19 @@ class EventController extends Controller
      */
     private function eventsWithoutRoomForCalendar(
         UserCalendarSettings|UserDailyViewCalendarSettings|null $userCalendarSettings,
-        \Illuminate\Support\Collection $eventTypes
+        \Illuminate\Support\Collection $eventTypes,
+        bool $isPlanningCalendar = false
     ): \Illuminate\Support\Collection {
         return Event::query()
             ->hasNoRoom()
+            // Gleiche Regel wie die Termine mit Raum: „Feste Termine anzeigen“ aus → nur geplante Termine
+            ->where(fn ($query) => CalendarDataService::whereVisibleByPlanningState(
+                $query,
+                $userCalendarSettings,
+                $isPlanningCalendar
+            ))
             ->with([
-                'project:id,name,state,artists,is_group,color,icon',
+                'project:id,name,state,artists,linked_artists,is_group,color,icon',
                 'project.status:id,name,color',
                 'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path',
                 'project.groups',
@@ -564,18 +571,16 @@ class EventController extends Controller
                 ['filter_type' => $planningFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
-            }
         } else {
             $planningFilterType = UserFilterTypes::PLANNING_FILTER->value;
             $userCalendarFilter = $user->userFilters()->firstOrCreate(
                 ['filter_type' => $planningFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('calendar_settings');
         }
+        // Eigene Einstellungszeile des Planungskalenders (legt sie bei Bedarf an – ohne Einstellungen brach
+        // getCalendarDateRange() mit TypeError ab)
+        $userCalendarSettings = $user->calendarSettingsFor(true, $isDailyView);
 
         $this->userService->shareCalendarAbo('calendar');
 
@@ -585,9 +590,9 @@ class EventController extends Controller
         $calendarWarningText = '';
 
         // Tagesansicht bis zu einem Monat (wie im Standard-Kalender)
-        if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
+        if ($isDailyView && self::calendarDaysBetween($startDate, $endDate) > 30) {
             // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
-            $endDate = $startDate->copy()->addDays(30);
+            $endDate = $startDate->copy()->addDays(30)->endOfDay();
             $calendarWarningText = __('calendar.daily_view_info');
             $user->userFilters()->updateOrCreate([
                 'filter_type' => $planningFilterType
@@ -597,8 +602,8 @@ class EventController extends Controller
         }
 
 
-        if ($startDate->diffInDays($endDate) > (365 * 2)) {
-            $endDate = $startDate->copy()->addYears(2);
+        if (self::calendarDaysBetween($startDate, $endDate) > (365 * 2)) {
+            $endDate = $startDate->copy()->addYears(2)->endOfDay();
             $calendarWarningText = __('calendar.calendar_limit_two_years');
             $user->userFilters()->updateOrCreate([
                 'filter_type' => $planningFilterType
@@ -637,7 +642,9 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
-            false // Planning calendar: only events determine occupancy
+            // Schicht-Karten („Schichten anzeigen“) belegen den Raum wie Termine
+            CalendarShiftVisibility::isEnabled($user, $userCalendarSettings),
+            isPlanningCalendar: true
         );
 
         $this->eventPlanningCalendarService->filterRoomsEvents(
@@ -660,9 +667,9 @@ class EventController extends Controller
             id: $room->id,
             name: $room->name,
             has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray(),
+            admins: $room->effectiveAdminIds(),
             everyone_can_book: $room->everyone_can_book,
-            requestable_by: $room->requestableBy->pluck('id')->toArray(),
+            requestable_by: $room->effectiveRequestableByIds(),
         ));
 
         $dateValue = [
@@ -684,7 +691,7 @@ class EventController extends Controller
             'personalFilters' => Inertia::always(fn() => $this->filterService
                 ->getPersonalFilter($user, $planningFilterType)),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
-            'eventsWithoutRoom' => $this->eventsWithoutRoomForCalendar($userCalendarSettings, $eventTypes),
+            'eventsWithoutRoom' => $this->eventsWithoutRoomForCalendar($userCalendarSettings, $eventTypes, true),
             'areas' => $this->areaService->getAll(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
@@ -700,7 +707,12 @@ class EventController extends Controller
                 ->resolveTimePeriodProject($userCalendarSettings)?->name,
             'calendarWarningText' => $calendarWarningText,
             'months' => $months,
-            'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
+            // Auch Modus "spezifisch" (event_types.specific_verifier_id) – sonst fehlten der festgelegten Person
+            // "Prüfung genehmigen/ablehnen" im Planungskalender (die Eingangsliste kennt beide Quellen)
+            'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id')
+                ->merge(EventType::where('specific_verifier_id', $user->id)->pluck('id'))
+                ->unique()
+                ->values(),
             'filterType' => $planningFilterType,
             'isDailyView' => $isDailyView,
             'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
@@ -717,7 +729,7 @@ class EventController extends Controller
                     ->get()
                 : [],
             'currentUserCrafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
-                ? $this->getCurrentUserCrafts($user)
+                ? $this->craftService->getCraftsForShiftCreation($user)
                 : [],
             'shiftTimePresets' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftTimePresetService->getAll()
@@ -796,7 +808,8 @@ class EventController extends Controller
             $startDate,
             $endDate,
             true,
-            $project
+            $project,
+            isShiftPlan: true
         );
 
         $period = $this->calendarDataService->createCalendarPeriodDto(
@@ -975,6 +988,9 @@ class EventController extends Controller
             $renderViewName = 'Shifts/ShiftPlanDailyView';
         }
 
+        // Schwere Props als Closures: beim normalen Seitenaufruf löst Inertia sie identisch auf,
+        // Partial-Reloads (z.B. nach Aktionen mit only: ['flash']) überspringen sie — sonst lief nach
+        // jeder Inertia-Aktion im Dienstplan der komplette Seitenaufbau erneut.
         return Inertia::render($renderViewName, [
             'history' => [],
             // Bewusst OHNE 'users'/'freelancers'/'serviceProviders': die Worker-Zeilen
@@ -984,7 +1000,7 @@ class EventController extends Controller
             // 2,45 MB Props aus. Von den Managing-Relationen wird nur die id
             // gelesen (buildManagingSets), qualifications braucht das
             // AddShiftModal zum Auflösen der Schichtplätze.
-            'crafts' => Craft::query()
+            'crafts' => static fn () => Craft::query()
                 ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
                 ->with([
                     // Das Frontend liest hier nur die id — die Namens-/Bildspalten
@@ -1003,20 +1019,20 @@ class EventController extends Controller
             // Das Festschreibungs-Modal filtert damit seine Gewerksliste — sonst liefe „alle Gewerke
             // auswählen" bei Nicht-Admins in den 422 aus CommitShiftsRequest.
             'plannableCraftIds' => static fn (): ?array => app(CraftScopeService::class)->plannableCraftIdsFor($user),
-            'eventTypes' => EventType::all(),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'event_properties' => EventProperty::all(),
-            'first_project_calendar_tab_id' => $this->projectTabService
+            'eventTypes' => static fn () => EventType::all(),
+            'eventStatuses' => static fn () => EventStatus::orderBy('order')->get(),
+            'event_properties' => static fn () => EventProperty::all(),
+            'first_project_calendar_tab_id' => fn () => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
+            'personalFilters' => fn () => $this->filterService->getPersonalFilter($user, $shiftFilterType),
+            'filterOptions' => fn () => $this->filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
-            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByPosition(),
-            'dayServices' => $this->dayServicesService->getAll(),
-            'firstProjectShiftTabId' => $this->projectTabService
+            'shiftQualifications' => fn () => $this->shiftQualificationService->getAllOrderedByPosition(),
+            'dayServices' => fn () => $this->dayServicesService->getAll(),
+            'firstProjectShiftTabId' => fn () => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'projectNameUsedForProjectTimePeriod' => $this->projectService
+            'projectNameUsedForProjectTimePeriod' => fn () => $this->projectService
                 ->resolveTimePeriodProject($userCalendarSettings)?->name,
             'projectId' => $project->id ?? null,
             'shiftPlanWorkerSortEnums' => array_map(
@@ -1027,9 +1043,9 @@ class EventController extends Controller
             ),
             'useFirstNameForSort' => (new ShiftSettings())->use_first_name_for_sort,
             'userShiftPlanShiftQualificationFilters' => $user->getAttribute('show_qualifications'),
-            'currentUserCrafts' => $this->getCurrentUserCrafts($user),
-            'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
-            'shiftGroupPresets' => ShiftPresetGroup::query()
+            'currentUserCrafts' => fn () => $this->craftService->getCraftsForShiftCreation($user),
+            'shiftTimePresets' => fn () => $this->shiftTimePresetService->getAll(),
+            'shiftGroupPresets' => static fn () => ShiftPresetGroup::query()
                 ->select(['id', 'name'])
                 ->withCount('presets')
                 ->with([
@@ -1051,8 +1067,8 @@ class EventController extends Controller
                 ->orderBy('name')
                 ->get(),
             'calendarWarningText' => $calendarWarningText,
-            'globalQualifications' => $this->globalQualificationService->getAll(),
-            'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
+            'globalQualifications' => fn () => $this->globalQualificationService->getAll(),
+            'shiftGroups' => fn () => $this->shiftGroupService->getAllShiftGroups(),
             'filterType' => $shiftFilterType,
             'isDailyView' => $isDailyView,
         ]);
@@ -1091,6 +1107,34 @@ class EventController extends Controller
         return [$start, $end];
     }
 
+    /**
+     * Abstand in Kalendertagen. Das Ende der Kalenderzeiträume liegt auf 23:59:59 (endOfDay); Carbon 3 liefert
+     * diffInDays dann als Bruchzahl (30,99… für 31 Kalendertage) – die Grenze "31 Tage" schlug so schon bei genau
+     * 31 Tagen an (Warnung + Filter bei jedem Aufruf neu gespeichert).
+     */
+    private static function calendarDaysBetween(Carbon $start, Carbon $end): int
+    {
+        return (int) $start->copy()->startOfDay()->diffInDays($end->copy()->startOfDay());
+    }
+
+    /**
+     * Das Dashboard zeigt von Aufgaben keine Personen — zugewiesene und erledigende Person nur schlank
+     * ausliefern statt als volle User-Modelle.
+     *
+     * @template T of iterable
+     * @param T $tasks
+     * @return T
+     */
+    private function slimDashboardTaskPeople(iterable $tasks): iterable
+    {
+        foreach ($tasks as $task) {
+            $task->task_users?->each->setVisible(['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']);
+            $task->user_who_done?->setVisible(['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']);
+        }
+
+        return $tasks;
+    }
+
     public function viewShiftPlanListView(): Response
     {
         /** @var User $user */
@@ -1100,16 +1144,10 @@ class EventController extends Controller
         $userCalendarFilter = $this->shiftListViewService->filterFor($user);
         $listViewSettings = $this->shiftListViewService->settingsFor($user);
 
-        $startDate = $userCalendarFilter->start_date
-            ? Carbon::parse($userCalendarFilter->start_date)
-            : Carbon::now()->startOfMonth();
-        $endDate = $userCalendarFilter->end_date
-            ? Carbon::parse($userCalendarFilter->end_date)
-            : Carbon::now()->endOfMonth();
+        [$startDate, $endDate, $clamped] = $this->resolveShiftListViewRange($userCalendarFilter);
 
         $calendarWarningText = '';
-        if ($startDate->diffInDays($endDate) > 183) {
-            $endDate = $startDate->copy()->addMonths(6);
+        if ($clamped) {
             $calendarWarningText = __('calendar.calendar_limit_six_months');
             $user->userFilters()->updateOrCreate(
                 ['filter_type' => $shiftFilterType],
@@ -1117,20 +1155,33 @@ class EventController extends Controller
             );
         }
 
+        // Erster Block (eine Woche) direkt mit der Seite, die übrigen lädt die Listenansicht über
+        // shifts.plan.list-view.days nach — lange Zeiträume blockierten sonst Server und Browser
+        $firstChunkEnd = $startDate->copy()->addDays(self::SHIFT_LIST_VIEW_CHUNK_DAYS - 1)->min($endDate);
+
         $dateValue = [
             $startDate->format('Y-m-d'),
             $endDate->format('Y-m-d'),
         ];
 
-        $groupedShifts = $this->shiftListViewService->getGroupedShifts(
-            $startDate,
-            $endDate,
-            $listViewSettings,
-            $userCalendarFilter
-        );
-
+        // Schwere Props als Closures: nach Aktionen lädt die Listenansicht per only: ['groupedShifts'] nach,
+        // dann werden Gewerke, Filter usw. nicht erneut berechnet. Große reine Datenblöcke in PlainDataProp,
+        // sonst durchläuft Inertia jeden einzelnen Wert (Response::resolvePropertyInstances).
         return Inertia::render('Shifts/ShiftPlanListView', [
-            'groupedShifts' => $groupedShifts,
+            'groupedShifts' => fn () => new PlainDataProp($this->shiftListViewService->getGroupedShifts(
+                $startDate,
+                $endDate,
+                $listViewSettings,
+                $userCalendarFilter,
+                $startDate->copy(),
+                $firstChunkEnd->copy()
+            )),
+            'groupedShiftsChunk' => [
+                'start' => $startDate->toDateString(),
+                'end' => $endDate->toDateString(),
+                'loadedUntil' => $firstChunkEnd->toDateString(),
+                'chunkDays' => self::SHIFT_LIST_VIEW_CHUNK_DAYS,
+            ],
             'dateValue' => $dateValue,
             'listViewSettings' => $listViewSettings,
             'user_filters' => $userCalendarFilter,
@@ -1139,22 +1190,87 @@ class EventController extends Controller
             // weiter, dessen getAssignablePeople() daraus die Auswahlliste zum
             // Zuweisen von Personen auf Schichtplätze baut. Ohne die Relationen
             // bleibt dieses Dropdown leer. Schlanke Personen-Serialisierung: CraftService.
-            'crafts' => $this->craftService->getAllWithAssignableWorkers(),
-            'eventTypes' => EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get(),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
-            'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),
-            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByPosition(),
-            'firstProjectShiftTabId' => $this->projectTabService
+            'crafts' => fn () => new PlainDataProp($this->craftService->getAllWithAssignableWorkers()),
+            'eventTypes' => static fn () => EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get(),
+            'filterOptions' => fn () => $this->filterService->getCalendarFilterDefinitions(),
+            'personalFilters' => fn () => $this->filterService->getPersonalFilter($user, $shiftFilterType),
+            'shiftQualifications' => fn () => $this->shiftQualificationService->getAllOrderedByPosition(),
+            'firstProjectShiftTabId' => fn () => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'filterType' => $shiftFilterType,
             'calendarWarningText' => $calendarWarningText,
-            'rooms' => Room::select(['id', 'name', 'position', 'area_id'])->get(),
-            'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
-            'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
-            'globalQualifications' => $this->globalQualificationService->getAll(),
-            'currentUserCrafts' => $this->getCurrentUserCrafts($user),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
+            'rooms' => static fn () => Room::listWithEffectiveAdminIds(['id', 'name', 'position', 'area_id']),
+            'shiftTimePresets' => fn () => $this->shiftTimePresetService->getAll(),
+            'shiftGroups' => fn () => $this->shiftGroupService->getAllShiftGroups(),
+            'globalQualifications' => fn () => $this->globalQualificationService->getAll(),
+            'currentUserCrafts' => fn () => $this->craftService->getCraftsForShiftCreation($user),
+            'eventStatuses' => static fn () => EventStatus::orderBy('order')->get(),
         ]);
+    }
+
+    /**
+     * Weiterer Tagesblock der Listenansicht (gleiche Berechnung und Filter wie die Seite, siehe
+     * ShiftListViewService::getGroupedShifts). Zeitraum und Filter kommen aus den gespeicherten
+     * Einstellungen der Person; der Client wählt nur den Block.
+     */
+    public function shiftPlanListViewDays(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'chunk_start' => ['required', 'date_format:Y-m-d'],
+            'chunk_end' => ['required', 'date_format:Y-m-d', 'after_or_equal:chunk_start'],
+        ]);
+
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $userCalendarFilter = $this->shiftListViewService->filterFor($user);
+        $listViewSettings = $this->shiftListViewService->settingsFor($user);
+        [$startDate, $endDate] = $this->resolveShiftListViewRange($userCalendarFilter);
+
+        $chunkStart = Carbon::parse($validated['chunk_start'])->max($startDate);
+        $chunkEnd = Carbon::parse($validated['chunk_end'])
+            ->min($endDate)
+            ->min($chunkStart->copy()->addDays(self::SHIFT_LIST_VIEW_MAX_CHUNK_DAYS - 1));
+
+        if ($chunkStart->gt($endDate) || $chunkEnd->lt($chunkStart)) {
+            abort(422, __('The requested days are outside the selected period.'));
+        }
+
+        return new JsonResponse([
+            'start' => $startDate->toDateString(),
+            'end' => $endDate->toDateString(),
+            'chunkStart' => $chunkStart->toDateString(),
+            'chunkEnd' => $chunkEnd->toDateString(),
+            'groupedShifts' => $this->shiftListViewService->getGroupedShifts(
+                $startDate,
+                $endDate,
+                $listViewSettings,
+                $userCalendarFilter,
+                $chunkStart->copy(),
+                $chunkEnd->copy()
+            ),
+        ]);
+    }
+
+    /**
+     * Zeitraum der Listenansicht aus dem gespeicherten Filter (ohne Datum: laufender Monat), höchstens
+     * sechs Monate.
+     *
+     * @return array{0: Carbon, 1: Carbon, 2: bool} [Start, Ende, auf sechs Monate gekürzt]
+     */
+    private function resolveShiftListViewRange(\Artwork\Modules\User\Models\UserFilter $filter): array
+    {
+        $startDate = $filter->start_date
+            ? Carbon::parse($filter->start_date)
+            : Carbon::now()->startOfMonth();
+        $endDate = $filter->end_date
+            ? Carbon::parse($filter->end_date)
+            : Carbon::now()->endOfMonth();
+
+        if ($startDate->diffInDays($endDate) > 183) {
+            return [$startDate, $startDate->copy()->addMonths(6), true];
+        }
+
+        return [$startDate, $endDate, false];
     }
 
     public function updateShiftListViewSettings(User $user, Request $request, UserService $userService): void
@@ -1233,9 +1349,10 @@ class EventController extends Controller
             )->with([
                 'event',
                 'event.project' => $withTeamFlag,
-                'event.room',
+                // SingleUserEventShift liest vom Raum nur den Namen
+                'event.room' => static fn ($query) => $query->without(['admins', 'creator']),
                 'event.event_type',
-                'room',
+                'room' => static fn ($query) => $query->without(['admins', 'creator']),
                 'project' => $withTeamFlag,
                 'craft',
                 'users',
@@ -1286,7 +1403,12 @@ class EventController extends Controller
                         $query->where('user_id', Auth::id());
                     });
                 }
-            )->with(['project', 'room', 'event_type'])->get();
+            )->with([
+                'project',
+                // Kachel zeigt nur den Raumnamen — ohne Room::$with (Admins, Ersteller als volle User-Modelle)
+                'room' => static fn ($query) => $query->without(['admins', 'creator']),
+                'event_type',
+            ])->get();
 
         //get date for humans of today with weekday
         $todayDate = Carbon::now()->locale(
@@ -1308,7 +1430,7 @@ class EventController extends Controller
         $dialogData = app(NotificationDialogDataService::class)->forRequest(request(), $user);
 
         return inertia('Dashboard', [
-            'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
+            'tasks' => TaskDashboardResource::collection($this->slimDashboardTaskPeople($tasks))->resolve(),
             // Pivot-Spalte ist DATE — Vergleich mit vollem Timestamp ($now) würde nur um
             // Mitternacht matchen und die Tagesdienste sonst immer leer lassen.
             'users_day_services_of_day' => $user->dayServices()->wherePivot('date', $today)->get(),
@@ -1326,7 +1448,8 @@ class EventController extends Controller
             'wantedSplit' => $dialogData['wantedSplit'],
             'roomCollisions' => [],
             'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
-            'rooms' => Room::select(['id', 'name', 'area_id', 'order'])->get(),
+            // Raumauswahl im Termin-Dialog: Raumadmins werden nur als IDs gelesen (adminIdsOf), inkl. Team-Mitgliedern
+            'rooms' => Room::listWithEffectiveAdminIds(['id', 'name', 'area_id', 'order']),
             'projects' => Project::select(['id', 'name'])->get(),
             'historyObjects' => $dialogData['historyObjects'],
             'eventStatuses' => EventStatus::orderBy('order')->get(),
@@ -1460,7 +1583,8 @@ class EventController extends Controller
             return $isOption;
         }
 
-        $room = $alwaysDirectBooking ? null : Room::find($roomId);
+        // Geplante Termine prüfen auch bei "Termine immer direkt buchbar" das Anlegerecht (EventPolicy::book)
+        $room = $alwaysDirectBooking && !$isPlanning ? null : Room::find($roomId);
         if ($room === null) {
             return $isOption;
         }
@@ -2316,7 +2440,12 @@ class EventController extends Controller
         $room = Room::find($event->room_id);
         $admins = collect();
         if (!empty($room)) {
-            $admins = $room->users()->wherePivot('is_admin', true)->get();
+            // Raumadmins inkl. Mitgliedern der Admin-Teams; ohne Admins die Person, die den Raum angelegt hat
+            // (wie RoomRequestNotificationService::recipientsFor)
+            $admins = $room->effectiveAdmins();
+            if ($admins->isEmpty()) {
+                $admins = User::query()->whereKey($room->user_id)->get();
+            }
         }
 
         $this->notificationService->setIcon('blue');
@@ -4381,7 +4510,7 @@ class EventController extends Controller
             || ($this->eventSettingsService->alwaysDirectBooking()
                 && $user->can(PermissionEnum::EVENT_REQUEST->value))
             || $room->everyone_can_book
-            || $room->admins()->where('user_id', $user->id)->exists();
+            || $room->isAdministeredBy($user);
 
         abort_unless($mayCreateRegularEvent, 403);
     }
@@ -5021,24 +5150,9 @@ class EventController extends Controller
             abort(403);
         }
 
-        $wasPlanning = $event->is_planning;
-
-        // Set the event as a planning event
-        $event->update(['is_planning' => true]);
-
-        // Offene Raumanfrage-Benachrichtigungen zurückziehen - der Termin ist für
-        // Raumadmins ohne Planungskalender-Zugriff nicht mehr sichtbar
-        $this->notificationService->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
-
-        if (!$wasPlanning) {
-            $this->changeService->saveFromBuilder(
-                $this->changeService
-                    ->createBuilder()
-                    ->setModelClass(Event::class)
-                    ->setModelId($event->id)
-                    ->setTranslationKey('Event converted to planning event')
-            );
-        }
+        // Änderungsverlauf, offene Raumanfrage zurücknehmen (geplante Termine kennen keine Raumanfrage) –
+        // gemeinsam mit der Projekt-Umstellung
+        app(EventVerificationService::class)->convertToPlanning($event);
 
         // Broadcast the event update
         $freshEvent = $event->fresh()->load(['event_type', 'project']);
@@ -5051,26 +5165,52 @@ class EventController extends Controller
     }
 
     /**
-     * Get crafts that the current user is allowed to assign in shift planning.
-     *
-     * @param User $user
-     * @return \Illuminate\Database\Eloquent\Collection
+     * Mehrfachauswahl „In geplante Termine umwandeln“ (Kalender, Bulk-Ansicht) – je Termin wie die
+     * Einzel-Umstellung, alles oder nichts. Bereits geplante Termine der Auswahl bleiben unverändert.
      */
-    private function getCurrentUserCrafts(User $user): \Illuminate\Database\Eloquent\Collection
+    public function bulkConvertToPlanning(Request $request): RedirectResponse|JsonResponse
     {
-        // If user is admin, return all crafts with qualifications
-        if ($user->hasRole('artwork admin')) {
-            return $this->craftService->getAll(['qualifications']);
+        /** @var User $user */
+        $user = $this->authManager->user();
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)
+        ) {
+            abort(403);
         }
 
-        // Get crafts that are assignable by all (not restricted)
-        $assignableByAllCrafts = $this->craftService->getAssignableByAllCrafts();
+        $validated = $request->validate([
+            'eventIds' => ['required', 'array', 'min:1', 'max:1000'],
+            'eventIds.*' => ['integer', 'distinct'],
+        ]);
 
-        // Get crafts where user is explicitly allowed (restricted crafts via craft_users table)
-        $userRestrictedCrafts = $user->crafts()->with(['qualifications'])->get();
+        $events = Event::query()
+            ->whereIn('id', $validated['eventIds'])
+            ->where('is_planning', false)
+            ->get();
 
-        // Merge both collections and remove duplicates by craft id
-        return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
+        $verificationService = app(EventVerificationService::class);
+        DB::transaction(function () use ($events, $verificationService): void {
+            foreach ($events as $event) {
+                $verificationService->convertToPlanning($event);
+            }
+        });
+
+        // Broadcasts nach der Response: bei bis zu 1000 Terminen liefe der Request sonst bei langsamem
+        // Websocket-Server in einen Timeout, obwohl die Umwandlung schon gespeichert ist
+        $convertedEvents = Event::query()->whereIn('id', $events->modelKeys())->with(['event_type', 'project'])->get();
+        dispatch(static function () use ($convertedEvents): void {
+            foreach ($convertedEvents as $event) {
+                SafeBroadcast::send(new EventUpdated($event, $event->room_id));
+            }
+        })->afterResponse();
+
+        // Bulk-Ansicht ruft per axios auf und aktualisiert ihre Zeilen selbst; der Kalender lädt per Inertia neu
+        if ($request->wantsJson()) {
+            return new JsonResponse(['converted' => $events->modelKeys()]);
+        }
+
+        return Redirect::back();
     }
 
     public function getShiftPlanWorkers(
@@ -5169,15 +5309,20 @@ class EventController extends Controller
         // ABER: die Tagesansicht reicht diese crafts an SingleShiftInDailyShiftView
         // weiter, dessen getAssignablePeople() die Personen zum Zuweisen von
         // Schichtplätzen daraus zieht. Sie fordert sie deshalb per withPeople an.
+        if ($request->boolean('withPeople')) {
+            // Dieselbe schlanke Personen-Serialisierung wie die crafts-Prop des Projekt-Schichten-Tabs und
+            // der Listenansicht (Vertrag: CraftAssignableWorkersPayloadTest) — vorher volle Modelle mit
+            // allen Funktions-Pivots, doppelt so groß und ohne can_work_shifts
+            return new JsonResponse([
+                'crafts' => $this->craftService->getAllWithAssignableWorkers(
+                    withManagers: !$request->boolean('lightweight')
+                ),
+            ]);
+        }
+
         $eagerLoad = [
             'qualifications:id,name,icon,available',
         ];
-
-        if ($request->boolean('withPeople')) {
-            $eagerLoad[] = 'users:id,first_name,last_name,position,profile_photo_path';
-            $eagerLoad[] = 'freelancers:id,first_name,last_name,position,profile_image';
-            $eagerLoad[] = 'serviceProviders:id,provider_name,profile_image';
-        }
 
         if (!$request->boolean('lightweight')) {
             // Nur die id wird gelesen; die übrigen Spalten brauchen die $appends

@@ -1,28 +1,20 @@
 <template>
-    <div class="flex items-center" v-if="project?.is_group || project?.groupProjects?.length > 0">
-        <span>
-            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true" alt=""/>
-        </span>
-        <div class="flex items-center" v-if="project?.is_group">
-            {{ $t('Projects of this group') }}:
-            <div v-for="project in project?.projectsOfGroup">
-                <div class="text-accent-600 ml-1 mr-3">
-                    {{ project?.name }}
-                </div>
-            </div>
-        </div>
-        <div class="flex items-center" v-else>
-            {{$t('This Project is part of the group')}}:
-            <div v-for="project in project?.groupProjects">
-                <div class="text-accent-600 ml-1">
-                    {{ project?.name }}
-                </div>
-            </div>
+    <div class="min-w-0">
+        <div
+            v-if="groupNames"
+            v-tooltip.top="{ value: groupNames, appendTo: 'body', class: 'aw-tooltip' }"
+            class="flex items-center gap-1.5 text-sm text-text min-w-0"
+        >
+            <component :is="IconFolder" class="size-4 shrink-0 text-text-muted" aria-hidden="true" />
+            <span class="truncate">{{ groupNames }}</span>
         </div>
     </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { IconFolder } from '@tabler/icons-vue'
+
 const props = defineProps({
     project: {
         type: Object,
@@ -34,8 +26,9 @@ const props = defineProps({
     },
 })
 
+// Projektübersicht liefert die Gruppen, zu denen das Projekt gehört, als project.group ([{ id, name }])
+const groupNames = computed(() => (props.project?.group ?? [])
+    .map((group) => group?.name)
+    .filter(Boolean)
+    .join(', '))
 </script>
-
-<style scoped>
-
-</style>

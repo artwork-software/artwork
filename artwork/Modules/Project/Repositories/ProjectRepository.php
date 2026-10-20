@@ -151,15 +151,11 @@ class ProjectRepository extends BaseRepository
         $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
 
         return Project::query()
-            ->with('crmContacts')
             ->where(function (EloquentBuilder $query) use ($like): void {
                 $query
                     ->where('name', 'like', $like)
                     ->orWhere('artists', 'like', $like)
-                    ->orWhereHas(
-                        'crmContacts',
-                        fn(EloquentBuilder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
-                    );
+                    ->tap(fn (EloquentBuilder $artistQuery) => $this->orWhereLinkedArtistMatches($artistQuery, $like));
             })
             ->orderBy('name')
             ->limit($limit)
@@ -182,11 +178,28 @@ class ProjectRepository extends BaseRepository
             $query
                 ->where('name', 'like', $like)
                 ->orWhere('artists', 'like', $like)
-                ->orWhereHas(
-                    'crmContacts',
-                    fn(EloquentBuilder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
-                );
+                ->tap(fn (EloquentBuilder $artistQuery) => $this->orWhereLinkedArtistMatches($artistQuery, $like));
         });
+    }
+
+    /**
+     * Verknüpfte CRM-Künstler*innen: Komponente „Projektkünstler*in“ und Sonderrolle in CRM-Kontaktlisten.
+     */
+    private function orWhereLinkedArtistMatches(EloquentBuilder $query, string $like): void
+    {
+        $query
+            ->orWhereHas(
+                'crmContacts',
+                fn(EloquentBuilder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
+            )
+            ->orWhereExists(fn ($exists) => $exists
+                ->selectRaw('1')
+                ->from('project_component_crm_contacts')
+                ->join('crm_contacts', 'crm_contacts.id', '=', 'project_component_crm_contacts.crm_contact_id')
+                ->whereColumn('project_component_crm_contacts.project_id', 'projects.id')
+                ->where('project_component_crm_contacts.is_artist', true)
+                ->whereNull('crm_contacts.deleted_at')
+                ->where('crm_contacts.display_name', 'like', $like));
     }
 
     public function pinnedProjects(int $userId, string $search = ''): Collection

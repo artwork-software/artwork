@@ -107,6 +107,7 @@ class CrmContactController extends Controller
                         'name' => $property->name,
                         'type' => $property->type,
                         'select_values' => $property->select_values,
+                        'multiselect_display' => $property->multiselect_display,
                         'tooltip_text' => $property->tooltip_text,
                         'is_required' => (bool) ($typeProperties[$property->id]->pivot->is_required ?? false),
                     ]);

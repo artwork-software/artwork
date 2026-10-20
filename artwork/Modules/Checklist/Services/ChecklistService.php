@@ -136,7 +136,7 @@ readonly class ChecklistService
         return [
             'opened_checklists' => $openedChecklists,
             'checklist_templates' => ChecklistTemplateIndexResource::collection(
-                ChecklistTemplate::all()
+                ChecklistTemplate::with(['task_templates', 'user', 'users'])->get()
             )->resolve(),
             'public_checklists' => ChecklistIndexResource::collection($publicChecklists)->resolve(),
             'private_checklists' => ChecklistIndexResource::collection($privateChecklists)->resolve(),
@@ -231,7 +231,7 @@ readonly class ChecklistService
         $headerObject->project->opened_checklists = User::where('id', Auth::id())
             ->first()->opened_checklists;
         $headerObject->project->checklist_templates = ChecklistTemplateIndexResource::collection(
-            ChecklistTemplate::all()
+            ChecklistTemplate::with(['task_templates', 'user', 'users'])->get()
         )->resolve();
         $userId = Auth::id();
         $headerObject->project->public_checklists = ChecklistIndexResource::collection(

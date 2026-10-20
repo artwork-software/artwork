@@ -6,11 +6,14 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
 use Carbon\Carbon;
+use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 
 class ShiftDTO extends Data
 {
+    use TransformsWithoutDataPipeline;
+
     public function __construct(
         public int $id,
         public string $startDate,

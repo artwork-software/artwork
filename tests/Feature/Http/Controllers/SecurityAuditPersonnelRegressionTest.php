@@ -86,12 +86,23 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     public function users_can_change_their_own_email_and_admins_can_change_any(): void
     {
         $self = $this->actingAsUserWith([]);
+        $self->forceFill(['password' => Hash::make('Own!Passw0rd#2026')])->save();
+        // Die eigene Adresse nur mit aktuellem Passwort (Audit 20.10.2026, M3).
         $this->patch(
             route('user.update', $self),
             $this->userDetailsPayload($self, ['email' => 'me-new@example.test'])
+        )->assertSessionHasErrors('current_password');
+        $this->patch(
+            route('user.update', $self),
+            $this->userDetailsPayload($self, [
+                'email' => 'me-new@example.test',
+                'current_password' => 'Own!Passw0rd#2026',
+            ])
         )->assertRedirect();
         $this->assertSame('me-new@example.test', $self->fresh()->email);
 
+        // AuthenticateSession hält den Passwort-Hash der ersten Person in der Session.
+        $this->flushSession();
         $this->actingAsAdmin();
         $target = User::factory()->create();
         $this->patch(
@@ -237,11 +248,19 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     #[Test]
     public function individual_time_series_can_be_created_for_self_or_with_availability_management(): void
     {
+        // Eigene Zeitreihen nur mit "can enter own individual times" und ab heute (OwnIndividualTimeAccess)
         $self = $this->actingAsUserWith([]);
         $this->post(
             route('individual-time-series.store'),
             $this->seriesPayload([['type' => 'user', 'id' => $self->id]])
-        )->assertRedirect();
+        )->assertForbidden();
+
+        $self = $this->actingAsUserWith([PermissionEnum::CAN_ENTER_OWN_INDIVIDUAL_TIMES]);
+        $this->post(route('individual-time-series.store'), [
+            ...$this->seriesPayload([['type' => 'user', 'id' => $self->id]]),
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addWeek()->toDateString(),
+        ])->assertRedirect();
         $this->assertSame(1, IndividualTimeSeries::query()->count());
 
         $this->actingAsUserWith([PermissionEnum::AVAILABILITY_MANAGEMENT]);

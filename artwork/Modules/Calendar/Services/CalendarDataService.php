@@ -11,6 +11,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Holidays\Services\HolidayService;
@@ -195,6 +196,41 @@ readonly class CalendarDataService
     }
 
     /**
+     * Welche Termine eine Kalenderansicht nach Planungsstatus zeigt – je Kalender nur dessen eigene Einstellung:
+     * Kalender = feste Termine, geplante nur mit „Geplante Termine anzeigen“ (und Sichtrecht);
+     * Planungskalender = geplante Termine, feste nur mit „Feste Termine anzeigen“.
+     * Vorher entschied „Geplante Termine anzeigen“ aus dem Kalender auch im Planungskalender mit.
+     */
+    public static function whereVisibleByPlanningState(
+        mixed $query,
+        // phpcs:ignore Generic.Files.LineLength.TooLong -- Union-Typ ohne Alias nicht umbrechbar
+        null|UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $userCalendarSettings,
+        bool $isPlanningCalendar,
+        string $column = 'is_planning'
+    ): void {
+        if ($isPlanningCalendar) {
+            $query->where($column, true);
+            if ($userCalendarSettings?->show_unplanned_events) {
+                $query->orWhere($column, false);
+            }
+
+            return;
+        }
+
+        $query->where($column, false);
+        $user = Auth::user();
+        if (
+            $userCalendarSettings?->show_planned_events &&
+            $user &&
+            ($user->hasRole('artwork admin') ||
+                $user->can('can see planning calendar') ||
+                $user->can('can edit planning calendar'))
+        ) {
+            $query->orWhere($column, true);
+        }
+    }
+
+    /**
      * Optimierte Room-Liste:
      * - nur benötigte Spalten
      * - `withCount('events')` für effiziente has_events Prüfung ohne N+1
@@ -212,7 +248,12 @@ readonly class CalendarDataService
         bool $showUnrelatedShifts = false,
         // Dienstplan-Wochenansicht mit ausgeblendeten Terminen: Räume, die nur durch Termine
         // belegt sind, zählen bei „Räume ohne Belegung ausblenden" nicht mehr als belegt
-        bool $considerEventsForOccupancy = true
+        bool $considerEventsForOccupancy = true,
+        // Planungskalender: belegt sind Räume mit geplanten Terminen (feste nur mit „Feste Termine anzeigen“)
+        bool $isPlanningCalendar = false,
+        // Dienstplan: geplante Termine zählen wie in ShiftCalendarService (Event::scopeVisiblePlanningFor) nach
+        // Planungskalender-Recht, nicht nach „Geplante Termine anzeigen“ – das gibt es dort nicht
+        bool $isShiftPlan = false
     ): SupportCollection {
         $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
             // Overlap: start <= endDate AND end >= startDate (SQL-Server indexfreundlich)
@@ -227,7 +268,9 @@ readonly class CalendarDataService
             $project,
             $overlap,
             $userCalendarSettings,
-            $showUnrelatedEvents
+            $showUnrelatedEvents,
+            $isPlanningCalendar,
+            $isShiftPlan
         ): void {
             $eventQuery->selectRaw('1')
                 ->from('events')
@@ -243,19 +286,18 @@ readonly class CalendarDataService
                     fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids)
                 )
                 ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'))
-                ->where(function ($q) use ($userCalendarSettings): void {
-                    $q->where('events.is_planning', false);
-                    $user = Auth::user();
-                    if (
-                        $userCalendarSettings?->show_planned_events &&
-                        $user &&
-                        ($user->hasRole('artwork admin') ||
-                             $user->can('can see planning calendar') ||
-                             $user->can('can edit planning calendar'))
-                    ) {
-                        $q->orWhere('events.is_planning', true);
-                    }
-                });
+                ->when(
+                    $isShiftPlan,
+                    fn ($q) => Auth::user()?->can('viewPlanning', Event::class) === false
+                        ? $q->where('events.is_planning', false)
+                        : $q,
+                    fn ($q) => $q->where(fn ($q) => self::whereVisibleByPlanningState(
+                        $q,
+                        $userCalendarSettings,
+                        $isPlanningCalendar,
+                        'events.is_planning'
+                    ))
+                );
 
             if (!empty($filter?->event_property_ids)) {
                 $ids = $filter->event_property_ids;
@@ -298,7 +340,14 @@ readonly class CalendarDataService
 
         $rooms = Room::query()
             ->select(['id', 'name', 'color', 'area_id', 'temporary', 'start_date', 'end_date', 'everyone_can_book'])
-            ->with(['admins:id,first_name,last_name,profile_photo_path', 'requestableBy:id', 'area:id,color'])
+            ->with([
+                'admins:id,first_name,last_name,profile_photo_path',
+                'requestableBy:id',
+                'area:id,color',
+                // Raumzugriff über Teams (Room::effectiveAdminIds / effectiveRequestableByIds)
+                'adminDepartments.users:id',
+                'requestableByDepartments.users:id',
+            ])
             ->where('relevant_for_disposition', true)
             ->unlessRoomIds($filter?->room_ids)
             ->unlessRoomAttributeIds($filter?->room_attribute_ids)

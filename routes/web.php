@@ -221,7 +221,9 @@ Route::get('/', [AppController::class, 'index']);
 Route::get('/password_feedback', [AppController::class, 'getPasswordScore']);
 
 Route::get('/setup', [AppController::class, 'showSetupPage'])->name('setup');
-Route::post('/setup', [AppController::class, 'createAdmin'])->name('setup.create');
+Route::post('/setup', [AppController::class, 'createAdmin'])
+    ->middleware('throttle:10,1')
+    ->name('setup.create');
 
 Route::get('/users/invitations/accept', [InvitationController::class, 'accept'])->middleware('throttle:10,1');
 Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])
@@ -871,6 +873,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->middleware(CanEditProject::class);
 
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::patch('/projects/{project}/type', [ProjectController::class, 'updateType'])
+        ->name('projects.update.type');
     Route::patch('/projects/{project}/shiftDescription', [ProjectController::class, 'updateShiftDescription'])
         ->name('projects.update.shift_description');
     Route::patch('/projects/{project}/shiftContacts', [ProjectController::class, 'updateShiftContacts'])
@@ -993,6 +997,11 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             Route::get('/mask', 'mask')->name('mask');
             Route::post('/', 'store')->name('store');
             Route::post('/link', 'link')->name('link');
+            // Rollen: Gruppen der Liste und Rollen/Sonderrolle „Künstler*in“ je Kontakt
+            Route::post('/roles', 'storeRole')->name('roles.store');
+            Route::patch('/roles', 'renameRole')->name('roles.rename');
+            Route::delete('/roles', 'destroyRole')->name('roles.destroy');
+            Route::patch('/{crmContact}/roles', 'updateEntryRoles')->name('entry-roles.update');
             Route::patch('/{crmContact}', 'update')->name('update');
             Route::delete('/{crmContact}', 'destroy')->name('destroy');
         });
@@ -1023,6 +1032,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
     Route::post('/project_files/{project_file}', [ProjectFileController::class, 'update'])
         ->name('project_files.update');
+    // "Sichtbar in" der Dateiupload-Komponente
+    Route::patch('/project_files/{project_file}/visibility', [ProjectFileController::class, 'updateVisibility'])
+        ->name('project_files.visibility');
     Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');
     Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy'])
         ->name('project_files.destroy');
@@ -1295,6 +1307,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     // das Termin-Modal laedt sie beim Oeffnen nach.
     Route::get('/events/{event}/description', [EventController::class, 'showDescription'])
         ->name('events.description');
+    // Vor /events/{event}/convert-to-planning: "bulk" würde sonst als {event} gebunden (404)
+    Route::post('/events/bulk/convert-to-planning', [EventController::class, 'bulkConvertToPlanning'])
+        ->name('events.bulk.convert-to-planning');
     Route::post('/events/{event}/convert-to-planning', [EventController::class, 'convertToPlanning'])
         ->name('events.convertToPlanning');
     Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])
@@ -1365,6 +1380,11 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
 
     Route::get('/shifts/list-view', [EventController::class, 'viewShiftPlanListView'])
         ->name('shifts.plan.list-view')
+        ->can('can view shift plan');
+
+    // Weitere Tagesblöcke der Listenansicht (erster Block kommt mit der Seite)
+    Route::get('/shifts/list-view/days', [EventController::class, 'shiftPlanListViewDays'])
+        ->name('shifts.plan.list-view.days')
         ->can('can view shift plan');
 
     // Wochenstatus: Gewerke × KW (Festschreibung, Anfragen, Änderungen, Verstöße, Besetzung, Frist)
@@ -2930,6 +2950,16 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
                 ProjectTabController::class,
                 'updateComponentScope'
             ])->name('tab.update.component.scope');
+
+            // Upload-Bereiche der Dateiupload-Komponente: erlaubte Typen, Größe, Anzahl
+            Route::patch('/component-in-tab/{componentInTab}/upload-settings', [
+                ProjectTabController::class,
+                'updateUploadSettings'
+            ])->name('tab.update.component.upload-settings');
+            Route::patch('/disclosure-component/{disclosureComponent}/upload-settings', [
+                ProjectTabController::class,
+                'updateFolderUploadSettings'
+            ])->name('tab.update.disclosure-component.upload-settings');
 
             // patch tab.update.default
             Route::patch('/{projectTab}/update/default', [ProjectTabController::class, 'updateDefault'])

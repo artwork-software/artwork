@@ -40,6 +40,7 @@ class CrmPropertyController extends Controller
             'name' => 'required|string|max:255',
             'type' => ['required', 'string', Rule::enum(CrmPropertyTypeEnum::class)],
             'select_values' => 'nullable|array',
+            'multiselect_display' => ['nullable', 'string', Rule::in(['checkboxes', 'dropdown'])],
             'tooltip_text' => 'nullable|string',
         ]);
 
@@ -54,8 +55,9 @@ class CrmPropertyController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'type' => 'sometimes|string|in:text,date,number,checkbox,select,link,textarea,upload',
+            'type' => ['sometimes', 'string', Rule::enum(CrmPropertyTypeEnum::class)],
             'select_values' => 'nullable|array',
+            'multiselect_display' => ['nullable', 'string', Rule::in(['checkboxes', 'dropdown'])],
             'tooltip_text' => 'nullable|string',
             'sort_order' => 'sometimes|integer',
         ]);

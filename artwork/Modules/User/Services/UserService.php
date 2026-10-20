@@ -377,12 +377,22 @@ class UserService
      * Zeitraum bei "Zeitraum in allen Ansichten teilen" auf alle Ansichten.
      *
      * @param array<string, mixed> $resetAttributes weitere Filterspalten, die zurückgesetzt werden
+     * @param bool $planningCalendar Filter des Planungskalenders statt des Kalenders
      */
-    public function focusCalendarOnPeriod(User $user, Carbon $start, Carbon $end, array $resetAttributes = []): void
-    {
-        $filterType = $user->getAttribute('calendar_daily_view')
-            ? UserFilterTypes::CALENDAR_DAILY_FILTER
-            : UserFilterTypes::CALENDAR_FILTER;
+    public function focusCalendarOnPeriod(
+        User $user,
+        Carbon $start,
+        Carbon $end,
+        array $resetAttributes = [],
+        bool $planningCalendar = false,
+    ): void {
+        $isDailyView = (bool) $user->getAttribute('calendar_daily_view');
+        $filterType = match (true) {
+            $planningCalendar && $isDailyView => UserFilterTypes::PLANNING_DAILY_FILTER,
+            $planningCalendar => UserFilterTypes::PLANNING_FILTER,
+            $isDailyView => UserFilterTypes::CALENDAR_DAILY_FILTER,
+            default => UserFilterTypes::CALENDAR_FILTER,
+        };
 
         $startDate = $start->format('Y-m-d');
         $endDate = $end->format('Y-m-d');

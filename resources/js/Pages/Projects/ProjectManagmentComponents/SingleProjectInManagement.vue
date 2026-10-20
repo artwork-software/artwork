@@ -151,6 +151,7 @@ import BuilderProjectTeamComponent from "@/Pages/Projects/BuilderComponents/Buil
 import BuilderActionsComponent from "@/Pages/Projects/BuilderComponents/BuilderActionsComponent.vue";
 import BuilderTextArea from "@/Pages/Projects/BuilderComponents/BuilderTextArea.vue";
 import BuilderProjectStateComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectStateComponent.vue";
+import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectGroupComponent.vue";
 import BuilderShiftContactPersonsComponent from "@/Pages/Projects/BuilderComponents/BuilderShiftContactPersonsComponent.vue";
 import BuilderRelevantDatesForShiftPlanningComponent from "@/Pages/Projects/BuilderComponents/BuilderRelevantDatesForShiftPlanningComponent.vue";
 import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderComponents/BuilderGeneralShiftInformationComponent.vue";
@@ -165,6 +166,7 @@ import { router, usePage } from "@inertiajs/vue3";
 import BuilderTextField from "@/Pages/Projects/BuilderComponents/BuilderTextField.vue";
 import BuilderCheckbox from "@/Pages/Projects/BuilderComponents/BuilderCheckbox.vue";
 import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.vue";
+import BuilderCrmContactListComponent from "@/Pages/Projects/BuilderComponents/BuilderCrmContactListComponent.vue";
 import BuilderLink from "@/Pages/Projects/BuilderComponents/BuilderLinkComponent.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -218,6 +220,7 @@ const componentMapping = {
     BuilderActionsComponent,
     BuilderTextArea,
     BuilderProjectStateComponent,
+    BuilderProjectGroupComponent,
     BuilderShiftContactPersonsComponent,
     BuilderRelevantDatesForShiftPlanningComponent,
     BuilderGeneralShiftInformationComponent,
@@ -228,6 +231,8 @@ const componentMapping = {
     BuilderTextField,
     BuilderCheckbox,
     BuilderDropDown,
+    BuilderCheckboxList: BuilderDropDown,
+    BuilderCrmContactListComponent,
     BuilderLink,
     BuilderBiKeyFiguresDisplay,
 };

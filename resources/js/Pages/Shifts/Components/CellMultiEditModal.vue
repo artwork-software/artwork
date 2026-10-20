@@ -344,6 +344,7 @@ import {
     ListboxOptions,
 } from '@headlessui/vue';
 import { useForm, usePage } from '@inertiajs/vue3';
+import { shiftPlanFlashOnlyReload } from '@/Helper/shiftPlanReloads.js';
 import axios from 'axios';
 import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
 
@@ -535,6 +536,7 @@ const doSubmit = () => {
     multiEditCellForm.post(route('shift.plan.user.cell.update'), {
         preserveScroll: true,
         preserveState: true,
+        ...shiftPlanFlashOnlyReload(usePage().component),
         onSuccess: () => {
             showSaveSuccess.value = true;
             emit('close', { saved: true });

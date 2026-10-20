@@ -4,6 +4,8 @@ namespace Artwork\Modules\Event\Events;
 
 use Artwork\Modules\Calendar\DTO\BroadcastEventDTO;
 use Artwork\Modules\Calendar\DTO\BroadcastEventDTOWithVerifications;
+use Artwork\Modules\Event\Events\Concerns\HasPlanningCompanionBroadcast;
+use Artwork\Modules\Event\Events\Concerns\SplitsPlanningBroadcast;
 use Artwork\Modules\Event\Models\Event;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -11,9 +13,10 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class EventUpdated implements ShouldBroadcastNow
+class EventUpdated implements ShouldBroadcastNow, HasPlanningCompanionBroadcast
 {
     use Dispatchable;
+    use SplitsPlanningBroadcast;
     use InteractsWithSockets;
     use SerializesModels;
 
@@ -43,7 +46,7 @@ class EventUpdated implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('event.room.' . $this->roomId);
+        return new PrivateChannel(($this->onPlanningChannel ? 'event.planning.room.' : 'event.room.') . $this->roomId);
     }
 
     /**
@@ -51,6 +54,15 @@ class EventUpdated implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
+        if ($this->sendsRedactedPayload()) {
+            return ['event' => [
+                'id' => $this->event->id,
+                'roomId' => $this->roomId,
+                'isPlanning' => true,
+                'redacted' => true,
+            ]];
+        }
+
         // Frisch laden statt loadMissing: am übergebenen Model kann die Relation
         // noch mit dem Stand von vor dem sync() hängen (stale) oder ganz fehlen —
         // die Serializer liefern bei nicht geladener Relation sonst still [].

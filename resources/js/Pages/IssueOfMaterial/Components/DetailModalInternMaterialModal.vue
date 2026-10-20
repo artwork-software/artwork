@@ -49,7 +49,7 @@
                         <p class="text-text-subtle">{{ $t('Responsible persons') }}</p>
                         <div class="flex items-center print:hidden">
                             <div class="flex -space-x-2 overflow-hidden items-center">
-                                <UserPopoverTooltip v-for="user in issue.responsible_users" :key="user.id || user.email" :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
+                                <UserPopoverTooltip lazy-load v-for="user in issue.responsible_users" :key="user.id || user.email" :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
                             </div>
                         </div>
                     </div>

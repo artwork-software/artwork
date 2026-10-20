@@ -180,6 +180,7 @@ import {IconRepeat, IconX} from "@tabler/icons-vue"
 import BaseButton from '@/Layouts/Components/General/Buttons/BaseButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import { followStartDate } from '@/Helper/followStartDate.js'
 
 const props = defineProps({
     user: { type: Object, required: true },
@@ -227,6 +228,11 @@ const conflictingWishDates = computed(() => {
         // Monatsgrenzen sonst falsch
         .sort()
         .map(date => date.split('-').reverse().join('.'))
+})
+
+// „Bis" folgt „Von", solange kein eigener Zeitraum gewählt ist
+watch(() => entry.start_date, (newStart, oldStart) => {
+    entry.end_date = followStartDate(newStart, oldStart, entry.end_date)
 })
 
 // Zeitraum und wöchentliche Wiederholung schließen sich aus

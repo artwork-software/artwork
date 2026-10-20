@@ -52,7 +52,7 @@ class InventoryArticlePropertyFileController extends Controller
     {
         $path = $this->validatedPath($request);
 
-        if (Storage::exists($path)) {
+        if (Storage::fileExists($path)) {
             Storage::delete($path);
             // Remove the now-empty uuid folder so storage doesn't accumulate dirs.
             Storage::deleteDirectory(dirname($path));
@@ -62,17 +62,19 @@ class InventoryArticlePropertyFileController extends Controller
     }
 
     /**
-     * Resolve and harden the path from the request to prevent traversal or
-     * access to files outside the property uploads directory.
+     * Resolve and harden the path from the request: only exactly one file inside
+     * an upload folder below the property uploads directory is accepted, so neither
+     * traversal nor directory paths (e.g. "uploads/inventory-properties/." –
+     * destroy() would otherwise wipe the whole base folder) get through.
      */
     private function validatedPath(Request $request): string
     {
         $path = (string) ($request->input('path') ?? $request->query('path', ''));
 
         abort_unless(
-            $path !== ''
-            && str_starts_with($path, self::BASE_DIR . '/')
-            && !str_contains($path, '..'),
+            preg_match('#^' . preg_quote(self::BASE_DIR, '#') . '/[A-Za-z0-9-]+/[^/]+$#', $path) === 1
+            && !str_contains($path, '..')
+            && basename($path) !== '.',
             403
         );
 

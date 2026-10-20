@@ -318,6 +318,7 @@
                                 :class="[expandDays ? '' : 'h-full']"
                                 :style="{
                                     backgroundColor: day.isExtraRow ? undefined : (dayTintLight(day) ?? '#ffffff'),
+                                    backgroundImage: day.isExtraRow ? undefined : (dayTintLightStripes(day) ?? undefined),
                                     borderLeft: day.isExtraRow
                                         ? undefined
                                         : (day.isFirstDayOfMonth ? '2px solid rgba(0,0,0,0.4)' : '1px solid rgba(0,0,0,0.18)'),
@@ -1121,6 +1122,7 @@
 </template>
 
 <script setup lang="ts">
+import { holidayStripes, isSingleDayHoliday, pickDayHolidays, withAlpha } from '@/Helper/holidayTint.js'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
@@ -1865,27 +1867,31 @@ const todayKey = (() => {
 })()
 
 const dayTintByKey = computed(() => {
-    const map = new Map<string, { light: string | null, dark: string | null, accent: string | null }>()
+    const map = new Map<string, { light: string | null, dark: string | null, accent: string | null, lightStripes: string | null, darkStripes: string | null }>()
     const highContrast = !!calendarSettings.value?.high_contrast
     for (const d of (days.value ?? [])) {
         if (!d || d.isExtraRow || !d.fullDay) continue
-        const holidays = d.holidays ?? []
-        const singleDayHoliday = holidays.find(
-            (h: any) => h?.color && (!h.end_date || h.end_date === h.date)
-        )
-        const coloredHoliday = singleDayHoliday ?? holidays.find((h: any) => h?.color)
+        // Mehrere Feiertage: eigene vor API-Feiertagen, zweite Farbe als Schraffur (holidayTint.js)
+        const picked = pickDayHolidays(d.holidays)
         let light: string | null = null
         let dark: string | null = null
         let accent: string | null = null
-        if (coloredHoliday) {
+        let lightStripes: string | null = null
+        let darkStripes: string | null = null
+        if (picked) {
             // Eintägige Feiertage deutlich, Ferienzeiträume dezent (wie im Kalender);
             // Wochenenden im Ferienzeitraum als kräftigere Abstufung derselben Farbe
+            const singleDay = isSingleDayHoliday(picked.primary)
             const periodAlphaLight = d.isWeekend ? (highContrast ? '66' : '40') : (highContrast ? '33' : '1A')
-            const lightAlpha = singleDayHoliday ? (highContrast ? '59' : '33') : periodAlphaLight
-            const darkAlpha = singleDayHoliday ? '4D' : (d.isWeekend ? '4D' : '26')
-            light = `${coloredHoliday.color}${lightAlpha}`
-            dark = `${coloredHoliday.color}${darkAlpha}`
-            accent = coloredHoliday.color
+            const lightAlpha = singleDay ? (highContrast ? '59' : '33') : periodAlphaLight
+            const darkAlpha = singleDay ? '4D' : (d.isWeekend ? '4D' : '26')
+            light = withAlpha(picked.primary.color, lightAlpha)
+            dark = withAlpha(picked.primary.color, darkAlpha)
+            accent = picked.primary.color
+            if (picked.secondary) {
+                lightStripes = holidayStripes(withAlpha(picked.secondary.color, highContrast ? '80' : '59'))
+                darkStripes = holidayStripes(withAlpha(picked.secondary.color, '66'))
+            }
         } else if (d.fullDay === todayKey) {
             light = highContrast ? '#e0e7ff' : '#eef2ff'
             dark = 'rgba(129,140,248,0.18)'
@@ -1896,7 +1902,7 @@ const dayTintByKey = computed(() => {
             accent = '#60a5fa'
         }
         if (d.fullDay === todayKey && !accent) accent = '#818cf8'
-        if (light || dark || accent) map.set(d.fullDay, { light, dark, accent })
+        if (light || dark || accent) map.set(d.fullDay, { light, dark, accent, lightStripes, darkStripes })
     }
     return map
 })
@@ -1924,11 +1930,15 @@ const specialDayTooltip = (day: any) => {
 
 const dayTintLight = (day: any) => dayTintByKey.value.get(day?.fullDay)?.light ?? null
 const dayTintDark = (day: any) => dayTintByKey.value.get(day?.fullDay)?.dark ?? null
+const dayTintLightStripes = (day: any) => dayTintByKey.value.get(day?.fullDay)?.lightStripes ?? null
+const dayTintDarkStripes = (day: any) => dayTintByKey.value.get(day?.fullDay)?.darkStripes ?? null
 // Tages-Tint der Personenzellen je Farbwelt: hell = dieselben Tints wie das weiße Haupt-Grid,
 // dunkel = die niedrig gedeckten Dark-Tints (Map-Lookup, kein Render-Pfad-Aufwand)
 const userOverviewDayTintStyle = (day: any) => {
     const tint = userOverviewLightMode.value ? dayTintLight(day) : dayTintDark(day)
-    return tint ? { backgroundColor: tint } : undefined
+    const stripes = userOverviewLightMode.value ? dayTintLightStripes(day) : dayTintDarkStripes(day)
+    if (!tint) return undefined
+    return stripes ? { backgroundColor: tint, backgroundImage: stripes } : { backgroundColor: tint }
 }
 const dayHeaderAccent = (day: any) => dayTintByKey.value.get(day?.fullDay)?.accent ?? null
 const isTodayColumn = (day: any) => day?.fullDay === todayKey

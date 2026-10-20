@@ -449,21 +449,12 @@ class EventController extends Controller
         $user = $this->authManager->user();
         $isDailyView = (bool) $user->getAttribute('calendar_daily_view');
 
-        if ($isDailyView) {
-            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
-            }
-        } else {
-            $userCalendarSettings = $user->getAttribute('calendar_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->calendar_settings()->create();
-            }
-        }
-
         $isPlanning           = $request->boolean('isPlanning', false);
         // Gleiche Schranke wie viewPlanningCalendar(): die Daten-API darf nicht mehr zeigen als die Seite.
         abort_if($isPlanning && !$user->can('viewPlanning', Event::class), 403);
+
+        // Planungskalender und Kalender haben je eine eigene Einstellungszeile
+        $userCalendarSettings = $user->calendarSettingsFor($isPlanning, $isDailyView);
 
         if ($isPlanning) {
             $filterType = $isDailyView
@@ -493,7 +484,8 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
-            false // Calendar API: only events determine occupancy
+            false, // Calendar API: only events determine occupancy
+            isPlanningCalendar: $isPlanning
         );
 
         $calendar = ($isPlanning
@@ -528,10 +520,17 @@ class EventController extends Controller
      */
     private function eventsWithoutRoomForCalendar(
         UserCalendarSettings|UserDailyViewCalendarSettings|null $userCalendarSettings,
-        \Illuminate\Support\Collection $eventTypes
+        \Illuminate\Support\Collection $eventTypes,
+        bool $isPlanningCalendar = false
     ): \Illuminate\Support\Collection {
         return Event::query()
             ->hasNoRoom()
+            // Gleiche Regel wie die Termine mit Raum: „Feste Termine anzeigen“ aus → nur geplante Termine
+            ->where(fn ($query) => CalendarDataService::whereVisibleByPlanningState(
+                $query,
+                $userCalendarSettings,
+                $isPlanningCalendar
+            ))
             ->with([
                 'project:id,name,state,artists,linked_artists,is_group,color,icon',
                 'project.status:id,name,color',
@@ -570,23 +569,16 @@ class EventController extends Controller
                 ['filter_type' => $planningFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
-            }
         } else {
             $planningFilterType = UserFilterTypes::PLANNING_FILTER->value;
             $userCalendarFilter = $user->userFilters()->firstOrCreate(
                 ['filter_type' => $planningFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('calendar_settings');
-            // Wie im Kalender: ohne Einstellungen (Konto vor initializeAccountDefaults) brach
-            // getCalendarDateRange() mit TypeError ab
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->calendar_settings()->create();
-            }
         }
+        // Eigene Einstellungszeile des Planungskalenders (legt sie bei Bedarf an – ohne Einstellungen brach
+        // getCalendarDateRange() mit TypeError ab)
+        $userCalendarSettings = $user->calendarSettingsFor(true, $isDailyView);
 
         $this->userService->shareCalendarAbo('calendar');
 
@@ -648,7 +640,8 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
-            false // Planning calendar: only events determine occupancy
+            false, // Planning calendar: only events determine occupancy
+            isPlanningCalendar: true
         );
 
         $this->eventPlanningCalendarService->filterRoomsEvents(
@@ -695,7 +688,7 @@ class EventController extends Controller
             'personalFilters' => Inertia::always(fn() => $this->filterService
                 ->getPersonalFilter($user, $planningFilterType)),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
-            'eventsWithoutRoom' => $this->eventsWithoutRoomForCalendar($userCalendarSettings, $eventTypes),
+            'eventsWithoutRoom' => $this->eventsWithoutRoomForCalendar($userCalendarSettings, $eventTypes, true),
             'areas' => $this->areaService->getAll(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
@@ -5161,6 +5154,51 @@ class EventController extends Controller
             $freshEvent,
             $freshEvent->room_id
         ));
+
+        return Redirect::back();
+    }
+
+    /**
+     * Mehrfachauswahl „In geplante Termine umwandeln“ (Kalender, Bulk-Ansicht) – je Termin wie die
+     * Einzel-Umstellung, alles oder nichts. Bereits geplante Termine der Auswahl bleiben unverändert.
+     */
+    public function bulkConvertToPlanning(Request $request): RedirectResponse|JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)
+        ) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'eventIds' => ['required', 'array', 'min:1', 'max:1000'],
+            'eventIds.*' => ['integer', 'distinct'],
+        ]);
+
+        $events = Event::query()
+            ->whereIn('id', $validated['eventIds'])
+            ->where('is_planning', false)
+            ->get();
+
+        $verificationService = app(EventVerificationService::class);
+        DB::transaction(function () use ($events, $verificationService): void {
+            foreach ($events as $event) {
+                $verificationService->convertToPlanning($event);
+            }
+        });
+
+        $convertedEvents = Event::query()->whereIn('id', $events->modelKeys())->with(['event_type', 'project'])->get();
+        foreach ($convertedEvents as $event) {
+            SafeBroadcast::send(new EventUpdated($event, $event->room_id));
+        }
+
+        // Bulk-Ansicht ruft per axios auf und aktualisiert ihre Zeilen selbst; der Kalender lädt per Inertia neu
+        if ($request->wantsJson()) {
+            return new JsonResponse(['converted' => $events->modelKeys()]);
+        }
 
         return Redirect::back();
     }

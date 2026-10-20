@@ -383,7 +383,10 @@ class EventVerificationService
         $this->notificationService->createNotification();
     }
 
-    public function approveVerificationByEvent(Event $event, User $user): void
+    /**
+     * @return bool false, wenn die Person für den Termin keine offene Prüfung hat
+     */
+    public function approveVerificationByEvent(Event $event, User $user): bool
     {
         /** @var EventVerification $verification */
         $verification = $event->verifications()
@@ -392,13 +395,18 @@ class EventVerificationService
             ->first();
 
         if (!$verification) {
-            return;
+            return false;
         }
 
         $this->approveVerification($verification);
+
+        return true;
     }
 
-    public function rejectVerificationByEvent(Event $event, User $user, string $rejectionReason = ''): void
+    /**
+     * @return bool false, wenn die Person für den Termin keine offene Prüfung hat
+     */
+    public function rejectVerificationByEvent(Event $event, User $user, string $rejectionReason = ''): bool
     {
         /** @var EventVerification $verification */
         $verification = $event->verifications()
@@ -407,10 +415,12 @@ class EventVerificationService
             ->first();
 
         if (!$verification) {
-            return;
+            return false;
         }
 
         $this->rejectVerification($verification, $rejectionReason);
+
+        return true;
     }
 
 

@@ -159,6 +159,7 @@
 </template>
 
 <script setup>
+import { holidayStripes, isSingleDayHoliday, pickDayHolidays, withAlpha } from '@/Helper/holidayTint.js';
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from "vue";
 import { usePage } from "@inertiajs/vue3";
 import { IconCirclePlus } from "@tabler/icons-vue";
@@ -264,33 +265,36 @@ const addEventIconStyle = computed(() => {
 // Wochenend-/Feiertags-Einfärbung der ganzen Tageszeile (inkl. Datumsspalte).
 // Feiertag schlägt Wochenende; eintägige Feiertage färben deutlich, mehrtägige
 // Zeiträume (Ferien) nur sehr dezent; Wochenenden im Ferienband kräftiger.
-const dayTintColor = computed(() => {
+// Mehrere Feiertage: eigene vor API-Feiertagen, zweite Farbe als Schraffur (holidayTint.js).
+const dayTint = computed(() => {
     const day = props.day;
     if (!day || day.isExtraRow) return null;
-    const holidays = day.holidays ?? [];
-    const singleDayHoliday = holidays.find(
-        (holiday) => holiday?.color && (!holiday.end_date || holiday.end_date === holiday.date)
-    );
-    const coloredHoliday = singleDayHoliday ?? holidays.find((holiday) => holiday?.color);
-    if (coloredHoliday) {
+    const picked = pickDayHolidays(day.holidays);
+    if (picked) {
         let alpha;
-        if (singleDayHoliday) {
+        if (isSingleDayHoliday(picked.primary)) {
             alpha = settings.value.high_contrast ? '59' : '33';
         } else if (day.isWeekend) {
             alpha = settings.value.high_contrast ? '66' : '40';
         } else {
             alpha = settings.value.high_contrast ? '33' : '1A';
         }
-        return `${coloredHoliday.color}${alpha}`;
+        return {
+            color: withAlpha(picked.primary.color, alpha),
+            stripes: picked.secondary ? withAlpha(picked.secondary.color, settings.value.high_contrast ? '80' : '59') : null,
+        };
     }
     if (day.isWeekend) {
-        return settings.value.high_contrast ? '#dbeafe' : '#eff6ff';
+        return { color: settings.value.high_contrast ? '#dbeafe' : '#eff6ff', stripes: null };
     }
     return null;
 });
-const dayRowBackgroundStyle = computed(() =>
-    dayTintColor.value ? { backgroundColor: dayTintColor.value } : {}
-);
+const dayRowBackgroundStyle = computed(() => {
+    if (!dayTint.value) return {};
+    return dayTint.value.stripes
+        ? { backgroundColor: dayTint.value.color, backgroundImage: holidayStripes(dayTint.value.stripes) }
+        : { backgroundColor: dayTint.value.color };
+});
 
 // Zell-Inhalte pro Raum: computed cached das Mischen+Sortieren — es läuft nur
 // neu, wenn sich die Tages-Slots DIESER Zeile ändern (Slot-Ersatz beim

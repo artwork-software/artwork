@@ -107,6 +107,41 @@ final class HolidayServiceTest extends TestCase
     }
 
     #[Test]
+    public function calendar_holidays_tell_custom_and_api_holidays_apart(): void
+    {
+        $subdivision = $this->makeSubdivision('HH');
+        $this->service->create(
+            name: 'API Feiertag',
+            subdivision: $subdivision,
+            date: Carbon::parse('2031-10-03'),
+            endDate: Carbon::parse('2031-10-03'),
+            countryCode: 'DE',
+            yearly: false,
+            from_api: true,
+            color: '#bbbbbb',
+        );
+        $this->service->create(
+            name: 'Eigener Feiertag',
+            subdivision: $subdivision,
+            date: Carbon::parse('2031-10-03'),
+            endDate: Carbon::parse('2031-10-03'),
+            countryCode: 'DE',
+            yearly: false,
+            from_api: false,
+            color: '#aaaaaa',
+        );
+
+        $holidays = $this->service
+            ->getCalendarHolidaysByDate(Carbon::parse('2031-10-01'), Carbon::parse('2031-10-05'))
+            ->get('2031-10-03')
+            ->keyBy('name');
+
+        $this->assertTrue($holidays['API Feiertag']->from_api);
+        $this->assertFalse($holidays['Eigener Feiertag']->from_api);
+        $this->assertFalse($holidays['Eigener Feiertag']->toArray()['from_api']);
+    }
+
+    #[Test]
     public function get_all_returns_paginator(): void
     {
         $subdivision = $this->makeSubdivision('BE');

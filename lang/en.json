@@ -3045,7 +3045,7 @@
     "Accept requests": "Accept requests",
     "Decline requests": "Decline requests",
     "Accept room request": "Accept room request",
-    "request verification": "request verification",
+    "request verification": "Request verification",
     "Show fixed events": "Show fixed events",
     "Show planned events": "Show planned events",
     "Planned Events": "Planned Events",
@@ -9271,5 +9271,16 @@
     "Installed version": "Installed version",
     "unknown": "unknown",
     "Changelog": "Changelog",
-    "If the changelog lists a newer version, its changes are not live on your installation yet.": "If the changelog lists a newer version, its changes are not live on your installation yet."
+    "If the changelog lists a newer version, its changes are not live on your installation yet.": "If the changelog lists a newer version, its changes are not live on your installation yet.",
+    "{1} One event was skipped: you are not its verifier or its verification is already completed.|[2,*] :count events were skipped: you are not their verifier or their verification is already completed.": "{1} One event was skipped: you are not its verifier or its verification is already completed.|[2,*] :count events were skipped: you are not their verifier or their verification is already completed.",
+    "Convert to planned events": "Convert to planned events",
+    "Are you sure you want to convert the {0} selected events to planned events?": "Are you sure you want to convert the {0} selected events to planned events?",
+    "No description yet": "No description yet",
+    "Not bookable by everyone": "Not bookable by everyone",
+    "Not relevant for disposition": "Not relevant for disposition",
+    "Members: {0}": "Members: {0}",
+    "Search for people and teams": "Search for people and teams",
+    "Nobody has access to this room yet. Add people or whole teams above.": "Nobody has access to this room yet. Add people or whole teams above.",
+    "Applies to all members ({0})": "Applies to all members ({0})",
+    "Remove team from room access": "Remove team from room access"
 }

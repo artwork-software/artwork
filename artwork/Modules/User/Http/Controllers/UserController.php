@@ -57,6 +57,7 @@ use Artwork\Modules\WorkTime\Support\OvertimeLedger;
 use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
@@ -1958,9 +1959,8 @@ class UserController extends Controller
                 $user->shiftCalendarAbo->delete();
             }
 
-            if ($user->calendar_settings) {
-                $user->calendar_settings->delete();
-            }
+            // Beide Kalender-Zeilen (Kalender + Planungskalender)
+            UserCalendarSettings::query()->where('user_id', $user->id)->delete();
 
             if ($user->calendar_filter) {
                 $user->calendar_filter->delete();
@@ -2118,15 +2118,11 @@ class UserController extends Controller
             } else {
                 $user->shift_plan_settings()->updateOrCreate([], $settingsFields);
             }
-        } elseif ($request->boolean('is_daily_view')) {
-            $dailySettings = $user->daily_view_calendar_settings;
-            if ($dailySettings === null) {
-                $user->daily_view_calendar_settings()->create($settingsFields);
-            } else {
-                $dailySettings->update($settingsFields);
-            }
         } else {
-            $user->calendar_settings()->update($settingsFields);
+            // Kalender und Planungskalender speichern in getrennte Zeilen: eine Einstellung im einen
+            // Kalender ändert nichts mehr am anderen
+            $user->calendarSettingsFor($request->boolean('is_planning'), $request->boolean('is_daily_view'))
+                ->update($settingsFields);
         }
     }
 

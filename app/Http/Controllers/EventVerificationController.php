@@ -349,15 +349,54 @@ class EventVerificationController extends Controller
     // Mehrfachauswahl: gelöschte Termine (findEventById → null, vorher TypeError) werden übersprungen
     public function rejectByEvents(Request $request): void
     {
-        foreach ($this->validatedEvents($request) as $event) {
-            $this->rejectByEvent($event, $request);
-        }
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $rejectionReason = $this->validatedRejectionReason($request);
+
+        $this->answerVerificationsInBulk(
+            $this->validatedEvents($request),
+            fn (Event $event): bool => $this->eventVerificationService
+                ->rejectVerificationByEvent($event, $user, $rejectionReason),
+        );
     }
 
     public function approvedByEvents(Request $request): void
     {
-        foreach ($this->validatedEvents($request) as $event) {
-            $this->approvedByEvent($event);
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        $this->answerVerificationsInBulk(
+            $this->validatedEvents($request),
+            fn (Event $event): bool => $this->eventVerificationService->approveVerificationByEvent($event, $user),
+        );
+    }
+
+    /**
+     * Beantwortet nur Termine mit eigener offener Prüfung. Den Rest der Auswahl (andere Terminart, schon
+     * abgeschlossene Prüfung) übersprang der Server früher stumm – jetzt mit Hinweis.
+     *
+     * @param \Illuminate\Support\Collection<int, Event> $events
+     * @param callable(Event): bool $answer
+     */
+    private function answerVerificationsInBulk(\Illuminate\Support\Collection $events, callable $answer): void
+    {
+        $skippedEvents = 0;
+        foreach ($events as $event) {
+            if (!$answer($event)) {
+                $skippedEvents++;
+                continue;
+            }
+            SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
+        }
+
+        if ($skippedEvents > 0) {
+            session()->flash('error', trans_choice(
+                '{1} One event was skipped: you are not its verifier or its verification is already completed.|'
+                . '[2,*] :count events were skipped: you are not their verifier or their verification '
+                . 'is already completed.',
+                $skippedEvents,
+                ['count' => $skippedEvents]
+            ));
         }
     }
 

@@ -248,26 +248,34 @@
                         v-if="showBulkVerificationRequest"
                         :disabled="checkedCount === 0"
                         @click="requestVerification"
-                        :text="checkedCount + ' ' + (directBookingOnly ? $t('Confirm as fixed events') : $t('request verification'))"
+                        :text="(directBookingOnly ? $t('Confirm as fixed events') : $t('request verification')) + ' (' + checkedCount + ')'"
                         class="transition-all duration-300 ease-in-out pointer-events-auto"
                     />
                     <!-- Genehmigen/Ablehnen wirkt nur auf eigene offene Prüfungen (approve/reject-by-event) –
-                         daher an die Prüfer-Zuordnung gebunden, nicht an das Bearbeitungsrecht -->
+                         daher nur, wenn die Auswahl einen Termin enthält, den die Person prüfen darf -->
                     <FormButton
-                        v-if="!directBookingOnly && verifierForEventTypIds?.length > 0"
+                        v-if="showBulkVerificationAnswer"
                         :disabled="checkedCount === 0"
                         @click="approveRequests"
-                        :text="checkedCount + ' ' + $t('Approve events')"
+                        :text="$t('Approve') + ' (' + checkedCount + ')'"
                         class="transition-all duration-300 ease-in-out pointer-events-auto"
                     />
                     <FormButton
-                        v-if="!directBookingOnly && verifierForEventTypIds?.length > 0"
+                        v-if="showBulkVerificationAnswer"
                         class="bg-danger hover:bg-danger/70 transition-all duration-300 ease-in-out pointer-events-auto"
                         @click="showRejectEventVerificationRequestModal = true"
                         :disabled="checkedCount === 0"
-                        :text="checkedCount + ' ' + $t('Reject events')"
+                        :text="$t('Reject') + ' (' + checkedCount + ')'"
                     />
                 </template>
+                <!-- Kompaktansicht hat kein Kachel-Menü: Umwandeln in geplante Termine über die Mehrfachauswahl -->
+                <FormButton
+                    v-if="!isPlanning && (can('can edit planning calendar') || isAdmin)"
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showBulkConvertToPlanningModal = true"
+                    :disabled="selectedFixedEventIds.length === 0"
+                    :text="$t('Convert to planned events') + ' (' + selectedFixedEventIds.length + ')'"
+                />
                 <FormButton
                     v-if="hasSelectedRoomRequests"
                     class="bg-success hover:bg-success/80 transition-all duration-300 ease-in-out pointer-events-auto"
@@ -335,6 +343,12 @@
         />
 
         <MultiEditModal v-if="showMultiEditModal" :checked-events="editEvents" :rooms="rooms" @closed="closeMultiEditModal" />
+        <ConvertToPlanningModal
+            v-if="showBulkConvertToPlanningModal"
+            :count="selectedFixedEventIds.length"
+            @close="showBulkConvertToPlanningModal = false"
+            @convert="bulkConvertToPlanning"
+        />
         <MultiDuplicateModal v-if="showMultiDuplicateModal" :checked-events="editEvents" :rooms="rooms" :is-planning="isPlanning" @closed="closeMultiDuplicateModal" />
 
         <MultiCellEventCreateModal
@@ -413,7 +427,9 @@ import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendar
 import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import {can} from "laravel-permission-to-vuejs";
-import {canRequestVerificationInBulk} from "@/Helper/verificationRights.js";
+import {canAnswerVerificationInBulk, canRequestVerificationInBulk} from "@/Helper/verificationRights.js";
+import {findRoom, isRoomAdminOf, roomAdminIds} from "@/Helper/roomAdminRights.js";
+import ConvertToPlanningModal from "@/Components/Modals/ConvertToPlanningModal.vue";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
@@ -1272,7 +1288,8 @@ const selectedRoomRequestIds = computed(() => {
         for (const slot of Object.values(room.content || {})) {
             for (const evt of (slot.events ?? [])) {
                 // Geplante Termine sind nie Raumanfragen (EventPolicy::answerRoomRequest → 403)
-                if (selectedIds.has(evt.id) && evt.occupancy_option && !evt.isPlanning && !requestIds.includes(evt.id)) {
+                if (selectedIds.has(evt.id) && evt.occupancy_option && !evt.isPlanning && !requestIds.includes(evt.id)
+                    && mayAnswerRoomRequestIn(evt.roomId)) {
                     requestIds.push(evt.id);
                 }
             }
@@ -1281,6 +1298,30 @@ const selectedRoomRequestIds = computed(() => {
     return requestIds;
 });
 const hasSelectedRoomRequests = computed(() => selectedRoomRequestIds.value.length > 0);
+// Feste Termine der Auswahl (geplante lassen sich nicht noch einmal umwandeln)
+const selectedFixedEventIds = computed(() => editEvents.value
+    .filter((eventId) => {
+        const evt = findCalendarEvent(eventId);
+        return evt && !evt.isPlanning;
+    }));
+const showBulkConvertToPlanningModal = ref(false);
+const bulkConvertToPlanning = () => {
+    router.post(route('events.bulk.convert-to-planning'), { eventIds: selectedFixedEventIds.value }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            showBulkConvertToPlanningModal.value = false;
+            clearEventSelection();
+        },
+    });
+};
+
+// Zusagen/Absagen nur für Raumadmins des Raums (Spiegel von EventPolicy::answerRoomRequest); ohne Raumadmins
+// entscheidet der Server (Fallback auf die Person, die den Raum angelegt hat)
+function mayAnswerRoomRequestIn(roomId) {
+    if (isAdmin.value) return true;
+    return roomAdminIds(findRoom(props.rooms, roomId)).length === 0 || isRoomAdminOf(props.rooms, roomId, user.value?.id);
+}
 
 // Sammel-"Prüfung anfragen": Raumadmins ohne "Im Planungskalender fest planen" legen in ihren Räumen geplante
 // Termine an und dürfen sie als Ersteller:innen anfragen (EventVerificationController::mayManageVerification) –
@@ -1290,6 +1331,12 @@ const showBulkVerificationRequest = computed(() => canRequestVerificationInBulk(
     canEditPlanning: can('can edit planning calendar'),
     canPlanFixed: can('can plan fixed in planning calendar'),
     userId: user.value?.id,
+    selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
+}));
+
+// Sammel-"Genehmigen/Ablehnen" nur mit mindestens einem prüfbaren Termin in der Auswahl
+const showBulkVerificationAnswer = computed(() => !directBookingOnly.value && canAnswerVerificationInBulk({
+    verifierForEventTypIds: props.verifierForEventTypIds,
     selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
 }));
 
@@ -1510,7 +1557,8 @@ const eventComponentClosed = (closedOnPurpose) => {
         if (cs.use_project_time_period) {
             router.patch(route("user.calendar_settings.toggle_calendar_settings_use_project_period"), {
                 use_project_time_period: true,
-                project_id: cs.time_period_project_id
+                project_id: cs.time_period_project_id,
+                is_planning: props.isPlanning
             }, { preserveState: false, preserveScroll: true });
             return;
         }

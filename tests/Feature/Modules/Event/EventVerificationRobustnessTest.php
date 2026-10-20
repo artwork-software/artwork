@@ -167,6 +167,52 @@ final class EventVerificationRobustnessTest extends FeatureTestCase
     }
 
     #[Test]
+    public function bulk_approve_reports_events_the_user_may_not_verify_instead_of_skipping_them_silently(): void
+    {
+        [$ownEvent, $ownVerifiers] = $this->planningEventWithVerifiers('any', 1);
+        [$foreignEvent, $foreignVerifiers] = $this->planningEventWithVerifiers('any', 1);
+        $ownVerification = $this->createVerification($ownEvent, $ownVerifiers[0]);
+        $foreignVerification = $this->createVerification($foreignEvent, $foreignVerifiers[0]);
+        $this->actingAs($ownVerifiers[0]);
+
+        $this->post(route('event-verifications.approved-by-events'), ['events' => [$ownEvent->id, $foreignEvent->id]])
+            ->assertSessionHas('error');
+
+        $this->assertSame('approved', $ownVerification->fresh()->status);
+        $this->assertSame('pending', $foreignVerification->fresh()->status);
+    }
+
+    #[Test]
+    public function bulk_approve_without_any_own_verification_changes_nothing(): void
+    {
+        [$foreignEvent, $foreignVerifiers] = $this->planningEventWithVerifiers('any', 1);
+        $foreignVerification = $this->createVerification($foreignEvent, $foreignVerifiers[0]);
+        $this->actingAsUserWith([PermissionEnum::CAN_SEE_PLANNING_CALENDAR]);
+
+        $this->post(route('event-verifications.approved-by-events'), ['events' => [$foreignEvent->id]])
+            ->assertSessionHas('error');
+        $this->post(route('event-verifications.reject-by-events'), ['events' => [$foreignEvent->id]])
+            ->assertSessionHas('error');
+
+        $this->assertSame('pending', $foreignVerification->fresh()->status);
+    }
+
+    #[Test]
+    public function bulk_reject_of_own_verifications_reports_no_error(): void
+    {
+        [$event, $verifiers] = $this->planningEventWithVerifiers('any', 1);
+        $verification = $this->createVerification($event, $verifiers[0]);
+        $this->actingAs($verifiers[0]);
+
+        $this->post(route('event-verifications.reject-by-events'), [
+            'events' => [$event->id],
+            'rejection_reason' => 'Raum belegt',
+        ])->assertSessionMissing('error');
+
+        $this->assertSame('rejected', $verification->fresh()->status);
+    }
+
+    #[Test]
     public function withdrawing_without_open_round_does_not_turn_a_confirmed_event_back_into_a_planned_one(): void
     {
         $this->actingAsAdmin();

@@ -3052,7 +3052,7 @@
     "Accept requests": "Anfragen zusagen",
     "Decline requests": "Anfragen absagen",
     "Accept room request": "Raumanfrage zusagen",
-    "request verification": "Termine überprüfung anfordern",
+    "request verification": "Überprüfung anfragen",
     "Show fixed events": "Feste Termine anzeigen",
     "Show planned events": "Geplante Termine anzeigen",
     "Planned Events": "Geplante Termine",
@@ -9282,5 +9282,16 @@
     "Installed version": "Installierte Version",
     "unknown": "unbekannt",
     "Changelog": "Changelog",
-    "If the changelog lists a newer version, its changes are not live on your installation yet.": "Steht im Changelog eine neuere Version, sind deren Änderungen bei euch noch nicht eingespielt."
+    "If the changelog lists a newer version, its changes are not live on your installation yet.": "Steht im Changelog eine neuere Version, sind deren Änderungen bei euch noch nicht eingespielt.",
+    "{1} One event was skipped: you are not its verifier or its verification is already completed.|[2,*] :count events were skipped: you are not their verifier or their verification is already completed.": "{1} Ein Termin wurde übersprungen: Du bist dafür nicht als prüfende Person eingetragen oder die Prüfung ist bereits abgeschlossen.|[2,*] :count Termine wurden übersprungen: Du bist dafür nicht als prüfende Person eingetragen oder die Prüfung ist bereits abgeschlossen.",
+    "Convert to planned events": "In geplante Termine umwandeln",
+    "Are you sure you want to convert the {0} selected events to planned events?": "Möchtest du die {0} ausgewählten Termine wirklich in geplante Termine umwandeln?",
+    "No description yet": "Noch keine Beschreibung",
+    "Not bookable by everyone": "Nicht für alle buchbar",
+    "Not relevant for disposition": "Nicht dispositionsrelevant",
+    "Members: {0}": "Mitglieder: {0}",
+    "Search for people and teams": "Personen und Teams suchen",
+    "Nobody has access to this room yet. Add people or whole teams above.": "Noch hat niemand Zugriff auf diesen Raum. Füge oben Personen oder ganze Teams hinzu.",
+    "Applies to all members ({0})": "Gilt für alle Mitglieder ({0})",
+    "Remove team from room access": "Team aus dem Raumzugriff entfernen"
 }

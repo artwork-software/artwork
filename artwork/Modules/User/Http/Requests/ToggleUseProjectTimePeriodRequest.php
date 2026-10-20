@@ -15,6 +15,7 @@ class ToggleUseProjectTimePeriodRequest extends FormRequest
         return [
             'use_project_time_period' => 'required|boolean',
             'is_axios' => 'boolean',
+            'is_planning' => 'nullable|boolean',
             'project_id' => Rule::when(
                 $this->boolean('use_project_time_period'),
                 'exists:projects,id',

@@ -983,6 +983,7 @@
 </template>
 
 <script setup>
+import { isRoomAdminOf } from '@/Helper/roomAdminRights.js';
 import ProjectArtistNames from '@/Components/Crm/ProjectArtistNames.vue'
 import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
@@ -1416,7 +1417,8 @@ const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, even
 };
 
 const isRoomAdmin = computed(() => {
-    return props.rooms?.find((room) => room.id === props.event.roomId)?.admins.some((admin) => admin.id === currentUserId.value) || false;
+    // admins kommt als ID-Liste (RoomDTO) – admin.id war dort immer undefined
+    return isRoomAdminOf(props.rooms, props.event.roomId, currentUserId.value);
 });
 
 const checkIfMultiEditIsEnabled = computed(() => {

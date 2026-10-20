@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { canRequestVerificationInBulk } from '../../resources/js/Helper/verificationRights.js';
+import { canAnswerVerificationInBulk, canRequestVerificationInBulk } from '../../resources/js/Helper/verificationRights.js';
 
 const base = { isAdmin: false, canEditPlanning: false, canPlanFixed: false, userId: 7, selectedEvents: [] };
 
@@ -29,4 +29,17 @@ test('own fixed events, deleted creators and unknown events do not count', () =>
         userId: undefined,
         selectedEvents: [{ isPlanning: true, created_by: { id: undefined } }],
     }), false);
+});
+
+test('bulk approve/reject needs a selected event with an open verification of a verifiable event type', () => {
+    const pendingTypeA = { hasVerification: true, eventType: { id: 1 } };
+    const pendingTypeB = { hasVerification: true, eventType: { id: 2 } };
+    const settledTypeA = { hasVerification: false, eventType: { id: 1 } };
+
+    assert.equal(canAnswerVerificationInBulk({ verifierForEventTypIds: [1], selectedEvents: [pendingTypeB, pendingTypeA] }), true);
+    assert.equal(canAnswerVerificationInBulk({ verifierForEventTypIds: [1], selectedEvents: [pendingTypeB] }), false);
+    assert.equal(canAnswerVerificationInBulk({ verifierForEventTypIds: [1], selectedEvents: [settledTypeA] }), false);
+    assert.equal(canAnswerVerificationInBulk({ verifierForEventTypIds: [], selectedEvents: [pendingTypeA] }), false);
+    assert.equal(canAnswerVerificationInBulk({ verifierForEventTypIds: null, selectedEvents: [pendingTypeA, null] }), false);
+    assert.equal(canAnswerVerificationInBulk({ verifierForEventTypIds: ['1'], selectedEvents: [{ hasVerification: true, eventType: null }, pendingTypeA] }), true);
 });

@@ -24,11 +24,13 @@ final class PlanningCalendarRobustnessTest extends FeatureTestCase
     {
         $admin = $this->actingAsAdmin();
         $admin->calendar_settings()->delete();
+        $admin->planningCalendarSettings()->delete();
         $admin->unsetRelation('calendar_settings');
 
         $this->get(route('planning-event-calendar.index'))->assertOk();
 
-        $this->assertNotNull($admin->calendar_settings()->first());
+        // Der Planungskalender legt seine eigene Einstellungszeile an
+        $this->assertNotNull($admin->planningCalendarSettings()->first());
     }
 
     #[Test]

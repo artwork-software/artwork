@@ -1305,6 +1305,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     // das Termin-Modal laedt sie beim Oeffnen nach.
     Route::get('/events/{event}/description', [EventController::class, 'showDescription'])
         ->name('events.description');
+    // Vor /events/{event}/convert-to-planning: "bulk" würde sonst als {event} gebunden (404)
+    Route::post('/events/bulk/convert-to-planning', [EventController::class, 'bulkConvertToPlanning'])
+        ->name('events.bulk.convert-to-planning');
     Route::post('/events/{event}/convert-to-planning', [EventController::class, 'convertToPlanning'])
         ->name('events.convertToPlanning');
     Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])

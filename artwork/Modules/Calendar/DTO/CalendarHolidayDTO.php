@@ -16,6 +16,8 @@ class CalendarHolidayDTO extends Data
         public ?string $color,
         public ?array $subdivisions,
         public bool $treatAsSpecialDay = false,
+        // Eigene Feiertage färben den Tag vor API-Feiertagen (holidayTint.js)
+        public bool $from_api = false,
     ) {
     }
 }

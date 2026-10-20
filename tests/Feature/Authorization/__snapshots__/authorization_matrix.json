@@ -919,6 +919,7 @@
     "POST event/shift/store/multi/add": "forbidden",
     "POST event_types": "forbidden",
     "POST events": "validation",
+    "POST events/bulk/convert-to-planning": "forbidden",
     "POST events/bulk/multi/edit": "redirect",
     "POST events/multi-cell/create": "validation",
     "POST events/multi-cell/duplicate": "validation",

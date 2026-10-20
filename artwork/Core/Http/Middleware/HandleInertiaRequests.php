@@ -85,8 +85,20 @@ class HandleInertiaRequests extends Middleware
             }
             return $settings;
         };
-        $calendarSettings = $ensureSettings($user, 'calendar_settings');
-        $dailyViewCalendarSettings = $ensureSettings($user, 'daily_view_calendar_settings');
+        // Der Planungskalender hat eigene Anzeigeeinstellungen. Auf seiner Seite liegen sie unter denselben
+        // Schlüsseln (calendar_settings / daily_view_calendar_settings, auch auth.user), damit alle Kalender-
+        // Komponenten ohne Unterscheidung die Einstellungen der gerade offenen Ansicht lesen.
+        if ($user !== null && $request->routeIs('planning-event-calendar.index')) {
+            $calendarSettings = $ensureSettings($user, 'planningCalendarSettings');
+            $dailyViewCalendarSettings = $ensureSettings($user, 'planningDailyViewCalendarSettings');
+            $user->setRelation('calendar_settings', $calendarSettings);
+            $user->setRelation('daily_view_calendar_settings', $dailyViewCalendarSettings);
+            $user->unsetRelation('planningCalendarSettings');
+            $user->unsetRelation('planningDailyViewCalendarSettings');
+        } else {
+            $calendarSettings = $ensureSettings($user, 'calendar_settings');
+            $dailyViewCalendarSettings = $ensureSettings($user, 'daily_view_calendar_settings');
+        }
         $shiftPlanSettings = $ensureSettings($user, 'shift_plan_settings');
         $shiftPlanDailySettings = $ensureSettings($user, 'shift_plan_daily_settings');
 

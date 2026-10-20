@@ -129,11 +129,7 @@ class AppController extends Controller
         ToggleUseProjectTimePeriodRequest $request
     ): RedirectResponse|bool {
         $user = $this->userService->getAuthUser();
-        $settings = $request->boolean('is_daily_view')
-            ? $user->daily_view_calendar_settings()
-            : $user->calendar_settings();
-
-        $settings->update([
+        $user->calendarSettingsFor($request->boolean('is_planning'), $request->boolean('is_daily_view'))->update([
             'use_project_time_period' => $request->boolean('use_project_time_period'),
             'time_period_project_id' => $request->integer('project_id')
         ]);
@@ -142,7 +138,10 @@ class AppController extends Controller
             return true;
         }
 
-        return $this->redirector->route('events');
+        // Aus dem Planungskalender heraus dort bleiben, statt im normalen Kalender zu landen
+        return $this->redirector->route(
+            $request->boolean('is_planning') ? 'planning-event-calendar.index' : 'events'
+        );
     }
 
     public function toggleCalendarSettingsUseProjectPeriodShiftPlan(

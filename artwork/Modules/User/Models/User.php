@@ -518,7 +518,18 @@ class User extends Model implements
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function calendar_settings(): HasOne
     {
-        return $this->hasOne(UserCalendarSettings::class);
+        return $this->hasOne(UserCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserCalendarSettings::SCOPE_CALENDAR]);
+    }
+
+    /**
+     * Anzeigeeinstellungen des Planungskalenders (eigene Zeile, unabhängig vom Kalender).
+     * @return HasOne<UserCalendarSettings, $this>
+     */
+    public function planningCalendarSettings(): HasOne
+    {
+        return $this->hasOne(UserCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserCalendarSettings::SCOPE_PLANNING]);
     }
 
     /**
@@ -528,7 +539,46 @@ class User extends Model implements
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function daily_view_calendar_settings(): HasOne
     {
-        return $this->hasOne(UserDailyViewCalendarSettings::class);
+        return $this->hasOne(UserDailyViewCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserDailyViewCalendarSettings::SCOPE_CALENDAR]);
+    }
+
+    /**
+     * Tagesansicht-Einstellungen des Planungskalenders.
+     * @return HasOne<UserDailyViewCalendarSettings, $this>
+     */
+    public function planningDailyViewCalendarSettings(): HasOne
+    {
+        return $this->hasOne(UserDailyViewCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserDailyViewCalendarSettings::SCOPE_PLANNING]);
+    }
+
+    /**
+     * Einstellungszeile der jeweiligen Kalenderansicht; fehlt sie (neues Konto), wird sie angelegt.
+     */
+    public function calendarSettingsFor(
+        bool $isPlanning,
+        bool $isDailyView
+    ): UserCalendarSettings|UserDailyViewCalendarSettings {
+        $relation = match (true) {
+            $isPlanning && $isDailyView => 'planningDailyViewCalendarSettings',
+            $isPlanning => 'planningCalendarSettings',
+            $isDailyView => 'daily_view_calendar_settings',
+            default => 'calendar_settings',
+        };
+
+        // Planungszeilen nicht als Relation cachen: auth.user würde sie sonst zusätzlich serialisieren
+        $settings = $isPlanning && !$this->relationLoaded($relation)
+            ? $this->{$relation}()->first()
+            : $this->getAttribute($relation);
+        if ($settings === null) {
+            $settings = $this->{$relation}()->create();
+            if (!$isPlanning) {
+                $this->setRelation($relation, $settings);
+            }
+        }
+
+        return $settings;
     }
 
     /**

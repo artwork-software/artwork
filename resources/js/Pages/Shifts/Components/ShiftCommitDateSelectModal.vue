@@ -227,6 +227,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import { isoWeekOf } from '@/Helper/IsoWeek.js'
 
 const emit = defineEmits(['close'])
 
@@ -240,21 +241,8 @@ const props = defineProps({
     },
 });
 
-/**
- * Hilfsfunktion für ISO-Kalenderwoche
- */
-const getIsoWeek = (date) => {
-    const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-    const dayNum = tmp.getUTCDay() || 7
-    tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum)
-    const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1))
-    const weekNo = Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7)
-    return weekNo
-}
-
-const today = new Date()
-const currentYear = today.getFullYear()
-const currentWeek = getIsoWeek(today)
+// ISO-KW und ISO-Jahr: am Jahreswechsel gehört z. B. der 01.01.2027 zur KW 53 von 2026
+const { week: currentWeek, year: currentYear } = isoWeekOf(new Date())
 
 const newShiftCommitForm = useForm({
     week_number: currentWeek,

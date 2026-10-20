@@ -1962,6 +1962,8 @@ function payload() {
     }
 }
 async function updateOrCreateEvent(isOptionParam = false) {
+    // Läuft schon ein Speichervorgang, legt ein zweiter Klick sonst einen zweiten Termin an
+    if (isLoading.value) return
     isOption.value = isOptionParam
 
     if (allDayEvent.value) {
@@ -2042,14 +2044,19 @@ async function confirmAssignmentImpactAndSave() {
 }
 
 async function doSaveEvent() {
+    if (isLoading.value) return
+    // Vor dem ersten await sperren: solange die Beschreibung nachlädt, war der
+    // Speichern-Button sonst noch klickbar und schickte den Termin doppelt
+    isLoading.value = true
+
     // Alle Speicherwege laufen hier durch: ohne geladenen Volltext wuerde
     // payload() eine leere Beschreibung schicken und den Text loeschen.
     if (!await ensureDescriptionLoaded()) {
+        isLoading.value = false
         error.value = { description: $t('The description could not be loaded. Please reopen the event before saving.') }
         return
     }
 
-    isLoading.value = true
     const data = payload()
 
     if (!(await checkSeriesImpact())) {

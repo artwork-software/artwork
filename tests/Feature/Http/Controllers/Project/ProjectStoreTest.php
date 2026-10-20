@@ -162,6 +162,32 @@ final class ProjectStoreTest extends FeatureTestCase
     }
 
     #[Test]
+    public function store_requires_and_saves_state_for_project_groups_when_state_is_required(): void
+    {
+        $this->actingAsAdmin();
+
+        $settings = app(ProjectCreateSettings::class);
+        $settings->state = true;
+        $settings->state_required = true;
+        $settings->save();
+
+        $this->post(route('projects.store'), [
+            'name' => 'Group Without State',
+            'isGroup' => true,
+        ])->assertSessionHasErrors('state');
+        $this->assertDatabaseMissing('projects', ['name' => 'Group Without State']);
+
+        $state = ProjectState::factory()->create();
+
+        $this->post(route('projects.store'), [
+            'name' => 'Group With State',
+            'isGroup' => true,
+            'state' => $state->id,
+        ])->assertRedirect();
+        $this->assertDatabaseHas('projects', ['name' => 'Group With State', 'is_group' => true, 'state' => $state->id]);
+    }
+
+    #[Test]
     public function store_does_not_require_state_when_state_field_is_disabled(): void
     {
         $this->actingAsAdmin();

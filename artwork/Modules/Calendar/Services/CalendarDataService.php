@@ -11,6 +11,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Holidays\Services\HolidayService;
@@ -249,7 +250,10 @@ readonly class CalendarDataService
         // belegt sind, zählen bei „Räume ohne Belegung ausblenden" nicht mehr als belegt
         bool $considerEventsForOccupancy = true,
         // Planungskalender: belegt sind Räume mit geplanten Terminen (feste nur mit „Feste Termine anzeigen“)
-        bool $isPlanningCalendar = false
+        bool $isPlanningCalendar = false,
+        // Dienstplan: geplante Termine zählen wie in ShiftCalendarService (Event::scopeVisiblePlanningFor) nach
+        // Planungskalender-Recht, nicht nach „Geplante Termine anzeigen“ – das gibt es dort nicht
+        bool $isShiftPlan = false
     ): SupportCollection {
         $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
             // Overlap: start <= endDate AND end >= startDate (SQL-Server indexfreundlich)
@@ -265,7 +269,8 @@ readonly class CalendarDataService
             $overlap,
             $userCalendarSettings,
             $showUnrelatedEvents,
-            $isPlanningCalendar
+            $isPlanningCalendar,
+            $isShiftPlan
         ): void {
             $eventQuery->selectRaw('1')
                 ->from('events')
@@ -281,12 +286,18 @@ readonly class CalendarDataService
                     fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids)
                 )
                 ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'))
-                ->where(fn ($q) => self::whereVisibleByPlanningState(
-                    $q,
-                    $userCalendarSettings,
-                    $isPlanningCalendar,
-                    'events.is_planning'
-                ));
+                ->when(
+                    $isShiftPlan,
+                    fn ($q) => Auth::user()?->can('viewPlanning', Event::class) === false
+                        ? $q->where('events.is_planning', false)
+                        : $q,
+                    fn ($q) => $q->where(fn ($q) => self::whereVisibleByPlanningState(
+                        $q,
+                        $userCalendarSettings,
+                        $isPlanningCalendar,
+                        'events.is_planning'
+                    ))
+                );
 
             if (!empty($filter?->event_property_ids)) {
                 $ids = $filter->event_property_ids;

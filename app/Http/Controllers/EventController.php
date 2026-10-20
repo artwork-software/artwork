@@ -370,7 +370,8 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
-            false // Calendar view: only events determine occupancy
+            // Schicht-Karten („Schichten anzeigen“) belegen den Raum wie Termine
+            CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
         );
 
         // Transform Room models to RoomDTOs for frontend compatibility
@@ -484,7 +485,8 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
-            false, // Calendar API: only events determine occupancy
+            // Schicht-Karten („Schichten anzeigen“) belegen den Raum wie Termine
+            CalendarShiftVisibility::isEnabled($user, $userCalendarSettings),
             isPlanningCalendar: $isPlanning
         );
 
@@ -640,7 +642,8 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
-            false, // Planning calendar: only events determine occupancy
+            // Schicht-Karten („Schichten anzeigen“) belegen den Raum wie Termine
+            CalendarShiftVisibility::isEnabled($user, $userCalendarSettings),
             isPlanningCalendar: true
         );
 
@@ -805,7 +808,8 @@ class EventController extends Controller
             $startDate,
             $endDate,
             true,
-            $project
+            $project,
+            isShiftPlan: true
         );
 
         $period = $this->calendarDataService->createCalendarPeriodDto(

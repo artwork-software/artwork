@@ -107,6 +107,8 @@ class ShiftCalendarService
                 $q->whereHas('eventProperties', fn ($p) => $p->whereIn('event_properties.id', $ids));
                 // Achtung: Table-Name event_properties ist Standard. Falls bei euch anders: anpassen.
             })
+            // Projektstatus-Filter wie im Kalender – vorher galt er nur für „Räume ohne Belegung ausblenden"
+            ->when(!empty($filter->project_state_ids), fn ($q) => $q->byProjectStateIds($filter->project_state_ids))
             ->where(fn ($q) => $overlap($q, 'start_time', 'end_time'))
             ->orderBy('start_time')
             ->get();

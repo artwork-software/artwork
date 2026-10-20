@@ -121,7 +121,7 @@
                     <ShiftPlanEmptyState
                         v-if="shiftPlanLoaded && !emptyStateDismissed && !multiEditModeCalendar"
                         overlay
-                        :rooms-count="shiftPlanArrayRef.length"
+                        :rooms-count="displayedShiftPlanRooms.length"
                         :crafts-count="craftsResolved?.length ?? 0"
                         :functions-count="shiftQualifications?.length ?? 0"
                         :has-shifts="planHasShifts"
@@ -1771,8 +1771,25 @@ function openAddShiftByPresetForFirstCell() {
 
 const shiftPlanArrayRef = computed<any[]>(() => normalizeShiftPlan(newShiftPlanData.value))
 
+// „Leere Räume ausblenden": der Server zählt jede Schicht als Belegung, „Nur nicht voll besetzte Schichten"
+// filtert erst hier — Räume, in denen danach weder Termin noch Schicht sichtbar ist, fallen deshalb hier raus
+const displayedShiftPlanRooms = computed<any[]>(() => {
+    const rooms = shiftPlanArrayRef.value
+    if (!calendarSettings.value?.hide_unoccupied_rooms || !calendarSettings.value?.show_only_not_fully_staffed_shifts) {
+        return rooms
+    }
+    const dayKeys = (days.value ?? []).filter((d: any) => !d?.isExtraRow).map((d: any) => d.fullDay)
+    return rooms.filter((room: any) => {
+        // __v lesen, damit Broadcast-Mutationen (bumpRoomVersion) neu filtern
+        void room?.__v
+        return dayKeys.some((day: string) =>
+            (showEvents.value && getRoomDayEvents(room, day).length > 0) || getRoomDayShifts(room, day).length > 0
+        )
+    })
+})
+
 const shiftRows = computed(() => {
-    const arr = shiftPlanArrayRef.value
+    const arr = displayedShiftPlanRooms.value
     return arr.map((room: any, idx: number) => ({
         key: room.roomId ?? room.room_id ?? room.id ?? `room_${idx}`,
         data: room,
@@ -2375,7 +2392,7 @@ function recomputeRowHeights() {
                 return
             }
 
-            const rooms = shiftPlanArrayRef.value
+            const rooms = displayedShiftPlanRooms.value
             const dayList = days.value ?? []
             const result: number[] = []
 
@@ -2480,7 +2497,7 @@ watch(
         expandDays.value,
         displayProjectGroups.value,
         calendarSettings.value,
-        shiftPlanArrayRef.value,
+        displayedShiftPlanRooms.value,
         days.value,
         // Spaltenzoom ändert die verfügbaren Textbreiten UND die Kartenhöhen
         // (Kompaktkarte) — Summaries verwerfen und Baseline neu messen

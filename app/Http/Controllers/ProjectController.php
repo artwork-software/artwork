@@ -3117,7 +3117,8 @@ class ProjectController extends Controller
                 $userCalendarSettings,
                 $startDate,
                 $endDate,
-                true
+                true,
+                isShiftPlan: true
             );
 
             $roomDTOs = $rooms->map(fn($room) => new RoomDTO(

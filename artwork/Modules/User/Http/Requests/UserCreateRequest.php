@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Http\Requests;
 
 use App\Actions\Fortify\PasswordValidationRules;
+use Artwork\Core\Validation\Rules\NotReservedUserEmail;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,7 +19,7 @@ class UserCreateRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users', new NotReservedUserEmail()],
             'password' => $this->passwordRules(),
             'phone_number' => ['nullable', 'string', 'max:30'],
             'position' => ['required', 'string', 'max:255'],

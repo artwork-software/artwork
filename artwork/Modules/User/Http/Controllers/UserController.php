@@ -64,6 +64,7 @@ use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\ContractSettingsResolver;
+use Artwork\Modules\User\Services\UserEmailChangeService;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
@@ -151,7 +152,7 @@ class UserController extends Controller
 
         $wantedUsers = User::search($request->input('query'))
             ->query(function ($query): void {
-                $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+                $query->excludeDeletedPlaceholder();
             })
             ->get();
         foreach ($wantedUsers as $user) {
@@ -246,7 +247,7 @@ class UserController extends Controller
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
                     $query->with('departments');
                     // Exclude the placeholder "Deleted user"
-                    $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+                    $query->excludeDeletedPlaceholder();
 
                     $this->applyAuthProviderFilter($query, $authProviderFilter);
 
@@ -272,7 +273,7 @@ class UserController extends Controller
                 ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
                 ->with('departments')
                 // Exclude the placeholder "Deleted user"
-                ->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'))
+                ->excludeDeletedPlaceholder()
                 ->when($authProviderFilter, fn ($query) => $this->applyAuthProviderFilter($query, $authProviderFilter))
                 ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {
                     switch ($sortEnum) {
@@ -1542,8 +1543,11 @@ class UserController extends Controller
         ];
     }
 
-    public function updateUserDetails(Request $request, User $user): RedirectResponse
-    {
+    public function updateUserDetails(
+        Request $request,
+        User $user,
+        UserEmailChangeService $emailChangeService
+    ): RedirectResponse {
         /** @var User $actor */
         $actor = Auth::user();
         $isSelf = $user->id === $actor->id;
@@ -1590,7 +1594,24 @@ class UserController extends Controller
             }
         }
 
+        // Login-E-Mail: gültig, eindeutig, nicht die interne Domain; die eigene nur mit aktuellem Passwort.
+        $previousEmail = (string) $user->email;
+        $emailChanged = $emailChangeService->isChange($user, $attributes['email'] ?? null);
+        if ($emailChanged) {
+            $request->validate(['email' => $emailChangeService->emailRules($user)]);
+            if ($isSelf) {
+                $emailChangeService->assertSelfChangeAllowed($user, $request->input('current_password'));
+            }
+            $attributes['email'] = trim((string) $attributes['email']);
+        } else {
+            unset($attributes['email']);
+        }
+
         $user->update($attributes);
+
+        if ($emailChanged) {
+            $emailChangeService->notifyPreviousAddress($user, $previousEmail);
+        }
 
         $user->calendar_settings?->update([
             'high_contrast' => $request->get('high_contrast')
@@ -2554,11 +2575,15 @@ class UserController extends Controller
 
     private function getOrCreateDeletedPlaceholderUserId(): int
     {
-        $email = config('artwork.deleted_user_email', 'deleted-user@artwork.local');
-
-        $placeholder = User::where('email', $email)->first();
+        // Nur über das Flag auflösen: ein Konto mit der Platzhalter-Adresse übernähme sonst alles Weitere.
+        $placeholder = User::query()->where('is_deleted_placeholder', true)->orderBy('id')->first();
         if ($placeholder) {
             return (int) $placeholder->id;
+        }
+
+        $email = config('artwork.deleted_user_email', 'deleted-user@artwork.local');
+        if (User::query()->where('email', $email)->exists()) {
+            $email = 'deleted-user-' . Str::lower(Str::random(12)) . '@artwork.local';
         }
 
         $user = new User();
@@ -2566,6 +2591,7 @@ class UserController extends Controller
             'first_name' => 'Deleted',
             'last_name' => 'user',
             'email' => $email,
+            'is_deleted_placeholder' => true,
             'password' => Hash::make(Str::random(40)),
             'email_verified_at' => now(),
             'language' => config('app.fallback_locale', 'en'),

@@ -128,6 +128,20 @@
                             id="email"
                         />
                         <JetInputError :message="userForm.errors.email" class="mt-2" />
+                        <div v-if="ownEmailChanged" class="mt-3">
+                            <BaseInput
+                                type="password"
+                                v-model="userForm.current_password"
+                                @focusout="editUser"
+                                :label="$t('Current password')"
+                                id="current_password_for_email"
+                                autocomplete="current-password"
+                            />
+                            <p class="mt-1 text-xs text-text-subtle">
+                                {{ $t('Confirm the new email address with your current password.') }}
+                            </p>
+                            <JetInputError :message="userForm.errors.current_password" class="mt-2" />
+                        </div>
                     </div>
 
                     <BaseInput
@@ -537,7 +551,12 @@ const userForm = useForm({
     phone_private: props.user_to_edit.phone_private,
     high_contrast: props.calendar_settings?.high_contrast,
     use_chat: props.user_to_edit.use_chat,
+    current_password: '',
 })
+
+/* Die eigene Login-E-Mail ändert sich nur mit dem aktuellen Passwort */
+const savedEmail = ref(props.user_to_edit.email)
+const ownEmailChanged = computed(() => isSignedInUser() && props.user_to_edit.email !== savedEmail.value)
 
 const resetPasswordForm = useForm({
     email: props.user_to_edit.email,
@@ -617,6 +636,10 @@ const editUser = () => {
         // Email bleibt aus Eingabefeld (bereits in user_to_edit), aber Patch erwartet userForm.email
         userForm.email = props.user_to_edit.email
     }
+    // Ohne Passwort die übrigen Felder speichern und die neue eigene Adresse noch zurückhalten
+    if (ownEmailChanged.value && !userForm.current_password) {
+        userForm.email = savedEmail.value
+    }
 
     if (!userForm.first_name || !userForm.last_name) {
         nameError.value = proxy.$t('First name and surname are required')
@@ -628,6 +651,8 @@ const editUser = () => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
+            savedEmail.value = userForm.email
+            userForm.current_password = ''
             successSaved.value = true
             setTimeout(() => (successSaved.value = false), 2000)
         },

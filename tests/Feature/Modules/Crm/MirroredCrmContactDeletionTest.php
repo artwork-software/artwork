@@ -117,7 +117,10 @@ final class MirroredCrmContactDeletionTest extends FeatureTestCase
             ServiceProvider::class,
             999_999_903
         );
-        $placeholder = User::factory()->create(['email' => self::placeholderEmail()]);
+        $placeholder = User::factory()->create([
+            'email' => self::placeholderEmail(),
+            'is_deleted_placeholder' => true,
+        ]);
         $placeholderContact = $this->mirroredContactFor($placeholder);
         $liveUserContact = $this->mirroredContactFor(User::factory()->create());
         // Künstler*innen sind nicht gespiegelt — ihre Kontakte fasst die Bereinigung nicht an
@@ -145,7 +148,10 @@ final class MirroredCrmContactDeletionTest extends FeatureTestCase
     #[Test]
     public function crm_sync_of_artwork_update_does_not_create_a_contact_for_the_deleted_user_placeholder(): void
     {
-        $placeholder = User::factory()->create(['email' => self::placeholderEmail()]);
+        $placeholder = User::factory()->create([
+            'email' => self::placeholderEmail(),
+            'is_deleted_placeholder' => true,
+        ]);
         $realUser = User::factory()->create();
 
         $command = app(UpdateArtwork::class);

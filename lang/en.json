@@ -9286,5 +9286,16 @@
     "Setup token": "Setup token",
     "Enter the value of ARTWORK_SETUP_TOKEN from the server configuration.": "Enter the value of ARTWORK_SETUP_TOKEN from the server configuration.",
     "The setup token is in the server log (Docker: container log of the app). Run php artisan artwork:setup-token on the server to generate a new one.": "The setup token is in the server log (Docker: container log of the app). Run php artisan artwork:setup-token on the server to generate a new one.",
-    "The setup token is invalid.": "The setup token is invalid."
+    "The setup token is invalid.": "The setup token is invalid.",
+    "Only administrators can change the mail settings and send test emails.": "Only administrators can change the mail settings and send test emails.",
+    "If you change the host, enter the password again.": "If you change the host, enter the password again.",
+    "Enter the password again when changing the mail server.": "Enter the password again when changing the mail server.",
+    "Confirm the new email address with your current password.": "Confirm the new email address with your current password.",
+    "This email address is reserved and cannot be used.": "This email address is reserved and cannot be used.",
+    "Your email address is managed by your organisation's sign-in and cannot be changed here.": "Your email address is managed by your organisation's sign-in and cannot be changed here.",
+    "The email address of your :app account was changed": "The email address of your :app account was changed",
+    "The login email address of your :app account was changed. Messages are now sent to the new address.": "The login email address of your :app account was changed. Messages are now sent to the new address.",
+    "If you did not make this change, please contact your administration immediately.": "If you did not make this change, please contact your administration immediately.",
+    "Enter the password again when changing the Sage host.": "Enter the password again when changing the Sage host.",
+    "The Sage host must be an https address.": "The Sage host must be an https address."
 }

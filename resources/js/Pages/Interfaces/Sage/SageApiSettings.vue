@@ -34,6 +34,9 @@
             <div class="text-danger text-xs mt-1" v-if="showHostErrorText">
                 {{ $t('The host must be specified.') }}
             </div>
+            <div class="text-danger text-xs mt-1" v-else-if="$page.props.errors?.host">
+                {{ $page.props.errors.host }}
+            </div>
             <BaseInput v-model="sageForm.endpoint" id="endpoint" :label="$t('Endpoint')"/>
             <div class="text-danger text-xs mt-1" v-if="showEndpointErrorText">
                 {{ $t('The end point must be specified.') }}
@@ -49,7 +52,12 @@
                 {{ $t('A password is stored. Leave blank to keep it, or enter a new one to replace it.') }}
             </div>
             <div class="text-sm/5 text-danger" v-if="showPasswordErrorText">
-                {{ $t('The password must be entered.') }}
+                {{ sageSettings?.has_password
+                    ? $t('Enter the password again when changing the Sage host.')
+                    : $t('The password must be entered.') }}
+            </div>
+            <div class="text-sm/5 text-danger" v-else-if="$page.props.errors?.password">
+                {{ $page.props.errors.password }}
             </div>
 
             <div class="grid grid-cols-1 gap-4 text-sm/5 font-bold text-text-subtle">
@@ -348,7 +356,10 @@ export default defineComponent({
             this.showHostErrorText = !this.sageForm.host;
             this.showEndpointErrorText = !this.sageForm.endpoint;
             this.showUserErrorText = !this.sageForm.user;
-            this.showPasswordErrorText = !this.sageForm.password && !this.sageSettings?.has_password;
+            // Ein neuer Host bekommt das gespeicherte Passwort nicht, es muss neu eingegeben werden.
+            const hostChanged = (this.sageForm.host ?? '').trim().replace(/\/+$/, '').toLowerCase()
+                !== (this.sageSettings?.host ?? '').trim().replace(/\/+$/, '').toLowerCase();
+            this.showPasswordErrorText = !this.sageForm.password && (!this.sageSettings?.has_password || hostChanged);
 
             if (this.showHostErrorText || this.showEndpointErrorText || this.showUserErrorText || this.showPasswordErrorText) {
                 return;

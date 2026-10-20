@@ -93,6 +93,9 @@ class RouteServiceProvider extends ServiceProvider
             return [
                 Limit::perMinute(10)->by('app-login:ip:' . $ip),
                 Limit::perMinute(5)->by('app-login:identity:' . hash('sha256', $email . '|' . $ip)),
+                // Pro Konto unabhängig von der IP (wie der Web-Login): bremst Password-Spraying und das
+                // Durchprobieren von 2FA-Codes über viele Adressen; höchstens 15 Minuten Wartezeit.
+                Limit::perMinutes(15, 10)->by('app-login:account:' . hash('sha256', trim($email))),
             ];
         });
 

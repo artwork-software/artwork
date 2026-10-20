@@ -239,6 +239,24 @@ final class AppAuthTest extends TestCase
     }
 
     #[Test]
+    public function loginThrottleAlsoCountsPerAccountAcrossIps(): void
+    {
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.' . ($attempt + 1)])
+                ->login(['email' => 'missing@example.com'])
+                ->assertUnauthorized();
+        }
+
+        $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.7'])
+            ->login(['email' => 'missing@example.com'])
+            ->assertTooManyRequests();
+
+        $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.7'])
+            ->login(['email' => 'other@example.com'])
+            ->assertUnauthorized();
+    }
+
+    #[Test]
     public function loginThrottleIsSegmentedByEmailAndIp(): void
     {
         for ($attempt = 0; $attempt < 5; $attempt++) {

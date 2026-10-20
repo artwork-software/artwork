@@ -378,9 +378,9 @@ class EventController extends Controller
             id: $room->id,
             name: $room->name,
             has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray(),
+            admins: $room->effectiveAdminIds(),
             everyone_can_book: $room->everyone_can_book,
-            requestable_by: $room->requestableBy->pluck('id')->toArray(),
+            requestable_by: $room->effectiveRequestableByIds(),
         ));
 
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
@@ -664,9 +664,9 @@ class EventController extends Controller
             id: $room->id,
             name: $room->name,
             has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray(),
+            admins: $room->effectiveAdminIds(),
             everyone_can_book: $room->everyone_can_book,
-            requestable_by: $room->requestableBy->pluck('id')->toArray(),
+            requestable_by: $room->effectiveRequestableByIds(),
         ));
 
         $dateValue = [
@@ -1444,11 +1444,18 @@ class EventController extends Controller
             'wantedSplit' => $dialogData['wantedSplit'],
             'roomCollisions' => [],
             'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
-            // Raumauswahl im Termin-Dialog: Raumadmins werden nur als IDs gelesen (adminIdsOf)
+            // Raumauswahl im Termin-Dialog: Raumadmins werden nur als IDs gelesen (adminIdsOf), inkl. Team-Mitgliedern
             'rooms' => Room::select(['id', 'name', 'area_id', 'order'])
-                ->without(['creator'])
+                ->without(['creator', 'admins'])
+                ->with(['admins:id', 'adminDepartments.users:id'])
                 ->get()
-                ->each(static fn (Room $room) => $room->admins->each->setVisible(['id'])),
+                ->map(static fn (Room $room): array => [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'area_id' => $room->area_id,
+                    'order' => $room->order,
+                    'admins' => array_map(static fn (int $id): array => ['id' => $id], $room->effectiveAdminIds()),
+                ]),
             'projects' => Project::select(['id', 'name'])->get(),
             'historyObjects' => $dialogData['historyObjects'],
             'eventStatuses' => EventStatus::orderBy('order')->get(),
@@ -4504,7 +4511,7 @@ class EventController extends Controller
             || ($this->eventSettingsService->alwaysDirectBooking()
                 && $user->can(PermissionEnum::EVENT_REQUEST->value))
             || $room->everyone_can_book
-            || $room->admins()->where('user_id', $user->id)->exists();
+            || $room->isAdministeredBy($user);
 
         abort_unless($mayCreateRegularEvent, 403);
     }

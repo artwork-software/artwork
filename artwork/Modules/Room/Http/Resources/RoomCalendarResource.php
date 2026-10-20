@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Room\Http\Resources;
 
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Http\Resources\EventShowResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Http\Resources\UserWithoutApartmentIndexResource;
@@ -53,6 +54,21 @@ class RoomCalendarResource extends JsonResource
             'users' => UserWithoutApartmentIndexResource::collection(
                 $this->users()->withPivot(['is_admin', 'can_request'])->get()
             ),
+            // Teams mit Raumzugriff (department_room): Rechte gelten für alle Mitglieder
+            'departments' => $this->departments()
+                ->withCount('users')
+                ->orderBy('name')
+                ->get()
+                ->map(static fn (Department $department): array => [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'svg_name' => $department->svg_name,
+                    'users_count' => $department->users_count,
+                    'is_admin' => (bool) $department->pivot->is_admin,
+                    'can_request' => (bool) $department->pivot->can_request,
+                ])
+                ->values()
+                ->all(),
             'event_requests' => EventShowResource::collection($events->where('occupancy_option', true))->resolve(),
             'area' => $this->area,
         ];

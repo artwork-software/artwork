@@ -1603,6 +1603,8 @@ class UserController extends Controller
                         return $department['id'];
                     })
             );
+            // Raumadmin über ein Team ändert den gecachten Anfragen-Status
+            User::forgetCachedShareDataForIds([$user->id]);
         }
 
         Session::put('locale', $user->language);

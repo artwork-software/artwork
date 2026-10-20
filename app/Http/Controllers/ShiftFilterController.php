@@ -22,7 +22,7 @@ class ShiftFilterController extends Controller
                 'id' => $room->id,
                 'everyone_can_book' => $room->everyone_can_book,
                 'label' => $room->name,
-                'room_admins' => $room->users()->wherePivot('is_admin', true)->get(),
+                'room_admins' => $room->effectiveAdminUsers(),
             ]),
             'eventTypes' => $filter->event_types,
         ]);

@@ -1,75 +1,148 @@
 <template>
     <app-layout :title="room.name">
-        <div class="max-w-screen-xl my-12 ml-10">
-            <div class="flex-wrap">
-                <div class="flex items-center pt-5">
-                    <h2 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">{{ room.name }}</h2>
-                    <BaseMenu :right="false" v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin" class="ml-2">
-                        <MenuItem v-slot="{ active }">
-                            <a @click="openEditRoomModal(room)"
-                               :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                <PropertyIcon name="IconEdit" stroke-width="1.5"
-                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                          aria-hidden="true"/>
-                                {{$t('edit')}}
-                            </a>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <a href="#" @click="duplicateRoom(room)"
-                               :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <PropertyIcon name="IconCopy" stroke-width="1.5"
-                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                          aria-hidden="true"/>
-                                {{ $t('Duplicate')}}
-                            </a>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <a @click="openSoftDeleteRoomModal(room)"
-                               :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <PropertyIcon name="IconTrash"  stroke-width="1.5"
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                            aria-hidden="true"/>
-                                {{$t('In the recycle bin')}}
-                            </a>
-                        </MenuItem>
-                    </BaseMenu>
-                </div>
-                <div v-if="room.room_history[0]?.changes?.[0]"
-                     class="mt-2 subpixel-antialiased text-text-subtle text-xs flex items-center">
-                    <div>
-                        {{$t('last modified')}}:
+        <div class="mx-auto max-w-screen-xl px-4 py-10 sm:px-6 lg:px-10">
+            <!-- Kopf: Name, Areal und alle Raum-Einstellungen auf einen Blick -->
+            <div class="flex items-start gap-x-4">
+                <span class="mt-2.5 h-4 w-4 shrink-0 rounded-full ring-2 ring-white shadow" :style="{ backgroundColor: effectiveRoomColor }" />
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-x-1">
+                        <h2 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text truncate">{{ room.name }}</h2>
+                        <BaseMenu :right="false" v-if="canEditRoom" class="ml-1">
+                            <MenuItem v-slot="{ active }">
+                                <a @click="openEditRoomModal(room)"
+                                   :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                    <PropertyIcon name="IconEdit" stroke-width="1.5"
+                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
+                                              aria-hidden="true"/>
+                                    {{$t('edit')}}
+                                </a>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <a href="#" @click="duplicateRoom(room)"
+                                   :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <PropertyIcon name="IconCopy" stroke-width="1.5"
+                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
+                                              aria-hidden="true"/>
+                                    {{ $t('Duplicate')}}
+                                </a>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <a @click="openSoftDeleteRoomModal(room)"
+                                   :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <PropertyIcon name="IconTrash"  stroke-width="1.5"
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
+                                                aria-hidden="true"/>
+                                    {{$t('In the recycle bin')}}
+                                </a>
+                            </MenuItem>
+                        </BaseMenu>
                     </div>
-                    <UserPopoverTooltip :user="room.room_history[0].changes[0].changed_by"
-                                        :id="room.room_history[0].changes[0].changed_by?.id"
-                                        height="4" width="4" class="ml-2"/>
-                    <span class="ml-2 subpixel-antialiased">
-                        {{ room.room_history[0].created_at }}
-                    </span>
-                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer text-accent-600"
-                            @click="openRoomHistoryModal()">
-                        <IconChevronRight
-                            class="-mr-0.5 h-4 w-4 group-hover:text-accent-700"
-                            aria-hidden="true"/>
-                        {{$t('View history')}}
-                    </button>
-                </div>
-                <div v-if="room.temporary === true" class="font-lexend my-4 font-semibold">
-                    {{ room.start_date }} - {{ room.end_date }}
-                </div>
-                <div class="w-[95%] grid grid-cols-7 mt-6">
-                    <div class="col-span-5 mr-14">
-                        <span class="text-sm/5 font-bold text-text-subtle">
-                            {{ room.area.name }}
+                    <div class="mt-1 text-sm text-text-muted">{{ room.area?.name }}</div>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span v-if="room.temporary === true" class="inline-flex items-center gap-x-1.5 rounded-full border border-border-subtle bg-white px-3 py-1 text-xs font-medium text-text">
+                            <PropertyIcon name="IconClockHour4" class="h-4 w-4" stroke-width="1.5" />
+                            {{ $t('Temporary room') }}: {{ room.start_date }} – {{ room.end_date }}
                         </span>
-                        <p class="text-sm/5 font-bold text-text-subtle mt-4">
-                            {{$t('Can be booked by anyone ')}}: <label v-if="room.everyone_can_book">{{$t('Yes')}}</label>
-                            <label v-else>{{ $t('No') }}</label>
-                        </p>
-                        <span class="flex mt-6 text-sm/5 font-bold text-text-subtle subpixel-antialiased">
-                            {{ room.description }}
+                        <span class="inline-flex items-center gap-x-1.5 rounded-full border border-border-subtle bg-white px-3 py-1 text-xs font-medium" :class="room.everyone_can_book ? 'text-text' : 'text-text-subtle'">
+                            <PropertyIcon :name="room.everyone_can_book ? 'IconUsers' : 'IconLock'" class="h-4 w-4" stroke-width="1.5" />
+                            {{ room.everyone_can_book ? $t('Can be booked by anyone') : $t('Not bookable by everyone') }}
+                        </span>
+                        <span class="inline-flex items-center gap-x-1.5 rounded-full border border-border-subtle bg-white px-3 py-1 text-xs font-medium" :class="room.relevant_for_disposition ? 'text-text' : 'text-text-subtle'">
+                            <PropertyIcon :name="room.relevant_for_disposition ? 'IconCalendarCheck' : 'IconCalendarOff'" class="h-4 w-4" stroke-width="1.5" />
+                            {{ room.relevant_for_disposition ? $t('Relevant for disposition') : $t('Not relevant for disposition') }}
+                        </span>
+                        <span v-if="room.capacity" class="inline-flex items-center gap-x-1.5 rounded-full border border-border-subtle bg-white px-3 py-1 text-xs font-medium text-text">
+                            <PropertyIcon name="IconArmchair" class="h-4 w-4" stroke-width="1.5" />
+                            {{ $t('Capacity') }}: {{ room.capacity }}
                         </span>
                     </div>
+                    <div v-if="room.room_history[0]?.changes?.[0]"
+                         class="mt-3 subpixel-antialiased text-text-subtle text-xs flex items-center">
+                        <div>
+                            {{$t('last modified')}}:
+                        </div>
+                        <UserPopoverTooltip :user="room.room_history[0].changes[0].changed_by"
+                                            :id="room.room_history[0].changes[0].changed_by?.id"
+                                            height="4" width="4" class="ml-2"/>
+                        <span class="ml-2 subpixel-antialiased">
+                            {{ room.room_history[0].created_at }}
+                        </span>
+                        <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer text-accent-600"
+                                @click="openRoomHistoryModal()">
+                            <IconChevronRight
+                                class="-mr-0.5 h-4 w-4 group-hover:text-accent-700"
+                                aria-hidden="true"/>
+                            {{$t('View history')}}
+                        </button>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Inhalt: alles sofort sichtbar, Bearbeiten je Karte über das Icon -->
+            <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <RoomDetailCard title="Description" icon="IconAlignLeft" :can-edit="canEditRoom" @action="openEditRoomModal(room)">
+                    <p v-if="room.description" class="whitespace-pre-line text-text-muted">{{ room.description }}</p>
+                    <p v-else class="text-text-subtle">{{ $t('No description yet') }}</p>
+                </RoomDetailCard>
+
+                <RoomDetailCard title="Access to room" icon="IconShieldLock" :can-edit="canEditRoom" @action="showRoomAccessModal = true">
+                    <div class="space-y-5">
+                        <RoomAccessGroup
+                            label="Room admin"
+                            empty-text="No room admins available yet"
+                            :users="room.room_admins ?? []"
+                            :departments="adminDepartments"
+                        />
+                        <div>
+                            <RoomAccessGroup
+                                label="Authorized to request"
+                                empty-text="So far, no user is authorized to make inquiries"
+                                :users="room.requestable_by ?? []"
+                                :departments="requestingDepartments"
+                            />
+                            <div v-if="$page.props.event_direct_booking_only" class="ui-hint mt-1">
+                                {{ $t('No effect while "Events always bookable directly" is active.') }}
+                            </div>
+                        </div>
+                    </div>
+                </RoomDetailCard>
+
+                <RoomDetailCard title="Room properties" icon="IconTags" :can-edit="canEditRoom" @action="showRoomAttributeEditModal = true">
+                    <div v-if="roomCategories?.length || roomAttributes?.length || adjoiningRooms?.length" class="space-y-4">
+                        <div v-for="group in propertyGroups" :key="group.label" v-show="group.items.length">
+                            <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">{{ $t(group.label) }}</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span v-for="item in group.items" :key="item.id" class="rounded-full border border-border-subtle bg-surface-sunken px-3 py-1 text-sm">
+                                    {{ item.name }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <p v-else class="text-text-subtle">{{ $t('No properties selected yet') }}</p>
+                </RoomDetailCard>
+
+                <RoomDetailCard title="Documents" icon="IconFileText" :can-edit="canEditRoom" action-icon="IconUpload" action-label="Upload"
+                                @action="showFileUploadModal = true">
+                    <ul v-if="room.room_files?.length" class="divide-y divide-border-subtle">
+                        <li v-for="roomFile in room.room_files" :key="roomFile.id" class="flex items-center gap-x-3 py-2">
+                            <PropertyIcon name="IconFile" class="h-4 w-4 shrink-0 text-text-subtle" stroke-width="1.5" />
+                            <button type="button" class="min-w-0 flex-1 truncate text-left hover:text-accent-700" @click="downloadFile(roomFile)">
+                                {{ roomFile.name }}
+                            </button>
+                            <button type="button" class="rounded-full p-1 text-text-subtle hover:bg-surface-sunken hover:text-accent-700"
+                                    :title="$t('Download')" @click="downloadFile(roomFile)">
+                                <span class="sr-only">{{ $t('Download') }}</span>
+                                <PropertyIcon name="IconDownload" class="h-4 w-4" stroke-width="1.75" />
+                            </button>
+                            <button v-if="canEditRoom" type="button" class="rounded-full p-1 text-text-subtle hover:bg-surface-sunken hover:text-danger"
+                                    :title="$t('Delete')" @click="openFileDeleteModal(roomFile)">
+                                <span class="sr-only">{{ $t('Delete') }}</span>
+                                <PropertyIcon name="IconTrash" class="h-4 w-4" stroke-width="1.75" />
+                            </button>
+                        </li>
+                    </ul>
+                    <p v-else class="text-text-subtle">{{ $t('No documents available') }}</p>
+                </RoomDetailCard>
             </div>
         </div>
         <!-- Raum Bearbeiten-->
@@ -194,17 +267,34 @@
         />
     </app-layout>
 
-    <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
-        <RoomSidenav
-            :room="room"
-            :categories="roomCategories"
-            :available-categories="available_categories"
-            :attributes="roomAttributes"
-            :available-attributes="available_attributes"
-            :adjoiningRooms="adjoiningRooms"
-            :available-adjoining-rooms="available_rooms"
-        />
-    </BaseSidenav>
+    <RoomAccessModal
+        v-if="showRoomAccessModal"
+        :show="showRoomAccessModal"
+        :room="room"
+        @close="showRoomAccessModal = false"
+    />
+    <RoomAttributeEditModal
+        :show="showRoomAttributeEditModal"
+        :room="room"
+        :categories="roomCategories"
+        :available-categories="available_categories"
+        :adjoining-rooms="adjoiningRooms"
+        :available-adjoining-rooms="available_rooms"
+        :attributes="roomAttributes"
+        :available-attributes="available_attributes"
+        @close="showRoomAttributeEditModal = false"
+    />
+    <RoomFileUploadModal
+        :show="showFileUploadModal"
+        :close-modal="() => showFileUploadModal = false"
+        :room-id="room.id"
+    />
+    <FileDeleteModal
+        :show="showFileDeleteModal"
+        :close-modal="() => showFileDeleteModal = false"
+        :file="roomFileToDelete"
+        type="room"
+    />
 
     <!-- Room History Modal-->
     <room-history-component
@@ -246,8 +336,12 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Link, useForm} from "@inertiajs/vue3";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
-import RoomSidenav from "@/Layouts/Components/RoomSidenav.vue";
+import RoomAccessModal from "@/Layouts/Components/RoomAccessModal.vue";
+import RoomAttributeEditModal from "@/Layouts/Components/RoomAttributeEditModal.vue";
+import RoomFileUploadModal from "@/Layouts/Components/RoomFileUploadModal.vue";
+import FileDeleteModal from "@/Layouts/Components/FileDeleteModal.vue";
+import RoomDetailCard from "@/Pages/Rooms/Components/RoomDetailCard.vue";
+import RoomAccessGroup from "@/Pages/Rooms/Components/RoomAccessGroup.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -298,8 +392,12 @@ export default {
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,
-        RoomSidenav,
-        BaseSidenav,
+        RoomAccessModal,
+        RoomAttributeEditModal,
+        RoomFileUploadModal,
+        FileDeleteModal,
+        RoomDetailCard,
+        RoomAccessGroup,
         NewUserToolTip,
         IconPlus,
         IconMinus,
@@ -337,6 +435,26 @@ export default {
         BaseInput
     },
     computed: {
+        // Bearbeiten-Icons nur für Raumverwaltung, Admins und Raumadmins (inkl. Team) – der Server prüft ohnehin
+        canEditRoom() {
+            return this.hasAdminRole() || this.$canAny(['create, delete and update rooms']) || this.is_room_admin;
+        },
+        effectiveRoomColor() {
+            return this.room.color ?? this.room.area?.color ?? '#000000';
+        },
+        adminDepartments() {
+            return (this.room.departments ?? []).filter((department) => department.is_admin);
+        },
+        requestingDepartments() {
+            return (this.room.departments ?? []).filter((department) => department.can_request);
+        },
+        propertyGroups() {
+            return [
+                {label: 'Categories', items: this.roomCategories ?? []},
+                {label: 'Properties', items: this.roomAttributes ?? []},
+                {label: 'Adjoining rooms', items: this.adjoiningRooms ?? []},
+            ];
+        },
         requestsToShow: function () {
             let requestsToShow;
             if (this.hasAdminRole() || this.is_room_admin || this.$canAny(['create, delete and update rooms'])) {
@@ -348,19 +466,13 @@ export default {
             return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete.name]);
         },
     },
-    mounted() {
-        setTimeout(() => {
-            this.showSidenav = false;
-        }, 1000)
-    },
     data() {
         return {
-            showSidenav: true,
-            attributesOpened: false,
-            showSuccess: false,
-            user_query: "",
-            user_search_results: [],
-            uploadDocumentFeedback: "",
+            showRoomAccessModal: false,
+            showRoomAttributeEditModal: false,
+            showFileUploadModal: false,
+            showFileDeleteModal: false,
+            roomFileToDelete: null,
             showEditRoomModal: false,
             roomToSoftDelete: null,
             showSuccessModal: false,
@@ -368,14 +480,7 @@ export default {
             showRoomHistory: false,
             successHeading: "",
             successDescription: "",
-            roomForm: this.$inertia.form({
-                _method: 'PUT',
-                room_admins: this.room.room_admins,
-                room_categories: this.roomCategoryIds,
-                room_attributes: this.roomAttributeIds,
-                adjoining_rooms: this.adjoiningRoomIds
-            }),
-            // Kategorien, Eigenschaften, Nebenräume und Admins pflegt die Seitenleiste; das Modal schickt
+            // Kategorien, Eigenschaften, Nebenräume und Raumzugriff haben eigene Karten-Modals; das Modal schickt
             // sie bewusst nicht mit, sonst überschrieben veraltete Werte vom Seitenaufruf dortige Änderungen
             editRoomInheritColor: true,
             editRoomAreaColor: '#000000',
@@ -393,9 +498,6 @@ export default {
                 relevant_for_disposition: false,
                 capacity: null,
             }),
-            documentForm: useForm({
-                file: null
-            }),
         }
     },
     methods: {
@@ -407,81 +509,20 @@ export default {
             }
         },
 
-        selectNewFiles() {
-            this.$refs.room_files.click();
-        },
-        removeFile(room_file) {
-            this.$inertia.delete(`/room_files/${room_file.id}`, {
-                preserveState: true,
-            })
-        },
         downloadFile(room_file) {
             let link = document.createElement('a');
             link.href = route('download_room_file', {room_file: room_file});
             link.target = '_blank';
             link.click();
         },
-        validateTypeAndUpload(files) {
-            this.uploadDocumentFeedback = "";
-            for (let file of files) {
-              this.uploadDocumentToRoom(file)
-            }
-        },
-        uploadChosenDocuments(event) {
-            this.validateTypeAndUpload([...event.target.files])
-        },
-        uploadDraggedDocuments(event) {
-            this.validateTypeAndUpload([...event.dataTransfer.files])
-        },
-        uploadDocumentToRoom(file) {
-            this.documentForm.file = file
-
-            this.documentForm.post(`/rooms/${this.room.id}/files`, {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.documentForm.file = null
-                }
-            })
-        },
-        openChangeRoomAdminsModal() {
-            this.showChangeRoomAdminsModal = true;
-        },
-        closeChangeRoomAdminsModal() {
-            this.showChangeRoomAdminsModal = false;
-        },
         closeSuccessModal() {
             this.showSuccessModal = false;
             this.successHeading = "";
             this.successDescription = "";
         },
-        saveRoomAttributes() {
-            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
-            this.attributesOpened = false;
-        },
-        removeCategoryFromRoom(index) {
-            this.roomForm.room_categories.splice(index, 1)
-            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
-        },
-        removeAttributeFromRoom(index) {
-            this.roomForm.room_attributes.splice(index, 1)
-            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
-        },
-        removeAdjoiningRoomFromRoom(index) {
-            this.roomForm.adjoining_rooms.splice(index, 1)
-            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
-        },
-        addUserToRoomAdminsArray(user) {
-            for (let adminUser of this.roomForm.room_admins) {
-                //if User is already Room Admin, do nothing
-                if (user.id === adminUser.id) {
-                    this.user_query = ""
-                    return;
-                }
-            }
-            this.roomForm.room_admins.push(user);
-            this.user_query = "";
-            this.user_search_results = []
+        openFileDeleteModal(roomFile) {
+            this.roomFileToDelete = roomFile;
+            this.showFileDeleteModal = true;
         },
         duplicateRoom(room) {
             this.$inertia.post(`/rooms/${room.id}/duplicate`);
@@ -553,20 +594,6 @@ export default {
         closeRoomHistoryModal() {
             this.showRoomHistory = false;
         },
-    },
-    watch: {
-        user_query: {
-            handler() {
-                if (this.user_query.length > 0) {
-                    axios.get('/users/search', {
-                        params: {query: this.user_query}
-                    }).then(response => {
-                        this.user_search_results = response.data
-                    })
-                }
-            },
-            deep: true
-        }
     },
 }
 </script>

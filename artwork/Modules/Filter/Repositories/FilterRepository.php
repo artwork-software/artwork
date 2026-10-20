@@ -24,7 +24,7 @@ class FilterRepository extends BaseRepository
                             'id' => $room->getAttribute('id'),
                             'everyone_can_book' => $room->getAttribute('everyone_can_book'),
                             'label' => $room->getAttribute('name'),
-                            'room_admins' => $room->users()->wherePivot('is_admin', true)->get(),
+                            'room_admins' => $room->effectiveAdminUsers(),
                         ]
                     ),
                     'areas' => $filter->getAttribute('areas'),

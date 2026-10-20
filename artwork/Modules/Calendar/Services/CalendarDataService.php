@@ -329,7 +329,14 @@ readonly class CalendarDataService
 
         $rooms = Room::query()
             ->select(['id', 'name', 'color', 'area_id', 'temporary', 'start_date', 'end_date', 'everyone_can_book'])
-            ->with(['admins:id,first_name,last_name,profile_photo_path', 'requestableBy:id', 'area:id,color'])
+            ->with([
+                'admins:id,first_name,last_name,profile_photo_path',
+                'requestableBy:id',
+                'area:id,color',
+                // Raumzugriff über Teams (Room::effectiveAdminIds / effectiveRequestableByIds)
+                'adminDepartments.users:id',
+                'requestableByDepartments.users:id',
+            ])
             ->where('relevant_for_disposition', true)
             ->unlessRoomIds($filter?->room_ids)
             ->unlessRoomAttributeIds($filter?->room_attribute_ids)

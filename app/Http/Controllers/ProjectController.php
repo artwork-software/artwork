@@ -2192,12 +2192,18 @@ class ProjectController extends Controller
                 $moneySourceCalculationService,
                 $notificationService
             ): void {
-                if ($moneySource = MoneySource::find($linkedMoneySourceId)) {
-                    $moneySourceThresholdReminderService->handleThresholdReminders(
-                        $moneySource,
-                        $moneySourceCalculationService,
-                        $notificationService
-                    );
+                // Läuft in der Terminate-Phase: eine Exception hier würde nach bereits gesendeter
+                // Antwort als "headers already sent"-Fatal enden und die eigentliche Ursache verdecken.
+                try {
+                    if ($moneySource = MoneySource::find($linkedMoneySourceId)) {
+                        $moneySourceThresholdReminderService->handleThresholdReminders(
+                            $moneySource,
+                            $moneySourceCalculationService,
+                            $notificationService
+                        );
+                    }
+                } catch (Throwable $throwable) {
+                    report($throwable);
                 }
             })->afterResponse();
         }
@@ -3118,9 +3124,9 @@ class ProjectController extends Controller
                 id: $room->id,
                 name: $room->name,
                 has_events: $room->events_count > 0,
-                admins: $room->admins->pluck('id')->toArray(),
+                admins: $room->effectiveAdminIds(),
                 everyone_can_book: $room->everyone_can_book,
-                requestable_by: $room->requestableBy->pluck('id')->toArray(),
+                requestable_by: $room->effectiveRequestableByIds(),
             ));
 
             $dateValue = [

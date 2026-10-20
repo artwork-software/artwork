@@ -227,6 +227,12 @@ class HandleInertiaRequests extends Middleware
                 static fn (): bool => $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
                     || $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
                     || DB::table('room_user')->where('user_id', $user->id)->where('is_admin', true)->exists()
+                    // Raumadmin über ein Team
+                    || DB::table('department_room')
+                        ->join('department_user', 'department_user.department_id', '=', 'department_room.department_id')
+                        ->where('department_user.user_id', $user->id)
+                        ->where('department_room.is_admin', true)
+                        ->exists()
                     || DB::table('event_type_user')->where('user_id', $user->id)->exists()
                     || DB::table('event_types')->where('specific_verifier_id', $user->id)->exists()
             )

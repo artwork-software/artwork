@@ -31,7 +31,7 @@ readonly class RoomFrontendModelService
         return ShowDto::newInstance()
             ->setAvailableCategories($this->roomCategoryRepository->getAll())
             ->setAvailableAttributes($this->roomAttributeRepository->getAll())
-            ->setIsRoomAdmin($this->roomRepository->getUserWhereIsAdmin($room, $user->id)->count() > 0)
+            ->setIsRoomAdmin($room->isAdministeredBy($user))
             ->setAvailableRooms($this->roomRepository->getRoomsNotIdIn([$room->id]))
             ->setRoomCategoryIds($this->roomRepository->getRoomCategoryIds($room))
             ->setRoomAttributeIds($this->roomRepository->getRoomAttributeIds($room))

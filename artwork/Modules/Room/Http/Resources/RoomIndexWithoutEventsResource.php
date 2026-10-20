@@ -23,7 +23,10 @@ class RoomIndexWithoutEventsResource extends JsonResource
         // Person nochmals Schichten/Gewerke nachluden (Benachrichtigungen: 734 Queries).
         // Konsumenten lesen von Admins nur die id (Raumadmin-Check, Anfrage-Dialog,
         // RoomSidenav-Avatare) und vom Ersteller Name/Avatar (Papierkorb).
-        $admins = $this->admins->map(static fn (User $user): array => self::slimUser($user))->values()->all();
+        // Mitglieder der Admin-Teams nur, wenn der Aufrufer adminDepartments.users mitgeladen hat
+        // (Benachrichtigungen) – sonst je Raum eine Query nachladen
+        $adminUsers = $this->relationLoaded('adminDepartments') ? $this->effectiveAdminUsers() : $this->admins;
+        $admins = $adminUsers->map(static fn (User $user): array => self::slimUser($user))->values()->all();
 
         return [
             'resource' => class_basename($this),

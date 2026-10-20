@@ -38,8 +38,7 @@ class EventPolicy
         }
 
         if ($room !== null) {
-            return $room->admins()->where('user_id', $user->id)->exists()
-                || $room->requestableBy()->where('user_id', $user->id)->exists();
+            return $room->isAdministeredBy($user) || $room->isRequestableBy($user);
         }
 
         return false;
@@ -76,7 +75,8 @@ class EventPolicy
      */
     public function book(User $user, Room $room, bool $asOption = false, bool $inPlanning = false): bool
     {
-        $isRoomAdmin = $room->admins()->where('user_id', $user->id)->exists();
+        // Raumadmin direkt oder über ein Team
+        $isRoomAdmin = $room->isAdministeredBy($user);
         $hasGlobalCreate = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
 
         // Geplante Termine kennen keine Raumanfrage (Entscheidung 13.10.2026): sie werden immer direkt
@@ -104,7 +104,7 @@ class EventPolicy
         return $hasGlobalCreate
             || $user->can(PermissionEnum::EVENT_REQUEST->value)
             || $isRoomAdmin
-            || $room->requestableBy()->where('user_id', $user->id)->exists()
+            || $room->isRequestableBy($user)
             || $room->everyone_can_book;
     }
 
@@ -128,10 +128,7 @@ class EventPolicy
         return $this->canWriteProjectOf($user, $event) ||
             ($event->is_planning && $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)) ||
             $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
-            $event->room?->users()
-                ->wherePivot('is_admin', true)
-                ->where('user_id', $user->id)
-                ->exists() ||
+            ($event->room?->isAdministeredBy($user) ?? false) ||
             $event->creator?->id === $user->id;
     }
 
@@ -143,11 +140,8 @@ class EventPolicy
         }
 
         return $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
-            $event->room?->users()
-                ->wherePivot('is_admin', true)
-                ->where('user_id', $user->id)
-                ->exists() ||
-            ($event->room?->user_id === $user->id && !$event->room->admins()->exists());
+            ($event->room?->isAdministeredBy($user) ?? false) ||
+            ($event->room?->user_id === $user->id && !$event->room->hasAnyAdmin());
     }
 
     // "Termin absagen": entfernt den Termin aus dem Raum. Gilt anders als
@@ -162,11 +156,8 @@ class EventPolicy
         return $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
             ($event->is_planning && $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)) ||
             $event->creator?->id === $user->id ||
-            $event->room?->users()
-                ->wherePivot('is_admin', true)
-                ->where('user_id', $user->id)
-                ->exists() ||
-            ($event->room?->user_id === $user->id && !$event->room->admins()->exists());
+            ($event->room?->isAdministeredBy($user) ?? false) ||
+            ($event->room?->user_id === $user->id && !$event->room->hasAnyAdmin());
     }
 
     /**
@@ -183,10 +174,7 @@ class EventPolicy
         return $this->canWriteProjectOf($user, $event) ||
             $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
             ($event->is_planning && $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)) ||
-            $event->room?->users()
-                ->wherePivot('is_admin', true)
-                ->where('user_id', $user->id)
-                ->exists() ||
+            ($event->room?->isAdministeredBy($user) ?? false) ||
             $event->creator?->id === $user->id;
     }
 

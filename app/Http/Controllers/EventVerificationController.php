@@ -66,8 +66,8 @@ class EventVerificationController extends Controller
         $roomRequestScopeNames = [];
 
         if (!$canSeeRoomRequests) {
-            $adminRoomIds = Room::whereHas('admins', fn ($q) => $q->where('user_id', $user->id))
-                ->pluck('id');
+            // Raumadmin direkt oder über ein Team
+            $adminRoomIds = Room::query()->administeredBy($user->id)->pluck('id');
             $canSeeRoomRequests = $adminRoomIds->isNotEmpty();
         }
 

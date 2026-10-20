@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Http\Requests;
 
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -32,7 +33,7 @@ class UpdateProjectRequest extends FormRequest
             'assigned_departments.?' => ['exists:departments,id'],
             'budget_deadline' => 'nullable|date',
             'color' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'icon' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'icon' => ['sometimes', 'nullable', 'string', 'max:255', new IconNameRule()],
         ];
     }
 }

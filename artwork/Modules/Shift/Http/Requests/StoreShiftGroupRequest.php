@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Http\Requests;
 
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreShiftGroupRequest extends FormRequest
@@ -24,7 +25,7 @@ class StoreShiftGroupRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'color' => 'required|string|max:7',
-            'icon' => 'nullable|string|max:255',
+            'icon' => ['nullable', 'string', 'max:255', new IconNameRule()],
         ];
     }
 }

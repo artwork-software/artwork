@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreGlobalQualificationRequest extends FormRequest
@@ -23,7 +24,7 @@ class StoreGlobalQualificationRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'icon' => 'required|string|max:255',
+            'icon' => ['required', 'string', 'max:255', new IconNameRule()],
         ];
     }
 }

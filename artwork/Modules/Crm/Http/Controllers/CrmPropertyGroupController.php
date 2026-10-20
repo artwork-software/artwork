@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Artwork\Modules\Crm\Events\CrmSettingsChanged;
 use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
@@ -24,7 +25,7 @@ class CrmPropertyGroupController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'icon' => 'nullable|string',
+            'icon' => ['nullable', 'string', new IconNameRule()],
             'color' => 'nullable|string',
             'is_confidential' => 'boolean',
             'permissions' => 'nullable|array',
@@ -49,7 +50,7 @@ class CrmPropertyGroupController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'icon' => 'nullable|string',
+            'icon' => ['nullable', 'string', new IconNameRule()],
             'color' => 'nullable|string',
             'is_confidential' => 'sometimes|boolean',
             'sort_order' => 'sometimes|integer',

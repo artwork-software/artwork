@@ -754,6 +754,7 @@ import DayRemarkHoverTooltip from "@/Components/Calendar/Elements/DayRemarkHover
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
+import {canViewPlanning} from "@/Helper/planningRights.js";
 import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 const ExportModal = defineAsyncComponent(() => import("@/Layouts/Components/Export/Modals/ExportModal.vue"));
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
@@ -2043,7 +2044,7 @@ function startShiftCalendarListener() {
         onShiftDataChanged: () => { triggerRef(shiftPlanCopy) },
         onLookupsReceived: mergeLookups,
         // Geplante Termine nur mit Planungskalender-Recht (wie der Server-Load, Event::visiblePlanningFor)
-        subscribePlanningChannels: hasAdminRole() || can('can see planning calendar') || can('can edit planning calendar'),
+        subscribePlanningChannels: canViewPlanning({ isAdmin: hasAdminRole(), can }),
         // Projekt-Schichten-Tab ohne „Schichten anderer Projekte anzeigen": wie der Server-Load nur
         // Schichten dieses Projekts live einspielen (sonst bleibt eine weg-verschobene Schicht stehen)
         projectFilterId: () => (

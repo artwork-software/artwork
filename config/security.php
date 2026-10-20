@@ -18,4 +18,18 @@ return [
 
     'csp_enforce' => (bool) env('SECURITY_CSP_ENFORCE', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Setup-Token
+    |--------------------------------------------------------------------------
+    |
+    | Das Web-Setup (/setup, erster Admin) verlangt einen Einmal-Token. Ist
+    | ARTWORK_SETUP_TOKEN gesetzt, gilt dieser Wert; sonst erzeugt artwork beim
+    | Container-Start bzw. beim ersten Aufruf von /setup einen Token und schreibt
+    | ihn ins Log (`php artisan artwork:setup-token` erzeugt einen neuen).
+    |
+    */
+
+    'setup_token' => env('ARTWORK_SETUP_TOKEN'),
+
 ];

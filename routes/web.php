@@ -221,7 +221,9 @@ Route::get('/', [AppController::class, 'index']);
 Route::get('/password_feedback', [AppController::class, 'getPasswordScore']);
 
 Route::get('/setup', [AppController::class, 'showSetupPage'])->name('setup');
-Route::post('/setup', [AppController::class, 'createAdmin'])->name('setup.create');
+Route::post('/setup', [AppController::class, 'createAdmin'])
+    ->middleware('throttle:10,1')
+    ->name('setup.create');
 
 Route::get('/users/invitations/accept', [InvitationController::class, 'accept'])->middleware('throttle:10,1');
 Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])

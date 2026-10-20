@@ -43,6 +43,9 @@ if [ "${RUN_INIT:-0}" = "1" ]; then
 
   php artisan storage:link || true
   php artisan artwork:container-update || true
+  # Solange kein Admin angelegt ist, steht die Setup-URL mit Einmal-Token im Container-Log
+  # (`docker compose logs artwork`); ohne Token ist /setup gesperrt.
+  php artisan artwork:setup-token || true
   php artisan optimize || true
   rm bootstrap/cache/config.php || true
 

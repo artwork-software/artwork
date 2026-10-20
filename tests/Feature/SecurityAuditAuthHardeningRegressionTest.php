@@ -281,7 +281,10 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
 
     private function setupPayload(string $email): array
     {
+        config(['security.setup_token' => 'setup-token-for-tests']);
+
         return [
+            'setup_token' => 'setup-token-for-tests',
             'first_name' => 'Erste',
             'last_name' => 'Admin',
             'email' => $email,

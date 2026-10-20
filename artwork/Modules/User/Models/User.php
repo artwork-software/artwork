@@ -329,6 +329,7 @@ class User extends Model implements
         'checklist_completed_tasks' => 'boolean',
         'checklist_show_without_tasks' => 'boolean',
         'is_developer' => 'boolean',
+        'is_deleted_placeholder' => 'boolean',
         'show_qualifications' => 'array',
         'sort_workers_by_qualification' => 'boolean',
         'closed_qualification_groups' => 'array',
@@ -361,6 +362,7 @@ class User extends Model implements
         'salary_per_hour',
         'salary_description',
         'weekly_working_hours',
+        'is_deleted_placeholder',
     ];
 
     protected $appends = [
@@ -1189,15 +1191,16 @@ class User extends Model implements
      */
     public function shouldBeSearchable(): bool
     {
-        return $this->email !== config('artwork.deleted_user_email', 'deleted-user@artwork.local');
+        return !$this->is_deleted_placeholder;
     }
 
     /**
-     * Convenience scope to hide the placeholder user in queries
+     * Convenience scope to hide the placeholder user in queries. Über das Flag, nie über die E-Mail:
+     * eine Adresse kann sich jedes Konto selbst geben.
      */
     public function scopeExcludeDeletedPlaceholder(Builder $builder): Builder
     {
-        return $builder->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+        return $builder->where($builder->qualifyColumn('is_deleted_placeholder'), false);
     }
 
     /**

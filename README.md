@@ -49,6 +49,29 @@ artwork is self-hostable — you can install, operate and update it entirely on 
 
 Artwork can be installed standalone on a dedicated server or as a multi-container app via Docker, we recommend to use the Docker-approach.
 
+## Production operation (Produktivbetrieb)
+
+Read this before an instance is reachable from the internet. Many protections depend on these settings.
+
+- **`APP_ENV=production`, `APP_DEBUG=false`.** Any other environment enables development features (demo passwords from seeded data, detailed error pages, no error reporting). Use `APP_ENV=local` only for a purely local test on `http://localhost`.
+- **Own secrets for everything.** Never keep values from `.env.example`, this README or the git history:
+  - `APP_KEY` (`php artisan key:generate --show`)
+  - `REVERB_APP_SECRET` (e.g. `openssl rand -hex 32`); whoever knows it can listen to private channels and push events to every browser
+  - `DB_PASSWORD` (in the Docker setup also the MariaDB root password)
+  - `MEILISEARCH_KEY` (at least 16 characters)
+
+  artwork logs publicly known or empty secrets once a day as a critical error (`storage/logs`, Docker: `docker compose logs artwork`).
+- **First administrator / setup token.** On a fresh installation `/setup` creates the first administrator. It requires a one-time setup token so that a random visitor cannot claim the instance:
+  - Docker: the setup URL including the token is printed on every container start while setup is open (`docker compose logs artwork`).
+  - Standalone: the token is written to the Laravel log on the first call of `/setup`, or run `php artisan artwork:setup-token` to generate a new one.
+  - Alternatively set your own value via `ARTWORK_SETUP_TOKEN` in `.env`.
+
+  Complete the setup right after the first start. The token becomes invalid once the administrator exists.
+- **Ports.** Only expose the web server (80/443). Database, Meilisearch and Redis must not be reachable from outside; `docker-compose.yml` binds DB and Meilisearch to `127.0.0.1` (`DB_BIND_HOST`). Note that Docker bypasses host firewalls such as ufw for published ports.
+- **Reverse proxy / websockets.** Only proxy `/app/` (websocket) to Reverb, never `/apps` (Reverb HTTP API), see `dockerfiles/artwork-php.84.vhost.conf`.
+- **HTTPS.** Run the instance behind TLS. Session cookies are https-only in production; set `SESSION_SECURE_COOKIE=false` only for plain-http intranet operation. Put the proxy's address into `TRUSTED_PROXIES` if it is not in a private network.
+- **No dev dependencies.** Install with `composer install --no-dev` (the Docker entrypoint does this by default) and do not run development seeders on production data.
+
 ## Docker
 
 > **This Docker setup is for demo purposes only. To get a productive-ready installation you need to fill in your credentials according to your server circumstances in the .env-file especially take care to have the emailing-service setup correctly and that the settings fit to your firewall settings of your setup. When doing this it can be needed, that you also adjust the dockerfiles to your setup.**
@@ -73,7 +96,9 @@ Artwork can be installed standalone on a dedicated server or as a multi-containe
    ```bash
    docker compose up -d
    ```
-5. The frontend should be available at http://localhost
+5. Open the setup URL from the container log (`docker compose logs artwork`, see [Production operation](#production-operation-produktivbetrieb)) and create the first administrator.
+
+   With `APP_ENV=production` the instance expects https. For a purely local test via http://localhost set `APP_ENV=local` in ``.env``.
 
 
 ## Standalone
@@ -119,6 +144,10 @@ Example configurations for the nginx, redis and php services can be found in the
 5. Run the setup command:
    ```bash
    php artisan artwork:update
+   ```
+6. Generate the setup token and open the printed URL to create the first administrator:
+   ```bash
+   php artisan artwork:setup-token
    ```
 
 ### E-Mail

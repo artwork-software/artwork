@@ -9,11 +9,13 @@ use Artwork\Modules\Mail\Http\Requests\UpdateMailSettingsRequest;
 use Artwork\Modules\Mail\Providers\MailSettingsServiceProvider;
 use Artwork\Modules\Mail\Services\MailSettingsResolver;
 use Artwork\Modules\Mail\Settings\MailSettings;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -40,6 +42,7 @@ class MailSettingsController extends Controller
                 'from_address' => $this->settings->from_address,
                 'from_name' => $this->settings->from_name,
                 'has_password' => ($this->settings->password ?? '') !== '',
+                'can_manage' => request()->user()->hasRole(RoleEnum::ARTWORK_ADMIN->value),
                 // Effective fallback values (from .env) to show as UI placeholders.
                 // Deliberately without username: the .env account name is itself a
                 // sensitive credential detail and must not be shown in the UI.
@@ -58,8 +61,30 @@ class MailSettingsController extends Controller
     {
         $validated = $request->validated();
 
+        $newHost = $this->nullableTrim($validated['host'] ?? null);
+        $newPassword = $validated['password'] ?? '';
+        $hostChanged = strcasecmp((string) $this->settings->host, (string) $newHost) !== 0;
+
+        // Das gespeicherte Passwort gehört zum bisherigen Server und darf nie an einen neuen Host
+        // gehen: bei Hostwechsel mit Benutzername neu verlangen, ohne Benutzername (kein SMTP-AUTH)
+        // verwerfen.
+        if (
+            $hostChanged
+            && $newPassword === ''
+            && !$request->boolean('clear_password')
+            && ($this->settings->password ?? '') !== ''
+        ) {
+            if ($this->nullableTrim($validated['username'] ?? null) !== null) {
+                throw ValidationException::withMessages([
+                    'password' => __('Enter the password again when changing the mail server.'),
+                ]);
+            }
+
+            $this->settings->password = null;
+        }
+
         $port = $validated['port'] ?? null;
-        $this->settings->host = $this->nullableTrim($validated['host'] ?? null);
+        $this->settings->host = $newHost;
         $this->settings->port = $port !== null && $port !== ''
             ? (int) $port
             : null;
@@ -91,8 +116,6 @@ class MailSettingsController extends Controller
 
     public function test(TestMailRequest $request): JsonResponse
     {
-        $this->authorize('view', GeneralSettings::class);
-
         // Rebuild the effective config from the stored settings and force a fresh transport.
         $config = $this->resolver->effectiveConfigArray();
 

@@ -86,12 +86,23 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     public function users_can_change_their_own_email_and_admins_can_change_any(): void
     {
         $self = $this->actingAsUserWith([]);
+        $self->forceFill(['password' => Hash::make('Own!Passw0rd#2026')])->save();
+        // Die eigene Adresse nur mit aktuellem Passwort (Audit 20.10.2026, M3).
         $this->patch(
             route('user.update', $self),
             $this->userDetailsPayload($self, ['email' => 'me-new@example.test'])
+        )->assertSessionHasErrors('current_password');
+        $this->patch(
+            route('user.update', $self),
+            $this->userDetailsPayload($self, [
+                'email' => 'me-new@example.test',
+                'current_password' => 'Own!Passw0rd#2026',
+            ])
         )->assertRedirect();
         $this->assertSame('me-new@example.test', $self->fresh()->email);
 
+        // AuthenticateSession hält den Passwort-Hash der ersten Person in der Session.
+        $this->flushSession();
         $this->actingAsAdmin();
         $target = User::factory()->create();
         $this->patch(

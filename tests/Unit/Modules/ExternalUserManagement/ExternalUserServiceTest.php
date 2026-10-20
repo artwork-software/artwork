@@ -41,6 +41,7 @@ final class ExternalUserServiceTest extends TestCase
                 'email' => 'second@example.com',
                 'first_name' => 'Second',
                 'last_name' => 'User',
+                'email_verified' => true,
             ],
             'shared-identifier'
         );

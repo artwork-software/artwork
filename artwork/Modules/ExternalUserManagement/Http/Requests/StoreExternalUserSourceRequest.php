@@ -12,6 +12,7 @@ use Illuminate\Validation\Validator;
 class StoreExternalUserSourceRequest extends FormRequest
 {
     use RestrictsAdminRoleMapping;
+    use ValidatesOidcSourceSecurity;
 
     /**
      * Quellen anlegen/ändern (inkl. Aktivieren) nur als artwork-Admin – siehe ExternalUserSourcePolicy.
@@ -57,7 +58,8 @@ class StoreExternalUserSourceRequest extends FormRequest
             'config.client_secret' => ['required', 'string', 'max:1000'],
             'config.scopes' => ['sometimes', 'array'],
             'config.scopes.*' => ['string', 'max:100'],
-            'config.identifier_attribute' => ['nullable', 'string', 'max:100'],
+            'config.identifier_attribute' => ['nullable', 'string', 'max:100', $this->identifierClaimRule()],
+            'config.trust_idp_email' => ['sometimes', 'boolean'],
             'config.groups_claim' => ['nullable', 'string', 'max:100'],
             'config.allowed_domains' => ['nullable', 'array'],
             'config.allowed_domains.*' => ['string', 'max:255'],
@@ -67,9 +69,15 @@ class StoreExternalUserSourceRequest extends FormRequest
         // Discovery-URL wird für Google/Microsoft aus dem Preset abgeleitet und
         // muss daher nur bei Custom eingegeben werden.
         if ($preset === 'microsoft') {
-            $rules['config.tenant_id'] = ['required', 'string', 'max:255'];
+            $rules['config.tenant_id'] = ['required', 'string', 'max:255', $this->singleTenantRule()];
         } elseif ($preset !== 'google') {
-            $rules['config.discovery_url'] = ['required', 'url:http,https', 'max:500', new PublicUrlRule()];
+            $rules['config.discovery_url'] = [
+                'required',
+                'url:http,https',
+                'max:500',
+                new PublicUrlRule(),
+                $this->singleTenantRule(),
+            ];
         }
 
         return $rules;
@@ -104,6 +112,8 @@ class StoreExternalUserSourceRequest extends FormRequest
             'config.use_ssl' => ['sometimes', 'boolean'],
             'config.use_tls' => ['sometimes', 'boolean'],
             'config.user_filter' => ['nullable', 'string', 'max:1000'],
+            'config.allowed_domains' => ['nullable', 'array'],
+            'config.allowed_domains.*' => ['string', 'max:255'],
             'config.identifier_attribute' => [
                 'nullable',
                 'string',

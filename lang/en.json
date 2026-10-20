@@ -9298,5 +9298,12 @@
     "The login email address of your :app account was changed. Messages are now sent to the new address.": "The login email address of your :app account was changed. Messages are now sent to the new address.",
     "If you did not make this change, please contact your administration immediately.": "If you did not make this change, please contact your administration immediately.",
     "Enter the password again when changing the Sage host.": "Enter the password again when changing the Sage host.",
-    "The Sage host must be an https address.": "The Sage host must be an https address."
+    "The Sage host must be an https address.": "The Sage host must be an https address.",
+    "Multi-tenant endpoints (common, organizations, consumers) are not allowed. Enter your own tenant ID.": "Multi-tenant endpoints (common, organizations, consumers) are not allowed. Enter your own tenant ID.",
+    "Only the immutable claims sub or oid can be used as identifier.": "Only the immutable claims sub or oid can be used as identifier.",
+    "This connection identifies people by a claim they can change themselves. Recommended: sub or oid. After switching, people already linked must be linked again – only switch in coordination with your identity provider.": "This connection identifies people by a claim they can change themselves. Recommended: sub or oid. After switching, people already linked must be linked again – only switch in coordination with your identity provider.",
+    "Trust email addresses from this identity provider": "Trust email addresses from this identity provider",
+    "Without this option, new accounts are only created if the identity provider confirms the email address (email_verified). Microsoft Entra usually does not send this confirmation – enable the option only if the connection is limited to your own tenant or directory.": "Without this option, new accounts are only created if the identity provider confirms the email address (email_verified). Microsoft Entra usually does not send this confirmation – enable the option only if the connection is limited to your own tenant or directory.",
+    "common, organizations and consumers are not allowed because any Microsoft account could sign in through them.": "common, organizations and consumers are not allowed because any Microsoft account could sign in through them.",
+    "Optional. If set, the sync and the directory sign-in only accept people with an email address from these domains. Leave empty to allow all domains.": "Optional. If set, the sync and the directory sign-in only accept people with an email address from these domains. Leave empty to allow all domains."
 }

@@ -12,6 +12,7 @@ use Illuminate\Validation\Validator;
 class UpdateExternalUserSourceRequest extends FormRequest
 {
     use RestrictsAdminRoleMapping;
+    use ValidatesOidcSourceSecurity;
 
     /**
      * Quellen anlegen/ändern (inkl. Aktivieren) nur als artwork-Admin – siehe ExternalUserSourcePolicy.
@@ -50,6 +51,21 @@ class UpdateExternalUserSourceRequest extends FormRequest
         return $this->input('type') ?? $source?->type;
     }
 
+    /**
+     * Bestandsquellen mit email/preferred_username als Kennung laufen weiter, bis sie umgestellt werden.
+     */
+    private function storedOidcIdentifier(): ?string
+    {
+        /** @var ExternalUserSource|null $source */
+        $source = $this->route('externalUserSource');
+
+        if ($source?->type !== 'identity_provider') {
+            return null;
+        }
+
+        return $source->config['identifier_attribute'] ?? null;
+    }
+
     private function resolvedPreset(): string
     {
         /** @var ExternalUserSource|null $source */
@@ -71,7 +87,13 @@ class UpdateExternalUserSourceRequest extends FormRequest
             'config.client_secret' => ['sometimes', 'required', 'string', 'max:1000'],
             'config.scopes' => ['sometimes', 'array'],
             'config.scopes.*' => ['string', 'max:100'],
-            'config.identifier_attribute' => ['nullable', 'string', 'max:100'],
+            'config.identifier_attribute' => [
+                'nullable',
+                'string',
+                'max:100',
+                $this->identifierClaimRule($this->storedOidcIdentifier()),
+            ],
+            'config.trust_idp_email' => ['sometimes', 'boolean'],
             'config.groups_claim' => ['nullable', 'string', 'max:100'],
             'config.allowed_domains' => ['sometimes', 'nullable', 'array'],
             'config.allowed_domains.*' => ['string', 'max:255'],
@@ -79,7 +101,7 @@ class UpdateExternalUserSourceRequest extends FormRequest
         ];
 
         if ($preset === 'microsoft') {
-            $rules['config.tenant_id'] = ['sometimes', 'required', 'string', 'max:255'];
+            $rules['config.tenant_id'] = ['sometimes', 'required', 'string', 'max:255', $this->singleTenantRule()];
         } elseif ($preset !== 'google') {
             $rules['config.discovery_url'] = [
                 'sometimes',
@@ -87,6 +109,7 @@ class UpdateExternalUserSourceRequest extends FormRequest
                 'url:http,https',
                 'max:500',
                 new PublicUrlRule(),
+                $this->singleTenantRule(),
             ];
         }
 
@@ -128,6 +151,8 @@ class UpdateExternalUserSourceRequest extends FormRequest
             'config.use_ssl' => ['sometimes', 'boolean'],
             'config.use_tls' => ['sometimes', 'boolean'],
             'config.user_filter' => ['nullable', 'string', 'max:1000'],
+            'config.allowed_domains' => ['sometimes', 'nullable', 'array'],
+            'config.allowed_domains.*' => ['string', 'max:255'],
             'config.identifier_attribute' => [
                 'nullable',
                 'string',

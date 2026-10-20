@@ -2,26 +2,22 @@
 
 namespace Tests\Unit\Modules\ExternalUserManagement;
 
-use App\Http\Controllers\OidcAuthController;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionMethod;
 use Tests\TestCase;
 
 final class OidcAuthControllerDomainTest extends TestCase
 {
+    /**
+     * Der OIDC-Callback ruft die Allowlist mit $allowWhenListEmpty = false auf.
+     */
     private function isAllowed(array $allowedDomains, string $email): bool
     {
-        $controller = app(OidcAuthController::class);
-
         $source = new ExternalUserSource();
         $source->config = ['allowed_domains' => $allowedDomains];
 
-        $method = new ReflectionMethod($controller, 'emailDomainAllowed');
-        $method->setAccessible(true);
-
-        return $method->invoke($controller, $source, $email);
+        return $source->allowsEmailDomain($email, false);
     }
 
     #[Test]

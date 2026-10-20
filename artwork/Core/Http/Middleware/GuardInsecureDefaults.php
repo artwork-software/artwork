@@ -11,53 +11,71 @@ use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 /**
- * Sperrt in production jeden Webzugriff (503), solange öffentlich bekannte Secrets konfiguriert sind;
- * artisan bleibt nutzbar, damit sich die .env korrigieren lässt. Weniger kritische Befunde und
- * „APP_ENV ≠ production unter öffentlicher Adresse“ werden höchstens einmal täglich geloggt.
- * Die Antwort nennt bewusst keine Details, die stehen nur im Log.
+ * Meldet öffentlich bekannte Secrets und „APP_ENV ≠ production unter öffentlicher Adresse“ höchstens
+ * einmal täglich als critical-Log. Der Request läuft immer normal weiter (Entscheidung 20.10.2026:
+ * keine Sperre, damit keine Selbst-Hoster-Instanz abgeschaltet wird). Ohne Fund kein Cache-Zugriff.
  */
 class GuardInsecureDefaults
 {
+    private const CACHE_KEY = 'insecure-defaults.logged';
+
+    private const LOG_INTERVAL_SECONDS = 86400;
+
+    /** Prozess-lokale Drossel für langlebige Worker (Swoole), spart dort den Cache-Zugriff. */
+    private static int $nextLogAttemptAt = 0;
+
     public function __construct(private readonly InsecureDefaultsDetector $detector)
     {
     }
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (app()->environment('production')) {
-            $blocking = $this->detector->blockingFindings();
-            if ($blocking !== []) {
-                $this->logOnce('insecure-defaults.blocking', 3600, $blocking, true);
-
-                return response(
-                    'artwork is not ready for production use: insecure default configuration. '
-                    . 'The operator finds the details in the server log.',
-                    Response::HTTP_SERVICE_UNAVAILABLE,
-                    ['Content-Type' => 'text/plain; charset=UTF-8', 'Retry-After' => '3600']
-                );
+        if (time() >= self::$nextLogAttemptAt) {
+            $findings = $this->findings();
+            if ($findings !== []) {
+                $this->logOncePerDay($findings);
             }
-
-            $warnings = $this->detector->warningFindings();
-            if ($warnings !== []) {
-                $this->logOnce('insecure-defaults.warning', 86400, $warnings, false);
-            }
-        } elseif ($this->detector->runsNonProductionOnPublicUrl()) {
-            $this->logOnce('insecure-defaults.environment', 86400, [
-                'APP_ENV is "' . app()->environment() . '" although APP_URL is a public address. '
-                . 'Set APP_ENV=production.',
-            ], false);
         }
 
         return $next($request);
     }
 
     /**
+     * Setzt die prozess-lokale Drossel zurück (Tests).
+     */
+    public static function resetThrottle(): void
+    {
+        self::$nextLogAttemptAt = 0;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function findings(): array
+    {
+        if (app()->environment('production')) {
+            return $this->detector->productionFindings();
+        }
+
+        if ($this->detector->runsNonProductionOnPublicUrl()) {
+            return [
+                'APP_ENV is "' . app()->environment() . '" although APP_URL is a public address. '
+                . 'Set APP_ENV=production.',
+            ];
+        }
+
+        return [];
+    }
+
+    /**
      * @param list<string> $findings
      */
-    private function logOnce(string $key, int $seconds, array $findings, bool $blocking): void
+    private function logOncePerDay(array $findings): void
     {
+        self::$nextLogAttemptAt = time() + self::LOG_INTERVAL_SECONDS;
+
         try {
-            if (!Cache::add($key, true, $seconds)) {
+            if (!Cache::add(self::CACHE_KEY, true, self::LOG_INTERVAL_SECONDS)) {
                 return;
             }
         } catch (Throwable) {
@@ -65,9 +83,7 @@ class GuardInsecureDefaults
         }
 
         Log::critical(
-            $blocking
-                ? 'artwork blocks all web requests because of insecure default configuration'
-                : 'artwork runs with insecure default configuration',
+            'artwork runs with insecure default configuration',
             ['findings' => $findings, 'docs' => 'README.md, section "Produktivbetrieb"']
         );
     }

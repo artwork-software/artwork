@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Artwork\Core\Http\Middleware\GuardInsecureDefaults;
 use Artwork\Core\Services\InsecureDefaultsDetector;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\GeneralSettings\Services\SetupTokenService;
@@ -10,6 +11,7 @@ use Artwork\Modules\User\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\UserTestSeeder;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -202,55 +204,104 @@ final class SecurityAuditDeploymentRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // H1/H2/N1/N2 – Bekannte Default-Secrets in production
+    // H1/H2/N1/N2 – Bekannte Default-Secrets: nur Log, keine Sperre (Entscheidung 20.10.2026)
     // ---------------------------------------------------------------------------------------
 
     private function useStrongSecrets(): void
     {
+        $connection = config('database.default');
         config([
             'app.key' => 'base64:' . base64_encode(random_bytes(32)),
+            'app.debug' => false,
+            'broadcasting.default' => 'reverb',
             'reverb.apps.apps' => [['key' => 'k', 'secret' => Str::random(48), 'app_id' => 'artwork']],
+            "database.connections.{$connection}.password" => Str::random(24),
+            'scout.driver' => 'database',
         ]);
     }
 
-    #[Test]
-    public function production_with_publicly_known_app_key_blocks_web_requests(): void
+    private function assertCriticalLogContains(string $finding): void
     {
-        $this->useStrongSecrets();
-        config(['app.key' => InsecureDefaultsDetector::KNOWN_APP_KEYS[0]]);
-        $this->runInEnvironment('production');
-
-        $response = $this->get('/login');
-
-        $response->assertStatus(503);
-        $this->assertStringNotContainsString('APP_KEY', (string) $response->getContent());
+        // Log::spy() bleibt innerhalb eines Tests dieselbe Instanz, Aufrufe summieren sich.
+        Log::shouldHaveReceived('critical')
+            ->atLeast()->once()
+            ->withArgs(static fn (string $message, array $context): bool => in_array(
+                $finding,
+                $context['findings'] ?? [],
+                true
+            ));
     }
 
     #[Test]
-    public function production_with_default_or_empty_reverb_secret_blocks_web_requests(): void
+    public function production_with_publicly_known_app_key_serves_requests_and_logs_once(): void
+    {
+        GuardInsecureDefaults::resetThrottle();
+        $this->useStrongSecrets();
+        config(['app.key' => InsecureDefaultsDetector::KNOWN_APP_KEYS[0]]);
+        $this->runInEnvironment('production');
+        Log::spy();
+
+        $this->get('/login')->assertOk();
+        GuardInsecureDefaults::resetThrottle();
+        $this->get('/login')->assertOk();
+
+        Log::shouldHaveReceived('critical')
+            ->once()
+            ->withArgs(static fn (string $message, array $context): bool => str_starts_with(
+                $context['findings'][0] ?? '',
+                'APP_KEY is publicly known'
+            ));
+    }
+
+    #[Test]
+    public function production_with_default_or_empty_reverb_secret_serves_requests_and_logs(): void
     {
         $this->runInEnvironment('production');
 
         foreach (['app-secret', 'set-a-key-here', ''] as $secret) {
+            GuardInsecureDefaults::resetThrottle();
+            Cache::flush();
+            Log::spy();
             $this->useStrongSecrets();
             config(['reverb.apps.apps' => [['key' => 'k', 'secret' => $secret, 'app_id' => 'artwork']]]);
 
-            $this->get('/login')->assertStatus(503);
+            $this->get('/login')->assertOk();
+
+            $this->assertCriticalLogContains(
+                'REVERB_APP_SECRET is empty or a publicly known default. Set a long random value.'
+            );
         }
     }
 
     #[Test]
-    public function production_with_own_secrets_serves_requests(): void
+    public function reverb_secret_is_only_checked_when_reverb_is_the_broadcast_driver(): void
     {
         $this->useStrongSecrets();
-        $this->runInEnvironment('production');
+        config([
+            'broadcasting.default' => 'log',
+            'reverb.apps.apps' => [['key' => 'k', 'secret' => 'app-secret', 'app_id' => 'artwork']],
+        ]);
 
-        $this->get('/login')->assertOk();
+        $this->assertSame([], app(InsecureDefaultsDetector::class)->productionFindings());
     }
 
     #[Test]
-    public function weak_database_password_is_logged_once_but_does_not_block(): void
+    public function production_with_own_secrets_logs_nothing(): void
     {
+        GuardInsecureDefaults::resetThrottle();
+        $this->useStrongSecrets();
+        $this->runInEnvironment('production');
+        Log::spy();
+
+        $this->get('/login')->assertOk();
+
+        Log::shouldNotHaveReceived('critical');
+    }
+
+    #[Test]
+    public function weak_database_password_is_logged(): void
+    {
+        GuardInsecureDefaults::resetThrottle();
         $this->useStrongSecrets();
         $connection = config('database.default');
         config(["database.connections.{$connection}.password" => 'password']);
@@ -258,23 +309,20 @@ final class SecurityAuditDeploymentRegressionTest extends FeatureTestCase
         Log::spy();
 
         $this->get('/login')->assertOk();
-        $this->get('/login')->assertOk();
 
-        Log::shouldHaveReceived('critical')
-            ->once()
-            ->withArgs(static fn (string $message, array $context): bool => in_array(
-                'DB_PASSWORD is a publicly known default.',
-                $context['findings'] ?? [],
-                true
-            ));
+        $this->assertCriticalLogContains('DB_PASSWORD is a publicly known default.');
     }
 
     #[Test]
-    public function outside_production_known_secrets_do_not_block(): void
+    public function outside_production_known_secrets_are_not_reported(): void
     {
+        GuardInsecureDefaults::resetThrottle();
         config(['app.key' => InsecureDefaultsDetector::KNOWN_APP_KEYS[0]]);
+        Log::spy();
 
         $this->get('/login')->assertOk();
+
+        Log::shouldNotHaveReceived('critical');
     }
 
     #[Test]

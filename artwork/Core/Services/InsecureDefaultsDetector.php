@@ -3,10 +3,10 @@
 namespace Artwork\Core\Services;
 
 /**
- * Erkennt öffentlich bekannte Standard-Secrets aus früheren .env.example-/README-Ständen.
- * Selbst-Hoster übernehmen diese Werte oft 1:1. Sperrende Befunde (bekannter APP_KEY = Sessions und
- * verschlüsselte Daten fälschbar; bekanntes Reverb-Secret = private Kanäle abhörbar, Events fälschbar)
- * legen in production den Webzugriff still; die übrigen werden nur geloggt.
+ * Erkennt öffentlich bekannte Standard-Secrets aus früheren .env.example-/README-Ständen, die
+ * Selbst-Hoster oft 1:1 übernehmen (bekannter APP_KEY = Sessions und verschlüsselte Daten fälschbar,
+ * bekanntes Reverb-Secret = private Kanäle abhörbar, Events fälschbar). Nur zum Loggen: artwork
+ * sperrt deswegen keine Instanz. Reine Config-Vergleiche, billig genug für jeden Request.
  */
 class InsecureDefaultsDetector
 {
@@ -32,11 +32,11 @@ class InsecureDefaultsDetector
     public const KNOWN_MEILISEARCH_KEYS = ['ddev', 'masterKey'];
 
     /**
-     * Befunde, die in production den Webzugriff sperren.
+     * Unsichere Standardwerte einer production-Instanz.
      *
      * @return list<string>
      */
-    public function blockingFindings(): array
+    public function productionFindings(): array
     {
         $findings = [];
 
@@ -45,25 +45,15 @@ class InsecureDefaultsDetector
                 . 'Generate a new key with `php artisan key:generate`.';
         }
 
-        foreach ((array) config('reverb.apps.apps', []) as $app) {
-            $secret = trim((string) ($app['secret'] ?? ''));
-            if ($secret === '' || in_array($secret, self::KNOWN_REVERB_SECRETS, true)) {
-                $findings[] = 'REVERB_APP_SECRET is empty or a publicly known default. Set a long random value.';
-                break;
+        if (config('broadcasting.default') === 'reverb') {
+            foreach ((array) config('reverb.apps.apps', []) as $app) {
+                $secret = trim((string) ($app['secret'] ?? ''));
+                if ($secret === '' || in_array($secret, self::KNOWN_REVERB_SECRETS, true)) {
+                    $findings[] = 'REVERB_APP_SECRET is empty or a publicly known default. Set a long random value.';
+                    break;
+                }
             }
         }
-
-        return $findings;
-    }
-
-    /**
-     * Befunde, die nur geloggt werden.
-     *
-     * @return list<string>
-     */
-    public function warningFindings(): array
-    {
-        $findings = [];
 
         $connection = (string) config('database.default');
         $dbPassword = (string) config("database.connections.{$connection}.password");

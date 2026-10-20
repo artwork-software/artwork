@@ -60,7 +60,7 @@ Read this before an instance is reachable from the internet. Many protections de
   - `DB_PASSWORD` (in the Docker setup also the MariaDB root password)
   - `MEILISEARCH_KEY` (at least 16 characters)
 
-  With `APP_ENV=production`, artwork answers every web request with **503** as long as `APP_KEY` or `REVERB_APP_SECRET` is empty or a publicly known default; details are in the log (`storage/logs`, Docker: `docker compose logs artwork`). Other weak defaults are logged once a day.
+  artwork logs publicly known or empty secrets once a day as a critical error (`storage/logs`, Docker: `docker compose logs artwork`).
 - **First administrator / setup token.** On a fresh installation `/setup` creates the first administrator. It requires a one-time setup token so that a random visitor cannot claim the instance:
   - Docker: the setup URL including the token is printed on every container start while setup is open (`docker compose logs artwork`).
   - Standalone: the token is written to the Laravel log on the first call of `/setup`, or run `php artisan artwork:setup-token` to generate a new one.

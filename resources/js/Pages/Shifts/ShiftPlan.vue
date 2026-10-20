@@ -117,7 +117,7 @@
                     class="min-h-0 h-[calc(var(--dynamic-height))] relative"
                     :class="[isFullscreen ? '' : '']"
                 >
-                    <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten) -->
+                    <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten / alle weggefiltert) -->
                     <ShiftPlanEmptyState
                         v-if="shiftPlanLoaded && !emptyStateDismissed && !multiEditModeCalendar"
                         overlay
@@ -125,8 +125,10 @@
                         :crafts-count="craftsResolved?.length ?? 0"
                         :functions-count="shiftQualifications?.length ?? 0"
                         :has-shifts="planHasShifts"
+                        :has-visible-shifts="planHasVisibleShifts"
                         :filters-active="planFiltersActive"
                         :hide-unoccupied-rooms="!!calendarSettings?.hide_unoccupied_rooms"
+                        :only-not-fully-staffed="!!calendarSettings?.show_only_not_fully_staffed_shifts"
                         @add-shift="openAddShiftForFirstCell"
                         @add-from-template="openAddShiftByPresetForFirstCell"
                         @dismiss="emptyStateDismissed = true"
@@ -1133,6 +1135,7 @@ import {messageForFailedRequest} from '@/Helper/appToast.js'
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftPlanOpenViolationsFilterNotice from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue'
 import ShiftPlanEmptyState from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanEmptyState.vue'
+import {hasVisibleShiftInCells} from '@/Layouts/Components/ShiftPlanComponents/shiftPlanEmptyState.js'
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue'
 import {MenuItem} from '@headlessui/vue'
 import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
@@ -1749,7 +1752,20 @@ const planHasShifts = computed<boolean>(() => {
     return false
 })
 
-/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand „keine Räume" */
+/**
+ * Bleibt nach den clientseitigen Anzeige-Filtern noch eine Schicht im Raster? Gewerke- und Raumfilter
+ * wirken serverseitig (dann ist planHasShifts schon false); clientseitig filtert nur „nur nicht voll
+ * besetzte Schichten". Ohne diesen Filter also kein Durchlauf; mit Filter über die gecachte Zellabfrage
+ * des Rasters (getRoomDayShifts), Abbruch bei der ersten sichtbaren Schicht.
+ */
+const planHasVisibleShifts = computed<boolean>(() => {
+    if (!planHasShifts.value) return false
+    if (!calendarSettings.value?.show_only_not_fully_staffed_shifts) return true
+    const dayKeys = (days.value ?? []).filter((d: any) => !d?.isExtraRow).map((d: any) => d.fullDay)
+    return hasVisibleShiftInCells(shiftPlanArrayRef.value, dayKeys, getRoomDayShifts)
+})
+
+/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand */
 const planFiltersActive = computed<boolean>(() => {
     const filters = (props.user_filters ?? {}) as Record<string, any>
     return Object.values(filters).some((value) => Array.isArray(value) && value.length > 0)

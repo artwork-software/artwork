@@ -9321,5 +9321,10 @@
     "The last admin cannot lose the admin role.": "Die letzte Person mit Admin-Rolle kann die Rolle nicht verlieren. Vergib die Rolle zuerst an eine weitere Person.",
     "The guest list and revenue are only visible to people who can see the ticketing component.": "Gästeliste und Umsatz sehen nur Personen mit Zugriff auf die Ticketing-Komponente.",
     "The selected color is invalid.": "Die gewählte Farbe ist ungültig.",
-    "The selected icon is invalid.": "Das gewählte Icon ist ungültig."
+    "The selected icon is invalid.": "Das gewählte Icon ist ungültig.",
+    "All shifts are hidden": "Alle Schichten sind ausgeblendet",
+    "There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.": "Im ausgewählten Zeitraum gibt es Schichten, aber die aktuellen Filter und Anzeigeeinstellungen blenden alle aus. Passe sie an, um die Schichten wieder zu sehen.",
+    "A filter is active — shifts outside the filter are not shown.": "Ein Filter ist aktiv — Schichten außerhalb des Filters werden nicht angezeigt.",
+    "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.": "„Nur Schichten anzeigen, die nicht voll besetzt sind“ ist aktiv — voll besetzte Schichten werden ausgeblendet.",
+    "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.": "„Unbesetzte Tage ausblenden“ ist in den Anzeigeeinstellungen aktiv — Tage ohne sichtbare Schichten oder Termine werden ausgeblendet."
 }

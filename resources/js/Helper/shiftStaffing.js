@@ -189,3 +189,25 @@ export function staffingOpen(count) {
     const staffed = Number(count?.staffed ?? 0)
     return Math.max(0, required - staffed)
 }
+
+/**
+ * Filter „nur nicht voll besetzte Schichten": hat mindestens eine Funktion mehr Plätze als
+ * Zuweisungen? Zählt wie das Wochenraster alle Zuweisungen der Funktion aus `workers`; ältere
+ * Payloads mit getrennten Gruppen (users/freelancer/serviceProviders) werden weiter unterstützt.
+ */
+export function shiftHasOpenSlot(shift) {
+    const qualifications = toArray(shift?.shifts_qualifications)
+    const workers = shift?.workers != null
+        ? toArray(shift.workers)
+        : ['users', 'freelancer', 'serviceProviders'].flatMap((group) => toArray(shift?.[group]))
+
+    return qualifications.some((qualification) => {
+        const capacity = Number(qualification?.value ?? 0)
+        const qualificationId = Number(qualification?.shift_qualification_id)
+        const assignedCount = workers
+            .filter((worker) => Number(worker?.pivot?.shift_qualification_id) === qualificationId)
+            .length
+
+        return capacity > assignedCount
+    })
+}

@@ -42,6 +42,27 @@ final class KernelTerminateMiddlewareTest extends FeatureTestCase
     }
 
     #[Test]
+    public function a_failing_after_response_callback_is_reported_instead_of_thrown(): void
+    {
+        $exceptions = Exceptions::fake();
+
+        // Wie dispatch(...)->afterResponse() (FeatureTestCase faked den Bus, daher direkt registriert)
+        Route::get('/__test/kernel-terminate-after-response', static function (): string {
+            app()->terminating(static function (): void {
+                throw new RuntimeException('after response failed');
+            });
+
+            return 'ok';
+        });
+
+        $this->get('/__test/kernel-terminate-after-response')->assertOk()->assertSee('ok');
+
+        $exceptions->assertReported(
+            static fn (RuntimeException $exception): bool => $exception->getMessage() === 'after response failed'
+        );
+    }
+
+    #[Test]
     public function terminable_middleware_runs_normally_without_failures(): void
     {
         $exceptions = Exceptions::fake();

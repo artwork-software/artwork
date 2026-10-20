@@ -1199,7 +1199,7 @@ class EventController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'filterType' => $shiftFilterType,
             'calendarWarningText' => $calendarWarningText,
-            'rooms' => static fn () => Room::select(['id', 'name', 'position', 'area_id'])->get(),
+            'rooms' => static fn () => Room::listWithEffectiveAdminIds(['id', 'name', 'position', 'area_id']),
             'shiftTimePresets' => fn () => $this->shiftTimePresetService->getAll(),
             'shiftGroups' => fn () => $this->shiftGroupService->getAllShiftGroups(),
             'globalQualifications' => fn () => $this->globalQualificationService->getAll(),
@@ -1449,17 +1449,7 @@ class EventController extends Controller
             'roomCollisions' => [],
             'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
             // Raumauswahl im Termin-Dialog: Raumadmins werden nur als IDs gelesen (adminIdsOf), inkl. Team-Mitgliedern
-            'rooms' => Room::select(['id', 'name', 'area_id', 'order'])
-                ->without(['creator', 'admins'])
-                ->with(['admins:id', 'adminDepartments.users:id'])
-                ->get()
-                ->map(static fn (Room $room): array => [
-                    'id' => $room->id,
-                    'name' => $room->name,
-                    'area_id' => $room->area_id,
-                    'order' => $room->order,
-                    'admins' => array_map(static fn (int $id): array => ['id' => $id], $room->effectiveAdminIds()),
-                ]),
+            'rooms' => Room::listWithEffectiveAdminIds(['id', 'name', 'area_id', 'order']),
             'projects' => Project::select(['id', 'name'])->get(),
             'historyObjects' => $dialogData['historyObjects'],
             'eventStatuses' => EventStatus::orderBy('order')->get(),
@@ -2450,7 +2440,12 @@ class EventController extends Controller
         $room = Room::find($event->room_id);
         $admins = collect();
         if (!empty($room)) {
-            $admins = $room->users()->wherePivot('is_admin', true)->get();
+            // Raumadmins inkl. Mitgliedern der Admin-Teams; ohne Admins die Person, die den Raum angelegt hat
+            // (wie RoomRequestNotificationService::recipientsFor)
+            $admins = $room->effectiveAdmins();
+            if ($admins->isEmpty()) {
+                $admins = User::query()->whereKey($room->user_id)->get();
+            }
         }
 
         $this->notificationService->setIcon('blue');
@@ -5201,10 +5196,14 @@ class EventController extends Controller
             }
         });
 
+        // Broadcasts nach der Response: bei bis zu 1000 Terminen liefe der Request sonst bei langsamem
+        // Websocket-Server in einen Timeout, obwohl die Umwandlung schon gespeichert ist
         $convertedEvents = Event::query()->whereIn('id', $events->modelKeys())->with(['event_type', 'project'])->get();
-        foreach ($convertedEvents as $event) {
-            SafeBroadcast::send(new EventUpdated($event, $event->room_id));
-        }
+        dispatch(static function () use ($convertedEvents): void {
+            foreach ($convertedEvents as $event) {
+                SafeBroadcast::send(new EventUpdated($event, $event->room_id));
+            }
+        })->afterResponse();
 
         // Bulk-Ansicht ruft per axios auf und aktualisiert ihre Zeilen selbst; der Kalender lädt per Inertia neu
         if ($request->wantsJson()) {

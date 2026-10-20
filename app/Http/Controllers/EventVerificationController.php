@@ -194,7 +194,7 @@ class EventVerificationController extends Controller
             'plannedEvents' => $this->eventVerificationService->getPlannedEvents($user),
             'myRoomRequests' => EventShowResource::collection($myRoomRequests)->resolve(),
             'myRoomRequestsForEdit' => $myRoomRequestsForEdit,
-            'rooms' => Room::select(['id', 'name', 'area_id', 'order', 'everyone_can_book'])->get(),
+            'rooms' => Room::listWithEffectiveAdminIds(['id', 'name', 'area_id', 'order', 'everyone_can_book']),
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'first_project_calendar_tab_id' => $this->projectTabService

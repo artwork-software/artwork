@@ -2,10 +2,22 @@
 
 namespace Artwork\Modules\Room\Http\Requests;
 
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRoomUserRequest extends FormRequest
 {
+    /**
+     * Rechte vor der Validierung prüfen: sonst ließen sich über die exists-Regeln Personen- und Team-IDs
+     * ohne Raumrecht abfragen (422 statt 403).
+     */
+    public function authorize(): bool
+    {
+        $room = $this->route('room');
+
+        return $room instanceof Room && ($this->user()?->can('update', $room) ?? false);
+    }
+
     /**
      * Raumzugriff: {users: [...], departments: [...]} – Teams geben allen Mitgliedern dieselben Rechte.
      * Die frühere Form (nur eine Liste von Personen) wird weiter angenommen.

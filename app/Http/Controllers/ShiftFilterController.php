@@ -15,17 +15,22 @@ class ShiftFilterController extends Controller
 {
     public function index(): Collection
     {
-        return ShiftFilter::query()->where('user_id', Auth::id())->get()->map(fn (ShiftFilter $filter) => [
-            'id' => $filter->id,
-            'name' => $filter->name,
-            'rooms' => $filter->rooms->map(fn (Room $room) => [
-                'id' => $room->id,
-                'everyone_can_book' => $room->everyone_can_book,
-                'label' => $room->name,
-                'room_admins' => $room->effectiveAdminUsers(),
-            ]),
-            'eventTypes' => $filter->event_types,
-        ]);
+        return ShiftFilter::query()
+            ->where('user_id', Auth::id())
+            // Mitglieder der Admin-Teams je Raum vorab laden (effectiveAdminUsers)
+            ->with('rooms.adminDepartments.users:id,first_name,last_name,profile_photo_path')
+            ->get()
+            ->map(fn (ShiftFilter $filter) => [
+                'id' => $filter->id,
+                'name' => $filter->name,
+                'rooms' => $filter->rooms->map(fn (Room $room) => [
+                    'id' => $room->id,
+                    'everyone_can_book' => $room->everyone_can_book,
+                    'label' => $room->name,
+                    'room_admins' => $room->effectiveAdminUsers(),
+                ]),
+                'eventTypes' => $filter->event_types,
+            ]);
     }
 
     public function store(Request $request): RedirectResponse

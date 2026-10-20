@@ -274,6 +274,26 @@ class Room extends Model
     }
 
     /**
+     * Schlanke Raumliste fürs Frontend: gewählte Spalten plus `admins` als [{id}] inkl. Mitgliedern der
+     * Admin-Teams (adminIdsOf / roomAdminRights.js), ohne volle User-Modelle aus Room::$with.
+     * @param array<int, string> $columns
+     * @return Collection<int, array<string, mixed>>
+     */
+    public static function listWithEffectiveAdminIds(array $columns): Collection
+    {
+        return static::query()
+            ->select(array_values(array_unique(['id', ...$columns])))
+            ->without(['creator', 'admins'])
+            ->with(['admins:id', 'adminDepartments.users:id'])
+            ->get()
+            ->map(static fn (Room $room): array => [
+                ...$room->only($columns),
+                'admins' => array_map(static fn (int $id): array => ['id' => $id], $room->effectiveAdminIds()),
+            ])
+            ->values();
+    }
+
+    /**
      * IDs aller Anfrageberechtigten inkl. Team-Mitgliedern.
      * @return array<int, int>
      */

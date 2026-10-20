@@ -48,4 +48,12 @@ final class ToolSettingsBrandingControllerTest extends FeatureTestCase
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page->where('artworkVersion', null));
     }
+
+    #[Test]
+    public function the_version_is_not_shared_with_guests(): void
+    {
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('artworkVersion', null));
+    }
 }

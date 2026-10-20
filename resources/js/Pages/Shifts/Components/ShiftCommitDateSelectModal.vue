@@ -37,7 +37,7 @@
 
             <BaseInput
                 v-model="newShiftCommitForm.year"
-                :min="currentYear"
+                :min="minimumYear"
                 type="number"
                 label="Year"
                 id="commit_year"
@@ -243,6 +243,8 @@ const props = defineProps({
 
 // ISO-KW und ISO-Jahr: am Jahreswechsel gehört z. B. der 01.01.2027 zur KW 53 von 2026
 const { week: currentWeek, year: currentYear } = isoWeekOf(new Date())
+// 29.–31.12. liegt das ISO-Jahr schon im Folgejahr; die letzte KW des laufenden Kalenderjahres bleibt wählbar
+const minimumYear = Math.min(currentYear, new Date().getFullYear())
 
 const newShiftCommitForm = useForm({
     week_number: currentWeek,

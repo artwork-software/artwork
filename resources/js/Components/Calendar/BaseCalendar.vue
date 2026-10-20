@@ -428,7 +428,7 @@ import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import {can} from "laravel-permission-to-vuejs";
 import {canAnswerVerificationInBulk, canRequestVerificationInBulk} from "@/Helper/verificationRights.js";
-import {findRoom, isRoomAdminOf, roomAdminIds} from "@/Helper/roomAdminRights.js";
+import {mayAnswerRoomRequestIn as mayAnswerRoomRequestInRoom} from "@/Helper/roomAdminRights.js";
 import ConvertToPlanningModal from "@/Components/Modals/ConvertToPlanningModal.vue";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
@@ -1316,11 +1316,15 @@ const bulkConvertToPlanning = () => {
     });
 };
 
-// Zusagen/Absagen nur für Raumadmins des Raums (Spiegel von EventPolicy::answerRoomRequest); ohne Raumadmins
-// entscheidet der Server (Fallback auf die Person, die den Raum angelegt hat)
+// Zusagen/Absagen wie EventPolicy::answerRoomRequest (Helper/roomAdminRights.js)
 function mayAnswerRoomRequestIn(roomId) {
-    if (isAdmin.value) return true;
-    return roomAdminIds(findRoom(props.rooms, roomId)).length === 0 || isRoomAdminOf(props.rooms, roomId, user.value?.id);
+    return mayAnswerRoomRequestInRoom({
+        rooms: props.rooms,
+        roomId,
+        userId: user.value?.id,
+        isAdmin: isAdmin.value,
+        canBookWithoutRequest: can('create events without request'),
+    });
 }
 
 // Sammel-"Prüfung anfragen": Raumadmins ohne "Im Planungskalender fest planen" legen in ihren Räumen geplante

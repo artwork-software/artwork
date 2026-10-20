@@ -9293,5 +9293,6 @@
     "Search for people and teams": "Personen und Teams suchen",
     "Nobody has access to this room yet. Add people or whole teams above.": "Noch hat niemand Zugriff auf diesen Raum. Füge oben Personen oder ganze Teams hinzu.",
     "Applies to all members ({0})": "Gilt für alle Mitglieder ({0})",
-    "Remove team from room access": "Team aus dem Raumzugriff entfernen"
+    "Remove team from room access": "Team aus dem Raumzugriff entfernen",
+    "Members of teams with room admin access can only be changed by people who may edit rooms.": "Mitglieder von Teams mit Raumadmin-Zugriff kann nur ändern, wer Räume bearbeiten darf."
 }

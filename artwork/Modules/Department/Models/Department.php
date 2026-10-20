@@ -8,6 +8,7 @@ use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +22,8 @@ use Laravel\Scout\Searchable;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property string $svg_name
+ * @property-read \Illuminate\Database\Eloquent\Relations\Pivot|null $pivot Pivot einer belongsToMany-Abfrage
+ *                (z. B. department_room mit is_admin/can_request)
  */
 class Department extends Model
 {
@@ -40,6 +43,16 @@ class Department extends Model
         return $this->belongsToMany(User::class);
     }
 
+
+    /**
+     * Räume, die das Team verwaltet (department_room.is_admin) – Mitglieder gelten dort als Raumadmins.
+     * @return BelongsToMany<Room, $this>
+     */
+    public function administeredRooms(): BelongsToMany
+    {
+        return $this->belongsToMany(Room::class, 'department_room')
+            ->wherePivot('is_admin', true);
+    }
 
     /**
      * @return BelongsToMany<Invitation, $this>

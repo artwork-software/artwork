@@ -263,7 +263,8 @@ class HandleInertiaRequests extends Middleware
             [
                 'name' => config('app.name'),
                 'use_chat_module' => config('app.use_chat_module'),
-                'artworkVersion' => config('app.version'),
+                // Nur für Angemeldete (Tool-Einstellungen) – Login- und Einladungsseiten verraten die Version nicht
+                'artworkVersion' => $user ? config('app.version') : null,
                 // Effektives PHP-Upload-Limit für transparente „Datei zu groß"-Meldungen
                 // und die Datei-Einstellungsseite (Abnahme RG-04); nginx kann zusätzlich begrenzen
                 'server_upload_limit_mb' => \Artwork\Core\FileHandling\ServerUploadLimit::inMegabytes(),

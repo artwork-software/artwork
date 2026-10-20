@@ -228,7 +228,10 @@ class RoomController extends Controller
      */
     private function recordAdminDepartmentChanges(Room $room, \Illuminate\Support\Collection $departmentsBefore): void
     {
-        $adminIdsBefore = $departmentsBefore->filter(fn (Department $d) => (bool) $d->pivot->is_admin)->keys()->all();
+        $adminIdsBefore = $departmentsBefore
+            ->filter(fn (Department $d) => (bool) $d->pivot?->getAttribute('is_admin'))
+            ->keys()
+            ->all();
         $adminsAfter = $room->adminDepartments()->get()->keyBy('id');
 
         foreach ($adminsAfter as $id => $department) {

@@ -9282,5 +9282,6 @@
     "Search for people and teams": "Search for people and teams",
     "Nobody has access to this room yet. Add people or whole teams above.": "Nobody has access to this room yet. Add people or whole teams above.",
     "Applies to all members ({0})": "Applies to all members ({0})",
-    "Remove team from room access": "Remove team from room access"
+    "Remove team from room access": "Remove team from room access",
+    "Members of teams with room admin access can only be changed by people who may edit rooms.": "Members of teams with room admin access can only be changed by people who may edit rooms."
 }

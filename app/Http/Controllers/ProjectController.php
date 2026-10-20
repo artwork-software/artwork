@@ -2952,7 +2952,7 @@ class ProjectController extends Controller
         $headerObject->projectGenres     = $project->genres;
         $headerObject->projectSectors    = $project->sectors;
 
-        $headerObject->rooms = Room::select('id', 'name')->whereNull('deleted_at')->get();
+        $headerObject->rooms = Room::listWithEffectiveAdminIds(['id', 'name', 'everyone_can_book']);
 
         $headerObject->projectState = $project->state;
 

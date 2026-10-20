@@ -10,6 +10,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Department\Policies\DepartmentPolicy;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\SubEvent;
@@ -79,6 +80,7 @@ use Illuminate\Http\Request;
 use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -1592,22 +1594,41 @@ class UserController extends Controller
 
         $user->update($attributes);
 
-        $user->calendar_settings?->update([
-            'high_contrast' => $request->get('high_contrast')
-        ]);
+        // Kalender und Planungskalender (je eigene Einstellungszeile)
+        if ($request->has('high_contrast')) {
+            UserCalendarSettings::query()->where('user_id', $user->id)->update([
+                'high_contrast' => $request->boolean('high_contrast'),
+            ]);
+        }
 
+        $roomAdminTeamLocked = false;
         if (Auth::user()->canAny([PermissionEnum::TEAM_UPDATE->value, PermissionEnum::MA_MANAGER->value])) {
-            $user->departments()->sync(
-                collect($request->departments)
-                    ->map(function ($department) {
-                        return $department['id'];
-                    })
-            );
+            $requestedIds = collect($request->departments)->map(fn ($department) => (int) $department['id']);
+            $currentIds = $user->departments()->pluck('departments.id')->map(fn ($id) => (int) $id);
+
+            // Teams mit Raumadmin-Zugriff nur mit dem Recht, Räume zu bearbeiten (DepartmentPolicy) –
+            // ohne bleibt die Mitgliedschaft in diesen Teams unverändert
+            $lockedIds = Department::query()
+                ->whereIn('id', $requestedIds->diff($currentIds)->merge($currentIds->diff($requestedIds))->all())
+                ->get()
+                ->filter(fn (Department $department) => Gate::denies('changeRoomAdminMembers', $department))
+                ->modelKeys();
+            if ($lockedIds !== []) {
+                $roomAdminTeamLocked = true;
+                $requestedIds = $requestedIds->reject(fn (int $id) => in_array($id, $lockedIds, true))
+                    ->merge($currentIds->intersect($lockedIds));
+            }
+
+            $user->departments()->sync($requestedIds->unique()->values()->all());
             // Raumadmin über ein Team ändert den gecachten Anfragen-Status
             User::forgetCachedShareDataForIds([$user->id]);
         }
 
         Session::put('locale', $user->language);
+
+        if ($roomAdminTeamLocked) {
+            return Redirect::back()->with('error', __(DepartmentPolicy::ROOM_ADMIN_TEAM_LOCKED_MESSAGE));
+        }
 
         return Redirect::back();
     }

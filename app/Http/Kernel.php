@@ -151,6 +151,25 @@ class Kernel extends HttpKernel
     ];
 
     /**
+     * Wie der Framework-Kernel, aber Fehler aus den Terminating-Callbacks (dispatch(...)->afterResponse(),
+     * app()->terminating()) werden gemeldet statt geworfen: die Antwort ist bereits gesendet, eine Exception
+     * endete sonst ebenfalls als "headers already sent"-Fatal. Nach einem Fehler entfallen die übrigen
+     * Callbacks dieses Requests.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \Symfony\Component\HttpFoundation\Response $response
+     */
+    public function terminate($request, $response): void
+    {
+        try {
+            parent::terminate($request, $response);
+        } catch (Throwable $throwable) {
+            $this->requestStartedAt = null;
+            report($throwable);
+        }
+    }
+
+    /**
      * Wie der Framework-Kernel, aber jede Middleware einzeln abgesichert: terminate() läuft, nachdem die Antwort
      * gesendet wurde. Eine Exception hier (auch schon beim Neubau der Middleware, z. B. Passports CheckToken, das
      * den ResourceServer samt OAuth-Key-Prüfung braucht) endete sonst als "headers already sent"-Fatal, verdeckte

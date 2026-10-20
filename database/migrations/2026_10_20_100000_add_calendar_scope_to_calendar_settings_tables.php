@@ -49,7 +49,14 @@ return new class extends Migration
                 continue;
             }
             DB::table($tableName)->where('calendar_scope', 'planning')->delete();
-            Schema::table($tableName, function (Blueprint $table): void {
+            // MariaDB kann den eigenen FK-Index auf user_id zugunsten des zusammengesetzten Index entfernt
+            // haben – ohne Ersatz scheitert dropIndex sonst an der Fremdschlüssel-Bedingung (1553)
+            $hasUserIdIndex = collect(Schema::getIndexes($tableName))
+                ->contains(static fn (array $index): bool => $index['columns'] === ['user_id']);
+            Schema::table($tableName, function (Blueprint $table) use ($hasUserIdIndex): void {
+                if (!$hasUserIdIndex) {
+                    $table->index('user_id');
+                }
                 $table->dropIndex(['user_id', 'calendar_scope']);
                 $table->dropColumn('calendar_scope');
             });

@@ -17,7 +17,7 @@
                                     {{$t('edit')}}
                                 </a>
                             </MenuItem>
-                            <MenuItem v-slot="{ active }">
+                            <MenuItem v-if="canManageRooms" v-slot="{ active }">
                                 <a href="#" @click="duplicateRoom(room)"
                                    :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <PropertyIcon name="IconCopy" stroke-width="1.5"
@@ -26,7 +26,7 @@
                                     {{ $t('Duplicate')}}
                                 </a>
                             </MenuItem>
-                            <MenuItem v-slot="{ active }">
+                            <MenuItem v-if="canManageRooms" v-slot="{ active }">
                                 <a @click="openSoftDeleteRoomModal(room)"
                                    :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <PropertyIcon name="IconTrash"  stroke-width="1.5"
@@ -439,6 +439,10 @@ export default {
         canEditRoom() {
             return this.hasAdminRole() || this.$canAny(['create, delete and update rooms']) || this.is_room_admin;
         },
+        // Duplizieren und Papierkorb verlangen serverseitig die Raumverwaltung (RoomPolicy create/delete), nicht Raumadmin
+        canManageRooms() {
+            return this.hasAdminRole() || this.$canAny(['create, delete and update rooms']);
+        },
         effectiveRoomColor() {
             return this.room.color ?? this.room.area?.color ?? '#000000';
         },
@@ -560,12 +564,15 @@ export default {
             this.roomToSoftDelete = null;
         },
         softDeleteRoom() {
-            this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
+            this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`, {
+                onSuccess: () => {
+                    this.successHeading = this.$t('Room in the recycle bin')
+                    this.successDescription = this.$t('The room has been successfully moved to the trash.')
+                    this.showSuccessModal = true;
+                    setTimeout(() => this.closeSuccessModal(), 2000);
+                },
+            });
             this.closeSoftDeleteRoomModal();
-            this.successHeading = this.$t('Room in the recycle bin')
-            this.successDescription = this.$t('The room has been successfully moved to the trash.')
-            this.showSuccessModal = true;
-            setTimeout(() => this.closeSuccessModal(), 2000);
         },
         editRoom() {
             // Zeitraum nur für temporäre Räume mitschicken

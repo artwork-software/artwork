@@ -64,8 +64,8 @@ class RoomCalendarResource extends JsonResource
                     'name' => $department->name,
                     'svg_name' => $department->svg_name,
                     'users_count' => $department->users_count,
-                    'is_admin' => (bool) $department->pivot->is_admin,
-                    'can_request' => (bool) $department->pivot->can_request,
+                    'is_admin' => (bool) $department->pivot?->getAttribute('is_admin'),
+                    'can_request' => (bool) $department->pivot?->getAttribute('can_request'),
                 ])
                 ->values()
                 ->all(),

@@ -67,6 +67,44 @@ final class ExternalDocumentsTest extends TestCase
     }
 
     #[Test]
+    public function upload_area_limits_apply_and_shared_files_are_listed(): void
+    {
+        $ctx = $this->context();
+        $placement = ComponentInTab::query()->where('project_tab_id', $ctx['tab']->id)->firstOrFail();
+        $placement->update(['upload_settings' => ['allowed_extensions' => ['pdf'], 'max_file_size_mb' => null, 'max_files' => 1]]);
+
+        $this->postJson(route('external.project.tab.documents.store', $this->params($ctx)), [
+            'file' => UploadedFile::fake()->create('rider.pdf', 120, 'application/pdf'),
+        ])->assertCreated();
+        $this->assertSame('tab:' . $placement->id, ProjectFile::query()->firstOrFail()->uploaded_via);
+
+        $this->postJson(route('external.project.tab.documents.store', $this->params($ctx)), [
+            'file' => UploadedFile::fake()->create('zweite.pdf', 120, 'application/pdf'),
+        ])->assertUnprocessable();
+
+        // intern aus einem anderen Tab hochgeladen und ausdrücklich in diesem Bereich sichtbar gemacht
+        $otherTab = ProjectTab::factory()->create();
+        ProjectFile::query()->forceCreate([
+            'project_id' => $ctx['project']->id,
+            'tab_id' => $otherTab->id,
+            'visible_in' => ['tab:' . $placement->id],
+            'name' => 'geteilt.pdf',
+            'basename' => 'geteilt.pdf',
+        ]);
+        ProjectFile::query()->forceCreate([
+            'project_id' => $ctx['project']->id,
+            'tab_id' => $otherTab->id,
+            'name' => 'fremd.pdf',
+            'basename' => 'fremd.pdf',
+        ]);
+
+        $names = collect($this->getJson(route('external.project.tab.documents.index', $this->params($ctx)))
+            ->assertOk()
+            ->json('documents'))->pluck('name')->all();
+        $this->assertEqualsCanonicalizing(['rider.pdf', 'geteilt.pdf'], $names);
+    }
+
+    #[Test]
     public function external_with_write_scope_can_upload_list_and_delete_own_file(): void
     {
         $ctx = $this->context();

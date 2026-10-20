@@ -109,4 +109,54 @@ final class HandleInertiaRequestsSharedPropsTest extends FeatureTestCase
         $this->assertSame([], $shared['permissions']);
         $this->assertFalse($shared['canSeeIncomingRequests']);
     }
+
+    #[Test]
+    public function plain_xhr_requests_skip_the_shared_props(): void
+    {
+        $this->actingAs($this->adminUser());
+
+        $xhr = Request::create('/shifts/worker-single', 'GET');
+        $xhr->headers->set('X-Requested-With', 'XMLHttpRequest');
+
+        $shared = app(HandleInertiaRequests::class)->share($xhr);
+
+        $this->assertArrayHasKey('errors', $shared);
+        $this->assertArrayNotHasKey('permissions', $shared);
+        $this->assertArrayNotHasKey('calendar_settings', $shared);
+        $this->assertArrayNotHasKey('flash', $shared);
+    }
+
+    #[Test]
+    public function inertia_visits_and_full_page_loads_keep_the_shared_props(): void
+    {
+        $this->actingAs($this->adminUser());
+
+        $inertiaVisit = Request::create('/dashboard', 'GET');
+        $inertiaVisit->headers->set('X-Requested-With', 'XMLHttpRequest');
+        $inertiaVisit->headers->set('X-Inertia', 'true');
+
+        foreach ([$inertiaVisit, Request::create('/dashboard', 'GET')] as $request) {
+            $shared = app(HandleInertiaRequests::class)->share($request);
+
+            $this->assertArrayHasKey('permissions', $shared);
+            $this->assertArrayHasKey('flash', $shared);
+            $this->assertArrayHasKey('calendar_settings', $shared);
+        }
+    }
+
+    #[Test]
+    public function json_endpoint_called_via_axios_runs_no_share_queries(): void
+    {
+        $this->actingAs($this->adminUser());
+
+        \Illuminate\Support\Facades\DB::flushQueryLog();
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+        $this->getJson(route('shifts.crafts'), ['X-Requested-With' => 'XMLHttpRequest'])->assertOk();
+        $queries = implode("\n", array_column(\Illuminate\Support\Facades\DB::getQueryLog(), 'query'));
+        \Illuminate\Support\Facades\DB::disableQueryLog();
+
+        $this->assertStringNotContainsString('user_calendar_settings', $queries);
+        $this->assertStringNotContainsString('money_source_users', $queries);
+        $this->assertStringNotContainsString('shift_commit_workflow_users', $queries);
+    }
 }

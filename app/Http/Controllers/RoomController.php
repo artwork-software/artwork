@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Change\Changes\Room\MemberChange;
+use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
 use Artwork\Modules\Room\Http\Requests\UpdateRoomUserRequest;
@@ -34,7 +37,9 @@ class RoomController extends Controller
         private readonly RoomChangeService $roomChangeService,
         private readonly RoomFrontendModelService $roomFrontendModelService,
         private readonly Redirector $redirector,
-        private readonly UserService $userService
+        private readonly UserService $userService,
+        private readonly MemberChange $memberChange,
+        private readonly ChangeService $changeService,
     ) {
     }
 
@@ -178,25 +183,79 @@ class RoomController extends Controller
     {
         $this->authorize('update', $room);
 
-        $affectedUserIds = $room->users()->pluck('users.id')->all();
+        // Vorher-Stand für Verlauf/Benachrichtigungen (vorher nur über update() – das Zugriffs-Modal lief daran vorbei)
+        $roomBefore = $room->replicate();
+        $roomBefore->admins = $room->admins()->get();
+        $departmentsBefore = $room->departments()->get()->keyBy('id');
+        $affectedUserIds = array_merge(
+            $room->users()->pluck('users.id')->all(),
+            $room->effectiveAdminIds(),
+        );
 
         $room->users()->detach();
-
-        foreach ($request->all() as $user) {
-            $room->users()->attach(
-                $user['id'],
-                [
-                    'is_admin' => $user['is_admin'],
-                    'can_request' => $user['can_request'],
-                ]
-            );
+        foreach ($request->roomUsers() as $user) {
+            $room->users()->attach($user['id'], [
+                'is_admin' => $user['is_admin'],
+                'can_request' => $user['can_request'],
+            ]);
             $affectedUserIds[] = $user['id'];
         }
 
-        // Raum-Admin-Status beeinflusst den gecachten canSeeIncomingRequests-Flag
-        User::forgetCachedShareDataForIds(array_unique($affectedUserIds));
+        if ($request->usesTeamPayload()) {
+            $room->departments()->sync(collect($request->roomDepartments())->mapWithKeys(
+                static fn (array $department): array => [$department['id'] => [
+                    'is_admin' => $department['is_admin'],
+                    'can_request' => $department['can_request'],
+                ]]
+            )->all());
+        }
+
+        $room->unsetRelation('admins');
+        $room->unsetRelation('adminDepartments');
+        $room->unsetRelation('departments');
+        $this->memberChange->change($room, $roomBefore);
+        $this->recordAdminDepartmentChanges($room, $departmentsBefore);
+
+        // Raum-Admin-Status beeinflusst den gecachten canSeeIncomingRequests-Flag – auch für Team-Mitglieder
+        User::forgetCachedShareDataForIds(array_unique(array_merge($affectedUserIds, $room->effectiveAdminIds())));
 
         return $this->redirector->back();
+    }
+
+    /**
+     * Verlaufseinträge, wenn ein Team als Raumadmin hinzukommt oder wegfällt.
+     * @param \Illuminate\Support\Collection<int, Department> $departmentsBefore
+     */
+    private function recordAdminDepartmentChanges(Room $room, \Illuminate\Support\Collection $departmentsBefore): void
+    {
+        $adminIdsBefore = $departmentsBefore
+            ->filter(fn (Department $d) => (bool) $d->pivot?->getAttribute('is_admin'))
+            ->keys()
+            ->all();
+        $adminsAfter = $room->adminDepartments()->get()->keyBy('id');
+
+        foreach ($adminsAfter as $id => $department) {
+            if (!in_array($id, $adminIdsBefore, true)) {
+                $this->recordRoomChange($room, 'Added as room admin', $department->name);
+            }
+        }
+        foreach ($adminIdsBefore as $id) {
+            if (!$adminsAfter->has($id)) {
+                $this->recordRoomChange($room, 'Removed as room admin', $departmentsBefore[$id]->name);
+            }
+        }
+    }
+
+    private function recordRoomChange(Room $room, string $translationKey, string $name): void
+    {
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Room::class)
+                ->setModelId($room->id)
+                ->setTranslationKey($translationKey)
+                ->setTranslationKeyPlaceholderValues([$name])
+        );
     }
 
     public function update(
@@ -270,8 +329,8 @@ class RoomController extends Controller
         );
 
         $roomId = $room->id;
-        foreach ($room->users()->wherePivot('is_admin', true)->get() as $user) {
-            $this->schedulingService->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
+        foreach ($room->effectiveAdminIds() as $adminId) {
+            $this->schedulingService->create($adminId, 'ROOM_CHANGES', 'ROOMS', $roomId);
         }
 
         return Redirect::back();
@@ -406,7 +465,13 @@ class RoomController extends Controller
             ->orWhereHas('area', function ($query) use ($search): void {
                 $query->where('name', 'like', "%{$search}%");
             })
-            ->with(['area', 'admins:id', 'requestableBy:id'])
+            ->with([
+                'area',
+                'admins:id',
+                'requestableBy:id',
+                'adminDepartments.users:id',
+                'requestableByDepartments.users:id',
+            ])
             ->get();
 
         $normalized = $rooms->map(fn(Room $room) => [
@@ -416,9 +481,9 @@ class RoomController extends Controller
             'temporary' => $room->temporary,
             'start_date' => $room->start_date,
             'end_date' => $room->end_date,
-            'admins' => $room->admins->pluck('id')->toArray(),
+            'admins' => $room->effectiveAdminIds(),
             'everyone_can_book' => $room->everyone_can_book,
-            'requestable_by' => $room->requestableBy->pluck('id')->toArray(),
+            'requestable_by' => $room->effectiveRequestableByIds(),
         ]);
 
         return response()->json($normalized);

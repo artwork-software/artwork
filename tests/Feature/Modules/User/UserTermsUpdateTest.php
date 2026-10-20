@@ -25,7 +25,8 @@ final class UserTermsUpdateTest extends FeatureTestCase
     #[Test]
     public function update_terms_ignores_weekly_working_hours_but_saves_the_remuneration(): void
     {
-        $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
+        $viewer = $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
+        request()->setUserResolver(fn () => $viewer);
         $user = User::factory()->create(['weekly_working_hours' => 40, 'salary_per_hour' => 10]);
 
         $this->patch(route('user.update.terms', $user), [
@@ -54,6 +55,9 @@ final class UserTermsUpdateTest extends FeatureTestCase
     {
         Carbon::setTestNow(Carbon::parse('2026-07-21 12:00:00'));
         $user = User::factory()->create(['weekly_working_hours' => 40]);
+        // Wochenstunden fremder Personen nur mit Personalverwaltung (Audit 20.10.2026, N24)
+        $viewer = $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
+        request()->setUserResolver(fn () => $viewer);
 
         $this->assertNull((new UserShowResource($user))->toArray(request())['weekly_working_hours']);
 

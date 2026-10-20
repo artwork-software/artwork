@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\AppApi\Http\Requests\AppDiscoverRequest;
 use Artwork\Modules\AppApi\Http\Requests\AppLoginRequest;
 use Artwork\Modules\AppApi\Services\AppShiftPlanService;
+use Artwork\Modules\AppApi\Services\AppTokenService;
 use Artwork\Modules\AppApi\Services\AppTwoFactorAuthenticationService;
 use Artwork\Modules\ExternalUserManagement\Service\CredentialLoginService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
@@ -24,6 +25,7 @@ class AppAuthController extends Controller
         private readonly CredentialLoginService $credentialLoginService,
         private readonly AppShiftPlanService $shiftPlanService,
         private readonly UserRepository $userRepository,
+        private readonly AppTokenService $appTokenService,
     ) {
     }
 
@@ -74,7 +76,7 @@ class AppAuthController extends Controller
             ], 422);
         }
 
-        $token = $user->createToken($validated['device_name'], ['app'])->accessToken;
+        $token = $this->appTokenService->issue($user, $validated['device_name']);
 
         return response()->json([
             'token' => $token,

@@ -313,6 +313,9 @@ final class PagePropShapeTest extends FeatureTestCase
     #[Test]
     public function planning_calendar(): void
     {
+        // Die raumlosen Termine des Fixtures sind feste Termine: im Planungskalender nur mit „Feste Termine anzeigen“
+        $this->admin->calendarSettingsFor(true, false)->update(['show_unplanned_events' => true]);
+
         $this->assertPropShapeMatchesSnapshot(
             $this->page(route('planning-event-calendar.index')),
             'planning-calendar',

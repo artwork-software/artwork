@@ -18,6 +18,8 @@ class CrmProperty extends Model
         'name',
         'type',
         'select_values',
+        // Mehrfachauswahl: "checkboxes" (Standard) oder "dropdown"
+        'multiselect_display',
         'tooltip_text',
         'is_system',
         'sort_order',

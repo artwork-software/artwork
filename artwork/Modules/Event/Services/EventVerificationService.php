@@ -7,6 +7,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Events\BroadcastToReloadEventVerificationRequests;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventVerification;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -36,6 +37,64 @@ class EventVerificationService
     {
         $this->trackIsPlanningChange($event, false);
         $event->update(['is_planning' => false, 'occupancy_option' => false]);
+    }
+
+    /**
+     * Macht aus einem Termin einen geplanten Termin. Geplante Termine kennen keine Raumanfrage: eine offene
+     * Anfrage wird zurückgenommen (sonst blieb sie schraffiert im Planungskalender stehen, ohne dass ein
+     * Raumadmin sie noch beantworten konnte – EventPolicy::answerRoomRequest schließt geplante Termine aus).
+     */
+    public function convertToPlanning(Event $event): void
+    {
+        $this->trackIsPlanningChange($event, true);
+
+        if ($event->occupancy_option) {
+            $this->notificationService->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
+        }
+
+        $event->update(['is_planning' => true, 'occupancy_option' => false]);
+    }
+
+    /**
+     * Eine Prüfung kann nur für geplante Termine ohne offene Prüfrunde angefragt werden. Für feste Termine
+     * hätte requestVerification() über confirmEvent() eine offene Raumanfrage ohne Raumadmin fest gebucht;
+     * eine zweite Anfrage während einer offenen Runde legte die Prüfenden doppelt an.
+     */
+    public function canRequestVerification(Event $event): bool
+    {
+        return (bool) $event->is_planning
+            && !$event->verifications()->where('status', 'pending')->exists();
+    }
+
+    /**
+     * Prüfung verlangt, aber niemand hinterlegt (keine Prüfenden, spezifische Person gelöscht): eine Anfrage
+     * legte keine einzige Prüfung an – der Termin blieb unverändert, ohne Rückmeldung.
+     */
+    public function lacksVerifiers(Event $event): bool
+    {
+        $eventType = $event->event_type;
+        if (
+            $eventType === null
+            || $eventType->verification_mode === 'none'
+            || $this->eventSettingsService->alwaysDirectBooking()
+        ) {
+            return false;
+        }
+
+        return $this->verifiersOf($eventType)->isEmpty();
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    private function verifiersOf(EventType $eventType): Collection
+    {
+        return match ($eventType->verification_mode) {
+            // filter(): gelöschter spezifischer Verifizierer darf nicht als null-Eintrag landen
+            'specific' => collect([$eventType->specificVerifier])->filter(),
+            'any', 'all' => $eventType->verifiers,
+            default => collect(),
+        };
     }
 
     /**
@@ -80,20 +139,6 @@ class EventVerificationService
         );
     }
 
-    public function getAllByUser(User $user, int $paginate = 5, string $filterVerificationRequest = '')
-    {
-        return EventVerification::where(function ($query) use ($user): void {
-            $query->where('verifier_id', $user->id)
-                ->orWhere('event_id', $user->id);
-        })
-            ->with(['event.room', 'event.event_type', 'event.project', 'verifier', 'requester'])
-            ->when(!empty($filterVerificationRequest), function ($query) use ($filterVerificationRequest): void {
-                $query->where('status', $filterVerificationRequest);
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate($paginate);
-    }
-
     public function getAllRequestedByUser(User $user, int $paginate = 5)
     {
         $events = Event::where('user_id', $user->id)
@@ -106,8 +151,10 @@ class EventVerificationService
             ->paginate($paginate);
 
         $events->each(function ($event): void {
+            // Nach id statt created_at: created_at ist per TranslatedDateTimeCast ein übersetzter String
+            // ("Mittwoch, 14. Oktober …") und sortierte nach Wochentag – die aktuelle Prüfrunde war Zufall
             $groupedByUuid = $event->verifications
-                ->sortByDesc('created_at')
+                ->sortByDesc('id')
                 ->groupBy('uuid');
 
             $latestGroup = $groupedByUuid->first();
@@ -118,7 +165,10 @@ class EventVerificationService
                 'rejected',
                 'pending',
             ])->mapWithKeys(function ($status) use ($latestGroup) {
-                $verifiers = $latestGroup->where('status', $status)->map(function ($verification) use ($status) {
+                // Gelöschte Prüfende (verifier = null) fehlen in der Personenliste, zählen aber im Status mit
+                $verificationsWithVerifier = $latestGroup->where('status', $status)
+                    ->filter(fn ($verification) => $verification->verifier !== null);
+                $verifiers = $verificationsWithVerifier->map(function ($verification) use ($status) {
                     $verifier = $verification->verifier;
 
                     // Erstelle ein sauberes Objekt mit nur den nötigen Daten + rejection_reason
@@ -126,6 +176,8 @@ class EventVerificationService
 
                     return (object) array_merge(
                         $verifier->only([
+                            // id: Schlüssel der Avatar-Liste im Frontend (fehlte → doppelte undefined-Keys)
+                            'id',
                             'first_name',
                             'last_name',
                             'email',
@@ -201,7 +253,9 @@ class EventVerificationService
             ->where('is_planning', true)
             ->with(['room', 'event_type', 'project'])
             ->orderBy('created_at', 'desc')
-            ->whereDoesntHave('verifications')
+            // Nach Ablehnung/Zurückziehen ist der Termin wieder nur geplant und muss hier erneut anfragbar sein –
+            // vorher verschwand er nach der ersten Ablehnung aus "Geplante Termine"
+            ->whereDoesntHave('verifications', fn ($query) => $query->where('status', 'pending'))
             ->get();
     }
 
@@ -232,7 +286,11 @@ class EventVerificationService
         $event = $verification->event;
         $eventType = $event->event_type;
         $eventCreator = $event->creator;
-        $notificationTitle = '';
+        // Ohne vollständige Freigabe (Modus "spezifisch" durch andere Person, Typ ohne Modus) nicht mit leerem
+        // Titel benachrichtigen
+        $notificationTitle = __('notification.request-verification.user-approved', [
+            'name' => $verification->verifier?->full_name ?? '',
+        ], $eventCreator?->language);
 
         switch ($eventType?->verification_mode) {
             case 'any':
@@ -242,7 +300,12 @@ class EventVerificationService
                     [],
                     $eventCreator?->language
                 );
+                // Die übrigen offenen Prüfungen erledigen sich – deren Eingangslisten neu laden
+                $obsoleteVerifications = $event->verifications()->where('status', 'pending')->with('verifier')->get();
                 $event->verifications()->where('status', 'pending')->delete();
+                foreach ($obsoleteVerifications as $obsoleteVerification) {
+                    $this->broadcastReload($obsoleteVerification->verifier);
+                }
                 break;
 
             case 'all':
@@ -288,6 +351,97 @@ class EventVerificationService
             return;
         }
 
+        $this->notifyCreatorAboutApproval($event, $eventCreator, $notificationTitle);
+    }
+
+    /**
+     * Admins übernehmen geplante Termine direkt fest (Entscheidung 20.10.2026) – mit oder ohne offene Prüfrunde.
+     * Die Zustimmung läuft auf die Admin-Person; die übrigen offenen Prüfungen der Runde entfallen, auch im
+     * Modus "alle".
+     */
+    public function approveAsAdmin(Event $event, User $admin): void
+    {
+        $openRound = $event->verifications()->where('status', 'pending')->first();
+        $ownOpenVerification = $openRound === null ? null : $event->verifications()
+            ->where('uuid', $openRound->uuid)
+            ->where('status', 'pending')
+            ->where('verifier_type', User::class)
+            ->where('verifier_id', $admin->id)
+            ->first();
+
+        if ($ownOpenVerification !== null) {
+            $ownOpenVerification->update(['status' => 'approved']);
+        } else {
+            $event->verifications()->create([
+                'uuid' => $openRound?->uuid ?? Str::uuid()->toString(),
+                'verifier_type' => User::class,
+                'verifier_id' => $admin->id,
+                'status' => 'approved',
+                'request_user_id' => $openRound?->request_user_id ?? $admin->id,
+            ]);
+        }
+
+        if ($openRound !== null) {
+            $this->closeOpenVerificationsOfRound($event, $openRound->uuid);
+        }
+        $this->confirmEvent($event);
+
+        $eventCreator = $event->creator;
+        if ($eventCreator === null || $eventCreator->id === $admin->id) {
+            return;
+        }
+
+        $this->notifyCreatorAboutApproval(
+            $event,
+            $eventCreator,
+            __('notification.request-verification.approved-finished', [], $eventCreator->language),
+        );
+    }
+
+    /**
+     * Ob "Prüfung anfragen" den geplanten Termin für diese Person sofort fest übernimmt (siehe
+     * requestVerification): Terminart ohne Prüfung bzw. ohne Terminart, festgelegte Prüfperson oder Modus "eine
+     * Person" mit der Person in der Liste.
+     */
+    public function approvesOnRequest(Event $event, User $user): bool
+    {
+        $eventType = $event->event_type;
+        if (
+            $eventType === null
+            || $eventType->verification_mode === 'none'
+            || $this->eventSettingsService->alwaysDirectBooking()
+        ) {
+            return true;
+        }
+
+        return match ($eventType->verification_mode) {
+            'specific', 'any' => $this->verifiersOf($eventType)->contains('id', $user->id),
+            default => false,
+        };
+    }
+
+    /**
+     * Terminarten, deren geplante Termine die Person per Anfrage sofort fest übernimmt – Spiegel von
+     * approvesOnRequest() für das Frontend (Beschriftung "Genehmigen" statt "Prüfung anfragen").
+     *
+     * @return Collection<int, int>
+     */
+    public function eventTypeIdsApprovedOnRequestBy(User $user): Collection
+    {
+        return EventType::query()
+            ->where('verification_mode', 'none')
+            ->orWhere(fn ($query) => $query->where('verification_mode', 'specific')
+                ->where('specific_verifier_id', $user->id))
+            ->orWhere(fn ($query) => $query->where('verification_mode', 'any')
+                ->whereHas('verifiers', fn ($verifierQuery) => $verifierQuery->where('users.id', $user->id)))
+            ->pluck('id');
+    }
+
+    private function notifyCreatorAboutApproval(Event $event, User $eventCreator, string $notificationTitle): void
+    {
+        // "Gesendet"-Ansicht der anfragenden Person live aktualisieren
+        $this->broadcastReload($eventCreator);
+
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this
@@ -317,7 +471,10 @@ class EventVerificationService
         $this->notificationService->createNotification();
     }
 
-    public function approveVerificationByEvent(Event $event, User $user): void
+    /**
+     * @return bool false, wenn die Person für den Termin keine offene Prüfung hat
+     */
+    public function approveVerificationByEvent(Event $event, User $user): bool
     {
         /** @var EventVerification $verification */
         $verification = $event->verifications()
@@ -326,13 +483,18 @@ class EventVerificationService
             ->first();
 
         if (!$verification) {
-            return;
+            return false;
         }
 
         $this->approveVerification($verification);
+
+        return true;
     }
 
-    public function rejectVerificationByEvent(Event $event, User $user, string $rejectionReason = ''): void
+    /**
+     * @return bool false, wenn die Person für den Termin keine offene Prüfung hat
+     */
+    public function rejectVerificationByEvent(Event $event, User $user, string $rejectionReason = ''): bool
     {
         /** @var EventVerification $verification */
         $verification = $event->verifications()
@@ -341,10 +503,12 @@ class EventVerificationService
             ->first();
 
         if (!$verification) {
-            return;
+            return false;
         }
 
         $this->rejectVerification($verification, $rejectionReason);
+
+        return true;
     }
 
 
@@ -360,10 +524,19 @@ class EventVerificationService
         $this->trackIsPlanningChange($event, true);
         $verification->event->update(['is_planning' => true]);
 
+        // Modus "alle": eine Ablehnung entscheidet die Runde (Entscheidung 14.10.2026). Die übrigen offenen
+        // Prüfungen werden geschlossen – vorher prüften die anderen umsonst weiter und der Termin zeigte
+        // weiter "Prüfung angefragt".
+        if ($event->event_type?->verification_mode === 'all') {
+            $this->closeOpenVerificationsOfRound($event, $verification->uuid);
+        }
+
         // Ersteller gelöscht – Status ist gesetzt, aber es gibt keinen Benachrichtigungs-Empfänger mehr
         if ($eventCreator === null) {
             return;
         }
+
+        $this->broadcastReload($eventCreator);
 
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(3);
@@ -410,26 +583,10 @@ class EventVerificationService
             return;
         }
 
-        $verifiers = match ($eventType->verification_mode) {
-            // filter(): gelöschter spezifischer Verifizierer darf nicht als null-Eintrag landen
-            'specific' => collect([$eventType->specificVerifier])->filter(),
-            'any', 'all' => $eventType->verifiers,
-            'none' => collect([]),
-        };
+        $verifiers = $this->verifiersOf($eventType);
 
-        if ($eventType->verification_mode === 'specific' && $eventType->specificVerifier?->id === $user->id) {
-            $event->verifications()->create([
-                'uuid' => $uuid,
-                'verifier_type' => get_class($user),
-                'verifier_id' => $user->id,
-                'status' => 'approved',
-                'request_user_id' => $user->id,
-            ]);
-            $this->confirmEvent($event);
-            return;
-        }
-
-        if ($eventType->verification_mode === 'any' && $verifiers->contains('id', $user->id)) {
+        // Festgelegte Prüfperson bzw. Modus "eine Person" mit der Person in der Liste: sofort genehmigt
+        if ($this->approvesOnRequest($event, $user)) {
             $event->verifications()->create([
                 'uuid' => $uuid,
                 'verifier_type' => get_class($user),
@@ -486,7 +643,7 @@ class EventVerificationService
                 $this->notificationService->createNotification();
             }
 
-            SafeBroadcast::send(new BroadcastToReloadEventVerificationRequests($verifier));
+            $this->broadcastReload($verifier);
         }
     }
 
@@ -496,10 +653,47 @@ class EventVerificationService
         $this->trackIsPlanningChange($event, true);
         $event->update(['is_planning' => true]);
         $this->notificationService->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
-        foreach ($event->verifications as $verification) {
+
+        // Nur die offene Prüfrunde zurückziehen (Entscheidung 14.10.2026) – frühere Runden bleiben als Verlauf
+        // erhalten; vorher wurden alle Prüfungen des Termins gelöscht
+        $openRoundUuids = $event->verifications()->where('status', 'pending')->pluck('uuid')->unique();
+        $withdrawnVerifications = $event->verifications()
+            ->whereIn('uuid', $openRoundUuids)
+            ->with('verifier')
+            ->get();
+        foreach ($withdrawnVerifications as $verification) {
             $verifier = $verification->verifier;
             $verification->delete();
-            SafeBroadcast::send(new BroadcastToReloadEventVerificationRequests($verifier));
+            $this->broadcastReload($verifier);
+        }
+    }
+
+    /**
+     * Schließt die noch offenen Prüfungen einer Runde (z. B. nach einer Ablehnung im Modus "alle") und lädt die
+     * Eingangslisten der betroffenen Prüfenden neu.
+     */
+    private function closeOpenVerificationsOfRound(Event $event, ?string $uuid): void
+    {
+        $openVerifications = $event->verifications()
+            ->where('uuid', $uuid)
+            ->where('status', 'pending')
+            ->with('verifier')
+            ->get();
+        foreach ($openVerifications as $openVerification) {
+            $verifier = $openVerification->verifier;
+            $openVerification->delete();
+            $this->broadcastReload($verifier);
+        }
+    }
+
+    /**
+     * Lädt Eingangs- bzw. "Gesendet"-Liste der Person neu. Gelöschte Prüfende (verifier = null): nichts zu
+     * aktualisieren – der Broadcast verlangt einen User (vorher TypeError beim Zurückziehen).
+     */
+    private function broadcastReload(mixed $user): void
+    {
+        if ($user instanceof User) {
+            SafeBroadcast::send(new BroadcastToReloadEventVerificationRequests($user));
         }
     }
 }

@@ -150,6 +150,16 @@
                                         <span v-if="hasWorkTime(day)" class="text-[10px] text-text-subtle">
                                             {{ day.totalWorkTime }}
                                         </span>
+                                        <!-- Individuelle Zeit für sich selbst eintragen (eigener Einsatzplan, Recht + ab heute) -->
+                                        <button
+                                            v-if="isOwnPlan && canEnterOwnTimesOn(day.date)"
+                                            type="button"
+                                            class="p-0.5 rounded hover:bg-surface-sunken transition"
+                                            :title="$t('Enter individual time')"
+                                            @click="openOwnIndividualTimeModal(day)"
+                                        >
+                                            <PropertyIcon name="IconClockPlus" class="h-3.5 w-3.5 text-accent-600" />
+                                        </button>
                                         <!-- Projektwunsch für diesen Tag eintragen (nur eigener Einsatzplan) -->
                                         <button
                                             v-if="isOwnPlan && projectAssignmentsEnabled"
@@ -260,6 +270,7 @@
                                                         {{ $t('Individual time') }}: {{ i.title ?? '' }}
                                                     </span>
                                                     <button
+                                                        v-if="!isOwnPlan || canEnterOwnTimesOn(i.start_date)"
                                                         type="button"
                                                         @click="openEditIndividualTimeModal(i)"
                                                         class="p-1 rounded hover:bg-border-subtle transition"
@@ -335,7 +346,30 @@
     <EditIndividualTimeModal
         v-if="showEditIndividualTimeModal && selectedIndividualTime"
         :individual-time="selectedIndividualTime"
+        :can-delete="!isOwnPlan || canEnterOwnTimesOn(selectedIndividualTime.start_date)"
         @closed="closeEditIndividualTimeModal"
+        @deleted="reloadOwnPlan"
+    />
+
+    <!-- Eigene individuelle Zeit eintragen (Einzeltag) -->
+    <AddOwnIndividualTimeModal
+        v-if="ownIndividualTimeDay"
+        :date="ownIndividualTimeDay"
+        :user-id="userToEditId"
+        @saved="reloadOwnPlan"
+        @closed="ownIndividualTimeDay = null"
+        @open-series="openOwnSeriesModal"
+    />
+
+    <!-- Eigene Zeitreihe: fest auf die eigene Person -->
+    <IndividualTimeSeriesModal
+        v-if="ownSeriesStartDate"
+        :initial-subject="ownSubject"
+        locked-subject
+        :initial-start-date="ownSeriesStartDate"
+        :min-date="ownTimesMinDate"
+        @created="reloadOwnPlan"
+        @close="ownSeriesStartDate = null"
     />
 
     <!-- Projektwunsch eintragen (geteiltes Modal, Modus "wish") -->
@@ -385,6 +419,7 @@ import { router, Link, usePage } from '@inertiajs/vue3'
 import UserShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue'
 import SingleUserShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
 import EditIndividualTimeModal from '@/Layouts/Components/ShiftPlanComponents/EditIndividualTimeModal.vue'
+import { usePermission } from '@/Composeables/Permission.js'
 import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { provideShiftPlanLookups } from '@/Composeables/useShiftPlanLookups.js';
@@ -401,6 +436,14 @@ const NotificationToast = defineAsyncComponent({
 
 const ShiftHistoryModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
+})
+
+const AddOwnIndividualTimeModal = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/ShiftPlanComponents/AddOwnIndividualTimeModal.vue'),
+})
+
+const IndividualTimeSeriesModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue'),
 })
 
 const ProjectAssignmentModal = defineAsyncComponent({
@@ -444,6 +487,37 @@ const assignmentsForDay = (day) => projectAssignmentsEnabled.value ? (projectAss
 
 // Wünsche darf nur die Person selbst eintragen (eigener Einsatzplan)
 const isOwnPlan = computed(() => props.type === 'user' && page.props?.auth?.user?.id === props.userToEditId)
+
+// --- Eigene individuelle Zeiten (Recht "can enter own individual times" ab heute, Verwaltungsrechte immer) ---
+const { canEnterOwnIndividualTimesOn, canManageOwnIndividualTimesOnAnyDay } = usePermission(page.props)
+const canEnterOwnTimesOn = (date) => canEnterOwnIndividualTimesOn(date)
+const ownIndividualTimeDay = ref(null)
+const ownSeriesStartDate = ref(null)
+const ownSubject = computed(() => ({
+    id: props.userToEditId,
+    type: 'user',
+    display_name: [page.props?.auth?.user?.first_name, page.props?.auth?.user?.last_name].filter(Boolean).join(' '),
+}))
+const ownTimesMinDate = computed(() => {
+    if (canManageOwnIndividualTimesOnAnyDay()) {
+        return null
+    }
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+})
+
+const openOwnIndividualTimeModal = (day) => {
+    ownIndividualTimeDay.value = day.date
+}
+
+const openOwnSeriesModal = () => {
+    ownSeriesStartDate.value = ownIndividualTimeDay.value
+    ownIndividualTimeDay.value = null
+}
+
+const reloadOwnPlan = () => {
+    router.reload({ preserveScroll: true })
+}
 
 const showWishModal = ref(false)
 const wishModalDay = ref(null)

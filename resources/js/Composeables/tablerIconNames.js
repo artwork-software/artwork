@@ -90,11 +90,20 @@ export function toSlug(input) {
     // ("Home2") — letzteres hat die frueher hier verwendete Aufloesung ebenfalls akzeptiert.
     if (/^[A-Z]/.test(s)) {
         const name = /^Icon[A-Z0-9]/.test(s) ? s : `Icon${s}`
-        return ALIASES[name] ?? slugFromExportName(name)
+        return safeSlug(ALIASES[name] ?? slugFromExportName(name))
     }
 
     // Bereits ein Slug, ggf. mit "icon-"-Prefix
-    return s.replace(/^icon[-_]+/i, '').replace(/_/g, '-').toLowerCase()
+    return safeSlug(s.replace(/^icon[-_]+/i, '').replace(/_/g, '-').toLowerCase())
+}
+
+/**
+ * Der Slug wird zum Dateipfad (`/build/icons/tabler/<slug>.svg`). Alles ausser a-z, 0-9 und
+ * Bindestrich faellt auf das Ersatz-Icon zurueck — sonst koennte ein gespeicherter Name wie
+ * `../../storage/...` auf beliebige hochgeladene Dateien zeigen.
+ */
+export function safeSlug(slug) {
+    return /^[a-z0-9-]{1,64}$/.test(slug) ? slug : FALLBACK_SLUG
 }
 
 /**

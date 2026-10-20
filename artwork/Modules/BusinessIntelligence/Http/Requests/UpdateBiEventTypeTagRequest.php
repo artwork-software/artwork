@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\BusinessIntelligence\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -18,7 +19,7 @@ class UpdateBiEventTypeTagRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'name_de' => ['required', 'string', 'max:255'],
-            'color' => ['nullable', 'string', 'max:7'],
+            'color' => ['nullable', 'string', 'max:7', new HexColorRule()],
             // Rolle je Kennzahl nur einmal vergebbar (Vorstellungen / Veranstaltungstage)
             'kpi_role' => [
                 'nullable',

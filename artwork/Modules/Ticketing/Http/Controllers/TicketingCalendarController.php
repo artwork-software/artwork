@@ -5,6 +5,8 @@ namespace Artwork\Modules\Ticketing\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Http\Requests\TicketingEventsRequest;
 use Artwork\Modules\Ticketing\Models\TicketingCustomer;
@@ -21,6 +23,7 @@ class TicketingCalendarController extends Controller
     public function __construct(
         private readonly TicketingConnectionService $connections,
         private readonly TicketingReleaseService $releases,
+        private readonly ProjectComponentVisibilityService $componentVisibility,
     ) {
     }
 
@@ -57,10 +60,23 @@ class TicketingCalendarController extends Controller
         }
 
         try {
-            return response()->json($this->releases->sales($event));
+            $sales = $this->releases->sales($event);
         } catch (TicketingConnectionException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }
+
+        // Gästeliste (Namen, E-Mails, Ticketcodes) und Umsatz nur mit Sicht auf die Ticketing-Komponente,
+        // wie im Projekt-Tab; der Kalender zeigt sonst nur Verkauft/Plätze/Eingecheckt.
+        $mayViewGuests = $this->componentVisibility->canSeeComponentTypeInProject(
+            $request->user(),
+            [ProjectTabComponentEnum::TICKETING->value]
+        );
+        if (!$mayViewGuests && ($sales['released'] ?? false)) {
+            unset($sales['tickets'], $sales['revenueCents']);
+            $sales['guests_hidden'] = true;
+        }
+
+        return response()->json($sales);
     }
 
     /**

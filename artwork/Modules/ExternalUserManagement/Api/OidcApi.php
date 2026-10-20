@@ -98,7 +98,7 @@ class OidcApi implements ExternalUserManagementApi
             'first_name' => $raw['given_name'] ?? '',
             'last_name' => $raw['family_name'] ?? '',
             'groups' => $groups,
-            'email_verified' => (bool) ($raw['email_verified'] ?? false),
+            'email_verified' => self::isVerifiedClaim($raw['email_verified'] ?? null),
             'meta_data' => [
                 'sub' => $raw['sub'] ?? null,
                 'preferred_username' => $raw['preferred_username'] ?? null,
@@ -107,6 +107,20 @@ class OidcApi implements ExternalUserManagementApi
                 'groups' => $groups,
             ],
         ];
+    }
+
+    /**
+     * Wertet den email_verified-Claim strikt aus. Manche IdPs (z. B. AWS Cognito)
+     * liefern ihn als String – ein (bool)-Cast machte aus "false" sonst true und
+     * erlaubte die Verknüpfung mit fremden Konten über eine unbestätigte Adresse.
+     */
+    public static function isVerifiedClaim(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return is_string($value) && strtolower(trim($value)) === 'true';
     }
 
     /**

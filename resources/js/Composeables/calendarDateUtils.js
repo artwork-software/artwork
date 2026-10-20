@@ -1,10 +1,19 @@
 import dayjs from 'dayjs'
-import weekOfYear from 'dayjs/plugin/weekOfYear'
 import localeData from 'dayjs/plugin/localeData'
 import 'dayjs/locale/de'
+import { isoWeekOf } from '@/Helper/IsoWeek.js'
 
-dayjs.extend(weekOfYear)
 dayjs.extend(localeData)
+
+/**
+ * ISO-Kalenderwoche (Mo–So, KW 1 enthält den 4. Januar). dayjs().week() rechnet ohne aktive
+ * de-Locale nach US-Regel (So–Sa, KW 1 enthält den 1. Januar) und lag z. B. 2027 ganzjährig um eins daneben.
+ * @param {import('dayjs').Dayjs} d
+ * @returns {number}
+ */
+function isoWeekNumber(d) {
+    return isoWeekOf(d.toDate()).week
+}
 
 /**
  * Compute derived calendar day properties from an ISO date string (YYYY-MM-DD).
@@ -27,7 +36,7 @@ export function computeDayProperties(isoDate) {
         fullDayDisplay: d.format('DD.MM.YY'),
 
         // Week/month metadata
-        weekNumber: d.week(),
+        weekNumber: isoWeekNumber(d),
         monthNumber: d.month() + 1, // dayjs months are 0-indexed
         isMonday: dayOfWeek === 1,
         isSunday: dayOfWeek === 0,
@@ -73,7 +82,7 @@ export function enrichDay(slimDay) {
         const d = dayjs(slimDay.date)
         return {
             isExtraRow: true,
-            weekNumber: d.week(),
+            weekNumber: isoWeekNumber(d),
             date: slimDay.date,
         }
     }

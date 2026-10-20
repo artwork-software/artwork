@@ -169,7 +169,10 @@ return [
             'authentication_failed' => 'Anmeldung über den Identity Provider fehlgeschlagen. Bitte versuche es erneut.',
             'missing_email' => 'Der Identity Provider hat keine E-Mail-Adresse übermittelt. Anmeldung nicht möglich.',
             'domain_not_allowed' => 'Deine E-Mail-Domain ist für diese Anmeldung nicht zugelassen.',
-            'password_login_disabled' => 'Dieser Account meldet sich über den Identity Provider an. Bitte nutze den SSO-Button.'
+            'password_login_disabled' => 'Dieser Account meldet sich über den Identity Provider an. Bitte nutze den SSO-Button.',
+            'email_not_verified' => 'Der Identity Provider hat deine E-Mail-Adresse nicht als bestätigt gemeldet. Bitte wende dich an die Administration.',
+            'account_deleted' => 'Dein artwork-Konto wurde gelöscht. Bitte wende dich an die Administration, wenn du wieder Zugang brauchst.',
+            'multi_tenant_not_allowed' => 'Diese Anmeldung ist falsch eingerichtet (Multi-Tenant-Endpunkt). Bitte wende dich an die Administration.'
         ]
     ]
 ];

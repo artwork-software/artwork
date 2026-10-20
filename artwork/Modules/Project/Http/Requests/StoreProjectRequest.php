@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Project\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,8 +26,8 @@ class StoreProjectRequest extends FormRequest
             'state' => ($stateRequired ? 'required' : 'nullable') . '|integer|exists:project_states,id',
             'cost_center' => 'nullable|string|max:255',
             'projects.*' => 'exists:projects,id',
-            'color' => 'nullable|string|max:255',
-            'icon' => 'nullable|string|max:255',
+            'color' => ['nullable', 'string', 'max:255', new HexColorRule()],
+            'icon' => ['nullable', 'string', 'max:255', new IconNameRule()],
             'marked_as_done' => 'nullable|boolean',
         ];
     }

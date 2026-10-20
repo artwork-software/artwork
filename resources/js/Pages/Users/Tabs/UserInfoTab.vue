@@ -128,6 +128,20 @@
                             id="email"
                         />
                         <JetInputError :message="userForm.errors.email" class="mt-2" />
+                        <div v-if="ownEmailChanged" class="mt-3">
+                            <BaseInput
+                                type="password"
+                                v-model="userForm.current_password"
+                                @focusout="editUser"
+                                :label="$t('Current password')"
+                                id="current_password_for_email"
+                                autocomplete="current-password"
+                            />
+                            <p class="mt-1 text-xs text-text-subtle">
+                                {{ $t('Confirm the new email address with your current password.') }}
+                            </p>
+                            <JetInputError :message="userForm.errors.current_password" class="mt-2" />
+                        </div>
                     </div>
 
                     <BaseInput
@@ -350,7 +364,7 @@
                 </template>
 
                 <BaseUIButton
-                    v-if="can('teammanagement') || can('can manage workers') || hasAdminRole()"
+                    v-if="canEditTeams"
                     @click="openChangeTeamsModal"
                     hide-icon
                 >
@@ -362,7 +376,7 @@
                 </BaseUIButton>
 
                 <button
-                    v-if="(can('teammanagement') || can('can manage workers')) && userForm.departments.length || hasAdminRole()"
+                    v-if="canEditTeams && (userForm.departments.length || hasAdminRole())"
                     @click="deleteFromAllDepartments"
                     class="inline-flex items-center gap-2 rounded-xl border border-danger-border bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger transition hover:bg-danger-surface"
                 >
@@ -370,6 +384,9 @@
                     {{ $t('Remove user from all teams') }}
                 </button>
             </div>
+            <p v-if="isOwnProfileWithoutTeamRights" class="mt-3 text-xs text-text-subtle">
+                {{ $t('Your own team membership can only be changed by another person with team management rights.') }}
+            </p>
         </section>
 
         <!-- MODALS -->
@@ -509,6 +526,12 @@ const hasAdminRole = () => (is('artwork admin'))
 const isSignedInUser = () => props.user_to_edit?.id === page.props?.auth?.user?.id
 const canEditPreferences = computed(() => isSignedInUser() || can('can manage workers') || hasAdminRole())
 
+// Teams tragen Rechte (Projekt-Schreibrecht, Raumadmin, Verträge) – die eigene Zugehörigkeit
+// ändert deshalb nur eine andere Person (Admins ausgenommen), wie im Backend (updateUserDetails).
+const hasTeamRights = computed(() => can('teammanagement') || can('can manage workers') || hasAdminRole())
+const canEditTeams = computed(() => hasTeamRights.value && (!isSignedInUser() || hasAdminRole()))
+const isOwnProfileWithoutTeamRights = computed(() => hasTeamRights.value && !canEditTeams.value)
+
 /* ----- UI State ----- */
 const successSaved = ref(false)
 const showChangeTeamsModal = ref(false)
@@ -537,7 +560,12 @@ const userForm = useForm({
     phone_private: props.user_to_edit.phone_private,
     high_contrast: props.calendar_settings?.high_contrast,
     use_chat: props.user_to_edit.use_chat,
+    current_password: '',
 })
+
+/* Die eigene Login-E-Mail ändert sich nur mit dem aktuellen Passwort */
+const savedEmail = ref(props.user_to_edit.email)
+const ownEmailChanged = computed(() => isSignedInUser() && props.user_to_edit.email !== savedEmail.value)
 
 const resetPasswordForm = useForm({
     email: props.user_to_edit.email,
@@ -617,6 +645,10 @@ const editUser = () => {
         // Email bleibt aus Eingabefeld (bereits in user_to_edit), aber Patch erwartet userForm.email
         userForm.email = props.user_to_edit.email
     }
+    // Ohne Passwort die übrigen Felder speichern und die neue eigene Adresse noch zurückhalten
+    if (ownEmailChanged.value && !userForm.current_password) {
+        userForm.email = savedEmail.value
+    }
 
     if (!userForm.first_name || !userForm.last_name) {
         nameError.value = proxy.$t('First name and surname are required')
@@ -628,6 +660,8 @@ const editUser = () => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
+            savedEmail.value = userForm.email
+            userForm.current_password = ''
             successSaved.value = true
             setTimeout(() => (successSaved.value = false), 2000)
         },

@@ -6,11 +6,14 @@ use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Department\Http\Requests\StoreDepartmentRequest;
 use Artwork\Modules\Department\Http\Requests\UpdateDepartmentRequest;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Department\Policies\DepartmentPolicy;
 use Artwork\Modules\Department\Services\DepartmentService;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -70,6 +73,21 @@ class DepartmentController extends Controller
         UserService $userService,
         NotificationService $notificationService
     ): RedirectResponse {
+        $requestedUserIds = collect($updateDepartmentRequest->get('users'))->pluck('id')->map(fn ($id) => (int) $id);
+        $currentUserIds = $department->users()->pluck('users.id')->map(fn ($id) => (int) $id);
+        $membersChange = $requestedUserIds->diff($currentUserIds)->isNotEmpty()
+            || $currentUserIds->diff($requestedUserIds)->isNotEmpty();
+        if ($membersChange && Gate::denies('changeRoomAdminMembers', $department)) {
+            return Redirect::back()->with('error', __(DepartmentPolicy::ROOM_ADMIN_TEAM_LOCKED_MESSAGE));
+        }
+
+        // Teams tragen Rechte: die eigene Zugehörigkeit ändert nur eine andere Person, Admins ausgenommen.
+        $actor = $updateDepartmentRequest->user();
+        $ownMembershipChange = $requestedUserIds->contains($actor->id) !== $currentUserIds->contains($actor->id);
+        if ($ownMembershipChange && !$actor->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return Redirect::back()->with('error', __(DepartmentPolicy::OWN_TEAMS_LOCKED_MESSAGE));
+        }
+
         $this->departmentService->updateByRequest(
             $updateDepartmentRequest,
             $department,
@@ -82,6 +100,9 @@ class DepartmentController extends Controller
     public function removeAllMembers(Department $department)
     {
         $this->authorize('update', $department);
+        if (Gate::denies('changeRoomAdminMembers', $department)) {
+            return Redirect::back()->with('error', __(DepartmentPolicy::ROOM_ADMIN_TEAM_LOCKED_MESSAGE));
+        }
 
         $this->departmentService->removeAllMembers($department);
         return Redirect::route('departments.show', $department->id);

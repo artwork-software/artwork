@@ -16,7 +16,13 @@
         />
 
         <div class="max-w-2xl">
+            <p v-if="!mailSettings.can_manage"
+               class="mb-6 rounded border-1 border-border-subtle bg-surface-canvas p-3 text-sm text-text-subtle">
+                {{ $t('Only administrators can change the mail settings and send test emails.') }}
+            </p>
+
             <!-- SMTP settings -->
+            <fieldset :disabled="!mailSettings.can_manage" class="contents">
             <form @submit.prevent="save" class="grid grid-cols-1 gap-4">
                 <h3 class="text-sm font-semibold text-text">{{ $t('SMTP server') }}</h3>
 
@@ -67,6 +73,9 @@
                         {{ mailSettings.has_password
                             ? $t('A password is stored. Leave blank to keep it, or enter a new one to replace it.')
                             : $t('Leave blank to use the server configuration (.env).') }}
+                    </p>
+                    <p v-if="mailSettings.has_password" class="text-xs text-text-subtle mt-1">
+                        {{ $t('If you change the host, enter the password again.') }}
                     </p>
                     <label v-if="mailSettings.has_password" class="mt-2 flex items-center gap-2 text-xs text-text-subtle">
                         <input type="checkbox" v-model="form.clear_password"
@@ -133,6 +142,7 @@
                     {{ testResult.message }}
                 </div>
             </div>
+            </fieldset>
         </div>
     </ToolSettingsHeader>
 </template>
@@ -185,7 +195,7 @@ export default defineComponent({
             });
         },
         async sendTestMail() {
-            if (!this.testRecipient) {
+            if (!this.testRecipient || !this.mailSettings.can_manage) {
                 return;
             }
 

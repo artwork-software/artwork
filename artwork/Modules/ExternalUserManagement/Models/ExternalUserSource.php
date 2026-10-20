@@ -80,6 +80,40 @@ class ExternalUserSource extends Model
     }
 
     /**
+     * Ob die Quelle neue Konten auch ohne email_verified-Claim anlegen darf. Microsoft Entra
+     * liefert den Claim in der Regel nicht; Bestandsquellen wurden per Migration auf true gesetzt.
+     */
+    public function trustsIdpEmail(): bool
+    {
+        return (bool) ($this->config['trust_idp_email'] ?? false);
+    }
+
+    /**
+     * Prüft die E-Mail gegen die Domain-Allowlist der Quelle. Wie sich eine leere Allowlist
+     * verhält, entscheidet der Aufrufer: OIDC sperrt dann, LDAP lässt alles zu.
+     */
+    public function allowsEmailDomain(?string $email, bool $allowWhenListEmpty): bool
+    {
+        $allowed = $this->config['allowed_domains'] ?? [];
+
+        if (empty($allowed)) {
+            return $allowWhenListEmpty;
+        }
+
+        if ($email === null || $email === '') {
+            return false;
+        }
+
+        $domain = strtolower(substr(strrchr($email, '@') ?: '@', 1));
+        $allowed = array_map(
+            static fn ($entry): string => strtolower(ltrim(trim((string) $entry), '@')),
+            (array) $allowed
+        );
+
+        return in_array($domain, $allowed, true);
+    }
+
+    /**
      * Pro Verbindung konfigurierbare Default-Rolle für die Provisionierung.
      */
     public function defaultRoleId(): ?int

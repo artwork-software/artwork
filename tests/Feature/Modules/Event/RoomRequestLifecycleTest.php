@@ -320,6 +320,27 @@ final class RoomRequestLifecycleTest extends FeatureTestCase
         $this->assertArrayNotHasKey('isModified', $this->openRequestsOf($roomAdmin, $request)->sole()->data);
     }
 
+    /**
+     * Wie die Einzel-Umstellung: geplante Termine kennen keine Raumanfrage – vorher blieb die Anfrage als
+     * occupancy_option stehen (schraffiert im Planungskalender, von keinem Raumadmin mehr beantwortbar).
+     */
+    #[Test]
+    public function converting_an_open_request_to_planning_via_bulk_save_withdraws_the_request(): void
+    {
+        $this->actingAsAdmin();
+        [$room, $roomAdmin] = $this->roomWithAdmin();
+        $request = $this->notifiedOpenRequest($room);
+
+        $this->patchJson(route('event.update.single.bulk', $request), [
+            'data' => $this->bulkData($request, ['is_planning' => true]),
+        ])->assertSuccessful();
+
+        $request->refresh();
+        $this->assertTrue((bool) $request->is_planning);
+        $this->assertFalse((bool) $request->occupancy_option);
+        $this->assertSame(0, $this->openRequestsOf($roomAdmin, $request)->count());
+    }
+
     // ------------------------------------------------------------------ Helfer
 
     private function trashedProjectWithRequests(Room $room, int $count): Project

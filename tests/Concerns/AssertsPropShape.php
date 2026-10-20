@@ -109,6 +109,15 @@ trait AssertsPropShape
         $props = $response->viewData('page')['props'] ?? null;
         $this->assertIsArray($props, "Inertia-Props fehlen in der Antwort ($name)");
 
+        // Hüllen wie PlainDataProp (JsonSerializable, von Inertia nicht aufgelöst) so lesen, wie sie beim
+        // Client ankommen
+        $props = array_map(
+            static fn (mixed $value): mixed => $value instanceof \JsonSerializable
+                ? json_decode((string) json_encode($value), true)
+                : $value,
+            $props
+        );
+
         foreach ($only as $prop) {
             $this->assertArrayHasKey($prop, $props, "Prop '$prop' fehlt in der Antwort ($name)");
         }

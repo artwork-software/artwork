@@ -62,6 +62,7 @@ readonly class EventCalendarService
             'name',
             'state',
             'artists',
+            'linked_artists',
             'is_group',
             'color',
             'icon',
@@ -138,7 +139,9 @@ readonly class EventCalendarService
         $eventStatusIds = $needsEventStatus ? $events->pluck('event_status_id')->unique()->filter() : collect();
         $userIds        = $needsCreator ? $events->pluck('user_id')->unique()->filter() : collect();
 
-        $projectSelect = $needsProjectStatus ? ['id', 'name', 'artists', 'state'] : ['id', 'name', 'artists'];
+        $projectSelect = $needsProjectStatus
+            ? ['id', 'name', 'artists', 'linked_artists', 'state']
+            : ['id', 'name', 'artists', 'linked_artists'];
         $projectWith = ['categories'];
         if ($needsProjectStatus) {
             $projectWith[] = 'status:id,name,color';
@@ -182,7 +185,7 @@ readonly class EventCalendarService
                 roomId: $event->room_id,
                 eventType: $eventTypes[$event->event_type_id] ?? null,
                 project: $project,
-                artistNames: $project?->artists,
+                artistNames: $project?->artistDisplayText(),
                 mainCategoryColor: $project?->categories?->firstWhere('pivot.is_main', true)?->color,
                 description: $event->description ?? null,
                 eventStatus: $eventStatuses[$event->event_status_id ?? null] ?? null,

@@ -342,12 +342,13 @@ class ProjectPrintLayoutController extends Controller
                         )->resolve();
                         break;
                     case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
-                        $projectData->artists = $project->artists;
+                        // Freitext plus verknüpfte CRM-Künstler*innen
+                        $projectData->artists = $project->artistDisplayText();
                         break;
                     case ProjectTabComponentEnum::PROJECT_BASIC_DATA_DISPLAY->value:
                         $projectData->basic_data = [
                             'name' => $project->name,
-                            'artists' => $project->artists,
+                            'artists' => $project->artistDisplayText(),
                             'description' => $project->description,
                             'number_of_participants' => $project->number_of_participants,
                             'state' => ProjectState::find($project->state),

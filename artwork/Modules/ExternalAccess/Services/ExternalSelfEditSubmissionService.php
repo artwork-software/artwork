@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalAccess\Services;
 
+use Artwork\Modules\Crm\Support\CrmPropertyValueFormat;
 use Artwork\Modules\ExternalAccess\DTOs\SelfEditField;
 use Artwork\Modules\ExternalAccess\DTOs\SelfEditSchema;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionContext;
@@ -293,6 +294,17 @@ class ExternalSelfEditSubmissionService
      */
     private function normalizeForInputType(SelfEditField $field, mixed $value): mixed
     {
+        if ($field->inputType === 'multiselect') {
+            // JSON-Liste in Reihenfolge der Optionen; unbekannte Einträge bleiben für die Prüfung hinten stehen
+            $selected = CrmPropertyValueFormat::decode($value);
+            $ordered = [
+                ...array_values(array_filter($field->options, static fn (string $o): bool => in_array($o, $selected, true))),
+                ...array_values(array_diff($selected, $field->options)),
+            ];
+
+            return $ordered === [] ? null : CrmPropertyValueFormat::encode($ordered);
+        }
+
         if ($field->inputType !== 'checkbox') {
             return $value;
         }
@@ -321,6 +333,18 @@ class ExternalSelfEditSubmissionService
             throw ValidationException::withMessages([
                 $errorKey => __('validation.url', ['attribute' => $field->label]),
             ]);
+        }
+
+        if ($field->inputType === 'multiselect') {
+            foreach (CrmPropertyValueFormat::decode($value) as $option) {
+                if (!in_array($option, $field->options, true)) {
+                    throw ValidationException::withMessages([
+                        $errorKey => __('validation.in', ['attribute' => $field->label]),
+                    ]);
+                }
+            }
+
+            return;
         }
 
         $rules = match ($field->inputType) {

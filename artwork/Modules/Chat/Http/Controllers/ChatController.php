@@ -312,12 +312,14 @@ class ChatController extends Controller
         foreach ($messages as $message) {
             $alreadyRead = $message->reads->firstWhere('user_id', $user->id);
             if (!$alreadyRead) {
-                $message->reads()->create([
+                $read = $message->reads()->create([
                     'user_id' => $user->id,
                     'read_at' => $readAt,
                 ]);
 
-                broadcast(new MessageRead($message, $user->id, $readAt));
+                // Wie markAsRead den übersetzten Anzeige-String senden (Cast am Model), nicht den
+                // ISO-Zeitstempel – das Frontend zeigt read_at unverändert an
+                broadcast(new MessageRead($message, $user->id, $read->read_at));
             }
         }
 

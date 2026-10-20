@@ -17,10 +17,12 @@
 <script setup>
 import { computed } from 'vue'
 import { showsInlineHint } from '@/Helper/ComponentInlineHints.js'
+import { allowsMultipleSelection } from '@/Helper/ComponentSelection.js'
 import ExternalTextField from './Types/ExternalTextField.vue'
 import ExternalTextArea from './Types/ExternalTextArea.vue'
 import ExternalCheckbox from './Types/ExternalCheckbox.vue'
 import ExternalDropdown from './Types/ExternalDropdown.vue'
+import ExternalCheckboxList from './Types/ExternalCheckboxList.vue'
 import ExternalLink from './Types/ExternalLink.vue'
 import ExternalLinkList from './Types/ExternalLinkList.vue'
 import ExternalTitle from './Types/ExternalTitle.vue'
@@ -46,6 +48,7 @@ const typeToComponent = {
     TextArea: ExternalTextArea,
     Checkbox: ExternalCheckbox,
     DropDown: ExternalDropdown,
+    CheckboxList: ExternalCheckboxList,
     Link: ExternalLink,
     LinkList: ExternalLinkList,
     Title: ExternalTitle,
@@ -58,5 +61,11 @@ const typeToComponent = {
     CrmContactListComponent: ExternalCrmContactList,
 }
 
-const resolvedComponent = computed(() => typeToComponent[props.component.type] ?? ExternalUnknownType)
+const resolvedComponent = computed(() => {
+    // DropDown mit Mehrfachauswahl wird extern als Checkbox-Liste bearbeitet
+    if (allowsMultipleSelection(props.component.type, props.component.data_schema)) {
+        return ExternalCheckboxList
+    }
+    return typeToComponent[props.component.type] ?? ExternalUnknownType
+})
 </script>

@@ -10,6 +10,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Department\Policies\DepartmentPolicy;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\SubEvent;
@@ -57,12 +58,14 @@ use Artwork\Modules\WorkTime\Support\OvertimeLedger;
 use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\ContractSettingsResolver;
+use Artwork\Modules\User\Services\UserEmailChangeService;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
@@ -78,6 +81,7 @@ use Illuminate\Http\Request;
 use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -150,7 +154,7 @@ class UserController extends Controller
 
         $wantedUsers = User::search($request->input('query'))
             ->query(function ($query): void {
-                $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+                $query->excludeDeletedPlaceholder();
             })
             ->get();
         foreach ($wantedUsers as $user) {
@@ -245,7 +249,7 @@ class UserController extends Controller
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
                     $query->with('departments');
                     // Exclude the placeholder "Deleted user"
-                    $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+                    $query->excludeDeletedPlaceholder();
 
                     $this->applyAuthProviderFilter($query, $authProviderFilter);
 
@@ -271,7 +275,7 @@ class UserController extends Controller
                 ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
                 ->with('departments')
                 // Exclude the placeholder "Deleted user"
-                ->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'))
+                ->excludeDeletedPlaceholder()
                 ->when($authProviderFilter, fn ($query) => $this->applyAuthProviderFilter($query, $authProviderFilter))
                 ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {
                     switch ($sortEnum) {
@@ -884,6 +888,11 @@ class UserController extends Controller
             return null;
         }
 
+        // Fremde Soll/Ist-Werte wie beim Stundenkonto nur mit „Stunden sehen“ oder Personalverwaltung.
+        if (!$this->mayViewHourAccount($user)) {
+            return null;
+        }
+
         try {
             $start = Carbon::parse((string) $dateValue[0])->startOfDay();
             $end = Carbon::parse((string) $dateValue[1])->startOfDay();
@@ -1082,14 +1091,19 @@ class UserController extends Controller
      */
     private function authorizeHourAccountAccess(User $user): void
     {
+        abort_unless($this->mayViewHourAccount($user), 403);
+    }
+
+    private function mayViewHourAccount(User $user): bool
+    {
         $viewer = Auth::user();
-        abort_unless(
+
+        return $viewer !== null && (
             $viewer->id === $user->id
             || $viewer->canAny([
                 PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value,
                 PermissionEnum::MA_MANAGER->value,
-            ]),
-            403
+            ])
         );
     }
 
@@ -1541,8 +1555,11 @@ class UserController extends Controller
         ];
     }
 
-    public function updateUserDetails(Request $request, User $user): RedirectResponse
-    {
+    public function updateUserDetails(
+        Request $request,
+        User $user,
+        UserEmailChangeService $emailChangeService
+    ): RedirectResponse {
         /** @var User $actor */
         $actor = Auth::user();
         $isSelf = $user->id === $actor->id;
@@ -1589,22 +1606,73 @@ class UserController extends Controller
             }
         }
 
+        // Login-E-Mail: gültig, eindeutig, nicht die interne Domain; die eigene nur mit aktuellem Passwort.
+        $previousEmail = (string) $user->email;
+        $emailChanged = $emailChangeService->isChange($user, $attributes['email'] ?? null);
+        if ($emailChanged) {
+            $request->validate(['email' => $emailChangeService->emailRules($user)]);
+            if ($isSelf) {
+                $emailChangeService->assertSelfChangeAllowed($user, $request->input('current_password'));
+            }
+            $attributes['email'] = trim((string) $attributes['email']);
+        } else {
+            unset($attributes['email']);
+        }
+
         $user->update($attributes);
 
-        $user->calendar_settings?->update([
-            'high_contrast' => $request->get('high_contrast')
-        ]);
+        if ($emailChanged) {
+            $emailChangeService->notifyPreviousAddress($user, $previousEmail);
+        }
 
+        // Kalender und Planungskalender (je eigene Einstellungszeile)
+        if ($request->has('high_contrast')) {
+            UserCalendarSettings::query()->where('user_id', $user->id)->update([
+                'high_contrast' => $request->boolean('high_contrast'),
+            ]);
+        }
+
+        $roomAdminTeamLocked = false;
+        $ownTeamsLocked = false;
         if (Auth::user()->canAny([PermissionEnum::TEAM_UPDATE->value, PermissionEnum::MA_MANAGER->value])) {
-            $user->departments()->sync(
-                collect($request->departments)
-                    ->map(function ($department) {
-                        return $department['id'];
-                    })
-            );
+            $requestedIds = collect($request->departments)->map(fn ($department) => (int) $department['id']);
+            $currentIds = $user->departments()->pluck('departments.id')->map(fn ($id) => (int) $id);
+
+            // Teams tragen Rechte (Projekt-Schreibrecht, Raumadmin, Verträge): die eigene Zugehörigkeit
+            // ändert nur eine andere Person, Admins ausgenommen.
+            $teamsChanged = $requestedIds->sort()->values()->all() !== $currentIds->sort()->values()->all();
+            if ($isSelf && !$actorIsAdmin && $teamsChanged) {
+                $ownTeamsLocked = true;
+                $requestedIds = $currentIds;
+            }
+
+            // Teams mit Raumadmin-Zugriff nur mit dem Recht, Räume zu bearbeiten (DepartmentPolicy) –
+            // ohne bleibt die Mitgliedschaft in diesen Teams unverändert
+            $lockedIds = Department::query()
+                ->whereIn('id', $requestedIds->diff($currentIds)->merge($currentIds->diff($requestedIds))->all())
+                ->get()
+                ->filter(fn (Department $department) => Gate::denies('changeRoomAdminMembers', $department))
+                ->modelKeys();
+            if ($lockedIds !== []) {
+                $roomAdminTeamLocked = true;
+                $requestedIds = $requestedIds->reject(fn (int $id) => in_array($id, $lockedIds, true))
+                    ->merge($currentIds->intersect($lockedIds));
+            }
+
+            $user->departments()->sync($requestedIds->unique()->values()->all());
+            // Raumadmin über ein Team ändert den gecachten Anfragen-Status
+            User::forgetCachedShareDataForIds([$user->id]);
         }
 
         Session::put('locale', $user->language);
+
+        if ($ownTeamsLocked) {
+            return Redirect::back()->with('error', __(DepartmentPolicy::OWN_TEAMS_LOCKED_MESSAGE));
+        }
+
+        if ($roomAdminTeamLocked) {
+            return Redirect::back()->with('error', __(DepartmentPolicy::ROOM_ADMIN_TEAM_LOCKED_MESSAGE));
+        }
 
         return Redirect::back();
     }
@@ -1653,6 +1721,13 @@ class UserController extends Controller
                     $rolesToGrant[] = $roleToGrant;
                 }
             }
+        }
+
+        if (
+            !in_array(RoleEnum::ARTWORK_ADMIN->value, $rolesToGrant, true)
+            && app(UserService::class)->isLastAdmin($user)
+        ) {
+            return Redirect::back()->with('error', __('The last admin cannot lose the admin role.'));
         }
 
         // Der Rechte-Tab speichert bei jedem Klick sofort; schnelle Klickfolgen erzeugen parallele Requests.
@@ -1958,9 +2033,8 @@ class UserController extends Controller
                 $user->shiftCalendarAbo->delete();
             }
 
-            if ($user->calendar_settings) {
-                $user->calendar_settings->delete();
-            }
+            // Beide Kalender-Zeilen (Kalender + Planungskalender)
+            UserCalendarSettings::query()->where('user_id', $user->id)->delete();
 
             if ($user->calendar_filter) {
                 $user->calendar_filter->delete();
@@ -2118,15 +2192,11 @@ class UserController extends Controller
             } else {
                 $user->shift_plan_settings()->updateOrCreate([], $settingsFields);
             }
-        } elseif ($request->boolean('is_daily_view')) {
-            $dailySettings = $user->daily_view_calendar_settings;
-            if ($dailySettings === null) {
-                $user->daily_view_calendar_settings()->create($settingsFields);
-            } else {
-                $dailySettings->update($settingsFields);
-            }
         } else {
-            $user->calendar_settings()->update($settingsFields);
+            // Kalender und Planungskalender speichern in getrennte Zeilen: eine Einstellung im einen
+            // Kalender ändert nichts mehr am anderen
+            $user->calendarSettingsFor($request->boolean('is_planning'), $request->boolean('is_daily_view'))
+                ->update($settingsFields);
         }
     }
 
@@ -2556,11 +2626,15 @@ class UserController extends Controller
 
     private function getOrCreateDeletedPlaceholderUserId(): int
     {
-        $email = config('artwork.deleted_user_email', 'deleted-user@artwork.local');
-
-        $placeholder = User::where('email', $email)->first();
+        // Nur über das Flag auflösen: ein Konto mit der Platzhalter-Adresse übernähme sonst alles Weitere.
+        $placeholder = User::query()->where('is_deleted_placeholder', true)->orderBy('id')->first();
         if ($placeholder) {
             return (int) $placeholder->id;
+        }
+
+        $email = config('artwork.deleted_user_email', 'deleted-user@artwork.local');
+        if (User::query()->where('email', $email)->exists()) {
+            $email = 'deleted-user-' . Str::lower(Str::random(12)) . '@artwork.local';
         }
 
         $user = new User();
@@ -2568,6 +2642,7 @@ class UserController extends Controller
             'first_name' => 'Deleted',
             'last_name' => 'user',
             'email' => $email,
+            'is_deleted_placeholder' => true,
             'password' => Hash::make(Str::random(40)),
             'email_verified_at' => now(),
             'language' => config('app.fallback_locale', 'en'),

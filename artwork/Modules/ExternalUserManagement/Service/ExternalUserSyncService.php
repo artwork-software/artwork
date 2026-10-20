@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ExternalUserManagement\Service;
 
 use Artwork\Core\Mail\MailService;
+use Artwork\Modules\ExternalUserManagement\Exceptions\ExternalIdentityDeletedException;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Illuminate\Support\Facades\DB;
 
@@ -50,9 +51,19 @@ class ExternalUserSyncService
                 continue;
             }
 
+            // Gleiche Regel wie beim LDAP-Login: ohne eingetragene Allowlist ist jede Domain erlaubt.
+            if (!$source->allowsEmailDomain($ldapUser['email'] ?? null, true)) {
+                $skipped++;
+                $notify('info', "Skipping user {$ldapUser['identifier']}: email domain not allowed");
+                continue;
+            }
+
             try {
                 $this->syncUser($source, $ldapUser);
                 $synced++;
+            } catch (ExternalIdentityDeletedException) {
+                $skipped++;
+                $notify('info', "Skipping user {$ldapUser['identifier']}: account was deleted in artwork");
             } catch (\InvalidArgumentException $e) {
                 // Erwartete Exception: User ohne E-Mail wird übersprungen
                 $skipped++;

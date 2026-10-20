@@ -3,7 +3,9 @@
 namespace Artwork\Modules\ServiceProvider\Http\Resources;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @mixin \Artwork\Modules\ServiceProvider\Models\ServiceProvider
@@ -18,6 +20,8 @@ class ServiceProviderShowResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
+        $canViewTerms = Gate::allows('updateTerms', ServiceProvider::class);
+
         return [
             'id' => $this->id,
             'profile_image' => $this->profile_image,
@@ -28,9 +32,10 @@ class ServiceProviderShowResource extends JsonResource
             'street' => $this->street,
             'zip_code' => $this->zip_code,
             'location' => $this->location,
-            'note' => $this->note,
-            'salary_per_hour' => $this->salary_per_hour,
-            'salary_description' => $this->salary_description,
+            // Gage und Notiz nur für Personen, die die Konditionen bearbeiten dürfen (nicht jede Dienstplan-Sicht).
+            'note' => $canViewTerms ? $this->note : null,
+            'salary_per_hour' => $canViewTerms ? $this->salary_per_hour : null,
+            'salary_description' => $canViewTerms ? $this->salary_description : null,
             'work_name' => $this->work_name,
             'work_description' => $this->work_description,
             'can_work_shifts' => $this->can_work_shifts,

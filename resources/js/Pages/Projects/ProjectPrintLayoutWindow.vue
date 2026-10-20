@@ -15,7 +15,7 @@
                     <div class="header-content p-2">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_header']">
                             <div v-for="index in layout['columns_header']" :key="index">
-                                <p class="text-sm/5 font-semibold text-text" v-html="breakLine(layout.notes.header[index - 1])" />
+                                <p class="text-sm/5 font-semibold text-text whitespace-pre-line">{{ layout.notes.header[index - 1] }}</p>
                             </div>
                             <template v-for="col in layout['columns_header']" :key="col">
                                 <div>
@@ -63,7 +63,7 @@
                     <div class="footer-content">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_footer']">
                             <div v-for="index in layout['columns_footer']" :key="index">
-                                <p class="text-sm/5 font-semibold text-text" v-html="breakLine(layout.notes.footer[index - 1])" />
+                                <p class="text-sm/5 font-semibold text-text whitespace-pre-line">{{ layout.notes.footer[index - 1] }}</p>
                             </div>
                             <template v-for="col in layout['columns_footer']" :key="col">
                                 <div>
@@ -218,6 +218,7 @@ const componentMapping = {
     BuilderTextField,
     BuilderCheckbox,
     BuilderDropDown,
+    BuilderCheckboxList: BuilderDropDown,
     BuilderTitle,
     BuilderProjectGroupComponent,
     BuilderSeparatorComponent,
@@ -266,10 +267,6 @@ const getRowCount = (layout, section) => {
 const getMaxOccupiedRow = (layout, section) => {
     const components = layout[section + '_components'];
     return components.length ? Math.max(...components.map(c => c.row)) : 1;
-};
-
-const breakLine = (text) => {
-    return text?.replace(/\n/g, '<br>');
 };
 </script>
 

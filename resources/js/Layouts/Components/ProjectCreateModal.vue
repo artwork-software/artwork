@@ -20,6 +20,36 @@
                         icon="IconInfoCircle"
                     />
                 </div>
+                <!-- Typwechsel nur in „Basisdaten bearbeiten“ und nur mit Bestätigung (Kundenwunsch) -->
+                <div v-if="project" class="mx-6 mt-5 mb-1 flex items-center justify-between gap-x-4 rounded-lg border border-border-subtle bg-surface-sunken px-4 py-3">
+                    <div class="min-w-0">
+                        <div class="text-sm/5 font-semibold text-text">
+                            {{ project.is_group ? t('This is a project group') : t('This is a project') }}
+                        </div>
+                        <p class="text-xs text-text-subtle">
+                            {{ project.is_group
+                                ? t('Converting it into a project removes the connection to its subprojects.')
+                                : t('Convert it into a project group to assign subprojects to it.') }}
+                        </p>
+                    </div>
+                    <BaseUIButton
+                        class="shrink-0"
+                        :label="project.is_group ? 'Convert to project' : 'Convert to project group'"
+                        use-translation
+                        variant="secondary"
+                        size="sm"
+                        icon="IconTransform"
+                        @click="showProjectTypeChangeConfirm = true"
+                    />
+                </div>
+                <ProjectTypeChangeConfirmModal
+                    v-if="project && showProjectTypeChangeConfirm"
+                    :project="project"
+                    :projects-of-group="projectsOfGroup"
+                    :processing="projectTypeChangeProcessing"
+                    @confirm="changeProjectType"
+                    @close="showProjectTypeChangeConfirm = false"
+                />
                 <div v-if="!createProjectGroup">
                     <div>
                         <div>
@@ -57,79 +87,13 @@
                                 />
                             </div>
                             <div class="px-6 pb-5 pt-4 w-full" v-if="createSettings.state">
-                                <!-- Ändern geht immer über die Listbox (Chip = Button); nur das
-                                     Entfernen-X entfällt bei Pflichtfeld -->
-                                <Listbox as="div" class="w-full relative" v-model="selectedState" @update:model-value="handleStateChange($event)">
-                                    <!-- Chip-Ansicht bei gewähltem Status: Klick öffnet die Auswahl -->
-                                    <div v-if="selectedState" class="w-full">
-                                        <div class="text-text-subtle text-xs mb-2">
-                                            {{ t('Project status') }}{{ isStateRequired ? '*' : '' }}
-                                        </div>
-                                        <div class="inline-flex items-center gap-x-1">
-                                            <ListboxButton
-                                                class="inline-flex items-center gap-x-2 px-3 py-1.5 rounded-full border border-border bg-white cursor-pointer hover:border-text-subtle transition-colors duration-150"
-                                            >
-                                                <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : selectedState.color }"/>
-                                                <span class="text-sm flex items-center gap-x-1">
-                                                    {{ selectedState.name }}
-                                                    <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
-                                                </span>
-                                                <IconChevronDown class="h-4 w-4 text-text-subtle" aria-hidden="true"/>
-                                            </ListboxButton>
-                                            <button v-if="!isStateRequired" type="button" @click="selectedState = null" class="ml-1">
-                                                <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <!-- Platzhalter-Ansicht ohne Status -->
-                                    <ListboxButton v-else class="menu-button-no-padding relative">
-                                        <div class="truncate">
-                                            <div class="top-2 left-4 absolute text-text-subtle text-xs">
-                                                {{ t('Project status') }}{{ isStateRequired ? '*' : '' }}
-                                            </div>
-                                            <div class="pt-6 pb-2 flex items-center gap-x-2">
-                                                <div class="truncate">
-                                                    <span>
-                                                        {{ t('Select project status') }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
-                                    </ListboxButton>
-                                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions class="absolute w-full z-10 bg-surface-inverse shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" class="max-h-8"
-                                                v-for="state in states"
-                                                :key="state.id"
-                                                :value="state"
-                                                v-slot="{ active, selected }">
-                                                <li :class="[active ? 'text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <div class="flex items-center">
-                                                        <div>
-                                                            <div class="block w-3 h-3 rounded-full"
-                                                                :style="{'backgroundColor' : state?.color }"/>
-                                                        </div>
-                                                        <span
-                                                            :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 flex items-center gap-x-1 truncate']">
-                                                            {{ state.name }}
-                                                            <IconCalendarMonth v-if="state.is_planning === true || state.is_planning === 1" class="w-4 h-4" />
-                                                        </span>
-                                                    </div>
-                                                    <span
-                                                        :class="[active ? 'text-white' : 'text-text-subtle', 'group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                        <IconCheck v-if="selected"
-                                                            class="h-5 w-5 flex text-success"
-                                                            aria-hidden="true"/>
-                                                    </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </Listbox>
-                                <div v-if="showInvalidProjectStateHelpText || createProjectForm.errors.state" class="text-danger text-xs mt-1">
-                                    {{ t('Project status is a required field.') }}
-                                </div>
+                                <ProjectStateSelect
+                                    v-model="selectedState"
+                                    :states="states"
+                                    :required="isStateRequired"
+                                    :error="showInvalidProjectStateHelpText || !!createProjectForm.errors.state"
+                                    @update:model-value="handleStateChange($event)"
+                                />
                             </div>
 
                             <div class="px-11 py-6 -mx-5 bg-surface-canvas" v-if="createSettings.managers">
@@ -252,7 +216,7 @@
                                 is-add-button
                                 use-translation
                                 icon="IconCalendarMonth"
-                                v-if="!project && (can('create events without request') || can('request room occupancy') || can('can see planning calendar') || can('can edit planning calendar'))"
+                                v-if="!project && (can('create events without request') || can('request room occupancy') || can('can edit planning calendar'))"
                                 :processing="createProjectForm.processing"
                                 @click="addProject(true)"
                             />
@@ -301,6 +265,20 @@
                                 id="sourceName"
                                 v-model="createProjectForm.name"
                                 label="Title*"
+                            />
+                            <div v-if="createProjectGroup && showInvalidProjectNameHelpText" class="text-danger text-xs mt-1">
+                                {{ t('Project name is a required field.')}}
+                            </div>
+                        </div>
+                        <!-- Statuspflicht gilt auch für Projektgruppen: ohne das Feld blieb „Anlegen“ stumm -->
+                        <!-- Beim Bearbeiten einer Gruppe zeigt der Projektteil oben das Feld bereits -->
+                        <div class="w-full mt-4" v-if="createProjectGroup && createSettings.state">
+                            <ProjectStateSelect
+                                v-model="selectedState"
+                                :states="states"
+                                :required="isStateRequired"
+                                :error="showInvalidProjectStateHelpText || !!createProjectForm.errors.state"
+                                @update:model-value="handleStateChange($event)"
                             />
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-6 gap-x-4">
@@ -353,13 +331,7 @@
 import Input from "@/Layouts/Components/InputComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import ProjectPropertiesChecklist from "@/Layouts/Components/ProjectPropertiesChecklist.vue";
-import {useForm} from "@inertiajs/vue3";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-} from "@headlessui/vue";
+import {router, useForm} from "@inertiajs/vue3";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import KeyVisual from "@/Components/Uploads/KeyVisual.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
@@ -371,7 +343,7 @@ import { ref, reactive, computed, watch, defineProps, defineEmits } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { usePermission } from '@/Composeables/Permission.js';
 import { useTranslation } from '@/Composeables/Translation.js';
-import {IconCalendarMonth, IconCheck, IconChevronDown, IconCirclePlus, IconX} from "@tabler/icons-vue";
+import {IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
@@ -379,6 +351,8 @@ import LastedProjects from "@/Artwork/LastedProjects.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import CrmArtistLinkManager from "@/Components/Crm/CrmArtistLinkManager.vue";
+import ProjectTypeChangeConfirmModal from "@/Layouts/Components/ProjectTypeChangeConfirmModal.vue";
+import ProjectStateSelect from "@/Layouts/Components/ProjectStateSelect.vue";
 
 // Define props
 const props = defineProps({
@@ -611,6 +585,27 @@ const addProjectToProjectGroup = (project) => {
 
 const deleteProjectFromProjectGroup = (index) => {
     projectGroupProjects.value.splice(index, 1);
+};
+
+const showProjectTypeChangeConfirm = ref(false);
+const projectTypeChangeProcessing = ref(false);
+
+// Modal danach schließen: das Formular (isGroup, Unterprojekte) beruht noch auf dem alten Typ
+const changeProjectType = () => {
+    if (projectTypeChangeProcessing.value) {
+        return;
+    }
+    router.patch(route('projects.update.type', props.project.id), {
+        is_group: !props.project.is_group,
+    }, {
+        preserveScroll: true,
+        onStart: () => projectTypeChangeProcessing.value = true,
+        onFinish: () => projectTypeChangeProcessing.value = false,
+        onSuccess: () => {
+            showProjectTypeChangeConfirm.value = false;
+            emit('closeCreateProjectModal', false);
+        },
+    });
 };
 
 const handleStateChange = (stateId) => {

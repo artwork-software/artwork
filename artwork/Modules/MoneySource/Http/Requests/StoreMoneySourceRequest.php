@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\MoneySource\Http\Requests;
 
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreMoneySourceRequest extends FormRequest
@@ -29,7 +30,7 @@ class StoreMoneySourceRequest extends FormRequest
             'source_name' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:65535'],
             'is_group' => ['nullable', 'boolean'],
-            'icon' => ['nullable', 'string', 'max:255'],
+            'icon' => ['nullable', 'string', 'max:255', new IconNameRule()],
             'group_id' => ['nullable', 'integer', 'exists:money_sources,id'],
             'sub_money_source_ids' => ['nullable', 'array'],
             'sub_money_source_ids.*' => ['integer', 'exists:money_sources,id'],

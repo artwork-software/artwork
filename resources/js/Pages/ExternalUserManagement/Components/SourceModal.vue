@@ -184,6 +184,20 @@
                     </p>
                 </div>
 
+                <!-- Allowed Domains (LDAP, optional) -->
+                <div>
+                    <BaseInput
+                        id="ldap_allowed_domains"
+                        :label="$t('Allowed Email Domains')"
+                        v-model="allowedDomainsText"
+                        :error="form.errors['config.allowed_domains']"
+                        placeholder="example.com, partner.org"
+                    />
+                    <p class="mt-1 text-xs text-text-subtle">
+                        {{ $t('Optional. If set, the sync and the directory sign-in only accept people with an email address from these domains. Leave empty to allow all domains.') }}
+                    </p>
+                </div>
+
                 <!-- Default Role -->
                 <div>
                     <label for="ldap_default_role" class="block text-sm font-medium text-text mb-1">
@@ -238,6 +252,7 @@
                     />
                     <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Azure AD / Entra tenant ID – it is part of the authority URL.') }}
+                        {{ $t('common, organizations and consumers are not allowed because any Microsoft account could sign in through them.') }}
                     </p>
                 </div>
 
@@ -299,15 +314,24 @@
 
                     <!-- Identifier Claim -->
                     <div>
-                        <BaseInput
+                        <label for="oidc_identifier_attribute" class="block text-sm font-medium text-text mb-1">
+                            {{ $t('Identifier Claim') }}
+                        </label>
+                        <select
                             id="oidc_identifier_attribute"
-                            :label="$t('Identifier Claim')"
                             v-model="form.config.identifier_attribute"
-                            :error="form.errors['config.identifier_attribute']"
-                            placeholder="sub"
-                        />
+                            class="block w-full rounded-lg border-border text-sm focus:border-accent-600 focus:ring-accent-600"
+                        >
+                            <option v-for="claim in oidcIdentifierOptions" :key="claim" :value="claim">{{ claim }}</option>
+                        </select>
+                        <p v-if="form.errors['config.identifier_attribute']" class="mt-1 text-xs text-danger">
+                            {{ form.errors['config.identifier_attribute'] }}
+                        </p>
                         <p class="mt-1 text-xs text-text-subtle">
                             {{ $t('OIDC claim used as unique identifier (default: sub)') }}
+                        </p>
+                        <p v-if="hasLegacyOidcIdentifier" class="mt-1 text-xs font-semibold text-warning">
+                            {{ $t('This connection identifies people by a claim they can change themselves. Recommended: sub or oid. After switching, people already linked must be linked again – only switch in coordination with your identity provider.') }}
                         </p>
                     </div>
 
@@ -337,6 +361,24 @@
                     />
                     <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Enter the permitted user email domains, for example company.com — not the Artwork domain. Only identities with an email address from these domains may sign in.') }}
+                    </p>
+                </div>
+
+                <!-- Trust IdP email -->
+                <div>
+                    <div class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="trust_idp_email"
+                            v-model="form.config.trust_idp_email"
+                            class="h-4 w-4 text-accent-600 focus:ring-accent-600 border-border rounded"
+                        />
+                        <label for="trust_idp_email" class="ml-2 block text-sm text-text">
+                            {{ $t('Trust email addresses from this identity provider') }}
+                        </label>
+                    </div>
+                    <p class="mt-1 text-xs text-text-subtle">
+                        {{ $t('Without this option, new accounts are only created if the identity provider confirms the email address (email_verified). Microsoft Entra usually does not send this confirmation – enable the option only if the connection is limited to your own tenant or directory.') }}
                     </p>
                 </div>
 
@@ -461,6 +503,7 @@ function defaultConfig() {
         scopes: ['openid', 'profile', 'email'],
         groups_claim: 'groups',
         allowed_domains: [],
+        trust_idp_email: false,
         // Shared
         default_role_id: null,
     };
@@ -537,6 +580,15 @@ export default defineComponent({
             set(value) {
                 this.form.config.allowed_domains = this.splitList(value);
             }
+        },
+        storedOidcIdentifier() {
+            return this.source?.type === 'identity_provider' ? this.source.config?.identifier_attribute : null;
+        },
+        hasLegacyOidcIdentifier() {
+            return !!this.storedOidcIdentifier && !['sub', 'oid'].includes(this.storedOidcIdentifier);
+        },
+        oidcIdentifierOptions() {
+            return this.hasLegacyOidcIdentifier ? ['sub', 'oid', this.storedOidcIdentifier] : ['sub', 'oid'];
         },
         redirectUri() {
             if (!this.source) {
@@ -618,6 +670,7 @@ export default defineComponent({
                     identifier_attribute: c.identifier_attribute,
                     groups_claim: c.groups_claim,
                     allowed_domains: c.allowed_domains,
+                    trust_idp_email: !!c.trust_idp_email,
                     default_role_id: c.default_role_id,
                 };
             }
@@ -631,6 +684,7 @@ export default defineComponent({
                 use_tls: c.use_tls,
                 user_filter: c.user_filter,
                 identifier_attribute: c.identifier_attribute,
+                allowed_domains: c.allowed_domains,
                 default_role_id: c.default_role_id,
             };
         },

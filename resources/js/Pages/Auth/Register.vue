@@ -12,6 +12,25 @@
                 <h2 class="mt-6 text-3xl font-lexend font-bold text-text">{{$t('Create administrator')}}</h2>
                 <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
             </div>
+            <div class="mt-6 grid grid-cols-1 gap-y-2 sm:grid-cols-6">
+                <div class="sm:col-span-6 mt-1">
+                    <label for="setup_token" class="text-sm font-bold text-text-subtle">{{ $t('Setup token') }}</label>
+                    <input
+                        v-model="form.setup_token"
+                        id="setup_token"
+                        type="text"
+                        required
+                        autocomplete="off"
+                        :class="[form.errors.setup_token ? 'border-danger' : 'border-border-subtle', 'focus:ring-black focus:border-accent-600 border-2 w-full sm:text-sm font-mono']"/>
+                    <jet-input-error :message="form.errors.setup_token" class="mt-2"/>
+                </div>
+                <p class="sm:col-span-6 text-xs text-text-subtle">
+                    {{ setupTokenFromEnv
+                        ? $t('Enter the value of ARTWORK_SETUP_TOKEN from the server configuration.')
+                        : $t('The setup token is in the server log (Docker: container log of the app). Run php artisan artwork:setup-token on the server to generate a new one.') }}
+                </p>
+            </div>
+
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3 mt-1">
                     <label for="first_name" class="text-sm font-bold text-text-subtle">{{ $t('First name')}}</label>
@@ -107,7 +126,7 @@
 
             <button type="submit"
                 class="px-28 py-3 mt-5 bg-accent-600 hover:bg-text-subtle text-xl uppercase text-white disabled:bg-text-subtle disabled:cursor-not-allowed"
-                :disabled="form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === ''">
+                :disabled="form.setup_token === '' || form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === ''">
                 {{$t('Register')}}
             </button>
         </form>
@@ -142,6 +161,16 @@ export default defineComponent({
         JetInputError,
         IconX
     },
+    props: {
+        setupToken: {
+            type: String,
+            default: '',
+        },
+        setupTokenFromEnv: {
+            type: Boolean,
+            default: false,
+        },
+    },
     data() {
         return {
             logoPreview: null,
@@ -149,6 +178,7 @@ export default defineComponent({
             pw_feedback: 0,
             form: this.$inertia.form({
                 _method: 'POST',
+                setup_token: this.setupToken ?? '',
                 first_name: '',
                 last_name: '',
                 email: '',
@@ -165,7 +195,7 @@ export default defineComponent({
         'form.password': {
             handler() {
                 if (this.form.password.length > 0) {
-                    axios.get('/password_feedback', {params: {password: this.form.password}})
+                    axios.post('/password_feedback', {password: this.form.password}, {skipErrorToast: true})
                         .then(response => this.pw_feedback = response.data)
                 }
             },

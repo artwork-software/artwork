@@ -130,7 +130,9 @@ class NotificationController extends Controller
             'roomCollisions' => [],
             'notificationCounts' => $this->getNotificationCountsByGroup($user),
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
-            'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
+            'rooms' => RoomIndexWithoutEventsResource::collection(
+                Room::query()->with('adminDepartments.users:id,first_name,last_name,profile_photo_path')->get()
+            )->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
             // Die Antwort-Modals zeigen nur den Projektnamen; vorher gingen alle Projekte mit
             // Gruppen, Sektoren, Kategorien, Genres und Kostenstelle mit (MB bei großen Häusern).

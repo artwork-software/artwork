@@ -14,6 +14,7 @@ use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
+use Artwork\Modules\Project\Services\ProjectDocumentPlacementService;
 use Artwork\Modules\Project\Services\ProjectTabDocumentService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -55,6 +56,7 @@ class AppSystemComponentService
         private readonly ShiftSettings $shiftSettings,
         private readonly ProjectComponentVisibilityService $visibility,
         private readonly ProjectTabDocumentService $documents,
+        private readonly ProjectDocumentPlacementService $placements,
     ) {
     }
 
@@ -62,8 +64,13 @@ class AppSystemComponentService
      * @param array<int, int> $scope ComponentInTab scope (tab ids) for checklist and document components.
      * @return array<string, mixed>|null Null for types the app renders from the project header itself.
      */
-    public function valueFor(User $user, Project $project, ProjectTabComponentEnum $type, array $scope): ?array
-    {
+    public function valueFor(
+        User $user,
+        Project $project,
+        ProjectTabComponentEnum $type,
+        array $scope,
+        ?string $placementKey = null,
+    ): ?array {
         return match ($type) {
             // BULK_EDIT is the web's "Schedule" tab (bulk event editor) — on
             // app both render as the same event list.
@@ -83,7 +90,9 @@ class AppSystemComponentService
             ProjectTabComponentEnum::CHECKLIST_ALL => ['checklists' => $this->checklists($user, $project, [])],
             ProjectTabComponentEnum::COMMENT_TAB,
             ProjectTabComponentEnum::COMMENT_ALL_TAB => ['comments' => $this->comments($user, $project)],
-            ProjectTabComponentEnum::PROJECT_DOCUMENTS => ['files' => $this->files($user, $project, $scope)],
+            ProjectTabComponentEnum::PROJECT_DOCUMENTS => [
+                'files' => $this->files($user, $project, $scope, $placementKey),
+            ],
             ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS => ['files' => $this->files($user, $project, [])],
             ProjectTabComponentEnum::PROJECT_ATTRIBUTES => [
                 'categories' => $project->categories->pluck('name')->all(),
@@ -329,10 +338,19 @@ class AppSystemComponentService
      * @param array<int, int> $scope
      * @return array<int, array<string, mixed>>
      */
-    private function files(User $user, Project $project, array $scope): array
+    private function files(User $user, Project $project, array $scope, ?string $placementKey = null): array
     {
         return $project->project_files()
-            ->tap(fn ($q) => $this->constrainToVisibleScope($q, $user, $scope))
+            ->tap(fn ($q) => $placementKey !== null && $scope !== []
+                // Upload-Bereich der Dateiupload-Komponente: Standard über die Tab-Auswahl, sonst "Sichtbar in"
+                ? $this->placements->constrainToPlacement(
+                    $q,
+                    $placementKey,
+                    $this->visibility->restrictScopeToVisibleTabs($user, $scope)
+                )
+                : ($scope === []
+                    ? $this->documents->constrainToVisibleDocumentTabs($q, $user)
+                    : $this->constrainToVisibleScope($q, $user, $scope)))
             ->tap(fn ($q) => $this->documents->constrainToVisibleBudgetDocuments($q, $project, $user))
             ->orderByDesc('created_at')
             ->get()

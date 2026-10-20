@@ -113,6 +113,8 @@ readonly class DepartmentService
 
     public function deleteDepartment(Department $department, NotificationService $notificationService): void
     {
+        $memberIds = $this->departmentRepository->getDepartmentUsers($department)->pluck('id')->all();
+
         foreach ($this->departmentRepository->getDepartmentUsers($department) as $user) {
             $this->sendTeamNotification(
                 __('notification.department.delete', ['department' => $department->name], $user->language),
@@ -126,6 +128,8 @@ readonly class DepartmentService
         }
 
         $department->delete();
+        // Raumzugriff des Teams (department_room) fällt per FK-Cascade weg – gecachten Anfragen-Status verwerfen
+        User::forgetCachedShareDataForIds($memberIds);
 
         $this->broadcastDepartmentUpdated();
     }

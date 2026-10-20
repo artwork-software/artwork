@@ -8,7 +8,7 @@
             <BaseInput id="prop_name" v-model="form.name" :label="$t('Name')" :error="form.errors.name" />
             <ArtworkBaseListbox
                 v-model="selectedPropertyType"
-                :items="propertyTypeOptions"
+                :items="availablePropertyTypeOptions"
                 by="id"
                 option-label="name"
                 option-key="id"
@@ -19,8 +19,24 @@
             <p v-if="form.errors.type" class="mt-1 text-xs text-danger">{{ form.errors.type }}</p>
             <BaseInput id="prop_tooltip" v-model="form.tooltip_text" :label="$t('Tooltip text')" />
 
+            <!-- Mehrfachauswahl: Darstellung -->
+            <div v-if="form.type === 'multiselect'" class="space-y-1">
+                <ArtworkBaseListbox
+                    v-model="selectedMultiselectDisplay"
+                    :items="multiselectDisplayOptions"
+                    by="id"
+                    option-label="name"
+                    option-key="id"
+                    :label="$t('Display')"
+                    :use-translations="true"
+                />
+                <p v-if="isTypeLockedToMultiselect" class="text-xs text-text-subtle">
+                    {{ $t('A multiple choice property cannot be changed back to another type.') }}
+                </p>
+            </div>
+
             <!-- Select values input -->
-            <div v-if="form.type === 'select'" class="space-y-2">
+            <div v-if="form.type === 'select' || form.type === 'multiselect'" class="space-y-2">
                 <label class="componentLabel">{{ $t('Selection values') }}</label>
                 <div v-for="(val, index) in form.select_values" :key="index" class="flex items-center gap-3">
                     <BaseInput
@@ -71,6 +87,7 @@ const propertyTypeOptions = [
     { id: 'date', name: 'Date' },
     { id: 'checkbox', name: 'Checkbox' },
     { id: 'select', name: 'Selection' },
+    { id: 'multiselect', name: 'Multiple choice' },
     { id: 'link', name: 'Link' },
     { id: 'upload', name: 'Upload' },
 ]
@@ -81,6 +98,30 @@ const form = useForm({
     type: props.property?.type ?? 'text',
     tooltip_text: props.property?.tooltip_text ?? '',
     select_values: props.property?.select_values ?? [],
+    multiselect_display: props.property?.multiselect_display ?? 'checkboxes',
+})
+
+const multiselectDisplayOptions = [
+    { id: 'checkboxes', name: 'Checkboxes' },
+    { id: 'dropdown', name: 'Dropdown with multiple selection' },
+]
+
+const selectedMultiselectDisplay = computed({
+    get: () => multiselectDisplayOptions.find(o => o.id === form.multiselect_display) ?? multiselectDisplayOptions[0],
+    set: (val) => { form.multiselect_display = val?.id ?? 'checkboxes' },
+})
+
+// Mehrfachauswahl nur neu oder aus einer Einfachauswahl; eine bestehende Mehrfachauswahl bleibt es
+// (Gegenstück zu CrmPropertyService::assertTypeChangeKeepsValues)
+const isTypeLockedToMultiselect = computed(() => props.property?.type === 'multiselect')
+const availablePropertyTypeOptions = computed(() => {
+    if (isTypeLockedToMultiselect.value) {
+        return propertyTypeOptions.filter((option) => option.id === 'multiselect')
+    }
+    if (props.property && props.property.type !== 'select') {
+        return propertyTypeOptions.filter((option) => option.id !== 'multiselect')
+    }
+    return propertyTypeOptions
 })
 
 const selectedPropertyType = computed({

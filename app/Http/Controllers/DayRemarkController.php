@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\Calendar\Events\DayRemarkUpdated;
 use Artwork\Modules\Calendar\Models\DayRemark;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -107,7 +108,7 @@ class DayRemarkController extends Controller
     private function broadcastDayRemarkUpdate(string $date, ?array $dayRemark): void
     {
         dispatch(static function () use ($date, $dayRemark): void {
-            broadcast(new DayRemarkUpdated($date, $dayRemark));
+            SafeBroadcast::send(new DayRemarkUpdated($date, $dayRemark));
         })->afterResponse();
     }
 }

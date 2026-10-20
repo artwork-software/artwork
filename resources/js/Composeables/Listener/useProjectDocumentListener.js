@@ -64,13 +64,23 @@ export function useProjectDocumentListener(projectId, onChange, { debounceMs = 3
  * @param {unknown} scope
  * @returns {(document: { tab_id: number|null }) => boolean}
  */
-export function isDocumentInScope(scope) {
+export function isDocumentInScope(scope, placementKey = null) {
     if (!Array.isArray(scope)) {
         return () => true;
     }
 
     const tabIds = scope.map(Number);
 
-    return (document) => document.tab_id !== null && document.tab_id !== undefined
-        && tabIds.includes(Number(document.tab_id));
+    return (document) => {
+        // "Sichtbar in" geändert: jeder Bereich lädt nach (die Datei kann hier auch verschwunden sein)
+        if (document.visibility_changed) {
+            return true;
+        }
+        // ausdrücklich in diesem Upload-Bereich sichtbar
+        if (placementKey && Array.isArray(document.visible_in) && document.visible_in.includes(placementKey)) {
+            return true;
+        }
+        return document.tab_id !== null && document.tab_id !== undefined
+            && tabIds.includes(Number(document.tab_id));
+    };
 }

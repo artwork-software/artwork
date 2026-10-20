@@ -33,7 +33,7 @@
                         />
                     </div>
                     <div v-else v-for="index in layout['columns_header']">
-                        <p class="text-xs/[18px] text-text-subtle" v-html="breakLine(layout.notes.header[index - 1])" />
+                        <p class="text-xs/[18px] text-text-subtle whitespace-pre-line">{{ layout.notes.header[index - 1] }}</p>
                     </div>
                     <template v-for="col in layout['columns_header']" :key="col">
                         <div v-if="getComponent(layout, 'header', 1, col)" :key="getComponent(layout, 'header', 1, col).id">
@@ -99,7 +99,7 @@
                         />
                     </div>
                     <div v-else v-for="index in layout['columns_header']">
-                        <p class="text-xs/[18px] text-text-subtle" v-html="breakLine(layout.notes.footer[index - 1])" />
+                        <p class="text-xs/[18px] text-text-subtle whitespace-pre-line">{{ layout.notes.footer[index - 1] }}</p>
                     </div>
                     <template v-for="col in layout['columns_footer']" :key="col">
                         <div v-if="getComponent(layout, 'footer', 1, col)" :key="getComponent(layout, 'footer', 1, col).id">
@@ -182,10 +182,6 @@ const getMaxOccupiedRow = (layout, section) => {
     return components.length ? Math.max(...components.map(c => c.row)) : 1;
 };
 
-const breakLine = (text) => {
-    // add line breaks to text
-    return text?.replace(/\n/g, '<br>');
-}
 
 const saveNotes = (type) => {
     router.patch(route('project-print-layout.update.header.note', props.layout.id), {

@@ -8,6 +8,7 @@ import Checkbox from '@/Pages/Projects/Tab/Components/Checkbox.vue'
 import Title from '@/Pages/Projects/Tab/Components/Title.vue'
 import TextArea from '@/Pages/Projects/Tab/Components/TextArea.vue'
 import DropDown from '@/Pages/Projects/Tab/Components/DropDown.vue'
+import CheckboxList from '@/Pages/Projects/Tab/Components/CheckboxList.vue'
 import ProjectStateComponent from '@/Pages/Projects/Components/ProjectStateComponent.vue'
 import CalendarTab from '@/Pages/Projects/Tab/Components/CalendarTab.vue'
 import ShiftTab from '@/Pages/Projects/Tab/Components/ShiftTab.vue'
@@ -51,6 +52,7 @@ export const projectTabComponents = {
     Link: LinkComponent,
     TextArea,
     DropDown,
+    CheckboxList,
     ProjectStateComponent,
     CalendarTab,
     ShiftTab,

@@ -8,6 +8,7 @@ use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Services\CrmPropertyFileService;
+use Artwork\Modules\Project\Services\ProjectArtistService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,12 +51,31 @@ class CrmContact extends Model
      */
     private array $propertyFilePathsToDelete = [];
 
+    /**
+     * Projekte, in denen der Kontakt als Künstler*in verknüpft war (vor dem endgültigen Löschen gesammelt).
+     *
+     * @var list<int>
+     */
+    private array $artistProjectIdsToRefresh = [];
+
     protected static function booted(): void
     {
         // Hersteller-Lookup-Cache der Inventar-Artikel (je Prozess, unter Octane/Swoole
         // request-übergreifend) nach Umbenennung/Löschung leeren
         static::saved(static fn () => InventoryArticle::flushPropertyLookupCaches());
         static::deleted(static fn () => InventoryArticle::flushPropertyLookupCaches());
+
+        // Verknüpfte Projektkünstler*innen stehen mit Namen am Projekt (projects.linked_artists):
+        // nach Umbenennen, Löschen (Papierkorb) und Wiederherstellen neu berechnen
+        $refreshArtists = static function (CrmContact $contact): void {
+            $contactId = (int) $contact->id;
+            DB::afterCommit(static fn () => app(ProjectArtistService::class)->refreshForContact($contactId));
+        };
+        static::updated(static fn (CrmContact $contact) => $contact->wasChanged('display_name')
+            ? $refreshArtists($contact)
+            : null);
+        static::deleted($refreshArtists);
+        static::restored($refreshArtists);
 
         // Beim (Soft-)Löschen eines Kontakts offene externe Zugänge widerrufen –
         // die DB-Cascade auf external_accesses feuert bei Soft-Delete NICHT, sonst
@@ -69,11 +89,23 @@ class CrmContact extends Model
         // Endgültiges Löschen entfernt auch die Dateien der Upload-Eigenschaften (DSGVO). Beim
         // Soft-Delete bleiben sie liegen, sonst wäre der Kontakt nicht vollständig wiederherstellbar.
         // Gelöscht wird erst nach dem Commit, damit ein Rollback keine Werte ohne Datei hinterlässt.
+        //
+        // Die FK-Cascade entfernt die Künstler*innen-Verknüpfungen schon beim DELETE – refreshForContact()
+        // fände danach keine Projekte mehr. Deshalb die Projekte vorher sammeln und danach neu berechnen,
+        // sonst bliebe der Name gelöschter Personen in projects.linked_artists stehen (DSGVO).
         static::forceDeleting(static function (CrmContact $contact): void {
             $contact->propertyFilePathsToDelete = app(CrmPropertyFileService::class)
                 ->collectPathsOfContact($contact);
+            $contact->artistProjectIdsToRefresh = app(ProjectArtistService::class)
+                ->projectIdsOfContact((int) $contact->id);
         });
         static::forceDeleted(static function (CrmContact $contact): void {
+            $artistProjectIds = $contact->artistProjectIdsToRefresh;
+            $contact->artistProjectIdsToRefresh = [];
+            if ($artistProjectIds !== []) {
+                DB::afterCommit(static fn () => app(ProjectArtistService::class)->refresh($artistProjectIds));
+            }
+
             $paths = $contact->propertyFilePathsToDelete;
             $contact->propertyFilePathsToDelete = [];
 

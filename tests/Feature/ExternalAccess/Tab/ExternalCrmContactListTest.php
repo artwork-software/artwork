@@ -6,6 +6,7 @@ use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
+use Artwork\Modules\Project\Services\ProjectComponentCrmContactService;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\ExternalAccess\CrmContactListFixtures;
 use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
@@ -76,6 +77,33 @@ final class ExternalCrmContactListTest extends TestCase
         $this->assertSame($context['project']->id, $entry->project_id);
         $this->assertSame($context['external']->id, (int) $entry->created_by_external_access_id);
         $this->assertNull($entry->reviewed_at);
+    }
+
+    #[Test]
+    public function externals_see_roles_but_cannot_set_them(): void
+    {
+        $context = $this->crmContactListContext();
+        $contact = $this->preLinkedContact($context);
+        ProjectComponentCrmContact::query()->where('crm_contact_id', $contact->id)
+            ->update(['roles' => json_encode(['Technik']), 'is_artist' => true]);
+        $this->actingAs($context['external'], 'external');
+
+        $this->getJson(route('external.project.tab.crm-contacts.index', $this->externalRouteParams($context)))
+            ->assertOk()
+            ->assertJsonPath('contacts.0.roles', ['Technik'])
+            ->assertJsonPath('contacts.0.is_artist', true);
+
+        // Rollen/Sonderrolle aus dem Request werden extern ignoriert
+        $createdId = $this->postJson(route('external.project.tab.crm-contacts.store', $this->externalRouteParams($context)), [
+            'crm_contact_type_id' => $context['type']->id,
+            'display_name' => 'Neue Person',
+            'property_values' => [$context['phone']->id => '0151 1'],
+            'roles' => ['Leitung'],
+            'is_artist' => true,
+        ])->assertCreated()->json('contact.id');
+        $entry = ProjectComponentCrmContact::query()->where('crm_contact_id', $createdId)->firstOrFail();
+        $this->assertNull($entry->roles);
+        $this->assertFalse($entry->is_artist);
     }
 
     #[Test]
@@ -183,7 +211,7 @@ final class ExternalCrmContactListTest extends TestCase
     }
 
     #[Test]
-    public function artists_are_also_linked_as_project_artists(): void
+    public function artists_get_the_artist_role_and_become_project_artists(): void
     {
         $artistType = CrmContactType::withTrashed()->firstOrCreate(
             ['slug' => 'artist'],
@@ -210,9 +238,29 @@ final class ExternalCrmContactListTest extends TestCase
             'property_values' => $values,
         ])->assertCreated()->json('contact.id');
 
-        $this->assertDatabaseHas('crm_contact_project', [
+        // Sonderrolle „Künstler*in“ in der Liste statt eigener Projektkünstler*innen-Verknüpfung
+        $this->assertDatabaseHas('project_component_crm_contacts', [
+            'project_id' => $context['project']->id,
+            'crm_contact_id' => $contactId,
+            'is_artist' => true,
+        ]);
+        $this->assertDatabaseMissing('crm_contact_project', [
             'project_id' => $context['project']->id,
             'crm_contact_id' => $contactId,
         ]);
+        // Erst nach der internen Prüfung erscheint der Name überall (Kalender, Dienstplan, Exporte …)
+        $this->assertNull($context['project']->fresh()->linked_artists);
+
+        app(ProjectComponentCrmContactService::class)->markReviewedForExternal(
+            $context['project'],
+            $context['tab'],
+            $context['external'],
+            $context['inviter'],
+        );
+
+        $this->assertSame(
+            [['id' => $contactId, 'name' => 'Compagnie Luna']],
+            $context['project']->fresh()->linked_artists
+        );
     }
 }

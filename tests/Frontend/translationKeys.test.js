@@ -21,6 +21,7 @@ const KEYS = {
     'Jump by calendar week': ['Springen um Kalenderwoche', 'Jump by calendar week'],
     'Jump by month': ['Springen um Monat', 'Jump by month'],
     'Work time accounting': ['Arbeitszeitberechnung', 'Work time accounting'],
+    'Installed version': ['Installierte Version', 'Installed version'],
 };
 
 test('new translation keys exist in German and English', () => {

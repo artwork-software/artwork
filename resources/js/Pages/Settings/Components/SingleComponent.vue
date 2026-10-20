@@ -8,6 +8,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DropComponentInDisclosureComponentElement from "@/Pages/Settings/Components/DropComponentInDisclosureComponentElement.vue";
 import EditComponentScopeModal from "@/Pages/Settings/Components/EditComponentScopeModal.vue";
+import UploadSettingsModal from "@/Pages/Settings/Components/UploadSettingsModal.vue";
 
 import { IconDragDrop, IconTrash, IconDotsVertical, IconChevronDown, IconFolder, IconFolderOpen } from "@tabler/icons-vue";
 
@@ -36,6 +37,18 @@ const scopeTabNames = computed(() => {
     const map = new Map(tabsArr.map((t) => [t.id, t.name]));
     return scopeIds.map((id) => map.get(id)).filter(Boolean);
 });
+// Upload-Einstellungen eines Bereichs der Dateiupload-Komponente (Tab-Platzierung oder im Ordner)
+const uploadSettingsPlacement = ref(null);
+function openUploadSettings(placement, inFolder) {
+    uploadSettingsPlacement.value = { id: placement.id, inFolder, settings: placement.upload_settings ?? null };
+}
+function uploadSettingsSummary(settings) {
+    const parts = [];
+    if (settings?.allowed_extensions?.length) parts.push(settings.allowed_extensions.map((e) => '.' + e).join(', '));
+    if (settings?.max_file_size_mb) parts.push(`max. ${settings.max_file_size_mb} MB`);
+    if (settings?.max_files) parts.push(`max. ${settings.max_files}`);
+    return parts.join(' · ');
+}
 function openEditScopeModal() { showEditScope.value = true }
 function closeEditScopeModal() { showEditScope.value = false }
 
@@ -158,6 +171,18 @@ function requestDeleteComponentInDisclosure(componentId) {
                                 {{ $t('Edit') }}
                             </button>
                         </div>
+                        <div v-if="isDocuments" class="mt-1 text-[12px] text-text-muted flex items-center gap-2">
+                            <span>
+                                {{ $t('Upload settings') }}: {{ uploadSettingsSummary(element.upload_settings) || $t('No additional limits') }}
+                            </span>
+                            <button
+                                type="button"
+                                class="rounded-md px-2 py-0.5 text-xs ring-1 ring-inset ring-border hover:bg-surface-sunken"
+                                @click="openUploadSettings(element, false)"
+                            >
+                                {{ $t('Edit') }}
+                            </button>
+                        </div>
 
                         <!-- Note -->
                         <div class="mt-3">
@@ -220,6 +245,19 @@ function requestDeleteComponentInDisclosure(componentId) {
                                                 <div class="text-[11px] text-text-subtle ml-6">
                                                     {{ $t(component.component.type) }}
                                                 </div>
+                                                <div
+                                                    v-if="component.component.type === 'ProjectDocumentsComponent'"
+                                                    class="ml-6 mt-1 flex items-center gap-2 text-[11px] text-text-muted"
+                                                >
+                                                    <span>{{ $t('Upload settings') }}: {{ uploadSettingsSummary(component.upload_settings) || $t('No additional limits') }}</span>
+                                                    <button
+                                                        type="button"
+                                                        class="rounded-md px-1.5 py-0.5 ring-1 ring-inset ring-border hover:bg-surface-sunken"
+                                                        @click="openUploadSettings(component, true)"
+                                                    >
+                                                        {{ $t('Edit') }}
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <DropComponentInDisclosureComponentElement
@@ -268,6 +306,14 @@ function requestDeleteComponentInDisclosure(componentId) {
             </div>
         </div>
     </div>
+
+    <UploadSettingsModal
+        v-if="uploadSettingsPlacement"
+        :placement-id="uploadSettingsPlacement.id"
+        :in-folder="uploadSettingsPlacement.inFolder"
+        :initial-settings="uploadSettingsPlacement.settings"
+        @close="uploadSettingsPlacement = null"
+    />
 
     <!-- Edit Scope Modal -->
     <EditComponentScopeModal

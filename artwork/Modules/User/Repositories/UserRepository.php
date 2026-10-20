@@ -187,7 +187,7 @@ class UserRepository extends BaseRepository
     {
         return User::search($search)
             ->query(function ($query): void {
-                $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+                $query->excludeDeletedPlaceholder();
             })
             ->get()
             ->map(fn(User $user) => [
@@ -242,6 +242,8 @@ class UserRepository extends BaseRepository
     public function syncDepartments(User $user, array $departmentIds): User
     {
         $user->departments()->sync($departmentIds);
+        // Raumadmin über ein Team ändert den gecachten Anfragen-Status
+        User::forgetCachedShareDataForIds([$user->id]);
 
         return $user;
     }

@@ -15,6 +15,7 @@ use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Role\Models\Role;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -377,12 +378,22 @@ class UserService
      * Zeitraum bei "Zeitraum in allen Ansichten teilen" auf alle Ansichten.
      *
      * @param array<string, mixed> $resetAttributes weitere Filterspalten, die zurückgesetzt werden
+     * @param bool $planningCalendar Filter des Planungskalenders statt des Kalenders
      */
-    public function focusCalendarOnPeriod(User $user, Carbon $start, Carbon $end, array $resetAttributes = []): void
-    {
-        $filterType = $user->getAttribute('calendar_daily_view')
-            ? UserFilterTypes::CALENDAR_DAILY_FILTER
-            : UserFilterTypes::CALENDAR_FILTER;
+    public function focusCalendarOnPeriod(
+        User $user,
+        Carbon $start,
+        Carbon $end,
+        array $resetAttributes = [],
+        bool $planningCalendar = false,
+    ): void {
+        $isDailyView = (bool) $user->getAttribute('calendar_daily_view');
+        $filterType = match (true) {
+            $planningCalendar && $isDailyView => UserFilterTypes::PLANNING_DAILY_FILTER,
+            $planningCalendar => UserFilterTypes::PLANNING_FILTER,
+            $isDailyView => UserFilterTypes::CALENDAR_DAILY_FILTER,
+            default => UserFilterTypes::CALENDAR_FILTER,
+        };
 
         $startDate = $start->format('Y-m-d');
         $endDate = $end->format('Y-m-d');
@@ -566,6 +577,18 @@ class UserService
             $user,
             $notificationConstValue
         );
+    }
+
+    /**
+     * Ohne Admin-Konto ließen sich Rollen, Rechte und Tool-Einstellungen nicht mehr verwalten.
+     */
+    public function isLastAdmin(User $user): bool
+    {
+        if (!$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return false;
+        }
+
+        return User::role(RoleEnum::ARTWORK_ADMIN->value)->whereKeyNot($user->getKey())->doesntExist();
     }
 
     public function getAuthUserId(): int

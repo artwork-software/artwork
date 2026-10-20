@@ -27,10 +27,9 @@ class CanViewRoom
         ) {
             return $next($request);
         }
-        if ($room->users()->where('users.id', Auth::id())->first()) {
-            if ($room->users()->where('users.id', Auth::id())->first()->pivot->is_admin) {
-                return $next($request);
-            }
+        // Raumadmins – direkt oder über ein Team
+        if ($room->isAdministeredBy((int) Auth::id())) {
+            return $next($request);
         }
 
         return redirect()->back();

@@ -21,7 +21,6 @@
     "View planning calendar": "Planungskalender einsehen",
     "Menu \"Planning Calendar\"": "Menü „Planungskalender“",
     "Switch \"Show planned events\" in the calendar settings": "Schalter „Geplante Termine anzeigen“ in den Kalender-Einstellungen",
-    "Request verification of planned events": "Verifizierung geplanter Termine anfordern",
     "Module \"Planning calendar\" enabled": "Modul „Planungskalender“ aktiv",
     "Edit planned events": "Geplante Termine bearbeiten",
     "Action bar in the planning calendar": "Aktionsleiste im Planungskalender",
@@ -48,10 +47,11 @@
     "Room admins have the same rights within their own rooms without this permission. Direct booking of planned events requires \"Plan directly in the planning calendar\" separately.": "Raum-Admins haben in ihren eigenen Räumen dieselben Rechte auch ohne dieses Recht. Das direkte Buchen geplanter Termine braucht zusätzlich „Im Planungskalender fest planen“.",
     "See planned events in the planning calendar and in the calendar": "Geplante Termine im Planungskalender und im Kalender sehen",
     "Planned events are never room requests: creating them requires \"Plan directly in the planning calendar\". When the module \"Planning calendar\" is disabled, the planning calendar is closed for artwork admins as well.": "Geplante Termine sind nie Raumanfragen: Zum Anlegen braucht es „Im Planungskalender fest planen“. Ist das Modul „Planungskalender“ deaktiviert, ist der Planungskalender auch für artwork-Admins geschlossen.",
-    "Planned events can be created without \"Plan directly in the planning calendar\"; there is no verification step.": "Geplante Termine können ohne „Im Planungskalender fest planen“ angelegt werden; es gibt keine Verifizierung.",
     "Can create planned events in all rooms": "Kann geplante Termine in allen Räumen anlegen",
     "Button \"Save\" in the planned event dialog": "Schaltfläche „Speichern“ im Dialog für geplante Termine",
     "Only when creating – editing existing planned events needs \"Edit planned events\"": "Nur beim Anlegen – bestehende geplante Termine bearbeiten braucht „Geplante Termine bearbeiten“",
-    "Planned events are never room requests. Independent of \"Plan events directly\": calendar and planning calendar are permitted separately. Room admins create planned events in their own rooms without this permission.": "Geplante Termine sind nie Raumanfragen. Unabhängig von „Termine fest planen“: Kalender und Planungskalender werden getrennt berechtigt. Raumadmins legen geplante Termine in ihren eigenen Räumen auch ohne dieses Recht an.",
-    "Everyone who may see the planning calendar creates planned events directly.": "Alle, die den Planungskalender sehen dürfen, legen geplante Termine direkt an."
+    "Request and withdraw the verification of all planned events": "Verifizierung aller geplanten Termine anfordern und zurückziehen",
+    "Request and withdraw the verification of own planned events": "Verifizierung eigener geplanter Termine anfordern und zurückziehen",
+    "Planned events are never room requests. Independent of \"Plan events directly\": calendar and planning calendar are permitted separately. Room admins create planned events in their own rooms without this permission. Also applies when \"Events always bookable directly\" is enabled.": "Geplante Termine sind nie Raumanfragen. Unabhängig von „Termine fest planen“: Kalender und Planungskalender werden getrennt berechtigt. Raumadmins legen geplante Termine in ihren eigenen Räumen auch ohne dieses Recht an. Gilt auch bei aktivem „Termine immer direkt buchbar“.",
+    "The setting \"Events always bookable directly\" is active: there are no room requests and no event verification. Everyone who may create events books directly. Room-specific request settings and the permissions marked below have no effect until the setting is switched off. Creating planned events still requires \"Plan directly in the planning calendar\".": "Die Einstellung „Termine immer direkt buchbar“ ist aktiv: Es gibt keine Raumbelegungsanfragen und keine Terminverifizierung. Alle, die Termine anlegen dürfen, buchen direkt. Raumbezogene Anfrage-Einstellungen und die unten markierten Rechte sind ohne Wirkung, bis die Einstellung wieder ausgeschaltet wird. Geplante Termine anlegen braucht weiterhin „Im Planungskalender fest planen“."
 }

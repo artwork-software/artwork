@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Modules\Calendar;
 
+use Artwork\Core\Casts\TimeAgoCast;
 use Artwork\Modules\Calendar\DTO\BroadcastEventDTOWithVerifications;
 use Artwork\Modules\Calendar\DTO\EventDTOWithVerifications;
 use Artwork\Modules\Event\Models\Event;
@@ -49,6 +50,27 @@ final class EventVerificationsSerializationTest extends FeatureTestCase
     public function created_at_iso8601_returns_null_without_timestamp(): void
     {
         $this->assertNull((new EventVerification())->createdAtIso8601());
+    }
+
+    /**
+     * toArray() reicht created_at vor dem Cast als UTC-ISO-String durch – die Eingangsliste der Prüfenden
+     * (EventVerificationController::index) zeigte dadurch die UTC-Uhrzeit (07:30 statt 09:30).
+     */
+    #[Test]
+    public function serialized_translated_timestamp_shows_local_time(): void
+    {
+        $verification = $this->createRejectedVerification();
+
+        $this->assertSame($verification->created_at, $verification->toArray()['created_at']);
+        $this->assertStringContainsString('09:30', $verification->toArray()['created_at']);
+    }
+
+    #[Test]
+    public function time_ago_cast_keeps_missing_timestamps_empty(): void
+    {
+        $cast = new TimeAgoCast();
+
+        $this->assertNull($cast->get(new EventVerification(), 'created_at', null, []));
     }
 
     private function createRejectedVerification(): EventVerification

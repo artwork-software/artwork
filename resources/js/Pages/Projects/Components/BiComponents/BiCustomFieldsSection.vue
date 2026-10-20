@@ -43,12 +43,13 @@
                 <!-- DropDown -->
                 <div v-else-if="field.type === 'DropDown'">
                     <ArtworkBaseListbox
-                        :model-value="getSelectedValue(field.id)"
-                        @update:model-value="val => saveDropdown(field.id, val)"
+                        :model-value="getSelectedValue(field)"
+                        @update:model-value="val => saveDropdown(field, val)"
                         :items="getDropdownOptions(field)"
                         by="value"
                         option-label="value"
                         :label="field.name"
+                        :multiple="allowsMultipleSelection(field.type, field.data)"
                         :disabled="!canEdit"
                     />
                 </div>
@@ -65,6 +66,7 @@ import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import { useBiSaveFeedback, BI_REQUEST_CONFIG } from '@/Composeables/BiSaveFeedback.js';
+import { allowsMultipleSelection, selectedValues } from '@/Helper/ComponentSelection.js';
 
 const props = defineProps({
     fields: { type: Array, default: () => [] },
@@ -91,10 +93,13 @@ function getCheckedValue(fieldId) {
     return localValues[fieldId]?.checked ?? false;
 }
 
-function getSelectedValue(fieldId) {
-    const val = localValues[fieldId]?.selected;
-    if (!val) return null;
-    return { value: val };
+// Einzelauswahl: Option|null, Mehrfachauswahl: Option[]
+function getSelectedValue(field) {
+    const values = selectedValues(localValues[field.id]?.selected);
+    if (allowsMultipleSelection(field.type, field.data)) {
+        return values.map((value) => ({ value }));
+    }
+    return values.length ? { value: values[0] } : null;
 }
 
 function getDropdownOptions(field) {
@@ -111,10 +116,12 @@ async function saveCheckbox(fieldId, checked) {
     await saveValue(fieldId, { checked });
 }
 
-async function saveDropdown(fieldId, item) {
-    const value = item?.value ?? item;
-    localValues[fieldId] = { selected: value };
-    await saveValue(fieldId, { selected: value });
+async function saveDropdown(field, item) {
+    const value = Array.isArray(item)
+        ? item.map((entry) => entry?.value ?? entry)
+        : (item?.value ?? item);
+    localValues[field.id] = { selected: value };
+    await saveValue(field.id, { selected: value });
 }
 
 const biSave = useBiSaveFeedback();

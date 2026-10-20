@@ -9,6 +9,7 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
 use Artwork\Modules\Project\Services\ProjectComponentCrmContactService;
+use Artwork\Modules\Project\Services\ProjectCrmContactRoleService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class ProjectComponentCrmContactController extends Controller
 {
     public function __construct(
         private readonly ProjectComponentCrmContactService $service,
+        private readonly ProjectCrmContactRoleService $roleService,
     ) {
     }
 
@@ -42,7 +44,8 @@ class ProjectComponentCrmContactController extends Controller
     {
         $this->assertCrmContactList($component);
         $user = $this->user($request);
-        abort_unless($user->can('view', $project), 403);
+        // Wie jede Tab-Komponente: Projekt sehen UND die Komponente sehen dürfen
+        abort_unless($user->can('viewComponent', [$project, $component]), 403);
 
         $canWrite = $user->can('writeComponent', [$project, $component]);
         $visiblePropertyIds = $this->service->visiblePropertyIdsFor($user);
@@ -60,6 +63,10 @@ class ProjectComponentCrmContactController extends Controller
                 ->map(fn (CrmContactType $type) => $this->service->serializeContactType($type))
                 ->values(),
             'max_contacts' => $this->service->maxContacts($component),
+            // Rollen (Einstellung der Komponente) und die Sonderrolle „Künstler*in“
+            'roles_enabled' => $this->roleService->rolesEnabled($component),
+            'roles' => $this->roleService->roleList($project, $component),
+            'role_suggestions' => $canWrite ? $this->roleService->suggestions() : [],
             'can_write' => $canWrite,
             'can_link_existing' => $canWrite && $user->can(PermissionEnum::CRM_VIEW->value),
             'can_merge' => $user->can(PermissionEnum::CRM_MANAGER->value),
@@ -72,7 +79,12 @@ class ProjectComponentCrmContactController extends Controller
         $this->authorizeLinking($request, $project, $component);
 
         return response()->json(
-            $this->service->searchLinkable($project, $component, (string) $request->input('search', ''))
+            $this->service->searchLinkable(
+                $project,
+                $component,
+                (string) $request->input('search', ''),
+                $request->filled('contact_type_id') ? $request->integer('contact_type_id') : null,
+            )
                 ->map(fn (CrmContact $contact) => [
                     'id' => $contact->id,
                     'display_name' => $contact->display_name,
@@ -107,6 +119,7 @@ class ProjectComponentCrmContactController extends Controller
             'display_name' => ['required', 'string', 'max:255'],
             'property_values' => ['array'],
             'property_values.*' => ['nullable'],
+            ...$this->roleRules(),
         ]);
 
         $entry = $this->service->create(
@@ -116,6 +129,8 @@ class ProjectComponentCrmContactController extends Controller
             (string) $validated['display_name'],
             $validated['property_values'] ?? [],
             $user,
+            $validated['roles'] ?? null,
+            isset($validated['is_artist']) ? (bool) $validated['is_artist'] : null,
         );
 
         return response()->json(['contact' => $this->serialize($entry, $user)], 201);
@@ -128,6 +143,7 @@ class ProjectComponentCrmContactController extends Controller
 
         $validated = $request->validate([
             'crm_contact_id' => ['required', 'integer', 'exists:crm_contacts,id'],
+            ...$this->roleRules(),
         ]);
 
         $entry = $this->service->link(
@@ -135,6 +151,8 @@ class ProjectComponentCrmContactController extends Controller
             $component,
             CrmContact::query()->findOrFail($validated['crm_contact_id']),
             $this->user($request),
+            $validated['roles'] ?? null,
+            isset($validated['is_artist']) ? (bool) $validated['is_artist'] : null,
         );
 
         return response()->json(['contact' => $this->serialize($entry, $this->user($request))], 201);
@@ -181,6 +199,81 @@ class ProjectComponentCrmContactController extends Controller
         $this->service->remove($entry, $user);
 
         return response()->json(['message' => __('Contact removed.')]);
+    }
+
+    /**
+     * Rollen eines Kontakts in dieser Liste und Sonderrolle „Künstler*in“ setzen.
+     */
+    public function updateEntryRoles(
+        Request $request,
+        Project $project,
+        Component $component,
+        CrmContact $crmContact,
+    ): JsonResponse {
+        $this->assertCrmContactList($component);
+        $user = $this->user($request);
+        abort_unless($user->can('writeComponent', [$project, $component]), 403);
+
+        $validated = $request->validate($this->roleRules());
+        $entry = $this->service->findEntry($project, $component, $crmContact) ?? abort(404);
+        $this->roleService->assignToEntry(
+            $entry,
+            array_key_exists('roles', $validated) ? (array) ($validated['roles'] ?? []) : null,
+            isset($validated['is_artist']) ? (bool) $validated['is_artist'] : null,
+        );
+
+        return response()->json([
+            'contact' => $this->serialize($entry->refresh(), $user),
+            'roles' => $this->roleService->roleList($project, $component),
+        ]);
+    }
+
+    public function storeRole(Request $request, Project $project, Component $component): JsonResponse
+    {
+        $this->authorizeRoleChange($request, $project, $component);
+        $validated = $request->validate(['name' => ['required', 'string', 'max:' . ProjectCrmContactRoleService::MAX_ROLE_LENGTH]]);
+        $this->roleService->addRole($project, $component, (string) $validated['name']);
+
+        return response()->json(['roles' => $this->roleService->roleList($project, $component)]);
+    }
+
+    public function renameRole(Request $request, Project $project, Component $component): JsonResponse
+    {
+        $this->authorizeRoleChange($request, $project, $component);
+        $validated = $request->validate([
+            'name' => ['required', 'string'],
+            'new_name' => ['required', 'string', 'max:' . ProjectCrmContactRoleService::MAX_ROLE_LENGTH],
+        ]);
+        $this->roleService->renameRole($project, $component, (string) $validated['name'], (string) $validated['new_name']);
+
+        return response()->json(['roles' => $this->roleService->roleList($project, $component)]);
+    }
+
+    public function destroyRole(Request $request, Project $project, Component $component): JsonResponse
+    {
+        $this->authorizeRoleChange($request, $project, $component);
+        $validated = $request->validate(['name' => ['required', 'string']]);
+        $this->roleService->deleteRole($project, $component, (string) $validated['name']);
+
+        return response()->json(['roles' => $this->roleService->roleList($project, $component)]);
+    }
+
+    private function authorizeRoleChange(Request $request, Project $project, Component $component): void
+    {
+        $this->assertCrmContactList($component);
+        abort_unless($this->user($request)->can('writeComponent', [$project, $component]), 403);
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function roleRules(): array
+    {
+        return [
+            'roles' => ['sometimes', 'nullable', 'array'],
+            'roles.*' => ['string', 'max:' . ProjectCrmContactRoleService::MAX_ROLE_LENGTH],
+            'is_artist' => ['sometimes', 'nullable', 'boolean'],
+        ];
     }
 
     /**

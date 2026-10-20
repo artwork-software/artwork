@@ -2,8 +2,11 @@
 
 namespace Artwork\Modules\ExternalUserManagement\Service;
 
+use Artwork\Modules\ExternalUserManagement\Exceptions\ExternalIdentityDeletedException;
 use Artwork\Modules\ExternalUserManagement\Exceptions\IdentityLinkConflictException;
+use Artwork\Modules\ExternalUserManagement\Exceptions\UnverifiedExternalEmailException;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
+use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Repositories\UserRepository;
@@ -16,7 +19,9 @@ use Spatie\Permission\Models\Role;
  *
  *  1. Primär über auth_provider_id + Issuer.
  *  2. Erstverknüpfung über die E-Mail (bei OIDC nur mit verifiziertem Claim).
- *  3. Sonst Provisionierung eines IdP-gebundenen Accounts mit Default-Rolle.
+ *  3. Sonst Provisionierung eines IdP-gebundenen Accounts mit Default-Rolle – bei OIDC nur mit
+ *     verifizierter E-Mail oder wenn die Quelle den Adressen vertraut, und nie für Identitäten,
+ *     deren artwork-Konto gelöscht wurde.
  *
  * Der lokale Datensatz inkl. aller Relationen, Rollen und Berechtigungen bleibt
  * erhalten – der IdP ersetzt ausschließlich die Credential-Prüfung.
@@ -27,6 +32,7 @@ class IdentityResolutionService
         private readonly UserRepository $userRepository,
         private readonly AdminLockoutGuard $adminLockoutGuard,
         private readonly UserService $userService,
+        private readonly ExternalUserRepository $externalUserRepository,
     ) {
     }
 
@@ -62,7 +68,29 @@ class IdentityResolutionService
         }
 
         // 3. Provisionierung eines neuen, direkt IdP-gebundenen Accounts.
-        return $this->provision($source, $provider, $subjectId, $issuer, $email, $profile);
+        return $this->provision($source, $provider, $subjectId, $issuer, $email, $profile, $emailVerified);
+    }
+
+    private function assertMayProvision(
+        ExternalUserSource $source,
+        string $provider,
+        string $subjectId,
+        bool $emailVerified
+    ): void {
+        // Ohne verifizierte Adresse könnte ein fremder IdP-Account beliebige Adressen der
+        // erlaubten Domains behaupten.
+        if ($provider !== 'ldap' && !$emailVerified && !$source->trustsIdpEmail()) {
+            throw new UnverifiedExternalEmailException(
+                'Cannot provision an account from an unverified identity provider email.'
+            );
+        }
+
+        // In artwork gelöschte Personen legt weder Sync noch Login wieder an.
+        if ($this->externalUserRepository->identityBelongedToDeletedUser($source->id, $subjectId)) {
+            throw new ExternalIdentityDeletedException(
+                'The artwork account for this external identity was deleted.'
+            );
+        }
     }
 
     private function findByProviderIdentity(string $provider, string $subjectId, ?string $issuer): ?User
@@ -129,7 +157,8 @@ class IdentityResolutionService
         string $subjectId,
         ?string $issuer,
         ?string $email,
-        array $profile
+        array $profile,
+        bool $emailVerified
     ): User {
         if ($email === null || $email === '') {
             throw new \InvalidArgumentException('Cannot provision an external user without an email address');
@@ -143,6 +172,8 @@ class IdentityResolutionService
                 'Cannot link an external identity to an existing account without a verified email address.'
             );
         }
+
+        $this->assertMayProvision($source, $provider, $subjectId, $emailVerified);
 
         /** @var User $user */
         $user = $this->userRepository->getNewModelInstance();

@@ -329,6 +329,7 @@ class User extends Model implements
         'checklist_completed_tasks' => 'boolean',
         'checklist_show_without_tasks' => 'boolean',
         'is_developer' => 'boolean',
+        'is_deleted_placeholder' => 'boolean',
         'show_qualifications' => 'array',
         'sort_workers_by_qualification' => 'boolean',
         'closed_qualification_groups' => 'array',
@@ -350,8 +351,9 @@ class User extends Model implements
     ];
 
     /**
-     * Gehaltsfelder sind versteckt; legitime Ausgabe nur über UserShowResource (greift direkt auf das
-     * Attribut zu) hinter der Vertrags-Sichtprüfung.
+     * Gehalts-, Vertrags- und Zeitkontofelder sowie IdP-Kennungen sind versteckt: rohe User-Models
+     * landen in Suchen, Chats, Broadcasts und Verläufen. Legitime Ausgabe nur über Resources (z. B.
+     * UserShowResource, greift direkt auf das Attribut zu) hinter der jeweiligen Sichtprüfung.
      */
     protected $hidden = [
         'password',
@@ -361,13 +363,20 @@ class User extends Model implements
         'salary_per_hour',
         'salary_description',
         'weekly_working_hours',
+        'is_deleted_placeholder',
+        'work_time_balance',
+        'employStart',
+        'employEnd',
+        'temporary',
+        'auth_provider_id',
+        'ad_identifier',
+        'is_developer',
     ];
 
     protected $appends = [
         'profile_photo_url',
         'full_name',
         'type',
-        'formated_work_time_balance',
     ];
 
     /**
@@ -518,7 +527,18 @@ class User extends Model implements
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function calendar_settings(): HasOne
     {
-        return $this->hasOne(UserCalendarSettings::class);
+        return $this->hasOne(UserCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserCalendarSettings::SCOPE_CALENDAR]);
+    }
+
+    /**
+     * Anzeigeeinstellungen des Planungskalenders (eigene Zeile, unabhängig vom Kalender).
+     * @return HasOne<UserCalendarSettings, $this>
+     */
+    public function planningCalendarSettings(): HasOne
+    {
+        return $this->hasOne(UserCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserCalendarSettings::SCOPE_PLANNING]);
     }
 
     /**
@@ -528,7 +548,46 @@ class User extends Model implements
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function daily_view_calendar_settings(): HasOne
     {
-        return $this->hasOne(UserDailyViewCalendarSettings::class);
+        return $this->hasOne(UserDailyViewCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserDailyViewCalendarSettings::SCOPE_CALENDAR]);
+    }
+
+    /**
+     * Tagesansicht-Einstellungen des Planungskalenders.
+     * @return HasOne<UserDailyViewCalendarSettings, $this>
+     */
+    public function planningDailyViewCalendarSettings(): HasOne
+    {
+        return $this->hasOne(UserDailyViewCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserDailyViewCalendarSettings::SCOPE_PLANNING]);
+    }
+
+    /**
+     * Einstellungszeile der jeweiligen Kalenderansicht; fehlt sie (neues Konto), wird sie angelegt.
+     */
+    public function calendarSettingsFor(
+        bool $isPlanning,
+        bool $isDailyView
+    ): UserCalendarSettings|UserDailyViewCalendarSettings {
+        $relation = match (true) {
+            $isPlanning && $isDailyView => 'planningDailyViewCalendarSettings',
+            $isPlanning => 'planningCalendarSettings',
+            $isDailyView => 'daily_view_calendar_settings',
+            default => 'calendar_settings',
+        };
+
+        // Planungszeilen nicht als Relation cachen: auth.user würde sie sonst zusätzlich serialisieren
+        $settings = $isPlanning && !$this->relationLoaded($relation)
+            ? $this->{$relation}()->first()
+            : $this->getAttribute($relation);
+        if ($settings === null) {
+            $settings = $this->{$relation}()->create();
+            if (!$isPlanning) {
+                $this->setRelation($relation, $settings);
+            }
+        }
+
+        return $settings;
     }
 
     /**
@@ -875,8 +934,10 @@ class User extends Model implements
             'profile_photo_path' => $this->profile_photo_path,
             'position' => $this->position,
             'business' => $this->business,
-            'phone_number' => $this->phone_number,
-            'email' => $this->email,
+            // Als privat markierte Kontaktdaten nicht in den Suchindex: sonst ließe sich über die Suche
+            // prüfen, wem eine Adresse/Nummer gehört.
+            'phone_number' => $this->phone_private ? null : $this->phone_number,
+            'email' => $this->email_private ? null : $this->email,
             'use_chat' => $this->use_chat,
         ];
     }
@@ -1139,15 +1200,16 @@ class User extends Model implements
      */
     public function shouldBeSearchable(): bool
     {
-        return $this->email !== config('artwork.deleted_user_email', 'deleted-user@artwork.local');
+        return !$this->is_deleted_placeholder;
     }
 
     /**
-     * Convenience scope to hide the placeholder user in queries
+     * Convenience scope to hide the placeholder user in queries. Über das Flag, nie über die E-Mail:
+     * eine Adresse kann sich jedes Konto selbst geben.
      */
     public function scopeExcludeDeletedPlaceholder(Builder $builder): Builder
     {
-        return $builder->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+        return $builder->where($builder->qualifyColumn('is_deleted_placeholder'), false);
     }
 
     /**

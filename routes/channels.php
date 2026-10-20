@@ -1,6 +1,7 @@
 <?php
 
 use Artwork\Modules\Chat\Models\Chat;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
@@ -28,6 +29,9 @@ $canViewShiftPlan = static fn ($user): bool => $user instanceof User
         $user->can(PermissionEnum::VIEW_SHIFT_PLAN->value)
         || $user->can(PermissionEnum::SHIFT_PLANNER->value)
     );
+
+// Planungstermine: nur mit Planungskalender-Recht (EventPolicy::viewPlanning, Admins via Gate::before)
+$canViewPlanning = static fn ($user): bool => $user instanceof User && $user->can('viewPlanning', Event::class);
 
 // Reload-Signale ohne Payload (OccupancyUpdated, PushesEventModification: roomId + Datumsbereich)
 Broadcast::channel('events', function () {
@@ -101,9 +105,15 @@ Broadcast::channel('shift-plan.worker-availability', function () {
     return Auth::check();
 });
 
-// BulkEventChanged: Termin-Payload der Bulk-Bearbeitung (kein Personen-/Gehaltsbezug)
+// BulkEventChanged: Termin-Payload der Bulk-Bearbeitung (kein Personen-/Gehaltsbezug); geplante Termine nur als
+// Hinweis ohne Inhalt (SplitsPlanningBroadcast)
 Broadcast::channel('bulk.events', function () {
     return Auth::check();
+});
+
+// BulkEventChanged geplanter Termine mit vollständiger Nutzlast
+Broadcast::channel('bulk.events.planning', function ($user) use ($canViewPlanning) {
+    return $canViewPlanning($user);
 });
 
 // Online-Status (UserStatusUpdated: userId + status; UserWentOffline: user_id)
@@ -117,8 +127,15 @@ Broadcast::channel('user-status', function () {
 
 // Termin-DTOs. Der Kalender steht jedem angemeldeten Nutzer offen und eine raumbezogene Sichtbarkeit
 // gibt es nicht (RoomPolicy::view ist das Verwaltungsrecht): Auth::check() plus Existenz des Raums.
+// Geplante Termine gehen hier nur als Hinweis ohne Inhalt raus (SplitsPlanningBroadcast).
 Broadcast::channel('event.room.{roomId}', function ($user, $roomId) {
     return $user instanceof User
+        && Room::query()->whereKey((int) $roomId)->exists();
+});
+
+// Geplante Termine mit vollständiger Nutzlast: nur mit Planungskalender-Recht
+Broadcast::channel('event.planning.room.{roomId}', function ($user, $roomId) use ($canViewPlanning) {
+    return $canViewPlanning($user)
         && Room::query()->whereKey((int) $roomId)->exists();
 });
 

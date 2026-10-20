@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Invitation\Http\Requests;
 
 use App\Actions\Fortify\PasswordValidationRules;
+use Artwork\Core\Validation\Rules\NotReservedUserEmail;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\User\Http\Requests\UserCreateRequest;
 use Illuminate\Support\Facades\Hash;
@@ -28,7 +29,15 @@ class AcceptInvitationRequest extends UserCreateRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users', 'exists:invitations'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:users',
+                'exists:invitations',
+                new NotReservedUserEmail(),
+            ],
             'password' => $this->passwordRules(),
             'password_confirmation' => ['required', 'string', 'same:password'],
             'phone_number' => ['nullable', 'string', 'max:30'],

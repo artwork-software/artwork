@@ -23,6 +23,7 @@ use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class ShiftCalendarService
 {
@@ -89,10 +90,13 @@ class ShiftCalendarService
                 'user_id',
                 'occupancy_option',
                 'declined_room_id',
+                'is_planning',
             ])
             ->withExists('timelines')
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
+            // Geplante Termine nur mit Planungskalender-Recht – vorher sah sie jede Person mit Dienstplan-Sichtrecht
+            ->visiblePlanningFor(Auth::user())
             // "Projektfremde Termine anzeigen": Projektfilter aussetzen, es zählt nur Raum + Zeitraum
             ->when($project !== null && !$showUnrelatedEvents, fn ($q) => $q->where('project_id', $project->id))
             ->when(!empty($filter->event_type_ids), fn ($q) => $q->whereIn('event_type_id', $filter->event_type_ids))
@@ -103,6 +107,8 @@ class ShiftCalendarService
                 $q->whereHas('eventProperties', fn ($p) => $p->whereIn('event_properties.id', $ids));
                 // Achtung: Table-Name event_properties ist Standard. Falls bei euch anders: anpassen.
             })
+            // Projektstatus-Filter wie im Kalender – vorher galt er nur für „Räume ohne Belegung ausblenden"
+            ->when(!empty($filter->project_state_ids), fn ($q) => $q->byProjectStateIds($filter->project_state_ids))
             ->where(fn ($q) => $overlap($q, 'start_time', 'end_time'))
             ->orderBy('start_time')
             ->get();
@@ -194,6 +200,7 @@ class ShiftCalendarService
         $projectSelect = ['id','name','state','is_group','icon','color'];
         if ($withArtists) {
             $projectSelect[] = 'artists';
+            $projectSelect[] = 'linked_artists';
         }
 
         $projectWith = [
@@ -381,7 +388,9 @@ class ShiftCalendarService
                 'name' => $statusModel->name,
                 'color' => $statusModel->color,
             ] : null,
-            'artistNames' => $project->artists ?? null,
+            // Freitext plus verknüpfte CRM-Künstler*innen; linkedArtists für die Infokarte
+            'artistNames' => ($artistText = $project->artistDisplayText()) !== '' ? $artistText : null,
+            'linkedArtists' => $project->linked_artists,
             // Bewusst ohne E-Mail: Kontaktdaten (inkl. Privacy-Flags) lädt das
             // UserPopoverTooltip lazy über user.tooltip.info nach.
             'leaders' => $project->relationLoaded('managerUsers')

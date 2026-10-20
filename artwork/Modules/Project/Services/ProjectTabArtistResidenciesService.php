@@ -36,6 +36,7 @@ class ProjectTabArtistResidenciesService
                         'name' => $p->name,
                         'type' => $p->type->value,
                         'select_values' => $p->select_values,
+                        'multiselect_display' => $p->multiselect_display,
                         'group_name' => $p->group->name,
                         'is_required' => (bool) $p->pivot->is_required,
                         'sort_order' => $p->pivot->sort_order,

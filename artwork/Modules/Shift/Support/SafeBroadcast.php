@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Support;
 
+use Artwork\Modules\Event\Events\Concerns\HasPlanningCompanionBroadcast;
 use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Support\Facades\DB;
 use Psr\Http\Client\NetworkExceptionInterface;
@@ -52,6 +53,11 @@ final class SafeBroadcast
         // Ohne offene Transaktion führt afterCommit den Callback sofort aus
         DB::afterCommit(static function () use ($event): void {
             self::dispatch($event);
+            // Geplante Termine: vollständige Nutzlast nur auf dem Planungskanal (SplitsPlanningBroadcast)
+            $companion = $event instanceof HasPlanningCompanionBroadcast ? $event->planningCompanion() : null;
+            if ($companion !== null) {
+                self::dispatch($companion);
+            }
         });
     }
 

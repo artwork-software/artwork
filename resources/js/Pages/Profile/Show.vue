@@ -391,11 +391,9 @@ export default defineComponent({
     },
     methods: {
         password_feedback() {
-            axios.get('/password_feedback', {
-                params: {
-                    password: this.passwordForm.password
-                }
-            }).then(response => {
+            axios.post('/password_feedback', {
+                password: this.passwordForm.password
+            }, {skipErrorToast: true}).then(response => {
                 this.pw_feedback = response.data
             })
         },

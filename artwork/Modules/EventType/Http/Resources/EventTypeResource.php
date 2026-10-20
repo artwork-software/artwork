@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\EventType\Http\Resources;
 
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * @mixin \Artwork\Modules\EventType\Models\EventType
@@ -38,7 +40,7 @@ class EventTypeResource extends JsonResource
                     'last_name' => $user->last_name,
                     'full_name' => $user->full_name,
                     'name' => $user->full_name,
-                    'email' => $user->email,
+                    'email' => $user instanceof User ? $user->visibleEmailFor(Auth::user()) : ($user->email ?? null),
                     'profile_photo_url' => $user->profile_photo_url,
                 ];
             }),

@@ -59,14 +59,22 @@ class GlobalNotificationController extends Controller
         UpdateGlobalNotificationRequest $request
     ): RedirectResponse {
         $image = $request->file('notificationImage');
+        $notificationImage = (string) $globalNotification->getAttribute('image_name');
 
-        $fileUrl = ($fileUrl = $request->string('notificationImage'))->contains(['https://', 'http://']) ?
-            substr($fileUrl, strpos($fileUrl, 'notificationImage')) :
-            ($image instanceof UploadedFile
+        // Ein mitgeschickter URL-String heißt „Bild unverändert“. Er darf nur auf das gespeicherte Bild
+        // zeigen – sonst ließe sich mit ../ ein beliebiger Pfad auf der public-Disk eintragen und beim
+        // nächsten Speichern löschen.
+        $sentUrl = $request->string('notificationImage');
+        if ($sentUrl->contains(['https://', 'http://'])) {
+            $sentPath = substr($sentUrl, strpos($sentUrl, 'notificationImage'));
+            $fileUrl = $sentPath === $notificationImage ? $notificationImage : '';
+        } else {
+            $fileUrl = $image instanceof UploadedFile
                 ? $image->storeAs('notificationImage', StoredFileName::forUpload($image), ['disk' => 'public'])
-                : '');
+                : '';
+        }
 
-        if ($fileUrl !== ($notificationImage = $globalNotification->getAttribute('image_name'))) {
+        if ($fileUrl !== $notificationImage && $this->isOwnNotificationImage($notificationImage)) {
             $publicDisk = $this->filesystemManager->disk('public');
             if ($publicDisk->exists($notificationImage)) {
                 $publicDisk->delete($notificationImage);
@@ -87,6 +95,11 @@ class GlobalNotificationController extends Controller
         );
 
         return $this->redirector->back();
+    }
+
+    private function isOwnNotificationImage(string $path): bool
+    {
+        return str_starts_with($path, 'notificationImage/') && !str_contains($path, '..');
     }
 
     public function destroy(GlobalNotification $globalNotification): RedirectResponse

@@ -245,7 +245,7 @@ const currentSideBarTab = ref(0);
  */
 const TOOL_COMPONENT_TYPES = ['CalendarTab', 'ShiftTab', 'BudgetTab', 'BulkBody', 'TicketingTab'];
 const PROSE_COMPONENT_TYPES = [
-    'TextField', 'TextArea', 'Title', 'Checkbox', 'DropDown', 'Link', 'LinkList',
+    'TextField', 'TextArea', 'Title', 'Checkbox', 'DropDown', 'CheckboxList', 'Link', 'LinkList',
     'ProjectStateComponent', 'ProjectBudgetDeadlineComponent', 'ArtistNameDisplayComponent',
     'ProjectBasicDataDisplayComponent', 'ProjectCostCenterDisplayComponent', 'ProjectAttributesComponent',
     'CrmContactListComponent',

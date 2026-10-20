@@ -71,7 +71,13 @@ class AppProjectTeamController extends Controller
             'This user is already part of the project team.',
         );
 
-        $pivot = $request->pivot();
+        $pivot = ProjectTeamService::withManagerWriteRight($this->projectTeamService->restrictPrivilegedRights(
+            $project,
+            $request->user(),
+            $userId,
+            $request->pivot(),
+            null
+        ));
         $this->projectTeamService->applyRosterChange(
             $project,
             static fn (Project $project) => $project->users()->attach($userId, $pivot),
@@ -86,7 +92,13 @@ class AppProjectTeamController extends Controller
 
         // Partial PATCH: rights the app does not send keep their current value
         $current = $project->users()->whereKey($user->id)->firstOrFail()->pivot;
-        $pivot = $request->pivot($current);
+        $pivot = ProjectTeamService::withManagerWriteRight($this->projectTeamService->restrictPrivilegedRights(
+            $project,
+            $request->user(),
+            $user->id,
+            $request->pivot($current),
+            $current
+        ));
         $this->projectTeamService->applyRosterChange(
             $project,
             static fn (Project $project) => $project->users()->updateExistingPivot($user->id, $pivot),

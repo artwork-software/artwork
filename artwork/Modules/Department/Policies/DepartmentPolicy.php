@@ -14,6 +14,9 @@ class DepartmentPolicy
     public const ROOM_ADMIN_TEAM_LOCKED_MESSAGE =
         'Members of teams with room admin access can only be changed by people who may edit rooms.';
 
+    public const OWN_TEAMS_LOCKED_MESSAGE =
+        'Your own team membership can only be changed by another person with team management rights.';
+
 
     public function viewAny(User $user): bool
     {

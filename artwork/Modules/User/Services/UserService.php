@@ -15,6 +15,7 @@ use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Role\Models\Role;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -576,6 +577,18 @@ class UserService
             $user,
             $notificationConstValue
         );
+    }
+
+    /**
+     * Ohne Admin-Konto ließen sich Rollen, Rechte und Tool-Einstellungen nicht mehr verwalten.
+     */
+    public function isLastAdmin(User $user): bool
+    {
+        if (!$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return false;
+        }
+
+        return User::role(RoleEnum::ARTWORK_ADMIN->value)->whereKeyNot($user->getKey())->doesntExist();
     }
 
     public function getAuthUserId(): int

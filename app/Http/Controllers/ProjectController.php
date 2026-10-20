@@ -3759,14 +3759,31 @@ class ProjectController extends Controller
         // only persist role ids that actually exist; anything else would linger
         // in the project_user.roles JSON forever (role deletion can't clean it up)
         $validRoleIds = ProjectRole::pluck('id');
+        $actor = $request->user();
+        $currentPivots = $project->users()->get()->mapWithKeys(
+            static fn (User $member): array => [$member->id => $member->pivot]
+        );
         $assignedUsers = collect($request->assigned_user_ids)->map(
-            static function ($pivotData) use ($validRoleIds) {
+            static function ($pivotData, $memberId) use (
+                $validRoleIds,
+                $project,
+                $actor,
+                $currentPivots,
+                $projectTeamService
+            ) {
                 // plain user id without pivot attributes — leave untouched
                 if (!is_array($pivotData)) {
                     return $pivotData;
                 }
 
                 $pivotData['roles'] = $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all();
+                $pivotData = $projectTeamService->restrictPrivilegedRights(
+                    $project,
+                    $actor,
+                    (int) $memberId,
+                    $pivotData,
+                    $currentPivots->get((int) $memberId)
+                );
 
                 return ProjectTeamService::withManagerWriteRight($pivotData);
             }

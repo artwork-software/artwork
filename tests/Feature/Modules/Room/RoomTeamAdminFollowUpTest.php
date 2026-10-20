@@ -88,7 +88,9 @@ final class RoomTeamAdminFollowUpTest extends FeatureTestCase
     #[Test]
     public function team_managers_still_manage_teams_without_room_admin_access(): void
     {
-        $teamManager = $this->actingAsUserWith([PermissionEnum::TEAM_UPDATE]);
+        $this->actingAsUserWith([PermissionEnum::TEAM_UPDATE]);
+        // Die eigene Teamzugehörigkeit ändert nur eine andere Person (Audit 20.10.2026, M5)
+        $member = User::factory()->create();
         $team = Department::factory()->create();
         $room = Room::factory()->create();
         $room->departments()->attach($team->id, ['is_admin' => false, 'can_request' => true]);
@@ -96,10 +98,10 @@ final class RoomTeamAdminFollowUpTest extends FeatureTestCase
         $this->patch(route('departments.edit', $team), [
             'name' => $team->name,
             'svg_name' => $team->svg_name,
-            'users' => [['id' => $teamManager->id]],
+            'users' => [['id' => $member->id]],
         ])->assertRedirect()->assertSessionMissing('error');
 
-        $this->assertSame([$teamManager->id], $team->users()->pluck('users.id')->all());
+        $this->assertSame([$member->id], $team->users()->pluck('users.id')->all());
     }
 
     #[Test]
@@ -140,23 +142,26 @@ final class RoomTeamAdminFollowUpTest extends FeatureTestCase
     #[Test]
     public function the_profile_keeps_admin_team_memberships_for_people_without_room_rights(): void
     {
-        $teamManager = $this->actingAsUserWith([PermissionEnum::TEAM_UPDATE]);
+        // Fremde Profile bearbeiten setzt „Mitarbeitende verwalten“ voraus; die eigene
+        // Teamzugehörigkeit ändert nur eine andere Person (Audit 20.10.2026, M5).
+        $this->actingAsUserWith([PermissionEnum::TEAM_UPDATE, PermissionEnum::MA_MANAGER]);
+        $member = User::factory()->create();
         $room = Room::factory()->create();
         $adminTeam = Department::factory()->create();
         $room->departments()->attach($adminTeam->id, ['is_admin' => true, 'can_request' => false]);
         $plainTeam = Department::factory()->create();
 
-        $this->patch(route('user.update', $teamManager), [
-            'first_name' => $teamManager->first_name,
-            'last_name' => $teamManager->last_name,
+        $this->patch(route('user.update', $member), [
+            'first_name' => $member->first_name,
+            'last_name' => $member->last_name,
             'departments' => [['id' => $adminTeam->id], ['id' => $plainTeam->id]],
         ])->assertRedirect()->assertSessionHas('error');
 
         $this->assertEqualsCanonicalizing(
             [$plainTeam->id],
-            $teamManager->departments()->pluck('departments.id')->all()
+            $member->departments()->pluck('departments.id')->all()
         );
-        $this->assertFalse($room->isAdministeredBy($teamManager));
+        $this->assertFalse($room->isAdministeredBy($member));
     }
 
     #[Test]

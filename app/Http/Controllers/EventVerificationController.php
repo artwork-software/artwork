@@ -253,7 +253,16 @@ class EventVerificationController extends Controller
             return;
         }
 
-        $this->eventVerificationService->approveVerification($eventVerification);
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $isOwnVerification = $eventVerification->verifier_type === User::class
+            && (int) $eventVerification->verifier_id === $user->id;
+        // Admins genehmigen fremde Prüfungen direkt: der Termin wird fest, auch im Modus "alle"
+        if (!$isOwnVerification && $eventVerification->event->is_planning) {
+            $this->eventVerificationService->approveAsAdmin($eventVerification->event, $user);
+        } else {
+            $this->eventVerificationService->approveVerification($eventVerification);
+        }
         $event = $eventVerification->event->fresh();
         SafeBroadcast::send(new EventCreated($event, $event->room_id));
     }
@@ -333,8 +342,42 @@ class EventVerificationController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $this->eventVerificationService->approveVerificationByEvent($event, $user);
+        $this->approveFor($event, $user);
         SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
+    }
+
+    /**
+     * "Genehmigen" im Planungskalender (Kachel und Mehrfachauswahl):
+     * - Admins übernehmen geplante Termine direkt fest, mit oder ohne offene Prüfrunde (Entscheidung 20.10.2026)
+     * - Prüfende beantworten ihre eigene offene Prüfung
+     * - wer den Termin anfragen darf und ihn dabei sofort genehmigen würde (festgelegte Prüfperson, Modus
+     *   "eine Person", Terminart ohne Prüfung), genehmigt ihn auch ohne vorherige Anfrage
+     *
+     * @return bool false, wenn die Person den Termin nicht genehmigen darf oder es nichts zu genehmigen gibt
+     */
+    private function approveFor(Event $event, User $user): bool
+    {
+        if ($event->is_planning && $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            $this->eventVerificationService->approveAsAdmin($event, $user);
+
+            return true;
+        }
+
+        if ($this->eventVerificationService->approveVerificationByEvent($event, $user)) {
+            return true;
+        }
+
+        if (
+            !$this->mayManageVerification($event, $user)
+            || !$this->eventVerificationService->canRequestVerification($event)
+            || !$this->eventVerificationService->approvesOnRequest($event, $user)
+        ) {
+            return false;
+        }
+
+        $this->eventVerificationService->requestVerification($event, $user);
+
+        return true;
     }
 
     public function rejectByEvent(Event $event, Request $request): void
@@ -367,13 +410,13 @@ class EventVerificationController extends Controller
 
         $this->answerVerificationsInBulk(
             $this->validatedEvents($request),
-            fn (Event $event): bool => $this->eventVerificationService->approveVerificationByEvent($event, $user),
+            fn (Event $event): bool => $this->approveFor($event, $user),
         );
     }
 
     /**
-     * Beantwortet nur Termine mit eigener offener Prüfung. Den Rest der Auswahl (andere Terminart, schon
-     * abgeschlossene Prüfung) übersprang der Server früher stumm – jetzt mit Hinweis.
+     * Beantwortet nur Termine, die die Person beantworten darf (eigene offene Prüfung, beim Genehmigen siehe
+     * approveFor). Den Rest der Auswahl übersprang der Server früher stumm – jetzt mit Hinweis.
      *
      * @param \Illuminate\Support\Collection<int, Event> $events
      * @param callable(Event): bool $answer

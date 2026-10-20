@@ -245,16 +245,16 @@
                          Personen mit "Im Planungskalender fest planen" bzw. Raumadmins in ihren Räumen) – "einsehen"
                          allein reicht nicht; fremde Termine der Auswahl überspringt der Server mit Hinweis -->
                     <FormButton
-                        v-if="showBulkVerificationRequest"
+                        v-if="showBulkVerificationRequest && !requestOnlyApproves"
                         :disabled="checkedCount === 0"
                         @click="requestVerification"
                         :text="(directBookingOnly ? $t('Confirm as fixed events') : $t('request verification')) + ' (' + checkedCount + ')'"
                         class="transition-all duration-300 ease-in-out pointer-events-auto"
                     />
-                    <!-- Genehmigen/Ablehnen wirkt nur auf eigene offene Prüfungen (approve/reject-by-event) –
-                         daher nur, wenn die Auswahl einen Termin enthält, den die Person prüfen darf -->
+                    <!-- Genehmigen: eigene offene Prüfungen, Admins jeden geplanten Termin, alleinige Prüfende auch ohne
+                         Anfrage (EventVerificationController::approveFor). Ablehnen nur eigene offene Prüfungen. -->
                     <FormButton
-                        v-if="showBulkVerificationAnswer"
+                        v-if="showBulkApprove"
                         :disabled="checkedCount === 0"
                         @click="approveRequests"
                         :text="$t('Approve') + ' (' + checkedCount + ')'"
@@ -427,7 +427,12 @@ import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendar
 import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import {can} from "laravel-permission-to-vuejs";
-import {canAnswerVerificationInBulk, canRequestVerificationInBulk} from "@/Helper/verificationRights.js";
+import {
+    canAnswerVerificationInBulk,
+    canApproveInBulk,
+    canRequestVerificationInBulk,
+    requestOnlyApprovesSelection,
+} from "@/Helper/verificationRights.js";
 import {mayAnswerRoomRequestIn as mayAnswerRoomRequestInRoom} from "@/Helper/roomAdminRights.js";
 import ConvertToPlanningModal from "@/Components/Modals/ConvertToPlanningModal.vue";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
@@ -1338,9 +1343,31 @@ const showBulkVerificationRequest = computed(() => canRequestVerificationInBulk(
     selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
 }));
 
-// Sammel-"Genehmigen/Ablehnen" nur mit mindestens einem prüfbaren Termin in der Auswahl
+// Sammel-"Ablehnen" nur mit mindestens einem prüfbaren Termin in der Auswahl
 const showBulkVerificationAnswer = computed(() => !directBookingOnly.value && canAnswerVerificationInBulk({
     verifierForEventTypIds: props.verifierForEventTypIds,
+    selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
+}));
+
+// Terminarten, deren Anfrage die Person sofort genehmigt (festgelegte Prüfperson, Modus "eine Person", ohne Prüfung)
+const approvedOnRequestEventTypeIds = computed(() => usePage().props.approvedOnRequestEventTypeIds ?? []);
+
+// Sammel-"Genehmigen": auch Admins (jeder geplante Termin) und alleinige Prüfende ohne vorherige Anfrage
+const showBulkApprove = computed(() => !directBookingOnly.value && canApproveInBulk({
+    isAdmin: isAdmin.value,
+    canEditPlanning: can('can edit planning calendar'),
+    userId: user.value?.id,
+    verifierForEventTypIds: props.verifierForEventTypIds,
+    approvedOnRequestEventTypeIds: approvedOnRequestEventTypeIds.value,
+    selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
+}));
+
+// "Prüfung anfragen" würde für die ganze Auswahl nur sofort genehmigen → stattdessen nur "Genehmigen" zeigen
+const requestOnlyApproves = computed(() => !directBookingOnly.value && requestOnlyApprovesSelection({
+    isAdmin: isAdmin.value,
+    canEditPlanning: can('can edit planning calendar'),
+    userId: user.value?.id,
+    approvedOnRequestEventTypeIds: approvedOnRequestEventTypeIds.value,
     selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
 }));
 

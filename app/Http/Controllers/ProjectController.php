@@ -5204,6 +5204,23 @@ class ProjectController extends Controller
             ->all();
     }
 
+    /**
+     * Gruppen, denen ein Projekt angehört (nur id und Name). Das Termin-Modal zeigt sie
+     * neben dem Projektnamen an — offen wie die Projektsuche, die Namen ebenso liefert.
+     *
+     * @return array<int, array{id: int, name: string}>
+     */
+    public function projectGroupNames(Project $project): array
+    {
+        return $project->groups()
+            ->setEagerLoads([])
+            ->orderBy('projects.name')
+            ->get(['projects.id', 'projects.name'])
+            ->map(fn (Project $group): array => ['id' => (int) $group->id, 'name' => (string) $group->name])
+            ->values()
+            ->all();
+    }
+
     public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void
     {
         $this->authorizeTimelineEdit($timeline->event);

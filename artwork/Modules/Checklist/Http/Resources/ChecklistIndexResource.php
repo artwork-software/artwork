@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Checklist\Http\Resources;
 
 use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,12 +15,9 @@ class ChecklistIndexResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * Personen zeigen die Checklisten nur als Avatar mit Tooltip (Kontaktdaten lädt der Tooltip per
-     * lazy-load nach) und vergleichen IDs — volle User-Modelle wären ein Vielfaches des Payloads.
-     */
-    private const PERSON_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
-
-    /**
+     * Personen erscheinen nur als Avatar mit Tooltip (User::AVATAR_FIELDS); verglichen werden IDs —
+     * volle User-Modelle wären ein Vielfaches des Payloads.
+     *
      * @return array<string, mixed>
      */
     public function toArray($request): array
@@ -30,7 +28,7 @@ class ChecklistIndexResource extends JsonResource
             'name' => $this->name,
             'private' => $this->private,
             'showContent' => true,
-            'users' => $this->users->each->setVisible(self::PERSON_FIELDS),
+            'users' => $this->users->each->setVisible(User::AVATAR_FIELDS),
             'user_id' => $this->user_id,
             'hasProject' => $this->project_id !== null,
             'project' => $this->project ? [
@@ -53,11 +51,11 @@ class ChecklistIndexResource extends JsonResource
                         Carbon::parse($task->deadline)->toDateTimeLocalString() : null,
                     'order' => $task->order,
                     'done' => $task->done,
-                    'done_by_user' => $task->user_who_done?->setVisible(self::PERSON_FIELDS),
+                    'done_by_user' => $task->user_who_done?->setVisible(User::AVATAR_FIELDS),
                     'done_at' => $task->done_at ? Carbon::parse($task->done_at)->format('d.m.Y, H:i') : null,
                     'done_at_dt_local' => $task->done_at ?
                         Carbon::parse($task->done_at)->toDateTimeLocalString() : null,
-                    'users' => $task->task_users->each->setVisible(self::PERSON_FIELDS),
+                    'users' => $task->task_users->each->setVisible(User::AVATAR_FIELDS),
                     'formatted_dates' => $task->getFormattedDates(),
                 ];
             }),

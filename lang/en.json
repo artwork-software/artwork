@@ -9310,5 +9310,10 @@
     "The last admin cannot lose the admin role.": "The last admin cannot lose the admin role.",
     "The guest list and revenue are only visible to people who can see the ticketing component.": "The guest list and revenue are only visible to people who can see the ticketing component.",
     "The selected color is invalid.": "The selected color is invalid.",
-    "The selected icon is invalid.": "The selected icon is invalid."
+    "The selected icon is invalid.": "The selected icon is invalid.",
+    "All shifts are hidden": "All shifts are hidden",
+    "There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.": "There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.",
+    "A filter is active — shifts outside the filter are not shown.": "A filter is active — shifts outside the filter are not shown.",
+    "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.": "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.",
+    "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.": "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden."
 }

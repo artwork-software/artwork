@@ -221,6 +221,14 @@ class User extends Model implements
     use HasCrmFields;
     use DeletesMirroredCrmContact;
 
+    /**
+     * Felder einer Person, die nur als Avatar mit Namens-Tooltip erscheint
+     * (Kontaktdaten lädt der Tooltip bei Bedarf nach).
+     *
+     * @var list<string>
+     */
+    public const AVATAR_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
+
     // All permissions/roles live on the web guard. Without this pin, spatie
     // resolves the guard from auth.defaults.guard, which Authenticate/shouldUse
     // switches to 'api' for Passport requests (app API) — every permission

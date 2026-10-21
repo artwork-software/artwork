@@ -15,6 +15,7 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
+use Artwork\Modules\User\Models\User;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -106,9 +107,9 @@ class InternalIssueController extends Controller
 
         $issues = $issuesQuery->paginate($entitiesPerPage)->withQueryString();
         // Verantwortliche nur als Avatar + Tooltip (Kontaktdaten lädt der Tooltip per lazy-load nach)
-        $issues->getCollection()->each(fn (InternalIssue $issue) => $issue->responsibleUsers->each->setVisible(
-            ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']
-        ));
+        $issues->getCollection()->each(
+            fn (InternalIssue $issue) => $issue->responsibleUsers->each->setVisible(User::AVATAR_FIELDS)
+        );
 
         $articlesInFilter = !empty($articleIds)
             ? InventoryArticle::whereIn('id', $articleIds)->get()

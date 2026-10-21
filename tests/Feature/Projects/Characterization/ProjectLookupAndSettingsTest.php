@@ -70,6 +70,44 @@ final class ProjectLookupAndSettingsTest extends FeatureTestCase
     }
 
     #[Test]
+    public function group_names_lists_groups_of_project_sorted_by_name(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+        $groupZeta = Project::factory()->create(['name' => 'Zeta-Festival', 'is_group' => true]);
+        $groupAlpha = Project::factory()->create(['name' => 'Alpha-Reihe', 'is_group' => true]);
+        $trashedGroup = Project::factory()->create(['name' => 'Alte Gruppe', 'is_group' => true]);
+        foreach ([$groupZeta, $groupAlpha, $trashedGroup] as $group) {
+            $group->projectsOfGroup()->attach($project->id);
+        }
+        $trashedGroup->delete();
+
+        $this->getJson(route('project.groupNames', $project))
+            ->assertOk()
+            ->assertExactJson([
+                ['id' => $groupAlpha->id, 'name' => 'Alpha-Reihe'],
+                ['id' => $groupZeta->id, 'name' => 'Zeta-Festival'],
+            ]);
+    }
+
+    #[Test]
+    public function group_names_of_project_without_group_is_empty(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+
+        $this->getJson(route('project.groupNames', $project))->assertOk()->assertExactJson([]);
+    }
+
+    #[Test]
+    public function group_names_requires_login(): void
+    {
+        $project = Project::factory()->create();
+
+        $this->getJson(route('project.groupNames', $project))->assertUnauthorized();
+    }
+
+    #[Test]
     public function scout_search_without_term_returns_empty_list(): void
     {
         $this->actingAs(User::factory()->create());

@@ -356,15 +356,18 @@
                 </div>
             </section>
 
-            <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten) -->
+            <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten / alle weggefiltert) -->
             <ShiftPlanEmptyState
                 v-if="dailyPlanLoaded && !emptyStateDismissed"
                 :rooms-count="shiftPlanCopy.length"
                 :crafts-count="craftsResolved?.length ?? 0"
                 :functions-count="shiftQualificationsArray?.length ?? 0"
                 :has-shifts="dailyPlanHasShifts"
+                :has-visible-shifts="dailyPlanHasVisibleShifts"
                 :filters-active="dailyFiltersActive"
                 :hide-unoccupied-rooms="hideUnoccupiedRooms"
+                :only-not-fully-staffed="dailyOnlyNotFullyStaffed"
+                :hide-unoccupied-days="hideUnoccupiedDays"
                 @add-shift="openAddShiftForFirstRoomAndDay"
                 @add-from-template="openAddShiftByPresetForFirstRoomAndDay"
                 @dismiss="emptyStateDismissed = true"
@@ -743,6 +746,7 @@ import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import ShiftPlanViewSwitch from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanViewSwitch.vue";
 import axios from "axios";
 import { failedRequestMessage } from "@/Helper/appToast.js";
+import { shiftHasOpenSlot } from "@/Helper/shiftStaffing.js";
 import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
 import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
@@ -750,6 +754,7 @@ import DayRemarkHoverTooltip from "@/Components/Calendar/Elements/DayRemarkHover
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
+import {canViewPlanning} from "@/Helper/planningRights.js";
 import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 const ExportModal = defineAsyncComponent(() => import("@/Layouts/Components/Export/Modals/ExportModal.vue"));
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
@@ -1543,23 +1548,7 @@ function getRoomDayShifts(room: any, day: string): any[] {
     // Filter: nur nicht voll besetzte Schichten anzeigen
     const showOnlyNotFullyStaffed = (page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth?.user?.calendar_settings)?.show_only_not_fully_staffed_shifts
     if (showOnlyNotFullyStaffed) {
-        shifts = shifts.filter((shift: any) => {
-            const qualifications = Array.isArray(shift?.shifts_qualifications)
-                ? shift.shifts_qualifications
-                : Object.values(shift?.shifts_qualifications || {})
-
-            return qualifications.some((q: any) => {
-                const capacity = q?.value ?? 0
-                const qualificationId = q?.shift_qualification_id
-
-                const assignedCount = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
-                    const items = shift[group] || []
-                    return acc + items.filter((item: any) => item?.pivot?.shift_qualification_id === qualificationId).length
-                }, 0)
-
-                return capacity > assignedCount
-            })
-        })
+        shifts = shifts.filter(shiftHasOpenSlot)
     }
 
     return shifts
@@ -1718,7 +1707,21 @@ const dailyPlanHasShifts = computed<boolean>(() => {
     return false
 })
 
-/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand „keine Räume" */
+/**
+ * Ist nach den Anzeige-Filtern (Gewerke, nur nicht voll besetzte, offene Verstöße) noch eine Schicht
+ * sichtbar? Liest nur die beim Index-Rebuild mitgezählte Summe — kein eigener Durchlauf. Solange ein
+ * Rebuild aussteht, gilt „sichtbar", damit die Karte beim Nachladen nicht aufblitzt. Den leeren
+ * Verstoß-Filter meldet bereits ShiftPlanOpenViolationsFilterNotice.
+ */
+const dailyPlanHasVisibleShifts = computed<boolean>(
+    () => filteredShiftsIndexPending.value || filteredShiftsTotal.value > 0 || openViolationsFilterIsEmpty.value,
+)
+
+const dailyOnlyNotFullyStaffed = computed<boolean>(() => (
+    (page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth?.user?.calendar_settings) as any
+)?.show_only_not_fully_staffed_shifts === true)
+
+/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand */
 const dailyFiltersActive = computed<boolean>(() => {
     const filters = (props.user_filters ?? {}) as Record<string, any>
     return Object.values(filters).some((value) => Array.isArray(value) && value.length > 0)
@@ -1820,6 +1823,8 @@ const craftPositionMap = computed(() => {
 const filteredShiftsIndex = shallowRef(new Map<string, any[]>())
 /** Anzahl Schichten im gefilterten Index (nebenbei beim Rebuild gezählt, für den Leer-Hinweis des Verstoß-Filters) */
 const filteredShiftsTotal = ref(0)
+/** Rebuild des Index ist angestoßen (debounced), filteredShiftsTotal also noch vom alten Stand */
+const filteredShiftsIndexPending = ref(false)
 
 function rebuildFilteredShiftsIndex() {
     const map = new Map<string, any[]>()
@@ -1857,20 +1862,7 @@ function rebuildFilteredShiftsIndex() {
             })
 
             if (showOnlyNotFullyStaffed) {
-                shifts = shifts.filter((shift: any) => {
-                    const qualifications = Array.isArray(shift?.shifts_qualifications)
-                        ? shift.shifts_qualifications
-                        : Object.values(shift?.shifts_qualifications || {})
-                    return qualifications.some((q: any) => {
-                        const capacity = q?.value ?? 0
-                        const qualificationId = q?.shift_qualification_id
-                        const assignedCount = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
-                            const items = shift[group] || []
-                            return acc + items.filter((item: any) => item?.pivot?.shift_qualification_id === qualificationId).length
-                        }, 0)
-                        return capacity > assignedCount
-                    })
-                })
+                shifts = shifts.filter(shiftHasOpenSlot)
             }
 
             // Personenfilter: nur Schichten mit mindestens einer Person mit offenem Verstoß am Tag
@@ -1908,8 +1900,10 @@ watch([shiftPlanCopy, craftIdSet, craftPositionMap, showOnlyUsersWithOpenViolati
         return
     }
     if (_shiftsRebuildTimer) clearTimeout(_shiftsRebuildTimer)
+    filteredShiftsIndexPending.value = true
     _shiftsRebuildTimer = setTimeout(() => {
         rebuildFilteredShiftsIndex()
+        filteredShiftsIndexPending.value = false
         _shiftsRebuildTimer = null
     }, 200)
 }, { immediate: true })
@@ -2050,7 +2044,7 @@ function startShiftCalendarListener() {
         onShiftDataChanged: () => { triggerRef(shiftPlanCopy) },
         onLookupsReceived: mergeLookups,
         // Geplante Termine nur mit Planungskalender-Recht (wie der Server-Load, Event::visiblePlanningFor)
-        subscribePlanningChannels: hasAdminRole() || can('can see planning calendar') || can('can edit planning calendar'),
+        subscribePlanningChannels: canViewPlanning({ isAdmin: hasAdminRole(), can }),
         // Projekt-Schichten-Tab ohne „Schichten anderer Projekte anzeigen": wie der Server-Load nur
         // Schichten dieses Projekts live einspielen (sonst bleibt eine weg-verschobene Schicht stehen)
         projectFilterId: () => (

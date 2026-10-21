@@ -268,12 +268,6 @@ class ProjectController extends Controller
     }
 
     /**
-     * Felder, die die Projektübersicht von Team-Mitgliedern liest: SingleProjectInManagement nur die IDs
-     * (Rechte), der Bearbeiten-Dialog Name und Bild der Projektleitung.
-     */
-    private const INDEX_PERSON_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
-
-    /**
      * Team-Listen der Übersicht (users, writeUsers, managerUsers, access_budget, delete_permission_users) nur
      * mit den gelesenen Feldern ausliefern — vorher volle User-Modelle inkl. E-Mail, Stundenkonto und aller
      * Einstellungen, je Projekt mehrfach (Seite mit 100 Projekten: ~4 MB). Die stdClass-Einträge von
@@ -290,7 +284,7 @@ class ProjectController extends Controller
                 }
                 foreach ($related as $model) {
                     if ($model instanceof User) {
-                        $model->setVisible(self::INDEX_PERSON_FIELDS);
+                        $model->setVisible(User::AVATAR_FIELDS);
                     }
                 }
             }
@@ -5207,6 +5201,23 @@ class ProjectController extends Controller
         return Project::whereIn('id', $ids)
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Gruppen, denen ein Projekt angehört (nur id und Name). Das Termin-Modal zeigt sie
+     * neben dem Projektnamen an — offen wie die Projektsuche, die Namen ebenso liefert.
+     *
+     * @return array<int, array{id: int, name: string}>
+     */
+    public function projectGroupNames(Project $project): array
+    {
+        return $project->groups()
+            ->setEagerLoads([])
+            ->orderBy('projects.name')
+            ->get(['projects.id', 'projects.name'])
+            ->map(fn (Project $group): array => ['id' => (int) $group->id, 'name' => (string) $group->name])
+            ->values()
             ->all();
     }
 

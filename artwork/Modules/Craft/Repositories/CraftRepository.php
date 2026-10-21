@@ -25,9 +25,13 @@ class CraftRepository extends BaseRepository
         return $craft->craftShiftPlaner()->detach();
     }
 
-    public function getAll(array $with = [])
+    /**
+     * @param array<int|string, mixed> $with
+     * @param array<int, string> $without Relationen aus Craft::$with, die nicht geladen werden sollen
+     */
+    public function getAll(array $with = [], array $without = [])
     {
-        return Craft::query()->with($with)->orderBy('position')->get();
+        return Craft::query()->without($without)->with($with)->orderBy('position')->get();
         /*$crafts = new Collection();
         // use here chunk method to avoid memory issues
         Craft::query()->with($with)->chunk(100, function ($craftsChunk) use (&$crafts): void {
@@ -37,9 +41,12 @@ class CraftRepository extends BaseRepository
         return $crafts;*/
     }
 
-    public function getAssignableByAllCrafts(): Collection
+    /**
+     * @param array<int, string> $without Relationen aus Craft::$with, die nicht geladen werden sollen
+     */
+    public function getAssignableByAllCrafts(array $without = []): Collection
     {
-        return Craft::query()->isAssignableByAll()->with(['qualifications'])->get();
+        return Craft::query()->without($without)->isAssignableByAll()->with(['qualifications'])->get();
     }
 
     public function findById(int $id): Craft

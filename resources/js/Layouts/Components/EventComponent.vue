@@ -404,6 +404,9 @@
                                         {{ selectedProject?.name }}
                                     </a>
                                     <span v-else class="truncate text-sm/5 font-semibold text-text text-text">{{ selectedProject?.name }}</span>
+                                    <span v-if="projectGroupLabel" class="ml-2 text-[12px] text-text-muted" :title="projectGroupLabel">
+                                        {{ $t('Project group') }}: {{ projectGroupLabel }}
+                                    </span>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0">
                                     <button type="button" class="ui-icon-btn" @click="removeProject" :aria-label="$t('Remove project')">
@@ -722,6 +725,9 @@
                                 {{ selectedProject?.name }}
                             </a>
                             <span v-else class="text-text">{{ selectedProject?.name }}</span>
+                            <span v-if="projectGroupLabel" class="ml-2 text-text-muted">
+                                {{ $t('Project group') }}: {{ projectGroupLabel }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -2187,6 +2193,20 @@ watch([startDate, startTime, allDayEvent], () => {
     // Endzeit ggf. automatisch anpassen, wenn Start sich ändert
     if (!endTime.value || endAutoFilled.value) updateTimes()
 })
+
+// Projektgruppen des gewählten Projekts neben dem Namen anzeigen (Suche/zuletzt geöffnet liefern sie nicht mit)
+const projectGroups = ref([])
+const projectGroupLabel = computed(() => projectGroups.value.map(group => group.name).join(', '))
+watch(() => selectedProject.value?.id, async (projectId) => {
+    projectGroups.value = []
+    if (!projectId) return
+    try {
+        const { data } = await axios.get(route('project.groupNames', { project: projectId }), { skipErrorToast: true }) // Lesezugriff, best effort
+        if (selectedProject.value?.id === projectId) projectGroups.value = Array.isArray(data) ? data : []
+    } catch {
+        // ohne Gruppenangabe weiter
+    }
+}, { immediate: true })
 
 // Auswahl aus Suche
 function chooseProjectFromPicker(project) {

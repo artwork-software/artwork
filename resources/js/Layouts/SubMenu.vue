@@ -500,6 +500,7 @@ import {
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { is, can } from 'laravel-permission-to-vuejs'
+import { canOpenPlanningCalendar } from '@/Helper/planningRights.js'
 import {Float} from "@headlessui-float/vue";
 import {useI18n} from "vue-i18n";
 import {manualUrl} from "@/Helper/manualLinks.js";
@@ -609,7 +610,7 @@ const navigation = ref([
                 href: route('planning-event-calendar.index'),
                 icon: 'IconCalendarCog',
                 current: route().current('planning-event-calendar.index'),
-                has_permission: usePage().props.module_settings['planning_calendar'] !== false && (can('can see planning calendar') || can('can edit planning calendar') || is('artwork admin')),
+                has_permission: canOpenPlanningCalendar({ isAdmin: is('artwork admin'), can, moduleSettings: usePage().props.module_settings }),
             },
             {
                 name: 'Event Verifications',

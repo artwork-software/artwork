@@ -1,10 +1,12 @@
 <template>
     <!-- Leerzustand des Dienstplan-Rasters (Wochen- und Tagesansicht), genau einmal pro Raster.
-         Drei Fälle in fester Reihenfolge: (1) keine Räume für die Disposition, (2) Stammdaten fehlen
-         (Gewerke/Funktionen), (3) keine Schichten im Zeitraum. Rendert nichts, wenn keiner zutrifft. -->
+         Vier Fälle in fester Reihenfolge (shiftPlanEmptyState.js): (1) keine Räume für die Disposition,
+         (2) Stammdaten fehlen (Gewerke/Funktionen), (3) keine Schichten im Zeitraum, (4) Schichten
+         vorhanden, aber Filter/Anzeigeeinstellungen blenden alle aus. Rendert nichts, wenn keiner zutrifft.
+         Overlay z-[45]: über den Zeilentrennern des Wochenrasters (z-40), unter der Raumspalte (z-50). -->
     <div
         v-if="mode"
-        :class="overlay ? 'absolute inset-x-0 top-14 z-30 flex justify-center px-4 pointer-events-none' : 'flex justify-center px-4 py-6'"
+        :class="overlay ? 'absolute inset-x-0 top-14 z-[45] flex justify-center px-4 pointer-events-none' : 'flex justify-center px-4 py-6'"
     >
         <div
             class="pointer-events-auto w-full max-w-xl rounded-2xl border border-border bg-surface p-5 shadow-lg"
@@ -36,7 +38,20 @@
                         <template v-if="hideUnoccupiedRooms">{{ $t('"Hide unoccupied rooms" is active in the display settings.') }}</template>
                     </p>
 
-                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <!-- Fall 3: ein Filter kann auch serverseitig alle Schichten ausschließen (z. B. Gewerke) -->
+                    <p v-if="mode === 'no-shifts' && filtersActive" class="mt-2 text-xs text-text-subtle">
+                        {{ $t('A filter is active — shifts outside the filter are not shown.') }}
+                    </p>
+
+                    <!-- Fall 4: welche Filter/Einstellungen die vorhandenen Schichten ausblenden -->
+                    <ul v-if="mode === 'filtered' && filteredReasons.length" class="mt-2 space-y-1 text-xs text-text-subtle">
+                        <li v-for="reason in filteredReasons" :key="reason" class="flex items-start gap-1.5">
+                            <PropertyIcon name="IconFilter" class="mt-px size-3.5 shrink-0" :stroke-width="2" />
+                            <span>{{ $t(reason) }}</span>
+                        </li>
+                    </ul>
+
+                    <div v-if="mode !== 'filtered'" class="mt-3 flex flex-wrap items-center gap-2">
                         <template v-if="mode === 'no-rooms'">
                             <Link
                                 v-if="canManageRooms"
@@ -84,7 +99,7 @@
                     </div>
                 </div>
                 <button
-                    v-if="mode === 'no-shifts'"
+                    v-if="mode === 'no-shifts' || mode === 'filtered'"
                     type="button"
                     class="shrink-0 rounded-md p-1 text-text-subtle hover:bg-surface-sunken hover:text-text"
                     :aria-label="$t('Close')"
@@ -103,16 +118,21 @@ import {Link} from '@inertiajs/vue3'
 import {can, is} from 'laravel-permission-to-vuejs'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import {resolveShiftPlanEmptyState, shiftPlanFilteredReasons} from './shiftPlanEmptyState.js'
 
 const props = defineProps({
     roomsCount: {type: Number, default: 0},
     craftsCount: {type: Number, default: 0},
     functionsCount: {type: Number, default: 0},
     hasShifts: {type: Boolean, default: false},
+    /** false = Schichten vorhanden, aber Filter/Anzeigeeinstellungen blenden alle aus */
+    hasVisibleShifts: {type: Boolean, default: true},
     /** true = schwebende Karte über dem Wochenraster, false = im Textfluss (Tagesansicht) */
     overlay: {type: Boolean, default: false},
     filtersActive: {type: Boolean, default: false},
     hideUnoccupiedRooms: {type: Boolean, default: false},
+    onlyNotFullyStaffed: {type: Boolean, default: false},
+    hideUnoccupiedDays: {type: Boolean, default: false},
 })
 
 defineEmits(['add-shift', 'add-from-template', 'dismiss'])
@@ -122,28 +142,38 @@ const canPlan = computed(() => isAdmin() || can('can plan shifts'))
 const canManageRooms = computed(() => isAdmin() || can('create, delete and update rooms'))
 const canOpenShiftSettings = computed(() => isAdmin() || can('shift.settings_view_edit'))
 
-const mode = computed(() => {
-    if (props.roomsCount === 0) return 'no-rooms'
-    if (props.craftsCount === 0 || props.functionsCount === 0) return 'no-master-data'
-    if (!props.hasShifts) return 'no-shifts'
-    return null
-})
+const mode = computed(() => resolveShiftPlanEmptyState({
+    roomsCount: props.roomsCount,
+    craftsCount: props.craftsCount,
+    functionsCount: props.functionsCount,
+    hasShifts: props.hasShifts,
+    hasVisibleShifts: props.hasVisibleShifts,
+}))
+
+const filteredReasons = computed(() => shiftPlanFilteredReasons({
+    filtersActive: props.filtersActive,
+    onlyNotFullyStaffed: props.onlyNotFullyStaffed,
+    hideUnoccupiedDays: props.hideUnoccupiedDays,
+}))
 
 const icon = computed(() => ({
     'no-rooms': 'IconDoorOff',
     'no-master-data': 'IconSettings',
     'no-shifts': 'IconCalendarOff',
+    'filtered': 'IconFilterOff',
 }[mode.value] ?? 'IconInfoCircle'))
 
 const title = computed(() => ({
     'no-rooms': 'No rooms released for the duty roster',
     'no-master-data': 'Master data missing',
     'no-shifts': 'No shifts in this period',
+    'filtered': 'All shifts are hidden',
 }[mode.value] ?? ''))
 
 const text = computed(() => ({
     'no-rooms': 'Only rooms marked as "relevant for disposition" appear in the duty roster. Release rooms in the room management.',
     'no-master-data': 'Shifts need at least one craft and one function (the role in the shift). Create them in the shift settings first.',
     'no-shifts': 'There are no shifts in the selected period yet. Create a shift for the first room and day or apply shift templates.',
+    'filtered': 'There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.',
 }[mode.value] ?? ''))
 </script>

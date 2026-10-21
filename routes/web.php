@@ -3684,6 +3684,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
         Route::post('/projects/existing', [ProjectController::class, 'filterExistingProjectIds'])
             ->name('project.filterExistingIds');
+        // Projektgruppen eines Projekts, Anzeige neben dem Projektnamen im Termin-Modal
+        Route::get('/projects/{project}/groups', [ProjectController::class, 'projectGroupNames'])
+            ->name('project.groupNames');
     });
 
     Route::group(['prefix' => 'chat'], function (): void {

@@ -160,8 +160,9 @@ const containerStyle = computed(() => {
             minWidth: zoomFactor.value * 90 + 'px',
         };
     }
+    // Keine feste Höhe: streckt sich per Flex auf die Tageszeile (siehe DayRemarkCell),
+    // sonst verdeckt die sticky Spalte die Trennlinie zum nächsten Tag
     return {
-        height: calendarSettings.value.expand_days ? '' : rowHeight.value + 'px',
         width: dateColumnWidth + 'px',
         minWidth: dateColumnWidth + 'px',
         // Tint als Gradient-Layer ÜBER dem deckenden bg-gray-100 statt als

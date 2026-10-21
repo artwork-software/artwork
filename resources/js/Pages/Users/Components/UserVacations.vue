@@ -1,5 +1,5 @@
 <template>
-    <div class="my-5 flex min-h-0 flex-col">
+    <div class="my-5 flex min-h-0 flex-col overflow-y-auto">
         <!-- Kopf mit Neuer-Eintrag-Button -->
         <div v-if="canManage" class="mb-4 flex shrink-0 items-center justify-between">
             <h3 class="text-base font-semibold text-text ">
@@ -16,7 +16,7 @@
         </div>
 
         <!-- Abwesenheiten: eigener Scrollbereich, damit die Verfügbarkeiten darunter sichtbar bleiben -->
-        <div v-if="vacationEntries.length > 0" class="mb-6 flex min-h-0 flex-auto flex-col">
+        <div v-if="vacationEntries.length > 0" class="mb-6 flex min-h-28 flex-auto flex-col last:mb-0">
             <h4 class="mb-2 shrink-0 text-sm font-semibold text-text-muted dark:text-text-subtle">
                 {{ $t('Absences') }}
             </h4>
@@ -32,7 +32,7 @@
         </div>
 
         <!-- Verfügbarkeiten -->
-        <div v-if="availabilityEntries.length > 0" class="mb-6 flex min-h-0 flex-auto flex-col">
+        <div v-if="availabilityEntries.length > 0" class="mb-6 flex min-h-28 flex-auto flex-col last:mb-0">
             <h4 class="mb-2 shrink-0 text-sm font-semibold text-text-muted dark:text-text-subtle">
                 {{ $t('Registered availability') }}
             </h4>
@@ -48,7 +48,7 @@
         </div>
 
         <!-- Projektwünsche -->
-        <div v-if="wishEntries.length > 0" class="mb-6 flex min-h-0 flex-auto flex-col">
+        <div v-if="wishEntries.length > 0" class="mb-6 flex min-h-28 flex-auto flex-col last:mb-0">
             <h4 class="mb-2 shrink-0 text-sm font-semibold text-text-muted dark:text-text-subtle italic">
                 {{ $t('Project wishes') }}
             </h4>

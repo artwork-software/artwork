@@ -116,7 +116,7 @@ test('components that show request errors themselves opt out of the global toast
         'Components/Crm/CreateCrmArtistModal.vue': 1,
         'Components/SearchBars/ProjectSearch.vue': 3,
         'Components/SearchBars/RoomSearch.vue': 1,
-        'Layouts/Components/EventComponent.vue': 3,
+        'Layouts/Components/EventComponent.vue': 4,
         'Layouts/Components/RoomRequestDialogComponent.vue': 1,
         'Pages/CRM/Components/InviteExternalModal.vue': 1,
         'Pages/ExternalAccess/Project/Components/Types/ExternalCrmContactList.vue': 1,

@@ -139,6 +139,29 @@ final class CrmMultiselectPropertyTest extends FeatureTestCase
         $this->assertSame('frei', CrmPropertyValueFormat::displayText('text', 'frei'));
     }
 
+    #[Test]
+    public function excel_export_uses_import_separator_so_the_file_can_be_reimported(): void
+    {
+        $property = CrmProperty::factory()->create([
+            'type' => CrmPropertyTypeEnum::MULTISELECT->value,
+            'select_values' => ['Tanz, zeitgenössisch', 'Theater'],
+        ]);
+        $contact = $this->contactWith($property, '["Tanz, zeitgenössisch","Theater"]');
+
+        $exported = CrmPropertyValueFormat::exportText($property, $this->storedValue($contact, $property));
+
+        $this->assertSame('Tanz, zeitgenössisch; Theater', $exported);
+        $this->assertSame('["Tanz, zeitgenössisch","Theater"]', CrmPropertyValueFormat::fromImport($property, $exported));
+        $this->assertSame('frei', CrmPropertyValueFormat::exportText('text', 'frei'));
+
+        $html = view('exports.crm-contacts', [
+            'contacts' => CrmContact::query()->whereKey($contact->id)->with('propertyValues')->get(),
+            'columns' => ['prop_' . $property->id],
+            'properties' => collect([$property]),
+        ])->render();
+        $this->assertStringContainsString('<td>Tanz, zeitgenössisch; Theater</td>', $html);
+    }
+
     private function multiselectProperty(): CrmProperty
     {
         return CrmProperty::factory()->create([

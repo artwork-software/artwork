@@ -78,6 +78,19 @@ final class CrmPropertyValueFormat
     }
 
     /**
+     * Excel-Export: Mehrfachauswahl mit dem Import-Trenner ("; "), damit eine exportierte Datei unverändert
+     * wieder importiert werden kann (Optionsnamen dürfen Kommas enthalten).
+     */
+    public static function exportText(CrmProperty|CrmPropertyTypeEnum|string|null $type, ?string $value): string
+    {
+        if (self::isMultiple($type)) {
+            return implode(self::IMPORT_SEPARATOR . ' ', self::decode($value));
+        }
+
+        return (string) $value;
+    }
+
+    /**
      * Import: Optionen getrennt durch ";" – jede muss eine hinterlegte Option sein, sonst false.
      */
     public static function fromImport(CrmProperty $property, string $raw): string|false

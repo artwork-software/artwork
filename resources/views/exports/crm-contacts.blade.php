@@ -32,7 +32,7 @@
                 @foreach($properties as $property)
                     @if(in_array('prop_' . $property->id, $columns))
                         {{-- Mehrfachauswahl kommagetrennt statt als JSON-Liste --}}
-                        <td>{{ \Artwork\Modules\Crm\Support\CrmPropertyValueFormat::displayText($property, $contact->propertyValues->firstWhere('crm_property_id', $property->id)?->value) }}</td>
+                        <td>{{ \Artwork\Modules\Crm\Support\CrmPropertyValueFormat::exportText($property, $contact->propertyValues->firstWhere('crm_property_id', $property->id)?->value) }}</td>
                     @endif
                 @endforeach
             </tr>

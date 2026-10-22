@@ -270,7 +270,7 @@
                                                         {{ $t('Individual time') }}: {{ i.title ?? '' }}
                                                     </span>
                                                     <button
-                                                        v-if="!isOwnPlan || canEnterOwnTimesOn(i.start_date)"
+                                                        v-if="!isOwnPlan || canEnterOwnTimesOn(individualTimeDate(i))"
                                                         type="button"
                                                         @click="openEditIndividualTimeModal(i)"
                                                         class="p-1 rounded hover:bg-border-subtle transition"
@@ -346,7 +346,7 @@
     <EditIndividualTimeModal
         v-if="showEditIndividualTimeModal && selectedIndividualTime"
         :individual-time="selectedIndividualTime"
-        :can-delete="!isOwnPlan || canEnterOwnTimesOn(selectedIndividualTime.start_date)"
+        :can-delete="!isOwnPlan || canEnterOwnTimesOn(individualTimeDate(selectedIndividualTime))"
         @closed="closeEditIndividualTimeModal"
         @deleted="reloadOwnPlan"
     />
@@ -491,6 +491,8 @@ const isOwnPlan = computed(() => props.type === 'user' && page.props?.auth?.user
 // --- Eigene individuelle Zeiten (Recht "can enter own individual times" ab heute, Verwaltungsrechte immer) ---
 const { canEnterOwnIndividualTimesOn, canManageOwnIndividualTimesOnAnyDay } = usePermission(page.props)
 const canEnterOwnTimesOn = (date) => canEnterOwnIndividualTimesOn(date)
+// daysWithData liefert Individualzeiten ohne start_date – dann zählt der Tag der Zelle (_day aus itemsForDay)
+const individualTimeDate = (individualTime) => individualTime?.start_date ?? individualTime?._day ?? null
 const ownIndividualTimeDay = ref(null)
 const ownSeriesStartDate = ref(null)
 const ownSubject = computed(() => ({

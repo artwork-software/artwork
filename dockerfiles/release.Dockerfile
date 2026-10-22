@@ -52,11 +52,11 @@ RUN mkdir -p /etc/apt/keyrings && \
         | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" \
         > /etc/apt/sources.list.d/nodesource.list && \
-    curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' \
-        | gpg --dearmor \
-        > /etc/apt/keyrings/ppa_ondrej_php.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu noble main" \
-        > /etc/apt/sources.list.d/ppa_ondrej_php.list && \
+    curl -fsSL -o /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb && \
+    dpkg -i /tmp/debsuryorg-archive-keyring.deb && \
+    rm /tmp/debsuryorg-archive-keyring.deb && \
+    echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ noble main" \
+        > /etc/apt/sources.list.d/php.list && \
     apt-get update -y && \
     apt-get install -y --no-install-recommends \
         php8.4-cli php8.4-dev php8.4-fpm \

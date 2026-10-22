@@ -4,8 +4,11 @@ namespace Tests\Feature\Modules\IndividualTimes;
 
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\Permission\Models\PermissionPreset;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\Permission\Models\Role;
 use Tests\Feature\FeatureTestCase;
 
 /**
@@ -33,6 +36,38 @@ final class OwnIndividualTimeAccessTest extends FeatureTestCase
         $this->storeOwnTime($user, now()->subDay()->toDateString())->assertForbidden();
 
         $this->assertSame(0, $user->individualTimes()->count());
+    }
+
+    #[Test]
+    public function backfill_migration_grants_permission_to_everyone_who_sees_the_own_roster(): void
+    {
+        $target = PermissionEnum::CAN_ENTER_OWN_INDIVIDUAL_TIMES->value;
+        Permission::findOrCreate($target, 'web');
+        $rosterViewer = $this->actingAsUserWith(PermissionEnum::CAN_VIEW_OWN_ROSTER->value);
+        $other = User::factory()->create();
+        $role = Role::create(['name' => 'roster-role', 'guard_name' => 'web']);
+        $role->givePermissionTo(PermissionEnum::CAN_VIEW_OWN_ROSTER->value);
+        $preset = PermissionPreset::query()->create([
+            'name' => 'Basis',
+            'permissions' => [PermissionEnum::CAN_VIEW_OWN_ROSTER->value],
+        ]);
+        $unrelatedPreset = PermissionPreset::query()->create([
+            'name' => 'Ohne Einsatzplan',
+            'permissions' => [PermissionEnum::SHIFT_PLANNER->value],
+        ]);
+
+        $migration = require base_path(
+            'database/migrations/2026_10_22_100000_backfill_enter_own_individual_times_permission.php'
+        );
+        $migration->up();
+        $migration->up(); // idempotent
+
+        $this->assertTrue($rosterViewer->fresh()->hasPermissionTo($target));
+        $this->assertSame(1, $rosterViewer->fresh()->permissions()->where('name', $target)->count());
+        $this->assertFalse($other->fresh()->hasPermissionTo($target));
+        $this->assertTrue($role->fresh()->hasPermissionTo($target));
+        $this->assertSame([PermissionEnum::CAN_VIEW_OWN_ROSTER->value, $target], $preset->fresh()->permissions);
+        $this->assertSame([PermissionEnum::SHIFT_PLANNER->value], $unrelatedPreset->fresh()->permissions);
     }
 
     #[Test]

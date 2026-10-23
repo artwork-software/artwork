@@ -233,7 +233,7 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref, watch } from 'vue'
+import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
 import { router, usePage } from '@inertiajs/vue3'
 import debounce from 'lodash.debounce'
@@ -525,6 +525,12 @@ function startLink(target) {
     linkTarget.value = target
     searchQuery.value = ''
     searchResults.value = []
+    // Suchfeld steht unter der Liste: direkt hinscrollen und fokussieren
+    nextTick(() => {
+        const input = document.getElementById(`crm-contact-list-search-${props.data.id}`)
+        input?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        input?.focus({ preventScroll: true })
+    })
 }
 
 const runSearch = debounce(async (query, typeId) => {

@@ -426,6 +426,7 @@
                         </div>
                         <BaseSortableList
                             v-model="textData.options"
+                            labeled
                             list-class="grid grid-cols-1 gap-3"
                             item-class="rounded-lg border border-border-subtle p-3 bg-white"
                         >

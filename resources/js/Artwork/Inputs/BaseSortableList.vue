@@ -11,18 +11,21 @@
     >
         <template #item="{ element: row }">
             <div :class="itemClass">
-                <div class="flex items-center gap-2">
-                    <IconGripVertical
-                        class="sortable-list-handle size-4 shrink-0 text-text-subtle hover:text-text-muted"
-                        :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
-                        stroke-width="1.5"
-                        :title="$t('Drag to reorder')"
-                        :aria-label="$t('Drag to reorder')"
-                    />
+                <div class="flex gap-2" :class="labeled ? 'items-stretch' : 'items-center'">
+                    <!-- bei Eingabefeldern mit Label: Griff und Pfeile mittig zum Feld, nicht zum Label -->
+                    <div class="flex shrink-0 items-center" :class="{ 'pt-5': labeled }">
+                        <IconGripVertical
+                            class="sortable-list-handle size-4 text-text-subtle hover:text-text-muted"
+                            :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+                            stroke-width="1.5"
+                            :title="$t('Drag to reorder')"
+                            :aria-label="$t('Drag to reorder')"
+                        />
+                    </div>
                     <div class="min-w-0 flex-1">
                         <slot :index="row.index" :item="modelValue[row.index]" :remove="() => remove(row.index)" />
                     </div>
-                    <div class="flex shrink-0 items-center">
+                    <div class="flex shrink-0 items-center" :class="{ 'pt-5': labeled }">
                         <button
                             type="button"
                             class="rounded p-1 text-text-subtle hover:text-text-muted disabled:cursor-not-allowed disabled:opacity-40"
@@ -68,6 +71,8 @@ const props = defineProps({
     modelValue: { type: Array, required: true },
     listClass: { type: [String, Array, Object], default: 'space-y-2' },
     itemClass: { type: [String, Array, Object], default: '' },
+    // Inhalt ist ein Eingabefeld mit Label darüber (BaseInput)
+    labeled: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])

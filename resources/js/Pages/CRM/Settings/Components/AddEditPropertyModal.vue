@@ -38,7 +38,7 @@
             <!-- Select values input -->
             <div v-if="form.type === 'select' || form.type === 'multiselect'" class="space-y-2">
                 <label class="componentLabel">{{ $t('Selection values') }}</label>
-                <BaseSortableList v-model="form.select_values">
+                <BaseSortableList v-model="form.select_values" labeled>
                     <template #default="{ index }">
                         <BaseInput
                             :id="'select_value_' + index"

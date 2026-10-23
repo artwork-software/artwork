@@ -14,7 +14,7 @@
         </div>
         <div v-else-if="loading" class="mt-2 text-xs text-text-subtle">{{ $t('Loading data...') }}</div>
         <template v-else>
-            <p v-if="contactTypes.length === 0 && canWrite" class="mt-2 text-xs text-warning">
+            <p v-if="contactTypes.length === 0 && linkableContactTypes.length === 0 && canWrite" class="mt-2 text-xs text-warning">
                 {{ $t('No contact types are allowed for this list yet. Select them in the component settings.') }}
             </p>
 
@@ -44,20 +44,43 @@
             <div v-else class="mt-2 space-y-4">
                 <section v-for="group in groups" :key="group.key">
                     <div class="flex items-center justify-between gap-2">
-                        <h4 class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                            <IconPalette v-if="group.key === ARTIST_GROUP" class="size-4 text-accent-700" stroke-width="1.5" />
-                            {{ group.label }}
-                            <span class="font-normal normal-case text-text-subtle">({{ group.contacts.length }})</span>
+                        <h4 class="min-w-0">
+                            <button
+                                type="button"
+                                class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-muted hover:text-text"
+                                :aria-expanded="String(!isCollapsed(group))"
+                                :title="isCollapsed(group) ? $t('Expand') : $t('Collapse')"
+                                @click="toggleGroup(group)"
+                            >
+                                <component :is="isCollapsed(group) ? IconChevronRight : IconChevronDown" class="size-4 shrink-0 text-text-subtle" stroke-width="1.5" />
+                                <IconPalette v-if="group.key === ARTIST_GROUP" class="size-4 shrink-0 text-accent-700" stroke-width="1.5" />
+                                <span class="truncate">{{ group.label }}</span>
+                                <span class="shrink-0 rounded-full bg-surface-sunken px-1.5 py-0.5 font-medium normal-case tracking-normal text-text-subtle">{{ group.contacts.length }}</span>
+                            </button>
                         </h4>
-                        <div v-if="canWrite && group.role" class="flex items-center gap-1">
-                            <button type="button" class="rounded p-1 text-text-subtle hover:text-text" :title="$t('Rename role')" :aria-label="$t('Rename role')" @click="renameRole(group.role)">
-                                <IconPencil class="size-3.5" stroke-width="1.5" />
+                        <div v-if="canWrite" class="flex items-center gap-1">
+                            <!-- zugeklappt steht „Verknüpfen“ im Kopf, aufgeklappt unter der Gruppe -->
+                            <button
+                                v-if="isCollapsed(group) && canLinkGroup(group)"
+                                type="button"
+                                class="rounded p-1 text-text-subtle hover:text-text"
+                                :title="$t('Link CRM contact as “{role}”', { role: group.label })"
+                                :aria-label="$t('Link CRM contact as “{role}”', { role: group.label })"
+                                @click="startGroupLink(group)"
+                            >
+                                <IconLink class="size-3.5" stroke-width="1.5" />
                             </button>
-                            <button type="button" class="rounded p-1 text-text-subtle hover:text-danger" :title="$t('Delete role')" :aria-label="$t('Delete role')" @click="deleteRole(group.role)">
-                                <IconTrash class="size-3.5" stroke-width="1.5" />
-                            </button>
+                            <template v-if="group.role">
+                                <button type="button" class="rounded p-1 text-text-subtle hover:text-text" :title="$t('Rename role')" :aria-label="$t('Rename role')" @click="renameRole(group.role)">
+                                    <IconPencil class="size-3.5" stroke-width="1.5" />
+                                </button>
+                                <button type="button" class="rounded p-1 text-text-subtle hover:text-danger" :title="$t('Delete role')" :aria-label="$t('Delete role')" @click="deleteRole(group.role)">
+                                    <IconTrash class="size-3.5" stroke-width="1.5" />
+                                </button>
+                            </template>
                         </div>
                     </div>
+                    <template v-if="!isCollapsed(group)">
                     <ul v-if="group.contacts.length" class="mt-1.5 space-y-2">
                         <CrmContactListCard
                             v-for="contact in group.contacts"
@@ -78,14 +101,15 @@
                     </ul>
                     <p v-else class="mt-1 text-xs italic text-text-subtle">{{ $t('Nobody assigned yet.') }}</p>
                     <button
-                        v-if="canWrite && canLinkExisting && group.key !== NO_ROLE_GROUP && !limitReached"
+                        v-if="canLinkGroup(group)"
                         type="button"
                         class="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-accent-600 hover:underline"
-                        @click="startLink(group.key === ARTIST_GROUP ? { artist: true } : { role: group.role })"
+                        @click="startGroupLink(group)"
                     >
                         <IconLink class="size-3.5" stroke-width="1.5" />
                         {{ $t('Link CRM contact as “{role}”', { role: group.label }) }}
                     </button>
+                    </template>
                 </section>
 
                 <!-- Neue Rolle -->
@@ -112,7 +136,7 @@
             <p v-if="actionError" class="mt-2 text-xs text-danger">{{ actionError }}</p>
 
             <!-- Aktionen -->
-            <div v-if="canWrite && contactTypes.length && !limitReached" class="mt-3">
+            <div v-if="canWrite && (linkTarget || (!limitReached && (contactTypes.length || (canLinkExisting && linkableContactTypes.length))))" class="mt-3">
                 <div v-if="!linkTarget" class="flex flex-wrap items-center gap-2">
                     <BaseUIButton
                         v-for="type in contactTypes"
@@ -126,7 +150,7 @@
                         {{ $t('Add {type}', { type: $t(type.name) }) }}
                     </BaseUIButton>
                     <BaseUIButton
-                        v-if="canLinkExisting"
+                        v-if="canLinkExisting && linkableContactTypes.length"
                         type="button"
                         variant="secondary"
                         size="sm"
@@ -140,13 +164,13 @@
                     <p v-if="linkTargetLabel" class="mb-1 text-xs text-text-muted">{{ $t('Link as “{role}”', { role: linkTargetLabel }) }}</p>
                     <div class="flex items-end gap-x-2">
                         <select
-                            v-if="contactTypes.length > 1"
+                            v-if="linkableContactTypes.length > 1"
                             v-model="searchTypeId"
                             class="h-[42px] shrink-0 rounded-lg border border-border bg-white px-2 text-sm text-text"
                             :aria-label="$t('Contact type')"
                         >
                             <option :value="null">{{ $t('All contact types') }}</option>
-                            <option v-for="type in contactTypes" :key="type.id" :value="type.id">{{ $t(type.name) }}</option>
+                            <option v-for="type in linkableContactTypes" :key="type.id" :value="type.id">{{ $t(type.name) }}</option>
                         </select>
                         <BaseInput :id="`crm-contact-list-search-${data.id}`" v-model="searchQuery" :label="$t('Search CRM contact')" without-translation class="w-full" />
                         <button type="button" class="mb-2.5 shrink-0 text-text-subtle hover:text-text-muted" :title="$t('Close')" :aria-label="$t('Close')" @click="closeSearch">
@@ -164,7 +188,10 @@
                                 @click="link(result)"
                             >
                                 <img :src="result.profile_photo_url" :alt="result.display_name" class="size-7 rounded-full object-cover" />
-                                <span class="truncate text-text">{{ result.display_name }}</span>
+                                <span class="min-w-0">
+                                    <span class="block truncate text-text">{{ result.display_name }}</span>
+                                    <span v-if="result.linked" class="block truncate text-xs text-text-subtle">{{ linkedHint(result.linked) }}</span>
+                                </span>
                                 <span
                                     v-if="result.contact_type"
                                     class="ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs"
@@ -219,6 +246,8 @@ import CrmContactRolesModal from '@/Pages/Projects/Tab/Components/CrmContactRole
 import { usePermission } from '@/Composeables/Permission.js'
 import { useTranslation } from '@/Composeables/Translation.js'
 import {
+    IconChevronDown,
+    IconChevronRight,
     IconLink,
     IconPalette,
     IconPencil,
@@ -251,6 +280,7 @@ const routeParams = computed(() => ({ project: props.projectId, component: props
 
 const contacts = ref([])
 const contactTypes = ref([])
+const linkableContactTypes = ref([])
 const maxContacts = ref(null)
 const canWriteServer = ref(false)
 const canLinkExisting = ref(false)
@@ -291,6 +321,50 @@ const groups = computed(() => {
     return result
 })
 
+// --- Akkordion je Rolle: zugeklappte Gruppen je Komponente im Browser merken ---
+// „Künstler*in“ ist standardmäßig zu, die Personen stehen zusätzlich in ihren Rollengruppen.
+const collapsedStorageKey = `crm-contact-list-collapsed:${props.data.id}`
+const collapsedGroups = ref(readCollapsedGroups())
+
+function readCollapsedGroups() {
+    try {
+        const stored = JSON.parse(window.localStorage.getItem(collapsedStorageKey) ?? 'null')
+        if (Array.isArray(stored)) return stored
+    } catch (e) {
+        // ohne Speicher gilt die Vorgabe
+    }
+    return [ARTIST_GROUP]
+}
+
+function isCollapsed(group) {
+    return collapsedGroups.value.includes(group.key)
+}
+
+function setCollapsed(group, collapsed) {
+    collapsedGroups.value = collapsed
+        ? [...new Set([...collapsedGroups.value, group.key])]
+        : collapsedGroups.value.filter((key) => key !== group.key)
+    try {
+        window.localStorage.setItem(collapsedStorageKey, JSON.stringify(collapsedGroups.value))
+    } catch (e) {
+        // nur Komfort: ohne Speicher gilt der Zustand bis zum Neuladen
+    }
+}
+
+function toggleGroup(group) {
+    setCollapsed(group, !isCollapsed(group))
+}
+
+// Auch bei erreichter Höchstzahl: Personen, die schon in der Liste stehen, bekommen weitere Rollen
+function canLinkGroup(group) {
+    return canWrite.value && canLinkExisting.value && linkableContactTypes.value.length > 0 && group.key !== NO_ROLE_GROUP
+}
+
+function startGroupLink(group) {
+    setCollapsed(group, false)
+    startLink(group.key === ARTIST_GROUP ? { artist: true } : { role: group.role })
+}
+
 async function load() {
     loading.value = true
     loadFailed.value = false
@@ -298,6 +372,7 @@ async function load() {
         const { data } = await axios.get(route('projects.components.crm-contacts.index', routeParams.value))
         contacts.value = data.contacts ?? []
         contactTypes.value = data.contact_types ?? []
+        linkableContactTypes.value = data.linkable_contact_types ?? []
         maxContacts.value = data.max_contacts ?? null
         canWriteServer.value = data.can_write === true
         canLinkExisting.value = data.can_link_existing === true
@@ -434,7 +509,7 @@ async function deleteRole(role) {
     }
 }
 
-// --- Suche bestehender Kontakte (erlaubte Typen, ohne bereits verknüpfte; optional als Rolle) ---
+// --- Suche bestehender Kontakte (als Rolle auch bereits verknüpfte, die die Rolle noch nicht haben) ---
 const linkTarget = ref(null) // { role?: string, artist?: boolean }
 const linkTargetLabel = computed(() => {
     if (!linkTarget.value) return ''
@@ -455,7 +530,12 @@ function startLink(target) {
 const runSearch = debounce(async (query, typeId) => {
     try {
         const { data } = await axios.get(route('projects.components.crm-contacts.search', routeParams.value), {
-            params: { search: query, contact_type_id: typeId ?? undefined },
+            params: {
+                search: query,
+                contact_type_id: typeId ?? undefined,
+                role: linkTarget.value?.role ?? undefined,
+                artist: linkTarget.value?.artist ? 1 : undefined,
+            },
         })
         if (query === searchQuery.value) searchResults.value = data ?? []
     } catch (e) {
@@ -473,6 +553,14 @@ watch([searchQuery, searchTypeId], ([query, typeId]) => {
     searching.value = true
     runSearch(query, typeId)
 })
+
+// Treffer, die schon in der Liste stehen, bekommen beim Verknüpfen nur die Rolle dazu
+function linkedHint(linked) {
+    const roles = [...(linked.is_artist ? [$t('Artist')] : []), ...(linked.roles ?? [])]
+    return roles.length
+        ? $t('Already in the list as {roles}', { roles: roles.join(', ') })
+        : $t('Already in the list')
+}
 
 function closeSearch() {
     linkTarget.value = null

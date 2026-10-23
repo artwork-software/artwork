@@ -95,6 +95,73 @@ final class ProjectComponentCrmContactTest extends TestCase
     }
 
     #[Test]
+    public function freelancers_can_only_be_linked_when_selected(): void
+    {
+        $context = $this->crmContactListContext();
+        $freelancerType = $this->activeSystemType('freelancer', 'Freelancer');
+        $freelancer = CrmContact::create(['crm_contact_type_id' => $freelancerType->id, 'display_name' => 'Fritz Licht', 'is_active' => true]);
+        $this->writer($context, [PermissionEnum::CRM_VIEW]);
+
+        // nicht ausgewählt (auch nicht bei leerer Auswahl): weder auffindbar noch verknüpfbar
+        foreach ([[$context['type']->id], []] as $typeIds) {
+            $context['component']->update(['data' => [...$context['component']->data, 'contact_type_ids' => $typeIds]]);
+            $this->getJson(route('projects.components.crm-contacts.search', $this->params($context)) . '?search=Fritz')
+                ->assertOk()->assertExactJson([]);
+        }
+        $this->postJson(route('projects.components.crm-contacts.link', $this->params($context)), ['crm_contact_id' => $freelancer->id])
+            ->assertStatus(422);
+
+        $context['component']->update(['data' => [
+            ...$context['component']->data,
+            'contact_type_ids' => [$context['type']->id, $freelancerType->id],
+        ]]);
+        $index = $this->getJson(route('projects.components.crm-contacts.index', $this->params($context)))->assertOk();
+        $this->assertSame([$context['type']->id], collect($index->json('contact_types'))->pluck('id')->all());
+        $this->assertContains($freelancerType->id, collect($index->json('linkable_contact_types'))->pluck('id')->all());
+
+        $this->getJson(route('projects.components.crm-contacts.search', $this->params($context)) . '?search=Fritz')
+            ->assertOk()->assertJsonPath('0.id', $freelancer->id);
+        $this->postJson(route('projects.components.crm-contacts.link', $this->params($context)), ['crm_contact_id' => $freelancer->id])
+            ->assertCreated()
+            ->assertJsonPath('contact.can_edit', false)
+            ->assertJsonPath('contact.can_remove', true);
+
+        // gepflegt wird an der Quelle: kein Anlegen, kein Bearbeiten über die Liste
+        $this->postJson(route('projects.components.crm-contacts.store', $this->params($context)), [
+            'crm_contact_type_id' => $freelancerType->id,
+            'display_name' => 'Neu als Freelancer',
+        ])->assertStatus(422);
+        $this->patchJson(route('projects.components.crm-contacts.update', $this->params($context, ['crmContact' => $freelancer->id])), [
+            'display_name' => 'Umbenannt',
+        ])->assertForbidden();
+        $this->assertSame('Fritz Licht', $freelancer->fresh()->display_name);
+    }
+
+    #[Test]
+    public function contact_type_options_mark_link_only_types(): void
+    {
+        $freelancerType = $this->activeSystemType('freelancer', 'Freelancer');
+        $userType = $this->activeSystemType('user', 'User');
+        $guestType = CrmContactType::create(['name' => 'Gast', 'slug' => 'guest-' . uniqid(), 'is_system' => false, 'is_active' => true]);
+        $this->actingAsAdmin();
+
+        $options = collect($this->getJson(route('components.crm-contact-list.contact-types'))->assertOk()->json())->keyBy('id');
+
+        $this->assertTrue($options->get($freelancerType->id)['link_only']);
+        $this->assertFalse($options->has($userType->id));
+        $this->assertFalse($options->get($guestType->id)['link_only']);
+    }
+
+    private function activeSystemType(string $slug, string $name): CrmContactType
+    {
+        $type = CrmContactType::withTrashed()->firstOrCreate(['slug' => $slug], ['name' => $name, 'is_system' => true, 'is_active' => true]);
+        $type->restore();
+        $type->update(['is_active' => true]);
+
+        return $type;
+    }
+
+    #[Test]
     public function internal_removal_only_unlinks_the_contact(): void
     {
         $context = $this->crmContactListContext();

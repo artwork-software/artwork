@@ -899,18 +899,12 @@ class ProjectController extends Controller
 
         if ($request->boolean('isGroup')) {
             $project->update(['is_group' => true]);
-            $project->projectsOfGroup()->sync($request->get('projects'));
-        } elseif (!empty($request->selectedGroup)) {
-            $group = Project::find($request->selectedGroup['id'] ?? null);
-            if ($group) {
-                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
-
-                // Ensure the group's is_group flag is set to true
-                if (!$group->is_group) {
-                    $group->is_group = true;
-                    $group->save();
-                }
+            if (is_array($request->input('projects'))) {
+                $this->syncProjectsOfGroup($project, $request->input('projects'));
             }
+        } elseif (!empty($request->selectedGroup)) {
+            $group = $this->resolveSelectedProjectGroup($request->selectedGroup['id'] ?? null);
+            $group?->projectsOfGroup()->syncWithoutDetaching($project->id);
         }
 
         $this->projectService->syncCategories(
@@ -3607,18 +3601,16 @@ class ProjectController extends Controller
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
         $this->authorize('update', $project);
+        $currentGroupIds = DB::table('project_groups')->where('project_id', '=', $project->id)->pluck('group_id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
         DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         if ($request->get('selectedGroup') !== null) {
-            $group = Project::find($request->get('selectedGroup')['id'] ?? null);
-            if ($group) {
-                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
-
-                // Ensure the group's is_group flag is set to true
-                if (!$group->is_group) {
-                    $group->is_group = true;
-                    $group->save();
-                }
-            }
+            $group = $this->resolveSelectedProjectGroup(
+                $request->get('selectedGroup')['id'] ?? null,
+                $currentGroupIds
+            );
+            $group?->projectsOfGroup()->syncWithoutDetaching($project->id);
 
             // Ensure the project has exactly one budget-relevant column
             $table = $project->table()->first();
@@ -3665,11 +3657,13 @@ class ProjectController extends Controller
 
         $this->projectService->syncManagementUsers($project, $request->assignedUsers ?? []);
 
-        if ($request->boolean('isGroup')) {
+        // Nur syncen, wenn die Unterprojekte bekannt mitkommen: Modals ohne geladene Gruppenprojekte
+        // schicken null und hätten sonst alle Projekte aus der Gruppe entfernt.
+        if ($request->boolean('isGroup') && is_array($request->input('projects'))) {
             $project->update(['is_group' => true]);
-            $project->projectsOfGroup()->sync($request->get('projects', []));
+            $this->syncProjectsOfGroup($project, $request->input('projects'));
 
-            foreach ($request->get('projects', []) as $projectId) {
+            foreach ($request->input('projects') as $projectId) {
                 $childProject = Project::find($projectId);
                 if ($childProject) {
                     $table = $childProject->table()->first();
@@ -5210,6 +5204,72 @@ class ProjectController extends Controller
      *
      * @return array<int, array{id: int, name: string}>
      */
+    /**
+     * Projekte einer Gruppe für das Basisdaten-Modal, wenn der Aufrufer sie nicht mitgibt.
+     *
+     * @return array<int, array{id: int, name: string}>
+     */
+    public function projectsOfGroupNames(Project $project): array
+    {
+        $this->authorize('view', $project);
+
+        return $project->projectsOfGroup()
+            ->setEagerLoads([])
+            ->orderBy('projects.name')
+            ->get(['projects.id', 'projects.name'])
+            ->map(fn (Project $groupProject): array => [
+                'id' => (int) $groupProject->id,
+                'name' => (string) $groupProject->name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Gruppe aus dem Modal nur übernehmen, wenn sie wirklich eine Gruppe ist und – sofern das Projekt
+     * nicht schon drin war – sichtbar ist. Vorher wurde jedes Projekt per ID still zur Gruppe gemacht.
+     *
+     * @param array<int, int> $currentGroupIds
+     */
+    private function resolveSelectedProjectGroup(mixed $groupId, array $currentGroupIds = []): ?Project
+    {
+        if (!is_numeric($groupId)) {
+            return null;
+        }
+
+        $group = Project::query()->where('is_group', true)->find((int) $groupId);
+        if ($group === null) {
+            return null;
+        }
+
+        if (!in_array((int) $group->id, $currentGroupIds, true)) {
+            $this->authorize('view', $group);
+        }
+
+        return $group;
+    }
+
+    /**
+     * Neu hinzugefügte Unterprojekte müssen sichtbar sein (wie addProjectsToGroup); bereits
+     * enthaltene bleiben auch ohne eigenes Sichtrecht erhalten, sonst scheitert jedes Speichern.
+     *
+     * @param array<int, mixed> $projectIds
+     */
+    private function syncProjectsOfGroup(Project $group, array $projectIds): void
+    {
+        $projectIds = collect($projectIds)
+            ->filter(fn ($id): bool => is_numeric($id) && (int) $id !== (int) $group->id)
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values();
+
+        $currentIds = $group->projectsOfGroup()->pluck('projects.id')->map(fn ($id): int => (int) $id);
+        Project::query()->whereIn('id', $projectIds->diff($currentIds))->get()
+            ->each(fn (Project $project) => $this->authorize('view', $project));
+
+        $group->projectsOfGroup()->sync($projectIds->all());
+    }
+
     public function projectGroupNames(Project $project): array
     {
         return $project->groups()

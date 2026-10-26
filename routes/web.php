@@ -3687,6 +3687,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         // Projektgruppen eines Projekts, Anzeige neben dem Projektnamen im Termin-Modal
         Route::get('/projects/{project}/groups', [ProjectController::class, 'projectGroupNames'])
             ->name('project.groupNames');
+        // Unterprojekte einer Gruppe, falls das Basisdaten-Modal sie nicht mitbekommt
+        Route::get('/projects/{project}/group-projects', [ProjectController::class, 'projectsOfGroupNames'])
+            ->name('project.groupProjectNames');
     });
 
     Route::group(['prefix' => 'chat'], function (): void {

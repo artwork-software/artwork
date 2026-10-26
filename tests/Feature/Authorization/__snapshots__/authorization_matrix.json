@@ -416,6 +416,8 @@
     "GET rooms/free": "validation",
     "GET rooms/move": "forbidden",
     "GET rooms/{room}": "redirect",
+    "GET searching/projects/{project}/group-projects": "forbidden",
+    "GET searching/projects/{project}/groups": "allowed",
     "GET service-provider/{serviceProvider}": "forbidden",
     "GET settings/bi": "forbidden",
     "GET settings/bi/audience-categories": "forbidden",

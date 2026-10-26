@@ -6,6 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistIndexResource;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Checklist\Repositories\ChecklistRepository;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistTemplateIndexResource;
 use Artwork\Modules\Checklist\Models\ChecklistTemplate;
@@ -91,10 +92,9 @@ readonly class ChecklistService
                             })
                             ->orWhereHas('tasks.task_users', function ($tq) use ($userId): void {
                                 $tq->where('user_id', $userId);
-                            })
-                            ->orWhereHas('project.users', function ($pq) use ($userId): void {
-                                $pq->where('users.id', $userId);
                             });
+                            // Kein Zweig "Projektmitglied": der Filter unten verwarf genau diese Checklisten
+                            // wieder – geladen wurden trotzdem alle Checklisten aller eigenen Projekte.
                         });
                 })
                 ->orWhere(function ($q) use ($userId): void {
@@ -143,28 +143,37 @@ readonly class ChecklistService
         ];
     }
 
+    /**
+     * Sortierung nach dem ersten Termin des Projekts. Die frühesten Starts kommen aus einer Abfrage; vorher
+     * lud der Vergleicher bei jedem Vergleich zwei Termine (n·log n Abfragen).
+     */
     private function applySorting(\Illuminate\Support\Collection $checklists, int $sort): \Illuminate\Support\Collection
     {
-        switch ($sort) {
-            case 1:
-                return $checklists->sort(function ($a, $b) {
-                    $aStart = $a->project?->events()->orderBy('start_time', 'ASC')->first();
-                    $bStart = $b->project?->events()->orderBy('start_time', 'ASC')->first();
-                    $aTime = $aStart ? strtotime($aStart->start_time) : PHP_INT_MAX;
-                    $bTime = $bStart ? strtotime($bStart->start_time) : PHP_INT_MAX;
-                    return $aTime - $bTime;
-                })->values();
-            case 2:
-                return $checklists->sort(function ($a, $b) {
-                    $aStart = $a->project?->events()->orderBy('start_time', 'ASC')->first();
-                    $bStart = $b->project?->events()->orderBy('start_time', 'ASC')->first();
-                    $aTime = $aStart ? strtotime($aStart->start_time) : PHP_INT_MAX;
-                    $bTime = $bStart ? strtotime($bStart->start_time) : PHP_INT_MAX;
-                    return $bTime - $aTime;
-                })->values();
-            default:
-                return $checklists;
+        if ($sort !== 1 && $sort !== 2) {
+            return $checklists;
         }
+
+        $projectIds = $checklists->pluck('project_id')->filter()->unique()->values();
+        $firstStartByProject = $projectIds->isEmpty()
+            ? collect()
+            : Event::query()
+                ->toBase()
+                ->whereIn('project_id', $projectIds)
+                ->groupBy('project_id')
+                ->selectRaw('project_id, MIN(start_time) as first_start')
+                ->pluck('first_start', 'project_id');
+
+        $firstStart = static function (Checklist $checklist) use ($firstStartByProject): int {
+            $start = $checklist->project_id !== null ? ($firstStartByProject[$checklist->project_id] ?? null) : null;
+
+            return $start !== null ? (int) strtotime((string) $start) : PHP_INT_MAX;
+        };
+
+        $sorted = $checklists->sort(fn (Checklist $a, Checklist $b): int => $sort === 1
+            ? $firstStart($a) <=> $firstStart($b)
+            : $firstStart($b) <=> $firstStart($a));
+
+        return $sorted->values();
     }
 
     public function assignUsersById(Checklist $checklist, array $ids): void

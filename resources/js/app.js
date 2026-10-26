@@ -7,6 +7,7 @@ import '../css/global.css'
 import { createApp, h } from 'vue'
 import { createInertiaApp, router, usePage } from '@inertiajs/vue3'
 import { createI18n } from 'vue-i18n'
+import { createLocaleSwitcher, resolveInitialLocale } from '@/Helper/appLocale.js'
 import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
@@ -20,10 +21,7 @@ async function loadLocaleMessages(locale) {
     return messages.default || messages
 }
 
-const initialLocale =
-    localStorage.getItem('locale') ||
-    document.documentElement.lang ||
-    'de'
+const initialLocale = resolveInitialLocale(document.documentElement.lang)
 
 const i18n = createI18n({
     legacy: false,
@@ -56,13 +54,7 @@ createInertiaApp({
         }
 
         // Sprache dynamisch laden, bevor wir i18n registrieren
-        const initialLocale =
-            localStorage.getItem('locale') ||
-            document.documentElement.lang ||
-            'de'
-
-        const messages = await import(`../../lang/${initialLocale}.json`)
-        i18n.global.setLocaleMessage(initialLocale, messages.default || messages)
+        i18n.global.setLocaleMessage(initialLocale, await loadLocaleMessages(initialLocale))
 
         app.use(i18n)
         setAppToastTranslator((key) => i18n.global.t(key))
@@ -85,11 +77,7 @@ createInertiaApp({
         app.config.globalProperties.$currencySymbol = () => instanceFormatter().currencySymbol
         app.config.globalProperties.$formatCurrency = (value) => instanceFormatter().formatCurrency(value)
 
-        app.config.globalProperties.$updateLocale = (newLocale) => {
-            i18n.global.locale.value = newLocale
-            document.documentElement.lang = newLocale
-            localStorage.setItem('locale', newLocale)
-        }
+        app.config.globalProperties.$updateLocale = createLocaleSwitcher(i18n, loadLocaleMessages, document.documentElement)
 
         if (import.meta.env.DEV) app.config.performance = true
         app.mount(el)

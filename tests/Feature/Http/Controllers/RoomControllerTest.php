@@ -185,21 +185,6 @@ final class RoomControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function free_rooms_require_a_valid_period_of_at_most_one_year(): void
-    {
-        $this->actingAsAdmin();
-
-        $this->getJson(route('rooms.free'))->assertJsonValidationErrors(['start', 'end']);
-        $this->getJson(route('rooms.free', ['start' => 'kein-datum', 'end' => '2026-10-10']))
-            ->assertJsonValidationErrors('start');
-        $this->getJson(route('rooms.free', ['start' => '2026-01-01', 'end' => '2027-06-01']))
-            ->assertJsonValidationErrors('end');
-        $this->getJson(route('rooms.free', ['start' => '2026-10-01', 'end' => '2026-10-03']))
-            ->assertOk()
-            ->assertJsonStructure(['rooms']);
-    }
-
-    #[Test]
     public function admin_can_update_room(): void
     {
         $this->actingAsAdmin();
@@ -516,20 +501,5 @@ final class RoomControllerTest extends FeatureTestCase
 
         $response->assertOk();
         $this->assertIsArray($response->json());
-    }
-
-    #[Test]
-    public function admin_can_get_all_day_free_rooms(): void
-    {
-        $this->actingAsAdmin();
-        Room::factory()->count(2)->create();
-
-        $response = $this->getJson(route('rooms.free', [
-            'start' => '2026-01-01',
-            'end' => '2026-01-02',
-        ]));
-
-        $response->assertOk();
-        $response->assertJsonStructure(['rooms']);
     }
 }

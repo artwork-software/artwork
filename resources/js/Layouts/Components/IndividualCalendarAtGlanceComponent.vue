@@ -268,7 +268,7 @@ watch(() => props.eventsAtAGlance, (eventsAtAGlance) => {
 
 /**
  * Im Multi-Edit-Modus setzt SingleCalendarEvent per Checkbox event.clicked; ausgewählt ist,
- * was dort angehakt ist (wie getCheckedEvents in IndividualCalendarComponent).
+ * was dort angehakt ist.
  */
 const checkedEventIds = computed(() => {
     const ids = new Set();

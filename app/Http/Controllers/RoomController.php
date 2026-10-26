@@ -6,7 +6,6 @@ use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Change\Changes\Room\MemberChange;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Department\Models\Department;
-use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
 use Artwork\Modules\Room\Http\Requests\UpdateRoomUserRequest;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
@@ -18,10 +17,8 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -41,71 +38,6 @@ class RoomController extends Controller
         private readonly MemberChange $memberChange,
         private readonly ChangeService $changeService,
     ) {
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function getAllDayFree(Request $request): array
-    {
-        // Je Tag läuft eine Abfrage: Zeitraum begrenzen, unparsbare Daten nicht als 500 enden lassen.
-        $request->validate([
-            'start' => ['required', 'date'],
-            'end' => ['required', 'date', 'after_or_equal:start'],
-        ]);
-        if (Carbon::parse($request->input('start'))->addYear()->lt(Carbon::parse($request->input('end')))) {
-            throw ValidationException::withMessages(['end' => __('The period may cover at most one year.')]);
-        }
-
-        $period = CarbonPeriod::create(
-            Carbon::parse($request->get('start'))->addHours(2),
-            Carbon::parse($request->get('end'))
-        );
-
-        // Convert the period to an array of dates
-        $dates = $period->toArray();
-        $roomIds = [];
-
-        foreach ($dates as $date) {
-            $events = Event::query()->occursAt(Carbon::parse($date))->get();
-            foreach ($events as $event) {
-                $roomIds[] = $event->room_id;
-            }
-        }
-        $room_occurrences = array_count_values($roomIds);
-
-        $rooms_with_events_everyDay = [];
-        foreach ($room_occurrences as $key => $occurrence) {
-            if ($occurrence == count($dates)) {
-                $rooms_with_events_everyDay[] = $key;
-            }
-        }
-
-        $rooms = Room::with('adjoining_rooms', 'main_rooms')
-            ->whereNotIn('id', $rooms_with_events_everyDay)
-            ->get()
-            ->map(
-                fn(Room $room) => [
-                    'id' => $room->id,
-                    'name' => $room->name,
-                    'area' => $room->area,
-                    'label' => $room->name,
-                    'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
-                        'id' => $adjoining_room->id,
-                        'label' => $adjoining_room->name
-                    ]),
-                    'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
-                        'id' => $main_room->id,
-                        'label' => $main_room->name
-                    ]),
-                    'categories' => $room->categories,
-                    'attributes' => $room->attributes
-                ]
-            );
-
-        return [
-            'rooms' => $rooms
-        ];
     }
 
     public function store(Request $request): RedirectResponse

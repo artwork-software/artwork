@@ -173,6 +173,7 @@ import type { PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {Float} from "@headlessui-float/vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { listboxItemMatches, normalizeSearchText, resolveListboxSearchKeys } from "@/Helper/listboxSearch.js";
 type Option = Record<string, any>
 type ModelValue = Option | Option[] | null
 
@@ -386,30 +387,15 @@ const shouldShowControls = computed(() =>
 )
 
 /** Normalisierung für Textsuche */
-const norm = (v: unknown) =>
-    String(v ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/\p{Diacritic}/gu, '')
+const norm = normalizeSearchText
 
 /** Welche Keys werden durchsucht? */
-const effectiveSearchKeys = computed<(string | ((i: Option) => string))[]>(() => {
-    if (props.searchKeys.length) return props.searchKeys
-    // Fallback: optionLabel (falls string) sonst 'name'/'id'
-    if (typeof props.optionLabel === 'string') return [props.optionLabel]
-    return ['name', 'id']
-})
+const effectiveSearchKeys = computed<(string | ((i: Option) => string))[]>(() =>
+    resolveListboxSearchKeys(props.searchKeys, props.optionLabel)
+)
 
 /** Suche matcht, wenn irgendein Feld matcht */
-const matchesSearch = (item: Option, query: string) => {
-    const q = norm(query)
-    if (!q) return true
-    for (const key of effectiveSearchKeys.value) {
-        const value = typeof key === 'function' ? key(item) : item?.[key]
-        if (norm(value).includes(q)) return true
-    }
-    return false
-}
+const matchesSearch = (item: Option, query: string) => listboxItemMatches(item, query, effectiveSearchKeys.value)
 
 /** Sortieren: sortFn > sortBy(function/key) > optionLabel */
 const compareItems = (a: Option, b: Option) => {

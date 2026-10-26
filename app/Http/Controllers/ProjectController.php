@@ -625,7 +625,14 @@ class ProjectController extends Controller
         $componentTypes = $components->pluck('type');
 
         if ($componentTypes->contains(ProjectTabComponentEnum::BI_KEY_FIGURES->value)) {
-            $projects->loadMissing(['biData', 'biEventData.event', 'biRoomCapacities', 'events.room']);
+            // Kennzahlen lesen je Termin event_type->biTags (sonst zwei Abfragen je Termin); vom Raum nur Kapazität
+            $projects->loadMissing([
+                'biData',
+                'biEventData.event',
+                'biRoomCapacities',
+                'events.room' => fn ($query) => $query->without(['admins', 'creator']),
+                'events.event_type.biTags',
+            ]);
         }
 
         return $componentTypes->contains(ProjectTabComponentEnum::PROJECT_PERIOD->value)

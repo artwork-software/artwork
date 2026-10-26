@@ -103,7 +103,7 @@
                                         v-model="artistSearch"
                                         id="search_artist"
                                         :label="$t('Search artist')"
-                                        placeholder="Name eingeben..."
+                                        :placeholder="$t('Search by name')"
                                         no-margin-top
                                     />
 

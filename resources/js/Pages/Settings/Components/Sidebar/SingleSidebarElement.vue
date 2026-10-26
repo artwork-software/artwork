@@ -1,4 +1,5 @@
 <script setup>
+import { useI18n } from "vue-i18n";
 import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import draggable from "vuedraggable";
@@ -15,6 +16,7 @@ import {
     IconDragDrop,
 } from "@tabler/icons-vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+const { t } = useI18n();
 
 const props = defineProps({
     tab: { type: Object, required: true },
@@ -45,7 +47,7 @@ function onDragStart(event) {
 }
 
 function removeComponentFromSidebar(id) {
-    if (confirm('Möchten Sie diese Komponente aus dem Sidebar-Tab entfernen?')) {
+    if (confirm(t('Remove this component from the sidebar tab?'))) {
         router.delete(route("sidebar.component.remove", { sidebarTabComponent: id }), {
             preserveScroll: true,
             onSuccess: () => {
@@ -108,7 +110,7 @@ function editTab() {
 }
 
 function removeTab() {
-    if (confirm('Möchten Sie diesen Sidebar-Tab wirklich löschen?')) {
+    if (confirm(t('Really delete this sidebar tab?'))) {
         router.delete(
             route("sidebar.tab.destroy", { projectTabSidebarTab: props.sidebarTab.id }),
             {

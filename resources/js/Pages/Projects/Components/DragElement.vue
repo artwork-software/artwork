@@ -52,7 +52,7 @@
                     <ToolTipComponent
                         icon="IconId"
                         icon-size="w-4 h-4"
-                        tooltip-text="Freelancer*in"
+                        :tooltip-text="$t('Freelancer')"
                         direction="top"
                         stroke="2"
                         icon-color="text-[var(--uo-text)]"

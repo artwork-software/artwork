@@ -20,7 +20,7 @@
                     <div class="px-4 py-2">
                         <div>
                             <p class="text-xs text-text-muted mb-2 font-lexend font-bold">
-                                Schichtzeiten für {{ person.name || person.full_name }} anpassen
+                                {{ $t('Adjust shift times for {name}', { name: person.name || person.full_name }) }}
                             </p>
                         </div>
                         <div class="flex items-center gap-x-2">
@@ -178,7 +178,7 @@
                                 <div class="px-4 py-2">
                                     <div>
                                         <p class="text-xs text-text-muted mb-2 font-lexend font-bold">
-                                            Schichtbeschreibung für {{ person.name || person.full_name }} anpassen
+                                            {{ $t('Adjust shift description for {name}', { name: person.name || person.full_name }) }}
                                         </p>
                                     </div>
                                     <div class="flex items-end gap-x-2">

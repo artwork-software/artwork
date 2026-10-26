@@ -9321,5 +9321,22 @@
     "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.": "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.",
     "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.": "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.",
     "The export link has expired. Please start the export again.": "The export link has expired. Please start the export again.",
-    "This event could not be approved: it is already approved or you may not approve it. Reload the page to see the current state.": "This event could not be approved: it is already approved or you may not approve it. Reload the page to see the current state."
+    "This event could not be approved: it is already approved or you may not approve it. Reload the page to see the current state.": "This event could not be approved: it is already approved or you may not approve it. Reload the page to see the current state.",
+    "The :attribute must be a valid URL.": "The :attribute must be a valid URL.",
+    "The :attribute must use one of these schemes: :schemes.": "The :attribute must use one of these schemes: :schemes.",
+    "The :attribute must not contain credentials.": "The :attribute must not contain credentials.",
+    "The :attribute must point to a public host.": "The :attribute must point to a public host.",
+    "The :attribute host could not be resolved.": "The :attribute host could not be resolved.",
+    "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded; the shift was committed by {username}.": "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded; the shift was committed by {username}.",
+    "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded.": "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded.",
+    "Assignment made on {date}.": "Assignment made on {date}.",
+    "Not available despite shift": "Not available despite shift",
+    "You lack the permission \"Plan directly in the planning calendar\" to create planned events in this room.": "You lack the permission \"Plan directly in the planning calendar\" to create planned events in this room.",
+    "Here you can view and edit the details of the planned event. Planned events are never room requests; saving keeps the event firmly planned.": "Here you can view and edit the details of the planned event. Planned events are never room requests; saving keeps the event firmly planned.",
+    "Adjust shift times for {name}": "Adjust shift times for {name}",
+    "Adjust shift description for {name}": "Adjust shift description for {name}",
+    "The print window was blocked. Please allow pop-ups for this page.": "The print window was blocked. Please allow pop-ups for this page.",
+    "Really delete this template?": "Really delete this template?",
+    "Remove this component from the sidebar tab?": "Remove this component from the sidebar tab?",
+    "Really delete this sidebar tab?": "Really delete this sidebar tab?"
 }

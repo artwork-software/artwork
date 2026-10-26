@@ -37,7 +37,7 @@
                 v-model:page="page"
                 @page-change="onPageChange"
                 empty-title="Keine Manufacturers"
-                empty-message="Derzeit sind keine Einträge vorhanden."
+                empty-message="No entries available"
             >
 
                 <!-- Name (Avatar + Name + Email) -->

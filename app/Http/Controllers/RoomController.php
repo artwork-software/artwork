@@ -441,20 +441,13 @@ class RoomController extends Controller
         } catch (\Throwable $e) {
             abort(422, 'Invalid date parameters.');
         }
-        $currentEventId = $params['currentEventId'] ?? null;
+        $currentEventId = isset($params['currentEventId']) ? (int) $params['currentEventId'] : null;
 
-        $collisions = [];
-        $this->roomService->getAllWithoutTrashed()->each(
-            function (Room $room) use (&$collisions, $startDate, $endDate, $currentEventId): void {
-                $collisions[$room->id] = $this->collisionService->findCollisionCountForRoom(
-                    $room,
-                    $startDate,
-                    $endDate,
-                    $currentEventId
-                );
-            }
-        );
-        return $collisions;
+        $roomIds = Room::query()->setEagerLoads([])->orderBy('id')->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+
+        return $this->collisionService->findCollisionCountsForRooms($roomIds, $startDate, $endDate, $currentEventId);
     }
 
     public function search(Request $request): \Illuminate\Http\JsonResponse

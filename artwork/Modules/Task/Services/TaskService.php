@@ -180,9 +180,12 @@ class TaskService
         $task->name = $data->get('name');
         $task->description = $data->get('description');
         $task->deadline = $data->get('deadlineDate') ? Carbon::parse($data->get('deadlineDate'))->endOfDay() : null;
-        $task->done = false;
-        $task->done_at = null;
-        $task->user_id = null;
+        // Erledigt-Status bleibt beim Bearbeiten erhalten (vorher öffnete jede Textkorrektur die Aufgabe wieder).
+        // Neue Deadline = neue Erinnerungen, sonst kam nach dem Verschieben keine mehr.
+        if ($task->isDirty('deadline')) {
+            $task->sent_deadline_notification = false;
+            $task->sent_deadline_tomorrow_notification = false;
+        }
         $this->syncTaskUsers(
             $task,
             $data->get('users')

@@ -4,6 +4,7 @@ import {
     findActiveShiftPlanRequestRow,
     isShiftPlanRequestComparisonTarget,
 } from './shiftPlanRequestNavigation.js';
+import { safeGetItem, safeRemoveItem, safeSetItem } from '@/Helper/safeStorage.js';
 
 const comparisonContextStorageKey = 'shift-plan-request-comparison-context';
 // Kontext verfällt, falls die Navigation abbricht und die Ziel-Anfrage erst später regulär geöffnet wird
@@ -42,19 +43,19 @@ export const useShiftPlanRequestWeekNavigation = (requestId) => {
         });
 
         if (!reviewContext) {
-            sessionStorage.removeItem(comparisonContextStorageKey);
+            safeRemoveItem(comparisonContextStorageKey, 'session');
             return;
         }
 
-        sessionStorage.setItem(comparisonContextStorageKey, JSON.stringify({
+        safeSetItem(comparisonContextStorageKey, JSON.stringify({
             ...reviewContext,
             targetRequestId: Number(targetRequestId),
             storedAt: Date.now(),
-        }));
+        }), 'session');
     };
 
     const restoreReviewPosition = async (currentRequestId) => {
-        const serializedContext = sessionStorage.getItem(comparisonContextStorageKey);
+        const serializedContext = safeGetItem(comparisonContextStorageKey, 'session');
         if (!serializedContext) {
             return;
         }
@@ -63,21 +64,21 @@ export const useShiftPlanRequestWeekNavigation = (requestId) => {
         try {
             reviewContext = JSON.parse(serializedContext);
         } catch {
-            sessionStorage.removeItem(comparisonContextStorageKey);
+            safeRemoveItem(comparisonContextStorageKey, 'session');
             return;
         }
 
         if (!reviewContext.storedAt || Date.now() - reviewContext.storedAt > comparisonContextTtlMs) {
-            sessionStorage.removeItem(comparisonContextStorageKey);
+            safeRemoveItem(comparisonContextStorageKey, 'session');
             return;
         }
 
         if (!isShiftPlanRequestComparisonTarget(reviewContext, currentRequestId)) {
-            sessionStorage.removeItem(comparisonContextStorageKey);
+            safeRemoveItem(comparisonContextStorageKey, 'session');
             return;
         }
 
-        sessionStorage.removeItem(comparisonContextStorageKey);
+        safeRemoveItem(comparisonContextStorageKey, 'session');
         await nextTick();
 
         window.requestAnimationFrame(() => {

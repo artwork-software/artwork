@@ -446,6 +446,7 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import BulkSingleEvent from "@/Pages/Projects/Components/BulkComponents/BulkSingleEvent.vue";
 import { parseYmd, toYmd } from "@/Helper/IsoWeek.js";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
@@ -523,10 +524,10 @@ const timeArray = ref(true);
 
 // Persisted user preference for showing End date column in Bulk
 const showEndDateStorageKey = computed(() => `bulk_show_end_date_user_${usePage().props.auth.user.id}`);
-const showEndDate = ref(localStorage.getItem(showEndDateStorageKey.value) === 'true');
+const showEndDate = ref(safeGetItem(showEndDateStorageKey.value) === 'true');
 
 const isPlanningEvent = ref((() => {
-    const storedValue = localStorage.getItem(`isPlanningEvent_${props.project.id}`);
+    const storedValue = safeGetItem(`isPlanningEvent_${props.project.id}`);
     return storedValue !== null ? storedValue === 'true' : (props.project?.state?.is_planning || false);
 })());
 
@@ -1467,7 +1468,7 @@ onMounted(async () => {
 
     // persist showEndDate changes
     watch(showEndDate, (v) => {
-        localStorage.setItem(showEndDateStorageKey.value, v ? 'true' : 'false');
+        safeSetItem(showEndDateStorageKey.value, v ? 'true' : 'false');
     });
 
     // Try to fetch data first, fallback to props
@@ -1557,7 +1558,7 @@ watch(() => events.value, (newEvents) => {
 }, {deep: true});
 
 watch(isPlanningEvent, (newValue) => {
-    localStorage.setItem(`isPlanningEvent_${props.project.id}`, newValue.toString());
+    safeSetItem(`isPlanningEvent_${props.project.id}`, newValue.toString());
 });
 
 // Virtualisierte Zeilen mounten asynchron – Sticky-Scrollbar-Breite neu vermessen,

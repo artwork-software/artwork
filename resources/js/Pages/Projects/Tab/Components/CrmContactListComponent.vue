@@ -233,6 +233,7 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
 import { router, usePage } from '@inertiajs/vue3'
@@ -328,7 +329,7 @@ const collapsedGroups = ref(readCollapsedGroups())
 
 function readCollapsedGroups() {
     try {
-        const stored = JSON.parse(window.localStorage.getItem(collapsedStorageKey) ?? 'null')
+        const stored = JSON.parse(safeGetItem(collapsedStorageKey) ?? 'null')
         if (Array.isArray(stored)) return stored
     } catch (e) {
         // ohne Speicher gilt die Vorgabe
@@ -345,7 +346,7 @@ function setCollapsed(group, collapsed) {
         ? [...new Set([...collapsedGroups.value, group.key])]
         : collapsedGroups.value.filter((key) => key !== group.key)
     try {
-        window.localStorage.setItem(collapsedStorageKey, JSON.stringify(collapsedGroups.value))
+        safeSetItem(collapsedStorageKey, JSON.stringify(collapsedGroups.value))
     } catch (e) {
         // nur Komfort: ohne Speicher gilt der Zustand bis zum Neuladen
     }

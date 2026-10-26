@@ -4134,6 +4134,10 @@ async function handleWorkerReload() {
     }
 }
 
+// Tagesdienst-Zellen, deren Zuweisung gerade gespeichert wird: ein zweiter Klick vor der Antwort
+// schickte sonst denselben attach erneut (bzw. hob ihn wieder auf)
+const dayServiceCellsInFlight = new Set<string>()
+
 function handleCellClick(user: any, day: any) {
     if (multiEditMode.value && !userForMultiEdit.value) {
         handleMultiEdit(user, day)
@@ -4179,18 +4183,24 @@ function handleCellClick(user: any, day: any) {
             }
         }
 
-        if (hasDayService) {
-            axios.patch(route('remove.day.service.from.user', {dayServiceable: user.element.id}), {
+        const cellKey = `${type}|${user.element.id}|${day.withoutFormat}`
+        if (dayServiceCellsInFlight.has(cellKey)) {
+            return
+        }
+        dayServiceCellsInFlight.add(cellKey)
+        const request = hasDayService
+            ? axios.patch(route('remove.day.service.from.user', {dayServiceable: user.element.id}), {
                 dayService: selectedDayService.value.id, date: day.withoutFormat, modelType: type,
-            }).then(setWorkerDayServicesCallback)
-        } else {
-            axios.post(route('day-service.attach', {
+            })
+            : axios.post(route('day-service.attach', {
                 dayServiceable: user.element.id,
                 dayService: selectedDayService.value.id
             }), {
                 date: day.withoutFormat, modelType: type,
-            }).then(setWorkerDayServicesCallback)
-        }
+            })
+        request.then(setWorkerDayServicesCallback)
+            .catch(() => {})
+            .finally(() => dayServiceCellsInFlight.delete(cellKey))
         return
     }
     const isOwnCell = user.type === 0 && user.element.id === authUser.value.id

@@ -15,7 +15,7 @@
                 <button type="button" @click="$emit('close')" class="inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:text-sm">
                     {{ $t('No') }}
                 </button>
-                <button type="button" @click="requestVerification" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-600 text-base font-medium text-white hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:text-sm">
+                <button type="button" @click="requestVerification" :disabled="requestingVerification" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-600 text-base font-medium text-white hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                     {{ directBookingOnly ? $t('Confirm as fixed events') : $t('Request appointments verification') }}
                 </button>
             </div>
@@ -40,10 +40,18 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
+// Doppelklick schickte zwei Anfragen: beide bestanden die Prüfung, es gab doppelte Prüfanfragen
+const requestingVerification = ref(false);
+
 const requestVerification = () => {
+    if (requestingVerification.value) {
+        return;
+    }
     router.post(route('projects.request-verification', props.projectId), {}, {
         preserveScroll: true,
         preserveState: false,
+        onStart: () => requestingVerification.value = true,
+        onFinish: () => requestingVerification.value = false,
         onSuccess: () => {
             emit('close');
         }

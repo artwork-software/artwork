@@ -4158,6 +4158,21 @@ class ProjectController extends Controller
             $project->departments->map(fn($department) => $this->authorize('update', $department));
         }
 
+        // Alles oder nichts: ein Fehler beim Budget oder einem Sync ließ sonst eine halbe „(Kopie)“ ohne Team stehen
+        $newProject = DB::transaction(fn (): Project => $this->createProjectCopy($project));
+
+        if ($projectTab = $this->projectTabService->findFirstProjectTabWithShiftsComponent()) {
+            return Redirect::route('projects.tab', [$newProject->id, $projectTab->id]);
+        }
+
+        return redirect()->route('projects', [
+            'page' => $request->get('page'),
+            'query' => $request->get('query'),
+        ]);
+    }
+
+    private function createProjectCopy(Project $project): Project
+    {
         $newProject = Project::create([
             'name' => __('(Copy)') . ' ' . $project->name,
             'description' => $project->description,
@@ -4194,14 +4209,7 @@ class ProjectController extends Controller
 
         $newProject->users()->sync($usersWithPivotFlags);
 
-        if ($projectTab = $this->projectTabService->findFirstProjectTabWithShiftsComponent()) {
-            return Redirect::route('projects.tab', [$newProject->id, $projectTab->id]);
-        }
-
-        return redirect()->route('projects', [
-            'page' => $request->get('page'),
-            'query' => $request->get('query'),
-        ]);
+        return $newProject;
     }
 
     public function destroy(

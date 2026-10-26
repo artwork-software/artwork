@@ -47,6 +47,13 @@ class ChecklistController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Name nur aus Leerzeichen wurde durch TrimStrings zu null → 500 statt Fehlermeldung
+        $request->validate([
+            'template_id' => ['nullable', 'integer', 'exists:checklist_templates,id'],
+            'name' => ['required_without:template_id', 'nullable', 'string', 'max:255'],
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
+        ]);
+
         if ($request->integer('project_id')) {
             $this->authorize('createProperties', Project::find($request->project_id));
         }

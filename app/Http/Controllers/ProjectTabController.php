@@ -551,8 +551,8 @@ class ProjectTabController extends Controller
 
     public function removeComponentFormDisclosure(Request $request): void
     {
-        // Verschiebe alle bestehenden Elemente mit größerer Order nach oben
-        DisclosureComponents::find($request->get('id'))->delete();
+        // Doppelklick bzw. schon entfernter Eintrag: kein 500 (find()->delete() auf null)
+        DisclosureComponents::query()->find($request->integer('id'))?->delete();
 
         $this->clearTabSettingsCache();
     }

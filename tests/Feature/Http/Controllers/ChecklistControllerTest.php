@@ -54,6 +54,27 @@ final class ChecklistControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function checklist_name_of_only_spaces_is_a_validation_error(): void
+    {
+        $this->actingAsAdmin();
+        $countBefore = Checklist::query()->count();
+
+        $this->post(route('checklists.store'), ['name' => '   ', 'private' => false])
+            ->assertSessionHasErrors('name');
+
+        $this->assertSame($countBefore, Checklist::query()->count());
+    }
+
+    #[Test]
+    public function checklist_from_deleted_template_is_a_validation_error(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->post(route('checklists.store'), ['template_id' => 999999999, 'private' => false])
+            ->assertSessionHasErrors('template_id');
+    }
+
+    #[Test]
     public function admin_can_store_project_checklist_with_tasks(): void
     {
         $this->actingAsAdmin();

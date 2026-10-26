@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Abstracts;
 
+use Artwork\Modules\Event\Exceptions\ExportLinkExpiredException;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Services\CacheService;
 use Artwork\Core\Services\CollectionService;
@@ -43,6 +44,9 @@ abstract class EventExportService
     final public function downloadBy(string $cacheToken): BinaryFileResponse
     {
         $this->cachedData = $this->cacheService->getValueByToken($cacheToken);
+        if ($this->cachedData === null) {
+            throw new ExportLinkExpiredException();
+        }
 
         return static::composeExport();
     }

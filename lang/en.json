@@ -9319,5 +9319,7 @@
     "There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.": "There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.",
     "A filter is active — shifts outside the filter are not shown.": "A filter is active — shifts outside the filter are not shown.",
     "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.": "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.",
-    "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.": "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden."
+    "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.": "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.",
+    "The export link has expired. Please start the export again.": "The export link has expired. Please start the export again.",
+    "This event could not be approved: it is already approved or you may not approve it. Reload the page to see the current state.": "This event could not be approved: it is already approved or you may not approve it. Reload the page to see the current state."
 }

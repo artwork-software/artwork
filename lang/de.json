@@ -9330,5 +9330,7 @@
     "There are shifts in the selected period, but the current filters and display settings hide all of them. Adjust them to see the shifts again.": "Im ausgewählten Zeitraum gibt es Schichten, aber die aktuellen Filter und Anzeigeeinstellungen blenden alle aus. Passe sie an, um die Schichten wieder zu sehen.",
     "A filter is active — shifts outside the filter are not shown.": "Ein Filter ist aktiv — Schichten außerhalb des Filters werden nicht angezeigt.",
     "\"Only show shifts that are not fully staffed\" is active — fully staffed shifts are hidden.": "„Nur Schichten anzeigen, die nicht voll besetzt sind“ ist aktiv — voll besetzte Schichten werden ausgeblendet.",
-    "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.": "„Unbesetzte Tage ausblenden“ ist in den Anzeigeeinstellungen aktiv — Tage ohne sichtbare Schichten oder Termine werden ausgeblendet."
+    "\"Hide unoccupied days\" is active in the display settings — days without visible shifts or events are hidden.": "„Unbesetzte Tage ausblenden“ ist in den Anzeigeeinstellungen aktiv — Tage ohne sichtbare Schichten oder Termine werden ausgeblendet.",
+    "The export link has expired. Please start the export again.": "Der Export-Link ist abgelaufen. Bitte starte den Export erneut.",
+    "This event could not be approved: it is already approved or you may not approve it. Reload the page to see the current state.": "Der Termin konnte nicht genehmigt werden: Er ist bereits genehmigt oder du darfst ihn nicht genehmigen. Lade die Seite neu, um den aktuellen Stand zu sehen."
 }

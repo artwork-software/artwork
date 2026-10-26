@@ -414,37 +414,28 @@ class EventRepository extends BaseRepository
                 $event->update($updates);
 
                 if ($selectedDay || $selectedStartTime || $selectedEndTime) {
-                    $startTime = $originalStartTime;
-                    $endTime = $originalEndTime;
+                    $startTime = Carbon::parse($originalStartTime ?? Carbon::now());
+                    $endTime = Carbon::parse($originalEndTime ?? $startTime);
                     $allDay = $originalAllDay;
 
-                    if ($selectedDay && !$selectedStartTime && !$selectedEndTime) {
-                        // Day-only change: shift both start and end by the same offset to preserve duration
-                        $originalStartDate = Carbon::parse($startTime);
-                        $newStartDate = Carbon::parse($selectedDay)->setTimeFrom($startTime);
-                        $daysDifference = $originalStartDate->diffInDays($newStartDate, false);
-
-                        $startTime = $newStartDate;
-                        $endTime = Carbon::parse($endTime)->addDays($daysDifference);
-                    } elseif ($selectedStartTime || $selectedEndTime) {
-                        // Time-only change: update times and convert to non-all-day event
-                        $day = optional($startTime)->toDateString() ?? Carbon::now()->toDateString();
-                        if ($selectedStartTime) {
-                            $startTime = Carbon::parse("$day $selectedStartTime");
-                        }
-                        if ($selectedEndTime) {
-                            $endTime = Carbon::parse("$day $selectedEndTime");
-                        }
-                        $allDay = false; // Convert to timed event when times are provided
+                    if ($selectedDay) {
+                        // Tag ändern: Start und Ende um dieselbe Anzahl Kalendertage verschieben, Dauer bleibt
+                        $daysDifference = (int) round($startTime->copy()->startOfDay()->diffInDays(
+                            Carbon::parse($selectedDay)->startOfDay(),
+                            false
+                        ));
+                        $startTime = $startTime->copy()->addDays($daysDifference);
+                        $endTime = $endTime->copy()->addDays($daysDifference);
                     }
 
-                    if ($selectedDay && $selectedStartTime && $selectedEndTime) {
-                        // Day and time change: use processEventTimes for proper handling
-                        [$startTime, $endTime, $allDay] = $this->processEventTimes(
-                            Carbon::parse($selectedDay),
+                    if ($selectedStartTime || $selectedEndTime) {
+                        [$startTime, $endTime] = $this->applyTimesKeepingDays(
+                            $startTime,
+                            $endTime,
                             $selectedStartTime,
                             $selectedEndTime
                         );
+                        $allDay = false; // Convert to timed event when times are provided
                     }
 
                     $event->update([
@@ -474,25 +465,38 @@ class EventRepository extends BaseRepository
      * @param string|null $endTime
      * @return array{Carbon, Carbon, bool}
      */
-    public function processEventTimes(Carbon $day, ?string $startTime, ?string $endTime): array
-    {
-        $endDay = clone $day;
-        $allDay = !$startTime || !$endTime;
+    /**
+     * Nur Uhrzeiten setzen: Das Startdatum bleibt, mehrtägige Termine behalten ihre vollen Tage und ein Ende
+     * vor (oder gleich) dem Start rutscht auf den Folgetag (23:45–0:15). Wird nur der Start geändert und
+     * läge das Ende dann davor, bleibt die bisherige Dauer erhalten.
+     *
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function applyTimesKeepingDays(
+        Carbon $start,
+        Carbon $end,
+        ?string $newStartTime,
+        ?string $newEndTime
+    ): array {
+        $durationInSeconds = max(0, $end->getTimestamp() - $start->getTimestamp());
+        $fullDays = intdiv($durationInSeconds, 86400);
 
-        if (!$allDay) {
-            $startTime = Carbon::parse($startTime);
-            $endTime = Carbon::parse($endTime);
+        $newStart = $newStartTime ? $start->copy()->setTimeFromTimeString($newStartTime) : $start->copy();
 
-            if ($endTime->lt($startTime) || $endTime->eq($startTime)) {
-                $endDay->addDay();
+        if ($newEndTime) {
+            $newEnd = $newStart->copy()->addDays($fullDays)->setTimeFromTimeString($newEndTime);
+            if ($newEnd->lte($newStart)) {
+                $newEnd->addDay();
             }
 
-            $day->setTimeFromTimeString($startTime->toTimeString());
-            $endDay->setTimeFromTimeString($endTime->toTimeString());
-        } else {
-            $day->startOfDay();
-            $endDay->endOfDay();
+            return [$newStart, $newEnd];
         }
-        return [$day, $endDay, $allDay];
+
+        $newEnd = $end->copy();
+        if ($newEnd->lte($newStart)) {
+            $newEnd = $newStart->copy()->addSeconds($durationInSeconds);
+        }
+
+        return [$newStart, $newEnd];
     }
 }

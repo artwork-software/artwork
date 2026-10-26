@@ -3995,13 +3995,9 @@ class EventController extends Controller
         return true;
     }
 
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
     public function updateMultiEdit(Request $request): void
     {
-        $desiredRoomIds = [];
-        $desiredDaysOfEvents = [];
-
+        $this->validateMultiEditTime($request);
         $eventIds = $request->collect('events');
         $events = $this->authorizedMultiEditEvents($eventIds, $this->multiEditTargetRoom($request), false);
         $openRoomRequestsBefore = $this->openRoomRequestSnapshot(
@@ -4009,160 +4005,12 @@ class EventController extends Controller
         );
 
         // Ein Termin im Verkauf kann das Speichern ablehnen; dann bleibt keiner der anderen halb verschoben.
-        DB::transaction(function () use ($request, $events, &$desiredRoomIds, &$desiredDaysOfEvents): void {
+        DB::transaction(function () use ($request, $events): void {
             foreach ($events as $event) {
-                $desiredRoomIds[] = $event->getAttribute('room_id');
-
-                foreach (
-                    CarbonPeriod::create(
-                        $event->getAttribute('start_time'),
-                        $event->getAttribute('end_time')
-                    ) as $desiredDayOfEvent
-                ) {
-                    $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
-                }
-
                 if ($request->get('newRoomId') !== null) {
                     $event->setAttribute('room_id', $request->integer('newRoomId'));
-                    $desiredRoomIds[] = $event->getAttribute('room_id');
                 }
-
-                if ($request->string('date')->toString() === '') {
-                    if ($request->integer('value') !== 0) {
-                        $endDate = Carbon::parse($event->getAttribute('end_time'));
-                        $startDate = Carbon::parse($event->getAttribute('start_time'));
-                        $shifts = $event->getAttribute('shifts');
-                        $calculationType = $request->integer('calculationType');
-                        $value = $request->integer('value');
-                        $type = $request->integer('type');
-
-                        // plus
-                        if ($calculationType === 1) {
-                            // stunden
-                            if ($type === 1) {
-                                $event->setAttribute('start_time', $startDate->addHours($value));
-                                $event->setAttribute('end_time', $endDate->addHours($value));
-                            }
-
-                            // Tage
-                            if ($type === 2) {
-                                $event->setAttribute('start_time', $startDate->addDays($value));
-                                $event->setAttribute('end_time', $endDate->addDays($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->addDays($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->addDays($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Wochen
-                            if ($type === 3) {
-                                $event->setAttribute('start_time', $startDate->addWeeks($value));
-                                $event->setAttribute('end_time', $endDate->addWeeks($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->addWeeks($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->addWeeks($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Monate
-                            if ($type === 4) {
-                                $event->setAttribute('start_time', $startDate->addMonths($value));
-                                $event->setAttribute('end_time', $endDate->addMonths($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->addMonths($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->addMonths($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Jahre
-                            if ($type === 5) {
-                                $event->setAttribute('start_time', $startDate->addYears($value));
-                                $event->setAttribute('end_time', $endDate->addYears($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->addYears($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->addYears($value));
-                                    $shift->save();
-                                }
-                            }
-                        }
-
-                        // minus
-                        if ($calculationType === 2) {
-                            // stunden
-                            if ($type === 1) {
-                                $event->setAttribute('start_time', $startDate->subHours($value));
-                                $event->setAttribute('end_time', $endDate->subHours($value));
-                            }
-                            // Tage
-                            if ($type === 2) {
-                                $event->setAttribute('start_time', $startDate->subDays($value));
-                                $event->setAttribute('end_time', $endDate->subDays($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->subDays($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->subDays($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Wochen
-                            if ($type === 3) {
-                                $event->setAttribute('start_time', $startDate->subWeeks($value));
-                                $event->setAttribute('end_time', $endDate->subWeeks($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->subWeeks($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->subWeeks($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Monate
-                            if ($type === 4) {
-                                $event->setAttribute('start_time', $startDate->subMonths($value));
-                                $event->setAttribute('end_time', $endDate->subMonths($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->subMonths($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->subMonths($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Jahre
-                            if ($type === 5) {
-                                $event->setAttribute('start_time', $startDate->subYears($value));
-                                $event->setAttribute('end_time', $endDate->subYears($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->subYears($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->subYears($value));
-                                    $shift->save();
-                                }
-                            }
-                        }
-                    }
-                    $desiredDaysOfEvents[] = $event->getAttribute('start_time')->format('d.m.Y');
-                    $desiredDaysOfEvents[] = $event->getAttribute('end_time')->format('d.m.Y');
-                } else {
-                    $endTime = Carbon::parse($event->getAttribute('end_time'))->format('H:i:s');
-                    $startTime = Carbon::parse($event->getAttribute('start_time'))->format('H:i:s');
-
-                    $newDate = Carbon::parse($request->string('date'));
-                    $desiredDaysOfEvents[] = $newDate->format('d.m.Y');
-                    $date = $newDate->format('Y-m-d');
-                    $event->setAttribute('start_time', $date . ' ' . $startTime);
-                    $event->setAttribute('end_time', $date . ' ' . $endTime);
-                }
+                $this->applyMultiEditTime($event, $request);
                 $event->save();
                 $freshEvent = $event->fresh();
                 SafeBroadcast::send(new EventCreated($freshEvent, $freshEvent->room_id));
@@ -4170,21 +4018,12 @@ class EventController extends Controller
         });
 
         $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
-
-        /*return new JsonResponse([
-            'desiredRoomIds' => array_values(array_unique($desiredRoomIds)),
-            'desiredDays' => array_values(array_unique($desiredDaysOfEvents))
-        ]);*/
     }
 
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
     public function updateMultiDuplicate(Request $request): void
     {
-        $desiredRoomIds = [];
-        $desiredDaysOfEvents = [];
+        $this->validateMultiEditTime($request);
         $eventIds = $request->collect('events');
-        $duplicatedEvents = [];
         // Aus dem Planungskalender heraus erzeugte Duplikate sind immer geplante Termine
         $forcePlanning = $request->boolean('isPlanning');
         // Kopien werden fest gebucht (Buchungsstatus des Originals, kein Anfrage-Workflow) – deshalb wie
@@ -4196,189 +4035,92 @@ class EventController extends Controller
             $forcePlanning
         );
 
-        foreach ($originalEvents as $originalEvent) {
-            $duplicatedEvent = $originalEvent->replicate();
-            $duplicatedEvent->series_id = null;
-            $duplicatedEvent->is_series = false;
-            if ($forcePlanning) {
-                $duplicatedEvent->is_planning = true;
-            }
-            $duplicatedEvent->save();
+        // Ein Fehler mitten in der Auswahl hinterließ sonst halbe Kopien.
+        $duplicatedEvents = DB::transaction(function () use ($request, $originalEvents, $forcePlanning): array {
+            $duplicatedEvents = [];
+            foreach ($originalEvents as $originalEvent) {
+                $duplicatedEvent = $originalEvent->replicate();
+                $duplicatedEvent->series_id = null;
+                $duplicatedEvent->is_series = false;
+                if ($forcePlanning) {
+                    $duplicatedEvent->is_planning = true;
+                }
+                $duplicatedEvent->save();
 
-            $shifts = $originalEvent->shifts;
-            foreach ($shifts as $shift) {
-                $duplicatedShift = $shift->replicate();
-                $duplicatedShift->event_id = $duplicatedEvent->id;
-                $duplicatedShift->save();
-            }
-            $duplicatedEvents[] = $duplicatedEvent;
-        }
-
-        foreach ($duplicatedEvents as $event) {
-            $desiredRoomIds[] = $event->getAttribute('room_id');
-
-            foreach (
-                CarbonPeriod::create(
-                    $event->getAttribute('start_time'),
-                    $event->getAttribute('end_time')
-                ) as $desiredDayOfEvent
-            ) {
-                $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
-            }
-
-            if ($request->get('newRoomId') !== null) {
-                $event->setAttribute('room_id', $request->integer('newRoomId'));
-                $desiredRoomIds[] = $event->getAttribute('room_id');
-            }
-            if ($request->string('date')->toString() === '') {
-                if ($request->integer('value') !== 0) {
-                    $endDate = Carbon::parse($event->getAttribute('end_time'));
-                    $startDate = Carbon::parse($event->getAttribute('start_time'));
-                    $shifts = $event->getAttribute('shifts');
-                    $calculationType = $request->integer('calculationType');
-                    $value = $request->integer('value');
-                    $type = $request->integer('type');
-
-                    // plus
-                    if ($calculationType === 1) {
-                        // stunden
-                        if ($type === 1) {
-                            $event->setAttribute('start_time', $startDate->addHours($value));
-                            $event->setAttribute('end_time', $endDate->addHours($value));
-                        }
-
-                        // Tage
-                        if ($type === 2) {
-                            $event->setAttribute('start_time', $startDate->addDays($value));
-                            $event->setAttribute('end_time', $endDate->addDays($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->addDays($value));
-                                $shift->setAttribute('end_date', $shiftEnd->addDays($value));
-                                $shift->save();
-                            }
-                        }
-                        // Wochen
-                        if ($type === 3) {
-                            $event->setAttribute('start_time', $startDate->addWeeks($value));
-                            $event->setAttribute('end_time', $endDate->addWeeks($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->addWeeks($value));
-                                $shift->setAttribute('end_date', $shiftEnd->addWeeks($value));
-                                $shift->save();
-                            }
-                        }
-                        // Monate
-                        if ($type === 4) {
-                            $event->setAttribute('start_time', $startDate->addMonths($value));
-                            $event->setAttribute('end_time', $endDate->addMonths($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->addMonths($value));
-                                $shift->setAttribute('end_date', $shiftEnd->addMonths($value));
-                                $shift->save();
-                            }
-                        }
-                        // Jahre
-                        if ($type === 5) {
-                            $event->setAttribute('start_time', $startDate->addYears($value));
-                            $event->setAttribute('end_time', $endDate->addYears($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->addYears($value));
-                                $shift->setAttribute('end_date', $shiftEnd->addYears($value));
-                                $shift->save();
-                            }
-                        }
-                    }
-
-                    // minus
-                    if ($calculationType === 2) {
-                        // stunden
-                        if ($type === 1) {
-                            $event->setAttribute('start_time', $startDate->subHours($value));
-                            $event->setAttribute('end_time', $endDate->subHours($value));
-                        }
-                        // Tage
-                        if ($type === 2) {
-                            $event->setAttribute('start_time', $startDate->subDays($value));
-                            $event->setAttribute('end_time', $endDate->subDays($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->subDays($value));
-                                $shift->setAttribute('end_date', $shiftEnd->subDays($value));
-                                $shift->save();
-                            }
-                        }
-                        // Wochen
-                        if ($type === 3) {
-                            $event->setAttribute('start_time', $startDate->subWeeks($value));
-                            $event->setAttribute('end_time', $endDate->subWeeks($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->subWeeks($value));
-                                $shift->setAttribute('end_date', $shiftEnd->subWeeks($value));
-                                $shift->save();
-                            }
-                        }
-                        // Monate
-                        if ($type === 4) {
-                            $event->setAttribute('start_time', $startDate->subMonths($value));
-                            $event->setAttribute('end_time', $endDate->subMonths($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->subMonths($value));
-                                $shift->setAttribute('end_date', $shiftEnd->subMonths($value));
-                                $shift->save();
-                            }
-                        }
-                        // Jahre
-                        if ($type === 5) {
-                            $event->setAttribute('start_time', $startDate->subYears($value));
-                            $event->setAttribute('end_time', $endDate->subYears($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->subYears($value));
-                                $shift->setAttribute('end_date', $shiftEnd->subYears($value));
-                                $shift->save();
-                            }
-                        }
-                    }
+                foreach ($originalEvent->shifts as $shift) {
+                    $duplicatedShift = $shift->replicate();
+                    $duplicatedShift->event_id = $duplicatedEvent->id;
+                    $duplicatedShift->save();
                 }
 
-                foreach (
-                    CarbonPeriod::create(
-                        $event->getAttribute('start_time'),
-                        $event->getAttribute('end_time')
-                    ) as $desiredDayOfEvent
-                ) {
-                    $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
+                if ($request->get('newRoomId') !== null) {
+                    $duplicatedEvent->setAttribute('room_id', $request->integer('newRoomId'));
                 }
-            } else {
-                $endTime = Carbon::parse($event->getAttribute('end_time'))->format('H:i:s');
-                $startTime = Carbon::parse($event->getAttribute('start_time'))->format('H:i:s');
-
-                $newDate = Carbon::parse($request->string('date'));
-                $desiredDaysOfEvents[] = $newDate->format('d.m.Y');
-                $date = $newDate->format('Y-m-d');
-                $event->setAttribute('start_time', $date . ' ' . $startTime);
-                $event->setAttribute('end_time', $date . ' ' . $endTime);
+                $this->applyMultiEditTime($duplicatedEvent, $request);
+                $duplicatedEvent->save();
+                $duplicatedEvents[] = $duplicatedEvent->fresh();
             }
-            $event->save();
-            $freshEvent = $event->fresh();
-            SafeBroadcast::send(new EventCreated($freshEvent, $freshEvent->room_id));
+
+            return $duplicatedEvents;
+        });
+
+        foreach ($duplicatedEvents as $duplicatedEvent) {
+            SafeBroadcast::send(new EventCreated($duplicatedEvent, $duplicatedEvent->room_id));
         }
     }
 
+    private function validateMultiEditTime(Request $request): void
+    {
+        $request->validate([
+            'date' => ['nullable', 'date'],
+            'value' => ['nullable', 'integer', 'min:0'],
+            'calculationType' => ['nullable', 'integer', 'in:1,2'],
+            'type' => ['nullable', 'integer', 'between:1,5'],
+        ]);
+    }
+
+    /**
+     * Zeit-Teil der Mehrfachbearbeitung: entweder um einen Versatz (Stunden … Jahre) verschieben oder auf
+     * ein festes Datum legen. Beim festen Datum bleibt die Dauer erhalten – vorher endeten Termine über
+     * Mitternacht vor ihrem Start und mehrtägige schrumpften auf einen Tag.
+     * Alt-Schichten mit event_id (Legacy) wandern bei Tagen bis Jahren weiter mit wie bisher.
+     */
+    private function applyMultiEditTime(Event $event, Request $request): void
+    {
+        $startDate = Carbon::parse($event->getAttribute('start_time'));
+        $endDate = Carbon::parse($event->getAttribute('end_time'));
+
+        if ($request->string('date')->toString() !== '') {
+            $durationInSeconds = max(0, $endDate->getTimestamp() - $startDate->getTimestamp());
+            $newStart = Carbon::parse($request->string('date')->toString())
+                ->setTimeFrom($startDate);
+            $event->setAttribute('start_time', $newStart->copy());
+            $event->setAttribute('end_time', $newStart->copy()->addSeconds($durationInSeconds));
+
+            return;
+        }
+
+        $value = $request->integer('value');
+        $unit = [1 => 'hours', 2 => 'days', 3 => 'weeks', 4 => 'months', 5 => 'years'][$request->integer('type')]
+            ?? null;
+        if ($value === 0 || $unit === null) {
+            return;
+        }
+        $signedValue = $request->integer('calculationType') === 2 ? -$value : $value;
+        $move = static fn (Carbon $date): Carbon => $date->add($unit, $signedValue);
+
+        $event->setAttribute('start_time', $move($startDate));
+        $event->setAttribute('end_time', $move($endDate));
+
+        if ($unit === 'hours') {
+            return;
+        }
+        foreach ($event->shifts as $shift) {
+            $shift->setAttribute('start_date', $move(Carbon::parse($shift->getAttribute('start_date'))));
+            $shift->setAttribute('end_date', $move(Carbon::parse($shift->getAttribute('end_date'))));
+            $shift->save();
+        }
+    }
 
     /**
      * Zielraum der Mehrfachbearbeitung im Kalender (newRoomId). Unbekannte Räume enden vor jeder Änderung in 404.

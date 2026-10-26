@@ -3172,7 +3172,8 @@ class ProjectController extends Controller
     public function history(Project $project): JsonResponse
     {
         $activities = $project->activities()->latest()->get();
-        $history = $activities->map(function ($activity) {
+        $changers = $this->preloadHistoryChangers($activities);
+        $history = $activities->map(function ($activity) use ($changers) {
             $properties = $activity->properties;
 
             return [
@@ -3182,7 +3183,8 @@ class ProjectController extends Controller
                 'created_at' => $activity->created_at->diffInHours() < 24
                     ? $activity->created_at->diffForHumans()
                     : $activity->created_at->format('d.m.Y, H:i'),
-                'changer'    => $this->resolveHistoryChanger($activity),
+                'changer'    => $changers[$activity->causer_type . ':' . $activity->causer_id]
+                    ?? $this->resolveHistoryChanger($activity),
             ];
         })->all();
 
@@ -5302,6 +5304,63 @@ class ProjectController extends Controller
      *
      * @return User|array<string, mixed>|null
      */
+    /**
+     * Verursacher aller Verlaufseinträge vorab mit je einer Abfrage pro Typ laden (vorher eine Abfrage samt
+     * vollem User-Modell je Eintrag – bei großen Projekten über tausend). Personen nur mit Avatar-Feldern;
+     * die Kontaktdaten lädt der UserPopoverTooltip beim Hovern nach (lazy-load).
+     *
+     * @param \Illuminate\Support\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+     * @return array<string, User|array<string, mixed>>
+     */
+    private function preloadHistoryChangers(\Illuminate\Support\Collection $activities): array
+    {
+        $userMorph = (new User())->getMorphClass();
+        $externalMorph = (new \Artwork\Modules\ExternalAccess\Models\ExternalAccess())->getMorphClass();
+        $causerIds = fn (string $morph) => $activities->where('causer_type', $morph)
+            ->pluck('causer_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $changers = [];
+        User::query()
+            ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+            ->whereIn('id', $causerIds($userMorph))
+            ->get()
+            ->each(function (User $user) use (&$changers, $userMorph): void {
+                $changers[$userMorph . ':' . $user->id] = $user->setVisible(User::AVATAR_FIELDS);
+            });
+
+        \Artwork\Modules\ExternalAccess\Models\ExternalAccess::query()
+            ->with('crmContact:id,display_name')
+            ->whereIn('id', $causerIds($externalMorph))
+            ->get()
+            ->each(function ($external) use (&$changers, $externalMorph): void {
+                $changers[$externalMorph . ':' . $external->id] = $this->externalHistoryChanger($external);
+            });
+
+        return $changers;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function externalHistoryChanger(\Artwork\Modules\ExternalAccess\Models\ExternalAccess $external): array
+    {
+        $name = $external->displayName();
+
+        return [
+            'id' => 'external-' . $external->id,
+            'type' => 'external',
+            'is_external' => true,
+            'first_name' => $name,
+            'last_name' => '',
+            'email' => $external->email,
+            'position' => __('External access'),
+            'profile_photo_url' => route('generate-avatar-image', ['letters' => mb_substr($name, 0, 1)]),
+        ];
+    }
+
     private function resolveHistoryChanger(\Spatie\Activitylog\Models\Activity $activity): User|array|null
     {
         if ($activity->causer_type === null || $activity->causer_id === null) {
@@ -5316,18 +5375,8 @@ class ProjectController extends Controller
             if ($external === null) {
                 return null;
             }
-            $name = $external->displayName();
 
-            return [
-                'id' => 'external-' . $external->id,
-                'type' => 'external',
-                'is_external' => true,
-                'first_name' => $name,
-                'last_name' => '',
-                'email' => $external->email,
-                'position' => __('External access'),
-                'profile_photo_url' => route('generate-avatar-image', ['letters' => mb_substr($name, 0, 1)]),
-            ];
+            return $this->externalHistoryChanger($external);
         }
 
         return $activity->causer()

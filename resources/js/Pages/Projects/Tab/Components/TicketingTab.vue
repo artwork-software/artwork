@@ -263,7 +263,8 @@ import TicketingReleaseModal from '@/Pages/Projects/Tab/Components/Ticketing/Tic
 import TicketingSaleMarks from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSaleMarks.vue'
 import TicketingSalesModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue'
 import TicketingProductionCard from '@/Pages/Projects/Tab/Components/Ticketing/TicketingProductionCard.vue'
-import { capacityOf, classesOf, formatDay, formatEuro, formatTime, isPast, isReleasable, isReleased, releaseBlocker } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { formatDateTime, formatDay, formatEuro, formatTime } from '@/Helper/ticketingFormat.js'
+import { capacityOf, classesOf, isPast, isReleasable, isReleased, releaseBlocker } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 
 const props = defineProps({
     project: { type: Object, required: true },
@@ -421,7 +422,7 @@ function toggleMany(list, on) {
 }
 
 function releasedTitle(event) {
-    const parts = [event.release?.releasedAt ? dayjs(event.release.releasedAt).format('DD.MM.YYYY HH:mm') : null, event.release?.releasedBy].filter(Boolean)
+    const parts = [event.release?.releasedAt ? formatDateTime(event.release.releasedAt) : null, event.release?.releasedBy].filter(Boolean)
     return parts.join(' · ')
 }
 

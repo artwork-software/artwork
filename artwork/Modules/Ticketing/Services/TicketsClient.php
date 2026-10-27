@@ -147,10 +147,22 @@ class TicketsClient
             );
         }
 
-        // Die Geschäftsregeln kommen als Code; die beiden, an denen eine Freigabe scheitern kann, in Worten.
+        // Die Geschäftsregeln kommen als Code; die, an denen Freigabe, Karte oder Einlass scheitern können, in Worten.
         $message = match ($response->json('error.code')) {
             'HOUSE_DETAILS_MISSING' => __('Artwork-Tickets is still missing details of the house: the legal details, the payout account verified by the payment provider or the legal pages of the shop. Until they are complete, nothing can be released for sale.'),
             'HOUSE_IN_REVIEW' => __('Artwork-Tickets is still reviewing the house. Until it is approved, nothing can be released for sale.'),
+            'PASS_TYPE_SOLD' => __('Passes of this kind have been sold already: uses, value, limits and term stay as they are, productions can only be added.'),
+            'PASS_IN_USE' => __('Passes of this kind have been sold already, so it cannot be deleted. Archive it to end the sale.'),
+            'NAME_TAKEN' => __('Artwork-Tickets already has a pass or group with this name.'),
+            'GROUP_IN_USE' => __('Sold passes or redeemed codes count on this group: it can only grow.'),
+            'ITEM_UNAVAILABLE' => __('No place is left in this price class tonight.'),
+            'SEAT_SELECTION_REQUIRED' => __('This date has a seating plan; sell the seat in Artwork-Tickets.'),
+            'PASS_NOT_ELIGIBLE' => __('This pass cannot be used for this date.'),
+            'PASS_EXPIRED' => __('This pass is no longer valid.'),
+            'PASS_EXHAUSTED' => __('This pass has no uses left.'),
+            'PASS_LIMIT_REACHED' => __('This pass has reached its limit for this production.'),
+            'PASS_PERIOD_LIMIT_REACHED' => __('This pass has reached its limit for this period.'),
+            'HOLD_EXPIRED' => __('The place could not be held. Please try again.'),
             'HOUSE_DETAILS_LOCKED' => __('Artwork-Tickets keeps the legal details once they are complete. They can be changed, but not removed.'),
             default => $response->json('error.message')
                 ?? __('Artwork-Tickets rejected the request.') . " (HTTP {$response->status()})",

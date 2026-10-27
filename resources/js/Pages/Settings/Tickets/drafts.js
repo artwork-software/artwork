@@ -13,10 +13,6 @@ export function fromCents(cents) {
     return cents === null || cents === undefined ? '' : (cents / 100).toFixed(2)
 }
 
-export function formatEuro(cents) {
-    return `${(cents / 100).toFixed(2).replace('.', ',')} €`
-}
-
 export function emptyZone(name, capacity = 0) {
     return { name, capacity: String(capacity ?? 0), price: '' }
 }
@@ -128,5 +124,107 @@ export function legalFormNames(t) {
         gbr: 'GbR',
         oeffentlich: t('Public body (city, state, federal)'),
         sonstige: t('Other legal form'),
+    }
+}
+
+/* Mehrfachkarten and Abos: tickets sends a type in the shape it takes back (cents, days, wall
+   times on the house's clock); the draft only turns amounts into input strings and back. */
+
+/** A new type in that same shape: ten admissions on a card, two a month on an Abo, a year's term, fully covered. */
+function newPassType(kind) {
+    return {
+        kind,
+        name: '',
+        description: '',
+        price: null,
+        monthlyPrice: null,
+        upfrontPrice: null,
+        termMode: 'months',
+        termMonths: 12,
+        seasonEnds: null,
+        saleEnds: null,
+        afterTerm: 'ends',
+        usesWindow: 'month',
+        rolloverMax: 0,
+        uses: kind === 'subscription' ? 2 : 10,
+        taxTreatment: null,
+        validityDays: null,
+        validUntil: null,
+        discountKind: 'percent',
+        discountPercent: 100,
+        discountAmount: null,
+        maxUsesPerOrder: null,
+        maxUsesPerEvent: null,
+        maxUsesPerPeriod: null,
+        limitPeriod: 'week',
+        redeemableInCheckout: true,
+        stampable: true,
+        allEvents: false,
+        eventIds: [],
+        groupIds: [],
+    }
+}
+
+export function passTypeDraft(passType, kind) {
+    const source = passType ?? newPassType(kind)
+    const text = (value) => (value === null ? '' : String(value))
+    return {
+        ...source,
+        price: fromCents(source.price),
+        monthlyPrice: fromCents(source.monthlyPrice),
+        upfrontPrice: fromCents(source.upfrontPrice),
+        discountAmount: fromCents(source.discountAmount),
+        uses: text(source.uses),
+        termMonths: text(source.termMonths),
+        rolloverMax: text(source.rolloverMax),
+        validityDays: text(source.validityDays),
+        discountPercent: text(source.discountPercent),
+        maxUsesPerOrder: text(source.maxUsesPerOrder),
+        maxUsesPerEvent: text(source.maxUsesPerEvent),
+        maxUsesPerPeriod: text(source.maxUsesPerPeriod),
+        seasonEnds: source.seasonEnds ?? '',
+        saleEnds: source.saleEnds ?? '',
+        validUntil: source.validUntil ?? '',
+        validity: source.validityDays ? 'days' : source.validUntil ? 'until' : 'unlimited',
+        eventIds: [...source.eventIds],
+        groupIds: [...source.groupIds],
+    }
+}
+
+/** Only what the kind and term use; the rest goes as null so tickets stores nothing stale. */
+export function passTypePayload(draft) {
+    const subscription = draft.kind === 'subscription'
+    const count = (value) => (String(value ?? '').trim() === '' ? null : Number(value))
+    const when = (condition, value) => (condition ? value : null)
+    return {
+        kind: draft.kind,
+        name: draft.name.trim(),
+        description: draft.description.trim() || null,
+        price: when(!subscription, toCents(draft.price)),
+        uses: Number(draft.uses),
+        monthlyPrice: when(subscription, toCents(draft.monthlyPrice)),
+        upfrontPrice: when(subscription && draft.termMode !== 'open', toCents(draft.upfrontPrice)),
+        termMode: draft.termMode,
+        termMonths: when(subscription && draft.termMode === 'months', count(draft.termMonths)),
+        seasonEnds: when(subscription && draft.termMode === 'season', draft.seasonEnds || null),
+        saleEnds: draft.saleEnds || null,
+        afterTerm: draft.afterTerm,
+        usesWindow: draft.usesWindow,
+        rolloverMax: subscription && draft.usesWindow === 'month' ? (count(draft.rolloverMax) ?? 0) : 0,
+        taxTreatment: draft.taxTreatment,
+        validityDays: when(!subscription && draft.validity === 'days', count(draft.validityDays)),
+        validUntil: when(!subscription && draft.validity === 'until', draft.validUntil || null),
+        discountKind: draft.discountKind,
+        discountPercent: when(draft.discountKind === 'percent', count(draft.discountPercent)),
+        discountAmount: when(draft.discountKind === 'fixed', toCents(draft.discountAmount)),
+        maxUsesPerOrder: count(draft.maxUsesPerOrder),
+        maxUsesPerEvent: count(draft.maxUsesPerEvent),
+        maxUsesPerPeriod: count(draft.maxUsesPerPeriod),
+        limitPeriod: draft.limitPeriod,
+        redeemableInCheckout: draft.redeemableInCheckout,
+        stampable: draft.stampable,
+        allEvents: draft.allEvents,
+        eventIds: draft.allEvents ? [] : draft.eventIds,
+        groupIds: draft.allEvents ? [] : draft.groupIds,
     }
 }

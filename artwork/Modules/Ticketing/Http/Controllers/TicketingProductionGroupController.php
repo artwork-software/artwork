@@ -3,8 +3,7 @@
 namespace Artwork\Modules\Ticketing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
-use Artwork\Modules\Ticketing\Http\Controllers\Concerns\WritesToTickets;
+use Artwork\Modules\Ticketing\Http\Controllers\Concerns\CallsTickets;
 use Artwork\Modules\Ticketing\Http\Requests\SaveTicketingProductionGroupRequest;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
@@ -19,7 +18,7 @@ use Inertia\Response;
  */
 class TicketingProductionGroupController extends Controller
 {
-    use WritesToTickets;
+    use CallsTickets;
 
     public function __construct(
         private readonly TicketingConnectionService $connections,
@@ -30,16 +29,11 @@ class TicketingProductionGroupController extends Controller
     public function index(): Response
     {
         $connection = $this->connections->current();
-        $overview = ['groups' => [], 'productions' => []];
-        $ticketsError = null;
-
-        if ($connection) {
-            try {
-                $overview = $this->groups->overview($connection);
-            } catch (TicketingConnectionException $exception) {
-                $ticketsError = $exception->getMessage();
-            }
-        }
+        [$overview, $ticketsError] = $this->readFromTickets(
+            $connection,
+            $this->groups->overview(...),
+            ['groups' => [], 'productions' => []],
+        );
 
         return Inertia::render('Settings/Tickets/Groups', [
             'connection' => [

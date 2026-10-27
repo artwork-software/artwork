@@ -141,6 +141,8 @@ const searchError = ref('')
 const selected = ref(null)
 const categoryId = ref(null)
 const admitting = ref(false)
+// One id per chosen pass: a retry after a lost answer replays the first admission.
+let admissionId = null
 const admitError = ref('')
 const admitted = ref(null)
 
@@ -183,6 +185,7 @@ async function load(value) {
 }
 
 function choose(pass) {
+    admissionId = crypto.randomUUID()
     selected.value = pass
     admitError.value = ''
     categoryId.value = categories.value.find((category) => category.available > 0)?.id ?? null
@@ -193,6 +196,7 @@ async function admit() {
     admitError.value = ''
     try {
         const { data } = await axios.post(route('ticketing.door.admit', props.eventId), {
+            admission_id: admissionId,
             pass_id: selected.value.id,
             price_category_id: categoryId.value,
         }, { skipErrorToast: true })

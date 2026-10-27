@@ -3,8 +3,7 @@
 namespace Artwork\Modules\Ticketing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
-use Artwork\Modules\Ticketing\Http\Controllers\Concerns\WritesToTickets;
+use Artwork\Modules\Ticketing\Http\Controllers\Concerns\CallsTickets;
 use Artwork\Modules\Ticketing\Http\Requests\SaveTicketingPassTypeRequest;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
@@ -16,7 +15,7 @@ use Inertia\Response;
 /** Einstellungen → Artwork-Tickets → Karten & Abos: Mehrfachkarten und Abos des Hauses anlegen und pflegen. */
 class TicketingPassTypeController extends Controller
 {
-    use WritesToTickets;
+    use CallsTickets;
 
     public function __construct(
         private readonly TicketingConnectionService $connections,
@@ -27,16 +26,11 @@ class TicketingPassTypeController extends Controller
     public function index(): Response
     {
         $connection = $this->connections->current();
-        $overview = ['passTypes' => [], 'productions' => [], 'groups' => []];
-        $ticketsError = null;
-
-        if ($connection) {
-            try {
-                $overview = $this->passTypes->overview($connection);
-            } catch (TicketingConnectionException $exception) {
-                $ticketsError = $exception->getMessage();
-            }
-        }
+        [$overview, $ticketsError] = $this->readFromTickets(
+            $connection,
+            $this->passTypes->overview(...),
+            ['passTypes' => [], 'productions' => [], 'groups' => []],
+        );
 
         return Inertia::render('Settings/Tickets/Passes', [
             'connection' => [

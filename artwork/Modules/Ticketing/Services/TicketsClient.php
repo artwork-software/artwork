@@ -163,6 +163,7 @@ class TicketsClient
             'PASS_LIMIT_REACHED' => __('This pass has reached its limit for this production.'),
             'PASS_PERIOD_LIMIT_REACHED' => __('This pass has reached its limit for this period.'),
             'HOLD_EXPIRED' => __('The place could not be held. Please try again.'),
+            'ADMISSION_RUNNING' => __('This admission has not finished yet. Check the guest list before trying again.'),
             'HOUSE_DETAILS_LOCKED' => __('Artwork-Tickets keeps the legal details once they are complete. They can be changed, but not removed.'),
             default => $response->json('error.message')
                 ?? __('Artwork-Tickets rejected the request.') . " (HTTP {$response->status()})",

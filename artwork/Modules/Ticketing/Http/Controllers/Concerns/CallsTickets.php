@@ -9,11 +9,32 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Ein Schreibzugriff auf tickets aus einem Einstellungs-Tab, mit der Antwort, die der Tab erwartet:
- * Erfolg als Hinweis, eine Ablehnung von tickets als Meldung.
+ * Ein Aufruf nach tickets aus einem Einstellungs-Tab, mit der Antwort, die der Tab erwartet:
+ * Gelesenes samt Meldung für die Seite, Erfolg als Hinweis, eine Ablehnung von tickets als Meldung.
  */
-trait WritesToTickets
+trait CallsTickets
 {
+    /**
+     * Für Seiten: was tickets liefert; ohne Verbindung oder bei einem Fehler $empty, mit der Meldung.
+     *
+     * @template T
+     * @param Closure(TicketingConnection): T $load
+     * @param T $empty
+     * @return array{0: T, 1: ?string}
+     */
+    private function readFromTickets(?TicketingConnection $connection, Closure $load, mixed $empty): array
+    {
+        if (!$connection) {
+            return [$empty, null];
+        }
+
+        try {
+            return [$load($connection), null];
+        } catch (TicketingConnectionException $exception) {
+            return [$empty, $exception->getMessage()];
+        }
+    }
+
     /**
      * Für Dialoge: eine Ablehnung kommt als Formularfehler zurück, der Dialog bleibt offen und mit
      * ihm, was eingegeben wurde.

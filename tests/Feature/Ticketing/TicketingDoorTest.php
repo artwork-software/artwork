@@ -24,6 +24,7 @@ final class TicketingDoorTest extends FeatureTestCase
     private const TICKET_ID = '1b2c3d4e-5f60-4a71-8b92-0c1d2e3f4a5b';
     private const PASS_ID = '2c3d4e5f-6a71-4b82-9c03-1d2e3f4a5b6c';
     private const CATEGORY_ID = '3d4e5f6a-7b82-4c93-8d14-2e3f4a5b6c7d';
+    private const ADMISSION_ID = '4e5f6a7b-8c93-4da4-9e25-3f4a5b6c7d8e';
     private const BASE = self::TICKETS_URL . '/api/integration/v1/dates/' . self::DATE_ID;
 
     private User $admin;
@@ -91,7 +92,9 @@ final class TicketingDoorTest extends FeatureTestCase
         $this->getJson(route('ticketing.door.passes', ['event' => $this->event, 'q' => 'Ada']))
             ->assertOk()
             ->assertJsonPath('seated', false);
-        $this->postJson(route('ticketing.door.admit', $this->event), ['pass_id' => self::PASS_ID, 'price_category_id' => self::CATEGORY_ID])
+        $this->postJson(route('ticketing.door.admit', $this->event), [
+            'admission_id' => self::ADMISSION_ID, 'pass_id' => self::PASS_ID, 'price_category_id' => self::CATEGORY_ID,
+        ])
             ->assertOk()
             ->assertJsonPath('paidCents', 400);
 
@@ -99,6 +102,7 @@ final class TicketingDoorTest extends FeatureTestCase
             && str_starts_with($request->url(), self::BASE . '/passes')
             && $request['q'] === 'Ada');
         Http::assertSent(fn (Request $request): bool => $request->url() === self::BASE . '/pass-admissions'
+            && $request['admissionId'] === self::ADMISSION_ID
             && $request['passId'] === self::PASS_ID
             && $request['priceCategoryId'] === self::CATEGORY_ID
             && $request['actor']['email'] === $this->admin->email);
@@ -111,7 +115,9 @@ final class TicketingDoorTest extends FeatureTestCase
             self::BASE . '/pass-admissions' => Http::response(['error' => ['code' => 'PASS_EXHAUSTED', 'message' => 'PASS_EXHAUSTED']], 409),
         ]);
 
-        $this->postJson(route('ticketing.door.admit', $this->event), ['pass_id' => self::PASS_ID, 'price_category_id' => self::CATEGORY_ID])
+        $this->postJson(route('ticketing.door.admit', $this->event), [
+            'admission_id' => self::ADMISSION_ID, 'pass_id' => self::PASS_ID, 'price_category_id' => self::CATEGORY_ID,
+        ])
             ->assertStatus(422)
             ->assertJsonPath('message', __('This pass has no uses left.'));
     }

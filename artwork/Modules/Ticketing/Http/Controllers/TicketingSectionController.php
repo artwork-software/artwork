@@ -3,7 +3,8 @@
 namespace Artwork\Modules\Ticketing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
+use Artwork\Modules\Ticketing\Http\Controllers\Concerns\CallsTickets;
+use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Artwork\Modules\Ticketing\Services\TicketingSalesService;
 use Closure;
@@ -14,6 +15,8 @@ use Inertia\Response;
 /** Hauptmenü → Artwork-Tickets: Verkäufe sowie verkaufte Karten und Abos, gelesen aus tickets. */
 class TicketingSectionController extends Controller
 {
+    use CallsTickets;
+
     public function __construct(
         private readonly TicketingConnectionService $connections,
         private readonly TicketingSalesService $sales,
@@ -30,9 +33,12 @@ class TicketingSectionController extends Controller
             'events.*' => ['uuid'],
         ]);
 
-        return $this->render('Ticketing/Sales', ['filters' => $query], [
-            'sales' => fn ($connection): array => $this->sales->sales($connection, $query),
-        ]);
+        return $this->render(
+            'Ticketing/Sales',
+            ['filters' => $query],
+            'sales',
+            fn ($connection): array => $this->sales->sales($connection, $query),
+        );
     }
 
     public function passes(Request $request): Response
@@ -45,38 +51,26 @@ class TicketingSectionController extends Controller
         $tab = $filters['tab'] ?? 'passes';
         $search = $filters['q'] ?? '';
 
-        return $this->render('Ticketing/Passes', ['filters' => ['tab' => $tab] + $filters], $tab === 'passes'
-            ? ['passes' => fn ($connection): array => $this->sales->passes($connection, $search)]
-            : ['subscriptions' => fn ($connection): array => $this->sales->subscriptions($connection, [
-                'state' => $filters['state'] ?? null,
-                'q' => $search,
-            ])]);
+        return $this->render(
+            'Ticketing/Passes',
+            ['filters' => ['tab' => $tab] + $filters],
+            $tab,
+            fn ($connection): array => $tab === 'passes'
+                ? $this->sales->passes($connection, $search)
+                : $this->sales->subscriptions($connection, ['state' => $filters['state'] ?? null, 'q' => $search]),
+        );
     }
 
     /**
      * Die Seite mit dem, was tickets liefert; ohne Verbindung oder bei einem Fehler bleibt sie leer und sagt es.
      *
      * @param array<string, mixed> $props
-     * @param array<string, Closure> $loaders
+     * @param Closure(TicketingConnection): array<mixed> $load
      */
-    private function render(string $component, array $props, array $loaders): Response
+    private function render(string $component, array $props, string $key, Closure $load): Response
     {
         $connection = $this->connections->current();
-        $ticketsError = null;
-
-        foreach ($loaders as $key => $load) {
-            $props[$key] = null;
-
-            if (!$connection) {
-                continue;
-            }
-
-            try {
-                $props[$key] = $load($connection);
-            } catch (TicketingConnectionException $exception) {
-                $ticketsError = $exception->getMessage();
-            }
-        }
+        [$props[$key], $ticketsError] = $this->readFromTickets($connection, $load, null);
 
         return Inertia::render($component, $props + [
             'connected' => $connection !== null,

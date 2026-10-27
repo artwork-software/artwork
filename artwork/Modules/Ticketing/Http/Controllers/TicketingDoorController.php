@@ -25,7 +25,9 @@ class TicketingDoorController extends Controller
         $this->authorizeDoor($event, $request);
         $ticketId = $request->validate(['ticket_id' => ['required', 'uuid']])['ticket_id'];
 
-        return $this->respond(fn (): array => $this->door->checkIn($event, ['ticketId' => $ticketId], $request->user()));
+        return $this->respond(
+            fn (): array => $this->door->checkIn($event, ['ticketId' => $ticketId], $request->user())
+        );
     }
 
     public function revert(Event $event, Request $request): JsonResponse
@@ -52,12 +54,14 @@ class TicketingDoorController extends Controller
     {
         $this->authorizeDoor($event, $request);
         $validated = $request->validate([
+            'admission_id' => ['required', 'uuid'],
             'pass_id' => ['required', 'uuid'],
             'price_category_id' => ['required', 'uuid'],
         ]);
 
         return $this->respond(fn (): array => $this->door->admit(
             $event,
+            $validated['admission_id'],
             $validated['pass_id'],
             $validated['price_category_id'],
             $request->user(),

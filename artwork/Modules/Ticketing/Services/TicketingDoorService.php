@@ -93,13 +93,24 @@ class TicketingDoorService
         return $this->tickets->get($connection, "/dates/{$dateId}/passes", $match);
     }
 
-    /** @return array{orderNumber: string, ticketCode: string, paidCents: int, checkedInAt: ?string} */
-    public function admit(Event $event, string $passId, string $priceCategoryId, User $actor): array
-    {
+    /**
+     * Mit der Einlass-ID der Tür beantwortet tickets eine Wiederholung mit dem ersten Einlass,
+     * statt die Karte ein zweites Mal einzulösen.
+     *
+     * @return array{orderNumber: string, ticketCode: string, paidCents: int, checkedInAt: ?string}
+     */
+    public function admit(
+        Event $event,
+        string $admissionId,
+        string $passId,
+        string $priceCategoryId,
+        User $actor,
+    ): array {
         [$connection, $dateId] = $this->dateOf($event);
 
         /** @var array{orderNumber: string, ticketCode: string, paidCents: int, checkedInAt: ?string} */
         return $this->tickets->post($connection, "/dates/{$dateId}/pass-admissions", [
+            'admissionId' => $admissionId,
             'passId' => $passId,
             'priceCategoryId' => $priceCategoryId,
             'actor' => $this->actor($actor),

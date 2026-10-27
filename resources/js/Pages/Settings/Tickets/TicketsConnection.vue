@@ -23,7 +23,7 @@
                         {{ shopHost }}/{{ connection.organizationSlug }}<IconExternalLink class="size-3" />
                     </a>
                     <dl class="mt-6 grid grid-cols-[120px_minmax(0,1fr)] gap-x-3 gap-y-2 text-[13px] max-w-[520px]">
-                        <dt class="text-text-subtle">{{ $t('Connected on') }}</dt><dd class="text-text">{{ formatDate(connection.connectedAt) }}</dd>
+                        <dt class="text-text-subtle">{{ $t('Connected on') }}</dt><dd class="text-text">{{ formatDateTime(connection.connectedAt) }}</dd>
                         <dt class="text-text-subtle">{{ $t('Connected by') }}</dt><dd class="text-text">{{ connection.connectedBy ?? '–' }}</dd>
                     </dl>
                     <p class="mt-6 max-w-[520px] text-[13px] leading-5 text-text-muted">
@@ -75,11 +75,11 @@ import { computed, ref } from 'vue'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import { IconChevronRight, IconExternalLink, IconPlugConnectedX } from '@tabler/icons-vue'
-import dayjs from 'dayjs'
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
 import ConnectStart from '@/Pages/Settings/Tickets/ConnectStart.vue'
 import ConnectWizard from '@/Pages/Settings/Tickets/ConnectWizard.vue'
+import { formatDateTime } from '@/Helper/ticketingFormat.js'
 
 const props = defineProps({
     connection: { type: Object, required: true },
@@ -134,9 +134,5 @@ function handleDisconnect(confirmed) {
     if (confirmed) {
         router.delete(route('settings.tickets.disconnect'), { preserveScroll: true })
     }
-}
-
-function formatDate(value) {
-    return value ? dayjs(value).format('DD.MM.YYYY HH:mm') : '–'
 }
 </script>

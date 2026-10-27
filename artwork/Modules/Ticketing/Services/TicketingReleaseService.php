@@ -170,27 +170,33 @@ class TicketingReleaseService
 
     /**
      * Verkauft und Plätze der freigegebenen Termine im Zeitraum, für den Hinweis im Kalender:
-     * ein Aufruf nach tickets für alle statt einer je Kachel. Nur Termine aus Projekten, die die
-     * Person sehen darf — dieselbe Grenze wie bei den Ticketdetails.
+     * ein Aufruf nach tickets für alle statt einer je Kachel.
      *
-     * @return array<int, array{sold: int, capacity: int, cancelled: bool}> nach Termin-ID
+     * @return array<int, array{sold: int, capacity: int, cancelled: bool, checked_in: int}> nach Termin-ID
      */
     public function calendarSummary(User $user, Carbon $start, Carbon $end): array
     {
-        $connection = $this->connections->current();
+        return $this->summaries($this->releasedVisibleTo($user, $start, $end));
+    }
 
-        if (!$connection) {
-            return [];
-        }
-
+    /**
+     * Die freigegebenen Termine im Zeitraum aus Projekten, die die Person sehen darf — dieselbe Grenze
+     * wie bei den Ticketdetails. Nach Beginn sortiert, mit Freigabe, Projekt und Raum.
+     *
+     * @return Collection<int, Event>
+     */
+    public function releasedVisibleTo(User $user, Carbon $start, Carbon $end): Collection
+    {
         $visibleProjects = [];
-        $events = Event::query()
+
+        return Event::query()
             ->where('start_time', '<=', $end)
             ->where('end_time', '>=', $start)
             ->whereHas('ticketingRelease', static fn ($query) => $query
                 ->where('state', TicketingEventRelease::STATE_RELEASED)
                 ->whereNotNull('tickets_date_id'))
-            ->with(['ticketingRelease', 'project'])
+            ->with(['ticketingRelease', 'project', 'room'])
+            ->orderBy('start_time')
             ->get()
             ->filter(static function (Event $event) use ($user, &$visibleProjects): bool {
                 if (!$event->project) {
@@ -198,9 +204,8 @@ class TicketingReleaseService
                 }
 
                 return $visibleProjects[$event->project_id] ??= $user->can('view', $event->project);
-            });
-
-        return $this->summaryOf($connection, $events);
+            })
+            ->values();
     }
 
     /**
@@ -212,16 +217,11 @@ class TicketingReleaseService
      */
     public function onSale(Collection $events): array
     {
-        $connection = $this->connections->current();
         $released = $events->filter(fn (Event $event): bool => $this->isReleased($event)
             && $event->ticketingRelease->tickets_date_id !== null);
 
-        if (!$connection || $released->isEmpty()) {
-            return [];
-        }
-
         try {
-            $summary = $this->summaryOf($connection, $released);
+            $summary = $this->summaries($released);
         } catch (TicketingConnectionException) {
             $summary = [];
         }
@@ -235,13 +235,19 @@ class TicketingReleaseService
     }
 
     /**
-     * Ein Aufruf nach tickets je 500 Termine.
+     * Der Stand der Termine aus tickets, ein Aufruf je 500 Termine; ohne Verbindung keiner.
      *
      * @param Collection<int, Event> $events freigegeben, mit ticketingRelease
-     * @return array<int, array{sold: int, capacity: int, cancelled: bool}> nach Termin-ID
+     * @return array<int, array{sold: int, capacity: int, cancelled: bool, checked_in: int}> nach Termin-ID
      */
-    private function summaryOf(TicketingConnection $connection, Collection $events): array
+    public function summaries(Collection $events): array
     {
+        $connection = $this->connections->current();
+
+        if (!$connection || $events->isEmpty()) {
+            return [];
+        }
+
         $eventIdsByDate = $events->mapWithKeys(
             static fn (Event $event): array => [$event->ticketingRelease->tickets_date_id => $event->id]
         );
@@ -253,6 +259,7 @@ class TicketingReleaseService
                     'sold' => (int) $date['sold'],
                     'capacity' => (int) $date['capacity'],
                     'cancelled' => $date['status'] === 'cancelled',
+                    'checked_in' => (int) $date['checkedInCount'],
                 ];
             }
         }

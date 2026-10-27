@@ -112,7 +112,9 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseRichTextEditor from '@/Artwork/Inputs/BaseRichTextEditor.vue'
 import SeriesScopeChoice from '@/Layouts/Components/SeriesScopeChoice.vue'
 import TicketingReductionChips from '@/Pages/Projects/Tab/Components/Ticketing/TicketingReductionChips.vue'
-import { classesOf, defaultClassesOf, formatEuro, formatWhen, fromCents, grantedIdsOf, isReleased, offeredIdsOf, seriesOf, toCents } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { formatEuro } from '@/Helper/ticketingFormat.js'
+import { fromCents, toCents } from '@/Pages/Settings/Tickets/drafts.js'
+import { classesOf, defaultClassesOf, formatWhen, grantedIdsOf, isReleased, offeredIdsOf, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 
 const props = defineProps({
     projectId: { type: Number, required: true },

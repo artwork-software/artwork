@@ -11,6 +11,7 @@ use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Http\Requests\TicketingEventsRequest;
 use Artwork\Modules\Ticketing\Models\TicketingCustomer;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
+use Artwork\Modules\Ticketing\Services\TicketingDoorService;
 use Artwork\Modules\Ticketing\Services\TicketingReleaseService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +25,7 @@ class TicketingCalendarController extends Controller
         private readonly TicketingConnectionService $connections,
         private readonly TicketingReleaseService $releases,
         private readonly ProjectComponentVisibilityService $componentVisibility,
+        private readonly TicketingDoorService $door,
     ) {
     }
 
@@ -75,6 +77,8 @@ class TicketingCalendarController extends Controller
             unset($sales['tickets'], $sales['revenueCents']);
             $sales['guests_hidden'] = true;
         }
+
+        $sales['may_admit'] = $this->door->mayAdmit($request->user(), $event);
 
         return response()->json($sales);
     }

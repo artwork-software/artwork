@@ -125,7 +125,11 @@ use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCustomerController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingDoorController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingPassTypeController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingProductionGroupController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingProjectController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingSectionController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingTeamController;
 use Artwork\Modules\Ticketing\Services\TicketingBillingService;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
@@ -432,6 +436,22 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');
         Route::post('/reductions', [TicketingConnectionController::class, 'syncReductions'])
             ->name('settings.tickets.reductions.sync');
+        Route::get('/passes', [TicketingPassTypeController::class, 'index'])->name('settings.tickets.passes');
+        Route::post('/passes', [TicketingPassTypeController::class, 'store'])->name('settings.tickets.passes.store');
+        Route::put('/passes/{passType}', [TicketingPassTypeController::class, 'update'])
+            ->whereUuid('passType')->name('settings.tickets.passes.update');
+        Route::delete('/passes/{passType}', [TicketingPassTypeController::class, 'destroy'])
+            ->whereUuid('passType')->name('settings.tickets.passes.destroy');
+        Route::post('/passes/{passType}/publish', [TicketingPassTypeController::class, 'publish'])
+            ->whereUuid('passType')->name('settings.tickets.passes.publish');
+        Route::post('/passes/{passType}/archive', [TicketingPassTypeController::class, 'archive'])
+            ->whereUuid('passType')->name('settings.tickets.passes.archive');
+        Route::get('/groups', [TicketingProductionGroupController::class, 'index'])->name('settings.tickets.groups');
+        Route::post('/groups', [TicketingProductionGroupController::class, 'store'])->name('settings.tickets.groups.store');
+        Route::put('/groups/{group}', [TicketingProductionGroupController::class, 'update'])
+            ->whereUuid('group')->name('settings.tickets.groups.update');
+        Route::delete('/groups/{group}', [TicketingProductionGroupController::class, 'destroy'])
+            ->whereUuid('group')->name('settings.tickets.groups.destroy');
         Route::get('/team', [TicketingTeamController::class, 'index'])->name('settings.tickets.team');
         Route::post('/team/invitations', [TicketingTeamController::class, 'invite'])
             ->name('settings.tickets.team.invite');
@@ -1261,6 +1281,21 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->name('ticketing.sales');
     Route::get('/ticketing/move-check', [TicketingCalendarController::class, 'moveCheck'])
         ->name('ticketing.move-check');
+    Route::post('/ticketing/events/{event}/check-ins', [TicketingDoorController::class, 'checkIn'])
+        ->name('ticketing.door.check-in');
+    Route::post('/ticketing/events/{event}/check-ins/revert', [TicketingDoorController::class, 'revert'])
+        ->name('ticketing.door.revert');
+    Route::get('/ticketing/events/{event}/passes', [TicketingDoorController::class, 'passes'])
+        ->name('ticketing.door.passes');
+    Route::post('/ticketing/events/{event}/pass-admissions', [TicketingDoorController::class, 'admit'])
+        ->name('ticketing.door.admit');
+    Route::group([
+        'prefix' => 'artwork-tickets',
+        'middleware' => 'can:' . PermissionEnum::TICKETING_VIEW_SALES->value,
+    ], function (): void {
+        Route::get('/sales', [TicketingSectionController::class, 'sales'])->name('ticketing.section.sales');
+        Route::get('/passes', [TicketingSectionController::class, 'passes'])->name('ticketing.section.passes');
+    });
     Route::get('/response/all/shift-plan-events', [
         EventController::class,
         'shiftPlanEventAPI',

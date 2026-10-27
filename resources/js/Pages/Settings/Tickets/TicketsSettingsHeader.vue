@@ -39,7 +39,9 @@ const tabs = [
     { name: t('Overview'), href: route('settings.tickets'), current: route().current('settings.tickets'), permission: true },
     { name: t('Details & payouts'), href: route('settings.tickets.billing'), current: route().current('settings.tickets.billing'), permission: true },
     { name: t('Rooms & price classes'), href: route('settings.tickets.rooms'), current: route().current('settings.tickets.rooms'), permission: true },
+    { name: t('Production groups'), href: route('settings.tickets.groups'), current: route().current('settings.tickets.groups'), permission: true },
     { name: t('Reductions'), href: route('settings.tickets.reductions'), current: route().current('settings.tickets.reductions'), permission: true },
+    { name: t('Passes & subscriptions'), href: route('settings.tickets.passes'), current: route().current('settings.tickets.passes'), permission: true },
     { name: t('Team'), href: route('settings.tickets.team'), current: route().current('settings.tickets.team'), permission: true },
 ]
 </script>

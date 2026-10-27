@@ -36,7 +36,7 @@
                                 {{ order.eventTitle ?? $t('Multi-visit pass') }}
                                 <span v-if="order.otherEventCount > 0" class="text-text-subtle">· {{ $t('+{count} more', { count: order.otherEventCount }) }}</span>
                             </td>
-                            <td class="whitespace-nowrap px-4 py-2.5 tabular-nums">{{ formatDay(order.happenedAt) }}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5 tabular-nums">{{ formatDate(order.happenedAt) }}</td>
                             <td class="px-4 py-2.5 text-right tabular-nums">{{ order.ticketCount }}</td>
                             <td class="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">{{ formatEuro(order.totalCents) }}</td>
                         </tr>
@@ -62,7 +62,7 @@
                             <td class="px-4 py-2.5">{{ pass.name }}</td>
                             <td class="whitespace-nowrap px-4 py-2.5 font-mono text-xs tabular-nums">{{ pass.code }}</td>
                             <td class="px-4 py-2.5 text-right tabular-nums">{{ pass.usesTotal - pass.usesUsed }} / {{ pass.usesTotal }}</td>
-                            <td class="whitespace-nowrap px-4 py-2.5 tabular-nums">{{ pass.validUntil ? formatDay(pass.validUntil) : '–' }}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5 tabular-nums">{{ pass.validUntil ? formatDate(pass.validUntil) : '–' }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -74,11 +74,10 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import axios from 'axios'
-import dayjs from 'dayjs'
 import { IconExternalLink, IconLoader2 } from '@tabler/icons-vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
-import { formatEuro } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { formatDate, formatEuro } from '@/Helper/ticketingFormat.js'
 
 /* Orders and passes of one buyer, read from Artwork-Tickets when the contact opens — the CRM only
    keeps the totals the nightly sync writes. */
@@ -92,7 +91,6 @@ const customer = ref(null)
 const loading = ref(true)
 const error = ref('')
 
-const formatDay = (value) => dayjs(value).format('DD.MM.YYYY')
 
 onMounted(async () => {
     try {

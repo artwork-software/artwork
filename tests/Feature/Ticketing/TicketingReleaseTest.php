@@ -91,7 +91,7 @@ final class TicketingReleaseTest extends FeatureTestCase
                 'tickets' => [['code' => 'ABCD1234', 'status' => 'valid', 'holderName' => 'Ada Lovelace', 'email' => 'ada@example.org', 'categoryName' => 'Parkett', 'reductionName' => null, 'priceCents' => 2900, 'checkedInAt' => null]],
             ]),
             self::TICKETS_URL . '/api/integration/v1/dates?ids=*' => Http::response([
-                ['id' => self::DATE_ID, 'status' => 'scheduled', 'capacity' => 300, 'sold' => 84],
+                ['id' => self::DATE_ID, 'status' => 'scheduled', 'capacity' => 300, 'sold' => 84, 'checkedInCount' => 12],
             ]),
             self::TICKETS_URL . '/api/integration/v1/login-links' => Http::response(['url' => self::TICKETS_URL . '/api/auth/core-login/verify?token=t0k3n']),
             self::TICKETS_URL . '/api/integration/v1/productions/*/publish' => Http::response(['id' => self::PRODUCTION_ID, 'status' => 'published']),
@@ -573,7 +573,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->getJson(route('ticketing.calendar-summary', ['start_date' => '2027-01-01', 'end_date' => '2027-01-31']))
             ->assertOk()
-            ->assertExactJson([(string) $released->id => ['sold' => 84, 'capacity' => 300, 'cancelled' => false]]);
+            ->assertExactJson([(string) $released->id => ['sold' => 84, 'capacity' => 300, 'cancelled' => false, 'checked_in' => 12]]);
 
         Http::assertSentCount(1);
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/dates?ids=' . self::DATE_ID));

@@ -113,6 +113,7 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import {computed, ref} from 'vue'
 import {Link} from '@inertiajs/vue3'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
@@ -192,13 +193,13 @@ const manualHref = computed(() => {
 })
 
 const collapsed = ref(
-    props.storageKey ? localStorage.getItem(props.storageKey) === '1' : false
+    props.storageKey ? safeGetItem(props.storageKey) === '1' : false
 )
 
 const toggleCollapsed = () => {
     collapsed.value = !collapsed.value
     if (props.storageKey) {
-        localStorage.setItem(props.storageKey, collapsed.value ? '1' : '0')
+        safeSetItem(props.storageKey, collapsed.value ? '1' : '0')
     }
 }
 

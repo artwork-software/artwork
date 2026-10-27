@@ -223,7 +223,7 @@
                             :aria-label="$t('Set end to {0} minutes after start', [defaultDurationMin])"
                             :title="$t('Set end to {0} minutes after start', [defaultDurationMin])"
                         >
-                            Standard: {{ defaultDurationMin }} {{ $t('min') }}
+                            {{ $t('Default') }}: {{ defaultDurationMin }} {{ $t('min') }}
                         </button>
                     </div>
 

@@ -59,9 +59,6 @@ test('multi-edit delete uses the JSON endpoint via axios and reloads after movin
     assert.match(atAGlance, /watch\(\(\) => props\.eventsAtAGlance,/);
     assert.match(read('resources/js/Pages/Projects/Tab/Components/CalendarTab.vue'), /provide\('reloadCalendarTabData', reloadCalendarData\)/);
 
-    const legacy = read('resources/js/Layouts/Components/IndividualCalendarComponent.vue');
-    assert.doesNotMatch(legacy, /router\.post\(route\('multi-edit\.delete'\)/);
-    assert.match(legacy, /axios\.post\(route\('multi-edit\.delete'\)/);
 });
 
 test('textarea limits only where the backend has one, with a visible counter', () => {

@@ -441,7 +441,8 @@ export default {
         this.handleScroll();
         window.addEventListener('scroll', this.handleScroll);
     },
-    beforeDestroy() {
+    // Vue 3: beforeDestroy wird nie aufgerufen, der Scroll-Listener blieb bei jedem Kalender-Tab liegen
+    beforeUnmount() {
         window.removeEventListener('scroll', this.handleScroll);
     },
     computed: {

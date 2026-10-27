@@ -10,6 +10,7 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 readonly class DayServicesService
 {
@@ -49,9 +50,29 @@ readonly class DayServicesService
         $this->dayServiceRepository->delete($dayService);
     }
 
+    /**
+     * Idempotent: schnelles Klicken im Tagesdienst-Modus schickte dieselbe Zuweisung mehrfach und legte
+     * doppelte Zeilen an. Parallele Requests fängt der Unique-Index ab.
+     */
     public function attachDayServiceable(DayService $dayService, $dayServiceable, string $date): void
     {
-        $dayServiceable?->dayServices()->attach($dayService->id, ['date' => $date]);
+        if ($dayServiceable === null) {
+            return;
+        }
+
+        $alreadyAssigned = $dayServiceable->dayServices()
+            ->wherePivot('date', $date)
+            ->whereKey($dayService->id)
+            ->exists();
+        if ($alreadyAssigned) {
+            return;
+        }
+
+        try {
+            $dayServiceable->dayServices()->attach($dayService->id, ['date' => $date]);
+        } catch (UniqueConstraintViolationException) {
+            // gleichzeitiger zweiter Klick hat die Zeile schon angelegt
+        }
     }
 
     public function findModelInstance(string $modelType, int $modelId): ?DayServiceable

@@ -599,7 +599,7 @@ async function updateTemplate() {
 }
 
 async function deleteTemplate(template) {
-    if (!confirm('Vorlage wirklich löschen?')) return
+    if (!confirm(t('Really delete this template?'))) return
 
     try {
         await axios.delete(route('link_list_templates.destroy', { linkListTemplate: template.id }))

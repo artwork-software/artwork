@@ -49,7 +49,6 @@ test('shift plan date shortcuts no longer format local dates via toISOString', (
         'resources/js/Pages/Shifts/ShiftPlanListView.vue',
         'resources/js/Pages/Projects/Components/BulkComponents/BulkBody.vue',
         'resources/js/Components/FunctionBars/FunctionBarCalendar.vue',
-        'resources/js/Layouts/Components/IndividualCalendarComponent.vue',
         'resources/js/Pages/Projects/Components/AddShiftModal.vue',
     ]) {
         const source = read(file);
@@ -60,7 +59,6 @@ test('shift plan date shortcuts no longer format local dates via toISOString', (
 
 test('YYYY-MM-DD values are parsed locally before local day arithmetic', () => {
     const files = {
-        'resources/js/Layouts/Components/IndividualCalendarComponent.vue': 2,
         'resources/js/Pages/Projects/Components/AddShiftModal.vue': 1,
         'resources/js/Pages/Projects/Components/BulkComponents/BulkBody.vue': 4,
         'resources/js/Layouts/Components/ShiftPlanComponents/ShiftPlanListViewFunctionBar.vue': 2,

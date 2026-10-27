@@ -1124,6 +1124,7 @@
 </template>
 
 <script setup lang="ts">
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import { holidayStripes, isSingleDayHoliday, pickDayHolidays, withAlpha } from '@/Helper/holidayTint.js'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
@@ -3095,6 +3096,10 @@ onBeforeUnmount(() => {
     if (originalVisit.value) {
         router.visit = originalVisit.value
     }
+    // Sonst fragte der Browser auf fremden Seiten "Seite verlassen?" (tote Closure mit multiEditMode)
+    if (window.onbeforeunload === shiftPlanBeforeUnload) {
+        window.onbeforeunload = null
+    }
 })
 
 function workerMapKey(row: any) {
@@ -3441,14 +3446,16 @@ function addDayAndRoomToMultiEditCalendar(day: string, roomId: number) {
     }
 }
 
+function shiftPlanBeforeUnload(event: BeforeUnloadEvent) {
+    if (multiEditMode.value && userForMultiEdit.value && !preventNextNavigation.value) {
+        event.preventDefault()
+        ;(event as any).returnValue = $t('Would you like to save the changes before you leave the page?')
+    }
+}
+
 function setupInertiaNavigationGuard() {
     originalVisit.value = router.visit
-    window.onbeforeunload = (event) => {
-        if (multiEditMode.value && userForMultiEdit.value && !preventNextNavigation.value) {
-            event.preventDefault()
-            ;(event as any).returnValue = $t('Would you like to save the changes before you leave the page?')
-        }
-    }
+    window.onbeforeunload = shiftPlanBeforeUnload
 
     router.visit = async (url: string, options: any = {}) => {
         // Standardmäßig Scroll-Position beibehalten, außer explizit überschrieben
@@ -3693,7 +3700,7 @@ let userOverviewScrollRestored = false
 
 function readUserOverviewScroll(): { top: number, left: number, range: string } | null {
     try {
-        const saved = JSON.parse(localStorage.getItem(userOverviewScrollKey.value) ?? 'null')
+        const saved = JSON.parse(safeGetItem(userOverviewScrollKey.value) ?? 'null')
         return saved && typeof saved.top === 'number' ? saved : null
     } catch {
         return null
@@ -3706,7 +3713,7 @@ function saveUserOverviewScroll() {
     // Mount (scrollTop 0) den gemerkten Stand
     if (!el || !userOverviewScrollRestored) return
     try {
-        localStorage.setItem(userOverviewScrollKey.value, JSON.stringify({
+        safeSetItem(userOverviewScrollKey.value, JSON.stringify({
             top: el.scrollTop,
             left: el.scrollLeft,
             range: userOverviewRangeKey.value,
@@ -4134,6 +4141,10 @@ async function handleWorkerReload() {
     }
 }
 
+// Tagesdienst-Zellen, deren Zuweisung gerade gespeichert wird: ein zweiter Klick vor der Antwort
+// schickte sonst denselben attach erneut (bzw. hob ihn wieder auf)
+const dayServiceCellsInFlight = new Set<string>()
+
 function handleCellClick(user: any, day: any) {
     if (multiEditMode.value && !userForMultiEdit.value) {
         handleMultiEdit(user, day)
@@ -4179,18 +4190,24 @@ function handleCellClick(user: any, day: any) {
             }
         }
 
-        if (hasDayService) {
-            axios.patch(route('remove.day.service.from.user', {dayServiceable: user.element.id}), {
+        const cellKey = `${type}|${user.element.id}|${day.withoutFormat}`
+        if (dayServiceCellsInFlight.has(cellKey)) {
+            return
+        }
+        dayServiceCellsInFlight.add(cellKey)
+        const request = hasDayService
+            ? axios.patch(route('remove.day.service.from.user', {dayServiceable: user.element.id}), {
                 dayService: selectedDayService.value.id, date: day.withoutFormat, modelType: type,
-            }).then(setWorkerDayServicesCallback)
-        } else {
-            axios.post(route('day-service.attach', {
+            })
+            : axios.post(route('day-service.attach', {
                 dayServiceable: user.element.id,
                 dayService: selectedDayService.value.id
             }), {
                 date: day.withoutFormat, modelType: type,
-            }).then(setWorkerDayServicesCallback)
-        }
+            })
+        request.then(setWorkerDayServicesCallback)
+            .catch(() => {})
+            .finally(() => dayServiceCellsInFlight.delete(cellKey))
         return
     }
     const isOwnCell = user.type === 0 && user.element.id === authUser.value.id

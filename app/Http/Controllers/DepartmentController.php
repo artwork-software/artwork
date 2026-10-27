@@ -22,7 +22,6 @@ class DepartmentController extends Controller
 {
     public function __construct(
         private readonly DepartmentService $departmentService,
-        private readonly UserService $userService,
     ) {
         $this->authorizeResource(Department::class);
     }
@@ -32,8 +31,8 @@ class DepartmentController extends Controller
         return inertia(
             'Departments/DepartmentManagement',
             [
+                // keine Liste aller Personen: die Seite sucht über /users/search (vorher ~2 KB je Person ungenutzt)
                 'departments' => $this->departmentService->getDepartmentIndexResource(),
-                'users' => $this->userService->getAllUsers()
             ]
         );
     }
@@ -62,7 +61,6 @@ class DepartmentController extends Controller
             'Departments/Edit',
             [
                 'department' => $this->departmentService->createDepartmentShowResource($department),
-                'users' => $this->userService->getAllUsers(),
             ]
         );
     }

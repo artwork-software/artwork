@@ -49,6 +49,7 @@
                                     :id="`project-${index}`"
                                     height="6"
                                     width="6"
+                                    lazy-load
                                 />
 
                                 <!-- Beschreibung -->

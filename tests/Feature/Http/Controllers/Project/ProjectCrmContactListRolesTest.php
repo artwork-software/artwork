@@ -207,6 +207,75 @@ final class ProjectCrmContactListRolesTest extends TestCase
         $this->assertNull($context['project']->fresh()->linked_artists);
     }
 
+    #[Test]
+    public function linked_contacts_stay_selectable_for_another_role(): void
+    {
+        $context = $this->rolesContext();
+        $this->writer($context, [PermissionEnum::CRM_VIEW->value]);
+        $contact = CrmContact::create(['crm_contact_type_id' => $context['type']->id, 'display_name' => 'Lena Licht', 'is_active' => true]);
+        $this->postJson(route('projects.components.crm-contacts.link', $this->params($context)), [
+            'crm_contact_id' => $contact->id,
+            'roles' => ['Lichttechnik'],
+        ])->assertCreated();
+
+        $this->searchLinkable($context, ['role' => 'Tontechnik'])->assertJsonPath('0.id', $contact->id)
+            ->assertJsonPath('0.linked.roles', ['Lichttechnik'])
+            ->assertJsonPath('0.linked.is_artist', false);
+        // gleiche Rolle (Groß-/Kleinschreibung egal) und ohne Zielrolle: nicht mehr auswählbar
+        $this->assertSame([], $this->searchLinkable($context, ['role' => 'lichttechnik'])->json());
+        $this->assertSame([], $this->searchLinkable($context, [])->json());
+        $this->searchLinkable($context, ['artist' => 1])->assertJsonPath('0.id', $contact->id);
+
+        $this->postJson(route('projects.components.crm-contacts.link', $this->params($context)), [
+            'crm_contact_id' => $contact->id,
+            'roles' => ['Tontechnik'],
+        ])->assertCreated()->assertJsonPath('contact.roles', ['Lichttechnik', 'Tontechnik']);
+        $this->assertSame(1, ProjectComponentCrmContact::query()->where('component_id', $context['component']->id)->count());
+
+        $this->postJson(route('projects.components.crm-contacts.link', $this->params($context)), [
+            'crm_contact_id' => $contact->id,
+            'is_artist' => true,
+        ])->assertCreated();
+        $this->assertSame([], $this->searchLinkable($context, ['artist' => 1])->json());
+    }
+
+    #[Test]
+    public function full_list_still_offers_linked_contacts_for_another_role(): void
+    {
+        $context = $this->rolesContext();
+        $context['component']->update(['data' => [...$context['component']->data, 'max_contacts' => 1]]);
+        $this->writer($context, [PermissionEnum::CRM_VIEW->value]);
+        $linked = CrmContact::create(['crm_contact_type_id' => $context['type']->id, 'display_name' => 'Kim Bühne', 'is_active' => true]);
+        $other = CrmContact::create(['crm_contact_type_id' => $context['type']->id, 'display_name' => 'Kai Bühne', 'is_active' => true]);
+        $this->postJson(route('projects.components.crm-contacts.link', $this->params($context)), ['crm_contact_id' => $linked->id])
+            ->assertCreated();
+
+        $this->searchLinkable($context, ['role' => 'Bühne', 'search' => 'Bühne'])
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.id', $linked->id);
+        $this->assertSame([], $this->searchLinkable($context, ['search' => 'Bühne'])->json());
+
+        $this->postJson(route('projects.components.crm-contacts.link', $this->params($context)), [
+            'crm_contact_id' => $linked->id,
+            'roles' => ['Bühne'],
+        ])->assertCreated()->assertJsonPath('contact.roles', ['Bühne']);
+        $this->postJson(route('projects.components.crm-contacts.link', $this->params($context)), [
+            'crm_contact_id' => $other->id,
+            'roles' => ['Bühne'],
+        ])->assertStatus(422);
+    }
+
+    /**
+     * @param array<string, mixed> $query
+     */
+    private function searchLinkable(array $context, array $query): \Illuminate\Testing\TestResponse
+    {
+        return $this->getJson(route('projects.components.crm-contacts.search', $this->params($context, [
+            'search' => $query['search'] ?? 'Licht',
+            ...collect($query)->except('search')->all(),
+        ])))->assertOk();
+    }
+
     private function rolesContext(): array
     {
         $context = $this->crmContactListContext();

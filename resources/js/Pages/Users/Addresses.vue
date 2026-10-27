@@ -101,7 +101,7 @@
                 row-key="email"
                 v-model:page="page"
                 empty-title="Keine Adressen"
-                empty-message="Derzeit sind keine Einträge vorhanden."
+                empty-message="No entries available"
             >
 
                 <!-- Name (Avatar + Name + Email) -->

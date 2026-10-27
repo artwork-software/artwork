@@ -38,16 +38,20 @@
             <!-- Select values input -->
             <div v-if="form.type === 'select' || form.type === 'multiselect'" class="space-y-2">
                 <label class="componentLabel">{{ $t('Selection values') }}</label>
-                <div v-for="(val, index) in form.select_values" :key="index" class="flex items-center gap-3">
-                    <BaseInput
-                        :id="'select_value_' + index"
-                        v-model="form.select_values[index]"
-                        :label="$t('Selection value {index}', { index: index + 1 })"
-                    />
-                    <button type="button" @click="form.select_values.splice(index, 1)" class="text-text-subtle hover:text-danger">
-                        <IconX class="h-4 w-4" />
-                    </button>
-                </div>
+                <BaseSortableList v-model="form.select_values" labeled>
+                    <template #default="{ index }">
+                        <BaseInput
+                            :id="'select_value_' + index"
+                            v-model="form.select_values[index]"
+                            :label="$t('Selection value {index}', { index: index + 1 })"
+                        />
+                    </template>
+                    <template #actions="{ remove }">
+                        <button type="button" class="rounded p-1 text-text-subtle hover:text-danger" :title="$t('Remove')" :aria-label="$t('Remove')" @click="remove">
+                            <IconX class="h-4 w-4" />
+                        </button>
+                    </template>
+                </BaseSortableList>
                 <button type="button" @click="form.select_values.push('')" class="text-sm text-accent-600 hover:text-accent-600 flex items-center gap-1">
                     <IconCirclePlus class="h-4 w-4" />
                     {{ $t('Add option') }}
@@ -70,6 +74,7 @@ import { useForm } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseSortableList from '@/Artwork/Inputs/BaseSortableList.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import { IconX, IconCirclePlus } from '@tabler/icons-vue'
 

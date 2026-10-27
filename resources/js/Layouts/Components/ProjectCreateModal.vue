@@ -45,7 +45,7 @@
                 <ProjectTypeChangeConfirmModal
                     v-if="project && showProjectTypeChangeConfirm"
                     :project="project"
-                    :projects-of-group="projectsOfGroup"
+                    :projects-of-group="projectGroupProjects"
                     :processing="projectTypeChangeProcessing"
                     @confirm="changeProjectType"
                     @close="showProjectTypeChangeConfirm = false"
@@ -332,6 +332,7 @@ import Input from "@/Layouts/Components/InputComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import ProjectPropertiesChecklist from "@/Layouts/Components/ProjectPropertiesChecklist.vue";
 import {router, useForm} from "@inertiajs/vue3";
+import axios from "axios";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import KeyVisual from "@/Components/Uploads/KeyVisual.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
@@ -369,9 +370,10 @@ const props = defineProps({
         default: null,
         required: false,
     },
+    // null = Aufrufer kennt die Unterprojekte nicht (z. B. Projektübersicht) → werden nachgeladen
     projectsOfGroup: {
         type: Array,
-        default: () => [],
+        default: null,
         required: false,
     },
 });
@@ -444,6 +446,18 @@ const createProjectForm = useForm({
     marked_as_done: props.project ? props.project.marked_as_done : false,
 });
 const projectGroupProjects = ref(props.project?.is_group && props.projectsOfGroup?.length > 0 ? [...props.projectsOfGroup] : []);
+// Solange die Unterprojekte einer bestehenden Gruppe unbekannt sind, wird "projects" nicht gesendet:
+// ein leeres Array hätte beim Speichern alle Projekte aus der Gruppe entfernt.
+const groupProjectsKnown = ref(!props.project?.is_group || Array.isArray(props.projectsOfGroup));
+if (!groupProjectsKnown.value) {
+    axios.get(route('project.groupProjectNames', props.project.id))
+        .then(({ data }) => {
+            const addedMeanwhile = projectGroupProjects.value.filter((p) => !data.some((d) => d.id === p.id));
+            projectGroupProjects.value = [...data, ...addedMeanwhile];
+            groupProjectsKnown.value = true;
+        })
+        .catch(() => {});
+}
 const projectGroupSearchResults = ref([]);
 const projectGroupQuery = ref('');
 const selectedState = ref(props.project && props.project.state && props.states ? props.states.find(state => state.id === (typeof props.project.state === 'object' ? props.project.state.id : props.project.state)) : null);
@@ -539,7 +553,9 @@ const addProject = (bool) => {
     }
 
     // Zuweisen statt anhängen: nach einem fehlgeschlagenen Versuch standen die Projekte sonst doppelt drin
-    createProjectForm.projects = projectGroupProjects.value.map((projectToAdd) => projectToAdd.id);
+    createProjectForm.projects = groupProjectsKnown.value
+        ? projectGroupProjects.value.map((projectToAdd) => projectToAdd.id)
+        : null;
 
     createProjectForm.assignedUsers = assignedUsers.value?.map(user => user.id);
     createProjectForm.state = selectedState.value ? selectedState.value.id : null;

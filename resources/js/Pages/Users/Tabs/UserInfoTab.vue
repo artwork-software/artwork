@@ -580,9 +580,6 @@ const selectedLanguage = ref(null)
 
 onMounted(() => {
     selectedLanguage.value = languages.value.find(l => l.id === props.user_to_edit.language) || languages.value[0]
-    if (selectedLanguage.value) {
-        document.documentElement.lang = selectedLanguage.value.id
-    }
 })
 
 /* ----- Departments (lokale Kopie fürs Modal) ----- */
@@ -638,7 +635,8 @@ const closeSuccessModal = () => (showSuccessModal.value = false)
 /* ----- Edit User ----- */
 const editUser = () => {
     userForm.language = selectedLanguage.value?.id
-    if (proxy?.$updateLocale && userForm.language) {
+    // Nur die eigene Oberfläche umstellen – vorher wechselte ein Admin beim Bearbeiten fremder Profile mit
+    if (isSignedInUser() && proxy?.$updateLocale && userForm.language) {
         proxy.$updateLocale(userForm.language)
     }
     if (hasAdminRole()) {

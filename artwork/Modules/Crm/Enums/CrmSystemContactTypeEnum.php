@@ -28,6 +28,19 @@ enum CrmSystemContactTypeEnum: string
         ];
     }
 
+    /**
+     * Gespiegelte Typen, die sich in Kontaktlisten verknüpfen (aber nicht anlegen/bearbeiten) lassen.
+     *
+     * @return list<string>
+     */
+    public static function linkOnlySlugs(): array
+    {
+        return [
+            self::FREELANCER->value,
+            self::SERVICE_PROVIDER->value,
+        ];
+    }
+
     public static function isMirrored(?string $slug): bool
     {
         return in_array($slug, self::mirroredSlugs(), true);

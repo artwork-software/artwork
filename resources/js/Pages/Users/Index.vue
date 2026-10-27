@@ -64,7 +64,7 @@
                 row-key="id"
                 v-model:page="page"
                 empty-title="Keine Personen"
-                empty-message="Derzeit sind keine Einträge vorhanden."
+                empty-message="No entries available"
             >
 
                 <!-- Name (Avatar + Name + Email) -->

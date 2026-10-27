@@ -267,7 +267,7 @@ import UserHeader from "@/Pages/Users/UserHeader.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 // Props
-const props = defineProps<{ departments: any; users: any }>()
+const props = defineProps<{ departments: any }>()
 
 const { t: $t } = useI18n()
 

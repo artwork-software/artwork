@@ -283,7 +283,8 @@ class InventoryCategoryController extends Controller
                 if ($filteredArticleIds !== null) {
                     $query->whereIn('id', $filteredArticleIds);
                 }
-                $query->select('id', 'name', 'inventory_category_id', 'inventory_sub_category_id');
+                // description zeigt die Artikelauswahl unter dem Namen an
+                $query->select('id', 'name', 'description', 'inventory_category_id', 'inventory_sub_category_id');
             },
             'articles.category:id,name',
             'articles.subCategory:id,name',

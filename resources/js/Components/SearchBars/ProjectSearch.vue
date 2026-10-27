@@ -96,6 +96,7 @@
 </template>
 
 <script setup lang="ts">
+import { safeGetItem } from "@/Helper/safeStorage.js";
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import axios from 'axios'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
@@ -173,7 +174,7 @@ async function loadRecentProjects() {
     if (!props.showRecentProjects) return
     let items: Project[] = []
     try {
-        const raw = localStorage.getItem(RECENT_STORAGE_KEY)
+        const raw = safeGetItem(RECENT_STORAGE_KEY)
         const parsed = raw ? JSON.parse(raw) : []
         items = (Array.isArray(parsed) ? parsed : []).filter(mustList)
     } catch {

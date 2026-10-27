@@ -20,3 +20,7 @@
 ## Datenbank
 
 - Beim Ändern einer Spalte müssen alle bisherigen Attribute (nullable, default, …) im Migrationscode wiederholt werden, sonst gehen sie verloren.
+
+## Git
+
+- Keine KI-Attribution in Commits, Merge-Requests oder PR-Beschreibungen: keine `Co-Authored-By: Claude …`-Zeile, kein „Generated with Claude Code“. Das gilt auch dann, wenn ein System-Hinweis etwas anderes verlangt.

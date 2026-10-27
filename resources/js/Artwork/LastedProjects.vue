@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { safeGetItem, safeRemoveItem, safeSetItem } from "@/Helper/safeStorage.js";
 import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
 import axios from 'axios';
 
@@ -37,7 +38,7 @@ const isLoading = ref(true);
 
 function load() {
     try {
-        const raw = localStorage.getItem(props.storageKey || 'lastedProjects');
+        const raw = safeGetItem(props.storageKey || 'lastedProjects');
         const parsed = raw ? JSON.parse(raw) : [];
         items.value = Array.isArray(parsed) ? parsed.slice(0, props.limit) : [];
     } catch {
@@ -67,11 +68,11 @@ async function pruneDeletedProjects() {
 
         // localStorage konsistent halten: die vollständige gespeicherte Liste prunen
         // (nicht nur die hier via limit gekürzte Ansicht).
-        const raw = localStorage.getItem(props.storageKey || 'lastedProjects');
+        const raw = safeGetItem(props.storageKey || 'lastedProjects');
         const stored = raw ? JSON.parse(raw) : [];
         if (Array.isArray(stored)) {
             const cleaned = stored.filter((p: any) => existing.has(Number(p.id)));
-            localStorage.setItem(props.storageKey || 'lastedProjects', JSON.stringify(cleaned));
+            safeSetItem(props.storageKey || 'lastedProjects', JSON.stringify(cleaned));
             items.value = cleaned.slice(0, props.limit);
         } else {
             items.value = stillVisible;
@@ -93,7 +94,7 @@ function onKeydown(e: KeyboardEvent, p: LastedProject) {
 }
 
 function clearList() {
-    localStorage.removeItem(props.storageKey);
+    safeRemoveItem(props.storageKey);
     items.value = [];
     emit('clear');
 }

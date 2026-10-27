@@ -45,7 +45,8 @@ class EventShowResource extends JsonResource
             'created_by' => $this->creator,
             'declined_room_id' => $this->declined_room_id,
             'declined_room_name' => $this->declined_room_id
-                ? Room::find($this->declined_room_id)?->name
+                // nur der Name: Room::$with lud sonst je Zeile Admins und Ersteller mit
+                ? Room::query()->setEagerLoads([])->whereKey($this->declined_room_id)->value('name')
                 : null,
             'accepted' => $this->accepted,
         ];

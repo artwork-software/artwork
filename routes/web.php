@@ -1200,7 +1200,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
     Route::get('/trashedRooms', [RoomController::class, 'getTrashed'])
         ->middleware('can:can access trash')->name('rooms.trashed');
-    Route::get('/rooms/free', [RoomController::class, 'getAllDayFree'])->name('rooms.free');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])
         ->name('rooms.show')->middleware(CanViewRoom::class);
@@ -3687,6 +3686,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         // Projektgruppen eines Projekts, Anzeige neben dem Projektnamen im Termin-Modal
         Route::get('/projects/{project}/groups', [ProjectController::class, 'projectGroupNames'])
             ->name('project.groupNames');
+        // Unterprojekte einer Gruppe, falls das Basisdaten-Modal sie nicht mitbekommt
+        Route::get('/projects/{project}/group-projects', [ProjectController::class, 'projectsOfGroupNames'])
+            ->name('project.groupProjectNames');
     });
 
     Route::group(['prefix' => 'chat'], function (): void {

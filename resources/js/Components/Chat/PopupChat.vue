@@ -472,11 +472,8 @@ const openChat = async () => {
         // Neu: sicherheitshalber sortieren (neueste oben)
         resortChats()
 
-        // Set up Echo listeners when chat is first opened
-        if (!echoListenersInitialized.value) {
-            setupEchoListeners()
-            echoListenersInitialized.value = true
-        }
+        // Listener der vorhandenen Chats beim ersten Öffnen (doppelte verhindert registeredChatIds)
+        chats.value.forEach(chat => registerChatListeners(chat))
 
         isChatOpen.value = true
         isLoading.value = false
@@ -585,34 +582,28 @@ const totalUnreadCount = computed(() => {
     return chats.value.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
 });
 
-// Flag to track if Echo listeners have been initialized
-const echoListenersInitialized = ref(false);
+// Chats, deren Kanal schon abonniert ist: openChat und .chat.created hätten sonst doppelte Handler angelegt
+const registeredChatIds = new Set();
 
-// Setup Echo listeners for chats and new chat creation
-const setupEchoListeners = () => {
-    const userId = usePage().props.auth.user.id;
-
-    // Register listeners for each existing chat
-    chats.value.forEach(chat => {
-        registerChatListeners(chat);
-    });
-
-    // Listen for new chats being created
-    window.Echo.private(`user.${userId}`)
-        .listen('.chat.created', (e) => {
-            if (!chats.value.some(c => c.id === e.chat.id)) {
-                // NEU: oben einfügen
-                chats.value.unshift(e.chat);
-                registerChatListeners(e.chat);
-            } else {
-                // Falls bereits vorhanden, nach oben schieben
-                moveChatToTop(e.chat.id);
-            }
-        });
+// Neue Chats: hängt pro Seite einmal am user-Kanal und wird beim Unmount wieder entfernt
+// (vorher blieb pro Navigation ein Handler samt Komponente im Speicher)
+const onChatCreated = (e) => {
+    if (!chats.value.some(c => c.id === e.chat.id)) {
+        // NEU: oben einfügen
+        chats.value.unshift(e.chat);
+        registerChatListeners(e.chat);
+    } else {
+        // Falls bereits vorhanden, nach oben schieben
+        moveChatToTop(e.chat.id);
+    }
 };
 
+// Beim Mounten festhalten: beim Unmount (z. B. Logout) ist auth.user schon weg
+let userChannel = null;
+
 onMounted(() => {
-    setupEchoListeners()
+    userChannel = `user.${usePage().props.auth.user.id}`
+    window.Echo.private(userChannel).listen('.chat.created', onChatCreated)
     // Only set up user status listener on mount
     // Chat loading and chat-related Echo listeners will be set up when chat is opened
     window.Echo.private('users.status')
@@ -629,13 +620,10 @@ onMounted(() => {
 
 
 onBeforeUnmount(() => {
-    // Only clean up chat-related listeners if they were initialized
-    if (echoListenersInitialized.value) {
-        chats.value.forEach(chat => {
-            window.Echo.leave(`chat.${chat.id}`);
-        });
-
-        window.Echo.leave(`user.${usePage().props.auth?.user?.id}`);
+    registeredChatIds.forEach(chatId => window.Echo.leave(`chat.${chatId}`));
+    registeredChatIds.clear();
+    if (userChannel) {
+        window.Echo.private(userChannel).stopListening('.chat.created', onChatCreated);
     }
 
     // Always clean up user status listener
@@ -878,6 +866,10 @@ const setChatPosition = async (pos) => {
 
 // NEU: Listener-Registrierung für einen Chat
 const registerChatListeners = (chat) => {
+    if (registeredChatIds.has(chat.id)) {
+        return;
+    }
+    registeredChatIds.add(chat.id);
     window.Echo.private(`chat.${chat.id}`)
         .listen('.new.message', async (e) => {
             const target = chats.value.find(c => c.id === chat.id);

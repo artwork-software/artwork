@@ -66,6 +66,15 @@ final class CrmSystemContactTypeEnumTest extends UnitTestCase
     }
 
     #[Test]
+    public function only_freelancers_and_service_providers_are_link_only(): void
+    {
+        $this->assertSame(['freelancer', 'service_provider'], CrmSystemContactTypeEnum::linkOnlySlugs());
+        foreach (CrmSystemContactTypeEnum::linkOnlySlugs() as $slug) {
+            $this->assertTrue(CrmSystemContactTypeEnum::isMirrored($slug));
+        }
+    }
+
+    #[Test]
     public function try_from_returns_null_for_unknown(): void
     {
         $this->assertNull(CrmSystemContactTypeEnum::tryFrom('partner'));

@@ -46,9 +46,13 @@
                 <tr>
                     <td></td>
                     @foreach($subPositionRow->cells as $columnCell)
-                        @php $isTextColumn = in_array($columnCell->column->id, $data['textColumnIds'], true); @endphp
-                        {{-- KTO/KST/Beschreibung: data-type="s" hält führende Nullen ("04000") als Text --}}
-                        <td @if($isTextColumn) data-type="s" @endif>
+                        @php
+                            $isTextColumn = in_array($columnCell->column->id, $data['textColumnIds'], true);
+                            $isFormulaColumn = !$isTextColumn && !in_array($columnCell->column->type, ['empty', 'sage'], true);
+                        @endphp
+                        {{-- KTO/KST/Beschreibung: data-type="s" hält führende Nullen ("04000") als Text.
+                             data-type="f": selbst erzeugte Formeln am SafeValueBinder vorbei als Formel setzen. --}}
+                        <td @if($isTextColumn) data-type="s" @elseif($isFormulaColumn) data-type="f" @endif>
                             @php
                                 $subPositionRowSumCellsCollection[$columnCell->column->id][] = $formulaService
                                     ->determineExcelColumn(
@@ -91,7 +95,7 @@
                               $currentRowCount,
                         );
                     @endphp
-                    <td style="background-color: #CECDD8;">
+                    <td style="background-color: #CECDD8;" data-type="f">
                         {{ $formulaService->createColumnSumRangeFormula($subPositionRowSumCells) }}
                     </td>
                 @endforeach
@@ -109,7 +113,7 @@
                           $currentRowCount,
                     );
                 @endphp
-                <td style="color:#FFFFFF; background-color: #27233C;">
+                <td style="color:#FFFFFF; background-color: #27233C;" data-type="f">
                     {{ $formulaService->createColumnSumSeparatedFormula($subPositionSumCells) }}
                 </td>
             @endforeach
@@ -127,7 +131,7 @@
                       $currentRowCount,
                 );
             @endphp
-            <td>
+            <td data-type="f">
                 {{ $formulaService->createColumnSumSeparatedFormula($mainPositionSumCells) }}
             </td>
         @endforeach
@@ -170,9 +174,13 @@
                 <tr>
                     <td></td>
                     @foreach($subPositionRow->cells as $columnCell)
-                        @php $isTextColumn = in_array($columnCell->column->id, $data['textColumnIds'], true); @endphp
-                        {{-- KTO/KST/Beschreibung: data-type="s" hält führende Nullen ("04000") als Text --}}
-                        <td @if($isTextColumn) data-type="s" @endif>
+                        @php
+                            $isTextColumn = in_array($columnCell->column->id, $data['textColumnIds'], true);
+                            $isFormulaColumn = !$isTextColumn && !in_array($columnCell->column->type, ['empty', 'sage'], true);
+                        @endphp
+                        {{-- KTO/KST/Beschreibung: data-type="s" hält führende Nullen ("04000") als Text.
+                             data-type="f": selbst erzeugte Formeln am SafeValueBinder vorbei als Formel setzen. --}}
+                        <td @if($isTextColumn) data-type="s" @elseif($isFormulaColumn) data-type="f" @endif>
                             @php
                                 $subPositionRowSumCellsCollection[$columnCell->column->id][] = $formulaService
                                     ->determineExcelColumn(
@@ -215,7 +223,7 @@
                               $currentRowCount,
                         );
                     @endphp
-                    <td style="background-color: #CECDD8;">
+                    <td style="background-color: #CECDD8;" data-type="f">
                         {{ $formulaService->createColumnSumRangeFormula($subPositionRowSumCells) }}
                     </td>
                 @endforeach
@@ -233,7 +241,7 @@
                           $currentRowCount,
                     );
                 @endphp
-                <td style="color:#FFFFFF; background-color: #27233C;">
+                <td style="color:#FFFFFF; background-color: #27233C;" data-type="f">
                     {{ $formulaService->createColumnSumSeparatedFormula($subPositionSumCells) }}
                 </td>
             @endforeach
@@ -251,7 +259,7 @@
                       $currentRowCount,
                 );
             @endphp
-            <td>
+            <td data-type="f">
                 {{ $formulaService->createColumnSumSeparatedFormula($mainPositionSumCells) }}
             </td>
         @endforeach
@@ -265,7 +273,7 @@
         <td colspan="3" align="center">Einnahmen - Ausgaben</td>
         <td align="right">SUM</td>
         @foreach($budgetTypeCostDeterminedCellsCollection as $columnId => $budgetTypeCostDeterminedCell)
-            <td>
+            <td data-type="f">
                 @if(isset($budgetTypeEarningDeterminedCellsCollection[$columnId]))
                     {{
                         $formulaService->createSubtractionFormula(

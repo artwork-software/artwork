@@ -541,18 +541,6 @@ export default {
         changeAtAGlance() {
             this.$emit('changeAtAGlance')
         },
-        async getAllDayFreeRooms() {
-            let rooms = []
-            await axios.get('/rooms/free', {
-                params: {
-                    start: this.eventsSince,
-                    end: this.eventsUntil,
-                }
-            }).then(response => {
-                rooms = response.data.rooms;
-            })
-            return rooms
-        },
         openEventComponent(event = null) {
 
             this.wantedSplit = event?.split;

@@ -29,13 +29,21 @@ class ProjectComponentCrmContactController extends Controller
     }
 
     /**
-     * Frei anlegbare Kontakttypen für die Einstellung „Erlaubte Kontakttypen“ der Komponente.
+     * Kontakttypen für die Einstellung „Erlaubte Kontakttypen“ der Komponente: frei anlegbare und
+     * gespiegelte, die sich nur verknüpfen lassen (`link_only`).
      */
     public function contactTypeOptions(): JsonResponse
     {
         return response()->json(
             $this->service->selectableContactTypes()
-                ->map(fn (CrmContactType $type) => $this->service->serializeContactType($type))
+                ->map(fn (CrmContactType $type) => [...$this->service->serializeContactType($type), 'link_only' => false])
+                ->concat(
+                    $this->service->linkOnlySelectableContactTypes()
+                        ->map(fn (CrmContactType $type) => [
+                            ...$this->service->serializeContactType($type),
+                            'link_only' => true,
+                        ])
+                )
                 ->values()
         );
     }
@@ -62,6 +70,10 @@ class ProjectComponentCrmContactController extends Controller
             'contact_types' => $this->service->allowedContactTypes($component)
                 ->map(fn (CrmContactType $type) => $this->service->serializeContactType($type))
                 ->values(),
+            // zusätzlich nur verknüpfbar: ausgewählte gespiegelte Typen (Freelancer, Dienstleister)
+            'linkable_contact_types' => $this->service->linkableContactTypes($component)
+                ->map(fn (CrmContactType $type) => $this->service->serializeContactType($type))
+                ->values(),
             'max_contacts' => $this->service->maxContacts($component),
             // Rollen (Einstellung der Komponente) und die Sonderrolle „Künstler*in“
             'roles_enabled' => $this->roleService->rolesEnabled($component),
@@ -78,12 +90,20 @@ class ProjectComponentCrmContactController extends Controller
         $this->assertCrmContactList($component);
         $this->authorizeLinking($request, $project, $component);
 
+        $request->validate([
+            'role' => ['nullable', 'string', 'max:255'],
+            'artist' => ['nullable', 'boolean'],
+        ]);
+        $linkedEntries = $this->service->linkedEntries($project, $component);
+
         return response()->json(
             $this->service->searchLinkable(
                 $project,
                 $component,
                 (string) $request->input('search', ''),
                 $request->filled('contact_type_id') ? $request->integer('contact_type_id') : null,
+                $request->filled('role') ? (string) $request->input('role') : null,
+                $request->boolean('artist'),
             )
                 ->map(fn (CrmContact $contact) => [
                     'id' => $contact->id,
@@ -92,6 +112,11 @@ class ProjectComponentCrmContactController extends Controller
                     'contact_type' => $contact->contactType
                         ? $this->service->serializeContactType($contact->contactType)
                         : null,
+                    // schon in der Liste: Treffer ergänzt nur die Rolle
+                    'linked' => $linkedEntries->has($contact->id) ? [
+                        'roles' => array_values((array) ($linkedEntries->get($contact->id)->roles ?? [])),
+                        'is_artist' => (bool) $linkedEntries->get($contact->id)->is_artist,
+                    ] : null,
                 ])
                 ->values()
         );

@@ -9582,5 +9582,10 @@
     "Look up sold passes and subscriptions": "Verkaufte Karten und Abos nachschlagen",
     "Check tickets of a date in and undo a check-in": "Tickets eines Termins einchecken und ein Einchecken zurücknehmen",
     "Admit a holder of a pass or subscription; what is left to pay is paid at the house's own till": "Inhaber einer Karte oder eines Abos einlassen; was zu zahlen bleibt, wird an der eigenen Kasse des Hauses bezahlt",
-    "This admission has not finished yet. Check the guest list before trying again.": "Dieser Einlass ist noch nicht abgeschlossen. Vor einem neuen Versuch bitte die Gästeliste prüfen."
+    "This admission has not finished yet. Check the guest list before trying again.": "Dieser Einlass ist noch nicht abgeschlossen. Vor einem neuen Versuch bitte die Gästeliste prüfen.",
+    "Request event in {0} cells": "Termin in {0} Zellen anfragen",
+    "You may neither create nor request events in at least one of the selected rooms.": "In mindestens einem gewählten Raum darfst du Termine weder anlegen noch anfragen.",
+    "In {0} of {1} cells you may only request the room: the event is created there as a room request and the room administration is notified.": "In {0} von {1} Zellen darfst du den Raum nur anfragen: Dort wird der Termin als Raumanfrage angelegt und die Raumverwaltung benachrichtigt.",
+    "In {0} of {1} cells you may only request the room: the copies are created there as room requests and the room administration is notified.": "In {0} von {1} Zellen darfst du den Raum nur anfragen: Dort werden die Kopien als Raumanfragen angelegt und die Raumverwaltung benachrichtigt.",
+    "Where you may only request the room, the copies are created as room requests and the room administration is notified.": "Wo du den Raum nur anfragen darfst, werden die Kopien als Raumanfragen angelegt und die Raumverwaltung benachrichtigt."
 }

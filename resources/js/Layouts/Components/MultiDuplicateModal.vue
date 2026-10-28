@@ -36,6 +36,9 @@
                         :use-translations="false"
                     />
                 </div>
+                <p v-if="copiesBecomeRoomRequests" class="mt-2 rounded-md bg-accent-50 px-3 py-2 text-sm text-accent-700">
+                    {{ $t('Where you may only request the room, the copies are created as room requests and the room administration is notified.') }}
+                </p>
             </section>
 
             <!-- Datum & Uhrzeit -->
@@ -213,6 +216,8 @@ const props = defineProps({
     rooms: { type: [Array, Object], default: () => [] },
     // Im Planungskalender erzeugte Duplikate werden als geplante Termine angelegt
     isPlanning: { type: Boolean, default: false },
+    // (roomId) => 'direct' | 'request' | 'none' – wie der Server je Raum anlegt (null = Raum ohne eigene Rechte)
+    bookingModeForRoom: { type: Function, default: () => "direct" },
 });
 
 const emit = defineEmits(["closed"]);
@@ -224,6 +229,10 @@ const roomItems = computed(() => [
     ...roomsList.value.map((room) => ({ id: room.roomId ?? room.id, name: room.name })),
 ]);
 const selectedRoom = ref(null);
+// Ohne Zielraum bleiben die Kopien in den Räumen der Originale – Hinweis, sobald dort nur Anfragen möglich wären
+const copiesBecomeRoomRequests = computed(
+    () => props.bookingModeForRoom(selectedRoom.value?.id ? selectedRoom.value.id : null) === "request"
+);
 
 // --- Zeit-Modus
 const timeModes = [

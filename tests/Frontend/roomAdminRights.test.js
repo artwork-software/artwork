@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { findRoom, isRoomAdminOf, mayAnswerRoomRequestIn, roomAdminIds } from '../../resources/js/Helper/roomAdminRights.js';
+import { bulkBookingModeIn, findRoom, isRoomAdminOf, mayAnswerRoomRequestIn, roomAdminIds } from '../../resources/js/Helper/roomAdminRights.js';
 
 test('room admins count as id list and as user objects', () => {
     assert.deepEqual(roomAdminIds({ admins: [3, 5] }), [3, 5]);
@@ -30,4 +30,34 @@ test('mayAnswerRoomRequestIn mirrors EventPolicy::answerRoomRequest', () => {
     assert.equal(mayAnswerRoomRequestIn({ ...base, roomId: 1, canBookWithoutRequest: true }), true);
     assert.equal(mayAnswerRoomRequestIn({ ...base, roomId: 1, isAdmin: true }), true);
     assert.equal(mayAnswerRoomRequestIn({ ...base, roomId: 2 }), true);
+});
+
+test('bulkBookingModeIn mirrors the multi-edit booking check (direct, room request, none)', () => {
+    const closedRoom = { id: 1, admins: [7], everyone_can_book: false, requestable_by: [9] };
+    const base = {
+        room: closedRoom,
+        userId: 8,
+        isAdmin: false,
+        isPlanning: false,
+        directBookingOnly: false,
+        canBookWithoutRequest: false,
+        canEditPlanning: false,
+        canRequestRooms: false,
+    };
+
+    assert.equal(bulkBookingModeIn(base), 'none');
+    assert.equal(bulkBookingModeIn({ ...base, canRequestRooms: true }), 'request');
+    assert.equal(bulkBookingModeIn({ ...base, userId: 9 }), 'request');
+    assert.equal(bulkBookingModeIn({ ...base, userId: 7 }), 'direct');
+    assert.equal(bulkBookingModeIn({ ...base, canBookWithoutRequest: true }), 'direct');
+    assert.equal(bulkBookingModeIn({ ...base, isAdmin: true }), 'direct');
+    assert.equal(bulkBookingModeIn({ ...base, room: { ...closedRoom, everyone_can_book: true } }), 'direct');
+
+    // "Termine immer direkt buchbar": Anfragerecht bucht direkt, sonst gibt es keine Anfrage
+    assert.equal(bulkBookingModeIn({ ...base, directBookingOnly: true, canRequestRooms: true }), 'direct');
+    assert.equal(bulkBookingModeIn({ ...base, directBookingOnly: true, userId: 9 }), 'none');
+
+    // Geplante Termine kennen keine Raumanfrage
+    assert.equal(bulkBookingModeIn({ ...base, isPlanning: true, canRequestRooms: true }), 'none');
+    assert.equal(bulkBookingModeIn({ ...base, isPlanning: true, canEditPlanning: true }), 'direct');
 });

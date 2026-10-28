@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Http\Controllers\Event;
 
+use App\Settings\EventSettings;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\SeriesEvents;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -441,10 +443,29 @@ final class EventRoomBookingRightsTest extends FeatureTestCase
     }
 
     #[Test]
-    public function request_only_creator_cannot_duplicate_booked_events_via_calendar_multi_duplicate(): void
+    public function request_only_creator_duplicates_booked_events_as_room_requests_via_calendar_multi_duplicate(): void
     {
         $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
-        $event = $this->bookedEvent($requester, Room::factory()->create(['everyone_can_book' => false]));
+        [$room, $roomAdmin] = $this->roomWithAdmin();
+        $event = $this->bookedEvent($requester, $room);
+
+        $this->patchJson(route('multi-duplicate.save'), [
+            'events' => [$event->id],
+            'date' => '2026-12-01',
+        ])->assertSuccessful();
+
+        $copy = Event::query()->whereKeyNot($event->id)->sole();
+        $this->assertTrue($copy->occupancy_option, 'Kopie aus reinem Anfragerecht muss Raumanfrage sein');
+        $this->assertSame($room->id, $copy->room_id);
+        $this->assertFalse($event->fresh()->occupancy_option, 'Original bleibt gebucht');
+        $this->assertSame(1, $this->roomRequestsSentTo($roomAdmin));
+    }
+
+    #[Test]
+    public function user_without_any_room_right_still_cannot_duplicate_via_calendar_multi_duplicate(): void
+    {
+        $user = $this->actingAsUserWith([]);
+        $event = $this->bookedEvent($user, Room::factory()->create(['everyone_can_book' => false]));
 
         $this->patchJson(route('multi-duplicate.save'), [
             'events' => [$event->id],
@@ -452,6 +473,160 @@ final class EventRoomBookingRightsTest extends FeatureTestCase
         ])->assertForbidden();
 
         $this->assertSame(1, Event::query()->count());
+    }
+
+    // ------------------------------------------------------------------ Kalender-Multi-Edit: Zellen als Raumanfrage
+
+    #[Test]
+    public function request_only_user_creates_room_requests_in_cells_and_notifies_the_room_admins(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        [$room, $roomAdmin] = $this->roomWithAdmin();
+
+        $this->postJson(route('events.multi-cell.create'), [
+            'cells' => [
+                ['day' => '2026-11-10', 'room_id' => $room->id],
+                ['day' => '2026-11-11', 'room_id' => $room->id],
+            ],
+            'event_type_id' => EventType::factory()->create()->id,
+            'name' => 'Angefragt',
+        ])->assertSuccessful();
+
+        $requests = Event::query()->where('eventName', 'Angefragt')->get();
+        $this->assertCount(2, $requests);
+        foreach ($requests as $request) {
+            $this->assertTrue($request->occupancy_option);
+            $this->assertFalse((bool) $request->accepted);
+        }
+        $this->assertSame(2, $this->roomRequestsSentTo($roomAdmin));
+    }
+
+    #[Test]
+    public function multi_cell_create_books_where_the_room_allows_it_and_requests_elsewhere(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $openRoom = Room::factory()->create(['everyone_can_book' => true]);
+        [$closedRoom, $roomAdmin] = $this->roomWithAdmin();
+
+        $this->postJson(route('events.multi-cell.create'), [
+            'cells' => [
+                ['day' => '2026-11-10', 'room_id' => $openRoom->id],
+                ['day' => '2026-11-10', 'room_id' => $closedRoom->id],
+            ],
+            'event_type_id' => EventType::factory()->create()->id,
+            'name' => 'Gemischt',
+        ])->assertSuccessful();
+
+        $this->assertFalse(Event::query()->where('room_id', $openRoom->id)->sole()->occupancy_option);
+        $this->assertTrue(Event::query()->where('room_id', $closedRoom->id)->sole()->occupancy_option);
+        $this->assertSame(1, $this->roomRequestsSentTo($roomAdmin));
+    }
+
+    #[Test]
+    public function room_specific_request_right_creates_room_requests_in_cells(): void
+    {
+        $user = $this->actingAsUserWith([]);
+        [$room] = $this->roomWithAdmin();
+        $room->users()->attach($user->id, ['is_admin' => false, 'can_request' => true]);
+
+        $this->postJson(route('events.multi-cell.create'), [
+            'cells' => [['day' => '2026-11-10', 'room_id' => $room->id]],
+            'event_type_id' => EventType::factory()->create()->id,
+        ])->assertSuccessful();
+
+        $this->assertTrue(Event::query()->where('room_id', $room->id)->sole()->occupancy_option);
+    }
+
+    #[Test]
+    public function multi_cell_create_is_rejected_completely_if_one_room_allows_neither_booking_nor_requests(): void
+    {
+        $user = $this->actingAsUserWith([]);
+        [$requestableRoom] = $this->roomWithAdmin();
+        $requestableRoom->users()->attach($user->id, ['is_admin' => false, 'can_request' => true]);
+        $closedRoom = Room::factory()->create(['everyone_can_book' => false]);
+
+        $this->postJson(route('events.multi-cell.create'), [
+            'cells' => [
+                ['day' => '2026-11-10', 'room_id' => $requestableRoom->id],
+                ['day' => '2026-11-10', 'room_id' => $closedRoom->id],
+            ],
+            'event_type_id' => EventType::factory()->create()->id,
+        ])->assertForbidden();
+
+        $this->assertSame(0, Event::query()->count());
+    }
+
+    #[Test]
+    public function request_only_user_cannot_create_planning_events_in_cells(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        [$room] = $this->roomWithAdmin();
+
+        // Geplante Termine kennen keine Raumanfrage
+        $this->postJson(route('events.multi-cell.create'), [
+            'cells' => [['day' => '2026-11-10', 'room_id' => $room->id]],
+            'event_type_id' => EventType::factory()->create()->id,
+            'is_planning' => true,
+        ])->assertForbidden();
+
+        $this->assertSame(0, Event::query()->where('room_id', $room->id)->count());
+    }
+
+    #[Test]
+    public function request_only_user_books_cells_directly_when_events_are_always_directly_bookable(): void
+    {
+        $settings = app(EventSettings::class);
+        $settings->always_direct_booking = true;
+        $settings->save();
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        [$room, $roomAdmin] = $this->roomWithAdmin();
+
+        $this->postJson(route('events.multi-cell.create'), [
+            'cells' => [['day' => '2026-11-10', 'room_id' => $room->id]],
+            'event_type_id' => EventType::factory()->create()->id,
+        ])->assertSuccessful();
+
+        $this->assertFalse(Event::query()->where('room_id', $room->id)->sole()->occupancy_option);
+        $this->assertSame(0, $this->roomRequestsSentTo($roomAdmin));
+    }
+
+    #[Test]
+    public function request_only_creator_duplicates_into_cells_as_room_requests(): void
+    {
+        $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $event = $this->bookedEvent($requester, Room::factory()->create(['everyone_can_book' => false]));
+        [$targetRoom, $roomAdmin] = $this->roomWithAdmin();
+
+        $this->postJson(route('events.multi-cell.duplicate'), [
+            'events' => [$event->id],
+            'cells' => [
+                ['day' => '2026-11-12', 'room_id' => $targetRoom->id],
+                ['day' => '2026-11-13', 'room_id' => $targetRoom->id],
+            ],
+        ])->assertSuccessful();
+
+        $copies = Event::query()->where('room_id', $targetRoom->id)->get();
+        $this->assertCount(2, $copies);
+        $this->assertTrue($copies->every(fn (Event $copy): bool => $copy->occupancy_option));
+        $this->assertFalse($event->fresh()->occupancy_option);
+        $this->assertSame(2, $this->roomRequestsSentTo($roomAdmin));
+    }
+
+    #[Test]
+    public function room_admin_duplicates_into_own_room_as_booked_events(): void
+    {
+        [$room, $roomAdmin] = $this->roomWithAdmin();
+        $this->actingAs($roomAdmin);
+        $event = $this->bookedEvent($roomAdmin, $room);
+
+        $this->postJson(route('events.multi-cell.duplicate'), [
+            'events' => [$event->id],
+            'cells' => [['day' => '2026-11-12', 'room_id' => $room->id]],
+        ])->assertSuccessful();
+
+        $copy = Event::query()->whereKeyNot($event->id)->sole();
+        $this->assertFalse($copy->occupancy_option);
+        $this->assertSame(0, $this->roomRequestsSentTo($roomAdmin));
     }
 
     #[Test]
@@ -498,7 +673,7 @@ final class EventRoomBookingRightsTest extends FeatureTestCase
 
         $this->postJson(route('events.multi-cell.create'), [
             'cells' => [['day' => '2026-11-10', 'room_id' => $trashedRoom->id]],
-            'event_type_id' => Event::factory()->create()->event_type_id,
+            'event_type_id' => EventType::factory()->create()->id,
         ])->assertUnprocessable()->assertJsonValidationErrors('cells.0.room_id');
     }
 

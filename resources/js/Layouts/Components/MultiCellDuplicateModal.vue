@@ -37,6 +37,10 @@
                 </div>
             </section>
 
+            <div v-if="roomRequestCellCount > 0" class="rounded-md bg-accent-50 px-3 py-2 text-sm text-accent-700">
+                {{ $t('In {0} of {1} cells you may only request the room: the copies are created there as room requests and the room administration is notified.', [roomRequestCellCount, cells.length]) }}
+            </div>
+
             <div v-if="requestError" class="ui-error">{{ requestError }}</div>
 
             <div class="ui-footer">
@@ -73,9 +77,15 @@ const props = defineProps({
     rooms: { type: [Array, Object], default: () => [] },
     // Im Planungskalender erzeugte Duplikate werden als geplante Termine angelegt
     isPlanning: { type: Boolean, default: false },
+    // (roomId) => 'direct' | 'request' | 'none' – wie der Server je Raum anlegt
+    bookingModeForRoom: { type: Function, default: () => "direct" },
 });
 
 const emit = defineEmits(["closed"]);
+
+const roomRequestCellCount = computed(
+    () => props.cells.filter((cell) => props.bookingModeForRoom(cell.room_id) === "request").length
+);
 
 const requestError = ref("");
 const submitting = ref(false);

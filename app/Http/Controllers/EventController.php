@@ -4026,17 +4026,24 @@ class EventController extends Controller
         $eventIds = $request->collect('events');
         // Aus dem Planungskalender heraus erzeugte Duplikate sind immer geplante Termine
         $forcePlanning = $request->boolean('isPlanning');
-        // Kopien werden fest gebucht (Buchungsstatus des Originals, kein Anfrage-Workflow) – deshalb wie
-        // bei duplicateEventsToCells Buchungsrecht im Zielraum (neuer Raum oder Raum des Originals) nötig.
+        // Kopien übernehmen den Buchungsstatus des Originals – wie bei duplicateEventsToCells mit Buchungsrecht
+        // im Zielraum (neuer Raum oder Raum des Originals); mit reinem Anfragerecht werden sie Raumanfragen.
+        $copiesAsRoomRequest = [];
         $originalEvents = $this->authorizedMultiEditEvents(
             $eventIds,
             $this->multiEditTargetRoom($request),
             true,
-            $forcePlanning
+            $forcePlanning,
+            $copiesAsRoomRequest
         );
 
         // Ein Fehler mitten in der Auswahl hinterließ sonst halbe Kopien.
-        $duplicatedEvents = DB::transaction(function () use ($request, $originalEvents, $forcePlanning): array {
+        $duplicatedEvents = DB::transaction(function () use (
+            $request,
+            $originalEvents,
+            $forcePlanning,
+            $copiesAsRoomRequest
+        ): array {
             $duplicatedEvents = [];
             foreach ($originalEvents as $originalEvent) {
                 $duplicatedEvent = $originalEvent->replicate();
@@ -4044,6 +4051,9 @@ class EventController extends Controller
                 $duplicatedEvent->is_series = false;
                 if ($forcePlanning) {
                     $duplicatedEvent->is_planning = true;
+                }
+                if (isset($copiesAsRoomRequest[(int) $originalEvent->id])) {
+                    $duplicatedEvent->occupancy_option = true;
                 }
                 $duplicatedEvent->save();
 
@@ -4063,6 +4073,11 @@ class EventController extends Controller
 
             return $duplicatedEvents;
         });
+
+        // Neue Raumanfragen (auch Kopien angefragter Originale) an die Raumverwaltung melden
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            collect($duplicatedEvents)->pluck('id')->all()
+        );
 
         foreach ($duplicatedEvents as $duplicatedEvent) {
             SafeBroadcast::send(new EventCreated($duplicatedEvent, $duplicatedEvent->room_id));
@@ -4137,19 +4152,22 @@ class EventController extends Controller
     /**
      * Lädt und autorisiert ALLE Termine der Mehrfachbearbeitung, bevor etwas geändert wird – sonst blieben
      * bei einem 403 mitten in der Auswahl die ersten Termine schon geändert bzw. kopiert zurück.
-     * Verschieben in einen anderen Raum und Kopieren buchen direkt (kein Anfrage-Workflow), deshalb gilt
-     * dafür dieselbe Raumprüfung wie beim Bulk-Anlegen.
+     * Verschieben in einen anderen Raum bucht direkt (kein Anfrage-Workflow), deshalb gilt dafür dieselbe
+     * Raumprüfung wie beim Bulk-Anlegen. Kopien werden zur Raumanfrage, wo die Person im Zielraum nur
+     * anfragen darf (wie im Termin-Dialog).
      *
      * @param \Illuminate\Support\Collection<int, mixed> $eventIds
      * @param bool $createsCopies true = Duplizieren: Zielraum ist der neue Raum oder der Raum des Originals
      * @param bool $forcePlanning Kopien werden geplante Termine (Planungskalender)
+     * @param array<int, true> $copiesAsRoomRequest IDs der Originale, deren Kopie als Raumanfrage entsteht
      * @return array<int, Event>
      */
     private function authorizedMultiEditEvents(
         \Illuminate\Support\Collection $eventIds,
         ?Room $targetRoom,
         bool $createsCopies,
-        bool $forcePlanning = false
+        bool $forcePlanning = false,
+        array &$copiesAsRoomRequest = []
     ): array {
         // Eine Abfrage mit den Relationen, die Policy und Raumprüfung lesen (statt Lazy-Loads je Termin)
         $loadedEvents = Event::query()
@@ -4169,14 +4187,23 @@ class EventController extends Controller
             $this->authorize('update', $event);
 
             $isPlanning = $forcePlanning || (bool) $event->is_planning;
+            $copyAsRoomRequest = false;
             if ($targetRoom !== null) {
                 if ($createsCopies || (int) $event->room_id !== (int) $targetRoom->id) {
-                    $this->authorizeBulkEventCreationOnce($checkedRooms, $isPlanning, $targetRoom);
+                    $copyAsRoomRequest = $this->authorizeBulkEventCreationOnce(
+                        $checkedRooms,
+                        $isPlanning,
+                        $targetRoom,
+                        $createsCopies
+                    );
                 }
             } elseif ($createsCopies) {
-                $this->authorizeCopyIntoOriginalRoom($event, $isPlanning, $checkedRooms);
+                $copyAsRoomRequest = $this->authorizeCopyIntoOriginalRoom($event, $isPlanning, $checkedRooms);
             }
 
+            if ($copyAsRoomRequest) {
+                $copiesAsRoomRequest[(int) $event->id] = true;
+            }
             $events[] = $event;
         }
 
@@ -4187,12 +4214,13 @@ class EventController extends Controller
      * Kopie ohne neuen Zielraum landet im Raum des Originals:
      * - Raum im Papierkorb: keine Kopie (sonst Geistertermin in einem gelöschten Raum, vgl. duplicateEventsToCells)
      * - ohne Raum: dieselbe Prüfung wie „Termin ohne Raum anlegen“ (storeEvent)
-     * - sonst: Buchungsrecht im Raum wie beim Bulk-Anlegen
+     * - sonst: Buchungsrecht im Raum wie beim Bulk-Anlegen, ersatzweise Anfragerecht (Kopie wird Raumanfrage)
      *
-     * @param array<string, true> $checkedRooms
+     * @param array<string, bool> $checkedRooms
+     * @return bool true = Kopie als Raumanfrage anlegen
      * @throws ValidationException
      */
-    private function authorizeCopyIntoOriginalRoom(Event $event, bool $isPlanning, array &$checkedRooms): void
+    private function authorizeCopyIntoOriginalRoom(Event $event, bool $isPlanning, array &$checkedRooms): bool
     {
         if ($event->room_id === null) {
             $key = ($isPlanning ? 'planning:' : 'regular:') . 'without-room';
@@ -4200,10 +4228,10 @@ class EventController extends Controller
                 /** @var User $user */
                 $user = $this->authManager->user();
                 $this->resolveRoomBookingOption($user, null, $isPlanning, false);
-                $checkedRooms[$key] = true;
+                $checkedRooms[$key] = false;
             }
 
-            return;
+            return false;
         }
 
         // Die Relation lädt Räume im Papierkorb nicht
@@ -4214,23 +4242,35 @@ class EventController extends Controller
             ]);
         }
 
-        $this->authorizeBulkEventCreationOnce($checkedRooms, $isPlanning, $room);
+        return $this->authorizeBulkEventCreationOnce($checkedRooms, $isPlanning, $room, true);
     }
 
     /**
-     * authorizeBulkEventCreation() je (Termin-Art, Raum) nur einmal pro Request auswerten.
+     * authorizeBulkEventCreation() bzw. authorizeBulkEventCreationOrRoomRequest() je (Termin-Art, Raum)
+     * nur einmal pro Request auswerten.
      *
-     * @param array<string, true> $checkedRooms bereits erlaubte Kombinationen
+     * @param array<string, bool> $checkedRooms bereits erlaubte Kombinationen (true = als Raumanfrage)
+     * @return bool true = als Raumanfrage anlegen (nur mit $allowsRoomRequest)
      */
-    private function authorizeBulkEventCreationOnce(array &$checkedRooms, bool $isPlanning, Room $room): void
-    {
-        $key = ($isPlanning ? 'planning:' : 'regular:') . $room->id;
+    private function authorizeBulkEventCreationOnce(
+        array &$checkedRooms,
+        bool $isPlanning,
+        Room $room,
+        bool $allowsRoomRequest = false
+    ): bool {
+        $key = ($isPlanning ? 'planning:' : 'regular:') . ($allowsRoomRequest ? 'request:' : '') . $room->id;
         if (isset($checkedRooms[$key])) {
-            return;
+            return $checkedRooms[$key];
         }
 
-        $this->authorizeBulkEventCreation($isPlanning, $room);
-        $checkedRooms[$key] = true;
+        if ($allowsRoomRequest) {
+            $checkedRooms[$key] = $this->authorizeBulkEventCreationOrRoomRequest($isPlanning, $room);
+        } else {
+            $this->authorizeBulkEventCreation($isPlanning, $room);
+            $checkedRooms[$key] = false;
+        }
+
+        return $checkedRooms[$key];
     }
 
     /**
@@ -4241,23 +4281,45 @@ class EventController extends Controller
      */
     private function authorizeBulkEventCreation(bool $isPlanning, Room $room): void
     {
+        abort_unless($this->mayCreateBulkEventDirectly($isPlanning, $room), 403);
+    }
+
+    private function mayCreateBulkEventDirectly(bool $isPlanning, Room $room): bool
+    {
         $user = $this->authManager->user();
 
         if ($isPlanning) {
-            abort_unless($user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value), 403);
-
-            return;
+            return $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value);
         }
 
         // "Termine immer direkt buchbar": "Raumbelegungen anfragen" bedeutet dann "Termine anlegen"
         // und schließt Bulk-Anlage und Serien ein (Entscheidung 18.09.2026).
-        $mayCreateRegularEvent = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
+        return $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
             || ($this->eventSettingsService->alwaysDirectBooking()
                 && $user->can(PermissionEnum::EVENT_REQUEST->value))
             || $room->everyone_can_book
             || $room->isAdministeredBy($user);
+    }
 
-        abort_unless($mayCreateRegularEvent, 403);
+    /**
+     * Kalender-Mehrfachbearbeitung (Anlegen in Zellen, Duplizieren): wer im Raum nicht direkt buchen, aber
+     * anfragen darf, legt Raumanfragen an – wie im Termin-Dialog (resolveRoomBookingOption). Geplante Termine
+     * und "Termine immer direkt buchbar" kennen keine Raumanfrage.
+     *
+     * @return bool true = als Raumanfrage anlegen
+     */
+    private function authorizeBulkEventCreationOrRoomRequest(bool $isPlanning, Room $room): bool
+    {
+        if ($this->mayCreateBulkEventDirectly($isPlanning, $room)) {
+            return false;
+        }
+
+        $mayRequestRoom = !$isPlanning
+            && !$this->eventSettingsService->alwaysDirectBooking()
+            && $this->authManager->user()->can('book', [Event::class, $room, true, false]);
+        abort_unless($mayRequestRoom, 403);
+
+        return true;
     }
 
     public function bulkProjectEventStore(
@@ -4525,8 +4587,10 @@ class EventController extends Controller
             ->get()
             ->keyBy('id');
 
+        // Wo die Person nur anfragen darf, entsteht je Zelle eine Raumanfrage (wie im Termin-Dialog)
+        $roomRequestByRoom = [];
         foreach ($rooms as $room) {
-            $this->authorizeBulkEventCreation($isPlanning, $room);
+            $roomRequestByRoom[(int) $room->id] = $this->authorizeBulkEventCreationOrRoomRequest($isPlanning, $room);
         }
 
         $eventStatusId = null;
@@ -4535,7 +4599,13 @@ class EventController extends Controller
                 ?? EventStatus::where('default', true)->first()?->id;
         }
 
-        $createdEvents = DB::transaction(function () use ($cells, $validated, $eventStatusId, $isPlanning): array {
+        $createdEvents = DB::transaction(function () use (
+            $cells,
+            $validated,
+            $eventStatusId,
+            $isPlanning,
+            $roomRequestByRoom
+        ): array {
             $events = [];
 
             foreach ($cells as $cell) {
@@ -4558,12 +4628,16 @@ class EventController extends Controller
                     'room_id' => $cell['room_id'],
                     'user_id' => $this->authManager->id(),
                     'is_planning' => $isPlanning,
+                    'occupancy_option' => $roomRequestByRoom[(int) $cell['room_id']] ?? false,
                 ]);
             }
 
             return $events;
         }, attempts: 3);
 
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            collect($createdEvents)->pluck('id')->all()
+        );
         $this->broadcastCreatedEventsAfterResponse($createdEvents);
     }
 
@@ -4597,16 +4671,26 @@ class EventController extends Controller
             ->whereIn('id', collect($cells)->pluck('room_id')->unique())
             ->get();
 
+        // Kopien übernehmen den Buchungsstatus des Originals; wo die Person nur anfragen darf, werden sie Raumanfragen
+        $checkedRooms = [];
+        $copiesAsRoomRequest = [];
         foreach ($originals as $original) {
             $this->authorize('update', $original);
 
             $isPlanning = $forcePlanning || (bool) $original->is_planning;
             foreach ($rooms as $room) {
-                $this->authorizeBulkEventCreation($isPlanning, $room);
+                if ($this->authorizeBulkEventCreationOnce($checkedRooms, $isPlanning, $room, true)) {
+                    $copiesAsRoomRequest[$original->id . ':' . $room->id] = true;
+                }
             }
         }
 
-        $duplicatedEvents = DB::transaction(function () use ($originals, $cells, $forcePlanning): array {
+        $duplicatedEvents = DB::transaction(function () use (
+            $originals,
+            $cells,
+            $forcePlanning,
+            $copiesAsRoomRequest
+        ): array {
             $duplicates = [];
 
             foreach ($originals as $original) {
@@ -4625,6 +4709,9 @@ class EventController extends Controller
                         $duplicated->setAttribute('is_planning', true);
                     }
                     $duplicated->setAttribute('room_id', $cell['room_id']);
+                    if (isset($copiesAsRoomRequest[$original->id . ':' . $cell['room_id']])) {
+                        $duplicated->setAttribute('occupancy_option', true);
+                    }
                     $duplicated->setAttribute('start_time', $newStart);
                     $duplicated->setAttribute(
                         'end_time',
@@ -4653,6 +4740,10 @@ class EventController extends Controller
             return $duplicates;
         }, attempts: 3);
 
+        // Neue Raumanfragen (auch Kopien angefragter Originale) an die Raumverwaltung melden
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            collect($duplicatedEvents)->pluck('id')->all()
+        );
         $this->broadcastCreatedEventsAfterResponse($duplicatedEvents);
     }
 

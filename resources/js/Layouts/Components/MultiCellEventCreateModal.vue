@@ -189,6 +189,10 @@
                 />
             </section>
 
+            <div v-if="roomRequestCellCount > 0" class="rounded-md bg-accent-50 px-3 py-2 text-sm text-accent-700">
+                {{ $t('In {0} of {1} cells you may only request the room: the event is created there as a room request and the room administration is notified.', [roomRequestCellCount, cells.length]) }}
+            </div>
+
             <div v-if="requestError" class="ui-error">{{ requestError }}</div>
 
             <!-- Sticky Action Bar -->
@@ -200,7 +204,7 @@
                     <FormButton
                         :disabled="submitting"
                         @click="submit"
-                        :text="$t('Create event in {0} cells', [cells.length])"
+                        :text="$t(roomRequestCellCount === cells.length ? 'Request event in {0} cells' : 'Create event in {0} cells', [cells.length])"
                     />
                 </div>
             </div>
@@ -234,9 +238,15 @@ const props = defineProps({
     eventStatuses: { type: [Array, Object], default: null },
     rooms: { type: [Array, Object], default: () => [] },
     isPlanning: { type: Boolean, default: false },
+    // (roomId) => 'direct' | 'request' | 'none' – wie der Server je Raum anlegt
+    bookingModeForRoom: { type: Function, default: () => "direct" },
 });
 
 const emit = defineEmits(["closed"]);
+
+const roomRequestCellCount = computed(
+    () => props.cells.filter((cell) => props.bookingModeForRoom(cell.room_id) === "request").length
+);
 
 const statusModule = computed(() => page.props.event_status_module);
 const eventTypesList = computed(() => {

@@ -216,7 +216,7 @@
                                 is-add-button
                                 use-translation
                                 icon="IconCalendarMonth"
-                                v-if="!project && (can('create events without request') || can('request room occupancy') || can('can edit planning calendar'))"
+                                v-if="!project && canSetUpEvents"
                                 :processing="createProjectForm.processing"
                                 @click="addProject(true)"
                             />
@@ -383,7 +383,12 @@ const emit = defineEmits(['closeCreateProjectModal', 'dropFeedback', 'openProjec
 
 // Setup composables
 const page = usePage();
-const { can } = usePermission(page.props);
+const { can, hasAdminRole } = usePermission(page.props);
+// Das folgende Termin-Modal (BulkBody) bucht direkt – reines Anfragerecht reicht dort nicht (hasCreateEventsPermission)
+const canSetUpEvents = can('create events without request')
+    || can('can edit planning calendar')
+    || hasAdminRole()
+    || (!!page.props.event_direct_booking_only && can('request room occupancy'));
 const t = useTranslation();
 
 // Color helper functions

@@ -8,6 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Tests\Feature\FeatureTestCase;
 
+use function Illuminate\Support\defer;
+
 /**
  * terminate() der Middleware läuft nach dem Senden der Antwort. Eine Exception dort endete auf Prod als
  * "headers already sent"-Fatal (Sentry 20.10.2026: OAuth-Key mit Rechten 644, Passports CheckToken scheitert
@@ -74,5 +76,25 @@ final class KernelTerminateMiddlewareTest extends FeatureTestCase
 
         $this->assertSame(1, KernelTerminateRecordingMiddleware::$terminated);
         $exceptions->assertNothingReported();
+    }
+
+    #[Test]
+    public function deferred_callbacks_run_after_the_response(): void
+    {
+        $ran = false;
+
+        Route::get('/__test/kernel-defer', static function () use (&$ran): string {
+            // Swoole besetzt auf Prod das globale defer() — daher immer die namespaced Funktion
+            defer(static function () use (&$ran): void {
+                $ran = true;
+            });
+
+            return 'ok';
+        });
+
+        $this->get('/__test/kernel-defer')->assertOk();
+
+        // Ohne InvokeDeferredCallbacks im Kernel liefen defer()-Callbacks in Web-Requests nie
+        $this->assertTrue($ran);
     }
 }

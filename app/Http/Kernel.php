@@ -37,6 +37,7 @@ use Illuminate\Http\Middleware\SetCacheHeaders;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Middleware\ValidateSignature;
+use Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Jetstream\Http\Middleware\AuthenticateSession;
@@ -49,6 +50,9 @@ use Throwable;
 class Kernel extends HttpKernel
 {
     protected $middleware = [
+        // Führt defer()-Callbacks nach dem Senden der Antwort aus (Laravel-11-Standard, fehlte bei der
+        // Laravel-10-Struktur) — ohne ihn liefen sie in Web-Requests nie.
+        InvokeDeferredCallbacks::class,
         TrustProxies::class,
         GuardInsecureDefaults::class,
         HandleCors::class,

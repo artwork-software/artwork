@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class CraftService
 {
@@ -233,7 +234,7 @@ class CraftService
         // der Besetzung festgeschriebener Schichten, Konflikte, Projekt-Tageszuordnungen,
         // Regel-Neuprüfung, Live-Update) — sonst löschte die DB-Kaskade sie still mit.
         app(ShiftDeletionService::class)->deleteMany($craft->shifts()->get(), true, false);
-        broadcast(new \Artwork\Modules\Event\Events\OccupancyUpdated())->toOthers();
+        SafeBroadcast::send(new \Artwork\Modules\Event\Events\OccupancyUpdated(), true);
 
         DB::transaction(function () use ($craft): void {
             $this->craftRepository->detachUsers($craft);

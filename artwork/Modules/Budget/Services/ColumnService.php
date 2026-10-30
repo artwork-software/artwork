@@ -13,6 +13,7 @@ use Artwork\Modules\Budget\Repositories\ColumnRepository;
 use Artwork\Modules\Project\Events\UpdateBudget;
 use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 readonly class ColumnService
 {
@@ -152,7 +153,7 @@ readonly class ColumnService
         );
 
         $this->columnRepository->forceDelete($column);
-        broadcast(new UpdateBudget($columnProjectId));
+        SafeBroadcast::send(new UpdateBudget($columnProjectId));
     }
 
     public function softDelete(
@@ -230,7 +231,7 @@ readonly class ColumnService
         );
 
         $this->columnRepository->delete($column);
-        broadcast(new UpdateBudget($columnProjectId));
+        SafeBroadcast::send(new UpdateBudget($columnProjectId));
     }
 
     public function restore(
@@ -307,7 +308,7 @@ readonly class ColumnService
         $this->columnRepository->restore($column);
 
         if ($columnProjectId) {
-            broadcast(new UpdateBudget($columnProjectId));
+            SafeBroadcast::send(new UpdateBudget($columnProjectId));
         }
     }
 

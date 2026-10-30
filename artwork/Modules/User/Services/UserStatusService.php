@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Services;
 
 use App\Events\UserStatusUpdated;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Throwable;
@@ -12,6 +13,12 @@ class UserStatusService
     private const TTL_SECONDS = 600; // 10 Minuten
     private const KEY_PREFIX  = 'user_status:';
 
+    /**
+     * Läuft auf jedem Request (Middleware UpdateUserStatus): „online“ höchstens so oft live melden — der
+     * Broadcast ist ein synchroner HTTP-Aufruf an den WebSocket-Server und lag sonst auf jeder Antwort.
+     */
+    private const ANNOUNCE_INTERVAL_SECONDS = 60;
+
     public function markOnline(int $userId): void
     {
         if (!$this->redisAvailable()) {
@@ -20,10 +27,17 @@ class UserStatusService
 
         $key = self::KEY_PREFIX . $userId;
 
+        // Restlaufzeit vor dem Auffrischen: -2/-1 = (noch) nicht online gemeldet
+        $remainingSeconds = (int) Redis::ttl($key);
+
         // Setzt Wert + TTL in einem Schritt (immer frisch)
         Redis::setex($key, self::TTL_SECONDS, now()->toDateTimeString());
 
-        event(new UserStatusUpdated($userId, 'online'));
+        if ($remainingSeconds > self::TTL_SECONDS - self::ANNOUNCE_INTERVAL_SECONDS) {
+            return;
+        }
+
+        SafeBroadcast::send(new UserStatusUpdated($userId, 'online'));
     }
 
     public function getStatus(int $userId): string
@@ -47,13 +61,13 @@ class UserStatusService
 
         if ($ttl === -1) {
             // Key hat keine TTL -> behandeln wir als "online"
-            event(new UserStatusUpdated($userId, 'online'));
+            SafeBroadcast::send(new UserStatusUpdated($userId, 'online'));
             return 'online';
         }
 
         $status = ($ttl < (self::TTL_SECONDS / 2)) ? 'away' : 'online';
 
-        event(new UserStatusUpdated($userId, $status));
+        SafeBroadcast::send(new UserStatusUpdated($userId, $status));
 
         return $status;
     }

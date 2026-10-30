@@ -11,6 +11,7 @@ use Artwork\Modules\Crm\Services\CrmContactTypeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class CrmContactTypeController extends Controller
 {
@@ -44,7 +45,7 @@ class CrmContactTypeController extends Controller
             $this->service->syncProperties($type, $properties);
         }
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -88,7 +89,7 @@ class CrmContactTypeController extends Controller
             $this->service->syncProperties($crmContactType, $properties);
         }
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -103,7 +104,7 @@ class CrmContactTypeController extends Controller
 
         $this->service->reorder($validated['types']);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -121,7 +122,7 @@ class CrmContactTypeController extends Controller
 
         $this->service->syncProperties($crmContactType, $validated['properties']);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -130,7 +131,7 @@ class CrmContactTypeController extends Controller
     {
         $this->service->destroy($crmContactType);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }

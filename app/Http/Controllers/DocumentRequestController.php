@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class DocumentRequestController extends Controller
 {
@@ -221,7 +222,7 @@ class DocumentRequestController extends Controller
 
         // Broadcast update for project contracts/documents component
         if ($documentRequest->project_id) {
-            broadcast(new UpdateProjectContractsDocuments($documentRequest->project_id));
+            SafeBroadcast::send(new UpdateProjectContractsDocuments($documentRequest->project_id));
         }
 
         return Redirect::back();
@@ -258,7 +259,7 @@ class DocumentRequestController extends Controller
 
         // Broadcast update for project contracts/documents component
         if ($documentRequest->project_id) {
-            broadcast(new UpdateProjectContractsDocuments($documentRequest->project_id));
+            SafeBroadcast::send(new UpdateProjectContractsDocuments($documentRequest->project_id));
         }
 
         return Redirect::back();

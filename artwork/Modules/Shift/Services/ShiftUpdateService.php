@@ -22,6 +22,7 @@ use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 /**
  * Einziger Weg, eine bestehende Schicht zu bearbeiten (Dienstplan/Projekt im Web und App-API): Speichern,
@@ -138,7 +139,7 @@ class ShiftUpdateService
             $shiftPlanUpdate = new UpdateShiftInShiftPlan($shift, $shift->room_id, $previousRoomId);
         }
         if ($shiftPlanUpdate !== null) {
-            broadcast($shiftPlanUpdate);
+            SafeBroadcast::send($shiftPlanUpdate);
         }
 
         return $shiftPlanUpdate;

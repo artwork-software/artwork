@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Crypt;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ChatController extends Controller
 {
@@ -90,7 +91,7 @@ class ChatController extends Controller
 
         // NEU: Nutzer laden und Broadcast senden
         $chat->load('users');
-        broadcast(new ChatCreated($chat));
+        SafeBroadcast::send(new ChatCreated($chat));
 
         return response()->json(['chat' => $chat]);
     }
@@ -268,7 +269,7 @@ class ChatController extends Controller
         // Für Broadcast/Response Klartext in-memory setzen (DB bleibt verschlüsselt)
         $message->setAttribute('message', $plain);
 
-        broadcast(new NewChatMessage($message))->toOthers();
+        SafeBroadcast::send(new NewChatMessage($message), true);
 
         return response()->json([
             'message' => $message,
@@ -288,7 +289,7 @@ class ChatController extends Controller
                 'read_at' => now(),
             ]);
 
-            broadcast(new MessageRead($message, $user->id, $read->read_at));
+            SafeBroadcast::send(new MessageRead($message, $user->id, $read->read_at));
         }
 
         return response()->noContent();
@@ -319,7 +320,7 @@ class ChatController extends Controller
 
                 // Wie markAsRead den übersetzten Anzeige-String senden (Cast am Model), nicht den
                 // ISO-Zeitstempel – das Frontend zeigt read_at unverändert an
-                broadcast(new MessageRead($message, $user->id, $read->read_at));
+                SafeBroadcast::send(new MessageRead($message, $user->id, $read->read_at));
             }
         }
 

@@ -7,6 +7,7 @@ use Artwork\Modules\Chat\Http\Requests\StoreChatMessageRequest;
 use Artwork\Modules\Chat\Http\Requests\UpdateChatMessageRequest;
 use Artwork\Modules\Chat\Models\ChatMessage;
 use App\Events\NewChatMessage;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ChatMessageController extends Controller
 {
@@ -39,7 +40,7 @@ class ChatMessageController extends Controller
             'message'   => $data['message'], // Plaintext
         ])->load(['sender', 'reads']);
 
-        broadcast(new NewChatMessage($message))->toOthers();
+        SafeBroadcast::send(new NewChatMessage($message), true);
 
         return response()->json([
             'message' => $message,

@@ -12,6 +12,7 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftWorkerConfirmationController extends Controller
 {
@@ -59,10 +60,10 @@ class ShiftWorkerConfirmationController extends Controller
         $shift = $shiftWorker->shift;
         if (!$shift->event_id) {
             if ($shift->room_id) {
-                broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id));
+                SafeBroadcast::send(new UpdateShiftInShiftPlan($shift, $shift->room_id));
             }
         } elseif ($shift->event?->room_id) {
-            broadcast(new UpdateShiftInShiftPlan($shift, $shift->event->room_id));
+            SafeBroadcast::send(new UpdateShiftInShiftPlan($shift, $shift->event->room_id));
         }
 
         return back();

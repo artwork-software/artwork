@@ -12,6 +12,7 @@ use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class AppProjectTaskController extends Controller
 {
@@ -35,7 +36,7 @@ class AppProjectTaskController extends Controller
             [],
         );
 
-        broadcast(new ChecklistUpdated($project->id))->toOthers();
+        SafeBroadcast::send(new ChecklistUpdated($project->id), true);
 
         return response()->json(['task' => $this->systemComponentService->mapTask($task)], 201);
     }
@@ -50,7 +51,7 @@ class AppProjectTaskController extends Controller
 
         $task = $this->taskService->doneOrUndoneTask($task, $request->user()->id);
 
-        broadcast(new ChecklistUpdated($project->id))->toOthers();
+        SafeBroadcast::send(new ChecklistUpdated($project->id), true);
 
         return response()->json(['task' => $this->systemComponentService->mapTask($task)]);
     }

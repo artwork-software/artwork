@@ -26,6 +26,7 @@ use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftUserService
 {
@@ -141,7 +142,7 @@ class ShiftUserService
         $vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
         $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $notificationService, $user);
 
-        broadcast(new ShiftAssigned($user, $shift));
+        SafeBroadcast::send(new ShiftAssigned($user, $shift));
     }
 
     private function assignUserToProjectIfNecessary(Shift $shift, User $user): void

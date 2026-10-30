@@ -22,6 +22,12 @@ use Throwable;
  *   statische Werte über Requests.
  * - In einer offenen Transaktion wird erst nach dem Commit gesendet (keine Locks während des Broadcasts,
  *   kein Live-Update für zurückgerollte Daten); der Commit-Callback ist selbst abgesichert.
+ * - Im Web-Request erst nach dem Senden der Antwort (Terminate-Phase, unter PHP-FPM nach
+ *   fastcgi_finish_request): Der Broadcast ist ein HTTP-Aufruf an den WebSocket-Server – ein langsamer oder
+ *   über die öffentliche Domain erreichter Server hielt sonst jedes Speichern (offenes Modal) auf. Bewusst
+ *   app()->terminating() statt defer(): afterResponse-Closures laufen erst nach den defer-Callbacks, ein dort
+ *   registriertes defer() käme nie an; terminating-Callbacks dürfen während der Terminate-Phase dazukommen.
+ *   In Konsole/Queue sofort – dort gibt es keine wartende Antwort, und ein Worker terminiert erst beim Beenden.
  */
 final class SafeBroadcast
 {
@@ -52,12 +58,28 @@ final class SafeBroadcast
 
         // Ohne offene Transaktion führt afterCommit den Callback sofort aus
         DB::afterCommit(static function () use ($event): void {
-            self::dispatch($event);
-            // Geplante Termine: vollständige Nutzlast nur auf dem Planungskanal (SplitsPlanningBroadcast)
-            $companion = $event instanceof HasPlanningCompanionBroadcast ? $event->planningCompanion() : null;
-            if ($companion !== null) {
-                self::dispatch($companion);
+            $broadcast = static function () use ($event): void {
+                self::dispatch($event);
+                // Geplante Termine: vollständige Nutzlast nur auf dem Planungskanal (SplitsPlanningBroadcast).
+                // Abgesichert, weil das in der Terminate-Phase laufen kann (dort nie werfen).
+                try {
+                    $companion = $event instanceof HasPlanningCompanionBroadcast ? $event->planningCompanion() : null;
+                } catch (Throwable $exception) {
+                    report($exception);
+                    $companion = null;
+                }
+                if ($companion !== null) {
+                    self::dispatch($companion);
+                }
+            };
+
+            if (app()->runningInConsole()) {
+                $broadcast();
+
+                return;
             }
+
+            app()->terminating($broadcast);
         });
     }
 

@@ -17,6 +17,7 @@ use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\DB;
 use Psr\Log\LoggerInterface;
 use Throwable;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftQualificationController extends Controller
 {
@@ -95,7 +96,7 @@ class ShiftQualificationController extends Controller
         $this->shiftsQualificationsService
             ->increaseValueOrCreateWithOneByQualification($shift->id, $request->integer('qualification_id'));
 
-        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
+        SafeBroadcast::send(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
             $shift,
             $shift->room_id ?? $shift->event?->room_id
         ));
@@ -116,7 +117,7 @@ class ShiftQualificationController extends Controller
         $this->shiftsQualificationsService
             ->increaseOverbookedValue($shift->id, $request->integer('qualification_id'));
 
-        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
+        SafeBroadcast::send(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
             $shift,
             $shift->room_id ?? $shift->event?->room_id
         ));
@@ -137,7 +138,7 @@ class ShiftQualificationController extends Controller
         $this->shiftsQualificationsService
             ->decreaseOverbookedValue($shift->id, $request->integer('qualification_id'));
 
-        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
+        SafeBroadcast::send(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
             $shift,
             $shift->room_id ?? $shift->event?->room_id
         ));

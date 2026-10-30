@@ -30,6 +30,7 @@ use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftWorkerService
 {
@@ -284,7 +285,7 @@ class ShiftWorkerService
         $shift = $pivot->shift;
         $roomId = $shift->event_id ? $shift->event?->room_id : $shift->room_id;
         if ($roomId !== null) {
-            broadcast(new UpdateShiftInShiftPlan($shift, (int) $roomId));
+            SafeBroadcast::send(new UpdateShiftInShiftPlan($shift, (int) $roomId));
         }
     }
 
@@ -695,7 +696,7 @@ class ShiftWorkerService
         }
 
         if ($worker instanceof User) {
-            broadcast(new ShiftAssigned($worker, $shift));
+            SafeBroadcast::send(new ShiftAssigned($worker, $shift));
         }
     }
 

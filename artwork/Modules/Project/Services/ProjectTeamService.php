@@ -14,6 +14,7 @@ use Artwork\Modules\User\Models\User;
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 /**
  * Der eine Schreibpfad für die Projekt-Teamzusammensetzung — Web (Roster-Sync)
@@ -112,7 +113,7 @@ class ProjectTeamService
             $project->access_budget()->get(),
         );
 
-        broadcast(new ProjectTeamUpdated($project->id));
+        SafeBroadcast::send(new ProjectTeamUpdated($project->id));
     }
 
     /**

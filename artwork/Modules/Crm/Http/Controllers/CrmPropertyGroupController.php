@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\In;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class CrmPropertyGroupController extends Controller
 {
@@ -42,7 +43,7 @@ class CrmPropertyGroupController extends Controller
             $this->service->updatePermissions($group, $validated['permissions']);
         }
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -72,7 +73,7 @@ class CrmPropertyGroupController extends Controller
             }
         }
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -87,7 +88,7 @@ class CrmPropertyGroupController extends Controller
 
         $this->service->reorder($validated['groups']);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -96,7 +97,7 @@ class CrmPropertyGroupController extends Controller
     {
         $this->service->destroy($crmPropertyGroup);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -121,7 +122,7 @@ class CrmPropertyGroupController extends Controller
 
         $this->service->updatePermissions($crmPropertyGroup, $validated['permissions'] ?? []);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }

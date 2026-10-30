@@ -99,6 +99,7 @@ use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
 use Throwable;
 use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class UserController extends Controller
 {
@@ -2084,7 +2085,7 @@ class UserController extends Controller
             throw $e;
         }
 
-        broadcast(new UserUpdated())->toOthers();
+        SafeBroadcast::send(new UserUpdated(), true);
 
         return Redirect::route('users');
     }

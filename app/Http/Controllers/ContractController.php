@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ContractController extends Controller
 {
@@ -168,7 +169,7 @@ class ContractController extends Controller
 
         // Broadcast update for project contracts/documents component
         if ($contract->project_id) {
-            broadcast(new UpdateProjectContractsDocuments($contract->project_id));
+            SafeBroadcast::send(new UpdateProjectContractsDocuments($contract->project_id));
         }
 
         return Redirect::back();

@@ -41,6 +41,16 @@ class DepartmentController extends Controller
         StoreDepartmentRequest $storeDepartmentRequest,
         NotificationService $notificationService
     ): RedirectResponse {
+        // Wie beim Bearbeiten: ins eigene Team setzt nur eine andere Person, Admins ausgenommen.
+        $actor = $storeDepartmentRequest->user();
+        $addsSelf = collect($storeDepartmentRequest->get('assigned_users'))
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->contains($actor->id);
+        if ($addsSelf && !$actor->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return Redirect::back()->with('error', __(DepartmentPolicy::OWN_TEAMS_LOCKED_MESSAGE));
+        }
+
         $this->departmentService->createByRequest($storeDepartmentRequest, $notificationService);
         return Redirect::route('departments');
     }

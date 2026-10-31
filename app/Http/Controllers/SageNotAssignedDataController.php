@@ -80,10 +80,20 @@ class SageNotAssignedDataController extends Controller
         return Redirect::back();
     }
 
-    public function forceDeleteAll(): RedirectResponse
+    /**
+     * Leert den Papierkorb nur um die Datensätze, die die Person auch einzeln endgültig löschen dürfte.
+     *
+     * @throws AuthorizationException
+     */
+    public function forceDeleteAll(Request $request): RedirectResponse
     {
-        SageNotAssignedData::onlyTrashed()->each(function ($item): void {
-            $this->sageNotAssignedDataService->forceDelete($item);
+        $this->authorize('getTrashed', SageNotAssignedData::class);
+
+        $user = $request->user();
+        SageNotAssignedData::onlyTrashed()->each(function (SageNotAssignedData $item) use ($user): void {
+            if ($user->can('forceDelete', $item)) {
+                $this->sageNotAssignedDataService->forceDelete($item);
+            }
         });
         return Redirect::route('sageNotAssignedData.trashed');
     }

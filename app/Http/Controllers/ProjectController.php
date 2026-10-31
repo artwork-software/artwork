@@ -953,12 +953,22 @@ class ProjectController extends Controller
     }
 
 
+    /**
+     * Budgetzugriff mit der Prüfanfrage vergeben nur, wer ihn auch im Team vergeben dürfte
+     * (Projektleitung, Ersteller:in, globale Budget-/Projektverwaltung) – und nur an Teammitglieder.
+     */
+    private function mayGrantBudgetAccessOnVerification(Project $project, Request $request): bool
+    {
+        return app(ProjectTeamService::class)->mayGrantBudgetAccess($project, $request->user());
+    }
+
     public function verifiedRequestMainPosition(Request $request): void
     {
-        $mainPosition = MainPosition::find($request->id);
-        $project = $mainPosition->table()->first()->project()->first();
+        $mainPosition = MainPosition::findOrFail($request->integer('id'));
+        $project = $mainPosition->table()->first()?->project()->first();
+        abort_if($project === null, 404);
 
-        if ($request->giveBudgetAccess) {
+        if ($request->giveBudgetAccess && $this->mayGrantBudgetAccessOnVerification($project, $request)) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             if ($user !== null) {
@@ -1401,10 +1411,11 @@ class ProjectController extends Controller
 
     public function verifiedRequestSubPosition(Request $request): void
     {
-        $subPosition = SubPosition::find($request->id);
+        $subPosition = SubPosition::findOrFail($request->integer('id'));
         $mainPosition = $subPosition->mainPosition()->first();
-        $project = $mainPosition->table()->first()->project()->first();
-        if ($request->giveBudgetAccess) {
+        $project = $mainPosition?->table()->first()?->project()->first();
+        abort_if($project === null, 404);
+        if ($request->giveBudgetAccess && $this->mayGrantBudgetAccessOnVerification($project, $request)) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             if ($user !== null) {

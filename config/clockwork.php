@@ -335,7 +335,7 @@ return [
 	'authentication' => env('CLOCKWORK_AUTHENTICATION', false),
 
 	// Password for the simple authentication
-	'authentication_password' => env('CLOCKWORK_AUTHENTICATION_PASSWORD', 'VerySecretPassword'),
+	'authentication_password' => env('CLOCKWORK_AUTHENTICATION_PASSWORD'),
 
 	/*
 	|------------------------------------------------------------------------------------------------------------------

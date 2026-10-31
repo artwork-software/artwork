@@ -4,6 +4,7 @@ namespace Artwork\Modules\Inventory\Http\Requests;
 
 use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Rules\InventoryArticleImageDimensions;
+use App\Rules\InventoryPropertyFileValue;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -54,10 +55,14 @@ class StoreInventoryArticleRequest extends FormRequest
                 'integer',
                 'exists:inventory_article_properties,id',
             ],
-            'detailed_article_quantities.*.properties.*.value' => ['nullable', 'max:255'],
+            'detailed_article_quantities.*.properties.*.value' => [
+                'nullable',
+                'max:255',
+                new InventoryPropertyFileValue(),
+            ],
             'properties' => ['nullable', 'array'],
             'properties.*.id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
-            'properties.*.value' => ['nullable', 'max:255'],
+            'properties.*.value' => ['nullable', 'max:255', new InventoryPropertyFileValue()],
             'main_image_index' => ['required', 'integer'],
             'statusValues' => ['nullable', 'array'],
             'statusValues.*.id' => ['required', 'integer', 'exists:inventory_article_statuses,id'],

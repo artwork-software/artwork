@@ -13,6 +13,7 @@ use Artwork\Modules\Project\Models\ProjectUserPivot;
 use Artwork\Modules\User\Models\User;
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 
@@ -23,10 +24,48 @@ use Artwork\Modules\Shift\Support\SafeBroadcast;
  */
 class ProjectTeamService
 {
+    /**
+     * Pivot für implizite Teamaufnahmen (Aufgaben, Checklisten, Schichten): nur Lesemitglied.
+     * Die Spalte project_user.can_write steht standardmäßig auf true – ein attach() ohne Pivot
+     * würde über eine Aufgabe sonst Schreibrecht im fremden Projekt verschaffen.
+     */
+    public const array IMPLICIT_MEMBER_PIVOT = [
+        'can_write' => false,
+        'access_budget' => false,
+        'is_manager' => false,
+        'delete_permission' => false,
+    ];
+
     public function __construct(
         private readonly ChangeService $changeService,
         private readonly NotificationService $notificationService,
     ) {
+    }
+
+    /**
+     * Nimmt die Personen einer Aufgabe/Checkliste als Lesemitglieder ins Projekt auf – nur wenn die
+     * handelnde Person im Projekt schreiben darf. Sonst holt ein Lesemitglied (oder wer global
+     * "To-dos verwalten" hat) beliebige Personen in fremde Projekte.
+     *
+     * @param iterable<int|string> $userIds
+     * @return list<int> neu aufgenommene Personen
+     */
+    public static function addImplicitMembers(Project $project, iterable $userIds): array
+    {
+        if (Gate::denies('update', $project)) {
+            return [];
+        }
+
+        $addedUserIds = [];
+        foreach ($userIds as $userId) {
+            $userId = (int) $userId;
+            if (!in_array($userId, $addedUserIds, true) && !$project->users->contains($userId)) {
+                $project->users()->attach($userId, self::IMPLICIT_MEMBER_PIVOT);
+                $addedUserIds[] = $userId;
+            }
+        }
+
+        return $addedUserIds;
     }
 
     /**
@@ -64,11 +103,7 @@ class ProjectTeamService
     ): array {
         $isLeadOrCreator = $this->isLeadOrCreator($project, $actor);
         $mayGrant = [
-            'access_budget' => $isLeadOrCreator
-                || $actor->canAny([
-                    PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
-                    PermissionEnum::PROJECT_MANAGEMENT->value,
-                ]),
+            'access_budget' => $this->mayGrantBudgetAccess($project, $actor),
             'delete_permission' => $isLeadOrCreator
                 || $actor->canAny([PermissionEnum::PROJECT_DELETE->value, PermissionEnum::PROJECT_MANAGEMENT->value]),
         ];
@@ -85,6 +120,15 @@ class ProjectTeamService
         }
 
         return $pivot;
+    }
+
+    public function mayGrantBudgetAccess(Project $project, User $actor): bool
+    {
+        return $this->isLeadOrCreator($project, $actor)
+            || $actor->canAny([
+                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
+                PermissionEnum::PROJECT_MANAGEMENT->value,
+            ]);
     }
 
     public function isLeadOrCreator(Project $project, User $actor): bool

@@ -424,4 +424,53 @@ final class SecurityAuditIdpProvisioningRegressionTest extends FeatureTestCase
 
         $this->assertSame('kept-token', $user->fresh()->remember_token);
     }
+
+    // ---------- Audit 31.10.2026, F-05: Admin-Konten nie per mail-Attribut an LDAP binden ----------
+
+    #[Test]
+    public function the_ldap_sync_does_not_link_a_local_admin_by_email(): void
+    {
+        // Zwei lokale Admins: nicht der Schutz des letzten Admins, sondern die Admin-Regel greift.
+        $this->adminUser();
+        $victim = $this->adminUser(User::factory()->create(['email' => 'admin2@theater.test']));
+
+        $result = $this->syncLdap($this->ldapSource(), [$this->ldapEntry('attacker', 'admin2@theater.test')]);
+
+        $this->assertSame(['total' => 1, 'synced' => 0, 'skipped' => 1], $result);
+        $this->assertSame('local', $victim->fresh()->auth_provider);
+        $this->assertNull(ExternalUser::query()->where('identification', 'attacker')->value('user_id'));
+    }
+
+    #[Test]
+    public function the_ldap_login_does_not_take_over_a_local_admin_by_email(): void
+    {
+        $this->adminUser();
+        $victim = $this->adminUser(User::factory()->create([
+            'email' => 'admin2@theater.test',
+            'password' => Hash::make('local-password'),
+        ]));
+        $this->ldapSource();
+        $this->mock(LdapService::class, function ($mock): void {
+            $mock->shouldReceive('authenticateAndFetch')->andReturn(
+                $this->ldapEntry('attacker', 'admin2@theater.test')
+            );
+        });
+
+        $this->post(route('login'), ['email' => 'admin2@theater.test', 'password' => 'attacker-ldap-password']);
+
+        $this->assertGuest();
+        $victim->refresh();
+        $this->assertSame('local', $victim->auth_provider);
+        $this->assertTrue(Hash::check('local-password', $victim->password));
+    }
+
+    #[Test]
+    public function the_ldap_sync_still_links_existing_non_admin_accounts_by_email(): void
+    {
+        $user = User::factory()->create(['email' => 'staff@theater.test']);
+
+        $this->syncLdap($this->ldapSource(), [$this->ldapEntry('staff', 'staff@theater.test')]);
+
+        $this->assertSame('ldap', $user->fresh()->auth_provider);
+    }
 }

@@ -12,6 +12,7 @@ use Artwork\Modules\User\Services\UserCredentialRevocationService;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -137,6 +138,7 @@ class IdentityResolutionService
         if (!$existing->isIdpBound()) {
             // Lokaler Account wird IdP-gebunden – Admin-Lockout verhindern.
             $this->adminLockoutGuard->assertNotLastLocalAdmin($existing);
+            $this->adminLockoutGuard->assertMayLinkByEmail($existing, $provider);
         }
 
         // Ab der Verknüpfung gilt nur noch der IdP: wer das Konto bisher genutzt hat (z. B. nach einer
@@ -188,7 +190,7 @@ class IdentityResolutionService
             'first_name' => $profile['first_name'] ?? '',
             'last_name' => $profile['last_name'] ?? '',
             'email' => $email,
-            'password' => Hash::make(uniqid('', true)),
+            'password' => Hash::make(Str::random(64)),
             'opened_checklists' => [],
             'opened_areas' => [],
             'ad_managed' => true,

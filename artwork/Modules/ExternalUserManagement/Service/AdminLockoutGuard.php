@@ -39,6 +39,25 @@ class AdminLockoutGuard
     }
 
     /**
+     * Lokale Admin-Konten werden nie automatisch per E-Mail an LDAP gebunden: das mail-Attribut
+     * ist in vielen Verzeichnissen vom Nutzer selbst schreibbar – wer dort die Adresse eines Admins
+     * einträgt, bekäme sonst dessen Konto. Admins bleiben lokal (Passwort-Login weiter möglich).
+     *
+     * @throws AdminLockoutException
+     */
+    public function assertMayLinkByEmail(User $user, string $provider): void
+    {
+        if ($provider !== 'ldap' || $user->isIdpBound() || !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return;
+        }
+
+        throw new AdminLockoutException(
+            'Refusing to link a local admin account to LDAP by email address. '
+            . 'Admin accounts keep their local password login.'
+        );
+    }
+
+    /**
      * Anzahl der Accounts mit Admin-Rolle, die weiterhin lokal einloggen können.
      */
     public function localAdminCount(): int

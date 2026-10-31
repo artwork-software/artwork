@@ -124,6 +124,9 @@ class TicketingCalendarController extends Controller
     private function destination(Request $request): array
     {
         if ($request->query('to') === 'settings') {
+            // Haus-Einstellungen nur für die Ticketing-Verwaltung (wie die Einstellungsseite in artwork).
+            abort_unless($request->user()->can(PermissionEnum::TICKETING_MANAGE->value), 403);
+
             return $request->filled('tab')
                 ? ['type' => 'houseSettings', 'tab' => $request->string('tab')->value()]
                 : ['type' => 'houseSettings'];

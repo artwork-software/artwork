@@ -200,6 +200,7 @@ use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use Artwork\Modules\User\Http\Controllers\UserContractController;
 use Artwork\Modules\User\Http\Controllers\UserBrowserSessionController;
+use Artwork\Modules\User\Http\Controllers\UserEmailChangeController;
 use Artwork\Modules\User\Http\Controllers\UserController;
 use Artwork\Modules\User\Http\Controllers\UserFilterController;
 use Artwork\Modules\User\Http\Controllers\UserFilterTemplateController;
@@ -740,6 +741,10 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->name('user.overtime.payout');
 
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
+    // Bestätigungslink für die selbst geänderte Login-E-Mail (UserEmailChangeService::requestSelfChange)
+    Route::get('/user/email-change/{user}/{hash}', [UserEmailChangeController::class, 'confirm'])
+        ->middleware(['signed', 'throttle:10,1'])
+        ->name('user.email-change.confirm');
 
     // user.update.open.crafts
     Route::patch('/users/{user}/open-crafts', [UserController::class, 'updateOpenedCrafts'])

@@ -86,6 +86,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property string $first_name
  * @property string $last_name
  * @property string $email
+ * @property string|null $pending_email
  * @property Carbon $email_verified_at
  * @property string $phone_number
  * @property string $password
@@ -365,6 +366,7 @@ class User extends Model implements
      */
     protected $hidden = [
         'password',
+        'pending_email',
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',

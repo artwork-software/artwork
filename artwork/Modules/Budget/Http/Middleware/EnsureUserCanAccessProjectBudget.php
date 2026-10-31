@@ -67,6 +67,14 @@ class EnsureUserCanAccessProjectBudget
         'sage_assigned_data_id' => SageAssignedData::class,
     ];
 
+    /**
+     * Listen-Ids (Reorder-Endpunkte): jedes Element muss zu einem Projekt mit Budgetzugriff gehören.
+     */
+    private const INPUT_ARRAY_KEY_MODEL_MAP = [
+        'main_position_ids' => MainPosition::class,
+        'sub_position_ids' => SubPosition::class,
+    ];
+
     public function __construct(
         private readonly BudgetModelProjectResolverService $projectResolverService,
     ) {
@@ -223,6 +231,20 @@ class EnsureUserCanAccessProjectBudget
             }
         }
 
+        // 3b) Id-Listen (Reorder von Haupt-/Unterpositionen)
+        foreach (self::INPUT_ARRAY_KEY_MODEL_MAP as $key => $modelClass) {
+            foreach ((array) $request->input($key, []) as $id) {
+                if ($id === null || is_array($id)) {
+                    continue;
+                }
+
+                $projectId = $this->resolveFromModelId($modelClass, $id);
+                if ($projectId !== null) {
+                    $projectIds[] = $projectId;
+                }
+            }
+        }
+
         // 4) Festschreibungs-Endpunkte senden {position: {id}, type: main|sub}
         $positionId = $request->input('position.id');
         if ($positionId !== null && !is_array($positionId)) {
@@ -242,6 +264,17 @@ class EnsureUserCanAccessProjectBudget
             $subPositionId = $update['sub_position_id'] ?? null;
             if ($subPositionId !== null && !is_array($subPositionId)) {
                 $projectId = $this->resolveFromModelId(SubPosition::class, $subPositionId);
+                if ($projectId !== null) {
+                    $projectIds[] = $projectId;
+                }
+            }
+
+            foreach ((array) ($update['row_ids'] ?? []) as $rowId) {
+                if ($rowId === null || is_array($rowId)) {
+                    continue;
+                }
+
+                $projectId = $this->resolveFromModelId(SubPositionRow::class, $rowId);
                 if ($projectId !== null) {
                     $projectIds[] = $projectId;
                 }

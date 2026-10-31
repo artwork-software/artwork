@@ -8,6 +8,7 @@ use Artwork\Modules\ExternalUserManagement\Exceptions\UnverifiedExternalEmailExc
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserRepository;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserCredentialRevocationService;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Illuminate\Support\Facades\Hash;
@@ -33,6 +34,7 @@ class IdentityResolutionService
         private readonly AdminLockoutGuard $adminLockoutGuard,
         private readonly UserService $userService,
         private readonly ExternalUserRepository $externalUserRepository,
+        private readonly UserCredentialRevocationService $credentialRevocationService,
     ) {
     }
 
@@ -136,6 +138,11 @@ class IdentityResolutionService
             // Lokaler Account wird IdP-gebunden – Admin-Lockout verhindern.
             $this->adminLockoutGuard->assertNotLastLocalAdmin($existing);
         }
+
+        // Ab der Verknüpfung gilt nur noch der IdP: wer das Konto bisher genutzt hat (z. B. nach einer
+        // vorab auf die Verzeichnisadresse geänderten E-Mail), verliert Passwort, Sitzungen und Tokens.
+        // Läuft auch beim Re-Key auf ein neues Subject derselben Verbindung.
+        $this->credentialRevocationService->revokeAll($existing);
 
         $existing->auth_provider = $provider;
         $existing->auth_provider_id = $subjectId;

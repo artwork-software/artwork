@@ -10,6 +10,11 @@ use Artwork\Modules\ExternalUserManagement\Service\LdapService;
 use Artwork\Modules\ExternalUserManagement\Service\OidcService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Passport;
+use Laravel\Passport\Token;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
@@ -340,5 +345,83 @@ final class SecurityAuditIdpProvisioningRegressionTest extends FeatureTestCase
 
         $this->assertSame(1, $result['synced']);
         $this->assertSame($reinvited->id, ExternalUser::query()->where('identification', 'lia')->value('user_id'));
+    }
+    // ---------- Audit 26.10.2026, H-4: Verknüpfung entzieht alle bisherigen Zugänge ----------
+
+    /**
+     * Lokales Konto mit Passwort, Datenbank-Sitzung und Passport-Tokens (App und Maschine) – so, wie
+     * es jemand nach einem Pre-Claim der Verzeichnisadresse besäße.
+     */
+    private function localAccountWithAccess(string $email): User
+    {
+        if (!is_readable(Passport::keyPath('oauth-private.key'))) {
+            $this->artisan('passport:keys');
+        }
+        app(ClientRepository::class)->createPersonalAccessGrantClient('Test Personal Access Client');
+
+        $user = User::factory()->create(['email' => $email, 'password' => Hash::make('local-password')]);
+        $user->forceFill(['remember_token' => 'old-remember-token'])->save();
+        $user->createToken('Phone', ['app']);
+        $user->createToken('Machine key', ['calendar:read']);
+
+        config(['session.driver' => 'database']);
+        DB::table('sessions')->insert([
+            'id' => 'pre-claim-session',
+            'user_id' => $user->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'test',
+            'payload' => '',
+            'last_activity' => now()->timestamp,
+        ]);
+
+        return $user;
+    }
+
+    private function assertAllAccessRevoked(User $user): void
+    {
+        $user->refresh();
+        $this->assertFalse(Hash::check('local-password', $user->password));
+        $this->assertNotSame('old-remember-token', $user->remember_token);
+        $this->assertDatabaseMissing('sessions', ['id' => 'pre-claim-session']);
+        $this->assertSame(0, Token::query()->where('user_id', $user->id)->where('revoked', false)->count());
+    }
+
+    #[Test]
+    public function ldap_sync_linking_an_existing_account_revokes_its_previous_access(): void
+    {
+        $user = $this->localAccountWithAccess('new.hire@theater.test');
+
+        $this->syncLdap($this->ldapSource(), [$this->ldapEntry('new-hire', 'new.hire@theater.test')]);
+
+        $this->assertSame('ldap', $user->fresh()->auth_provider);
+        $this->assertAllAccessRevoked($user);
+    }
+
+    #[Test]
+    public function oidc_login_linking_an_existing_account_revokes_its_previous_access(): void
+    {
+        $user = $this->localAccountWithAccess('new.person@example.com');
+        $source = $this->oidcSource();
+        $this->fakeOidcLogin(['email_verified' => true]);
+
+        $this->get(route('auth.oidc.callback', ['externalUserSource' => $source->id]));
+
+        $this->assertSame('oidc', $user->fresh()->auth_provider);
+        $this->assertAllAccessRevoked($user);
+        $this->assertTrue(Auth::check());
+        $this->assertSame($user->id, Auth::id());
+    }
+
+    #[Test]
+    public function resolving_an_already_linked_identity_keeps_access(): void
+    {
+        $source = $this->ldapSource();
+        $this->syncLdap($source, [$this->ldapEntry('linked', 'linked@theater.test')]);
+        $user = User::query()->where('email', 'linked@theater.test')->firstOrFail();
+        $user->forceFill(['remember_token' => 'kept-token'])->save();
+
+        $this->syncLdap($source, [$this->ldapEntry('linked', 'linked@theater.test')]);
+
+        $this->assertSame('kept-token', $user->fresh()->remember_token);
     }
 }

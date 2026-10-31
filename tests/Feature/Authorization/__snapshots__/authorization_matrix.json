@@ -515,6 +515,7 @@
     "GET user/browser-sessions": "allowed",
     "GET user/confirm-password": "allowed",
     "GET user/confirmed-password-status": "allowed",
+    "GET user/email-change/{user}/{hash}": "forbidden",
     "GET user/two-factor-qr-code": "confirm",
     "GET user/two-factor-recovery-codes": "confirm",
     "GET user/two-factor-secret-key": "confirm",

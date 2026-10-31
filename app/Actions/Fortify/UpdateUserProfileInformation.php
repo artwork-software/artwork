@@ -26,7 +26,6 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'description' => ['nullable','string', 'max:5000']
         ])->validateWithBag('updateProfileInformation');
 
-        $previousEmail = (string) $user->email;
         $emailChanged = $this->emailChangeService->isChange($user, $input['email']);
         if ($emailChanged) {
             $this->emailChangeService->assertSelfChangeAllowed(
@@ -40,12 +39,11 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             $user->updateProfilePhoto($input['photo']);
         }
 
-        // Keine E-Mail-Verifizierung (Konten nur per Einladung, LDAP oder OIDC): die neue Adresse gilt sofort,
-        // verlangt aber das aktuelle Passwort; die bisherige Adresse bekommt einen Hinweis.
+        // Die neue Adresse verlangt das aktuelle Passwort und gilt erst nach dem Bestätigungslink an sie;
+        // die bisherige Adresse bekommt dann einen Hinweis.
         $user->forceFill([
             'first_name' => $input['first_name'],
             'last_name' => $input['last_name'],
-            'email' => $input['email'],
             'phone_number' => $input['phone_number'] ?? null,
             'position' => $input['position'] ?? null,
             'business' => $input['business'] ?? null,
@@ -53,7 +51,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
         ])->save();
 
         if ($emailChanged) {
-            $this->emailChangeService->notifyPreviousAddress($user, $previousEmail);
+            $this->emailChangeService->requestSelfChange($user, (string) $input['email']);
         }
     }
 }

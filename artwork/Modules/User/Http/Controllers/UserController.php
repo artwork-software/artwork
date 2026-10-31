@@ -1607,22 +1607,29 @@ class UserController extends Controller
             }
         }
 
-        // Login-E-Mail: gültig, eindeutig, nicht die interne Domain; die eigene nur mit aktuellem Passwort.
+        // Login-E-Mail: gültig, eindeutig, nicht die interne Domain. Die eigene nur mit aktuellem Passwort
+        // und erst nach Bestätigung über den Link an die neue Adresse; fremde Konten ändert die
+        // Verwaltung sofort.
         $previousEmail = (string) $user->email;
         $emailChanged = $emailChangeService->isChange($user, $attributes['email'] ?? null);
+        $requestedEmail = null;
         if ($emailChanged) {
             $request->validate(['email' => $emailChangeService->emailRules($user)]);
+            $attributes['email'] = trim((string) $attributes['email']);
             if ($isSelf) {
                 $emailChangeService->assertSelfChangeAllowed($user, $request->input('current_password'));
+                $requestedEmail = $attributes['email'];
+                unset($attributes['email']);
             }
-            $attributes['email'] = trim((string) $attributes['email']);
         } else {
             unset($attributes['email']);
         }
 
         $user->update($attributes);
 
-        if ($emailChanged) {
+        if ($requestedEmail !== null) {
+            $emailChangeService->requestSelfChange($user, $requestedEmail);
+        } elseif ($emailChanged) {
             $emailChangeService->notifyPreviousAddress($user, $previousEmail);
         }
 

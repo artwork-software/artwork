@@ -110,6 +110,121 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         ])->assertSuccessful();
     }
 
+    // ---------- Haupt-/Unterpositionen aus fremdem Budget (Audit 26.10.2026, H-2) ----------
+
+    #[Test]
+    public function foreign_sub_positions_cannot_be_moved_into_an_own_main_position(): void
+    {
+        [$ownTable] = $this->createProjectTableWithColumn();
+        [$foreignTable] = $this->createProjectTableWithColumn();
+        $this->userWithBudgetAccess($ownTable->project);
+
+        $ownMain = MainPosition::factory()->create(['table_id' => $ownTable->id]);
+        $foreignMain = MainPosition::factory()->create(['table_id' => $foreignTable->id]);
+        $foreignSub = SubPosition::factory()->create(['main_position_id' => $foreignMain->id]);
+
+        $this->patch(route('project.budget.sub-position.reorder'), [
+            'main_position_id' => $ownMain->id,
+            'sub_position_ids' => [$foreignSub->id],
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('sub_positions', ['id' => $foreignSub->id, 'main_position_id' => $foreignMain->id]);
+    }
+
+    #[Test]
+    public function sub_positions_cannot_change_tables_even_with_access_to_both_budgets(): void
+    {
+        [$ownTable] = $this->createProjectTableWithColumn();
+        [$otherTable] = $this->createProjectTableWithColumn();
+        $user = $this->userWithBudgetAccess($ownTable->project);
+        $otherTable->project->users()->attach($user->id, ['access_budget' => true]);
+
+        $ownMain = MainPosition::factory()->create(['table_id' => $ownTable->id]);
+        $otherMain = MainPosition::factory()->create(['table_id' => $otherTable->id]);
+        $otherSub = SubPosition::factory()->create(['main_position_id' => $otherMain->id]);
+
+        $this->patch(route('project.budget.sub-position.reorder'), [
+            'main_position_id' => $ownMain->id,
+            'sub_position_ids' => [$otherSub->id],
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('sub_positions', ['id' => $otherSub->id, 'main_position_id' => $otherMain->id]);
+    }
+
+    #[Test]
+    public function sub_positions_can_move_between_main_positions_of_the_same_table(): void
+    {
+        [$table] = $this->createProjectTableWithColumn();
+        $this->userWithBudgetAccess($table->project);
+
+        $sourceMain = MainPosition::factory()->create(['table_id' => $table->id]);
+        $targetMain = MainPosition::factory()->create(['table_id' => $table->id]);
+        $sub = SubPosition::factory()->create(['main_position_id' => $sourceMain->id]);
+
+        $this->patch(route('project.budget.sub-position.reorder'), [
+            'main_position_id' => $targetMain->id,
+            'sub_position_ids' => [$sub->id],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('sub_positions', ['id' => $sub->id, 'main_position_id' => $targetMain->id]);
+    }
+
+    #[Test]
+    public function foreign_main_positions_cannot_be_reordered(): void
+    {
+        [$ownTable] = $this->createProjectTableWithColumn();
+        [$foreignTable] = $this->createProjectTableWithColumn();
+        $this->userWithBudgetAccess($ownTable->project);
+
+        $ownMain = MainPosition::factory()->create(['table_id' => $ownTable->id, 'position' => 1]);
+        $foreignMain = MainPosition::factory()->create(['table_id' => $foreignTable->id, 'position' => 7]);
+
+        $this->patch(route('project.budget.main-position.reorder'), [
+            'table_id' => $ownTable->id,
+            'type' => 'BUDGET_TYPE_COST',
+            'main_position_ids' => [$foreignMain->id, $ownMain->id],
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('main_positions', ['id' => $foreignMain->id, 'position' => 7]);
+    }
+
+    #[Test]
+    public function template_main_positions_cannot_be_reordered_via_an_own_table(): void
+    {
+        [$ownTable] = $this->createProjectTableWithColumn();
+        $templateTable = Table::factory()->create(['is_template' => true, 'project_id' => null]);
+        $this->userWithBudgetAccess($ownTable->project);
+
+        $templateMain = MainPosition::factory()->create(['table_id' => $templateTable->id, 'position' => 7]);
+
+        $this->patch(route('project.budget.main-position.reorder'), [
+            'table_id' => $ownTable->id,
+            'type' => 'BUDGET_TYPE_COST',
+            'main_position_ids' => [$templateMain->id],
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('main_positions', ['id' => $templateMain->id, 'position' => 7]);
+    }
+
+    #[Test]
+    public function own_main_positions_can_be_reordered(): void
+    {
+        [$table] = $this->createProjectTableWithColumn();
+        $this->userWithBudgetAccess($table->project);
+
+        $first = MainPosition::factory()->create(['table_id' => $table->id, 'position' => 1]);
+        $second = MainPosition::factory()->create(['table_id' => $table->id, 'position' => 2]);
+
+        $this->patch(route('project.budget.main-position.reorder'), [
+            'table_id' => $table->id,
+            'type' => 'BUDGET_TYPE_COST',
+            'main_position_ids' => [$second->id, $first->id],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('main_positions', ['id' => $second->id, 'position' => 1]);
+        $this->assertDatabaseHas('main_positions', ['id' => $first->id, 'position' => 2]);
+    }
+
     // ---------- Zeilen aus fremdem Budget ziehen ----------
 
     #[Test]

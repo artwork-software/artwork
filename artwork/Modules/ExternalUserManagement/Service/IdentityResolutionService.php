@@ -135,10 +135,12 @@ class IdentityResolutionService
             );
         }
 
+        // Gilt auch für den Re-Key auf ein neues Subject derselben Verbindung.
+        $this->adminLockoutGuard->assertMayLinkByEmail($existing, $provider);
+
         if (!$existing->isIdpBound()) {
             // Lokaler Account wird IdP-gebunden – Admin-Lockout verhindern.
             $this->adminLockoutGuard->assertNotLastLocalAdmin($existing);
-            $this->adminLockoutGuard->assertMayLinkByEmail($existing, $provider);
         }
 
         // Ab der Verknüpfung gilt nur noch der IdP: wer das Konto bisher genutzt hat (z. B. nach einer

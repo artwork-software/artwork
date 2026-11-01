@@ -2,6 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\SageNotAssignedDataController;
+use Artwork\Modules\Budget\Models\Column;
+use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
+use Illuminate\Support\Facades\Validator;
 use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
@@ -72,6 +76,19 @@ final class SecurityAuditBusinessLogicRegressionTest extends FeatureTestCase
         }
 
         $this->assertSame(0, $detail->properties()->count());
+    }
+
+    #[Test]
+    public function article_properties_must_be_lists_so_the_file_check_sees_the_property(): void
+    {
+        $property = InventoryArticleProperties::factory()->create(['type' => 'file']);
+        $rules = (new StoreInventoryArticleRequest())->rules();
+
+        $validator = Validator::make([
+            'properties' => ['a.b' => ['id' => $property->id, 'value' => 'uploads/inventory-properties/../../public']],
+        ], array_intersect_key($rules, array_flip(['properties', 'properties.*.id', 'properties.*.value'])));
+
+        $this->assertTrue($validator->fails());
     }
 
     #[Test]
@@ -254,6 +271,59 @@ final class SecurityAuditBusinessLogicRegressionTest extends FeatureTestCase
     }
 
     #[Test]
+    public function a_fractional_id_cannot_slip_a_foreign_position_past_the_budget_check(): void
+    {
+        $ownTable = Table::factory()->create(['is_template' => false]);
+        $foreignPosition = MainPosition::factory()->create();
+        $user = $this->actingAsUserWith(PermissionEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value);
+        $ownTable->project->users()->attach($user->id, ['access_budget' => true]);
+
+        $this->post(route('project.budget.verified.main-position.request'), [
+            'id' => $foreignPosition->id . '.9',
+            'user' => $user->id,
+            'project_id' => $ownTable->project_id,
+        ])->assertForbidden();
+
+        $this->assertSame('BUDGET_VERIFIED_TYPE_NOT_VERIFIED', $foreignPosition->fresh()->is_verified);
+    }
+
+    #[Test]
+    public function sum_details_need_position_and_column_from_the_same_table(): void
+    {
+        $ownTable = Table::factory()->create(['is_template' => false]);
+        $ownColumn = Column::factory()->create(['table_id' => $ownTable->id]);
+        $foreignPosition = MainPosition::factory()->create();
+        $user = $this->actingAsUserWith([]);
+        $ownTable->project->users()->attach($user->id, ['access_budget' => true]);
+
+        $this->getJson(route('project.budget.sum-details.show', [
+            'type' => 'mainPosition',
+            'position_id' => $foreignPosition->id,
+            'column_id' => $ownColumn->id,
+        ]))->assertNotFound();
+
+        $this->assertDatabaseMissing('main_position_details', ['main_position_id' => $foreignPosition->id]);
+    }
+
+    #[Test]
+    public function emptying_the_sage_trash_only_removes_data_of_accessible_projects(): void
+    {
+        $ownProject = Project::factory()->create();
+        $foreignProject = Project::factory()->create();
+        $user = $this->actingAsUserWith(PermissionEnum::VIEW_PROJECT_SAGE_DATA->value);
+        $ownProject->users()->attach($user->id, ['access_budget' => true]);
+        $own = SageNotAssignedData::factory()->create(['project_id' => $ownProject->id]);
+        $foreign = SageNotAssignedData::factory()->create(['project_id' => $foreignProject->id]);
+        $own->delete();
+        $foreign->delete();
+
+        app(SageNotAssignedDataController::class)->forceDeleteAll(request()->setUserResolver(fn () => $user));
+
+        $this->assertDatabaseMissing('sage_not_assigned_data', ['id' => $own->id]);
+        $this->assertSoftDeleted($foreign);
+    }
+
+    #[Test]
     public function budget_member_without_lead_rights_cannot_grant_budget_access_with_a_request(): void
     {
         $position = MainPosition::factory()->create();
@@ -346,15 +416,18 @@ final class SecurityAuditBusinessLogicRegressionTest extends FeatureTestCase
             'name' => 'Selbstbedienung',
             'svg_name' => 'lightSvg',
             'assigned_users' => [['id' => $user->id]],
-        ])->assertSessionHas('error');
+        ])->assertSessionHasErrors('assigned_users');
 
         $this->assertDatabaseMissing('departments', ['name' => 'Selbstbedienung']);
     }
 
     #[Test]
-    public function clockwork_has_no_default_password(): void
+    public function clockwork_has_no_known_or_empty_default_password(): void
     {
-        $this->assertNull(config('clockwork.authentication_password'));
+        $password = (string) config('clockwork.authentication_password');
+
+        $this->assertNotSame('', $password);
+        $this->assertNotSame('VerySecretPassword', $password);
     }
 
     #[Test]

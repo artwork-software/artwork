@@ -34,7 +34,8 @@ class CredentialLoginService
         private readonly LdapService $ldapService,
         private readonly IdentityResolutionService $identityResolutionService,
         private readonly ExternalUserService $externalUserService,
-        private readonly ExternalUserGroupMappingService $groupMappingService
+        private readonly ExternalUserGroupMappingService $groupMappingService,
+        private readonly AdminLockoutGuard $adminLockoutGuard,
     ) {
     }
 
@@ -60,6 +61,12 @@ class CredentialLoginService
             ]);
         }
 
+        // Lokale Admins nicht gegen das Verzeichnis prüfen: sie werden nicht per E-Mail an LDAP
+        // gebunden, ein Bind würde sonst den lokalen Login unterdrücken bzw. nie zum Ziel führen.
+        if ($user !== null && $this->adminLockoutGuard->keepsLocalLogin($user)) {
+            return $this->attemptLocal($user, $password);
+        }
+
         // Zuerst den IdP prüfen: Existiert der Nutzer in einer aktiven LDAP-Quelle,
         // zählt ausschließlich der IdP – der lokale Passwort-Login greift dann nicht,
         // auch nicht bei falschem Passwort.
@@ -76,6 +83,11 @@ class CredentialLoginService
         }
 
         // Nicht im IdP → ganz normaler lokaler Login (Standardverhalten).
+        return $this->attemptLocal($user, $password);
+    }
+
+    private function attemptLocal(?User $user, string $password): ?User
+    {
         if ($user === null || $user->password === null || $user->password === '') {
             // Gleicher Rechenaufwand wie bei bekanntem Konto, Ergebnis wird verworfen.
             Hash::check($password, self::DUMMY_PASSWORD_HASH);

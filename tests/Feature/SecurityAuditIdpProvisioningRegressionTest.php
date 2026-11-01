@@ -473,4 +473,40 @@ final class SecurityAuditIdpProvisioningRegressionTest extends FeatureTestCase
 
         $this->assertSame('ldap', $user->fresh()->auth_provider);
     }
+
+    #[Test]
+    public function a_local_admin_with_a_directory_entry_logs_in_with_the_local_password(): void
+    {
+        $this->adminUser();
+        $admin = $this->adminUser(User::factory()->create([
+            'email' => 'admin2@theater.test',
+            'password' => Hash::make('local-password'),
+        ]));
+        $this->ldapSource();
+        $this->mock(LdapService::class, function ($mock): void {
+            $mock->shouldNotReceive('authenticateAndFetch');
+        });
+
+        $this->post(route('login'), ['email' => 'admin2@theater.test', 'password' => 'local-password']);
+
+        $this->assertAuthenticatedAs($admin);
+        $this->assertSame('local', $admin->fresh()->auth_provider);
+    }
+
+    #[Test]
+    public function an_ldap_bound_admin_is_not_rekeyed_to_another_subject_by_email(): void
+    {
+        $source = $this->ldapSource();
+        $admin = $this->adminUser(User::factory()->create(['email' => 'admin2@theater.test']));
+        $admin->forceFill([
+            'auth_provider' => 'ldap',
+            'auth_provider_id' => 'admin-original',
+            'auth_provider_issuer' => $source->resolvedIssuer(),
+        ])->save();
+
+        $result = $this->syncLdap($source, [$this->ldapEntry('attacker', 'admin2@theater.test')]);
+
+        $this->assertSame(0, $result['synced']);
+        $this->assertSame('admin-original', $admin->fresh()->auth_provider_id);
+    }
 }

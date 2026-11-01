@@ -273,9 +273,9 @@ class EnsureUserCanAccessProjectBudget
 
         // 1b) Prüfanfragen senden die Position als "id"
         $routeModelClass = self::ROUTE_ID_MODEL_MAP[$request->route()?->getName()] ?? null;
-        $routeModelId = $request->input('id');
-        if ($routeModelClass !== null && $routeModelId !== null && !is_array($routeModelId)) {
-            $projectId = $this->resolveFromModelId($routeModelClass, $routeModelId);
+        // Wie der Controller als Integer lesen – sonst träfe "5.9" hier nichts, dort aber Position 5.
+        if ($routeModelClass !== null && $request->filled('id') && !is_array($request->input('id'))) {
+            $projectId = $this->resolveFromModelId($routeModelClass, $request->integer('id'));
             if ($projectId !== null) {
                 $projectIds[] = $projectId;
             }

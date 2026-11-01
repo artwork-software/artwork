@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -48,7 +49,10 @@ class DepartmentController extends Controller
             ->map(fn ($id) => (int) $id)
             ->contains($actor->id);
         if ($addsSelf && !$actor->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            return Redirect::back()->with('error', __(DepartmentPolicy::OWN_TEAMS_LOCKED_MESSAGE));
+            // Validierungsfehler statt Flash: sonst meldet das Modal trotzdem "Team angelegt".
+            throw ValidationException::withMessages([
+                'assigned_users' => __(DepartmentPolicy::OWN_TEAMS_LOCKED_MESSAGE),
+            ]);
         }
 
         $this->departmentService->createByRequest($storeDepartmentRequest, $notificationService);

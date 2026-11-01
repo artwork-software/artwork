@@ -335,7 +335,8 @@ return [
 	'authentication' => env('CLOCKWORK_AUTHENTICATION', false),
 
 	// Password for the simple authentication
-	'authentication_password' => env('CLOCKWORK_AUTHENTICATION_PASSWORD'),
+	// Ohne gesetztes Passwort ein zufälliges (nie leer – ein leeres Passwort würde sonst akzeptiert)
+	'authentication_password' => env('CLOCKWORK_AUTHENTICATION_PASSWORD') ?: \Illuminate\Support\Str::random(40),
 
 	/*
 	|------------------------------------------------------------------------------------------------------------------

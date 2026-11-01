@@ -44,11 +44,11 @@ class UpdateInventoryArticleRequest extends FormRequest
 
             'main_image_index' => ['nullable', 'integer'],
 
-            'properties' => ['nullable', 'array'],
+            'properties' => ['nullable', 'array', 'list'],
             'properties.*.id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
             'properties.*.value' => ['nullable', 'max:255', new InventoryPropertyFileValue()],
 
-            'detailed_article_quantities' => ['nullable', 'array'],
+            'detailed_article_quantities' => ['nullable', 'array', 'list'],
             'detailed_article_quantities.*.id' => [
                 'nullable',
                 'integer',
@@ -59,7 +59,7 @@ class UpdateInventoryArticleRequest extends FormRequest
             'detailed_article_quantities.*.name' => ['required', 'string', 'max:255'],
             'detailed_article_quantities.*.quantity' => ['required', 'integer', 'min:0'],
             'detailed_article_quantities.*.description' => ['nullable', 'string'],
-            'detailed_article_quantities.*.properties' => ['nullable', 'array'],
+            'detailed_article_quantities.*.properties' => ['nullable', 'array', 'list'],
             'detailed_article_quantities.*.properties.*.id' => [
                 'required',
                 'integer',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
@@ -81,17 +82,18 @@ class SageNotAssignedDataController extends Controller
     }
 
     /**
-     * Leert den Papierkorb nur um die Datensätze, die die Person auch einzeln endgültig löschen dürfte.
-     *
-     * @throws AuthorizationException
+     * Leert den Papierkorb nur um die Datensätze, die die Person auch einzeln endgültig löschen dürfte:
+     * globale mit globalem Sage-Recht, projektbezogene nur mit Budgetzugriff auf genau dieses Projekt.
      */
     public function forceDeleteAll(Request $request): RedirectResponse
     {
-        $this->authorize('getTrashed', SageNotAssignedData::class);
-
         $user = $request->user();
-        SageNotAssignedData::onlyTrashed()->each(function (SageNotAssignedData $item) use ($user): void {
-            if ($user->can('forceDelete', $item)) {
+        $trashed = SageNotAssignedData::onlyTrashed()->with('project');
+        $trashed->each(function (SageNotAssignedData $item) use ($user): void {
+            $hasProjectAccess = $item->project_id === null
+                || ($item->project !== null
+                    && EnsureUserCanAccessProjectBudget::canAccessProjectBudget($user, $item->project));
+            if ($hasProjectAccess && $user->can('forceDelete', $item)) {
                 $this->sageNotAssignedDataService->forceDelete($item);
             }
         });

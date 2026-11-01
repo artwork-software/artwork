@@ -12,8 +12,6 @@
 
     <!-- Excluded files/directories -->
     <exclude-pattern>./config/debugbar.php</exclude-pattern>
-    <!-- Vendor-veröffentlichte Konfiguration (Tabs, lange Zeilen) — nicht unser Stil -->
-    <exclude-pattern>./config/clockwork.php</exclude-pattern>
     <exclude-pattern>./database/migrations/</exclude-pattern>
     <exclude-pattern>storage/</exclude-pattern>
     <exclude-pattern>vendor/</exclude-pattern>

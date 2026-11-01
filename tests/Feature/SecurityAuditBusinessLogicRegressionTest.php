@@ -422,12 +422,12 @@ final class SecurityAuditBusinessLogicRegressionTest extends FeatureTestCase
     }
 
     #[Test]
-    public function clockwork_has_no_known_or_empty_default_password(): void
+    public function clockwork_is_not_installed(): void
     {
-        $password = (string) config('clockwork.authentication_password');
-
-        $this->assertNotSame('', $password);
-        $this->assertNotSame('VerySecretPassword', $password);
+        $this->assertFalse(class_exists('Clockwork\Support\Laravel\ClockworkServiceProvider'));
+        $this->assertNull(config('clockwork'));
+        $this->get('/clockwork/app')->assertNotFound();
+        $this->get('/__clockwork/latest')->assertNotFound();
     }
 
     #[Test]

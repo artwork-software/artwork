@@ -18,7 +18,7 @@ class ShiftFilterController extends Controller
         return ShiftFilter::query()
             ->where('user_id', Auth::id())
             // Mitglieder der Admin-Teams je Raum vorab laden (effectiveAdminUsers)
-            ->with('rooms.adminDepartments.users:id,first_name,last_name,profile_photo_path')
+            ->with('rooms.adminDepartments.users:id,first_name,last_name,profile_photo_path,deactivated_at')
             ->get()
             ->map(fn (ShiftFilter $filter) => [
                 'id' => $filter->id,

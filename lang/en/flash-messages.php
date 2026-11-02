@@ -174,5 +174,15 @@ return [
             'account_deleted' => 'Your artwork account was deleted. Please contact your administrator if you need access again.',
             'multi_tenant_not_allowed' => 'This sign-in is misconfigured (multi-tenant endpoint). Please contact your administrator.'
         ]
+    ],
+    'user' => [
+        'error' => [
+            'account_deactivated' => 'Your artwork account is deactivated. Please contact your administrator if you need access again.',
+            'cannot_deactivate_self' => 'You cannot deactivate your own account.',
+        ],
+        'success' => [
+            'deactivated' => 'Account deactivated',
+            'reactivated' => 'Account reactivated',
+        ]
     ]
 ];

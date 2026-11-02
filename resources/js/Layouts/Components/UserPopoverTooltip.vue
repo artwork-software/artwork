@@ -5,7 +5,7 @@
                 <slot/>
             </template>
             <template v-else>
-                <img v-if="user" :src="user.profile_photo_url" alt="" class="shrink-0 flex object-cover rounded-full !ring-0 " :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes]">
+                <img v-if="user" :src="user.profile_photo_url" alt="" class="shrink-0 flex object-cover rounded-full" :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes, isDeactivated ? deactivatedAvatarClasses : '!ring-0']">
                 <PropertyIcon name="IconUserExclamation" v-else stroke-width="2" class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 bg-border" :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes]"/>
             </template>
         </PopoverButton>
@@ -14,7 +14,7 @@
                 <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '', isWhite ? 'bg-white border border-border-subtle' : 'bg-surface-inverse']" class="absolute left-1/2 z-[10000] transform   rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
                     <div v-if="resolvedUser" class="">
                         <div class="flex items-center gap-4">
-                            <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :src="resolvedUser.profile_photo_url" alt=""/>
+                            <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :class="isDeactivated ? deactivatedAvatarClasses : ''" :src="resolvedUser.profile_photo_url" alt=""/>
                             <div class="">
                                 <div class="font-black font-lexend  text-lg flex items-start gap-x-4 mb-2 border-b border-dashed" :class="isWhite ? 'text-text border-border' : 'text-text-inverse border-white/10'">
                                     <span :class="{'underline cursor-pointer': canViewUserInfo}" @click="goToUserInfo">{{ displayName }}</span>
@@ -27,7 +27,14 @@
                                     <PropertyIcon name="IconMapPin" class="h-4 w-4" v-if="resolvedUser.position"/>
                                     {{ resolvedUser.position }}
                                 </div>
-                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-text-subtle' : 'text-white/70'" v-if="resolvedUser.email && !resolvedUser.email_private || $can('can view private user info') || hasAdminRole()">
+                                <!-- Deaktivierte Accounts: Vermerk statt E-Mail-Adresse -->
+                                <div v-if="isDeactivated" class="mb-1">
+                                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold" :class="isWhite ? 'bg-surface-sunken text-text-subtle ring-1 ring-inset ring-border' : 'bg-white/10 text-white/80 ring-1 ring-inset ring-white/20'">
+                                        <PropertyIcon name="IconUserOff" class="h-3.5 w-3.5"/>
+                                        {{ $t('Account inactive') }}
+                                    </span>
+                                </div>
+                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-text-subtle' : 'text-white/70'" v-else-if="resolvedUser.email && !resolvedUser.email_private || $can('can view private user info') || hasAdminRole()">
                                     <PropertyIcon name="IconMail" class="h-4 w-4" v-if="resolvedUser.email"/>
                                     {{ resolvedUser.email }}
                                 </div>
@@ -65,6 +72,7 @@ import {router, usePage} from "@inertiajs/vue3";
 import {usePermission} from "@/Composeables/Permission.js";
 import {reactive} from "vue";
 import axios from "axios";
+import {DEACTIVATED_AVATAR_CLASSES, isUserDeactivated} from "@/Helper/UserDeactivation.js";
 
 // Modulweiter Cache: Tooltip-Details werden pro User nur einmal geladen,
 // egal wie viele Popover-Instanzen (z.B. Kalender-Kacheln) denselben User zeigen.
@@ -133,9 +141,13 @@ export default {
             },
             anchorTop: 0,
             anchorBottom: 0,
+            deactivatedAvatarClasses: DEACTIVATED_AVATAR_CLASSES,
         }
     },
     computed: {
+        isDeactivated() {
+            return this.isUserEntity && isUserDeactivated(this.resolvedUser);
+        },
         canViewUserInfo() {
             return this.hasAdminRole() ||
                 this.can('can manage workers') ||

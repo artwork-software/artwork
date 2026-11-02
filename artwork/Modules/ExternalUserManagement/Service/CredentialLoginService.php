@@ -45,6 +45,24 @@ class CredentialLoginService
      */
     public function attempt(string $email, string $password): ?User
     {
+        $user = $this->attemptCredentials($email, $password);
+
+        // Erst nach erfolgreicher Prüfung melden – sonst verriete die Meldung, dass das Konto existiert.
+        if ($user !== null && $user->isDeactivated()) {
+            throw ValidationException::withMessages([
+                'email' => __('flash-messages.user.error.account_deactivated'),
+            ]);
+        }
+
+        return $user;
+    }
+
+    /**
+     * @throws ValidationException wenn der Account IdP-gebunden ist und kein
+     *         Passwort-Login erlaubt ist.
+     */
+    private function attemptCredentials(string $email, string $password): ?User
+    {
         $email = trim($email);
 
         if ($email === '' || $password === '') {

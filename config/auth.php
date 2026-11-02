@@ -69,6 +69,8 @@ return [
 
     'providers' => [
         'users' => [
+            // Für das User-Model liefert der Treiber App\Auth\ActiveUserProvider (ohne deaktivierte Accounts,
+            // AuthServiceProvider). Der Name muss "eloquent" bleiben – Passport erkennt den Provider daran.
             'driver' => 'eloquent',
             'model' => \Artwork\Modules\User\Models\User::class,
         ],

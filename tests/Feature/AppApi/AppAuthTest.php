@@ -76,6 +76,25 @@ final class AppAuthTest extends TestCase
     }
 
     #[Test]
+    public function deactivatedAccountsCannotLogInAndTheirTokensStopWorkingUntilReactivation(): void
+    {
+        $user = $this->createUser();
+        $headers = ['Authorization' => 'Bearer ' . $this->login()->json('token')];
+
+        $user->forceFill(['deactivated_at' => now()])->save();
+
+        $this->getJson(route('app.v1.me'), $headers)->assertUnauthorized();
+        // Gleiche Antwort wie bei falschem Passwort – verrät nicht, dass es das Konto gibt.
+        $this->login()->assertUnauthorized()
+            ->assertJsonPath('message', __('These credentials do not match our records.'));
+
+        $user->forceFill(['deactivated_at' => null])->save();
+        $this->app['auth']->forgetGuards();
+
+        $this->getJson(route('app.v1.me'), $headers)->assertOk();
+    }
+
+    #[Test]
     public function loginWithWrongPasswordReturns401WithoutCreatingAToken(): void
     {
         $this->createUser();

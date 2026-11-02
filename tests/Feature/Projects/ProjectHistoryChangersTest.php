@@ -38,7 +38,7 @@ final class ProjectHistoryChangersTest extends FeatureTestCase
         $changers = collect($history)->pluck('changer')->filter()->values();
         $this->assertGreaterThanOrEqual(18, $changers->count());
         $this->assertEqualsCanonicalizing(
-            ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'],
+            ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url', 'deactivated_at'],
             array_keys($changers->first())
         );
         foreach ($authors as $author) {

@@ -217,7 +217,7 @@ class ProjectDayAssignmentService
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->limit($limit)
-            ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path']);
+            ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path', 'deactivated_at']);
 
         $freelancers = Freelancer::query()
             ->canWorkShifts()

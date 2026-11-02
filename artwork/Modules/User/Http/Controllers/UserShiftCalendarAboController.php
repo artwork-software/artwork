@@ -54,6 +54,8 @@ class UserShiftCalendarAboController extends Controller
         // Retrieve Calendar Abo and related user
         $calendarAbo = UserShiftCalendarAbo::where('calendar_abo_id', $calendar_abo_id)->firstOrFail();
         $user = $calendarAbo->user;
+        // Abos deaktivierter Accounts liefern nichts mehr (nach Reaktivierung wieder)
+        abort_if($user?->isDeactivated() === true, 404);
 
         // Create Calendar
         $calendar = Calendar::create('Schichtplan ' . $user->full_name)

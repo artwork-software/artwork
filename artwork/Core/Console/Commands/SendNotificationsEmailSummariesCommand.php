@@ -54,6 +54,11 @@ class SendNotificationsEmailSummariesCommand extends Command
         $exitCode = 0;
 
         foreach ($this->userService->getAllUsers() as $user) {
+            // Deaktivierte Accounts bekommen keine Zusammenfassungen
+            if ($user instanceof User && $user->isDeactivated()) {
+                continue;
+            }
+
             try {
                 $this->sendNotificationsSummary($user);
             } catch (Throwable $t) {

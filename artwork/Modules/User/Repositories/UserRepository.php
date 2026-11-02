@@ -187,7 +187,8 @@ class UserRepository extends BaseRepository
     {
         return User::search($search)
             ->query(function ($query): void {
-                $query->excludeDeletedPlaceholder();
+                // active(): falls der Suchindex einen deaktivierten Account noch führt
+                $query->excludeDeletedPlaceholder()->active();
             })
             ->get()
             ->map(fn(User $user) => [

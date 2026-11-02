@@ -588,7 +588,8 @@ class UserService
             return false;
         }
 
-        return User::role(RoleEnum::ARTWORK_ADMIN->value)->whereKeyNot($user->getKey())->doesntExist();
+        // Deaktivierte Admins zählen nicht – sie können sich nicht anmelden.
+        return User::role(RoleEnum::ARTWORK_ADMIN->value)->active()->whereKeyNot($user->getKey())->doesntExist();
     }
 
     public function getAuthUserId(): int

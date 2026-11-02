@@ -536,11 +536,11 @@ class EventController extends Controller
             ->with([
                 'project:id,name,state,artists,linked_artists,is_group,color,icon',
                 'project.status:id,name,color',
-                'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path',
+                'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path,deactivated_at',
                 'project.groups',
                 'project.users:id',
                 'project.categories',
-                'creator:id,first_name,last_name,position,email,profile_photo_path',
+                'creator:id,first_name,last_name,position,email,profile_photo_path,deactivated_at',
                 'eventStatus:id,name,color',
                 'eventProperties',
                 'subEvents' => fn ($query) => $query->without('creator'),
@@ -1010,7 +1010,7 @@ class EventController extends Controller
                     // müssen trotzdem mit, weil die $appends der Modelle beim
                     // Serialisieren darauf zugreifen (ServiceProvider::getNameAttribute
                     // wirft ohne provider_name einen TypeError).
-                    'managingUsers:id,first_name,last_name,profile_photo_path,work_time_balance',
+                    'managingUsers:id,first_name,last_name,profile_photo_path,deactivated_at,work_time_balance',
                     'managingFreelancers:id,first_name,last_name,profile_image',
                     'managingServiceProviders:id,provider_name,profile_image',
                     'qualifications:id,name,icon,available',
@@ -5177,7 +5177,7 @@ class EventController extends Controller
             // der Modelle beim Serialisieren (siehe viewShiftPlan). Mit reinem
             // ':id' warf ServiceProvider::getNameAttribute() einen TypeError,
             // sobald überhaupt eine Gewerksleitung hinterlegt war.
-            $eagerLoad[] = 'managingUsers:id,first_name,last_name,profile_photo_path,work_time_balance';
+            $eagerLoad[] = 'managingUsers:id,first_name,last_name,profile_photo_path,deactivated_at,work_time_balance';
             $eagerLoad[] = 'managingFreelancers:id,first_name,last_name,profile_image';
             $eagerLoad[] = 'managingServiceProviders:id,provider_name,profile_image';
         }

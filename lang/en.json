@@ -9613,5 +9613,12 @@
     "A user name is stored but no password. Enter the password, otherwise the mail server will reject the login.": "A user name is stored but no password. Enter the password, otherwise the mail server will reject the login.",
     "Saved state: login with the user name and password stored here.": "Saved state: login with the user name and password stored here.",
     "Saved state: login with the access data from the server configuration (.env).": "Saved state: login with the access data from the server configuration (.env).",
-    "Saved state: emails are sent without login. Many mail servers reject this.": "Saved state: emails are sent without login. Many mail servers reject this."
+    "Saved state: emails are sent without login. Many mail servers reject this.": "Saved state: emails are sent without login. Many mail servers reject this.",
+    "Account inactive": "Account inactive",
+    "Deactivated on {date} by {name}": "Deactivated on {date} by {name}",
+    "Deactivated on {date}": "Deactivated on {date}",
+    "Deactivate account": "Deactivate account",
+    "Reactivate account": "Reactivate account",
+    "{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.": "{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.",
+    "There is a deactivated account for this email address. Reactivate it in the user list.": "There is a deactivated account for this email address. Reactivate it in the user list."
 }

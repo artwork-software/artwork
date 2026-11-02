@@ -173,6 +173,7 @@
         "business": ".",
         "can_work_shifts": ".",
         "crafts": "[]",
+        "deactivated_at": ".",
         "departments": "[]",
         "description": ".",
         "email": ".",

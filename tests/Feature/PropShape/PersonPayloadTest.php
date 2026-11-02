@@ -16,7 +16,8 @@ use Tests\Feature\FeatureTestCase;
  */
 final class PersonPayloadTest extends FeatureTestCase
 {
-    private const PERSON_FIELDS = ['first_name', 'full_name', 'id', 'last_name', 'profile_photo_url'];
+    // deactivated_at: grauer Avatar bei deaktivierten Accounts
+    private const PERSON_FIELDS = ['deactivated_at', 'first_name', 'full_name', 'id', 'last_name', 'profile_photo_url'];
 
     /**
      * @return array<string, mixed>

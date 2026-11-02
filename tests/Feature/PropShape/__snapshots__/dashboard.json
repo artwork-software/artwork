@@ -43,6 +43,7 @@
             "projectName": ".",
             "users": {
                 "[]": {
+                    "deactivated_at": ".",
                     "first_name": ".",
                     "full_name": ".",
                     "id": ".",

@@ -3,6 +3,8 @@
 namespace Artwork\Modules\Ticketing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Http\Controllers\Concerns\CallsTickets;
@@ -63,6 +65,9 @@ class TicketingConnectionController extends Controller
             'legalForms' => TicketingDraftRules::LEGAL_FORMS,
             'rooms' => $this->permanentRooms(),
             'linkedRooms' => TicketingRoomLink::query()->count(),
+            'ticketingOnTab' => ComponentInTab::query()
+                ->whereHas('component', fn ($query) => $query->where('type', ProjectTabComponentEnum::TICKETING->value))
+                ->exists(),
         ]);
     }
 

@@ -37,6 +37,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
     private const TICKETS_URL = 'https://tickets.test';
     private const VENUE_ID = '0355e5ad-e8aa-405b-9550-038a557dc897';
+    private const STUDIO_ID = '5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f';
     private const PRODUCTION_ID = '6f1d2c3b-4a5e-4f60-8a71-9b2c3d4e5f60';
     private const DATE_ID = '7a2e3d4c-5b6f-4a71-9b82-0c3d4e5f6a71';
 
@@ -830,9 +831,9 @@ final class TicketingReleaseTest extends FeatureTestCase
     #[Test]
     public function a_rejection_by_tickets_is_kept_on_the_date(): void
     {
-        $message = 'The production sells in one room; this date lies in another one.';
+        $message = __('Tickets for this date are sold and one of the two rooms has a seating plan, so the date stays in its room: sold seats belong to its chairs.');
         $this->fakeTickets([self::TICKETS_URL . '/api/integration/v1/dates' => Http::response([
-            'error' => ['code' => 'CONFLICT', 'message' => $message],
+            'error' => ['code' => 'ROOM_CHANGE_AFTER_SALE', 'message' => 'ROOM_CHANGE_AFTER_SALE'],
         ], 409)]);
         $event = $this->releasedEvent();
 
@@ -941,18 +942,132 @@ final class TicketingReleaseTest extends FeatureTestCase
     }
 
     #[Test]
-    public function a_date_on_sale_only_moves_to_a_room_of_the_same_venue(): void
+    public function a_date_on_sale_moves_within_its_venue_with_its_prices(): void
     {
         $this->fakeTickets();
-        $event = $this->releasedEvent();
+        $event = $this->releasedEvent(['venue_id' => self::VENUE_ID]);
         $sameVenue = Room::factory()->create();
         TicketingRoomLink::query()->create(['room_id' => $sameVenue->id, 'venue_id' => self::VENUE_ID]);
 
         $this->moveConfirmed($event, ['room_id' => $sameVenue->id]);
+
         $this->assertSame($sameVenue->id, $event->fresh()->room_id);
+        $this->getJson(route('projects.tabs.ticketing', $this->project))
+            ->assertJsonPath('events.0.release.roomChanged', false);
+    }
+
+    #[Test]
+    public function a_date_on_sale_moves_to_another_venue_and_takes_its_price_classes(): void
+    {
+        $this->fakeTickets($this->withStudio(seated: false));
+        $event = $this->releasedEvent([
+            'venue_id' => self::VENUE_ID,
+            'classes' => [
+                ['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3500, 'quota' => 300],
+                ['zone_key' => null, 'name' => 'Premiere', 'price_cents' => 9000, 'quota' => 10],
+            ],
+        ]);
+
+        $this->moveConfirmed($event, ['room_id' => $this->studio()->id]);
+        $this->runTicketingSync();
+
+        $sent = Http::recorded(fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/dates'))->last()[0];
+        $this->assertSame(self::STUDIO_ID, $sent['venueId']);
+        $this->assertSame([
+            ['zoneKey' => 'parkett', 'name' => 'Parkett', 'priceCents' => 3500, 'quota' => 80],
+            ['zoneKey' => 'stehplatz', 'name' => 'Stehplatz', 'priceCents' => 1500, 'quota' => 40],
+            ['zoneKey' => null, 'name' => 'Premiere', 'priceCents' => 9000, 'quota' => 10],
+        ], $sent['categories']);
+
+        $this->getJson(route('projects.tabs.ticketing', $this->project))
+            ->assertJsonPath('events.0.release.roomChanged', true)
+            ->assertJsonPath('events.0.release.previousRoom', 'Großer Saal')
+            ->assertJsonPath('events.0.release.classes.1.zone_key', 'stehplatz');
+    }
+
+    #[Test]
+    public function saving_the_prices_after_a_room_change_settles_them_on_the_new_room(): void
+    {
+        $this->fakeTickets($this->withStudio(seated: false));
+        $event = $this->releasedEvent(['venue_id' => self::VENUE_ID]);
+        $this->moveConfirmed($event, ['room_id' => $this->studio()->id]);
+
+        $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
+            'event_ids' => [$event->id],
+            'classes' => [['zone_key' => 'stehplatz', 'name' => 'Stehplatz', 'price_cents' => 1800, 'quota' => 40]],
+            'description' => null,
+            'reductions' => [],
+        ])->assertOk()->assertJsonPath('events.0.release.roomChanged', false);
+
+        $this->assertSame(self::STUDIO_ID, $event->fresh()->ticketingRelease->venue_id);
+    }
+
+    #[Test]
+    public function a_date_with_sold_tickets_keeps_its_room_when_one_of_the_rooms_has_a_seating_plan(): void
+    {
+        $this->fakeTickets($this->withStudio(seated: true));
+        $event = $this->releasedEvent(['venue_id' => self::VENUE_ID]);
+
+        try {
+            $this->moveConfirmed($event, ['room_id' => $this->studio()->id]);
+            $this->fail('The move went through.');
+        } catch (TicketingLockedException $exception) {
+            $this->assertStringContainsString('seating plan', $exception->getMessage());
+        }
+
+        $this->assertSame($this->room->id, $event->fresh()->room_id);
+    }
+
+    #[Test]
+    public function an_unsold_date_moves_into_a_room_with_a_seating_plan(): void
+    {
+        $this->fakeTickets($this->withStudio(seated: true) + [
+            self::TICKETS_URL . '/api/integration/v1/dates?ids=*' => Http::response([
+                ['id' => self::DATE_ID, 'status' => 'scheduled', 'capacity' => 300, 'sold' => 0, 'checkedInCount' => 0],
+            ]),
+        ]);
+        $event = $this->releasedEvent(['venue_id' => self::VENUE_ID]);
+        $studio = $this->studio();
+
+        $this->moveConfirmed($event, ['room_id' => $studio->id]);
+
+        $this->assertSame($studio->id, $event->fresh()->room_id);
+    }
+
+    #[Test]
+    public function the_component_offers_the_synced_rooms_to_move_to(): void
+    {
+        $this->fakeTickets($this->withStudio(seated: true));
+        $studio = $this->studio();
+        Room::factory()->create();
+
+        $rooms = $this->getJson(route('projects.tabs.ticketing', $this->project))->assertOk()->json('rooms');
+
+        $this->assertEqualsCanonicalizing([$this->room->id, $studio->id], array_column($rooms, 'id'));
+        $this->assertTrue(collect($rooms)->firstWhere('id', $studio->id)['venue']['seated']);
+    }
+
+    #[Test]
+    public function a_date_on_sale_does_not_move_to_a_room_that_is_not_synced(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
 
         $this->expectException(TicketingLockedException::class);
         $this->moveConfirmed($event, ['room_id' => Room::factory()->create()->id]);
+    }
+
+    #[Test]
+    public function the_room_of_a_date_on_sale_stays_while_tickets_is_unreachable(): void
+    {
+        $this->fakeTickets($this->withStudio(seated: false) + [
+            self::TICKETS_URL . '/api/integration/v1/dates?ids=*' => Http::failedConnection(),
+        ]);
+        $event = $this->releasedEvent(['venue_id' => self::VENUE_ID]);
+
+        $this->expectException(TicketingLockedException::class);
+        $this->moveConfirmed($event, ['room_id' => $this->studio()->id]);
     }
 
     #[Test]
@@ -998,6 +1113,38 @@ final class TicketingReleaseTest extends FeatureTestCase
             ->assertOk()
             ->assertJsonPath('dates.0.id', $event->id)
             ->assertJsonPath('dates.0.sold', null);
+    }
+
+    /**
+     * Die Spielstätten mit einem zweiten Raum, der eine Zone mit dem Großen Saal teilt und eine eigene hat.
+     *
+     * @return array<string, mixed>
+     */
+    private function withStudio(bool $seated): array
+    {
+        return [self::TICKETS_URL . '/api/integration/v1/venues' => Http::response(['venues' => [
+            [
+                'id' => self::VENUE_ID, 'name' => 'Großer Saal', 'seated' => false,
+                'street' => '', 'postalCode' => '', 'city' => '', 'country' => 'DE',
+                'zones' => [['key' => 'parkett', 'name' => 'Parkett', 'capacity' => 300, 'defaultPriceCents' => 2900]],
+            ],
+            [
+                'id' => self::STUDIO_ID, 'name' => 'Studio', 'seated' => $seated,
+                'street' => '', 'postalCode' => '', 'city' => '', 'country' => 'DE',
+                'zones' => [
+                    ['key' => 'parkett', 'name' => 'Parkett', 'capacity' => 80, 'defaultPriceCents' => 2500],
+                    ['key' => 'stehplatz', 'name' => 'Stehplatz', 'capacity' => 40, 'defaultPriceCents' => 1500],
+                ],
+            ],
+        ]])];
+    }
+
+    private function studio(): Room
+    {
+        $studio = Room::factory()->create();
+        TicketingRoomLink::query()->create(['room_id' => $studio->id, 'venue_id' => self::STUDIO_ID]);
+
+        return $studio;
     }
 
     /**

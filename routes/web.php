@@ -1302,6 +1302,15 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     ], function (): void {
         Route::get('/sales', [TicketingSectionController::class, 'sales'])->name('ticketing.section.sales');
         Route::get('/passes', [TicketingSectionController::class, 'passes'])->name('ticketing.section.passes');
+        Route::get('/holdings', [TicketingSectionController::class, 'holdings'])->name('ticketing.section.holdings');
+        Route::get('/passes/{pass}', [TicketingSectionController::class, 'pass'])
+            ->whereUuid('pass')->name('ticketing.section.pass');
+        Route::group(['middleware' => 'can:' . PermissionEnum::TICKETING_MANAGE_PASSES->value], function (): void {
+            Route::post('/passes/{pass}/commands', [TicketingSectionController::class, 'correctPass'])
+                ->whereUuid('pass')->name('ticketing.section.pass.correct');
+            Route::post('/subscriptions/{subscription}/commands', [TicketingSectionController::class, 'changeSubscription'])
+                ->whereUuid('subscription')->name('ticketing.section.subscription.change');
+        });
     });
     Route::get('/response/all/shift-plan-events', [
         EventController::class,

@@ -36,6 +36,7 @@ class PermissionPresetSeeder extends Seeder
                 PermissionEnum::CAN_SEE_PLANNING_CALENDAR,
                 PermissionEnum::DOCUMENT_REQUEST_CREATE,
                 PermissionEnum::CHECKLIST_EDIT_PERMISSION,
+                PermissionEnum::TICKETING_ADMISSION,
             ],
             'Disposition / Raumplanung' => [
                 ...$basis,
@@ -78,6 +79,7 @@ class PermissionPresetSeeder extends Seeder
                 PermissionEnum::BI_EXPORT,
                 PermissionEnum::BUDGET_SETTINGS_UPDATE,
                 PermissionEnum::MONEY_SOURCE_SETTINGS_UPDATE,
+                PermissionEnum::TICKETING_VIEW_SALES,
             ],
             'Vertrags- & Dokumentenverwaltung' => [
                 ...$basis,
@@ -99,6 +101,12 @@ class PermissionPresetSeeder extends Seeder
                 ...$basis,
                 PermissionEnum::CRM_VIEW,
                 PermissionEnum::CRM_MANAGER,
+            ],
+            'Kasse / Einlass' => [
+                ...$basis,
+                PermissionEnum::TICKETING_VIEW_SALES,
+                PermissionEnum::TICKETING_ADMISSION,
+                PermissionEnum::TICKETING_MANAGE_PASSES,
             ],
         ];
     }

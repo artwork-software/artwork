@@ -12,6 +12,7 @@ class TicketingConnectionException extends RuntimeException
         string $message,
         private readonly bool $transient = false,
         ?Throwable $previous = null,
+        private readonly ?string $ticketsCode = null,
     ) {
         parent::__construct($message, 0, $previous);
     }
@@ -25,5 +26,11 @@ class TicketingConnectionException extends RuntimeException
     public function isTransient(): bool
     {
         return $this->transient;
+    }
+
+    /** Der Code, mit dem tickets abgelehnt hat (z. B. ADMISSION_RUNNING), falls es abgelehnt hat. */
+    public function ticketsCode(): ?string
+    {
+        return $this->ticketsCode;
     }
 }

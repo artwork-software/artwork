@@ -108,6 +108,7 @@ enum PermissionEnum : string
     case TICKETING_MOVE_ON_SALE = 'move dates on sale';
     case TICKETING_VIEW_SALES = 'view ticket sales';
     case TICKETING_ADMISSION = 'run ticket admission';
+    case TICKETING_MANAGE_PASSES = 'manage ticket passes';
 
     // Eigene Rechte für bisher admin-only Bereiche (Konzept Nutzerrechte, Entscheidung 8)
     case TRASH_ACCESS = 'can access trash';

@@ -19,7 +19,7 @@
         />
 
         <div class="mt-6 rounded-lg border border-border-subtle/70 bg-surface shadow-raised px-3 py-4 sm:px-5 sm:py-5">
-            <TicketsConnection :connection="connection" :rooms="rooms" :linked-rooms="linkedRooms" :house-defaults="houseDefaults" :countries="countries" :legal-forms="legalForms"/>
+            <TicketsConnection :connection="connection" :rooms="rooms" :linked-rooms="linkedRooms" :ticketing-on-tab="ticketingOnTab" :house-defaults="houseDefaults" :countries="countries" :legal-forms="legalForms"/>
         </div>
     </TicketsSettingsHeader>
 </template>
@@ -35,6 +35,8 @@ defineProps({
     rooms: { type: Array, default: () => [] },
     /** How many of them already are a venue in Artwork-Tickets. */
     linkedRooms: { type: Number, default: 0 },
+    /** Whether any project tab carries the Artwork-Tickets component yet. */
+    ticketingOnTab: { type: Boolean, default: false },
     houseDefaults: { type: Object, required: true },
     countries: { type: Array, required: true },
     legalForms: { type: Array, required: true },

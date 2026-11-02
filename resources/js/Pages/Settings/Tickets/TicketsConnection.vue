@@ -80,17 +80,20 @@ import BaseChip from '@/Artwork/Chips/BaseChip.vue'
 import ConnectStart from '@/Pages/Settings/Tickets/ConnectStart.vue'
 import ConnectWizard from '@/Pages/Settings/Tickets/ConnectWizard.vue'
 import { formatDateTime } from '@/Helper/ticketingFormat.js'
+import { usePermission } from '@/Composeables/Permission.js'
 
 const props = defineProps({
     connection: { type: Object, required: true },
     rooms: { type: Array, default: () => [] },
     linkedRooms: { type: Number, default: 0 },
+    ticketingOnTab: { type: Boolean, default: false },
     houseDefaults: { type: Object, required: true },
     countries: { type: Array, required: true },
     legalForms: { type: Array, default: () => [] },
 })
 
 const { t } = useI18n()
+const { hasAdminRole } = usePermission(usePage().props)
 
 const userEmail = usePage().props.auth.user.email
 const confirmDisconnect = ref(false)
@@ -127,6 +130,19 @@ const setup = computed(() => [
         text: t('Invite people from this artwork into the ticket house.'),
         state: null,
     },
+    {
+        href: route('tab.index'),
+        title: t('Project tab'),
+        text: t('Place the Artwork-Tickets component on a project tab; dates are released for sale from there.'),
+        state: props.ticketingOnTab ? null : { variant: 'warning', label: t('None yet') },
+    },
+    // The presets page is admin-only.
+    ...(hasAdminRole() ? [{
+        href: route('permission-presets.index'),
+        title: t('Rights'),
+        text: t('Who sees sales and runs admission is granted per user or through a permission preset.'),
+        state: null,
+    }] : []),
 ])
 
 function handleDisconnect(confirmed) {

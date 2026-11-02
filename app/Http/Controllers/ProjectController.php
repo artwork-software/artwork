@@ -884,9 +884,10 @@ class ProjectController extends Controller
         }
 
         if (!empty($request->assignedUsers)) {
+            $managerIds = app(ProjectTeamService::class)->allowedManagerIds($project, $request->collect('assignedUsers'));
             $this->projectService->attachManagementUsersWithoutSelf(
                 $project,
-                $request->collect('assignedUsers'),
+                collect($managerIds),
                 $this->authManager->id()
             );
         }
@@ -952,12 +953,22 @@ class ProjectController extends Controller
     }
 
 
+    /**
+     * Budgetzugriff mit der Prüfanfrage vergeben nur, wer ihn auch im Team vergeben dürfte
+     * (Projektleitung, Ersteller:in, globale Budget-/Projektverwaltung) – und nur an Teammitglieder.
+     */
+    private function mayGrantBudgetAccessOnVerification(Project $project, Request $request): bool
+    {
+        return app(ProjectTeamService::class)->mayGrantBudgetAccess($project, $request->user());
+    }
+
     public function verifiedRequestMainPosition(Request $request): void
     {
-        $mainPosition = MainPosition::find($request->id);
-        $project = $mainPosition->table()->first()->project()->first();
+        $mainPosition = MainPosition::findOrFail($request->integer('id'));
+        $project = $mainPosition->table()->first()?->project()->first();
+        abort_if($project === null, 404);
 
-        if ($request->giveBudgetAccess) {
+        if ($request->giveBudgetAccess && $this->mayGrantBudgetAccessOnVerification($project, $request)) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             if ($user !== null) {
@@ -1400,10 +1411,11 @@ class ProjectController extends Controller
 
     public function verifiedRequestSubPosition(Request $request): void
     {
-        $subPosition = SubPosition::find($request->id);
+        $subPosition = SubPosition::findOrFail($request->integer('id'));
         $mainPosition = $subPosition->mainPosition()->first();
-        $project = $mainPosition->table()->first()->project()->first();
-        if ($request->giveBudgetAccess) {
+        $project = $mainPosition?->table()->first()?->project()->first();
+        abort_if($project === null, 404);
+        if ($request->giveBudgetAccess && $this->mayGrantBudgetAccessOnVerification($project, $request)) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             if ($user !== null) {
@@ -2358,8 +2370,19 @@ class ProjectController extends Controller
             'table_id' => ['required', 'integer', 'exists:tables,id'],
             'type' => ['required', 'string'],
             'main_position_ids' => ['required', 'array', 'min:1'],
-            'main_position_ids.*' => ['required', 'integer', 'exists:main_positions,id'],
+            'main_position_ids.*' => ['required', 'integer', 'exists:main_positions,id', 'distinct'],
         ]);
+
+        // Nur Hauptpositionen der angegebenen Tabelle: die Middleware prüft nur table_id.
+        $foreignCount = MainPosition::query()
+            ->whereIn('id', $validated['main_position_ids'])
+            ->where('table_id', '!=', $validated['table_id'])
+            ->count();
+        $ownCount = MainPosition::query()
+            ->whereIn('id', $validated['main_position_ids'])
+            ->where('table_id', $validated['table_id'])
+            ->count();
+        abort_unless($foreignCount === 0 && $ownCount === count($validated['main_position_ids']), 403);
 
         DB::transaction(function () use ($validated): void {
             foreach ($validated['main_position_ids'] as $index => $mainPositionId) {
@@ -2385,8 +2408,23 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'main_position_id' => ['required', 'integer', 'exists:main_positions,id'],
             'sub_position_ids' => ['required', 'array', 'min:1'],
-            'sub_position_ids.*' => ['required', 'integer', 'exists:sub_positions,id'],
+            'sub_position_ids.*' => ['required', 'integer', 'exists:sub_positions,id', 'distinct'],
         ]);
+
+        // Unterpositionen dürfen nur innerhalb derselben Budgettabelle umgehängt werden: die Middleware
+        // prüft nur die Ziel-Hauptposition.
+        $targetTableId = MainPosition::query()->whereKey($validated['main_position_id'])->value('table_id');
+        $subPositionTableIds = SubPosition::query()
+            ->whereIn('id', $validated['sub_position_ids'])
+            ->with('mainPosition:id,table_id')
+            ->get()
+            ->map(fn (SubPosition $subPosition) => $subPosition->mainPosition?->table_id);
+        abort_unless(
+            $targetTableId !== null
+            && $subPositionTableIds->count() === count($validated['sub_position_ids'])
+            && $subPositionTableIds->every(fn ($tableId): bool => $tableId === $targetTableId),
+            403
+        );
 
         DB::transaction(function () use ($validated): void {
             foreach ($validated['sub_position_ids'] as $index => $subPositionId) {
@@ -3665,7 +3703,15 @@ class ProjectController extends Controller
             }
         }
 
-        $this->projectService->syncManagementUsers($project, $request->assignedUsers ?? []);
+        // Nur wenn die Leitung mitgeschickt wird (sonst würde ein Aufruf ohne den Key alle Leitungen
+        // entfernen) und nur durch Leitung, Ersteller:in oder „Projekte verwalten“.
+        $projectTeamService = app(ProjectTeamService::class);
+        if ($request->has('assignedUsers') && $projectTeamService->mayChangeManagers($project, $request->user())) {
+            $this->projectService->syncManagementUsers(
+                $project,
+                $projectTeamService->allowedManagerIds($project, $request->input('assignedUsers') ?? [])
+            );
+        }
 
         // Nur syncen, wenn die Unterprojekte bekannt mitkommen: Modals ohne geladene Gruppenprojekte
         // schicken null und hätten sonst alle Projekte aus der Gruppe entfernt.

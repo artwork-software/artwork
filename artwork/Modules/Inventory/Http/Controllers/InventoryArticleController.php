@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Rules\InventoryPropertyFileValue;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
@@ -497,7 +498,7 @@ class InventoryArticleController extends Controller
 
         $validated = $request->validate([
             'property_id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
-            'value' => ['nullable', 'max:255'],
+            'value' => ['nullable', 'max:255', new InventoryPropertyFileValue($request->integer('property_id'))],
         ]);
 
         $propertyId = $validated['property_id'];

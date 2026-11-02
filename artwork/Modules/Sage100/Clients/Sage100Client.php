@@ -32,6 +32,9 @@ class Sage100Client implements SageClient
                 'verify' => $this->verifySsl,
             ])
             ->acceptJson()
+            // Sage läuft meist im internen Netz, daher keine PublicUrlRule – aber auch keine Redirects,
+            // die Basic-Auth-Daten an ein anderes Ziel tragen.
+            ->withoutRedirecting()
             ->throw();
     }
 

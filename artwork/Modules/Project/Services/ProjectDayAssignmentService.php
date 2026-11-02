@@ -1233,7 +1233,7 @@ class ProjectDayAssignmentService
         }
 
         if (!$project->users()->where('users.id', $employableId)->exists()) {
-            $project->users()->attach($employableId);
+            $project->users()->attach($employableId, ProjectTeamService::IMPLICIT_MEMBER_PIVOT);
         }
     }
 

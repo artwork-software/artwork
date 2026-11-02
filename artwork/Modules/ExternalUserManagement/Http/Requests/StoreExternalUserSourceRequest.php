@@ -73,7 +73,8 @@ class StoreExternalUserSourceRequest extends FormRequest
         } elseif ($preset !== 'google') {
             $rules['config.discovery_url'] = [
                 'required',
-                'url:http,https',
+                // Nur https: die Identität kommt aus dem userinfo-Endpunkt, nicht aus einem signierten ID-Token.
+                'url:https',
                 'max:500',
                 new PublicUrlRule(),
                 $this->singleTenantRule(),

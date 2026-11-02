@@ -128,6 +128,9 @@
                             id="email"
                         />
                         <JetInputError :message="userForm.errors.email" class="mt-2" />
+                        <p v-if="user_to_edit.pending_email" class="mt-1 text-xs text-text-subtle">
+                            {{ $t('Confirmation pending: we sent a link to {email}.', { email: user_to_edit.pending_email }) }}
+                        </p>
                         <div v-if="ownEmailChanged" class="mt-3">
                             <BaseInput
                                 type="password"
@@ -658,7 +661,9 @@ const editUser = () => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
-            savedEmail.value = userForm.email
+            // Die eigene neue Adresse gilt erst nach dem Bestätigungslink; der Server liefert die bisherige zurück
+            savedEmail.value = props.user_to_edit.email
+            userForm.email = props.user_to_edit.email
             userForm.current_password = ''
             successSaved.value = true
             setTimeout(() => (successSaved.value = false), 2000)

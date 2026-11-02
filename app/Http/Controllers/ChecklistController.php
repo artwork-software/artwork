@@ -118,7 +118,7 @@ class ChecklistController extends Controller
             $userIds = $checklist->users->pluck('id');
             foreach ($userIds as $id) {
                 if (!$project->users->contains($id)) {
-                    $project->users()->attach($id);
+                    $project->users()->attach($id, ['can_write' => false]);
                 }
             }
         }
@@ -151,13 +151,6 @@ class ChecklistController extends Controller
                     'checklist_id' => $checklist->id,
                     'order' => Task::max('order') + 1,
                 ]);
-            }
-        }
-
-        if ($checklist->hasProject()) {
-            $project = $checklist->project;
-            if (!$project->users->contains($this->authManager->id())) {
-                $project->users()->attach($this->authManager->id());
             }
         }
 

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Modules\Project\Services\ProjectTeamService;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -150,7 +151,7 @@ class ShiftUserService
         $project = $shift->event?->project;
 
         if ($project && ! $project->users->contains($user->id)) {
-            $project->users()->attach($user->id);
+            $project->users()->attach($user->id, ProjectTeamService::IMPLICIT_MEMBER_PIVOT);
             $this->projectTeamNotificationService->notifyAddedToTeam($project, [$user->id]);
         }
     }

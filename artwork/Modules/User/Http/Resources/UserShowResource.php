@@ -30,6 +30,8 @@ class UserShowResource extends JsonResource
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_photo_url,
             'email' => !$this->email_private || $canViewPrivate ? $this->email : null,
+            // Noch nicht bestätigte neue Login-E-Mail – nur für die Person selbst.
+            'pending_email' => $isSelf ? $this->pending_email : null,
             'description' => $this->description,
             'departments' => $this->departments,
             'position' => $this->position,

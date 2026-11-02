@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Task\Services;
 
+use Artwork\Modules\Project\Services\ProjectTeamService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Repositories\ChecklistRepository;
 use Artwork\Modules\Task\Models\Task;
@@ -47,13 +48,7 @@ class TaskService
 
         // add all users to $checklist->project when they not in project
         if ($checklist->hasProject()) {
-            $addedUserIds = [];
-            foreach ($userIds as $userId) {
-                if (!$checklist->project->users->contains($userId)) {
-                    $checklist->project->users()->attach($userId);
-                    $addedUserIds[] = $userId;
-                }
-            }
+            $addedUserIds = ProjectTeamService::addImplicitMembers($checklist->project, $userIds ?? []);
             $this->projectTeamNotificationService->notifyAddedToTeam($checklist->project, $addedUserIds);
         }
 
@@ -194,13 +189,7 @@ class TaskService
         $checklist = $task->checklist;
         $userIds = $data->get('users');
         if ($checklist->hasProject()) {
-            $addedUserIds = [];
-            foreach ($userIds as $userId) {
-                if (!$checklist->project->users->contains($userId)) {
-                    $checklist->project->users()->attach($userId);
-                    $addedUserIds[] = $userId;
-                }
-            }
+            $addedUserIds = ProjectTeamService::addImplicitMembers($checklist->project, $userIds ?? []);
             $this->projectTeamNotificationService->notifyAddedToTeam($checklist->project, $addedUserIds);
         }
 

@@ -5,7 +5,10 @@ namespace Tests\Feature\Modules\User;
 use Artwork\Core\Mail\MailService;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Service\OidcService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectTabTeamService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
@@ -386,6 +389,33 @@ final class UserDeactivationTest extends FeatureTestCase
             ->activeOrWithShiftsBetween(Carbon::parse('2026-07-06'), Carbon::parse('2026-07-12'))
             ->pluck('id');
         $this->assertFalse($idsOtherWeek->contains($withShift->id));
+    }
+
+    #[Test]
+    public function payload_helper_marks_only_deactivated_users(): void
+    {
+        $deactivated = $this->deactivatedAndSaved()->fresh();
+
+        $this->assertSame($deactivated->deactivated_at->format(DATE_ATOM), User::deactivatedAtFor($deactivated));
+        $this->assertNull(User::deactivatedAtFor(User::factory()->create()->fresh()));
+        $this->assertNull(User::deactivatedAtFor(Freelancer::factory()->create()));
+        $this->assertNull(User::deactivatedAtFor(null));
+    }
+
+    #[Test]
+    public function project_team_payload_marks_deactivated_members(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+        $active = User::factory()->create();
+        $deactivated = $this->deactivatedAndSaved();
+        $project->users()->attach([$active->id, $deactivated->id]);
+
+        $members = collect(app(ProjectTabTeamService::class)->buildTeamPayload($project)['project']['usersArray'])
+            ->keyBy('id');
+
+        $this->assertNull($members[$active->id]['deactivated_at']);
+        $this->assertNotNull($members[$deactivated->id]['deactivated_at']);
     }
 
     private function userWithPermissionsFor(string $permission): User

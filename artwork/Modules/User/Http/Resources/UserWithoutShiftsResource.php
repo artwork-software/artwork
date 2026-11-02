@@ -4,6 +4,7 @@ namespace Artwork\Modules\User\Http\Resources;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Artwork\Modules\User\Models\User;
 
 /**
  * @mixin \Artwork\Modules\User\Models\User
@@ -24,6 +25,7 @@ class UserWithoutShiftsResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_photo_url,
+            'deactivated_at' => User::deactivatedAtFor($this->resource),
             'email' => $this->visibleEmailFor($request->user()),
             'departments' => $this->departments,
             'position' => $this->position,

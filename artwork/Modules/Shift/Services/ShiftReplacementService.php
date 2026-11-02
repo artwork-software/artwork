@@ -187,6 +187,7 @@ class ShiftReplacementService
                 'type' => $candidate instanceof User ? 'user' : 'freelancer',
                 'full_name' => $fullName,
                 'profile_photo_url' => $candidate->profile_photo_url,
+                'deactivated_at' => User::deactivatedAtFor($candidate),
                 'qualification_id' => $qualificationId,
                 'qualification_name' => $qualification?->name,
                 'craft_abbreviation' => $craftAbbreviations[$key] ?? ($craft?->abbreviation ?? ''),

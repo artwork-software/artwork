@@ -21,9 +21,7 @@
                                 </div>
                             </div>
                             <p class="text-text-subtle text-sm">{{ user_to_edit.email }}</p>
-                            <span v-if="isUserDeactivated(user_to_edit)" class="mt-1 inline-flex items-center rounded-full bg-surface-sunken px-2 py-0.5 text-xs font-semibold text-text-subtle ring-1 ring-inset ring-border">
-                                {{ $t('Account inactive') }}
-                            </span>
+                            <DeactivatedAccountBadge v-if="isUserDeactivated(user_to_edit)" class="mt-1" />
                         </div>
 
                         <div class="ml-auto">
@@ -56,10 +54,12 @@ import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import UserProfileSearch from "@/Pages/Users/Components/UserProfileSearch.vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import {deactivatedAvatarClasses, isUserDeactivated} from "@/Helper/UserDeactivation.js";
+import DeactivatedAccountBadge from "@/Layouts/Components/DeactivatedAccountBadge.vue";
 export default {
     mixins: [Permissions],
     name: "UserEditHeader",
     components: {
+        DeactivatedAccountBadge,
         UserProfileSearch,
         BaseTabs,
         Link,

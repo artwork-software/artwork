@@ -3364,6 +3364,7 @@ class ProjectController extends Controller
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
                         'profile_photo_url' => $user->profile_photo_url,
+                        'deactivated_at' => User::deactivatedAtFor($user),
                     ]),
                     'accessibleDepartments' => $contract->accessingDepartments->map(fn($dept) => [
                         'id' => $dept->id,
@@ -3515,12 +3516,14 @@ class ProjectController extends Controller
                 'first_name' => $request->requester->first_name,
                 'last_name' => $request->requester->last_name,
                 'profile_photo_url' => $request->requester->profile_photo_url,
+                'deactivated_at' => User::deactivatedAtFor($request->requester),
             ] : null,
             'requested' => $request->requested ? [
                 'id' => $request->requested->id,
                 'first_name' => $request->requested->first_name,
                 'last_name' => $request->requested->last_name,
                 'profile_photo_url' => $request->requested->profile_photo_url,
+                'deactivated_at' => User::deactivatedAtFor($request->requested),
             ] : null,
             'project' => $request->project ? [
                 'id' => $request->project->id,
@@ -3546,6 +3549,7 @@ class ProjectController extends Controller
                 'first_name'          => $user->first_name,
                 'last_name'           => $user->last_name,
                 'profile_photo_url'   => $user->profile_photo_url,
+                'deactivated_at'      => User::deactivatedAtFor($user),
                 'email'               => $user->visibleEmailFor(Auth::user()),
                 'departments'         => $user->departments,
                 'position'            => $user->position,

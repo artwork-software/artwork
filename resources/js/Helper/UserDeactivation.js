@@ -13,3 +13,19 @@ export const DEACTIVATED_AVATAR_CLASSES = 'grayscale opacity-70 ring-2 ring-bord
 export function deactivatedAvatarClasses(user) {
     return isUserDeactivated(user) ? DEACTIVATED_AVATAR_CLASSES : ''
 }
+
+/**
+ * Darf die angemeldete Person diesen Account deaktivieren bzw. reaktivieren? Spiegel von
+ * UserPolicy::deactivate (das Backend prüft erneut): Personalverwaltung oder Admin, Admin-Accounts nur
+ * durch Admins, nie der eigene Account, nur echte User (keine Freelancer/Dienstleister).
+ */
+export function canChangeAccountActivation({ user, authUserId, isAdmin, canManageWorkers, isTargetAdmin }) {
+    if (!user || (user.type !== undefined && user.type !== 'user') || user.id === authUserId) {
+        return false
+    }
+    if (!isAdmin && !canManageWorkers) {
+        return false
+    }
+
+    return isAdmin || !isTargetAdmin
+}

@@ -113,6 +113,7 @@ class ContractResource extends JsonResource
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,
             'profile_photo_url' => $user->profile_photo_url,
+            'deactivated_at' => User::deactivatedAtFor($user),
             'email' => $user->visibleEmailFor($request->user()),
             'departments' => $user->departments,
             'position' => $user->position,

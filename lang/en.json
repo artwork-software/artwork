@@ -9620,5 +9620,8 @@
     "Deactivate account": "Deactivate account",
     "Reactivate account": "Reactivate account",
     "{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.": "{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.",
-    "There is a deactivated account for this email address. Reactivate it in the user list.": "There is a deactivated account for this email address. Reactivate it in the user list."
+    "There is a deactivated account for this email address. Reactivate it in the user list.": "There is a deactivated account for this email address. Reactivate it in the user list.",
+    "Account status": "Account status",
+    "This person can no longer sign in. Rights and assignments are kept.": "This person can no longer sign in. Rights and assignments are kept.",
+    "Deactivated accounts can no longer sign in. Rights, settings and assignments are kept.": "Deactivated accounts can no longer sign in. Rights, settings and assignments are kept."
 }

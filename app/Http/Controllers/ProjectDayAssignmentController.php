@@ -353,6 +353,7 @@ class ProjectDayAssignmentController extends Controller
                     'last_name' => $worker->last_name,
                     'position' => $worker->position,
                     'profile_photo_url' => $worker->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($worker),
                 ] : null,
                 Freelancer::class => $worker ? [
                     'id' => $worker->id,

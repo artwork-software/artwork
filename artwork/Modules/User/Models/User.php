@@ -1219,6 +1219,20 @@ class User extends Model implements
     }
 
     /**
+     * Payload-Feld deactivated_at (ISO-8601) für Avatare und Tooltips: null für aktive Accounts und für
+     * Nicht-User (Freelancer, Dienstleister, CRM-Kontakte) – so auch in gemischten Personenlisten nutzbar.
+     */
+    public static function deactivatedAtFor(mixed $subject): ?string
+    {
+        if (!$subject instanceof self) {
+            return null;
+        }
+        $deactivatedAt = $subject->getAttribute('deactivated_at');
+
+        return $deactivatedAt instanceof \DateTimeInterface ? $deactivatedAt->format(DATE_ATOM) : null;
+    }
+
+    /**
      * Deaktiviert: Login gesperrt, Account samt Zuordnungen bleibt erhalten und sichtbar.
      */
     public function isDeactivated(): bool

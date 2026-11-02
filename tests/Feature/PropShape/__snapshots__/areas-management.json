@@ -53,6 +53,7 @@
                     "resource": ".",
                     "room_admins": {
                         "[]": {
+                            "deactivated_at": ".",
                             "id": ".",
                             "profile_photo_url": ".",
                             "resource": "."

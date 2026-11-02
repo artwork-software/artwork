@@ -31,6 +31,7 @@ class ProjectTabBudgetService
                 'first_name'          => $user->first_name,
                 'last_name'           => $user->last_name,
                 'profile_photo_url'   => $user->profile_photo_url,
+                'deactivated_at'      => User::deactivatedAtFor($user),
                 'email'               => $user->visibleEmailFor($viewer),
                 'departments'         => $user->departments,
                 'position'            => $user->position,

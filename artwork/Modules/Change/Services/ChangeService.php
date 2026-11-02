@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Spatie\Activitylog\Contracts\Activity;
+use Artwork\Modules\User\Models\User;
 
 class ChangeService
 {
@@ -97,6 +98,7 @@ class ChangeService
                     'first_name' => $causer->first_name ?? null,
                     'last_name' => $causer->last_name ?? null,
                     'profile_photo_url' => $causer->profile_photo_url ?? null,
+                    'deactivated_at' => User::deactivatedAtFor($causer),
                 ] : null;
 
                 $changes = array_map(function ($item) use ($changerData) {

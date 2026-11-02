@@ -193,6 +193,8 @@ class IdentityResolutionService
             'last_name' => $profile['last_name'] ?? '',
             'email' => $email,
             'password' => Hash::make(Str::random(64)),
+            // Beim SSO-Login die Browsersprache (Localization-Middleware), im LDAP-Sync die Instanzsprache
+            'language' => app()->getLocale(),
             'opened_checklists' => [],
             'opened_areas' => [],
             'ad_managed' => true,

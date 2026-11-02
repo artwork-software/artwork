@@ -7,6 +7,7 @@ use Artwork\Modules\ExternalUserManagement\Service\OidcService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -75,6 +76,25 @@ final class OidcCallbackTest extends FeatureTestCase
             $user->notificationSettings()->count()
         );
         $this->assertTrue($user->productBasket()->exists());
+    }
+
+    #[Test]
+    public function a_provisioned_user_gets_the_browser_language(): void
+    {
+        $source = $this->source();
+
+        $this->mock(OidcService::class, function ($mock): void {
+            $mock->shouldReceive('userFromCallback')->andReturn($this->fakeClaims());
+        });
+
+        // TestCase legt 'en' in die Session; die hätte Vorrang vor dem Accept-Language-Header.
+        Session::forget('locale');
+
+        $this->withHeader('Accept-Language', 'en-US,en;q=0.9')
+            ->get(route('auth.oidc.callback', ['externalUserSource' => $source->id]))
+            ->assertRedirect();
+
+        $this->assertSame('en', User::query()->where('email', 'oidc.user@example.com')->value('language'));
     }
 
     #[Test]

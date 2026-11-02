@@ -29,6 +29,9 @@ class UserCreateRequest extends FormRequest
     }
 
     /**
+     * Sprache = die, in der das Formular angezeigt wurde (Localization-Middleware: Session/Cookie/Browser).
+     * Sonst griff der Spalten-Default 'de', obwohl die Person die Registrierung z. B. auf Englisch sah.
+     *
      * @return array<string, mixed>
      */
     public function userData(): array
@@ -42,6 +45,7 @@ class UserCreateRequest extends FormRequest
             'position' => $this->input('position'),
             'business' => $this->input('business'),
             'description' => $this->input('description'),
+            'language' => app()->getLocale(),
             'opened_checklists' => [],
             'opened_areas' => [],
             'use_chat' => true,

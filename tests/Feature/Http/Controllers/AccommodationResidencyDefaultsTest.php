@@ -53,6 +53,69 @@ final class AccommodationResidencyDefaultsTest extends FeatureTestCase
     }
 
     #[Test]
+    public function accommodation_without_room_types_can_still_be_updated(): void
+    {
+        $this->actingAsAdmin();
+        $accommodation = Accommodation::factory()->create();
+
+        $this->patch(route('accommodation.update', $accommodation), [
+            'id' => $accommodation->id,
+            'name' => 'Hotel ohne Zimmertyp',
+            'daily_allowance' => '41',
+            'room_types' => [],
+            'room_type_costs' => [],
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $accommodation->refresh();
+        $this->assertSame('Hotel ohne Zimmertyp', $accommodation->name);
+        $this->assertSame(41.0, $accommodation->daily_allowance);
+    }
+
+    #[Test]
+    public function last_room_type_can_be_removed(): void
+    {
+        $this->actingAsAdmin();
+        $accommodation = Accommodation::factory()->create();
+        $roomType = AccommodationRoomType::query()->create(['name' => 'Doppelzimmer ' . uniqid()]);
+        $accommodation->roomTypes()->attach($roomType->id, ['cost_per_night' => 80]);
+
+        $this->patch(route('accommodation.update', $accommodation), [
+            'id' => $accommodation->id,
+            'name' => $accommodation->name,
+            'room_types' => [],
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->assertCount(0, $accommodation->roomTypes()->get());
+    }
+
+    #[Test]
+    public function missing_room_types_field_is_rejected_on_update(): void
+    {
+        $this->actingAsAdmin();
+        $accommodation = Accommodation::factory()->create();
+        $roomType = AccommodationRoomType::query()->create(['name' => 'Suite ' . uniqid()]);
+        $accommodation->roomTypes()->attach($roomType->id, ['cost_per_night' => 120]);
+
+        $this->patchJson(route('accommodation.update', $accommodation), [
+            'id' => $accommodation->id,
+            'name' => $accommodation->name,
+        ])->assertJsonValidationErrors(['room_types']);
+
+        $this->assertCount(1, $accommodation->roomTypes()->get());
+    }
+
+    #[Test]
+    public function new_accommodation_still_needs_a_room_type(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson(route('accommodation.store'), [
+            'name' => 'Hotel ohne Zimmer',
+            'room_types' => [],
+        ])->assertJsonValidationErrors(['room_types']);
+    }
+
+    #[Test]
     public function negative_residency_defaults_are_rejected(): void
     {
         $this->actingAsAdmin();

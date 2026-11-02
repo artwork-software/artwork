@@ -1858,12 +1858,6 @@ parameters:
 			path: artwork/Modules/Invitation/Services/InvitationService.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Support\\ServiceProvider\:\:applyMailConfig\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: artwork/Modules/Mail/Http/Controllers/MailSettingsController.php
-
-		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Manufacturer\\Models\\Manufacturer\:\:\$profile_photo_path\.$#'
 			identifier: property.notFound
 			count: 1

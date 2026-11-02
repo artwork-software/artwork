@@ -6157,7 +6157,7 @@
     "Projektzeitraum": "Project period",
     "Mail": "Mail",
     "SMTP server": "SMTP server",
-    "Fallback: :value": "Fallback: :value",
+    "Fallback: {value}": "Fallback: {value}",
     "Encryption": "Encryption",
     "Fallback (.env)": "Fallback (.env)",
     "Username": "Username",
@@ -9602,5 +9602,16 @@
     "Controls whether a new project can be created directly from an event.": "Controls whether a new project can be created directly from an event.",
     "Project creation possible when creating events": "Project creation possible when creating events",
     "If activated, a new project can be created directly in the event dialog when linking a project. If deactivated, events can only be linked to existing projects, so that projects are not created by accident.": "If activated, a new project can be created directly in the event dialog when linking a project. If deactivated, events can only be linked to existing projects, so that projects are not created by accident.",
-    "Creating new projects from events is deactivated in the calendar settings.": "Creating new projects from events is deactivated in the calendar settings."
+    "Creating new projects from events is deactivated in the calendar settings.": "Creating new projects from events is deactivated in the calendar settings.",
+    "Enter the password for this user name.": "Enter the password for this user name.",
+    "The mail server rejected the login. Please check the user name and password.": "The mail server rejected the login. Please check the user name and password.",
+    "The mail server rejected the sender address :address. Enter a sender address the mail account may send from.": "The mail server rejected the sender address :address. Enter a sender address the mail account may send from.",
+    "The mail server only accepts emails after login. Please enter user name and password.": "The mail server only accepts emails after login. Please enter user name and password.",
+    "The TLS certificate of the mail server could not be verified.": "The TLS certificate of the mail server could not be verified.",
+    "User name and password belong together: both come either from here or from the server configuration. For a server other than the one in the server configuration, its access data are never used.": "User name and password belong together: both come either from here or from the server configuration. For a server other than the one in the server configuration, its access data are never used.",
+    "If you enter a user name, enter its password too. Leave both blank to use the server configuration (.env).": "If you enter a user name, enter its password too. Leave both blank to use the server configuration (.env).",
+    "A user name is stored but no password. Enter the password, otherwise the mail server will reject the login.": "A user name is stored but no password. Enter the password, otherwise the mail server will reject the login.",
+    "Saved state: login with the user name and password stored here.": "Saved state: login with the user name and password stored here.",
+    "Saved state: login with the access data from the server configuration (.env).": "Saved state: login with the access data from the server configuration (.env).",
+    "Saved state: emails are sent without login. Many mail servers reject this.": "Saved state: emails are sent without login. Many mail servers reject this."
 }

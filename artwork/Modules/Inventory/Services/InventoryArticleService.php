@@ -58,7 +58,8 @@ class InventoryArticleService
         ?array $resolvedFilters = null,
         ?array $resolvedTagIds = null,
         ?int $statusId = null,
-        ?int $searchPropertyId = null
+        ?int $searchPropertyId = null,
+        ?int $perPage = null
     ): LengthAwarePaginator {
         $query = $this->buildArticleQuery($category, $subCategory, $search, $searchPropertyId);
 
@@ -93,7 +94,8 @@ class InventoryArticleService
         $this->applyStatusFilter($query, $statusId);
 
         // Cap page size to avoid loading the whole inventory incl. relations at once.
-        $perPage = min(max((int) Request::get('per_page', Request::integer('entitiesPerPage', 50)), 1), 100);
+        $perPage ??= (int) Request::get('per_page', Request::integer('entitiesPerPage', 50));
+        $perPage = min(max($perPage, 1), 100);
         $this->applyStableOrdering($query, $category, $subCategory);
         return $query->paginate($perPage);
     }

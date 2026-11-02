@@ -27,6 +27,7 @@ final class AppModuleSettingsTest extends TestCase
             'Schichtliste' => ['shift_plan', 'app.v1.shift-list'],
             'Raumbelegung' => ['room_assignment', 'app.v1.calendar'],
             'Projektliste' => ['projects', 'app.v1.projects'],
+            'Inventar' => ['inventory', 'app.v1.inventory.articles'],
         ];
     }
 

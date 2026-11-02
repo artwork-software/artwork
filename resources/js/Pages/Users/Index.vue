@@ -107,9 +107,7 @@
                             </div>
                             <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                             <div v-if="isUserDeactivated(row)" class="mt-1 flex items-center gap-2 text-xs text-text-subtle">
-                                <span class="inline-flex items-center rounded-full bg-surface-sunken px-2 py-0.5 font-semibold ring-1 ring-inset ring-border">
-                                    {{ $t('Account inactive') }}
-                                </span>
+                                <DeactivatedAccountBadge />
                                 <span v-if="row.deactivated_by_name">
                                     {{ $t('Deactivated on {date} by {name}', { date: formatDate(row.deactivated_at), name: row.deactivated_by_name }) }}
                                 </span>
@@ -252,22 +250,7 @@
     </BaseModal>
 
     <!-- Deactivate Modal -->
-    <BaseModal @closed="closeDeactivateUserModal" v-if="userToDeactivate" modal-image="/Svgs/Overlays/illu_warning.svg">
-        <div class="mx-4">
-            <div class="text-2xl font-bold text-text my-2">
-                {{ $t('Deactivate account') }}
-            </div>
-            <div class="text-sm text-text-muted">
-                {{ $t('{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.', { name: `${userToDeactivate.first_name} ${userToDeactivate.last_name}` }) }}
-            </div>
-            <div class="mt-6 flex items-center justify-between">
-                <BaseUIButton :label="$t('Deactivate')" variant="primary" @click="deactivateUser" />
-                <button @click="closeDeactivateUserModal" class="text-sm text-text-subtle hover:text-text">
-                    {{ $t('No, not really') }}
-                </button>
-            </div>
-        </div>
-    </BaseModal>
+    <DeactivateAccountModal v-if="userToDeactivate" :user="userToDeactivate" @closed="closeDeactivateUserModal" />
 
     <!-- Success -->
     <SuccessModal
@@ -298,7 +281,9 @@ import { usePermission } from '@/Composeables/Permission.js'
 import { useSortEnumTranslation } from '@/Composeables/SortEnumTranslation.js'
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
-import { deactivatedAvatarClasses, isUserDeactivated } from '@/Helper/UserDeactivation.js'
+import { canChangeAccountActivation, deactivatedAvatarClasses, isUserDeactivated } from '@/Helper/UserDeactivation.js'
+import DeactivateAccountModal from '@/Pages/Users/Components/DeactivateAccountModal.vue'
+import DeactivatedAccountBadge from '@/Layouts/Components/DeactivatedAccountBadge.vue'
 import { useInstanceFormat } from '@/Composeables/InstanceFormat.js'
 
 const props = defineProps({
@@ -383,24 +368,19 @@ const { formatDate } = useInstanceFormat()
 const showDeactivated = ref(false)
 const visibleUsers = computed(() => showDeactivated.value ? props.deactivatedUsers : props.users)
 const canManageDeactivation = computed(() => hasAdminRole() || can('can manage workers'))
-const canChangeActivation = (user) =>
-    user?.type === 'user'
-    && user.id !== usePage().props.auth.user.id
-    && canManageDeactivation.value
-    && (hasAdminRole() || !props.adminUserIds.includes(user.id))
+const canChangeActivation = (user) => canChangeAccountActivation({
+    user,
+    authUserId: usePage().props.auth.user.id,
+    isAdmin: hasAdminRole(),
+    canManageWorkers: can('can manage workers'),
+    isTargetAdmin: props.adminUserIds.includes(user?.id),
+})
 const canDeactivate = (user) => canChangeActivation(user) && !isUserDeactivated(user)
 const canReactivate = (user) => canChangeActivation(user) && isUserDeactivated(user)
 
 const userToDeactivate = ref(null)
 const openDeactivateUserModal = (user) => (userToDeactivate.value = user)
 const closeDeactivateUserModal = () => (userToDeactivate.value = null)
-const deactivateUser = () => {
-    if (!userToDeactivate.value) return
-    router.post(route('user.deactivate', { user: userToDeactivate.value.id }), {}, {
-        preserveScroll: true,
-        onSuccess: () => closeDeactivateUserModal(),
-    })
-}
 const reactivateUser = (user) => {
     router.post(route('user.reactivate', { user: user.id }), {}, {
         preserveScroll: true,

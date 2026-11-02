@@ -36,6 +36,7 @@ class ChecklistTemplateIndexResource extends JsonResource
             'users' => $this->users->map(fn (User $user) => [
                 'id' => $user->id,
                 'profile_photo_url' => $user->profile_photo_url,
+                'deactivated_at' => User::deactivatedAtFor($user),
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
             ]),

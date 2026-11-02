@@ -402,6 +402,7 @@ class ShiftCalendarService
                     'position' => $user->position ?? null,
                     // Accessor liefert bei fehlendem Foto den Buchstaben-Avatar (SVG-Data-URI)
                     'profile_photo_url' => $user->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($user),
                 ])->values()->all()
                 : null,
         ];
@@ -428,6 +429,7 @@ class ShiftCalendarService
                     'position' => $user->position ?? null,
                     'business' => $user->business ?? null,
                     'profile_photo_url' => $user->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($user),
                 ])->values()->all()
                 : [],
         ];

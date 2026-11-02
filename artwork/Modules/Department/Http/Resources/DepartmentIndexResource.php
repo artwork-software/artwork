@@ -68,6 +68,7 @@ class DepartmentIndexResource extends JsonResource
                 'first_name' => data_get($user, 'first_name'),
                 'last_name' => data_get($user, 'last_name'),
                 'profile_photo_url' => data_get($user, 'profile_photo_url'),
+                'deactivated_at' => User::deactivatedAtFor($user),
                 'email' => $user instanceof User ? $user->visibleEmailFor($request->user()) : data_get($user, 'email'),
                 'departments' => data_get($user, 'departments'),
                 'position' => data_get($user, 'position'),

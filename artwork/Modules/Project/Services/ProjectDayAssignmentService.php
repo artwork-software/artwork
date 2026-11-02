@@ -268,6 +268,7 @@ class ProjectDayAssignmentService
             'name' => $user->getFullNameAttribute(),
             'position' => $user->position,
             'profile_photo_url' => $user->profile_photo_url,
+            'deactivated_at' => User::deactivatedAtFor($user),
             'in_project_team' => $teamUserIds->has($user->id),
         ] + $summarize(User::class, $user->id))
             ->concat($freelancers->map(static fn (Freelancer $freelancer) => [

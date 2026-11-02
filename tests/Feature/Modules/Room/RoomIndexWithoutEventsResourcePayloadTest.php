@@ -22,7 +22,7 @@ use Tests\Feature\FeatureTestCase;
  */
 final class RoomIndexWithoutEventsResourcePayloadTest extends FeatureTestCase
 {
-    private const SLIM_USER_FIELDS = ['id', 'first_name', 'last_name', 'profile_photo_url'];
+    private const SLIM_USER_FIELDS = ['id', 'first_name', 'last_name', 'profile_photo_url', 'deactivated_at'];
 
     private Room $room;
     private User $creator;

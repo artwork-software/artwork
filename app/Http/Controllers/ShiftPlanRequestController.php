@@ -559,6 +559,7 @@ class ShiftPlanRequestController extends Controller
                     'id' => $u->id,
                     'full_name' => $u->full_name ?? ($u->first_name . ' ' . $u->last_name),
                     'profile_photo_url' => $u->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($u),
                     'is_freelancer' => (bool) $u->is_freelancer,
                 ]),
                 'freelancers' => $craftFreelancers->map(fn ($f) => [
@@ -1742,6 +1743,7 @@ class ShiftPlanRequestController extends Controller
                     'id' => $u->id,
                     'full_name' => $u->full_name ?? ($u->first_name . ' ' . $u->last_name),
                     'profile_photo_url' => $u->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($u),
                     'is_freelancer' => (bool) $u->is_freelancer,
                 ]),
                 'freelancers' => $craftFreelancers->map(fn ($f) => [

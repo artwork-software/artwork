@@ -35,6 +35,7 @@ class IndividualTimeSubjectsSearchController extends Controller
                     'type'              => 'user',
                     'display_name'      => $user->display_name,
                     'profile_photo_url' => $user->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($user),
                     'can_work_shifts'   => $user->can_work_shifts,
                 ];
             });

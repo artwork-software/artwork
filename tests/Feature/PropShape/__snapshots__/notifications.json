@@ -15,6 +15,7 @@
             "specific_verifier_id": ".",
             "users": {
                 "[]": {
+                    "deactivated_at": ".",
                     "email": ".",
                     "first_name": ".",
                     "full_name": ".",
@@ -37,6 +38,7 @@
         "[]": {
             "admins": {
                 "[]": {
+                    "deactivated_at": ".",
                     "first_name": ".",
                     "id": ".",
                     "last_name": ".",
@@ -45,6 +47,7 @@
             },
             "created_at": ".",
             "created_by": {
+                "deactivated_at": ".",
                 "first_name": ".",
                 "id": ".",
                 "last_name": ".",
@@ -58,6 +61,7 @@
             "resource": ".",
             "room_admins": {
                 "[]": {
+                    "deactivated_at": ".",
                     "first_name": ".",
                     "id": ".",
                     "last_name": ".",

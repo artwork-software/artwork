@@ -118,7 +118,7 @@ final class NotificationControllerTest extends FeatureTestCase
                 ->where('event.project.name', $project->name)
                 ->where('event.projectName', $project->name)
                 ->has('event.projectLeaders', 1)
-                ->has('event.projectLeaders.0', 4)
+                ->has('event.projectLeaders.0', 5)
                 ->where('event.projectLeaders.0.id', $manager->id)
                 ->where('event.projectLeaders.0.first_name', $manager->first_name)
                 ->missing('event.projectLeaders.0.work_time_balance')

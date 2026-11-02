@@ -9620,5 +9620,8 @@
     "Deactivate account": "Account deaktivieren",
     "Reactivate account": "Account reaktivieren",
     "{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.": "{name} kann sich danach nicht mehr anmelden. Rechte, Einstellungen und Zuordnungen zu Projekten und Schichten bleiben erhalten, der Account lässt sich jederzeit wieder aktivieren.",
-    "There is a deactivated account for this email address. Reactivate it in the user list.": "Für diese E-Mail-Adresse gibt es einen deaktivierten Account. Bitte reaktiviere ihn in der Liste der Nutzer*innen."
+    "There is a deactivated account for this email address. Reactivate it in the user list.": "Für diese E-Mail-Adresse gibt es einen deaktivierten Account. Bitte reaktiviere ihn in der Liste der Nutzer*innen.",
+    "Account status": "Account-Status",
+    "This person can no longer sign in. Rights and assignments are kept.": "Diese Person kann sich nicht mehr anmelden. Rechte und Zuordnungen bleiben erhalten.",
+    "Deactivated accounts can no longer sign in. Rights, settings and assignments are kept.": "Deaktivierte Accounts können sich nicht mehr anmelden. Rechte, Einstellungen und Zuordnungen bleiben erhalten."
 }

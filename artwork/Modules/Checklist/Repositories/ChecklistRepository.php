@@ -10,6 +10,7 @@ use Artwork\Modules\Task\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Artwork\Modules\User\Models\User;
 
 class ChecklistRepository extends BaseRepository
 {
@@ -179,6 +180,7 @@ class ChecklistRepository extends BaseRepository
                     'last_name' => $user->last_name,
                     'email' => $user->visibleEmailFor(Auth::user()),
                     'profile_photo_url' => $user->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($user),
                 ];
             }),
             'hasProject' => $checklist->hasProject(),

@@ -19,6 +19,7 @@ class IndividualTimeSubjectsSearchController extends Controller
         $userQuery = User::query()
             ->canWorkShifts()
             ->excludeDeletedPlaceholder()
+            ->active()
             ->when($query !== '', function ($q) use ($query): void {
                 $q->where(function ($qq) use ($query): void {
                     $qq->where('first_name', 'like', $query . '%')

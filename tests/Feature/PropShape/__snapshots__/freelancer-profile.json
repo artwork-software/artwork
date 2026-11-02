@@ -220,6 +220,7 @@
                         "crm_contact_id": ".",
                         "current_team_id": ".",
                         "daily_view": ".",
+                        "deactivated_at": ".",
                         "description": ".",
                         "drawer_height": ".",
                         "email": ".",

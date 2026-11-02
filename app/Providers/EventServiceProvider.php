@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Middleware\UpdateUserStatus;
+use App\Listeners\SkipNotificationsForDeactivatedUsers;
 use App\Listeners\UpdateUserOnLogout;
 use Artwork\Modules\Budget\Events\BudgetUpdated;
 use Artwork\Modules\Budget\Listeners\BudgetModelObserver;
@@ -27,6 +28,7 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Notifications\Events\NotificationSending;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -42,7 +44,10 @@ class EventServiceProvider extends ServiceProvider
         ],
         BudgetUpdated::class => [
             InvalidateBudgetCache::class,
-        ]
+        ],
+        NotificationSending::class => [
+            SkipNotificationsForDeactivatedUsers::class,
+        ],
     ];
 
     /**

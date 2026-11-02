@@ -239,9 +239,8 @@ class ProjectController extends Controller
         // Liefert Team-Pivots (Budgetzugriff, Rollen) – nur für Personen, die das Projekt sehen dürfen.
         $this->authorize('view', $project);
 
-        $userIds = User::search((string) ($validated['query'] ?? ''))->keys();
-
-        return $project->users()->whereIn('users.id', $userIds)->get()->all();
+        // Per SQL statt Suchindex: deaktivierte Teammitglieder stehen nicht im Index, gehören aber weiter zum Team.
+        return $project->users()->nameOrLastNameLike((string) ($validated['query'] ?? ''))->get()->all();
     }
 
     public function saveProjectManagementFilter(ProjectIndexPaginateRequest $request): void
@@ -789,7 +788,7 @@ class ProjectController extends Controller
                 Department::nameLike($query)->get() :
                 [],
             'users' => UserWithoutShiftsResource::collection(
-                User::nameOrLastNameLike($query)->with('defaultProjectRoles')->get()
+                User::nameOrLastNameLike($query)->active()->with('defaultProjectRoles')->get()
             )->resolve()
         ];
     }
@@ -3641,8 +3640,9 @@ class ProjectController extends Controller
         return inertia('Projects/Edit', [
             'project' => new ProjectEditResource($project),
             // email_private mitladen: User::toArray() blendet private Adressen sonst nicht aus
-            'users' => User::select(['id', 'first_name', 'last_name', 'email', 'email_private', 'profile_photo_path'])
-                ->get(),
+            'users' => User::select([
+                'id', 'first_name', 'last_name', 'email', 'email_private', 'profile_photo_path', 'deactivated_at',
+            ])->get(),
             'departments' => Department::select(['id', 'name'])->get()
         ]);
     }

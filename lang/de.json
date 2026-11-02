@@ -9613,5 +9613,12 @@
     "A user name is stored but no password. Enter the password, otherwise the mail server will reject the login.": "Es ist ein Benutzername gespeichert, aber kein Passwort. Gib das Passwort ein, sonst lehnt der Mailserver die Anmeldung ab.",
     "Saved state: login with the user name and password stored here.": "Gespeicherter Stand: Anmeldung mit dem hier gespeicherten Benutzernamen und Passwort.",
     "Saved state: login with the access data from the server configuration (.env).": "Gespeicherter Stand: Anmeldung mit den Zugangsdaten aus der Server-Konfiguration (.env).",
-    "Saved state: emails are sent without login. Many mail servers reject this.": "Gespeicherter Stand: Mails werden ohne Anmeldung gesendet. Viele Mailserver lehnen das ab."
+    "Saved state: emails are sent without login. Many mail servers reject this.": "Gespeicherter Stand: Mails werden ohne Anmeldung gesendet. Viele Mailserver lehnen das ab.",
+    "Account inactive": "Account inaktiv",
+    "Deactivated on {date} by {name}": "Deaktiviert am {date} von {name}",
+    "Deactivated on {date}": "Deaktiviert am {date}",
+    "Deactivate account": "Account deaktivieren",
+    "Reactivate account": "Account reaktivieren",
+    "{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.": "{name} kann sich danach nicht mehr anmelden. Rechte, Einstellungen und Zuordnungen zu Projekten und Schichten bleiben erhalten, der Account lässt sich jederzeit wieder aktivieren.",
+    "There is a deactivated account for this email address. Reactivate it in the user list.": "Für diese E-Mail-Adresse gibt es einen deaktivierten Account. Bitte reaktiviere ihn in der Liste der Nutzer*innen."
 }

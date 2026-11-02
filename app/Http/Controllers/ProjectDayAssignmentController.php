@@ -325,7 +325,7 @@ class ProjectDayAssignmentController extends Controller
         $workersByType = [
             User::class => User::query()
                 ->whereIn('id', $rows->where('employable_type', User::class)->pluck('employable_id')->unique())
-                ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path'])
+                ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path', 'deactivated_at'])
                 ->keyBy('id'),
             Freelancer::class => Freelancer::query()
                 ->whereIn('id', $rows->where('employable_type', Freelancer::class)->pluck('employable_id')->unique())

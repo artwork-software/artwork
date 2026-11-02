@@ -117,7 +117,7 @@ class EventPlanningCalendarService
             ->select(['id', 'name', 'state', 'artists', 'linked_artists', 'is_group', 'color', 'icon'])
             ->with([
                 'status:id,name,color',
-                'managerUsers:id,first_name,last_name,position,email,profile_photo_path',
+                'managerUsers:id,first_name,last_name,position,email,profile_photo_path,deactivated_at',
                 'managerUsers.departments:id',
                 'groups',
                 'categories',

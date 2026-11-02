@@ -59,7 +59,7 @@ class ShiftCalendarService
             'eventStatus:id,color',
             'event_type:id,name,abbreviation,hex_code',
             'room:id,name',
-            'creator:id,first_name,last_name,profile_photo_path',
+            'creator:id,first_name,last_name,profile_photo_path,deactivated_at',
             'eventProperties:id,name,icon',
         ];
 
@@ -126,7 +126,7 @@ class ShiftCalendarService
             ? [
                 'room:id,name',
                 'craft:id,name,abbreviation,color',
-                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path',
+                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path,deactivated_at',
                 'shiftsQualifications',
                 'globalQualifications',
                 'users:id,first_name,last_name',
@@ -140,10 +140,10 @@ class ShiftCalendarService
             : [
                 'room:id,name',
                 'craft:id,name,abbreviation,color',
-                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path',
+                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path,deactivated_at',
                 'shiftsQualifications',
                 'globalQualifications',
-                'users:id,first_name,last_name,pronouns,position,profile_photo_path',
+                'users:id,first_name,last_name,pronouns,position,profile_photo_path,deactivated_at',
                 'users.globalQualifications:id',
                 'users.vacations' => $vacationsScope,
                 'freelancer:id,first_name,last_name,position,profile_image',
@@ -220,6 +220,7 @@ class ShiftCalendarService
                 'users.position',
                 'users.email',
                 'users.profile_photo_path',
+                'users.deactivated_at',
             ]);
         }
 

@@ -770,6 +770,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.destroy');
+    Route::post('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('user.deactivate');
+    Route::post('/users/{user}/reactivate', [UserController::class, 'reactivate'])->name('user.reactivate');
     // Eigene Browsersitzungen (die Jetstream-Routen hängen am api-Guard)
     Route::get('/user/browser-sessions', [UserBrowserSessionController::class, 'index'])
         ->name('user.browser-sessions.index');

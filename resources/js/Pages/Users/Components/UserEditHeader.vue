@@ -8,6 +8,7 @@
                     </div>
                     <div class="flex items-center gap-4">
                         <img class="h-16 w-16 rounded-full flex justify-start object-cover"
+                             :class="deactivatedAvatarClasses(user_to_edit)"
                              :src="user_to_edit.profile_photo_url"
                              alt=""/>
                         <div>
@@ -20,6 +21,9 @@
                                 </div>
                             </div>
                             <p class="text-text-subtle text-sm">{{ user_to_edit.email }}</p>
+                            <span v-if="isUserDeactivated(user_to_edit)" class="mt-1 inline-flex items-center rounded-full bg-surface-sunken px-2 py-0.5 text-xs font-semibold text-text-subtle ring-1 ring-inset ring-border">
+                                {{ $t('Account inactive') }}
+                            </span>
                         </div>
 
                         <div class="ml-auto">
@@ -51,6 +55,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import UserProfileSearch from "@/Pages/Users/Components/UserProfileSearch.vue";
 import {usePermission} from "@/Composeables/Permission.js";
+import {deactivatedAvatarClasses, isUserDeactivated} from "@/Helper/UserDeactivation.js";
 export default {
     mixins: [Permissions],
     name: "UserEditHeader",
@@ -89,6 +94,8 @@ export default {
         }
     },
     methods: {
+        deactivatedAvatarClasses,
+        isUserDeactivated,
         changeTab(selectedTab) {
             if (selectedTab === 1) {
                 router.get(route('user.edit.shiftplan', {user: this.user_to_edit.id}));

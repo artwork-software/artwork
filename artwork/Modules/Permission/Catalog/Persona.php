@@ -18,5 +18,6 @@ enum Persona: string
     case CONTRACTS = 'Contract & document administration';
     case INVENTORY = 'Warehouse / inventory';
     case CRM = 'Artist relations / CRM';
+    case BOX_OFFICE = 'Box office / admission';
     case SYSADMIN = 'System administration';
 }

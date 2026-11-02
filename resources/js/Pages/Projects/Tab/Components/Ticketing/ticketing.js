@@ -5,14 +5,24 @@ import { formatDay, formatEuro, formatTime } from '@/Helper/ticketingFormat.js'
    and holds (its own draft first, the venue's defaults otherwise), and the
    labels the modals and the table print. */
 
-/** The room's price classes as a date starts out with them. */
-export function defaultClassesOf(event) {
-    return (event.venue?.zones ?? []).map((zone) => ({ zone_key: zone.key, name: zone.name, price_cents: zone.defaultPriceCents ?? 0, quota: zone.capacity ?? 0 }))
+/** A room's price classes as a date starts out with them. */
+export function defaultClassesOfVenue(venue) {
+    return (venue?.zones ?? []).map((zone) => ({ zone_key: zone.key, name: zone.name, price_cents: zone.defaultPriceCents ?? 0, quota: zone.capacity ?? 0 }))
 }
+
 
 /** What the date sells: its own classes once saved, else the room's. Shape of the release table. */
 export function classesOf(event) {
-    return event.release?.classes?.length ? event.release.classes : defaultClassesOf(event)
+    return event.release?.classes?.length ? event.release.classes : defaultClassesOfVenue(event.venue)
+}
+
+/** Set once the date moved to another room after its classes were saved: they are the new room's now, to be checked. */
+export function roomChangeNote(event, t) {
+    if (!event.release?.roomChanged) return null
+    return t('The date moved from {from} to {to}. Its price classes now come from the new room; classes both rooms share kept their price. Check them and save.', {
+        from: event.release.previousRoom ?? t('another room'),
+        to: event.venue.name,
+    })
 }
 
 export function capacityOf(event) {

@@ -65,7 +65,7 @@ class TicketingDoorService
         /** @var array{scanId: string, outcome: string, ticket: ?array<string, mixed>} */
         return $this->tickets->post($connection, "/dates/{$dateId}/check-ins", $attempt + array_filter([
             'scanId' => $scanId,
-            'actor' => $this->actor($actor),
+            'actor' => $this->tickets->actor($actor),
         ]));
     }
 
@@ -75,7 +75,7 @@ class TicketingDoorService
 
         $this->tickets->post($connection, "/dates/{$dateId}/check-ins/revert", [
             'ticketId' => $ticketId,
-            'actor' => $this->actor($actor),
+            'actor' => $this->tickets->actor($actor),
         ]);
     }
 
@@ -113,7 +113,7 @@ class TicketingDoorService
             'admissionId' => $admissionId,
             'passId' => $passId,
             'priceCategoryId' => $priceCategoryId,
-            'actor' => $this->actor($actor),
+            'actor' => $this->tickets->actor($actor),
         ], self::ADMISSION_TIMEOUT);
     }
 
@@ -128,11 +128,5 @@ class TicketingDoorService
         }
 
         return [$connection, $dateId];
-    }
-
-    /** @return array{email: string, name: string} */
-    private function actor(User $user): array
-    {
-        return ['email' => $user->email, 'name' => $user->full_name];
     }
 }

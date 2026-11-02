@@ -36,6 +36,7 @@
                     "color": ".",
                     "created_at": ".",
                     "created_by": {
+                        "deactivated_at": ".",
                         "first_name": ".",
                         "full_name": ".",
                         "id": ".",

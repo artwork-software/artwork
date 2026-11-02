@@ -8,12 +8,24 @@
                 :icon="IconUsers"
                 title="Users"
                 v-model="user_query"
-                :description="users?.length ? `${users.length} ${$t('Users')}` : ''"
+                :description="visibleUsers?.length ? `${visibleUsers.length} ${$t('Users')}` : ''"
                 :search-enabled="true"
                 :search-label="$t('Search for Users')"
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
+                    <!-- Deaktivierte Accounts: eigener Reiter, nur für Personalverwaltung/Admins -->
+                    <BaseUIButton
+                        v-if="canManageDeactivation && (deactivatedUsers?.length > 0 || showDeactivated)"
+                        type="button"
+                        hide-icon
+                        on-band
+                        :class="showDeactivated ? '!bg-accent-500 !text-white' : ''"
+                        @click="showDeactivated = !showDeactivated"
+                    >
+                        {{ $t('Deactivated') }} ({{ deactivatedUsers?.length ?? 0 }})
+                    </BaseUIButton>
+
                     <BaseUIButton
                         v-if="hasActiveSsoSource"
                         type="button"
@@ -59,7 +71,7 @@
         <!-- Main list -->
         <template #default>
             <BaseTable
-                :rows="users"
+                :rows="visibleUsers"
                 :columns="cols"
                 row-key="id"
                 v-model:page="page"
@@ -71,7 +83,7 @@
                 <template #cell-name="{ row }">
                     <component :is="checkLink(row) ? Link : 'div'" class="flex items-center" :href="checkLink(row) ?? undefined">
                         <div class="size-11 shrink-0">
-                            <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
+                            <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" :class="deactivatedAvatarClasses(row)" />
                         </div>
                         <div class="ml-4">
                             <div class="flex items-center gap-2">
@@ -94,6 +106,17 @@
                                 </span>
                             </div>
                             <div class="mt-1 text-text-subtle">{{ row.email }}</div>
+                            <div v-if="isUserDeactivated(row)" class="mt-1 flex items-center gap-2 text-xs text-text-subtle">
+                                <span class="inline-flex items-center rounded-full bg-surface-sunken px-2 py-0.5 font-semibold ring-1 ring-inset ring-border">
+                                    {{ $t('Account inactive') }}
+                                </span>
+                                <span v-if="row.deactivated_by_name">
+                                    {{ $t('Deactivated on {date} by {name}', { date: formatDate(row.deactivated_at), name: row.deactivated_by_name }) }}
+                                </span>
+                                <span v-else>
+                                    {{ $t('Deactivated on {date}', { date: formatDate(row.deactivated_at) }) }}
+                                </span>
+                            </div>
                         </div>
                     </component>
                 </template>
@@ -159,11 +182,13 @@
                 <!-- Actions -->
                 <template #row-actions="{ row }">
                     <!-- Right: Actions -->
-                    <BaseMenu v-if="hasAdminRole()" has-no-offset white-menu-background>
+                    <BaseMenu v-if="hasAdminRole() || canDeactivate(row) || canReactivate(row)" has-no-offset white-menu-background>
                         <BaseMenuItem :icon="IconEdit" title="Edit Profile" white-menu-background as-link :link="checkLink(row)" />
-                        <BaseMenuItem :icon="IconTrash" v-if="row.type === 'user'" title="Delete user" white-menu-background @click="openDeleteUserModal(row)" />
-                        <BaseMenuItem :icon="IconTrash" v-if="row.type === 'freelancer'" title="Delete freelancer" white-menu-background @click="openDeleteUserModal(row)" />
-                        <BaseMenuItem :icon="IconTrash" v-if="row.type === 'service_provider'" title="Delete provider" white-menu-background @click="openDeleteUserModal(row)" />
+                        <BaseMenuItem :icon="IconUserOff" v-if="canDeactivate(row)" title="Deactivate account" white-menu-background @click="openDeactivateUserModal(row)" />
+                        <BaseMenuItem :icon="IconUserCheck" v-if="canReactivate(row)" title="Reactivate account" white-menu-background @click="reactivateUser(row)" />
+                        <BaseMenuItem :icon="IconTrash" v-if="hasAdminRole() && row.type === 'user'" title="Delete user" white-menu-background @click="openDeleteUserModal(row)" />
+                        <BaseMenuItem :icon="IconTrash" v-if="hasAdminRole() && row.type === 'freelancer'" title="Delete freelancer" white-menu-background @click="openDeleteUserModal(row)" />
+                        <BaseMenuItem :icon="IconTrash" v-if="hasAdminRole() && row.type === 'service_provider'" title="Delete provider" white-menu-background @click="openDeleteUserModal(row)" />
                     </BaseMenu>
                 </template>
             </BaseTable>
@@ -226,6 +251,24 @@
         </div>
     </BaseModal>
 
+    <!-- Deactivate Modal -->
+    <BaseModal @closed="closeDeactivateUserModal" v-if="userToDeactivate" modal-image="/Svgs/Overlays/illu_warning.svg">
+        <div class="mx-4">
+            <div class="text-2xl font-bold text-text my-2">
+                {{ $t('Deactivate account') }}
+            </div>
+            <div class="text-sm text-text-muted">
+                {{ $t('{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.', { name: `${userToDeactivate.first_name} ${userToDeactivate.last_name}` }) }}
+            </div>
+            <div class="mt-6 flex items-center justify-between">
+                <BaseUIButton :label="$t('Deactivate')" variant="primary" @click="deactivateUser" />
+                <button @click="closeDeactivateUserModal" class="text-sm text-text-subtle hover:text-text">
+                    {{ $t('No, not really') }}
+                </button>
+            </div>
+        </div>
+    </BaseModal>
+
     <!-- Success -->
     <SuccessModal
         :open="showSuccessModal"
@@ -237,12 +280,12 @@
 </template>
 
 <script setup lang="ts">
-import {ref, nextTick, watch} from 'vue'
+import {ref, nextTick, watch, computed} from 'vue'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import {
     Menu, MenuButton, MenuItem, MenuItems,
 } from '@headlessui/vue'
-import {IconAlertTriangle, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconTrash, IconUsers} from "@tabler/icons-vue"
+import {IconAlertTriangle, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconTrash, IconUserCheck, IconUserOff, IconUsers} from "@tabler/icons-vue"
 import debounce from 'lodash.debounce'
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
@@ -255,6 +298,8 @@ import { usePermission } from '@/Composeables/Permission.js'
 import { useSortEnumTranslation } from '@/Composeables/SortEnumTranslation.js'
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import { deactivatedAvatarClasses, isUserDeactivated } from '@/Helper/UserDeactivation.js'
+import { useInstanceFormat } from '@/Composeables/InstanceFormat.js'
 
 const props = defineProps({
     users: Array,
@@ -269,6 +314,8 @@ const props = defineProps({
     userSortEnumNames: Array,
     userUserManagementSetting: Object,
     hasActiveSsoSource: Boolean,
+    deactivatedUsers: { type: Array, default: () => [] },
+    adminUserIds: { type: Array, default: () => [] },
 })
 
 const { getSortEnumTranslation } = useSortEnumTranslation()
@@ -330,6 +377,39 @@ const openSuccessModal = () => {
     setTimeout(() => closeSuccessModal(), 2000)
 }
 const closeSuccessModal = () => (showSuccessModal.value = false)
+
+/* Deactivate flow – Spiegel von UserPolicy::deactivate (Backend prüft erneut) */
+const { formatDate } = useInstanceFormat()
+const showDeactivated = ref(false)
+const visibleUsers = computed(() => showDeactivated.value ? props.deactivatedUsers : props.users)
+const canManageDeactivation = computed(() => hasAdminRole() || can('can manage workers'))
+const canChangeActivation = (user) =>
+    user?.type === 'user'
+    && user.id !== usePage().props.auth.user.id
+    && canManageDeactivation.value
+    && (hasAdminRole() || !props.adminUserIds.includes(user.id))
+const canDeactivate = (user) => canChangeActivation(user) && !isUserDeactivated(user)
+const canReactivate = (user) => canChangeActivation(user) && isUserDeactivated(user)
+
+const userToDeactivate = ref(null)
+const openDeactivateUserModal = (user) => (userToDeactivate.value = user)
+const closeDeactivateUserModal = () => (userToDeactivate.value = null)
+const deactivateUser = () => {
+    if (!userToDeactivate.value) return
+    router.post(route('user.deactivate', { user: userToDeactivate.value.id }), {}, {
+        preserveScroll: true,
+        onSuccess: () => closeDeactivateUserModal(),
+    })
+}
+const reactivateUser = (user) => {
+    router.post(route('user.reactivate', { user: user.id }), {}, {
+        preserveScroll: true,
+        // Letzter deaktivierter Account reaktiviert → zurück zur Liste der aktiven
+        onSuccess: () => {
+            if (props.deactivatedUsers.length === 0) showDeactivated.value = false
+        },
+    })
+}
 
 /* Delete flow */
 const openDeleteUserModal = (user) => {

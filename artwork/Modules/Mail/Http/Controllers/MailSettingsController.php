@@ -12,9 +12,8 @@ use Artwork\Modules\Mail\Settings\MailSettings;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -43,6 +42,13 @@ class MailSettingsController extends Controller
                 'from_name' => $this->settings->from_name,
                 'has_password' => ($this->settings->password ?? '') !== '',
                 'can_manage' => request()->user()->hasRole(RoleEnum::ARTWORK_ADMIN->value),
+                // Effektiver Stand der SMTP-Anmeldung, damit ein unvollständiges Paar auffällt.
+                'authentication' => [
+                    'source' => $this->resolver->authenticationSource(),
+                    // Nur für hier gepflegte Benutzernamen — die .env verantwortet der Serverbetrieb.
+                    'password_missing' => $this->resolver->authenticationSource() === 'settings'
+                        && $this->resolver->password() === null,
+                ],
                 // Effective fallback values (from .env) to show as UI placeholders.
                 // Deliberately without username: the .env account name is itself a
                 // sensitive credential detail and must not be shown in the UI.
@@ -50,7 +56,8 @@ class MailSettingsController extends Controller
                     'host' => $this->resolver->hostFallback(),
                     'port' => $this->resolver->portFallback(),
                     'encryption' => $this->resolver->encryptionFallback(),
-                    'from_address' => $this->resolver->fromAddressFallback(),
+                    // Wie bei echten Mails: Support-Adresse bzw. system_mail vor MAIL_FROM_ADDRESS.
+                    'from_address' => $this->resolver->defaultSenderAddress(),
                     'from_name' => $this->resolver->fromNameFallback(),
                 ],
             ],
@@ -83,13 +90,31 @@ class MailSettingsController extends Controller
             $this->settings->password = null;
         }
 
+        // Benutzername und Passwort gehören zusammen: Ohne gespeichertes oder neues Passwort
+        // würde mit leerem (oder fremdem .env-)Passwort angemeldet → „535 authentication failed“.
+        $newUsername = $this->nullableTrim($validated['username'] ?? null);
+        $resultingPassword = match (true) {
+            $request->boolean('clear_password') => null,
+            $newPassword !== '' => $newPassword,
+            default => $this->settings->password,
+        };
+        if (
+            $newUsername !== null
+            && ($resultingPassword ?? '') === ''
+            && !$this->resolver->mayUseFallbackPassword($newHost, $newUsername)
+        ) {
+            throw ValidationException::withMessages([
+                'password' => __('Enter the password for this user name.'),
+            ]);
+        }
+
         $port = $validated['port'] ?? null;
         $this->settings->host = $newHost;
         $this->settings->port = $port !== null && $port !== ''
             ? (int) $port
             : null;
         $this->settings->encryption = $this->nullableTrim($validated['encryption'] ?? null);
-        $this->settings->username = $this->nullableTrim($validated['username'] ?? null);
+        $this->settings->username = $newUsername;
         $this->settings->from_address = $this->nullableTrim($validated['from_address'] ?? null);
         $this->settings->from_name = $this->nullableTrim($validated['from_name'] ?? null);
 
@@ -103,8 +128,7 @@ class MailSettingsController extends Controller
 
         $this->settings->save();
 
-        app()->getProvider(MailSettingsServiceProvider::class)?->applyMailConfig(true);
-        Mail::purge('smtp');
+        $this->reapplyMailConfig();
 
         activity('mail_settings')
             ->causedBy($request->user())
@@ -116,22 +140,9 @@ class MailSettingsController extends Controller
 
     public function test(TestMailRequest $request): JsonResponse
     {
-        // Rebuild the effective config from the stored settings and force a fresh transport.
-        $config = $this->resolver->effectiveConfigArray();
-
-        Config::set('mail.mailers.smtp.host', $config['host']);
-        Config::set('mail.mailers.smtp.port', $config['port']);
-        Config::set('mail.mailers.smtp.encryption', $config['encryption']);
-        Config::set('mail.mailers.smtp.username', $config['username']);
-        Config::set('mail.mailers.smtp.password', $config['password']);
-        if ($config['from_address'] !== null && $config['from_address'] !== '') {
-            Config::set('mail.from.address', $config['from_address']);
-        }
-        if ($config['from_name'] !== null && $config['from_name'] !== '') {
-            Config::set('mail.from.name', $config['from_name']);
-        }
-
-        Mail::purge('smtp');
+        // Dieselbe Konfiguration wie beim echten Versand (inkl. scheme/require_tls und Absender-Kette),
+        // sonst sagt der Test nichts über echte Mails aus.
+        $this->reapplyMailConfig();
 
         $recipient = $request->validated('recipient');
 
@@ -143,13 +154,11 @@ class MailSettingsController extends Controller
                 }
             );
         } catch (Throwable $e) {
-            // Generische Meldung: Die rohe Transport-Exception würde Host/Port-
-            // Erreichbarkeit ausplaudern (Port-Scan-Oracle); Details ins Log.
             report($e);
 
             return response()->json([
                 'success' => false,
-                'message' => __('Test email could not be sent. Please check the mail configuration and the log.'),
+                'message' => $this->describeTestMailFailure($e),
             ], 500);
         }
 
@@ -157,6 +166,54 @@ class MailSettingsController extends Controller
             'success' => true,
             'message' => __('Test email sent to :recipient.', ['recipient' => $recipient]),
         ]);
+    }
+
+    /**
+     * Gespeicherte Einstellungen frisch in config('mail.*') übernehmen und den SMTP-Transport neu aufbauen.
+     */
+    private function reapplyMailConfig(): void
+    {
+        $provider = app()->getProvider(MailSettingsServiceProvider::class);
+        if ($provider instanceof MailSettingsServiceProvider) {
+            $provider->applyMailConfig(true);
+        }
+
+        Mail::purge('smtp');
+    }
+
+    /**
+     * Übersetzt Antworten eines erreichten Mailservers in eine verständliche Ursache. Verbindungsfehler
+     * bleiben bewusst generisch: Die rohe Exception würde Host/Port-Erreichbarkeit ausplaudern
+     * (Port-Scan-Oracle); Details landen nur im Log.
+     */
+    private function describeTestMailFailure(Throwable $exception): string
+    {
+        $generic = __('Test email could not be sent. Please check the mail configuration and the log.');
+
+        if (!$exception instanceof TransportExceptionInterface) {
+            return $generic;
+        }
+
+        $message = strtolower($exception->getMessage());
+
+        return match (true) {
+            $exception->getCode() === 535 || str_contains($message, 'failed to authenticate')
+                => __('The mail server rejected the login. Please check the user name and password.'),
+            str_contains($message, 'sender address rejected')
+                => __(
+                    // phpcs:ignore Generic.Files.LineLength.TooLong -- wörtlicher Schlüssel, damit BackendTranslationKeysTest ihn prüft
+                    'The mail server rejected the sender address :address. Enter a sender address the mail account may send from.',
+                    ['address' => (string) $this->resolver->fromAddress()]
+                ),
+            str_contains($message, 'client host rejected')
+                || str_contains($message, 'relay access denied')
+                || str_contains($message, 'authentication required')
+                || $exception->getCode() === 530
+                => __('The mail server only accepts emails after login. Please enter user name and password.'),
+            str_contains($message, 'certificate verify failed')
+                => __('The TLS certificate of the mail server could not be verified.'),
+            default => $generic,
+        };
     }
 
     private function nullableTrim(?string $value): ?string

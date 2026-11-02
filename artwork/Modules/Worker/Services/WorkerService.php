@@ -52,7 +52,8 @@ class WorkerService
         $eagerLoads = WorkerEagerLoadConfig::getShiftPlanEagerLoads($startDate, $endDate);
         // Polymorphe Query basierend auf Worker-Typ
         $query = match ($workerType) {
-            User::class => User::query()->canWorkShifts(),
+            // Deaktivierte nur, solange sie im Zeitraum noch Schichten haben (bestehende Zuteilungen sichtbar)
+            User::class => User::query()->canWorkShifts()->activeOrWithShiftsBetween($startDate, $endDate),
             Freelancer::class => Freelancer::query()->canWorkShifts(),
             ServiceProvider::class => ServiceProvider::query()->canWorkShifts(),
             default => throw new \InvalidArgumentException("Unbekannter Worker-Typ: {$workerType}"),

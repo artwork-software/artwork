@@ -4,11 +4,12 @@
     <div class="w-full">
         <div @click="$emit('highlightShiftsOfUser', item.id, type)" :class="[$page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12']" class="drag-item w-full p-2 text-[var(--uo-text)] text-xs flex items-center gap-2 relative !rounded-lg border" :style="{backgroundColor: backgroundColorWithOpacity(color), borderColor : color+'80'}">
             <div v-if="!$page.props.auth.user.compact_mode">
-                <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6">
+                <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6" :class="type === 0 ? deactivatedAvatarClasses(item) : ''">
             </div>
             <div class="text-left cursor-pointer flex items-center gap-2 w-full">
                 <div>
-                    <div v-if="type === 0" class="text-ellipsis" :class="$page.props.auth.user.compact_mode ? 'w-32' : 'w-24'">
+                    <!-- Deaktivierte Accounts erscheinen nur noch mit bestehenden Schichten im Zeitraum -->
+                    <div v-if="type === 0" class="text-ellipsis" :class="[$page.props.auth.user.compact_mode ? 'w-32' : 'w-24', isUserDeactivated(item) ? 'opacity-60 italic' : '']" :title="isUserDeactivated(item) ? $t('Account inactive') : undefined">
                         <div class="flex">
                             <div :class="this.isManagingCraft ? 'underline truncate' : 'truncate'">
                                 {{ item.first_name }} {{ item.last_name }}
@@ -68,6 +69,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import {useWorkTimeBalanceBadge} from "@/Composeables/useWorkTimeBalanceBadge.js";
+import {deactivatedAvatarClasses, isUserDeactivated} from "@/Helper/UserDeactivation.js";
 
 export default defineComponent({
     name: "HighlightUserCell",
@@ -88,7 +90,7 @@ export default defineComponent({
     setup(props) {
         const {backgroundColorWithOpacityOld: backgroundColorWithOpacity} = useColorHelper();
         const {balanceClass, balanceTooltip} = useWorkTimeBalanceBadge(props, {themed: true});
-        return {backgroundColorWithOpacity, can, is, workTimeBalanceClass: balanceClass, workTimeBalanceTooltip: balanceTooltip};
+        return {backgroundColorWithOpacity, can, is, workTimeBalanceClass: balanceClass, workTimeBalanceTooltip: balanceTooltip, deactivatedAvatarClasses, isUserDeactivated};
     },
 
     computed: {

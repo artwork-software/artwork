@@ -33,6 +33,7 @@ class ProjectTabBudgetInformationService
         'users.first_name',
         'users.last_name',
         'users.profile_photo_path',
+        'users.deactivated_at',
         'users.work_name',
         'users.email',
     ];

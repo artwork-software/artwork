@@ -407,8 +407,9 @@ class EventRepository extends BaseRepository
                 $event = Event::findOrFail($eventId);
 
                 // Store original times BEFORE updating the event
-                $originalStartTime = $event->start_time;
-                $originalEndTime = $event->end_time;
+                // Spalten sind nullable (die @property-Annotation nicht) – daher getAttribute
+                $originalStartTime = $event->getAttribute('start_time');
+                $originalEndTime = $event->getAttribute('end_time');
                 $originalAllDay = $event->allDay;
 
                 $event->update($updates);

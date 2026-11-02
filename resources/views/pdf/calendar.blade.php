@@ -58,18 +58,19 @@
 
         th, td { word-wrap: break-word; }
 
+        /* Spaltenüberschriften (Räume/Tage) größer für bessere Lesbarkeit */
         thead th {
             border-bottom: 2px solid #404040;
             border-right: 2px solid #404040;
             background: #f9fafb;
             vertical-align: top;
-            font-size: {{ $s(6) }};
+            font-size: {{ $s(9) }};
             font-weight: 500;
         }
 
         .th-room-head {
             font-weight: 500;
-            font-size: {{ $s(6) }};
+            font-size: {{ $s(9) }};
             line-height: 1.3;
             text-align: left;
             padding: 4px;
@@ -84,9 +85,9 @@
             line-height: 1.3;
             padding: 4px 2px;
             font-weight: 500;
-            font-size: {{ $s(6) }};
+            font-size: {{ $s(9) }};
         }
-        .th-daygroup-meta { font-weight: 500; font-size: {{ $s(6) }}; line-height: 1.2; color: #4b5563; }
+        .th-daygroup-meta { font-weight: 500; font-size: {{ $s(8) }}; line-height: 1.2; color: #4b5563; }
 
         .weekend-bg-top { background-color: #f4f4f5; }
         .weekend-bg-cell { background-color: #f4f4f5; }

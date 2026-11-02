@@ -10,6 +10,7 @@ use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class CrmPropertyController extends Controller
 {
@@ -28,7 +29,7 @@ class CrmPropertyController extends Controller
 
         $this->service->reorder($validated['properties']);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -46,7 +47,7 @@ class CrmPropertyController extends Controller
 
         $this->service->store($validated);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -64,7 +65,7 @@ class CrmPropertyController extends Controller
 
         $this->service->update($crmProperty, $validated);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -73,7 +74,7 @@ class CrmPropertyController extends Controller
     {
         $this->service->destroy($crmProperty);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }

@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Policies;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Support\Facades\Auth;
@@ -97,6 +98,36 @@ class UserPolicy
     public function delete(User $user, User $model): bool
     {
         return $user->id === $model->id;
+    }
+
+    /**
+     * Deaktivieren/Reaktivieren: Personalverwaltung (Admins via Gate::before). Admin-Accounts nur durch
+     * Admins; den eigenen Account sperrt der Controller zusätzlich, weil Gate::before Admins durchlässt.
+     */
+    public function deactivate(User $user, User $targetUser): bool
+    {
+        if ($user->is($targetUser) || $targetUser->getAttribute('is_deleted_placeholder')) {
+            return false;
+        }
+
+        if ($targetUser->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+        }
+
+        return $user->can(PermissionEnum::MA_MANAGER->value);
+    }
+
+    public function reactivate(User $user, User $targetUser): bool
+    {
+        return $this->deactivate($user, $targetUser);
+    }
+
+    /**
+     * Reiter "Deaktiviert" in der Nutzer*innenliste – für alle anderen bleiben deaktivierte Accounts unsichtbar.
+     */
+    public function viewDeactivated(User $user): bool
+    {
+        return $user->can(PermissionEnum::MA_MANAGER->value);
     }
 
     public function updateWorkProfile(User $user): bool

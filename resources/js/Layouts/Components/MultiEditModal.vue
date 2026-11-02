@@ -132,7 +132,7 @@
                 <!-- Festes Datum -->
                 <div v-if="timeMode === 'date'" class="mt-3 space-y-2">
                     <span class="ui-hint">
-                        {{ $t('All selected events are placed on this date, keeping their start time. Multi-day events will end on the chosen day.') }}
+                        {{ $t('All selected events start on this date at their previous time and keep their duration.') }}
                     </span>
                     <BaseInput
                         type="date"

@@ -188,7 +188,9 @@ class OidcApi implements ExternalUserManagementApi
      */
     private function fetchDiscovery(string $url): array
     {
-        return Http::acceptJson()
+        self::assertHttps($url, 'discovery_url');
+
+        $discovery = Http::acceptJson()
             ->connectTimeout(5)
             ->timeout(10)
             // Keine Redirects (SSRF): die Discovery-URL ist gegen private Netze geprüft, ein 302 nicht.
@@ -197,5 +199,22 @@ class OidcApi implements ExternalUserManagementApi
             ->get($url)
             ->throw()
             ->json() ?? [];
+
+        // Die Identität kommt aus dem userinfo-Endpunkt (kein ID-Token-Signaturcheck) – Token und
+        // Claims dürfen deshalb nur über TLS fließen.
+        foreach (['authorization_endpoint', 'token_endpoint', 'userinfo_endpoint'] as $key) {
+            if (!empty($discovery[$key])) {
+                self::assertHttps((string) $discovery[$key], $key);
+            }
+        }
+
+        return $discovery;
+    }
+
+    private static function assertHttps(string $url, string $name): void
+    {
+        if (strtolower((string) parse_url($url, PHP_URL_SCHEME)) !== 'https') {
+            throw new \RuntimeException("OIDC {$name} must use https");
+        }
     }
 }

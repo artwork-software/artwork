@@ -64,7 +64,8 @@
                         <BaseInput
                             v-model="contractForm.contract_partner"
                             id="eventTitle"
-                            :label="$t('Contract partner*')"
+                            label="Contract partner"
+                            required
                         />
                         <!-- CRM Contact Link -->
                         <div class="mt-2">

@@ -100,7 +100,8 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
                 'current_password' => 'Own!Passw0rd#2026',
             ])
         )->assertRedirect();
-        $this->assertSame('me-new@example.test', $self->fresh()->email);
+        // Wirksam erst nach dem Bestätigungslink an die neue Adresse (Audit 26.10.2026, H-4).
+        $this->assertSame('me-new@example.test', $self->fresh()->pending_email);
 
         // AuthenticateSession hält den Passwort-Hash der ersten Person in der Session.
         $this->flushSession();

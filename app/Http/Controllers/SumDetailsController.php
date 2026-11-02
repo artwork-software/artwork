@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
@@ -33,6 +36,19 @@ class SumDetailsController extends Controller
         $positionId = $request->get('position_id'); // subPosition_id, mainPosition_id, or budget type (COST/EARNING)
 
         $sumDetail = null;
+
+        // Die Middleware prüft nur die Spalte: Position und Spalte müssen zur selben Tabelle gehören,
+        // sonst ließe sich zu einer Position aus einem fremden Budget ein Summen-Datensatz anlegen.
+        if (in_array($type, ['subPosition', 'mainPosition'], true) && $positionId && $columnId) {
+            $positionTableId = $type === 'subPosition'
+                ? SubPosition::query()->find($positionId)?->mainPosition?->table_id
+                : MainPosition::query()->find($positionId)?->table_id;
+            abort_unless(
+                $positionTableId !== null
+                    && (int) $positionTableId === (int) Column::query()->find($columnId)?->table_id,
+                404
+            );
+        }
 
         if ($type === 'subPosition' && $positionId && $columnId) {
             $sumDetail = SubPositionSumDetail::firstOrCreate([

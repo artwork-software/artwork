@@ -15,7 +15,7 @@ class FilterRepository extends BaseRepository
         return Filter::query()
             ->where('user_id', $user->id)
             // Mitglieder der Admin-Teams je Raum vorab laden (effectiveAdminUsers), sonst zwei Queries je Raum
-            ->with('rooms.adminDepartments.users:id,first_name,last_name,profile_photo_path')
+            ->with('rooms.adminDepartments.users:id,first_name,last_name,profile_photo_path,deactivated_at')
             ->get()
             ->map(
                 fn(Filter $filter) => [

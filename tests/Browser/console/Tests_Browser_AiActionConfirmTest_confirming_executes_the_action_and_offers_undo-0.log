@@ -1,0 +1,8 @@
+[
+    {
+        "level": "SEVERE",
+        "message": "https:\/\/artwork.ddev.site:5173\/node_modules\/.vite\/deps\/pusher-js.js?v=5f4f3419 3257 WebSocket connection to 'ws:\/\/artwork.ddev.site\/app\/app-key?protocol=7&client=js&version=8.5.0&flash=false' failed: Error during WebSocket handshake: Unexpected response code: 404",
+        "source": "network",
+        "timestamp": 1789557006456
+    }
+]

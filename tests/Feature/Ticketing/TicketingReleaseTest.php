@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Ticketing;
 
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\EventType\Models\EventType;
@@ -626,6 +627,17 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/login-links')
             && $request['destination'] === ['type' => 'houseSettings', 'tab' => 'appearance']);
+    }
+
+    #[Test]
+    public function the_shop_settings_link_needs_the_ticketing_management_permission(): void
+    {
+        $this->fakeTickets();
+        $this->actingAs(User::factory()->create());
+
+        $this->get(route('ticketing.open', ['to' => 'settings']))->assertForbidden();
+
+        Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/login-links'));
     }
 
     #[Test]

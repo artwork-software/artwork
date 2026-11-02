@@ -217,7 +217,7 @@
                     </div>
 
                     <div class="my-2" v-if="this.canEdit">
-                        <div class="flex pb-2">
+                        <div class="flex pb-2" v-if="projectCreationFromEventsEnabled">
                             <span class="mr-4 "
                                   :class="[!creatingProject ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle',]">
                                 {{$t('Existing project')}}
@@ -586,6 +586,10 @@ export default {
         },
     },
     computed: {
+        // Kalender-Einstellung: ohne Projektanlage aus Terminen nur bestehende Projekte verknüpfen
+        projectCreationFromEventsEnabled() {
+            return this.$page.props.project_creation_from_events_enabled !== false;
+        },
         roomAdminIds() {
             let adminIds = [];
             this.selectedRoom?.room_admins?.forEach(admin => {

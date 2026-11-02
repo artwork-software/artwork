@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Checklist\Services;
 
+use Artwork\Modules\Project\Services\ProjectTeamService;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistIndexResource;
@@ -181,13 +182,7 @@ readonly class ChecklistService
         $checklist->users()->sync($ids);
         if ($checklist->hasProject()) {
             $project = $checklist->project;
-            $addedUserIds = [];
-            foreach ($ids as $id) {
-                if (!$project->users->contains($id)) {
-                    $project->users()->attach($id);
-                    $addedUserIds[] = $id;
-                }
-            }
+            $addedUserIds = ProjectTeamService::addImplicitMembers($project, $ids);
             $this->projectTeamNotificationService->notifyAddedToTeam($project, $addedUserIds);
         }
     }

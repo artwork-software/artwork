@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Mail;
 
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Mail\Services\MailSettingsResolver;
 use Artwork\Modules\Mail\Settings\MailSettings;
 use PHPUnit\Framework\Attributes\Test;
@@ -189,5 +190,104 @@ final class MailSettingsResolverTest extends TestCase
 
         $this->assertSame('env-user', $this->resolver()->username());
         $this->assertSame('env-secret', $this->resolver()->password());
+    }
+
+    #[Test]
+    public function a_custom_user_name_never_gets_the_env_password(): void
+    {
+        config([
+            'mail.fallback.host' => 'env-host.example.com',
+            'mail.fallback.username' => 'env-user',
+            'mail.fallback.password' => 'env-secret',
+        ]);
+
+        $settings = $this->settings();
+        $settings->host = null;
+        $settings->username = 'loth@theater.example';
+        $settings->password = null;
+        $settings->save();
+
+        // Sentry (Theaterhaus Jena): Benutzername aus den Einstellungen + .env-Passwort → 535.
+        $this->assertSame('loth@theater.example', $this->resolver()->username());
+        $this->assertNull($this->resolver()->password());
+        $this->assertSame('settings', $this->resolver()->authenticationSource());
+    }
+
+    #[Test]
+    public function the_env_host_entered_again_keeps_the_env_credentials(): void
+    {
+        config([
+            'mail.fallback.host' => 'env-host.example.com',
+            'mail.fallback.username' => 'env-user',
+            'mail.fallback.password' => 'env-secret',
+        ]);
+
+        $settings = $this->settings();
+        $settings->host = 'ENV-HOST.example.com';
+        $settings->username = null;
+        $settings->password = null;
+        $settings->save();
+
+        // Vorher fiel die Anmeldung bei jedem Host-Override weg → „Client host rejected“.
+        $this->assertSame('env-user', $this->resolver()->username());
+        $this->assertSame('env-secret', $this->resolver()->password());
+        $this->assertSame('env', $this->resolver()->authenticationSource());
+
+        $settings->host = 'relay.example.com';
+        $settings->save();
+
+        $this->assertSame('none', $this->resolver()->authenticationSource());
+    }
+
+    #[Test]
+    public function the_default_sender_follows_the_notification_chain_and_skips_empty_values(): void
+    {
+        config([
+            'mail.system_mail' => 'system@artwork.example',
+            'mail.fallback.from_address' => 'hello@example.com',
+        ]);
+        $generalSettings = app(GeneralSettings::class);
+        $generalSettings->business_email = 'support@theater.example';
+        $generalSettings->save();
+        $settings = $this->settings();
+        $settings->from_address = null;
+        $settings->save();
+
+        $this->assertSame('support@theater.example', $this->resolver()->fromAddress());
+
+        $generalSettings->business_email = '';
+        $generalSettings->save();
+        $this->assertSame('system@artwork.example', $this->resolver()->fromAddress());
+
+        config(['mail.system_mail' => '']);
+        $this->assertSame('hello@example.com', $this->resolver()->fromAddress());
+    }
+
+    #[Test]
+    public function a_mail_without_sender_gets_the_default_sender(): void
+    {
+        config([
+            'mail.default' => 'array',
+            'mail.system_mail' => '',
+            'mail.from.address' => null,
+        ]);
+        $generalSettings = app(GeneralSettings::class);
+        $generalSettings->business_email = 'support@theater.example';
+        $generalSettings->save();
+        $settings = $this->settings();
+        $settings->from_address = null;
+        $settings->save();
+        \Illuminate\Support\Facades\Mail::purge('array');
+
+        // Sentry HARZTHEATER-12: leere Einladungs-Adresse + leeres SYSTEM_MAIL → kein From-Header.
+        \Illuminate\Support\Facades\Mail::raw('Test', function ($message): void {
+            $message->to('user@example.com');
+        });
+
+        $sent = app('mail.manager')->mailer('array')->getSymfonyTransport()->messages();
+        $this->assertSame(
+            'support@theater.example',
+            $sent->last()->getOriginalMessage()->getFrom()[0]->getAddress()
+        );
     }
 }

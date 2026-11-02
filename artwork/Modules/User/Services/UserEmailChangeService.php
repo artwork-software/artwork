@@ -4,18 +4,24 @@ namespace Artwork\Modules\User\Services;
 
 use Artwork\Core\Validation\Rules\NotReservedUserEmail;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Notifications\ConfirmEmailChangeNotification;
 use Artwork\Modules\User\Notifications\EmailAddressChangedNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Regeln für den Wechsel der Login-E-Mail. Die Adresse ist Login, Reset-Ziel und Schlüssel für die
- * Verknüpfung mit LDAP/OIDC-Identitäten; ein ungeprüfter Wechsel öffnet Kontoübernahmen.
+ * Verknüpfung mit LDAP/OIDC-Identitäten; ein ungeprüfter Wechsel öffnet Kontoübernahmen. Die eigene
+ * Adresse wechselt deshalb erst, wenn der Link an die neue Adresse bestätigt wurde.
  */
 class UserEmailChangeService
 {
+    public const CONFIRMATION_MINUTES = 60;
+
     /**
      * @return array<int, mixed>
      */
@@ -72,5 +78,66 @@ class UserEmailChangeService
             (new EmailAddressChangedNotification($user->full_name))
                 ->locale($user->preferredLocale() ?? app()->getLocale())
         );
+    }
+
+    /**
+     * Merkt die neue Adresse vor und schickt den Bestätigungslink dorthin. Ein erneuter Antrag ersetzt
+     * den vorigen; dessen Link passt dann nicht mehr.
+     */
+    public function requestSelfChange(User $user, string $newEmail): void
+    {
+        $newEmail = trim($newEmail);
+        $user->forceFill(['pending_email' => $newEmail])->save();
+
+        $confirmationUrl = URL::temporarySignedRoute(
+            'user.email-change.confirm',
+            now()->addMinutes(self::CONFIRMATION_MINUTES),
+            ['user' => $user->id, 'hash' => $this->pendingEmailHash($newEmail)]
+        );
+
+        Notification::route('mail', $newEmail)->notify(
+            (new ConfirmEmailChangeNotification($user->full_name, $confirmationUrl, self::CONFIRMATION_MINUTES))
+                ->locale($user->preferredLocale() ?? app()->getLocale())
+        );
+    }
+
+    /**
+     * Übernimmt die vorgemerkte Adresse, wenn der Link zu ihr gehört. Eindeutigkeit, reservierte
+     * Domains und IdP-Bindung werden erneut geprüft – seit dem Antrag kann sich beides geändert haben.
+     *
+     * @throws ValidationException
+     */
+    public function confirmSelfChange(User $user, string $hash): void
+    {
+        $pendingEmail = $user->pending_email;
+        if ($pendingEmail === null || !hash_equals($this->pendingEmailHash($pendingEmail), $hash)) {
+            throw ValidationException::withMessages([
+                'email' => __('This confirmation link is no longer valid.'),
+            ]);
+        }
+
+        if ($user->isIdpBound()) {
+            $user->forceFill(['pending_email' => null])->save();
+            throw ValidationException::withMessages([
+                'email' => __(
+                    'Your email address is managed by your organisation\'s sign-in and cannot be changed here.'
+                ),
+            ]);
+        }
+
+        $validator = Validator::make(['email' => $pendingEmail], ['email' => $this->emailRules($user)]);
+        if ($validator->fails()) {
+            $user->forceFill(['pending_email' => null])->save();
+            throw new ValidationException($validator);
+        }
+
+        $previousEmail = (string) $user->email;
+        $user->forceFill(['email' => $pendingEmail, 'pending_email' => null])->save();
+        $this->notifyPreviousAddress($user, $previousEmail);
+    }
+
+    private function pendingEmailHash(string $email): string
+    {
+        return sha1(mb_strtolower($email));
     }
 }

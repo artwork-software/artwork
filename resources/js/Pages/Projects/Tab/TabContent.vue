@@ -261,6 +261,10 @@ const innerWidthClass = (component) => {
     if (component?.type === 'Title' && component?.data?.bar_color) {
         return '';
     }
+    // Lange Fließtexte bekommen mehr Lesebreite als einzeilige Formularfelder
+    if (component?.type === 'TextArea') {
+        return 'max-w-4xl';
+    }
     return PROSE_COMPONENT_TYPES.includes(component?.type) ? 'max-w-2xl' : '';
 };
 

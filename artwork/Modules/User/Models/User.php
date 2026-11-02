@@ -86,7 +86,10 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property string $first_name
  * @property string $last_name
  * @property string $email
+ * @property string|null $pending_email
  * @property Carbon $email_verified_at
+ * @property Carbon|null $deactivated_at
+ * @property int|null $deactivated_by
  * @property string $phone_number
  * @property string $password
  * @property string $two_factor_secret
@@ -223,11 +226,11 @@ class User extends Model implements
 
     /**
      * Felder einer Person, die nur als Avatar mit Namens-Tooltip erscheint
-     * (Kontaktdaten lädt der Tooltip bei Bedarf nach).
+     * (Kontaktdaten lädt der Tooltip bei Bedarf nach). deactivated_at färbt den Avatar grau.
      *
      * @var list<string>
      */
-    public const AVATAR_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
+    public const AVATAR_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url', 'deactivated_at'];
 
     // All permissions/roles live on the web guard. Without this pin, spatie
     // resolves the guard from auth.defaults.guard, which Authenticate/shouldUse
@@ -313,6 +316,7 @@ class User extends Model implements
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'deactivated_at' => 'datetime',
         'opened_checklists' => 'array',
         'opened_areas' => 'array',
         'toggle_hints' => 'boolean',
@@ -365,6 +369,7 @@ class User extends Model implements
      */
     protected $hidden = [
         'password',
+        'pending_email',
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
@@ -379,6 +384,7 @@ class User extends Model implements
         'auth_provider_id',
         'ad_identifier',
         'is_developer',
+        'deactivated_by',
     ];
 
     protected $appends = [
@@ -1204,11 +1210,65 @@ class User extends Model implements
             });
     }
     /**
-     * Exclude the placeholder "Deleted user" from Scout indexing
+     * Exclude the placeholder "Deleted user" from Scout indexing. Deaktivierte Accounts fallen ebenfalls
+     * heraus – damit tauchen sie in keiner Personensuche (Team, Schicht, Aufgaben, Chat …) mehr auf.
      */
     public function shouldBeSearchable(): bool
     {
-        return !$this->is_deleted_placeholder;
+        return !$this->is_deleted_placeholder && !$this->isDeactivated();
+    }
+
+    /**
+     * Deaktiviert: Login gesperrt, Account samt Zuordnungen bleibt erhalten und sichtbar.
+     */
+    public function isDeactivated(): bool
+    {
+        return $this->getAttribute('deactivated_at') !== null;
+    }
+
+    /**
+     * Ist der Account an diesem Tag (oder später) deaktiviert? Ab dem Deaktivierungstag gilt kein Soll mehr.
+     */
+    public function isDeactivatedOn(Carbon $day): bool
+    {
+        $deactivatedAt = $this->getAttribute('deactivated_at');
+
+        return $deactivatedAt !== null && $day->copy()->startOfDay()->gte($deactivatedAt->copy()->startOfDay());
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<self, $this>
+     */
+    public function deactivatedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(self::class, 'deactivated_by', 'id', 'deactivatedBy');
+    }
+
+    public function scopeActive(Builder $builder): Builder
+    {
+        return $builder->whereNull($builder->qualifyColumn('deactivated_at'));
+    }
+
+    public function scopeDeactivated(Builder $builder): Builder
+    {
+        return $builder->whereNotNull($builder->qualifyColumn('deactivated_at'));
+    }
+
+    /**
+     * Aktive Personen plus deaktivierte, die im Zeitraum noch Schichten haben (Dienstplan: bestehende
+     * Zuteilungen bleiben sichtbar). Ohne Zeitraum nur aktive.
+     */
+    public function scopeActiveOrWithShiftsBetween(Builder $builder, ?Carbon $start, ?Carbon $end): Builder
+    {
+        return $builder->where(function (Builder $query) use ($start, $end): void {
+            $query->whereNull($query->qualifyColumn('deactivated_at'));
+            if ($start !== null && $end !== null) {
+                $query->orWhereHas('shifts', function (Builder $shiftQuery) use ($start, $end): void {
+                    $shiftQuery->where('shifts.start_date', '<=', $end)
+                        ->where('shifts.end_date', '>=', $start);
+                });
+            }
+        });
     }
 
     /**

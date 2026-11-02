@@ -20,6 +20,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class IndividualTimeSeriesController extends Controller
 {
@@ -69,7 +70,7 @@ class IndividualTimeSeriesController extends Controller
         $series = $this->individualTimeSeriesService->createSeriesForTimeables($data, $timeables);
 
         foreach ($subjectsInput as $subject) {
-            broadcast(new IndividualTimeChanged(
+            SafeBroadcast::send(new IndividualTimeChanged(
                 $subject['id'],
                 $this->resolveWorkerTypeFromSubjectType($subject['type']),
             ));
@@ -194,7 +195,7 @@ class IndividualTimeSeriesController extends Controller
         );
 
         foreach ($data['subjects'] as $subject) {
-            broadcast(new IndividualTimeChanged(
+            SafeBroadcast::send(new IndividualTimeChanged(
                 $subject['id'],
                 $this->resolveWorkerTypeFromSubjectType($subject['type']),
             ));
@@ -225,7 +226,7 @@ class IndividualTimeSeriesController extends Controller
                 ServiceProvider::class => 2,
                 default => 0,
             };
-            broadcast(new IndividualTimeChanged($worker->timeable_id, $workerType));
+            SafeBroadcast::send(new IndividualTimeChanged($worker->timeable_id, $workerType));
         }
     }
 

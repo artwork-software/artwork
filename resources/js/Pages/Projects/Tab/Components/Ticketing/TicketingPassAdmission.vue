@@ -14,7 +14,7 @@
 
         <!-- Gewählte Karte: Preisklasse, was zu zahlen ist, und wie -->
         <div v-else-if="selected" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-            <button type="button" class="inline-flex items-center gap-1 self-start text-xs text-text-subtle hover:text-text" @click="selected = null">
+            <button type="button" class="inline-flex items-center gap-1 self-start text-xs text-text-subtle hover:text-text disabled:cursor-not-allowed disabled:opacity-60" :disabled="admitting" @click="selected = null">
                 <IconArrowLeft class="size-3.5" />{{ $t('Back to the search') }}
             </button>
 
@@ -141,8 +141,9 @@ const searchError = ref('')
 const selected = ref(null)
 const categoryId = ref(null)
 const admitting = ref(false)
-// One id per chosen pass: a retry after a lost answer replays the first admission.
-let admissionId = null
+// One id per pass until it is admitted: a retry after a lost answer replays the first admission,
+// even when the pass is chosen again from the search.
+const admissionIds = new Map()
 const admitError = ref('')
 const admitted = ref(null)
 
@@ -184,8 +185,22 @@ async function load(value) {
     }
 }
 
+// crypto.randomUUID needs a secure context; houses on plain HTTP still have getRandomValues.
+function newAdmissionId() {
+    if (typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID()
+    }
+    const bytes = crypto.getRandomValues(new Uint8Array(16))
+    bytes[6] = (bytes[6] & 0x0f) | 0x40
+    bytes[8] = (bytes[8] & 0x3f) | 0x80
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
+
 function choose(pass) {
-    admissionId = crypto.randomUUID()
+    if (!admissionIds.has(pass.id)) {
+        admissionIds.set(pass.id, newAdmissionId())
+    }
     selected.value = pass
     admitError.value = ''
     categoryId.value = categories.value.find((category) => category.available > 0)?.id ?? null
@@ -194,12 +209,14 @@ function choose(pass) {
 async function admit() {
     admitting.value = true
     admitError.value = ''
+    const passId = selected.value.id
     try {
         const { data } = await axios.post(route('ticketing.door.admit', props.eventId), {
-            admission_id: admissionId,
-            pass_id: selected.value.id,
+            admission_id: admissionIds.get(passId),
+            pass_id: passId,
             price_category_id: categoryId.value,
         }, { skipErrorToast: true })
+        admissionIds.delete(passId)
         admitted.value = data
         emit('admitted')
     } catch (error) {

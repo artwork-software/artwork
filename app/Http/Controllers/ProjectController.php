@@ -188,6 +188,7 @@ use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ProjectController extends Controller
 {
@@ -238,9 +239,8 @@ class ProjectController extends Controller
         // Liefert Team-Pivots (Budgetzugriff, Rollen) – nur für Personen, die das Projekt sehen dürfen.
         $this->authorize('view', $project);
 
-        $userIds = User::search((string) ($validated['query'] ?? ''))->keys();
-
-        return $project->users()->whereIn('users.id', $userIds)->get()->all();
+        // Per SQL statt Suchindex: deaktivierte Teammitglieder stehen nicht im Index, gehören aber weiter zum Team.
+        return $project->users()->nameOrLastNameLike((string) ($validated['query'] ?? ''))->get()->all();
     }
 
     public function saveProjectManagementFilter(ProjectIndexPaginateRequest $request): void
@@ -788,7 +788,7 @@ class ProjectController extends Controller
                 Department::nameLike($query)->get() :
                 [],
             'users' => UserWithoutShiftsResource::collection(
-                User::nameOrLastNameLike($query)->with('defaultProjectRoles')->get()
+                User::nameOrLastNameLike($query)->active()->with('defaultProjectRoles')->get()
             )->resolve()
         ];
     }
@@ -883,9 +883,10 @@ class ProjectController extends Controller
         }
 
         if (!empty($request->assignedUsers)) {
+            $managerIds = app(ProjectTeamService::class)->allowedManagerIds($project, $request->collect('assignedUsers'));
             $this->projectService->attachManagementUsersWithoutSelf(
                 $project,
-                $request->collect('assignedUsers'),
+                collect($managerIds),
                 $this->authManager->id()
             );
         }
@@ -951,12 +952,22 @@ class ProjectController extends Controller
     }
 
 
+    /**
+     * Budgetzugriff mit der Prüfanfrage vergeben nur, wer ihn auch im Team vergeben dürfte
+     * (Projektleitung, Ersteller:in, globale Budget-/Projektverwaltung) – und nur an Teammitglieder.
+     */
+    private function mayGrantBudgetAccessOnVerification(Project $project, Request $request): bool
+    {
+        return app(ProjectTeamService::class)->mayGrantBudgetAccess($project, $request->user());
+    }
+
     public function verifiedRequestMainPosition(Request $request): void
     {
-        $mainPosition = MainPosition::find($request->id);
-        $project = $mainPosition->table()->first()->project()->first();
+        $mainPosition = MainPosition::findOrFail($request->integer('id'));
+        $project = $mainPosition->table()->first()?->project()->first();
+        abort_if($project === null, 404);
 
-        if ($request->giveBudgetAccess) {
+        if ($request->giveBudgetAccess && $this->mayGrantBudgetAccessOnVerification($project, $request)) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             if ($user !== null) {
@@ -1046,7 +1057,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
 
         //return Redirect::back();
     }
@@ -1198,7 +1209,7 @@ class ProjectController extends Controller
             );
         }
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
         //return Redirect::back();
     }
 
@@ -1211,7 +1222,7 @@ class ProjectController extends Controller
         $position->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
 
         $table = $position instanceof MainPosition ? $position->table : $position->mainPosition->table;
-        broadcast(new UpdateBudget($table->project_id));
+        SafeBroadcast::send(new UpdateBudget($table->project_id));
     }
 
     /**
@@ -1394,15 +1405,16 @@ class ProjectController extends Controller
             $databaseNotificationService->deleteByKey($notificationKey);
         }
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function verifiedRequestSubPosition(Request $request): void
     {
-        $subPosition = SubPosition::find($request->id);
+        $subPosition = SubPosition::findOrFail($request->integer('id'));
         $mainPosition = $subPosition->mainPosition()->first();
-        $project = $mainPosition->table()->first()->project()->first();
-        if ($request->giveBudgetAccess) {
+        $project = $mainPosition?->table()->first()?->project()->first();
+        abort_if($project === null, 404);
+        if ($request->giveBudgetAccess && $this->mayGrantBudgetAccessOnVerification($project, $request)) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             if ($user !== null) {
@@ -1515,7 +1527,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function verifiedSubPosition(Request $request): void
@@ -1541,7 +1553,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     public function fixSubPosition(Request $request): void
@@ -1610,7 +1622,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     public function unfixSubPosition(Request $request): void
@@ -1678,7 +1690,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     public function fixMainPosition(Request $request): void
@@ -1697,7 +1709,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function unfixMainPosition(Request $request): void
@@ -1716,7 +1728,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function resetTable(
@@ -1765,7 +1777,7 @@ class ProjectController extends Controller
             $project,
         );
 
-        broadcast(new UpdateBudget($project->id));
+        SafeBroadcast::send(new UpdateBudget($project->id));
     }
 
     public function verifiedMainPosition(Request $request): void
@@ -1791,7 +1803,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
     }
 
     private function setSubPositionCellVerifiedValue(SubPosition $subPosition): void
@@ -1851,7 +1863,7 @@ class ProjectController extends Controller
         if ($projectId) {
             \Artwork\Modules\Budget\Events\BudgetUpdated::dispatch($projectId);
         }
-        broadcast(new UpdateBudget($projectId));
+        SafeBroadcast::send(new UpdateBudget($projectId));
     }
 
     public function updateCellSource(
@@ -1894,7 +1906,7 @@ class ProjectController extends Controller
             'name' => $request->columnName
         ]);
 
-        broadcast(new UpdateBudget($column->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($column->table->project_id));
     }
     public function updateTableName(Request $request): void
     {
@@ -1906,7 +1918,7 @@ class ProjectController extends Controller
         ]);
 
 
-        broadcast(new UpdateBudget($table->project_id));
+        SafeBroadcast::send(new UpdateBudget($table->project_id));
     }
 
     public function columnDelete(
@@ -1931,7 +1943,7 @@ class ProjectController extends Controller
         if ($columnRelevanceService->isLastValueColumn($column)) {
             $column->cells()->update(['value' => '0', 'verified_value' => null]);
             $columnRelevanceService->assignExclusive($column);
-            broadcast(new UpdateBudget($table->project_id));
+            SafeBroadcast::send(new UpdateBudget($table->project_id));
 
             return Redirect::back()->with(
                 'success',
@@ -2021,7 +2033,7 @@ class ProjectController extends Controller
             'name' => $request->mainPositionName
         ]);
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function updateSubPositionName(Request $request): void
@@ -2031,7 +2043,7 @@ class ProjectController extends Controller
             'name' => $request->subPositionName
         ]);
 
-        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     private function setColumnSubName(int $table_id): void
@@ -2139,7 +2151,7 @@ class ProjectController extends Controller
             $columnCellService->createCellsForAutomaticColumn($column);
         }
 
-        broadcast(new UpdateBudget($table->project_id));
+        SafeBroadcast::send(new UpdateBudget($table->project_id));
     }
 
     public function updateCellValue(
@@ -2204,7 +2216,7 @@ class ProjectController extends Controller
             })->afterResponse();
         }
 
-        broadcast(new UpdateBudget($project->id))->toOthers();
+        SafeBroadcast::send(new UpdateBudget($project->id), true);
 
         // Schlanker Patch statt Client-Full-Refetch: frische Zellen der Zeile
         // + neu berechnete Summen. Waermt zugleich den Budget-Cache auf.
@@ -2220,7 +2232,7 @@ class ProjectController extends Controller
 
         $column->update(['color' => $request->color]);
 
-        broadcast(new UpdateBudget($column->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($column->table->project_id));
     }
 
     public function addSubPositionRow(Request $request): void
@@ -2268,7 +2280,7 @@ class ProjectController extends Controller
             ]);
         }
 
-        broadcast(new UpdateBudget($table->project_id))->toOthers();
+        SafeBroadcast::send(new UpdateBudget($table->project_id), true);
     }
 
     public function reorderSubPositionRows(Request $request, BudgetCacheService $budgetCacheService): RedirectResponse
@@ -2357,8 +2369,19 @@ class ProjectController extends Controller
             'table_id' => ['required', 'integer', 'exists:tables,id'],
             'type' => ['required', 'string'],
             'main_position_ids' => ['required', 'array', 'min:1'],
-            'main_position_ids.*' => ['required', 'integer', 'exists:main_positions,id'],
+            'main_position_ids.*' => ['required', 'integer', 'exists:main_positions,id', 'distinct'],
         ]);
+
+        // Nur Hauptpositionen der angegebenen Tabelle: die Middleware prüft nur table_id.
+        $foreignCount = MainPosition::query()
+            ->whereIn('id', $validated['main_position_ids'])
+            ->where('table_id', '!=', $validated['table_id'])
+            ->count();
+        $ownCount = MainPosition::query()
+            ->whereIn('id', $validated['main_position_ids'])
+            ->where('table_id', $validated['table_id'])
+            ->count();
+        abort_unless($foreignCount === 0 && $ownCount === count($validated['main_position_ids']), 403);
 
         DB::transaction(function () use ($validated): void {
             foreach ($validated['main_position_ids'] as $index => $mainPositionId) {
@@ -2384,8 +2407,23 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'main_position_id' => ['required', 'integer', 'exists:main_positions,id'],
             'sub_position_ids' => ['required', 'array', 'min:1'],
-            'sub_position_ids.*' => ['required', 'integer', 'exists:sub_positions,id'],
+            'sub_position_ids.*' => ['required', 'integer', 'exists:sub_positions,id', 'distinct'],
         ]);
+
+        // Unterpositionen dürfen nur innerhalb derselben Budgettabelle umgehängt werden: die Middleware
+        // prüft nur die Ziel-Hauptposition.
+        $targetTableId = MainPosition::query()->whereKey($validated['main_position_id'])->value('table_id');
+        $subPositionTableIds = SubPosition::query()
+            ->whereIn('id', $validated['sub_position_ids'])
+            ->with('mainPosition:id,table_id')
+            ->get()
+            ->map(fn (SubPosition $subPosition) => $subPosition->mainPosition?->table_id);
+        abort_unless(
+            $targetTableId !== null
+            && $subPositionTableIds->count() === count($validated['sub_position_ids'])
+            && $subPositionTableIds->every(fn ($tableId): bool => $tableId === $targetTableId),
+            403
+        );
 
         DB::transaction(function () use ($validated): void {
             foreach ($validated['sub_position_ids'] as $index => $subPositionId) {
@@ -2460,7 +2498,7 @@ class ProjectController extends Controller
         );
 
         $this->addSubPositionRowsWithColumns($subPosition, $columns);
-        broadcast(new UpdateBudget($table->project_id));
+        SafeBroadcast::send(new UpdateBudget($table->project_id));
     }
 
     public function addSubPosition(Request $request): void
@@ -2480,7 +2518,7 @@ class ProjectController extends Controller
         ]);
 
         $this->addSubPositionRowsWithColumns($subPosition, $columns);
-        broadcast(new UpdateBudget($table->project_id));
+        SafeBroadcast::send(new UpdateBudget($table->project_id));
     }
 
     private function addSubPositionRowsWithColumns(SubPosition $subPosition, Collection $columns): void
@@ -2520,7 +2558,7 @@ class ProjectController extends Controller
             ]);
         }
 
-        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     public function updateCellCalculation(Request $request)
@@ -2630,7 +2668,7 @@ class ProjectController extends Controller
         abort_unless((bool) $column, 404);
 
         $column->update(['is_locked' => true, 'locked_by' => Auth::id()]);
-        broadcast(new UpdateBudget($column->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($column->table->project_id));
     }
 
     public function unlockColumn(Request $request): void
@@ -2639,7 +2677,7 @@ class ProjectController extends Controller
         abort_unless((bool) $column, 404);
 
         $column->update(['is_locked' => false, 'locked_by' => null]);
-        broadcast(new UpdateBudget($column->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($column->table->project_id));
     }
 
     public function updateProjectState(Request $request, Project $project): void
@@ -3182,6 +3220,7 @@ class ProjectController extends Controller
         $changers = $this->preloadHistoryChangers($activities);
         $history = $activities->map(function ($activity) use ($changers) {
             $properties = $activity->properties;
+            $changerKey = $activity->getAttribute('causer_type') . ':' . $activity->getAttribute('causer_id');
 
             return [
                 'changes'    => $properties instanceof \Illuminate\Support\Collection
@@ -3190,7 +3229,7 @@ class ProjectController extends Controller
                 'created_at' => $activity->created_at->diffInHours() < 24
                     ? $activity->created_at->diffForHumans()
                     : $activity->created_at->format('d.m.Y, H:i'),
-                'changer'    => $changers[$activity->causer_type . ':' . $activity->causer_id]
+                'changer'    => $changers[$changerKey]
                     ?? $this->resolveHistoryChanger($activity),
             ];
         })->all();
@@ -3601,8 +3640,9 @@ class ProjectController extends Controller
         return inertia('Projects/Edit', [
             'project' => new ProjectEditResource($project),
             // email_private mitladen: User::toArray() blendet private Adressen sonst nicht aus
-            'users' => User::select(['id', 'first_name', 'last_name', 'email', 'email_private', 'profile_photo_path'])
-                ->get(),
+            'users' => User::select([
+                'id', 'first_name', 'last_name', 'email', 'email_private', 'profile_photo_path', 'deactivated_at',
+            ])->get(),
             'departments' => Department::select(['id', 'name'])->get()
         ]);
     }
@@ -3613,12 +3653,12 @@ class ProjectController extends Controller
         $currentGroupIds = DB::table('project_groups')->where('project_id', '=', $project->id)->pluck('group_id')
             ->map(fn ($id): int => (int) $id)
             ->all();
+        // Gruppe vor dem Lösen prüfen: ein 403 für eine fremde Gruppe ließ das Projekt sonst ohne Gruppe zurück.
+        $group = $request->get('selectedGroup') !== null
+            ? $this->resolveSelectedProjectGroup($request->get('selectedGroup')['id'] ?? null, $currentGroupIds)
+            : null;
         DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         if ($request->get('selectedGroup') !== null) {
-            $group = $this->resolveSelectedProjectGroup(
-                $request->get('selectedGroup')['id'] ?? null,
-                $currentGroupIds
-            );
             $group?->projectsOfGroup()->syncWithoutDetaching($project->id);
 
             // Ensure the project has exactly one budget-relevant column
@@ -3664,7 +3704,15 @@ class ProjectController extends Controller
             }
         }
 
-        $this->projectService->syncManagementUsers($project, $request->assignedUsers ?? []);
+        // Nur wenn die Leitung mitgeschickt wird (sonst würde ein Aufruf ohne den Key alle Leitungen
+        // entfernen) und nur durch Leitung, Ersteller:in oder „Projekte verwalten“.
+        $projectTeamService = app(ProjectTeamService::class);
+        if ($request->has('assignedUsers') && $projectTeamService->mayChangeManagers($project, $request->user())) {
+            $this->projectService->syncManagementUsers(
+                $project,
+                $projectTeamService->allowedManagerIds($project, $request->input('assignedUsers') ?? [])
+            );
+        }
 
         // Nur syncen, wenn die Unterprojekte bekannt mitkommen: Modals ohne geladene Gruppenprojekte
         // schicken null und hätten sonst alle Projekte aus der Gruppe entfernt.
@@ -4612,7 +4660,7 @@ class ProjectController extends Controller
             $sageAssignedDataService
         );
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
 
         return Redirect::back();
     }
@@ -4650,7 +4698,7 @@ class ProjectController extends Controller
             $sageAssignedDataService
         );
 
-        broadcast(new UpdateBudget($projectId));
+        SafeBroadcast::send(new UpdateBudget($projectId));
 
         return Redirect::back();
     }
@@ -4662,14 +4710,14 @@ class ProjectController extends Controller
         $cellIds = $row->cells->skip(3)->pluck('id');
 
         $row->cells()->whereIntegerInRaw('id', $cellIds)->update(['commented' => $request->commented]);
-        broadcast(new UpdateBudget($row->subPosition->mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($row->subPosition->mainPosition->table->project_id));
         //return Redirect::back();
     }
 
     public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): void
     {
         $columnCell->update(['commented' => $request->commented]);
-        broadcast(new UpdateBudget($columnCell->column->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($columnCell->column->table->project_id));
         //return Redirect::back();
     }
 
@@ -4830,7 +4878,7 @@ class ProjectController extends Controller
             $columnRelevanceService->assignExclusive($newColumn);
         }
 
-        broadcast(new UpdateBudget($column->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($column->table->project_id));
     }
 
     public function duplicateSubPosition(SubPosition $subPosition, $mainPositionId = null): void
@@ -4865,7 +4913,7 @@ class ProjectController extends Controller
             }
         }
 
-        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     public function duplicateMainPosition(MainPosition $mainPosition): void
@@ -4880,7 +4928,7 @@ class ProjectController extends Controller
             $this->duplicateSubPosition($subPosition, $newMainPosition->id);
         }
 
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function duplicateRow(SubPositionRow $subPositionRow): void
@@ -4898,7 +4946,7 @@ class ProjectController extends Controller
             $subPositionRowCellReplicate->linked_type = null;
             $subPositionRowCellReplicate->save();
         }
-        broadcast(new UpdateBudget($subPositionRow->subPosition->mainPosition->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($subPositionRow->subPosition->mainPosition->table->project_id));
     }
 
     public function updateCommentedStatusOfColumn(Request $request, Column $column): void
@@ -4906,7 +4954,7 @@ class ProjectController extends Controller
         $validated = $request->validate(['commented' => 'required|boolean']);
         $column->update(['commented' => $validated['commented']]);
 
-        broadcast(new UpdateBudget($column->table->project_id));
+        SafeBroadcast::send(new UpdateBudget($column->table->project_id));
     }
 
     public function projectBudgetExport(Project $project): BinaryFileResponse

@@ -29,6 +29,8 @@ class AppProjectEventController extends Controller
     public function show(Request $request, Project $project, Event $event): JsonResponse
     {
         $this->authorize('view', $project);
+        // Planungstermine nur mit Planungskalender-Recht (EventPolicy::view).
+        $this->authorize('view', $event);
 
         return response()->json([
             'event' => $this->systemComponentService->eventPayload($request->user(), $event),
@@ -83,6 +85,7 @@ class AppProjectEventController extends Controller
     public function update(AppEventRequest $request, Project $project, Event $event): JsonResponse
     {
         $this->authorize('view', $project);
+        $this->authorize('view', $event);
         $this->authorize('update', $event);
 
         $attributes = $this->eventAttributes($request);

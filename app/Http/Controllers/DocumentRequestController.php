@@ -17,6 +17,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Events\UpdateProjectContractsDocuments;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class DocumentRequestController extends Controller
 {
@@ -144,6 +146,8 @@ class DocumentRequestController extends Controller
             'crm_contact_id' => 'nullable|exists:crm_contacts,id',
         ]);
 
+        $this->authorizeProjectReference($validated['project_id'] ?? null);
+
         $documentRequest = DocumentRequest::create([
             'requester_id' => Auth::id(),
             'requested_id' => $validated['requested_id'] ?? null,
@@ -207,6 +211,13 @@ class DocumentRequestController extends Controller
             'crm_contact_id' => 'nullable|exists:crm_contacts,id',
         ]);
 
+        if (
+            array_key_exists('project_id', $validated)
+            && (int) $validated['project_id'] !== (int) $documentRequest->project_id
+        ) {
+            $this->authorizeProjectReference($validated['project_id']);
+        }
+
         $documentRequest->update($validated);
 
         // If contract was uploaded and status changed to completed, notify requester
@@ -221,10 +232,23 @@ class DocumentRequestController extends Controller
 
         // Broadcast update for project contracts/documents component
         if ($documentRequest->project_id) {
-            broadcast(new UpdateProjectContractsDocuments($documentRequest->project_id));
+            SafeBroadcast::send(new UpdateProjectContractsDocuments($documentRequest->project_id));
         }
 
         return Redirect::back();
+    }
+
+    /**
+     * Eine Anfrage darf nur auf ein Projekt verweisen, das die Person sieht – über die eigene Anfrage
+     * ließe sich sonst ein Vertrag an ein beliebiges Projekt hängen (ContractController).
+     */
+    private function authorizeProjectReference(mixed $projectId): void
+    {
+        if ($projectId === null) {
+            return;
+        }
+
+        $this->authorize('view', Project::findOrFail((int) $projectId));
     }
 
     /**
@@ -258,7 +282,7 @@ class DocumentRequestController extends Controller
 
         // Broadcast update for project contracts/documents component
         if ($documentRequest->project_id) {
-            broadcast(new UpdateProjectContractsDocuments($documentRequest->project_id));
+            SafeBroadcast::send(new UpdateProjectContractsDocuments($documentRequest->project_id));
         }
 
         return Redirect::back();

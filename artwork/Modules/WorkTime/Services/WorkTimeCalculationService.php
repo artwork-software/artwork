@@ -561,7 +561,8 @@ class WorkTimeCalculationService
      * Basis-Tagessoll (vor Sondertag-/Ausgleichstag-Minderung).
      *
      * User: Minuten des am Tag gültigen Musters, null ohne Muster (Soll unbekannt – kein
-     * Fallback auf weekly_working_hours). Externe haben kein Soll: 0.
+     * Fallback auf weekly_working_hours). Externe und deaktivierte Accounts (ab dem Deaktivierungstag)
+     * haben kein Soll: 0.
      */
     public function baseTargetMinutes(
         User|Freelancer|ServiceProvider $entity,
@@ -569,6 +570,11 @@ class WorkTimeCalculationService
         ?array $context = null
     ): ?int {
         if (!$entity instanceof User) {
+            return 0;
+        }
+
+        // Ab dem Deaktivierungstag läuft kein Soll mehr auf (sonst wüchsen Minusstunden weiter).
+        if ($entity->isDeactivatedOn($day)) {
             return 0;
         }
 

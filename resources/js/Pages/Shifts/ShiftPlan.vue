@@ -3891,7 +3891,9 @@ function setOpenViolationsFilter(active: boolean) {
     router.patch(
         route('update.user.calendar.filter.open-violations', authUser.value.id),
         { filter_type: 'shift_filter', show_only_users_with_open_violations: active },
-        { preserveScroll: true, preserveState: false },
+        // Filter wirkt clientseitig (Verstöße sind geladen): nur user_filters nachladen statt die
+        // Seite neu aufzubauen und alle Räume/Personen erneut zu holen
+        { preserveScroll: true, preserveState: true, only: ['user_filters'] },
     )
 }
 

@@ -455,6 +455,7 @@ import { ref, computed } from 'vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import { can, is } from 'laravel-permission-to-vuejs'
 import { usePermission } from '@/Composeables/Permission.js'
+import { isCheckboxChecked } from '@/Helper/CheckboxValue.js'
 import Galleria from 'primevue/galleria'
 import {
     IconAlertSquareRoundedFilled,
@@ -630,7 +631,7 @@ const formatProperty = (article, property) => {
     }
 
     if (property.type === 'checkbox') {
-        return property.pivot.value ? $t('Yes') : $t('No')
+        return isCheckboxChecked(property.pivot.value) ? $t('Yes') : $t('No')
     }
 
     if (property.pivot.value === null || property.pivot.value === '') return '-'

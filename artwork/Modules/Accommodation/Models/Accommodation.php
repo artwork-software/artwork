@@ -22,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string|null $location
  * @property string|null $note
  * @property string|null $profile_image
+ * @property float|null $daily_allowance Vorgabe Tagegeld für Künstler*innenaufenthalte (null = allgemeine Vorgabe)
+ * @property float|null $breakfast_deduction_per_day Vorgabe Abzug pro Frühstück (null = allgemeine Vorgabe)
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  */
@@ -40,7 +42,14 @@ class Accommodation extends Model implements CrmEntity
         'zip_code',
         'location',
         'note',
-        'profile_image'
+        'profile_image',
+        'daily_allowance',
+        'breakfast_deduction_per_day',
+    ];
+
+    protected $casts = [
+        'daily_allowance' => 'float',
+        'breakfast_deduction_per_day' => 'float',
     ];
 
     protected $appends = [

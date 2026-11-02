@@ -259,7 +259,8 @@ class TicketingReleaseService
                     'sold' => (int) $date['sold'],
                     'capacity' => (int) $date['capacity'],
                     'cancelled' => $date['status'] === 'cancelled',
-                    'checked_in' => (int) $date['checkedInCount'],
+                    // Neueres tickets-Feld: fehlt es (Deploy-Reihenfolge), bleibt die Übersicht trotzdem heil
+                    'checked_in' => (int) ($date['checkedInCount'] ?? 0),
                 ];
             }
         }

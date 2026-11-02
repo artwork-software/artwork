@@ -28,10 +28,15 @@ class MailSettingsServiceProvider extends ServiceProvider
         // Mail-Tab gepflegte From-Adresse muss deshalb beim Versand zentral
         // durchgesetzt werden, sonst ist das Setting wirkungslos (und der
         // Test-Mail-Erfolg sagt nichts über echte Mails aus).
+        // Fehlt der Absender ganz (z. B. leere Einladungs-Adresse und leeres SYSTEM_MAIL), bekommt
+        // die Mail den Standard-Absender statt „An email must have a From header“ (Sentry HARZTHEATER-12).
         Event::listen(MessageSending::class, function (MessageSending $event): void {
+            $existingFrom = $event->message->getFrom()[0] ?? null;
+
             try {
                 $resolver = $this->app->make(MailSettingsResolver::class);
-                $fromAddress = $resolver->fromAddressOverride();
+                $fromAddress = $resolver->fromAddressOverride()
+                    ?? ($existingFrom === null ? $resolver->fromAddress() : null);
             } catch (Throwable) {
                 return;
             }
@@ -40,8 +45,7 @@ class MailSettingsServiceProvider extends ServiceProvider
                 return;
             }
 
-            $existingFrom = $event->message->getFrom()[0] ?? null;
-            $fromName = $resolver->fromNameOverride() ?? $existingFrom?->getName() ?? '';
+            $fromName = $resolver->fromNameOverride() ?? $existingFrom?->getName() ?? $resolver->fromName() ?? '';
 
             $event->message->from(new Address($fromAddress, $fromName));
         });

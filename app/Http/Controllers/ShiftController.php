@@ -66,6 +66,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftController extends Controller
 {
@@ -885,7 +886,7 @@ class ShiftController extends Controller
                 continue;
             }
 
-            broadcast(new RemoveEntityFormShiftEvent(
+            SafeBroadcast::send(new RemoveEntityFormShiftEvent(
                 $shift->refresh(),
                 $shift->room_id ?? $shift->event?->room_id,
                 $validated['userTypeId'],
@@ -938,7 +939,7 @@ class ShiftController extends Controller
                     $isOverbooked
                 );
 
-                broadcast(new AssignUserToShift(
+                SafeBroadcast::send(new AssignUserToShift(
                     $shift,
                     $shift?->room_id ?? $shift?->event?->room_id,
                     $validated['userTypeId'],
@@ -962,7 +963,7 @@ class ShiftController extends Controller
                 $isOverbooked
             );
 
-            broadcast(new AssignUserToShift(
+            SafeBroadcast::send(new AssignUserToShift(
                 $shift,
                 $shift?->room_id ?? $shift?->event?->room_id,
                 $validated['userTypeId'],
@@ -1054,7 +1055,7 @@ class ShiftController extends Controller
                 $isOverbooked
             );
 
-            broadcast(new AssignUserToShift(
+            SafeBroadcast::send(new AssignUserToShift(
                 $shift,
                 $shift->event_id ? $shift->event?->room_id : $shift->room_id,
                 $request->get('userId'),
@@ -1090,7 +1091,7 @@ class ShiftController extends Controller
             }
         }
 
-        broadcast(new AssignUserToShift(
+        SafeBroadcast::send(new AssignUserToShift(
             $shift,
             $shift->event_id ? $shift->event?->room_id : $shift->room_id,
             $request->get('userId'),
@@ -1152,7 +1153,7 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
-    ): bool|RedirectResponse|null {
+    ): bool|JsonResponse|RedirectResponse|null {
         $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($userType) {
             0 => $shiftUserService,
@@ -1204,14 +1205,15 @@ class ShiftController extends Controller
                 $changeService
             );
 
-            broadcast(new RemoveEntityFormShiftEvent(
+            $removalUpdate = new RemoveEntityFormShiftEvent(
                 $shift,
                 $shift->event_id ? $shift->event?->room_id : $shift->room_id,
                 (string) $removedEmployableId,
                 (string) $userType
-            ));
+            );
+            SafeBroadcast::send($removalUpdate);
 
-            return $isShiftTab ? $this->redirector->back() : null;
+            return $this->removedFromShiftResponse($request, $removalUpdate, $isShiftTab);
         }
 
         $serviceToUse->removeFromShift(
@@ -1224,12 +1226,13 @@ class ShiftController extends Controller
             $changeService
         );
 
-        broadcast(new RemoveEntityFormShiftEvent(
+        $removalUpdate = new RemoveEntityFormShiftEvent(
             $shift,
             $shift->event_id ? $shift->event?->room_id : $shift->room_id,
             (string) $removedEmployableId,
             (string) $userType
-        ));
+        );
+        SafeBroadcast::send($removalUpdate);
 
         // Re-validate the removed user so now-obsolete conflicts can be re-evaluated for the shift's range.
         if ($removedUserId) {
@@ -1241,6 +1244,22 @@ class ShiftController extends Controller
                     Carbon::parse($shift->end_date)
                 );
             }
+        }
+
+        return $this->removedFromShiftResponse($request, $removalUpdate, $isShiftTab);
+    }
+
+    /**
+     * withShiftUpdate (Tagesansicht per axios): gespeicherter Stand wie der Broadcast, damit die eigene
+     * Ansicht ihn sofort übernimmt — statt Redirect und komplettem Neuaufbau der Seite.
+     */
+    private function removedFromShiftResponse(
+        Request $request,
+        RemoveEntityFormShiftEvent $removalUpdate,
+        bool $isShiftTab
+    ): JsonResponse|RedirectResponse|null {
+        if ($request->boolean('withShiftUpdate')) {
+            return response()->json($removalUpdate->broadcastWith());
         }
 
         return $isShiftTab ? $this->redirector->back() : null;
@@ -1367,13 +1386,13 @@ class ShiftController extends Controller
         // Beide Broadcasts wie in removeFromShift/assignToShift → Room-Version wird
         // clientseitig gebumpt, andere Planer*innen sehen den Tausch sofort.
         if ($roomId) {
-            broadcast(new RemoveEntityFormShiftEvent(
+            SafeBroadcast::send(new RemoveEntityFormShiftEvent(
                 $shift,
                 $roomId,
                 (string) $declinedPivotId,
                 (string) $typeToInt($declinedType)
             ));
-            broadcast(new AssignUserToShift(
+            SafeBroadcast::send(new AssignUserToShift(
                 $shift,
                 $roomId,
                 (string) $replacement->id,
@@ -1392,10 +1411,16 @@ class ShiftController extends Controller
             'serviceProvider.globalQualifications',
         ]);
 
+        $shift->load(['project', 'craft:id,name,abbreviation,color']);
+        $shiftDto = \Artwork\Modules\Calendar\DTO\ShiftDTO::fromModel($shift, $shift->project);
+
         return new JsonResponse([
             'success' => true,
             'shift_worker_id' => $pivot->id,
-            'workers' => \Artwork\Modules\Calendar\DTO\ShiftDTO::fromModel($shift)->workers,
+            'workers' => $shiftDto->workers,
+            // Geänderte Schicht wie im Broadcast: die Tagesansicht übernimmt sie sofort
+            'shift' => $shiftDto,
+            'roomId' => $roomId,
         ]);
     }
 
@@ -1587,7 +1612,7 @@ class ShiftController extends Controller
             }
 
             if ($shift !== null) {
-                broadcast(new RemoveEntityFormShiftEvent(
+                SafeBroadcast::send(new RemoveEntityFormShiftEvent(
                     $shift,
                     $shift->event_id ? $shift->event?->room_id : $shift->room_id,
                     $pivotId,
@@ -1615,7 +1640,7 @@ class ShiftController extends Controller
                     WorkingHourCacheService::entityType($owner),
                     $owner->id,
                 );
-                broadcast(new IndividualTimeChanged($owner->id, $modelType));
+                SafeBroadcast::send(new IndividualTimeChanged($owner->id, $modelType));
             }
         }
 
@@ -1668,7 +1693,7 @@ class ShiftController extends Controller
 
         $roomId = $shift->event?->room_id ?? $shift->room_id;
         if ($roomId) {
-            broadcast(new UpdateShiftInShiftPlan($shift->fresh(), $roomId));
+            SafeBroadcast::send(new UpdateShiftInShiftPlan($shift->fresh(), $roomId));
         }
 
         return response()->json(['success' => true]);
@@ -1727,7 +1752,7 @@ class ShiftController extends Controller
                     $entity['days']
                 );
                 if (!empty($vacationType['type'])) {
-                    broadcast(WorkerAvailabilityChanged::forMorph($modelClass, (int) $entityModel->id));
+                    SafeBroadcast::send(WorkerAvailabilityChanged::forMorph($modelClass, (int) $entityModel->id));
                 }
             }
 
@@ -1811,7 +1836,7 @@ class ShiftController extends Controller
             }
 
             if ($vacationsCleared) {
-                broadcast(WorkerAvailabilityChanged::forMorph($modelClass, (int) $entityModel->id));
+                SafeBroadcast::send(WorkerAvailabilityChanged::forMorph($modelClass, (int) $entityModel->id));
             }
         }
 
@@ -2268,9 +2293,9 @@ class ShiftController extends Controller
 
         // Broadcast the updated shift
         if (!$pivot->shift->event_id) {
-            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
+            SafeBroadcast::send(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
         } else {
-            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event?->room_id));
+            SafeBroadcast::send(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event?->room_id));
         }
     }
 

@@ -61,7 +61,7 @@ return [
     ],
     'by' => 'Export erstellt von',
     'date' => 'Exportdatum',
-    'artist_name' => 'Künstlername',
+    'artist_name' => 'Künstler*innen-Name',
     'arrival_time' => 'Ankunftszeit',
     'departure_time' => 'Abreisezeit',
     'nights_count' => 'Anzahl Übernachtungen',
@@ -75,7 +75,7 @@ return [
     'total_daily_allowance' => 'Summe Tagegeld',
     'breakfast_count' => 'Anzahl Frühstück',
     'breakfast_deduction_total' => 'Abzüglich Anzahl Frühstück im Hotel',
-    'payout_per_diem' => 'Summe Auszahlung per DIEM',
+    'payout_per_diem' => 'Summe Auszahlung Tagegeld',
     'per_diem_number' => 'Per Diem Nummer',
     'per_diem_list' => 'Per-Diem-Liste',
     'production' => 'Produktion',
@@ -91,7 +91,7 @@ return [
 
     // Contract export translations
     'contract_name' => 'Vertragsname',
-    'contract_partner' => 'Vertragspartner',
+    'contract_partner' => 'Vertragspartner*in',
     'project' => 'Projekt',
     'contract_type' => 'Vertragstyp',
     'company_type' => 'Rechtsform',

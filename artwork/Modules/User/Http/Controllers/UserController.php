@@ -65,6 +65,7 @@ use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\ContractSettingsResolver;
+use Artwork\Modules\User\Services\UserDeactivationService;
 use Artwork\Modules\User\Services\UserEmailChangeService;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
@@ -99,6 +100,7 @@ use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
 use Throwable;
 use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class UserController extends Controller
 {
@@ -121,6 +123,7 @@ class UserController extends Controller
     {
         $users = User::nameOrLastNameLike($request->get('query'))
             ->excludeDeletedPlaceholder()
+            ->active()
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->limit(self::PROFILE_SEARCH_LIMIT)
@@ -154,7 +157,7 @@ class UserController extends Controller
 
         $wantedUsers = User::search($request->input('query'))
             ->query(function ($query): void {
-                $query->excludeDeletedPlaceholder();
+                $query->excludeDeletedPlaceholder()->active();
             })
             ->get();
         foreach ($wantedUsers as $user) {
@@ -250,6 +253,8 @@ class UserController extends Controller
                     $query->with('departments');
                     // Exclude the placeholder "Deleted user"
                     $query->excludeDeletedPlaceholder();
+                    // Deaktivierte stehen im eigenen Reiter (deactivatedUsers)
+                    $query->active();
 
                     $this->applyAuthProviderFilter($query, $authProviderFilter);
 
@@ -276,6 +281,7 @@ class UserController extends Controller
                 ->with('departments')
                 // Exclude the placeholder "Deleted user"
                 ->excludeDeletedPlaceholder()
+                ->active()
                 ->when($authProviderFilter, fn ($query) => $this->applyAuthProviderFilter($query, $authProviderFilter))
                 ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {
                     switch ($sortEnum) {
@@ -331,6 +337,12 @@ class UserController extends Controller
 
         return inertia('Users/Index', [
             'users' => $users,
+            // Reiter "Deaktiviert": nur für Personalverwaltung/Admins, alle anderen sehen deaktivierte Accounts nicht
+            'deactivatedUsers' => Gate::allows('viewDeactivated', User::class)
+                ? $this->deactivatedUsersForIndex($request)
+                : [],
+            // Deaktivieren-Menü: Personalverwaltung darf Admin-Accounts nicht deaktivieren (UserPolicy::deactivate)
+            'adminUserIds' => User::role(RoleEnum::ARTWORK_ADMIN->value)->pluck('id'),
             'all_permissions' => Permission::all()->groupBy('group'),
             'departments' => Department::all(),
             // Rollen (= Admin-Rolle) nur für Admins wählbar; Altbestand-Rollen in der DB werden nicht angeboten,
@@ -360,6 +372,35 @@ class UserController extends Controller
                 ->getAttribute('settings'),
             'hasActiveSsoSource' => ExternalUserSource::query()->where('active', true)->exists()
         ]);
+    }
+
+    /**
+     * Deaktivierte Accounts für den eigenen Reiter der Nutzer*innenliste. Sie stehen nicht im Suchindex,
+     * daher filtert die Suche hier per SQL.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function deactivatedUsersForIndex(Request $request): array
+    {
+        $searchQuery = (string) $request->get('query', '');
+
+        $deactivatedUsers = User::query()
+            ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+            ->with(['departments', 'deactivatedBy:id,first_name,last_name'])
+            ->excludeDeletedPlaceholder()
+            ->deactivated()
+            ->when($searchQuery !== '', fn ($query) => $query->nameOrLastNameLike($searchQuery))
+            ->orderByDesc('deactivated_at')
+            ->get();
+
+        return $deactivatedUsers->map(function (User $deactivatedUser) use ($request): array {
+            $deactivatedBy = $deactivatedUser->getRelation('deactivatedBy');
+
+            return [
+                ...MinimalUserIndexResource::make($deactivatedUser)->toArray($request),
+                'deactivated_by_name' => $deactivatedBy?->getAttribute('full_name'),
+            ];
+        })->values()->all();
     }
 
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
@@ -487,6 +528,7 @@ class UserController extends Controller
                 : null,
             'email_private' => (bool) $user->getAttribute('email_private'),
             'phone_private' => (bool) $user->getAttribute('phone_private'),
+            'deactivated_at' => $user->getAttribute('deactivated_at')?->toIso8601String(),
         ]);
     }
 
@@ -1606,22 +1648,31 @@ class UserController extends Controller
             }
         }
 
-        // Login-E-Mail: gültig, eindeutig, nicht die interne Domain; die eigene nur mit aktuellem Passwort.
+        // Login-E-Mail: gültig, eindeutig, nicht die interne Domain. Die eigene nur mit aktuellem Passwort
+        // und erst nach Bestätigung über den Link an die neue Adresse; fremde Konten ändert die
+        // Verwaltung sofort.
         $previousEmail = (string) $user->email;
         $emailChanged = $emailChangeService->isChange($user, $attributes['email'] ?? null);
+        $requestedEmail = null;
         if ($emailChanged) {
             $request->validate(['email' => $emailChangeService->emailRules($user)]);
+            $attributes['email'] = trim((string) $attributes['email']);
             if ($isSelf) {
                 $emailChangeService->assertSelfChangeAllowed($user, $request->input('current_password'));
+                $requestedEmail = $attributes['email'];
+                unset($attributes['email']);
             }
-            $attributes['email'] = trim((string) $attributes['email']);
         } else {
             unset($attributes['email']);
         }
 
         $user->update($attributes);
 
-        if ($emailChanged) {
+        if ($requestedEmail !== null) {
+            $emailChangeService->requestSelfChange($user, $requestedEmail);
+        } elseif ($emailChanged) {
+            // Ein noch offener eigener Antrag würde die Änderung der Verwaltung beim Link-Klick überschreiben.
+            $user->forceFill(['pending_email' => null])->save();
             $emailChangeService->notifyPreviousAddress($user, $previousEmail);
         }
 
@@ -1901,6 +1952,28 @@ class UserController extends Controller
         return Redirect::back();
     }
 
+    public function deactivate(User $user, UserDeactivationService $userDeactivationService): RedirectResponse
+    {
+        // Gate::before lässt Admins jede Policy passieren – der eigene Account bleibt trotzdem aktiv.
+        if (Auth::id() === $user->getKey()) {
+            return Redirect::back()->with('error', __('flash-messages.user.error.cannot_deactivate_self'));
+        }
+        $this->authorize('deactivate', $user);
+
+        $userDeactivationService->deactivate($user, Auth::user());
+
+        return Redirect::back()->with('success', __('flash-messages.user.success.deactivated'));
+    }
+
+    public function reactivate(User $user, UserDeactivationService $userDeactivationService): RedirectResponse
+    {
+        $this->authorize('reactivate', $user);
+
+        $userDeactivationService->reactivate($user);
+
+        return Redirect::back()->with('success', __('flash-messages.user.success.reactivated'));
+    }
+
     public function destroy(
         User $user,
         RoomService $roomService,
@@ -2084,7 +2157,7 @@ class UserController extends Controller
             throw $e;
         }
 
-        broadcast(new UserUpdated())->toOthers();
+        SafeBroadcast::send(new UserUpdated(), true);
 
         return Redirect::route('users');
     }

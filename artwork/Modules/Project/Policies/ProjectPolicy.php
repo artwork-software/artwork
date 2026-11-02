@@ -61,26 +61,15 @@ class ProjectPolicy
         return $user->can(PermissionEnum::ADD_EDIT_OWN_PROJECT->value);
     }
 
+    /**
+     * Checklisten u. ä. im Projekt anlegen: wer im Projekt schreiben darf oder zum Team gehört (auch
+     * nur lesend). Bewusst kein Zweig für das globale "Eigene Projekte anlegen" oder für
+     * Termin-Ersteller:innen – beides ist ohne Bezug zum konkreten Projekt erreichbar und hat früher
+     * über den Auto-Attach an das Team Schreibzugriff auf beliebige Projekte verschafft.
+     */
     public function createProperties(User $user, Project $project): bool
     {
-        $isTeamMember = false;
-        foreach ($project->departments as $department) {
-            if ($department->users->contains($user->id)) {
-                $isTeamMember = true;
-            }
-        }
-        $isCreator = false;
-        foreach ($project->events as $event) {
-            if ($event->user_id === $user->id) {
-                $isCreator = true;
-            }
-        }
-
-        return $user->can(PermissionEnum::ADD_EDIT_OWN_PROJECT->value) ||
-            $project->users->contains($user->id) ||
-            $isTeamMember ||
-            (bool)$user->projects()?->find($project->id)?->pivot?->is_manager === true ||
-            $isCreator;
+        return $this->update($user, $project) || $project->users->contains($user->id);
     }
 
 

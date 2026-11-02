@@ -37,6 +37,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Spatie\Activitylog\Models\Activity;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftPlanRequestController extends Controller
 {
@@ -1243,7 +1244,7 @@ class ShiftPlanRequestController extends Controller
                     })
                     ->log('Shift rejected as part of shift plan request');
 
-                broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
+                SafeBroadcast::send(new UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
             }
 
             $rejected = true;

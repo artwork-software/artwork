@@ -106,7 +106,8 @@ class UpdateExternalUserSourceRequest extends FormRequest
             $rules['config.discovery_url'] = [
                 'sometimes',
                 'required',
-                'url:http,https',
+                // Nur https: die Identität kommt aus dem userinfo-Endpunkt, nicht aus einem signierten ID-Token.
+                'url:https',
                 'max:500',
                 new PublicUrlRule(),
                 $this->singleTenantRule(),

@@ -273,7 +273,9 @@ final class SecurityAuditTakeoverChainsRegressionTest extends FeatureTestCase
         User::factory()->create(['email' => 'taken@theater.example']);
         $this->actingAs($user);
 
-        $this->get($this->confirmationUrl($user, 'taken@theater.example'))->assertSessionHasErrors('email');
+        $this->get($this->confirmationUrl($user, 'taken@theater.example'))
+            ->assertSessionHasErrors('email')
+            ->assertSessionHas('error');
 
         $this->assertSame($oldEmail, $user->fresh()->email);
         $this->assertNull($user->fresh()->pending_email);
@@ -331,6 +333,20 @@ final class SecurityAuditTakeoverChainsRegressionTest extends FeatureTestCase
             ->assertSessionHasNoErrors();
 
         $this->assertSame($newEmail, $target->fresh()->email);
+    }
+
+    #[Test]
+    public function admin_email_change_discards_a_pending_own_request(): void
+    {
+        $this->actingAsAdmin();
+        $target = $this->userWithPassword(['pending_email' => 'own-request@theater.example']);
+        $newEmail = 'moved-' . Str::random(6) . '@theater.example';
+
+        $this->patch(route('user.update', $target), $this->detailsPayload($target, ['email' => $newEmail]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame($newEmail, $target->fresh()->email);
+        $this->assertNull($target->fresh()->pending_email);
     }
 
     #[Test]

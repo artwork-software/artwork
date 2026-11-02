@@ -142,6 +142,7 @@ final class ProjectGroupMembershipTest extends FeatureTestCase
             'selectedGroup' => ['id' => $foreignGroup->id],
         ])->assertForbidden();
         $this->assertSame([], $this->childIds($foreignGroup));
+        $this->assertSame([$project->id], $this->childIds($currentGroup), 'Abgelehnter Wechsel löst die bisherige Gruppe nicht');
     }
 
     #[Test]

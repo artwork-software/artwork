@@ -4053,7 +4053,7 @@ class EventController extends Controller
                     $duplicatedEvent->is_planning = true;
                 }
                 if (isset($copiesAsRoomRequest[(int) $originalEvent->id])) {
-                    $duplicatedEvent->occupancy_option = true;
+                    $this->markCopyAsRoomRequest($duplicatedEvent);
                 }
                 $duplicatedEvent->save();
 
@@ -4092,6 +4092,18 @@ class EventController extends Controller
             'calculationType' => ['nullable', 'integer', 'in:1,2'],
             'type' => ['nullable', 'integer', 'between:1,5'],
         ]);
+    }
+
+    /**
+     * Eine Kopie, die mangels Buchungsrecht zur Raumanfrage wird, ist eine neue Anfrage der handelnden
+     * Person: sie steht als Anfragende drin (Zu-/Absage geht an sie) und erbt keine alte Absage des Originals.
+     */
+    private function markCopyAsRoomRequest(Event $copy): void
+    {
+        $copy->setAttribute('occupancy_option', true);
+        $copy->setAttribute('accepted', false);
+        $copy->setAttribute('declined_room_id', null);
+        $copy->setAttribute('user_id', $this->authManager->id());
     }
 
     /**
@@ -4710,7 +4722,7 @@ class EventController extends Controller
                     }
                     $duplicated->setAttribute('room_id', $cell['room_id']);
                     if (isset($copiesAsRoomRequest[$original->id . ':' . $cell['room_id']])) {
-                        $duplicated->setAttribute('occupancy_option', true);
+                        $this->markCopyAsRoomRequest($duplicated);
                     }
                     $duplicated->setAttribute('start_time', $newStart);
                     $duplicated->setAttribute(

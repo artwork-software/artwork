@@ -561,7 +561,7 @@
 </template>
 
 <script setup>
-import {ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, onUnmounted, nextTick, defineAsyncComponent} from 'vue';
+import {ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, onUnmounted, nextTick, defineAsyncComponent, provide} from 'vue';
 import { parseYmd, toYmd } from '@/Helper/IsoWeek.js';
 import {Link, router, usePage} from '@inertiajs/vue3';
 import NotificationToast from '@/Artwork/Feedback/NotificationToast.vue';
@@ -937,6 +937,7 @@ function updateShiftLocally(data) {
                 existing.description = 'description' in shiftData ? shiftData.description : existing.description;
                 existing.start = shiftData.start ?? existing.start;
                 existing.end = shiftData.end ?? existing.end;
+                existing.end_date = shiftData.endDate ?? existing.end_date;
                 existing.is_committed = shiftData.isCommitted ?? shiftData.is_committed ?? existing.is_committed;
                 existing.break_minutes = shiftData.break_minutes ?? existing.break_minutes;
 
@@ -1033,6 +1034,24 @@ function removeShiftLocally(data) {
         }
     }
 }
+
+/**
+ * Speicher-Antwort einer Schicht sofort übernehmen (wie in der Tagesansicht): die Schicht-Komponenten
+ * (Person entfernen, Funktion/Überbuchung, Löschen, Bearbeiten) laden nicht mehr neu und verlassen
+ * sich sonst allein auf den WebSocket.
+ */
+function applySavedShift(savedShift) {
+    if (!savedShift) return;
+    if (savedShift.removed) {
+        removeShiftLocally(savedShift);
+        return;
+    }
+    const shifts = Array.isArray(savedShift.shifts) ? savedShift.shifts : [savedShift.shift];
+    for (const shift of shifts.filter(Boolean)) {
+        updateShiftLocally({shift, roomId: shift === savedShift.shift ? savedShift.roomId : undefined});
+    }
+}
+provide('applySavedShift', applySavedShift);
 
 /** Tage ('YYYY-MM-DD') der hier geladenen Schichten mit diesen IDs */
 function daysOfLoadedShifts(shiftIds) {

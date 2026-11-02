@@ -1630,6 +1630,8 @@ class UserController extends Controller
         if ($requestedEmail !== null) {
             $emailChangeService->requestSelfChange($user, $requestedEmail);
         } elseif ($emailChanged) {
+            // Ein noch offener eigener Antrag würde die Änderung der Verwaltung beim Link-Klick überschreiben.
+            $user->forceFill(['pending_email' => null])->save();
             $emailChangeService->notifyPreviousAddress($user, $previousEmail);
         }
 

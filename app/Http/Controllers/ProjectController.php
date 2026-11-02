@@ -3221,6 +3221,7 @@ class ProjectController extends Controller
         $changers = $this->preloadHistoryChangers($activities);
         $history = $activities->map(function ($activity) use ($changers) {
             $properties = $activity->properties;
+            $changerKey = $activity->getAttribute('causer_type') . ':' . $activity->getAttribute('causer_id');
 
             return [
                 'changes'    => $properties instanceof \Illuminate\Support\Collection
@@ -3229,7 +3230,7 @@ class ProjectController extends Controller
                 'created_at' => $activity->created_at->diffInHours() < 24
                     ? $activity->created_at->diffForHumans()
                     : $activity->created_at->format('d.m.Y, H:i'),
-                'changer'    => $changers[$activity->causer_type . ':' . $activity->causer_id]
+                'changer'    => $changers[$changerKey]
                     ?? $this->resolveHistoryChanger($activity),
             ];
         })->all();
@@ -3652,12 +3653,12 @@ class ProjectController extends Controller
         $currentGroupIds = DB::table('project_groups')->where('project_id', '=', $project->id)->pluck('group_id')
             ->map(fn ($id): int => (int) $id)
             ->all();
+        // Gruppe vor dem Lösen prüfen: ein 403 für eine fremde Gruppe ließ das Projekt sonst ohne Gruppe zurück.
+        $group = $request->get('selectedGroup') !== null
+            ? $this->resolveSelectedProjectGroup($request->get('selectedGroup')['id'] ?? null, $currentGroupIds)
+            : null;
         DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         if ($request->get('selectedGroup') !== null) {
-            $group = $this->resolveSelectedProjectGroup(
-                $request->get('selectedGroup')['id'] ?? null,
-                $currentGroupIds
-            );
             $group?->projectsOfGroup()->syncWithoutDetaching($project->id);
 
             // Ensure the project has exactly one budget-relevant column

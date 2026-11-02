@@ -138,7 +138,7 @@
                 <!-- Festes Datum -->
                 <div v-if="timeMode === 'date'" class="mt-3 space-y-2">
                     <span class="ui-hint">
-                        {{ $t('All copies are placed on this date, keeping their start time. Multi-day copies will end on the chosen day.') }}
+                        {{ $t('All copies start on this date at the original time and keep their duration.') }}
                     </span>
                     <BaseInput
                         type="date"

@@ -27,7 +27,11 @@ class UserEmailChangeController
         try {
             $this->emailChangeService->confirmSelfChange($user, $hash);
         } catch (ValidationException $exception) {
-            return $redirect->withErrors($exception->errors());
+            // Die Profilseite zeigt Feldfehler nur nach eigenem Absenden; nach dem Link-Klick sieht man
+            // die Ursache nur über den globalen Hinweis.
+            return $redirect
+                ->withErrors($exception->errors())
+                ->with('error', collect($exception->errors())->flatten()->first());
         }
 
         return $redirect->with('success', __('Your new email address has been confirmed.'));

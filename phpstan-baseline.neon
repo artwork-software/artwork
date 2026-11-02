@@ -1923,11 +1923,6 @@ parameters:
 			count: 1
 			path: artwork/Modules/Project/Models/Component.php
 
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$is_manager\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Project/Policies/ProjectPolicy.php
 
 		-
 			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:events\(\)\.$#'

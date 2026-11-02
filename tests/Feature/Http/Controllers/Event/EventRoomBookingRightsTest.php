@@ -613,6 +613,40 @@ final class EventRoomBookingRightsTest extends FeatureTestCase
     }
 
     #[Test]
+    public function copies_that_become_room_requests_belong_to_the_acting_user_and_drop_an_old_decline(): void
+    {
+        $originalCreator = User::factory()->create();
+        [$sourceRoom, $sourceRoomAdmin] = $this->roomWithAdmin();
+        $sourceRoomAdmin->givePermissionTo(PermissionEnum::EVENT_REQUEST->value);
+        $this->actingAs($sourceRoomAdmin);
+        [$targetRoom, $targetRoomAdmin] = $this->roomWithAdmin();
+        $event = $this->bookedEvent($originalCreator, $sourceRoom);
+        $event->update(['accepted' => true, 'declined_room_id' => $targetRoom->id]);
+
+        $this->postJson(route('events.multi-cell.duplicate'), [
+            'events' => [$event->id],
+            'cells' => [['day' => '2026-11-12', 'room_id' => $targetRoom->id]],
+        ])->assertSuccessful();
+
+        $this->patchJson(route('multi-duplicate.save'), [
+            'events' => [$event->id],
+            'newRoomId' => $targetRoom->id,
+            'date' => '2026-12-01',
+        ])->assertSuccessful();
+
+        $copies = Event::query()->whereKeyNot($event->id)->get();
+        $this->assertCount(2, $copies);
+        foreach ($copies as $copy) {
+            $this->assertTrue($copy->occupancy_option);
+            $this->assertSame($sourceRoomAdmin->id, $copy->user_id, 'Anfragende ist die kopierende Person');
+            $this->assertFalse((bool) $copy->accepted);
+            $this->assertNull($copy->declined_room_id);
+        }
+        $this->assertSame($originalCreator->id, $event->fresh()->user_id);
+        $this->assertSame(2, $this->roomRequestsSentTo($targetRoomAdmin));
+    }
+
+    #[Test]
     public function room_admin_duplicates_into_own_room_as_booked_events(): void
     {
         [$room, $roomAdmin] = $this->roomWithAdmin();

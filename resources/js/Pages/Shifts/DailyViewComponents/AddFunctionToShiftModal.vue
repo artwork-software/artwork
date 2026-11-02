@@ -19,9 +19,9 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
-import { router } from "@inertiajs/vue3";
+import axios from "axios";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
@@ -45,6 +45,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close']);
+
+// Von der Tagesansicht bereitgestellt; in anderen Ansichten aktualisiert der Broadcast
+const applySavedShift = inject('applySavedShift', null);
 
 const availableQualifications = computed(() => {
     const shiftCraftId = props.shift?.craftId ?? props.shift?.craft_id ?? props.shift?.craft?.id;
@@ -73,16 +76,15 @@ const addQualification = (qualificationId) => {
         ? 'shifts.qualifications.overbook.increase'
         : 'shifts.qualifications.add';
 
-    router.patch(route(routeName, { shift: props.shift.id }), {
+    // axios statt router.patch: die Antwort trägt die geänderte Schicht (wie der Broadcast) — die Ansicht
+    // übernimmt sie sofort, statt per Redirect die ganze Seite neu aufzubauen
+    axios.patch(route(routeName, { shift: props.shift.id }), {
         qualification_id: qualificationId
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-            emit('close');
-        },
-        onFinish: () => {
-            requestInFlight.value = false;
-        }
+    }).then(({ data }) => {
+        if (data?.shift) applySavedShift?.(data);
+        emit('close');
+    }).finally(() => {
+        requestInFlight.value = false;
     });
 };
 </script>

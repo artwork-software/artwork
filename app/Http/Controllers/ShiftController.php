@@ -1153,7 +1153,7 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
-    ): bool|RedirectResponse|null {
+    ): bool|JsonResponse|RedirectResponse|null {
         $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($userType) {
             0 => $shiftUserService,
@@ -1205,14 +1205,15 @@ class ShiftController extends Controller
                 $changeService
             );
 
-            SafeBroadcast::send(new RemoveEntityFormShiftEvent(
+            $removalUpdate = new RemoveEntityFormShiftEvent(
                 $shift,
                 $shift->event_id ? $shift->event?->room_id : $shift->room_id,
                 (string) $removedEmployableId,
                 (string) $userType
-            ));
+            );
+            SafeBroadcast::send($removalUpdate);
 
-            return $isShiftTab ? $this->redirector->back() : null;
+            return $this->removedFromShiftResponse($request, $removalUpdate, $isShiftTab);
         }
 
         $serviceToUse->removeFromShift(
@@ -1225,12 +1226,13 @@ class ShiftController extends Controller
             $changeService
         );
 
-        SafeBroadcast::send(new RemoveEntityFormShiftEvent(
+        $removalUpdate = new RemoveEntityFormShiftEvent(
             $shift,
             $shift->event_id ? $shift->event?->room_id : $shift->room_id,
             (string) $removedEmployableId,
             (string) $userType
-        ));
+        );
+        SafeBroadcast::send($removalUpdate);
 
         // Re-validate the removed user so now-obsolete conflicts can be re-evaluated for the shift's range.
         if ($removedUserId) {
@@ -1242,6 +1244,22 @@ class ShiftController extends Controller
                     Carbon::parse($shift->end_date)
                 );
             }
+        }
+
+        return $this->removedFromShiftResponse($request, $removalUpdate, $isShiftTab);
+    }
+
+    /**
+     * withShiftUpdate (Tagesansicht per axios): gespeicherter Stand wie der Broadcast, damit die eigene
+     * Ansicht ihn sofort übernimmt — statt Redirect und komplettem Neuaufbau der Seite.
+     */
+    private function removedFromShiftResponse(
+        Request $request,
+        RemoveEntityFormShiftEvent $removalUpdate,
+        bool $isShiftTab
+    ): JsonResponse|RedirectResponse|null {
+        if ($request->boolean('withShiftUpdate')) {
+            return response()->json($removalUpdate->broadcastWith());
         }
 
         return $isShiftTab ? $this->redirector->back() : null;
@@ -1393,10 +1411,16 @@ class ShiftController extends Controller
             'serviceProvider.globalQualifications',
         ]);
 
+        $shift->load(['project', 'craft:id,name,abbreviation,color']);
+        $shiftDto = \Artwork\Modules\Calendar\DTO\ShiftDTO::fromModel($shift, $shift->project);
+
         return new JsonResponse([
             'success' => true,
             'shift_worker_id' => $pivot->id,
-            'workers' => \Artwork\Modules\Calendar\DTO\ShiftDTO::fromModel($shift)->workers,
+            'workers' => $shiftDto->workers,
+            // Geänderte Schicht wie im Broadcast: die Tagesansicht übernimmt sie sofort
+            'shift' => $shiftDto,
+            'roomId' => $roomId,
         ]);
     }
 

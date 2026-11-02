@@ -290,6 +290,7 @@ async function confirmReplacement(candidate) {
         )
         emit('replaced', {
             workers: data?.workers ?? null,
+            shiftUpdate: data?.shift ? { shift: data.shift, roomId: data.roomId } : null,
             shiftWorkerId: data?.shift_worker_id ?? null,
             removed: props.worker,
             replacement: candidate,

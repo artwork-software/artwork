@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Craft\Services\CraftScopeService;
+use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
@@ -11,6 +12,7 @@ use Artwork\Modules\Shift\Http\Requests\StoreShiftQualificationRequest;
 use Artwork\Modules\Shift\Http\Requests\UpdateShiftQualificationRequest;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
@@ -84,7 +86,7 @@ class ShiftQualificationController extends Controller
         return $this->redirector->back();
     }
 
-    public function updateValue(Shift $shift, Request $request): void
+    public function updateValue(Shift $shift, Request $request): JsonResponse
     {
         app(CraftScopeService::class)->assertCanPlanShifts($request->user(), [$shift]);
 
@@ -96,13 +98,10 @@ class ShiftQualificationController extends Controller
         $this->shiftsQualificationsService
             ->increaseValueOrCreateWithOneByQualification($shift->id, $request->integer('qualification_id'));
 
-        SafeBroadcast::send(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
-            $shift,
-            $shift->room_id ?? $shift->event?->room_id
-        ));
+        return $this->publishShiftUpdate($shift);
     }
 
-    public function increaseOverbookedValue(Shift $shift, Request $request): void
+    public function increaseOverbookedValue(Shift $shift, Request $request): JsonResponse
     {
         app(CraftScopeService::class)->assertCanPlanShifts($request->user(), [$shift]);
 
@@ -117,13 +116,10 @@ class ShiftQualificationController extends Controller
         $this->shiftsQualificationsService
             ->increaseOverbookedValue($shift->id, $request->integer('qualification_id'));
 
-        SafeBroadcast::send(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
-            $shift,
-            $shift->room_id ?? $shift->event?->room_id
-        ));
+        return $this->publishShiftUpdate($shift);
     }
 
-    public function decreaseOverbookedValue(Shift $shift, Request $request): void
+    public function decreaseOverbookedValue(Shift $shift, Request $request): JsonResponse
     {
         app(CraftScopeService::class)->assertCanPlanShifts($request->user(), [$shift]);
 
@@ -138,10 +134,24 @@ class ShiftQualificationController extends Controller
         $this->shiftsQualificationsService
             ->decreaseOverbookedValue($shift->id, $request->integer('qualification_id'));
 
-        SafeBroadcast::send(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
-            $shift,
-            $shift->room_id ?? $shift->event?->room_id
-        ));
+        return $this->publishShiftUpdate($shift);
+    }
+
+    /**
+     * Live-Update an alle Ansichten und derselbe Stand als Antwort: die Tagesansicht übernimmt ihn sofort,
+     * statt per Redirect die ganze Seite neu aufzubauen.
+     */
+    private function publishShiftUpdate(Shift $shift): JsonResponse
+    {
+        $roomId = $shift->room_id ?? $shift->event?->room_id;
+        if ($roomId === null) {
+            return response()->json(['id' => $shift->id]);
+        }
+
+        $shiftPlanUpdate = new UpdateShiftInShiftPlan($shift, $roomId);
+        SafeBroadcast::send($shiftPlanUpdate);
+
+        return response()->json(['id' => $shift->id, ...$shiftPlanUpdate->broadcastWith()]);
     }
 
     public function destroy(

@@ -278,4 +278,45 @@ final class ShiftMutationHardeningTest extends FeatureTestCase
             static fn (RemoveEntityFormShiftEvent $event): bool => (int) $event->entity === $worker->id
         );
     }
+
+    #[Test]
+    public function removing_a_person_with_shift_update_returns_the_changed_shift_instead_of_a_redirect(): void
+    {
+        // Tagesansicht per axios: übernimmt den Stand sofort, statt die Seite per Redirect neu aufzubauen
+        $this->actingAsAdmin();
+        $shift = $this->standaloneShift(Craft::factory()->create());
+        $removed = User::factory()->create();
+        $staying = User::factory()->create();
+        $pivotId = $this->assignWorker($shift, $removed);
+        $this->assignWorker($shift, $staying);
+
+        $response = $this->deleteJson(
+            route('shift.removeUserByType', ['usersPivotId' => $pivotId, 'userType' => 0]),
+            ['removeFromSingleShift' => true, 'withShiftUpdate' => true]
+        )->assertOk();
+
+        $this->assertSame($shift->id, $response->json('shift.id'));
+        $this->assertSame($shift->room_id, $response->json('roomId'));
+        $workerIds = collect($response->json('shift.workers'))->pluck('id')->all();
+        $this->assertContains($staying->id, $workerIds);
+        $this->assertNotContains($removed->id, $workerIds);
+    }
+
+    #[Test]
+    public function adding_a_function_slot_returns_the_changed_shift(): void
+    {
+        $this->actingAsAdmin();
+        $shift = $this->standaloneShift(Craft::factory()->create());
+        $qualification = ShiftQualification::factory()->create();
+
+        $response = $this->patchJson(route('shifts.qualifications.add', $shift), [
+            'qualification_id' => $qualification->id,
+        ])->assertOk();
+
+        $this->assertSame($shift->id, $response->json('id'));
+        $this->assertSame($shift->room_id, $response->json('roomId'));
+        $slot = collect($response->json('shift.shifts_qualifications'))
+            ->firstWhere('shift_qualification_id', $qualification->id);
+        $this->assertSame(1, (int) ($slot['value'] ?? 0));
+    }
 }

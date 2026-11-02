@@ -1225,6 +1225,7 @@ import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Compo
 import PropertyFileCell from "@/Pages/Inventory/Components/Article/PropertyFileCell.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
+import { isCheckboxChecked } from "@/Helper/CheckboxValue.js";
 import {IconCirclePlus, IconCircleX, IconClick, IconCopy, IconCopyPlus, IconInfoCircle, IconLock, IconPhoto, IconPhotoPlus, IconTag, IconTrash} from "@tabler/icons-vue"
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
@@ -1329,11 +1330,7 @@ const getValue = (prop) => {
     return prop.value ?? prop.pivot?.value ?? ''
 }
 
-const booleanValue = (val) => {
-    if (val === true || val === 1 || val === '1' || val === 'true' || val === 'on') return true
-    if (typeof val === 'string') return !['', '0', 'false'].includes(val.toLowerCase())
-    return !!val
-}
+const booleanValue = isCheckboxChecked
 
 const findSelectValues = (propId) => properties?.find?.(p => p.id === propId)?.select_values ?? []
 

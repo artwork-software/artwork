@@ -267,12 +267,13 @@
                                         $borderRGB = "rgba($r,$g,$b,0.95)";
                                         $leftRGB = "rgba($r,$g,$b,1)";
 
-                                        $line1 = $startFormatted . '-' . $endFormatted . $admissionSuffix . ' ' . $abbr . ' ' . $eventTypeName;
+                                        // Gleiche Kürzel/Namen (Terminart, Projekt/Termin) nur einmal ausgeben
+                                        $line1 = trim(
+                                            $startFormatted . '-' . $endFormatted . $admissionSuffix . ' '
+                                            . implode(' ', $display->distinctParts([$abbr, $eventTypeName]))
+                                        );
 
-                                        $line2Parts = [];
-                                        if ($projectName) $line2Parts[] = $projectName;
-                                        if ($eventName) $line2Parts[] = $eventName;
-                                        $line2 = implode(', ', $line2Parts);
+                                        $line2 = implode(', ', $display->distinctParts([$projectName, $eventName]));
                                         if (mb_strlen($line2) > 60) {
                                             $line2 = mb_substr($line2, 0, 60) . '…';
                                         }

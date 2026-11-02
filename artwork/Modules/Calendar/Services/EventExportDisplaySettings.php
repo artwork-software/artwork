@@ -122,6 +122,30 @@ class EventExportDisplaySettings
     }
 
     /**
+     * Leere und doppelte Textteile einer Kachelzeile entfernen (Vergleich ohne Groß-/Kleinschreibung),
+     * z. B. Terminart-Kürzel = Terminart-Name oder Terminname = Projektname.
+     *
+     * @param array<int, string|null> $parts
+     * @return array<int, string>
+     */
+    public function distinctParts(array $parts): array
+    {
+        $distinct = [];
+        foreach ($parts as $part) {
+            $part = trim((string) $part);
+            if ($part === '') {
+                continue;
+            }
+            $key = mb_strtolower($part);
+            if (!array_key_exists($key, $distinct)) {
+                $distinct[$key] = $part;
+            }
+        }
+
+        return array_values($distinct);
+    }
+
+    /**
      * Zusätzliche Inhaltszeilen einer Termin-Kachel gemäß aktivierter Flags.
      * Erwartet ein PdfEventDTO-förmiges Objekt (artistNames, projectStatus, eventStatus,
      * description, projectLeaders, createdBy — fehlende Felder werden übersprungen).

@@ -6,6 +6,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
@@ -90,6 +91,18 @@ class TicketingProjectService
             'events' => $this->events($project)
                 ->map(fn (Event $event): array => $this->eventPayload($event, $links, $venues))
                 ->values(),
+            // Wohin ein Termin aus der Komponente umziehen kann: die Räume, die in tickets verkaufen.
+            'rooms' => Room::query()
+                ->whereIn('id', $links->keys())
+                ->orderBy('order')
+                ->get(['id', 'name'])
+                ->filter(static fn (Room $room): bool => isset($venues[$links[$room->id]]))
+                ->map(fn (Room $room): array => [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'venue' => $this->venuePayload($venues[$links[$room->id]]),
+                ])
+                ->values(),
         ];
     }
 
@@ -105,6 +118,22 @@ class TicketingProjectService
     }
 
     /**
+     * @param array<string, mixed> $venue
+     * @return array<string, mixed>
+     */
+    private function venuePayload(array $venue): array
+    {
+        return [
+            'id' => $venue['id'],
+            'name' => $venue['name'],
+            'capacity' => array_sum(array_column($venue['zones'], 'capacity')),
+            // Mit Saalplan liegen Kategorien und Plätze fest; ein Termin ändert nur die Preise.
+            'seated' => (bool) ($venue['seated'] ?? false),
+            'zones' => $venue['zones'],
+        ];
+    }
+
+    /**
      * @param Collection<int, string> $links venue_id je room_id
      * @param array<string, array<string, mixed>> $venues Spielstätte je tickets-ID
      * @return array<string, mixed>
@@ -113,6 +142,7 @@ class TicketingProjectService
     {
         $venue = $event->room_id ? ($venues[$links[$event->room_id] ?? ''] ?? null) : null;
         $release = $event->ticketingRelease;
+        $roomChanged = TicketingReleaseService::pricedElsewhere($release, $venue);
 
         return [
             'id' => $event->id,
@@ -127,17 +157,13 @@ class TicketingProjectService
                 'hexCode' => $event->event_type->hex_code,
             ] : null,
             'room' => $event->room ? ['id' => $event->room->id, 'name' => $event->room->name] : null,
-            'venue' => $venue ? [
-                'id' => $venue['id'],
-                'name' => $venue['name'],
-                'capacity' => array_sum(array_column($venue['zones'], 'capacity')),
-                // Mit Saalplan liegen Kategorien und Plätze fest; ein Termin ändert nur die Preise.
-                'seated' => (bool) ($venue['seated'] ?? false),
-                'zones' => $venue['zones'],
-            ] : null,
+            'venue' => $venue ? $this->venuePayload($venue) : null,
             'release' => $release ? [
                 'state' => $release->state,
-                'classes' => $release->classes,
+                'classes' => TicketingReleaseService::fittedClasses($release, $venue),
+                // Seit dem letzten Speichern in einen anderen Raum gewechselt: die Klassen sind die des neuen, zum Prüfen.
+                'roomChanged' => $roomChanged,
+                'previousRoom' => $roomChanged ? ($venues[$release->venue_id]['name'] ?? null) : null,
                 'description' => $release->description,
                 'reductions' => $release->reductions ?? [],
                 'releasedAt' => $release->released_at?->toIso8601String(),

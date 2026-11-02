@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Http\Requests;
 
+use App\Settings\GeneralCalendarSettings;
 use Illuminate\Foundation\Http\FormRequest;
 
 class EventStoreOrUpdateRequest extends FormRequest
@@ -36,7 +37,9 @@ class EventStoreOrUpdateRequest extends FormRequest
             'creatingProject' => 'required|boolean',
             'eventNameMandatory' => 'required|boolean',
             'projectId' => ['required_if:projectIdMandatory,true', 'nullable', 'exists:projects,id'],
-            'projectName' => ['required_unless:creatingProject,false', 'nullable', 'string'],
+            'projectName' => app(GeneralCalendarSettings::class)->project_creation_from_events_enabled
+                ? ['required_unless:creatingProject,false', 'nullable', 'string']
+                : ['prohibited'],
             'eventTypeId' => ['required', 'exists:event_types,id'],
             'adminComment' => ['sometimes','nullable','string'],
             'optionString' => ['sometimes','nullable','string'],
@@ -62,6 +65,7 @@ class EventStoreOrUpdateRequest extends FormRequest
             'eventName.required_if'       => __('validation.custom.eventName.required_if'),
             'projectId.required_if'       => __('validation.custom.projectId.required_if'),
             'projectName.required_unless' => __('validation.custom.projectName.required_unless'),
+            'projectName.prohibited'      => __('Creating new projects from events is deactivated in the calendar settings.'),
             'start.required'              => __('validation.custom.start.required'),
             'start.date'                  => __('validation.custom.start.date'),
             'end.required'                => __('validation.custom.end.required'),

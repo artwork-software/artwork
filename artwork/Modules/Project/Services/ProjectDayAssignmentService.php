@@ -217,7 +217,7 @@ class ProjectDayAssignmentService
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->limit($limit)
-            ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path']);
+            ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path', 'deactivated_at']);
 
         $freelancers = Freelancer::query()
             ->canWorkShifts()
@@ -268,6 +268,7 @@ class ProjectDayAssignmentService
             'name' => $user->getFullNameAttribute(),
             'position' => $user->position,
             'profile_photo_url' => $user->profile_photo_url,
+            'deactivated_at' => User::deactivatedAtFor($user),
             'in_project_team' => $teamUserIds->has($user->id),
         ] + $summarize(User::class, $user->id))
             ->concat($freelancers->map(static fn (Freelancer $freelancer) => [
@@ -1233,7 +1234,7 @@ class ProjectDayAssignmentService
         }
 
         if (!$project->users()->where('users.id', $employableId)->exists()) {
-            $project->users()->attach($employableId);
+            $project->users()->attach($employableId, ProjectTeamService::IMPLICIT_MEMBER_PIVOT);
         }
     }
 

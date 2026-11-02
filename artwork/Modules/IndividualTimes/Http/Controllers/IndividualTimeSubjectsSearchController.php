@@ -19,6 +19,7 @@ class IndividualTimeSubjectsSearchController extends Controller
         $userQuery = User::query()
             ->canWorkShifts()
             ->excludeDeletedPlaceholder()
+            ->active()
             ->when($query !== '', function ($q) use ($query): void {
                 $q->where(function ($qq) use ($query): void {
                     $qq->where('first_name', 'like', $query . '%')
@@ -34,6 +35,7 @@ class IndividualTimeSubjectsSearchController extends Controller
                     'type'              => 'user',
                     'display_name'      => $user->display_name,
                     'profile_photo_url' => $user->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($user),
                     'can_work_shifts'   => $user->can_work_shifts,
                 ];
             });

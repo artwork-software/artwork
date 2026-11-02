@@ -108,6 +108,19 @@ final class ProjectLookupAndSettingsTest extends FeatureTestCase
     }
 
     #[Test]
+    public function project_overview_rejects_page_sizes_outside_the_paginator(): void
+    {
+        $user = $this->actingAsAdmin();
+        $user->update(['entities_per_page' => 10]);
+
+        $this->get(route('projects', ['entitiesPerPage' => 100000]))->assertSessionHasErrors('entitiesPerPage');
+        $this->assertSame(10, (int) $user->fresh()->entities_per_page);
+
+        $this->get(route('projects', ['entitiesPerPage' => 50]))->assertOk();
+        $this->assertSame(50, (int) $user->fresh()->entities_per_page);
+    }
+
+    #[Test]
     public function scout_search_without_term_returns_empty_list(): void
     {
         $this->actingAs(User::factory()->create());

@@ -212,6 +212,7 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import { computed, reactive, ref, watch } from 'vue';
 import { IconChevronDown } from '@tabler/icons-vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
@@ -325,8 +326,8 @@ const visibleCategories = computed(() => props.audienceCategories.filter((catego
 }));
 
 const showCategories = ref(false);
-const showCategoryColumns = ref(localStorage.getItem('bi_show_category_columns') === '1');
-watch(showCategoryColumns, v => localStorage.setItem('bi_show_category_columns', v ? '1' : '0'));
+const showCategoryColumns = ref(safeGetItem('bi_show_category_columns') === '1');
+watch(showCategoryColumns, v => safeSetItem('bi_show_category_columns', v ? '1' : '0'));
 
 // Gesamtwerte je Kategorie (event_id null) — gleiche Fokus-Schutz-Mechanik wie totals
 const categoryTotals = reactive({});

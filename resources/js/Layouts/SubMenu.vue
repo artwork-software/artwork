@@ -795,6 +795,16 @@ const navigation = ref([
         prefetch: false,
     },
     {
+        name: 'Artwork-Tickets',
+        href: route('ticketing.section.sales'),
+        icon: 'IconTicket',
+        current: route().current('ticketing.section.*'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: Boolean(usePage().props.ticketing?.active) && (can('view ticket sales') || is('artwork admin')),
+        prefetch: false,
+    },
+    {
         name: 'Documents',
         href: '#',
         icon: 'IconFileText',

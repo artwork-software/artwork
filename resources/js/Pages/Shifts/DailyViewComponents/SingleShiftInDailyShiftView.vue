@@ -382,7 +382,7 @@ import { toYmd } from "@/Helper/IsoWeek.js";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {router, usePage} from "@inertiajs/vue3";
+import {usePage} from "@inertiajs/vue3";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import axios from "axios";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
@@ -724,11 +724,12 @@ const visibleShiftQualifications = computed(() =>
 )
 
 const removeOverbookedSlot = (shiftQualificationId) => {
-    router.patch(route('shifts.qualifications.overbook.decrease', { shift: props.shift.id }), {
+    // Antwort = geänderte Schicht → sofort übernehmen statt die ganze Seite neu aufzubauen
+    axios.patch(route('shifts.qualifications.overbook.decrease', { shift: props.shift.id }), {
         qualification_id: shiftQualificationId
-    }, {
-        preserveScroll: true
-    });
+    }).then(({ data }) => {
+        if (data?.shift) applySavedShift?.(data)
+    })
 }
 
 const shiftGroups = computed(() => {

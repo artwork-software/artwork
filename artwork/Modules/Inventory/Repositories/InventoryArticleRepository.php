@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Repositories;
 
+use App\Rules\InventoryPropertyFileValue;
 use Carbon\Carbon;
 use App\Jobs\GenerateInventoryArticleImageThumbnail;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
@@ -411,8 +412,9 @@ class InventoryArticleRepository
         $removedIds = $values->pluck('id')->all();
 
         foreach ($values->pluck('value')->filter()->unique() as $path) {
-            // Only ever touch files inside the dedicated property uploads directory.
-            if (!str_starts_with((string) $path, 'uploads/inventory-properties/')) {
+            // Only ever touch exactly one file inside an upload folder of the property uploads
+            // directory – a stored "uploads/inventory-properties/../.." would otherwise wipe the disk.
+            if (!InventoryPropertyFileValue::isSafePath((string) $path)) {
                 continue;
             }
 

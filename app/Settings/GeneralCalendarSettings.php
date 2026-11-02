@@ -16,6 +16,9 @@ class GeneralCalendarSettings extends Settings
     public bool $day_remarks_enabled;
     public bool $day_remarks_mandatory;
 
+    // false = im Termin-Dialog kann kein neues Projekt angelegt werden, nur bestehende verknüpft werden
+    public bool $project_creation_from_events_enabled;
+
     public static function group(): string
     {
         return 'calendar';

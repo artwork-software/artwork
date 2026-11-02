@@ -57,3 +57,43 @@ export function mayAnswerRoomRequestIn({rooms, roomId, userId, isAdmin, canBookW
 
     return roomAdminIds(findRoom(rooms, roomId)).length === 0 || isRoomAdminOf(rooms, roomId, userId);
 }
+
+/**
+ * Wie legen Mehrfach-Aktionen des Kalenders (Anlegen in Zellen, Duplizieren) Termine in diesem Raum an?
+ * Spiegel von EventController::authorizeBulkEventCreationOrRoomRequest: 'direct' = fest gebucht,
+ * 'request' = als Raumanfrage (wie im Termin-Dialog), 'none' = nicht erlaubt (Server antwortet 403).
+ *
+ * @param {{room: object|null|undefined, userId: number|null|undefined, isAdmin: boolean, isPlanning: boolean,
+ *          directBookingOnly: boolean, canBookWithoutRequest: boolean, canEditPlanning: boolean,
+ *          canRequestRooms: boolean}} context
+ * @returns {'direct'|'request'|'none'}
+ */
+export function bulkBookingModeIn({
+    room,
+    userId,
+    isAdmin,
+    isPlanning,
+    directBookingOnly,
+    canBookWithoutRequest,
+    canEditPlanning,
+    canRequestRooms,
+}) {
+    if (isAdmin) {
+        return 'direct';
+    }
+    if (isPlanning) {
+        return canEditPlanning ? 'direct' : 'none';
+    }
+
+    const isRoomAdmin = userId !== null && userId !== undefined && roomAdminIds(room).includes(Number(userId));
+    if (canBookWithoutRequest || (directBookingOnly && canRequestRooms) || room?.everyone_can_book || isRoomAdmin) {
+        return 'direct';
+    }
+    if (directBookingOnly) {
+        return 'none';
+    }
+
+    const isRequestableByUser = (room?.requestable_by ?? []).map(Number).includes(Number(userId));
+
+    return canRequestRooms || isRequestableByUser ? 'request' : 'none';
+}

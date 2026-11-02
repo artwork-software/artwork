@@ -27,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Artwork\Modules\Vacation\Enums\Vacation as VacationEnum;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class VacationController extends Controller
 {
@@ -429,7 +430,7 @@ class VacationController extends Controller
             }
             // Relations verwerfen, damit broadcastWith den Stand NACH der Änderung lädt
             $shift->unsetRelations();
-            broadcast(new UpdateShiftInShiftPlan($shift, (int) $roomId));
+            SafeBroadcast::send(new UpdateShiftInShiftPlan($shift, (int) $roomId));
         }
     }
 
@@ -439,7 +440,7 @@ class VacationController extends Controller
      */
     private function broadcastWorkerAvailability(User|Freelancer|ServiceProvider $worker): void
     {
-        broadcast(WorkerAvailabilityChanged::forMorph($worker::class, (int) $worker->id));
+        SafeBroadcast::send(WorkerAvailabilityChanged::forMorph($worker::class, (int) $worker->id));
     }
 
     public function update(
@@ -488,7 +489,9 @@ class VacationController extends Controller
                 );
             }
         }
-        broadcast(WorkerAvailabilityChanged::forMorph($vacation->vacationer_type, (int) $vacation->vacationer_id));
+        SafeBroadcast::send(
+            WorkerAvailabilityChanged::forMorph($vacation->vacationer_type, (int) $vacation->vacationer_id)
+        );
         return redirect()->back();
     }
 
@@ -556,7 +559,9 @@ class VacationController extends Controller
     {
         $this->authorize('delete', $vacation);
         $this->vacationService->delete($vacation);
-        broadcast(WorkerAvailabilityChanged::forMorph($vacation->vacationer_type, (int) $vacation->vacationer_id));
+        SafeBroadcast::send(
+            WorkerAvailabilityChanged::forMorph($vacation->vacationer_type, (int) $vacation->vacationer_id)
+        );
         return redirect()->back();
     }
 
@@ -568,7 +573,7 @@ class VacationController extends Controller
         }
         $this->vacationSeriesService->deleteSeries($vacationSeries);
         if ($firstVacation !== null) {
-            broadcast(WorkerAvailabilityChanged::forMorph(
+            SafeBroadcast::send(WorkerAvailabilityChanged::forMorph(
                 $firstVacation->vacationer_type,
                 (int) $firstVacation->vacationer_id
             ));

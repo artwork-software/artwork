@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -22,7 +23,6 @@ class DepartmentController extends Controller
 {
     public function __construct(
         private readonly DepartmentService $departmentService,
-        private readonly UserService $userService,
     ) {
         $this->authorizeResource(Department::class);
     }
@@ -32,8 +32,8 @@ class DepartmentController extends Controller
         return inertia(
             'Departments/DepartmentManagement',
             [
+                // keine Liste aller Personen: die Seite sucht über /users/search (vorher ~2 KB je Person ungenutzt)
                 'departments' => $this->departmentService->getDepartmentIndexResource(),
-                'users' => $this->userService->getAllUsers()
             ]
         );
     }
@@ -42,6 +42,19 @@ class DepartmentController extends Controller
         StoreDepartmentRequest $storeDepartmentRequest,
         NotificationService $notificationService
     ): RedirectResponse {
+        // Wie beim Bearbeiten: ins eigene Team setzt nur eine andere Person, Admins ausgenommen.
+        $actor = $storeDepartmentRequest->user();
+        $addsSelf = collect($storeDepartmentRequest->get('assigned_users'))
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->contains($actor->id);
+        if ($addsSelf && !$actor->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            // Validierungsfehler statt Flash: sonst meldet das Modal trotzdem "Team angelegt".
+            throw ValidationException::withMessages([
+                'assigned_users' => __(DepartmentPolicy::OWN_TEAMS_LOCKED_MESSAGE),
+            ]);
+        }
+
         $this->departmentService->createByRequest($storeDepartmentRequest, $notificationService);
         return Redirect::route('departments');
     }
@@ -62,7 +75,6 @@ class DepartmentController extends Controller
             'Departments/Edit',
             [
                 'department' => $this->departmentService->createDepartmentShowResource($department),
-                'users' => $this->userService->getAllUsers(),
             ]
         );
     }

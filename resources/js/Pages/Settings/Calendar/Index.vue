@@ -7,6 +7,7 @@
             :paragraphs="[
                 'Start and end time define which hours the day view of the calendar and the shift plan displays. The range may span midnight — for example 22:00 to 08:00.',
                 'Day remarks add one shared remark per day as a separate column in the calendar, the planning calendar and the shift plan.',
+                'If project creation from events is deactivated, events can only be linked to existing projects.',
             ]"
         />
         <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
@@ -99,6 +100,39 @@
                 </div>
             </fieldset>
         </div>
+
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-5">
+            <BasePageTitle
+                :title="$t('Project link of events')"
+                :description="$t('Controls whether a new project can be created directly from an event.')" />
+
+            <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
+                <Switch v-model="tinyTimePeriod.project_creation_from_events_enabled"
+                        @update:model-value="postCalendarSettings"
+                        :class="[
+                            tinyTimePeriod.project_creation_from_events_enabled ?
+                                'bg-accent-600' :
+                                'bg-border-subtle',
+                            'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
+                        ]">
+                    <span aria-hidden="true" :class="[tinyTimePeriod.project_creation_from_events_enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                </Switch>
+                <SwitchLabel as="span" class="text-sm">
+                    <span :class="[tinyTimePeriod.project_creation_from_events_enabled ? 'font-bold' : 'font-medium', 'text-text']">
+                        {{ $t('Project creation possible when creating events') }}
+                    </span>
+                </SwitchLabel>
+                <ToolTipComponent
+                    icon="IconInfoCircle"
+                    icon-size="h-4 w-4"
+                    :tooltip-text="$t('If activated, a new project can be created directly in the event dialog when linking a project. If deactivated, events can only be linked to existing projects, so that projects are not created by accident.')"
+                    direction="top"
+                    gray-icon
+                    classes-button=""
+                    tooltip-css-class="aw-tooltip-wide"
+                />
+            </SwitchGroup>
+        </div>
     </CalendarSettingsHeader>
 </template>
 
@@ -114,6 +148,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const props = defineProps({
     calendarSettings: {
@@ -127,6 +162,7 @@ const tinyTimePeriod = useForm({
     end: props.calendarSettings ? props.calendarSettings.end : '08:00',
     day_remarks_enabled: props.calendarSettings?.day_remarks_enabled ?? false,
     day_remarks_mandatory: props.calendarSettings?.day_remarks_mandatory ?? false,
+    project_creation_from_events_enabled: props.calendarSettings?.project_creation_from_events_enabled ?? true,
 })
 
 const showVisualFeedback = ref(false)

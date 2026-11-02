@@ -236,6 +236,11 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    /** Rückblickende statt kommender Schnellwahlen — für Auswertungen wie Verkäufe */
+    past: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['change']);
@@ -582,11 +587,17 @@ const presets = computed(() => {
         {label: $t('Current week'), range: () => [mondayOf(now), addDays(mondayOf(now), 6)]},
         {label: $t('Current month'), range: () => [monthStart(now), monthEnd(now)]},
         {label: $t('Current year'), range: () => [atNoon(new Date(now.getFullYear(), 0, 1)), atNoon(new Date(now.getFullYear(), 11, 31))]},
-        {label: $t('Next 7 days'), range: () => [now, addDays(now, 6)]},
-        {label: $t('Next 14 days'), range: () => [now, addDays(now, 13)]},
-        {label: $t('Next 30 days'), range: () => [now, addDays(now, 29)]},
-        {label: $t('Next 90 days'), range: () => [now, addDays(now, 89)]},
-        {label: $t('Next 12 months'), range: () => [now, addDays(addMonths(now, 12), -1)]},
+        ...(props.past ? [
+            {label: $t('Last month'), range: () => [monthStart(addMonths(now, -1)), monthEnd(addMonths(now, -1))]},
+            {label: $t('Last 12 months'), range: () => [addDays(addMonths(now, -12), 1), now]},
+            {label: $t('Last year'), range: () => [atNoon(new Date(now.getFullYear() - 1, 0, 1)), atNoon(new Date(now.getFullYear() - 1, 11, 31))]},
+        ] : [
+            {label: $t('Next 7 days'), range: () => [now, addDays(now, 6)]},
+            {label: $t('Next 14 days'), range: () => [now, addDays(now, 13)]},
+            {label: $t('Next 30 days'), range: () => [now, addDays(now, 29)]},
+            {label: $t('Next 90 days'), range: () => [now, addDays(now, 89)]},
+            {label: $t('Next 12 months'), range: () => [now, addDays(addMonths(now, 12), -1)]},
+        ]),
     ];
 });
 

@@ -8,6 +8,7 @@ use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Core\Dto\TransformsWithoutDataPipeline;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
+use Artwork\Modules\User\Models\User;
 
 class ProjectDTO extends Data
 {
@@ -114,6 +115,7 @@ class ProjectDTO extends Data
             'position' => $user->position ?? null,
             // Accessor liefert bei fehlendem Foto den Buchstaben-Avatar (SVG-Data-URI)
             'profile_photo_url' => $user->profile_photo_url,
+            'deactivated_at' => User::deactivatedAtFor($user),
         ])->values()->all();
     }
 }

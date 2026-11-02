@@ -61,6 +61,7 @@ import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from 
 import Permissions from "@/Mixins/Permissions.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { overlayAbove } from "@/Composeables/useOverlayStack.js";
+import { attachModalDrag } from "@/Helper/draggableModal.js";
 
 export default {
     name: "BaseModal",
@@ -101,6 +102,9 @@ export default {
     mounted() {
 
     },
+    beforeUnmount() {
+        this.detachDrag?.()
+    },
     emits: ['closed'],
     methods: {
         closeModal(bool) {
@@ -128,44 +132,9 @@ export default {
         },
         makeContainerDraggable(){
             const container = this.$refs.containerRef?.$el || this.$refs.containerRef
-
             const dragHandle = this.$refs.dragHandleRef?.$el || this.$refs.dragHandleRef;
-
-            let isDragging = false;
-            let offsetX = 0;
-            let offsetY = 0;
-            let animationFrameId = null;
-
-            dragHandle.addEventListener('mousedown', (event) => {
-                isDragging = true;
-                offsetX = event.clientX - container.offsetLeft;
-                offsetY = event.clientY - container.offsetTop;
-            });
-
-            document.addEventListener('mousemove', (event) => {
-                if (isDragging) {
-                    if (animationFrameId !== null) {
-                        cancelAnimationFrame(animationFrameId);
-                    }
-
-                    animationFrameId = requestAnimationFrame(() => {
-                        container.style.position = 'absolute';
-                        container.style.left = `${event.clientX - offsetX}px`;
-                        container.style.top = `${event.clientY - offsetY}px`;
-                        // Prevent text selection while dragging
-                        document.body.classList.add('select-none');
-                    });
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                isDragging = false;
-                if (animationFrameId !== null) {
-                    cancelAnimationFrame(animationFrameId);
-                }
-                // Remove no-select class when dragging stops
-                document.body.classList.remove('select-none');
-            });
+            this.detachDrag?.()
+            this.detachDrag = attachModalDrag(container, dragHandle)
         },
     }
 }

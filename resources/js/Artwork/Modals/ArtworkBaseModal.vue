@@ -72,7 +72,8 @@
 <script setup>
 
 import axios from "axios";
-import {nextTick, ref} from "vue";
+import {nextTick, onBeforeUnmount, ref} from "vue";
+import { attachModalDrag } from "@/Helper/draggableModal.js";
 import {usePage} from "@inertiajs/vue3";
 import {Dialog, DialogPanel, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -150,48 +151,16 @@ function onDialogClose() {
 }
 const containerRef = ref(null)
 const dragHandleRef = ref(null)
+let detachDrag = null
 function initDraggable() {
     nextTick(() => {
         const container = containerRef.value?.$el || containerRef.value
-        const dragHandle = dragHandleRef?.value.$el || dragHandleRef.value;
-
-        let isDragging = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        let animationFrameId = null;
-
-        dragHandle.addEventListener('mousedown', (event) => {
-            isDragging = true;
-            offsetX = event.clientX - container.offsetLeft;
-            offsetY = event.clientY - container.offsetTop;
-        });
-
-        document.addEventListener('mousemove', (event) => {
-            if (isDragging) {
-                if (animationFrameId !== null) {
-                    cancelAnimationFrame(animationFrameId);
-                }
-
-                animationFrameId = requestAnimationFrame(() => {
-                    container.style.position = 'absolute';
-                    container.style.left = `${event.clientX - offsetX}px`;
-                    container.style.top = `${event.clientY - offsetY}px`;
-                    // Prevent text selection while dragging
-                    document.body.classList.add('select-none');
-                });
-            }
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            if (animationFrameId !== null) {
-                cancelAnimationFrame(animationFrameId);
-            }
-            // Remove no-select class when dragging stops
-            document.body.classList.remove('select-none');
-        });
+        const dragHandle = dragHandleRef.value?.$el || dragHandleRef.value
+        detachDrag?.()
+        detachDrag = attachModalDrag(container, dragHandle)
     })
 }
+onBeforeUnmount(() => detachDrag?.())
 </script>
 
 <style scoped>

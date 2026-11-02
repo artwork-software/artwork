@@ -30,6 +30,9 @@ use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class EventVerificationController extends Controller
 {
+    private const string NOT_APPROVABLE_MESSAGE = 'This event could not be approved: it is already approved '
+        . 'or you may not approve it. Reload the page to see the current state.';
+
     /** Gründe, warum requestVerificationFor() nichts angefragt hat */
     private const SKIPPED_NOT_PLANNING = 'not_planning';
     private const SKIPPED_ALREADY_OPEN = 'already_open';
@@ -342,7 +345,12 @@ class EventVerificationController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $this->approveFor($event, $user);
+        // Veraltete Kachel (schon genehmigt, Recht entzogen): vorher passierte still nichts, gesendet wurde trotzdem
+        if (!$this->approveFor($event, $user)) {
+            session()->flash('error', __(self::NOT_APPROVABLE_MESSAGE));
+
+            return;
+        }
         SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
     }
 

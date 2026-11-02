@@ -561,13 +561,14 @@
 </template>
 
 <script setup>
-import {ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, onUnmounted, nextTick, defineAsyncComponent} from 'vue';
+import {ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, onUnmounted, nextTick, defineAsyncComponent, provide} from 'vue';
 import { parseYmd, toYmd } from '@/Helper/IsoWeek.js';
 import {Link, router, usePage} from '@inertiajs/vue3';
 import NotificationToast from '@/Artwork/Feedback/NotificationToast.vue';
 import {useI18n} from 'vue-i18n';
 import {usePermission} from '@/Composeables/Permission.js';
 import axios from 'axios';
+import {createdShiftDays} from '@/Helper/shiftPlanReloads.js';
 import {chunkRanges, chunksOwningDays, chunksToLoadNow, mergeDayChunk, ownedRange, prioritizeChunks, rangesNearVisibleDays} from '@/Helper/listViewChunks.js';
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue';
 import ShiftPlanListViewFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanListViewFunctionBar.vue';
@@ -936,6 +937,7 @@ function updateShiftLocally(data) {
                 existing.description = 'description' in shiftData ? shiftData.description : existing.description;
                 existing.start = shiftData.start ?? existing.start;
                 existing.end = shiftData.end ?? existing.end;
+                existing.end_date = shiftData.endDate ?? existing.end_date;
                 existing.is_committed = shiftData.isCommitted ?? shiftData.is_committed ?? existing.is_committed;
                 existing.break_minutes = shiftData.break_minutes ?? existing.break_minutes;
 
@@ -1031,6 +1033,38 @@ function removeShiftLocally(data) {
             }
         }
     }
+}
+
+/**
+ * Speicher-Antwort einer Schicht sofort übernehmen (wie in der Tagesansicht): die Schicht-Komponenten
+ * (Person entfernen, Funktion/Überbuchung, Löschen, Bearbeiten) laden nicht mehr neu und verlassen
+ * sich sonst allein auf den WebSocket.
+ */
+function applySavedShift(savedShift) {
+    if (!savedShift) return;
+    if (savedShift.removed) {
+        removeShiftLocally(savedShift);
+        return;
+    }
+    const shifts = Array.isArray(savedShift.shifts) ? savedShift.shifts : [savedShift.shift];
+    for (const shift of shifts.filter(Boolean)) {
+        updateShiftLocally({shift, roomId: shift === savedShift.shift ? savedShift.roomId : undefined});
+    }
+}
+provide('applySavedShift', applySavedShift);
+
+/** Tage ('YYYY-MM-DD') der hier geladenen Schichten mit diesen IDs */
+function daysOfLoadedShifts(shiftIds) {
+    const ids = new Set(shiftIds);
+    const days = new Set();
+    for (const dayData of localGroupedShifts.value) {
+        for (const roomData of dayData.rooms || []) {
+            for (const shift of roomData.shifts || []) {
+                if (ids.has(shift.id) && shift.start_date) days.add(String(shift.start_date).slice(0, 10));
+            }
+        }
+    }
+    return [...days];
 }
 
 // --- L2: Lazy rendering via IntersectionObserver ---
@@ -1371,13 +1405,35 @@ const openAddShiftForRoomAndDay = (day, roomId, shiftGroupId = null) => {
     showAddShiftModal.value = true;
 };
 
-const closeAddShiftModal = () => {
+/**
+ * @param success Speichern erfolgreich (Abbrechen lädt nichts nach)
+ * @param savedShift Antwort des Speicherns: { shift, roomId } (Bearbeiten), { removed, shift } (Löschen)
+ *                   oder { shifts } (Anlegen, flash.shiftPlanUpdate)
+ */
+const closeAddShiftModal = (success = false, savedShift = null) => {
+    const editedShift = shiftToEdit.value;
     showAddShiftModal.value = false;
     shiftToEdit.value = null;
     roomForShiftAdd.value = null;
     dayForShiftAdd.value = null;
     shiftGroupForShiftAdd.value = null;
-    reloadGroupedShifts();
+    if (!success) return;
+
+    if (savedShift?.removed && savedShift.shift) {
+        removeShiftLocally(savedShift);
+        return;
+    }
+    if (savedShift?.shift) {
+        updateShiftLocally(savedShift);
+        // Gewerk gewechselt: Gewerksfilter/Sortierung kennt nur der Server — den Tag nachladen
+        const craftId = savedShift.shift.craftId ?? null;
+        if (editedShift && craftId !== null && craftId !== (editedShift.craft_id ?? editedShift.craft?.id ?? null)) {
+            reloadGroupedShifts([savedShift.shift.startDate]);
+        }
+        return;
+    }
+    // Angelegt: nur die betroffenen Tage und den sichtbaren Bereich nachladen
+    reloadGroupedShifts(createdShiftDays(savedShift));
 };
 
 // Add event for room/day
@@ -1419,11 +1475,13 @@ const showBulkActionError = (error) => {
 };
 
 const deleteSelectedShifts = () => {
+    const shiftIds = [...selectedShiftIds.value];
     axios.post(route('shifts.multi.delete'), {
-        shift_ids: selectedShiftIds.value,
+        shift_ids: shiftIds,
     }, { skipErrorToast: true }).then(() => { // Fehler zeigt showBulkActionError
         selectedShiftIds.value = [];
-        reloadGroupedShifts();
+        // Gelöschte Schichten lokal herausnehmen statt die Liste neu zu laden
+        shiftIds.forEach((id) => removeShiftLocally({ shift: { id } }));
     }).catch(showBulkActionError).finally(() => {
         showDeleteConfirm.value = false;
     });
@@ -1436,11 +1494,13 @@ const duplicateSelectedShifts = () => {
         return;
     }
     duplicateInFlight.value = true;
+    const affectedDays = daysOfLoadedShifts(selectedShiftIds.value);
     axios.post(route('shifts.multi.duplicate'), {
         shift_ids: selectedShiftIds.value,
     }, { skipErrorToast: true }).then(() => { // Fehler zeigt showBulkActionError
         selectedShiftIds.value = [];
-        reloadGroupedShifts();
+        // Kopien liegen am selben Tag wie das Original: nur diese Tage (und den sichtbaren Bereich) nachladen
+        reloadGroupedShifts(affectedDays);
     }).catch(showBulkActionError).finally(() => {
         duplicateInFlight.value = false;
     });

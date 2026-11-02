@@ -94,7 +94,8 @@
                         :class="index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72' : 'w-48'">
                         <div class="flex items-center group" :key="column.id"
                              :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
-                            <div>
+                            <!-- KTO/KST-Überschriften zentriert über der Spalte -->
+                            <div :class="index <= 1 ? 'flex-1 text-center' : ''">
                                 <div>
                                     <div v-if="column.subName" class="flex items-center justify-end">
                                         <div class="flex items-center mr-2" v-if="column.is_locked">
@@ -231,6 +232,7 @@
 
                                 </div>
                                 <div @click="column.clicked = !column.clicked" class="h-5 font-lexend text-xs w-full max-w-max"
+                                     :class="index <= 1 ? 'mx-auto' : ''"
                                      v-if="!column.clicked">
                                     {{ column.name ?? 'no name' }}
                                 </div>

@@ -124,7 +124,6 @@ import Button from "@/Jetstream/Button.vue";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
@@ -153,7 +152,6 @@ export default {
         CalendarAboInfoModal,
         CalendarAboSettingModal,
         BaseFilterTag,
-        ShiftPlanFilter,
         Dropdown,
         Button,
         IconCalendar,

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Auth\ActiveUserProvider;
 use App\Auth\ExtendedTokenValidator;
 use App\Policies\AccommodationPolicy;
 use App\Policies\ArtistPolicy;
@@ -85,6 +86,8 @@ use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Artwork\Modules\Webhook\Policies\WebhookEndpointPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Auth\EloquentUserProvider;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Horizon\Horizon;
 use Laravel\Passport\Bridge\AccessTokenRepository;
@@ -178,6 +181,15 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPolicies();
+
+        // Eloquent-Provider für User: deaktivierte Accounts melden sich auf keinem Guard an. Überschreibt den
+        // Treiber "eloquent" statt einen eigenen Namen zu nutzen, weil Passport (HasApiTokens::getProviderName)
+        // nur Provider mit driver "eloquent" findet; andere Models (z. B. externals) bleiben unverändert.
+        Auth::provider('eloquent', static function ($app, array $config): EloquentUserProvider {
+            return is_a($config['model'], User::class, true)
+                ? new ActiveUserProvider($app['hash'], $config['model'])
+                : new EloquentUserProvider($app['hash'], $config['model']);
+        });
 
         Passport::$clientUuids = false;
         // Scopes der Maschinen-API und der App. Ein Scope, der hier fehlt, lässt sich nicht

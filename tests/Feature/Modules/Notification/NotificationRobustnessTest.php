@@ -61,7 +61,7 @@ final class NotificationRobustnessTest extends FeatureTestCase
         $service->createNotification();
 
         $createdBy = (array) $recipient->notifications()->sole()->data['created_by'];
-        $this->assertSame(['id', 'first_name', 'last_name', 'profile_photo_url'], array_keys($createdBy));
+        $this->assertSame(['id', 'first_name', 'last_name', 'profile_photo_url', 'deactivated_at'], array_keys($createdBy));
         $this->assertSame($actor->id, $createdBy['id']);
     }
 

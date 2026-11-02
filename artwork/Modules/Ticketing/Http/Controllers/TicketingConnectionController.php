@@ -5,6 +5,7 @@ namespace Artwork\Modules\Ticketing\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
+use Artwork\Modules\Ticketing\Http\Controllers\Concerns\CallsTickets;
 use Artwork\Modules\Ticketing\Http\Requests\ConnectTicketingRequest;
 use Artwork\Modules\Ticketing\Http\Requests\SyncReductionsRequest;
 use Artwork\Modules\Ticketing\Http\Requests\SyncRoomsRequest;
@@ -26,6 +27,8 @@ use Inertia\Response;
  */
 class TicketingConnectionController extends Controller
 {
+    use CallsTickets;
+
     public function __construct(
         private readonly TicketingConnectionService $connections,
         private readonly TicketingBillingService $billing,
@@ -66,17 +69,11 @@ class TicketingConnectionController extends Controller
     /** Nach dem Verbinden: die Räume mit dem Stand aus tickets vorbelegt, damit ein Abgleich nichts überschreibt. */
     public function rooms(Request $request): Response
     {
-        $connection = $this->connections->current();
-        $venues = [];
-        $ticketsError = null;
-
-        if ($connection) {
-            try {
-                $venues = $this->connections->venues($connection);
-            } catch (TicketingConnectionException $exception) {
-                $ticketsError = $exception->getMessage();
-            }
-        }
+        [$venues, $ticketsError] = $this->readFromTickets(
+            $this->connections->current(),
+            $this->connections->venues(...),
+            [],
+        );
 
         $links = TicketingRoomLink::query()->pluck('venue_id', 'room_id');
 
@@ -94,17 +91,11 @@ class TicketingConnectionController extends Controller
 
     public function reductions(): Response
     {
-        $connection = $this->connections->current();
-        $reductions = [];
-        $ticketsError = null;
-
-        if ($connection) {
-            try {
-                $reductions = $this->connections->reductions($connection);
-            } catch (TicketingConnectionException $exception) {
-                $ticketsError = $exception->getMessage();
-            }
-        }
+        [$reductions, $ticketsError] = $this->readFromTickets(
+            $this->connections->current(),
+            $this->connections->reductions(...),
+            [],
+        );
 
         return Inertia::render('Settings/Tickets/Reductions', [
             'connection' => $this->connectionProps(),
@@ -140,28 +131,22 @@ class TicketingConnectionController extends Controller
 
     public function syncRooms(SyncRoomsRequest $request): RedirectResponse
     {
-        $connection = $this->requireConnection();
-
-        try {
-            $this->connections->syncRooms($connection, $request->validated('rooms'));
-        } catch (TicketingConnectionException $exception) {
-            return back()->with('error', $exception->getMessage());
-        }
-
-        return back()->with('success', __('Rooms synced with Artwork-Tickets.'));
+        return $this->sendToTickets(
+            $this->requireConnection(),
+            fn (TicketingConnection $connection) => $this->connections
+                ->syncRooms($connection, $request->validated('rooms')),
+            __('Rooms synced with Artwork-Tickets.'),
+        );
     }
 
     public function syncReductions(SyncReductionsRequest $request): RedirectResponse
     {
-        $connection = $this->requireConnection();
-
-        try {
-            $this->connections->syncReductions($connection, $request->validated('reductions'));
-        } catch (TicketingConnectionException $exception) {
-            return back()->with('error', $exception->getMessage());
-        }
-
-        return back()->with('success', __('Reductions synced with Artwork-Tickets.'));
+        return $this->sendToTickets(
+            $this->requireConnection(),
+            fn (TicketingConnection $connection) => $this->connections
+                ->syncReductions($connection, $request->validated('reductions')),
+            __('Reductions synced with Artwork-Tickets.'),
+        );
     }
 
     public function destroy(): RedirectResponse

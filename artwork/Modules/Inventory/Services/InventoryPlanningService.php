@@ -678,10 +678,11 @@ class InventoryPlanningService
         }
 
         // External issues carry no time information → treated as full-day.
+        // return_date ist bereits das effektive Rückgabedatum (die Aufrufer übergeben flache Objekte).
         foreach ($externalIssues as $issue) {
             $collect(
                 $issue->issue_date ? CarbonCarbon::parse($issue->issue_date)->toDateString() : null,
-                $issue->effectiveReturnDate()?->toDateString(),
+                $issue->return_date,
                 0,
                 1440,
                 (int) ($issue->pivot->quantity ?? 0)

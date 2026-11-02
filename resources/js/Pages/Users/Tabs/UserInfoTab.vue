@@ -128,6 +128,9 @@
                             id="email"
                         />
                         <JetInputError :message="userForm.errors.email" class="mt-2" />
+                        <p v-if="user_to_edit.pending_email" class="mt-1 text-xs text-text-subtle">
+                            {{ $t('Confirmation pending: we sent a link to {email}.', { email: user_to_edit.pending_email }) }}
+                        </p>
                         <div v-if="ownEmailChanged" class="mt-3">
                             <BaseInput
                                 type="password"
@@ -389,6 +392,30 @@
             </p>
         </section>
 
+        <!-- ACCOUNT-STATUS (Personalverwaltung/Admins, nicht der eigene Account) -->
+        <section v-if="canChangeActivation" class="mt-8 rounded-3xl border border-border-subtle bg-white p-6 shadow-sm sm:p-8">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-semibold text-text">{{ $t('Account status') }}</h3>
+                    <p v-if="isDeactivated" class="mt-1 text-sm text-text-muted">
+                        {{ $t('Deactivated on {date}', { date: formatDate(user_to_edit.deactivated_at) }) }} –
+                        {{ $t('This person can no longer sign in. Rights and assignments are kept.') }}
+                    </p>
+                    <p v-else class="mt-1 text-sm text-text-muted">
+                        {{ $t('Deactivated accounts can no longer sign in. Rights, settings and assignments are kept.') }}
+                    </p>
+                </div>
+                <BaseUIButton v-if="isDeactivated" hide-icon :disabled="activationProcessing" @click="reactivateAccount">
+                    <IconUserCheck class="h-4 w-4" />
+                    {{ $t('Reactivate account') }}
+                </BaseUIButton>
+                <BaseUIButton v-else hide-icon @click="showDeactivateModal = true">
+                    <IconUserOff class="h-4 w-4" />
+                    {{ $t('Deactivate account') }}
+                </BaseUIButton>
+            </div>
+        </section>
+
         <!-- MODALS -->
         <BaseModal
             @closed="closeChangeTeamsModal"
@@ -478,6 +505,8 @@
             </div>
         </BaseModal>
 
+        <DeactivateAccountModal v-if="showDeactivateModal" :user="user_to_edit" @closed="showDeactivateModal = false" />
+
         <!-- SUCCESS DIALOG -->
         <SuccessModal
             v-if="showSuccessModal"
@@ -507,10 +536,13 @@ import VisualFeedback from '@/Components/Feedback/VisualFeedback.vue'
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
-import {IconCheck, IconChevronDown, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue"
+import {IconCheck, IconChevronDown, IconDotsVertical, IconEdit, IconTrash, IconUserCheck, IconUserOff, IconX} from "@tabler/icons-vue"
 import {is, can} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import LogoutOtherBrowserSessionsForm from "@/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue";
+import DeactivateAccountModal from "@/Pages/Users/Components/DeactivateAccountModal.vue";
+import {canChangeAccountActivation, isUserDeactivated} from "@/Helper/UserDeactivation.js";
+import {useInstanceFormat} from "@/Composeables/InstanceFormat.js";
 
 const props = defineProps({
     user_to_edit: { type: Object, required: true },
@@ -531,6 +563,26 @@ const canEditPreferences = computed(() => isSignedInUser() || can('can manage wo
 const hasTeamRights = computed(() => can('teammanagement') || can('can manage workers') || hasAdminRole())
 const canEditTeams = computed(() => hasTeamRights.value && (!isSignedInUser() || hasAdminRole()))
 const isOwnProfileWithoutTeamRights = computed(() => hasTeamRights.value && !canEditTeams.value)
+
+/* ----- Account deaktivieren/reaktivieren (Spiegel von UserPolicy::deactivate) ----- */
+const { formatDate } = useInstanceFormat()
+const isDeactivated = computed(() => isUserDeactivated(props.user_to_edit))
+const canChangeActivation = computed(() => canChangeAccountActivation({
+    user: props.user_to_edit,
+    authUserId: page.props?.auth?.user?.id,
+    isAdmin: hasAdminRole(),
+    canManageWorkers: can('can manage workers'),
+    isTargetAdmin: (props.user_to_edit.roles ?? []).includes('artwork admin'),
+}))
+const showDeactivateModal = ref(false)
+const activationProcessing = ref(false)
+const reactivateAccount = () => {
+    activationProcessing.value = true
+    router.post(route('user.reactivate', { user: props.user_to_edit.id }), {}, {
+        preserveScroll: true,
+        onFinish: () => (activationProcessing.value = false),
+    })
+}
 
 /* ----- UI State ----- */
 const successSaved = ref(false)
@@ -580,9 +632,6 @@ const selectedLanguage = ref(null)
 
 onMounted(() => {
     selectedLanguage.value = languages.value.find(l => l.id === props.user_to_edit.language) || languages.value[0]
-    if (selectedLanguage.value) {
-        document.documentElement.lang = selectedLanguage.value.id
-    }
 })
 
 /* ----- Departments (lokale Kopie fürs Modal) ----- */
@@ -638,7 +687,8 @@ const closeSuccessModal = () => (showSuccessModal.value = false)
 /* ----- Edit User ----- */
 const editUser = () => {
     userForm.language = selectedLanguage.value?.id
-    if (proxy?.$updateLocale && userForm.language) {
+    // Nur die eigene Oberfläche umstellen – vorher wechselte ein Admin beim Bearbeiten fremder Profile mit
+    if (isSignedInUser() && proxy?.$updateLocale && userForm.language) {
         proxy.$updateLocale(userForm.language)
     }
     if (hasAdminRole()) {
@@ -660,7 +710,9 @@ const editUser = () => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
-            savedEmail.value = userForm.email
+            // Die eigene neue Adresse gilt erst nach dem Bestätigungslink; der Server liefert die bisherige zurück
+            savedEmail.value = props.user_to_edit.email
+            userForm.email = props.user_to_edit.email
             userForm.current_password = ''
             successSaved.value = true
             setTimeout(() => (successSaved.value = false), 2000)

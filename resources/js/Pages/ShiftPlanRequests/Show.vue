@@ -166,6 +166,7 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {Link, router} from '@inertiajs/vue3';
 import {computed, reactive, ref, watch} from 'vue';
@@ -710,7 +711,7 @@ const defaultRowPrefs = () => ({
 });
 const loadRowPrefs = () => {
     try {
-        const stored = JSON.parse(localStorage.getItem(ROW_PREFS_STORAGE_KEY) ?? 'null');
+        const stored = JSON.parse(safeGetItem(ROW_PREFS_STORAGE_KEY) ?? 'null');
         if (!stored) return defaultRowPrefs();
         return {
             ...defaultRowPrefs(),
@@ -724,7 +725,7 @@ const loadRowPrefs = () => {
 const rowPrefs = reactive(loadRowPrefs());
 watch(rowPrefs, () => {
     try {
-        localStorage.setItem(ROW_PREFS_STORAGE_KEY, JSON.stringify(rowPrefs));
+        safeSetItem(ROW_PREFS_STORAGE_KEY, JSON.stringify(rowPrefs));
     } catch { /* Speichern ist optional */ }
 }, {deep: true});
 

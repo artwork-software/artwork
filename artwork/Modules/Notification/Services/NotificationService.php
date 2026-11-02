@@ -378,6 +378,7 @@ class NotificationService
             'first_name' => $creator->first_name,
             'last_name' => $creator->last_name,
             'profile_photo_url' => $creator->profile_photo_url,
+            'deactivated_at' => User::deactivatedAtFor($creator),
         ];
     }
 

@@ -10,6 +10,11 @@ use Artwork\Modules\ExternalUserManagement\Service\LdapService;
 use Artwork\Modules\ExternalUserManagement\Service\OidcService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Passport;
+use Laravel\Passport\Token;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
@@ -340,5 +345,168 @@ final class SecurityAuditIdpProvisioningRegressionTest extends FeatureTestCase
 
         $this->assertSame(1, $result['synced']);
         $this->assertSame($reinvited->id, ExternalUser::query()->where('identification', 'lia')->value('user_id'));
+    }
+    // ---------- Audit 26.10.2026, H-4: Verknüpfung entzieht alle bisherigen Zugänge ----------
+
+    /**
+     * Lokales Konto mit Passwort, Datenbank-Sitzung und Passport-Tokens (App und Maschine) – so, wie
+     * es jemand nach einem Pre-Claim der Verzeichnisadresse besäße.
+     */
+    private function localAccountWithAccess(string $email): User
+    {
+        if (!is_readable(Passport::keyPath('oauth-private.key'))) {
+            $this->artisan('passport:keys');
+        }
+        app(ClientRepository::class)->createPersonalAccessGrantClient('Test Personal Access Client');
+
+        $user = User::factory()->create(['email' => $email, 'password' => Hash::make('local-password')]);
+        $user->forceFill(['remember_token' => 'old-remember-token'])->save();
+        $user->createToken('Phone', ['app']);
+        $user->createToken('Machine key', ['calendar:read']);
+
+        config(['session.driver' => 'database']);
+        DB::table('sessions')->insert([
+            'id' => 'pre-claim-session',
+            'user_id' => $user->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'test',
+            'payload' => '',
+            'last_activity' => now()->timestamp,
+        ]);
+
+        return $user;
+    }
+
+    private function assertAllAccessRevoked(User $user): void
+    {
+        $user->refresh();
+        $this->assertFalse(Hash::check('local-password', $user->password));
+        $this->assertNotSame('old-remember-token', $user->remember_token);
+        $this->assertDatabaseMissing('sessions', ['id' => 'pre-claim-session']);
+        $this->assertSame(0, Token::query()->where('user_id', $user->id)->where('revoked', false)->count());
+    }
+
+    #[Test]
+    public function ldap_sync_linking_an_existing_account_revokes_its_previous_access(): void
+    {
+        $user = $this->localAccountWithAccess('new.hire@theater.test');
+
+        $this->syncLdap($this->ldapSource(), [$this->ldapEntry('new-hire', 'new.hire@theater.test')]);
+
+        $this->assertSame('ldap', $user->fresh()->auth_provider);
+        $this->assertAllAccessRevoked($user);
+    }
+
+    #[Test]
+    public function oidc_login_linking_an_existing_account_revokes_its_previous_access(): void
+    {
+        $user = $this->localAccountWithAccess('new.person@example.com');
+        $source = $this->oidcSource();
+        $this->fakeOidcLogin(['email_verified' => true]);
+
+        $this->get(route('auth.oidc.callback', ['externalUserSource' => $source->id]));
+
+        $this->assertSame('oidc', $user->fresh()->auth_provider);
+        $this->assertAllAccessRevoked($user);
+        $this->assertTrue(Auth::check());
+        $this->assertSame($user->id, Auth::id());
+    }
+
+    #[Test]
+    public function resolving_an_already_linked_identity_keeps_access(): void
+    {
+        $source = $this->ldapSource();
+        $this->syncLdap($source, [$this->ldapEntry('linked', 'linked@theater.test')]);
+        $user = User::query()->where('email', 'linked@theater.test')->firstOrFail();
+        $user->forceFill(['remember_token' => 'kept-token'])->save();
+
+        $this->syncLdap($source, [$this->ldapEntry('linked', 'linked@theater.test')]);
+
+        $this->assertSame('kept-token', $user->fresh()->remember_token);
+    }
+
+    // ---------- Audit 31.10.2026, F-05: Admin-Konten nie per mail-Attribut an LDAP binden ----------
+
+    #[Test]
+    public function the_ldap_sync_does_not_link_a_local_admin_by_email(): void
+    {
+        // Zwei lokale Admins: nicht der Schutz des letzten Admins, sondern die Admin-Regel greift.
+        $this->adminUser();
+        $victim = $this->adminUser(User::factory()->create(['email' => 'admin2@theater.test']));
+
+        $result = $this->syncLdap($this->ldapSource(), [$this->ldapEntry('attacker', 'admin2@theater.test')]);
+
+        $this->assertSame(['total' => 1, 'synced' => 0, 'skipped' => 1], $result);
+        $this->assertSame('local', $victim->fresh()->auth_provider);
+        $this->assertNull(ExternalUser::query()->where('identification', 'attacker')->value('user_id'));
+    }
+
+    #[Test]
+    public function the_ldap_login_does_not_take_over_a_local_admin_by_email(): void
+    {
+        $this->adminUser();
+        $victim = $this->adminUser(User::factory()->create([
+            'email' => 'admin2@theater.test',
+            'password' => Hash::make('local-password'),
+        ]));
+        $this->ldapSource();
+        $this->mock(LdapService::class, function ($mock): void {
+            $mock->shouldReceive('authenticateAndFetch')->andReturn(
+                $this->ldapEntry('attacker', 'admin2@theater.test')
+            );
+        });
+
+        $this->post(route('login'), ['email' => 'admin2@theater.test', 'password' => 'attacker-ldap-password']);
+
+        $this->assertGuest();
+        $victim->refresh();
+        $this->assertSame('local', $victim->auth_provider);
+        $this->assertTrue(Hash::check('local-password', $victim->password));
+    }
+
+    #[Test]
+    public function the_ldap_sync_still_links_existing_non_admin_accounts_by_email(): void
+    {
+        $user = User::factory()->create(['email' => 'staff@theater.test']);
+
+        $this->syncLdap($this->ldapSource(), [$this->ldapEntry('staff', 'staff@theater.test')]);
+
+        $this->assertSame('ldap', $user->fresh()->auth_provider);
+    }
+
+    #[Test]
+    public function a_local_admin_with_a_directory_entry_logs_in_with_the_local_password(): void
+    {
+        $this->adminUser();
+        $admin = $this->adminUser(User::factory()->create([
+            'email' => 'admin2@theater.test',
+            'password' => Hash::make('local-password'),
+        ]));
+        $this->ldapSource();
+        $this->mock(LdapService::class, function ($mock): void {
+            $mock->shouldNotReceive('authenticateAndFetch');
+        });
+
+        $this->post(route('login'), ['email' => 'admin2@theater.test', 'password' => 'local-password']);
+
+        $this->assertAuthenticatedAs($admin);
+        $this->assertSame('local', $admin->fresh()->auth_provider);
+    }
+
+    #[Test]
+    public function an_ldap_bound_admin_is_not_rekeyed_to_another_subject_by_email(): void
+    {
+        $source = $this->ldapSource();
+        $admin = $this->adminUser(User::factory()->create(['email' => 'admin2@theater.test']));
+        $admin->forceFill([
+            'auth_provider' => 'ldap',
+            'auth_provider_id' => 'admin-original',
+            'auth_provider_issuer' => $source->resolvedIssuer(),
+        ])->save();
+
+        $result = $this->syncLdap($source, [$this->ldapEntry('attacker', 'admin2@theater.test')]);
+
+        $this->assertSame(0, $result['synced']);
+        $this->assertSame('admin-original', $admin->fresh()->auth_provider_id);
     }
 }

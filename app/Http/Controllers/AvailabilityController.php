@@ -20,6 +20,7 @@ use Artwork\Modules\Vacation\Services\VacationSeriesService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class AvailabilityController extends Controller
 {
@@ -166,7 +167,7 @@ class AvailabilityController extends Controller
      */
     private function broadcastWorkerAvailability(Availability $availability): void
     {
-        broadcast(WorkerAvailabilityChanged::forMorph(
+        SafeBroadcast::send(WorkerAvailabilityChanged::forMorph(
             $availability->available_type,
             (int) $availability->available_id
         ));

@@ -42,6 +42,7 @@ class EventTypeResource extends JsonResource
                     'name' => $user->full_name,
                     'email' => $user instanceof User ? $user->visibleEmailFor(Auth::user()) : ($user->email ?? null),
                     'profile_photo_url' => $user->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($user),
                 ];
             }),
         ];

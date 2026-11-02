@@ -49,6 +49,8 @@ class UserCalenderAboController extends Controller
     \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\Response|\Illuminate\Foundation\Application
     {
         $calendarAbo = UserCalendarAbo::where('calendar_abo_id', $calendar_abo_id)->firstOrFail();
+        // Abos deaktivierter Accounts liefern nichts mehr (nach Reaktivierung wieder)
+        abort_if($calendarAbo->user?->isDeactivated() === true, 404);
 
         // Create Calendar
         $calendar = Calendar::create('Alle Termine')

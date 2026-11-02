@@ -25,6 +25,7 @@
                     "done_at": ".",
                     "done_at_dt_local": ".",
                     "done_by_user": {
+                        "deactivated_at": ".",
                         "first_name": ".",
                         "full_name": ".",
                         "id": ".",
@@ -41,6 +42,7 @@
                     "order": ".",
                     "users": {
                         "[]": {
+                            "deactivated_at": ".",
                             "first_name": ".",
                             "full_name": ".",
                             "id": ".",
@@ -53,6 +55,7 @@
             "user_id": ".",
             "users": {
                 "[]": {
+                    "deactivated_at": ".",
                     "first_name": ".",
                     "full_name": ".",
                     "id": ".",

@@ -33,6 +33,7 @@ class MinimalUserIndexResource extends JsonResource
             'auth_provider_issuer' => $this->getAttribute('auth_provider_issuer'),
             // Personalverwaltung: Basis für das Badge "Arbeitszeitmuster fehlt" (UserController::index)
             'can_work_shifts' => (bool) $this->getAttribute('can_work_shifts'),
+            'deactivated_at' => $this->getAttribute('deactivated_at')?->toIso8601String(),
         ];
     }
 }

@@ -267,11 +267,18 @@
                                     :checked="textData.contact_type_ids.includes(contactType.id)"
                                     @change="toggleContactType(contactType.id, $event.target.checked)"
                                 />
-                                {{ $t(contactType.name) }}
+                                <span class="min-w-0 flex-1 truncate">{{ $t(contactType.name) }}</span>
+                                <span
+                                    v-if="contactType.link_only"
+                                    class="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text-subtle"
+                                    :title="$t('These contacts are maintained in their own profile. They can only be linked here, not created or edited.')"
+                                >
+                                    {{ $t('Link only') }}
+                                </span>
                             </label>
                         </div>
                         <p v-if="!textData.contact_type_ids.length" class="mt-1.5 text-xs text-text-subtle">
-                            {{ $t('Without a selection, contacts of all contact types can be added.') }}
+                            {{ $t('Without a selection, contacts of all contact types can be added. Freelancers and service providers only if they are selected.') }}
                         </p>
                     </fieldset>
 
@@ -417,29 +424,31 @@
                                 icon-size="h-4 w-4"
                             />
                         </div>
-                        <div class="grid grid-cols-1 gap-3">
-                            <div
-                                v-for="(opt, idx) in textData.options"
-                                :key="`opt-${idx}`"
-                                class="rounded-lg border border-border-subtle p-3 bg-white"
-                            >
+                        <BaseSortableList
+                            v-model="textData.options"
+                            labeled
+                            list-class="grid grid-cols-1 gap-3"
+                            item-class="rounded-lg border border-border-subtle p-3 bg-white"
+                        >
+                            <template #default="{ index }">
                                 <BaseInput
-                                    v-model="textData.options[idx].value"
-                                    :label="'Option (' + (idx + 1) + ')'"
-                                    :id="`option-${idx}`"
+                                    v-model="textData.options[index].value"
+                                    :label="'Option (' + (index + 1) + ')'"
+                                    :id="`option-${index}`"
                                 />
-                                <div class="mt-1 text-right">
+                            </template>
+                            <template #below="{ remove }">
+                                <div v-if="textData.options.length > 1" class="mt-1 text-right">
                                     <button
-                                        v-if="idx !== 0"
                                         type="button"
                                         class="text-xs text-accent-600 hover:text-accent-700 underline underline-offset-2"
-                                        @click="removeOption(idx)"
+                                        @click="remove"
                                     >
                                         {{ $t('Remove') }}
                                     </button>
                                 </div>
-                            </div>
-                        </div>
+                            </template>
+                        </BaseSortableList>
 
                         <div class="mt-2 flex items-center justify-end">
                             <button
@@ -743,6 +752,7 @@ import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseSortableList from '@/Artwork/Inputs/BaseSortableList.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import { useColorHelper } from '@/Composeables/UseColorHelper.js'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -1000,9 +1010,6 @@ function toggleContactType(id, checked) {
 function addMoreOneOption() {
     if (!Array.isArray(textData.options)) textData.options = []
     textData.options.push({ value: '' })
-}
-function removeOption(index) {
-    if (Array.isArray(textData.options)) textData.options.splice(index, 1)
 }
 
 /* Watch: Typwechsel -> Fields neu setzen */

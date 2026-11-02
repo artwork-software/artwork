@@ -60,6 +60,23 @@ final class ProjectComponentMultipleSelectionTest extends FeatureTestCase
     }
 
     #[Test]
+    public function reordering_options_keeps_the_project_selection(): void
+    {
+        $list = $this->makeComponent('CheckboxList', ['options' => [['value' => 'A'], ['value' => 'B'], ['value' => 'C']]]);
+        $this->patchValue($list, ['selected' => ['A', 'C']])->assertOk();
+
+        $this->updateComponentData($list, ['options' => [['value' => 'C'], ['value' => 'A'], ['value' => 'B']]])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame([['value' => 'C'], ['value' => 'A'], ['value' => 'B']], $list->fresh()->data['options']);
+        $this->assertSame(['selected' => ['A', 'C']], $this->storedData($list));
+
+        // nächstes Speichern folgt der neuen Reihenfolge
+        $this->patchValue($list, ['selected' => ['A', 'C']])->assertOk();
+        $this->assertSame(['selected' => ['C', 'A']], $this->storedData($list));
+    }
+
+    #[Test]
     public function stale_entries_of_a_renamed_option_do_not_block_saving(): void
     {
         $dropdown = $this->makeComponent('DropDown', [

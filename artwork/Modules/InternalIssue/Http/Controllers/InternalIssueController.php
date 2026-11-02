@@ -72,6 +72,8 @@ class InternalIssueController extends Controller
                 'articles.images',
                 'articles.category',
                 'articles.subCategory',
+                // $appends room/manufacturer lesen properties – sonst eine Abfrage je Artikel
+                'articles.properties',
                 'specialItems',
                 // Liste und Bearbeiten-Dialog lesen vom Raum nur id und Namen — ohne Room::$with
                 // (Admins, Ersteller als volle User-Modelle)
@@ -112,7 +114,7 @@ class InternalIssueController extends Controller
         );
 
         $articlesInFilter = !empty($articleIds)
-            ? InventoryArticle::whereIn('id', $articleIds)->get()
+            ? InventoryArticle::with(['properties', 'category', 'subCategory'])->whereIn('id', $articleIds)->get()
             : collect([]);
 
         // ⚠️ Tippfehler korrigiert: authManager (nicht authManger)
@@ -124,7 +126,8 @@ class InternalIssueController extends Controller
             'materialSets' => MaterialSet::with(
                 'items.article',
                 'items.article.category',
-                'items.article.subCategory'
+                'items.article.subCategory',
+                'items.article.properties'
             )->get(),
             'detailedArticle' => Inertia::optional(fn () =>
             InventoryArticle::with([

@@ -15,7 +15,8 @@ final class UserAvatarFieldsTest extends FeatureTestCase
     #[Test]
     public function avatar_fields_serialize_exactly_name_and_photo(): void
     {
-        $user = User::factory()->create(['first_name' => 'Ada', 'last_name' => 'Lovelace']);
+        // fresh(): wie aus der DB geladen – erst dann trägt das Model deactivated_at (Spalten-Default null)
+        $user = User::factory()->create(['first_name' => 'Ada', 'last_name' => 'Lovelace'])->fresh();
 
         $serialized = $user->setVisible(User::AVATAR_FIELDS)->toArray();
 

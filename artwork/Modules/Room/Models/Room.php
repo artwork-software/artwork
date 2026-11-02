@@ -317,7 +317,7 @@ class Room extends Model
      */
     public function effectiveAdminUsers(): Collection
     {
-        $this->loadMissing(['adminDepartments.users:id,first_name,last_name,profile_photo_path']);
+        $this->loadMissing(['adminDepartments.users:id,first_name,last_name,profile_photo_path,deactivated_at']);
 
         return collect($this->admins->all())
             ->merge($this->adminDepartments->flatMap(fn (Department $department) => $department->users->all()))

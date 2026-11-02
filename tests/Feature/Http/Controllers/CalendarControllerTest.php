@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\User\Models\User;
 use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
@@ -80,5 +81,36 @@ final class CalendarControllerTest extends FeatureTestCase
             'day_remarks_enabled' => true,
             'day_remarks_mandatory' => true,
         ])->assertForbidden();
+    }
+
+    #[Test]
+    public function admin_can_disable_project_creation_from_events(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->post(route('calendar-settings.store'), [
+            'start' => '08:00',
+            'end' => '20:00',
+            'project_creation_from_events_enabled' => false,
+        ])->assertRedirect();
+
+        $this->assertFalse(app(GeneralCalendarSettings::class)->project_creation_from_events_enabled);
+        $this->get(route('calendar.settings'))->assertInertia(fn (AssertableInertia $page) =>
+            $page->where('project_creation_from_events_enabled', false)
+                ->where('calendarSettings.project_creation_from_events_enabled', false)
+        );
+    }
+
+    #[Test]
+    public function project_creation_from_events_stays_enabled_when_the_field_is_not_sent(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->post(route('calendar-settings.store'), [
+            'start' => '08:00',
+            'end' => '20:00',
+        ])->assertRedirect();
+
+        $this->assertTrue(app(GeneralCalendarSettings::class)->project_creation_from_events_enabled);
     }
 }

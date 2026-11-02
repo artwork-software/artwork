@@ -56,6 +56,7 @@ readonly class EventCalendarService
             'position',
             'email',
             'profile_photo_path',
+            'deactivated_at',
         ])->get()->keyBy('id');
         $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id', $projectIds)->select([
             'id',
@@ -68,7 +69,7 @@ readonly class EventCalendarService
             'icon',
         ])->with([
             'status:id,name,color',
-            'managerUsers:id,first_name,last_name,position,email,profile_photo_path',
+            'managerUsers:id,first_name,last_name,position,email,profile_photo_path,deactivated_at',
             'managerUsers.departments:id',
             'groups',
             'categories',
@@ -147,7 +148,7 @@ readonly class EventCalendarService
             $projectWith[] = 'status:id,name,color';
         }
         if ($needsLeaders) {
-            $projectWith[] = 'managerUsers:id,first_name,last_name,position,email,profile_photo_path';
+            $projectWith[] = 'managerUsers:id,first_name,last_name,position,email,profile_photo_path,deactivated_at';
         }
 
         $projects   = $projectIds->isEmpty() ? collect() :
@@ -163,7 +164,7 @@ readonly class EventCalendarService
             EventStatus::whereIn('id', $eventStatusIds)->select(['id', 'name', 'color'])->get()->keyBy('id');
         $users = $userIds->isEmpty() ? collect() :
             User::whereIn('id', $userIds)
-                ->select(['id', 'first_name', 'last_name', 'position', 'email', 'profile_photo_path'])
+                ->select(['id', 'first_name', 'last_name', 'position', 'email', 'profile_photo_path', 'deactivated_at'])
                 ->get()->keyBy('id');
 
         $eventDTOs = $events->map(function ($event) use (

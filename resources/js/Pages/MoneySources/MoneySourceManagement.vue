@@ -378,13 +378,13 @@
                             class="ml-2"
                             :height="6"
                             :width="6"
-                            v-if="moneySource.history[0]?.changes?.[0]?.changed_by"
-                            :user="moneySource.history[0]?.changes?.[0]?.changed_by"
-                            :id="(moneySource.history[0]?.changes?.[0]?.changed_by?.id || 0) + (moneySource.id || 0)"
+                            v-if="lastChanger(moneySource)"
+                            :user="lastChanger(moneySource)"
+                            :id="(lastChanger(moneySource)?.id || 0) + (moneySource.id || 0)"
                         />
                         <span class="ml-1">
-              {{ moneySource.history[0]?.changes?.[0]?.changed_by?.first_name }}
-              {{ moneySource.history[0]?.changes?.[0]?.changed_by?.last_name }}
+              {{ lastChanger(moneySource)?.first_name }}
+              {{ lastChanger(moneySource)?.last_name }}
             </span>
                     </div>
 
@@ -505,6 +505,10 @@ const moneySourceFilter = ref(moneySourceFilters.value[0])
 const showSearchbar = ref(false)
 const moneySource_query = ref('')
 const searchBarInput = ref(null)
+
+/** Wer zuletzt geändert hat: historyForFrontend liefert die Person je Zeile (change_by) */
+const lastChanger = (moneySource) =>
+    moneySource.history?.[0]?.change_by ?? moneySource.history?.[0]?.changes?.[0]?.changed_by ?? null
 
 const showMoneySourceModal = ref(false)
 const showDeleteSourceModal = ref(false)

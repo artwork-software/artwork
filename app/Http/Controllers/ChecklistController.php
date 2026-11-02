@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ChecklistController extends Controller
 {
@@ -47,6 +48,13 @@ class ChecklistController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Name nur aus Leerzeichen wurde durch TrimStrings zu null → 500 statt Fehlermeldung
+        $request->validate([
+            'template_id' => ['nullable', 'integer', 'exists:checklist_templates,id'],
+            'name' => ['required_without:template_id', 'nullable', 'string', 'max:255'],
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
+        ]);
+
         if ($request->integer('project_id')) {
             $this->authorize('createProperties', Project::find($request->project_id));
         }
@@ -68,7 +76,7 @@ class ChecklistController extends Controller
                     ->setTranslationKey('Checklist added')
                     ->setTranslationKeyPlaceholderValues([$request->name])
             );
-            broadcast(new ChecklistUpdated($request->integer('project_id')))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($request->integer('project_id')), true);
         }
         return Redirect::back();
     }
@@ -110,7 +118,7 @@ class ChecklistController extends Controller
             $userIds = $checklist->users->pluck('id');
             foreach ($userIds as $id) {
                 if (!$project->users->contains($id)) {
-                    $project->users()->attach($id);
+                    $project->users()->attach($id, ['can_write' => false]);
                 }
             }
         }
@@ -143,13 +151,6 @@ class ChecklistController extends Controller
                     'checklist_id' => $checklist->id,
                     'order' => Task::max('order') + 1,
                 ]);
-            }
-        }
-
-        if ($checklist->hasProject()) {
-            $project = $checklist->project;
-            if (!$project->users->contains($this->authManager->id())) {
-                $project->users()->attach($this->authManager->id());
             }
         }
 
@@ -189,7 +190,7 @@ class ChecklistController extends Controller
                     ->setTranslationKey('Checklist modified')
                     ->setTranslationKeyPlaceholderValues([$checklist->name])
             );
-            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($checklist->project_id), true);
         }
         return $this->checklistUpdateResponse($request, $checklist);
     }
@@ -246,7 +247,7 @@ class ChecklistController extends Controller
                     ->setTranslationKey('Checklist removed')
                     ->setTranslationKeyPlaceholderValues([$checklist->name])
             );
-            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($checklist->project_id), true);
         }
 
         return Redirect::back();
@@ -279,7 +280,7 @@ class ChecklistController extends Controller
                     ->setTranslationKey('Checklist duplicated')
                     ->setTranslationKeyPlaceholderValues([$newChecklist->name])
             );
-            broadcast(new ChecklistUpdated($newChecklist->project_id))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($newChecklist->project_id), true);
         }
 
         $newChecklist->users()->sync($checklist->users->pluck('id'));
@@ -299,7 +300,7 @@ class ChecklistController extends Controller
             $this->authManager->id()
         );
         if ($checklist->hasProject()) {
-            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($checklist->project_id), true);
         }
         return Redirect::back();
     }

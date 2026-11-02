@@ -38,6 +38,7 @@ class MinimalCalendarEventResource extends JsonResource
             'created_by'  => [
                 'id'               => $creator?->getAttribute('id'),
                 'profile_photo_url' => $creator?->getAttribute('profile_photo_url'),
+                'deactivated_at' => User::deactivatedAtFor($creator),
                 'first_name'       => $creator?->getAttribute('first_name'),
                 'last_name'        => $creator?->getAttribute('last_name'),
             ],
@@ -133,6 +134,7 @@ class MinimalCalendarEventResource extends JsonResource
         return count($managerUsers) > 0
             ? array_map(fn(User $u) => [
                 'profile_photo_url' => $u->getAttribute('profile_photo_url'),
+                'deactivated_at' => User::deactivatedAtFor($u),
                 'first_name'        => $u->getAttribute('first_name'),
                 'last_name'         => $u->getAttribute('last_name'),
             ], $managerUsers)

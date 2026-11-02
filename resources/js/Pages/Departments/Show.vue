@@ -56,7 +56,7 @@
                         :columns="userCols"
                         row-key="id"
                         empty-title="Keine Teammitglieder"
-                        empty-message="Derzeit sind keine Teammitglieder vorhanden."
+                        empty-message="No team members added yet"
                     >
                         <!-- Name (Avatar + Name) -->
                         <template #cell-name="{ row }">

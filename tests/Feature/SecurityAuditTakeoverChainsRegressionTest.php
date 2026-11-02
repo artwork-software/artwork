@@ -10,11 +10,13 @@ use Artwork\Modules\Mail\Settings\MailSettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Notifications\ConfirmEmailChangeNotification;
 use Artwork\Modules\User\Notifications\EmailAddressChangedNotification;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Passport\ClientRepository;
@@ -172,8 +174,11 @@ final class SecurityAuditTakeoverChainsRegressionTest extends FeatureTestCase
         Notification::assertNothingSent();
     }
 
+    /**
+     * Audit 26.10.2026, H-4: die eigene neue Adresse gilt erst nach dem Link an sie.
+     */
     #[Test]
-    public function own_email_change_with_current_password_succeeds_and_warns_the_old_address(): void
+    public function own_email_change_waits_for_confirmation_and_then_warns_the_old_address(): void
     {
         $user = $this->userWithPassword();
         $oldEmail = $user->email;
@@ -185,13 +190,95 @@ final class SecurityAuditTakeoverChainsRegressionTest extends FeatureTestCase
             'current_password' => self::PASSWORD,
         ]))->assertSessionHasNoErrors();
 
+        $this->assertSame($oldEmail, $user->fresh()->email);
+        $this->assertSame($newEmail, $user->fresh()->pending_email);
+        $confirmationUrl = null;
+        Notification::assertSentTo(
+            new AnonymousNotifiable(),
+            ConfirmEmailChangeNotification::class,
+            static function ($notification, array $channels, AnonymousNotifiable $notifiable) use (
+                $newEmail,
+                &$confirmationUrl
+            ): bool {
+                $confirmationUrl = $notification->confirmationUrl;
+
+                return $notifiable->routeNotificationFor('mail') === $newEmail;
+            }
+        );
+        Notification::assertNotSentTo(new AnonymousNotifiable(), EmailAddressChangedNotification::class);
+
+        $this->get($confirmationUrl)->assertRedirect(route('user.edit.info', $user));
+
         $this->assertSame($newEmail, $user->fresh()->email);
+        $this->assertNull($user->fresh()->pending_email);
         Notification::assertSentTo(
             new AnonymousNotifiable(),
             EmailAddressChangedNotification::class,
             static fn ($notification, array $channels, AnonymousNotifiable $notifiable): bool =>
                 $notifiable->routeNotificationFor('mail') === $oldEmail
         );
+    }
+
+    private function confirmationUrl(User $user, string $email, int $minutes = 60): string
+    {
+        return URL::temporarySignedRoute(
+            'user.email-change.confirm',
+            now()->addMinutes($minutes),
+            ['user' => $user->id, 'hash' => sha1(mb_strtolower($email))]
+        );
+    }
+
+    #[Test]
+    public function email_confirmation_link_needs_a_valid_signature_and_the_own_account(): void
+    {
+        $user = $this->userWithPassword(['pending_email' => 'pending@theater.example']);
+        $oldEmail = $user->email;
+        $validUrl = $this->confirmationUrl($user, 'pending@theater.example');
+
+        $this->actingAs(User::factory()->create());
+        $this->get($validUrl)->assertForbidden();
+
+        $this->actingAs($user);
+        // Ungültige oder abgelaufene Signatur: InvalidSignatureException (vom Handler als 4xx beantwortet)
+        $this->get($validUrl . 'x')->assertClientError();
+        $this->get(route('user.email-change.confirm', [
+            'user' => $user->id,
+            'hash' => sha1('pending@theater.example'),
+        ]))->assertClientError();
+
+        $this->travel(61)->minutes();
+        $this->get($validUrl)->assertClientError();
+
+        $this->assertSame($oldEmail, $user->fresh()->email);
+    }
+
+    #[Test]
+    public function an_outdated_confirmation_link_does_not_apply_a_newer_request(): void
+    {
+        $user = $this->userWithPassword(['pending_email' => 'second@theater.example']);
+        $oldEmail = $user->email;
+        $this->actingAs($user);
+
+        $this->get($this->confirmationUrl($user, 'first@theater.example'))->assertSessionHasErrors('email');
+
+        $this->assertSame($oldEmail, $user->fresh()->email);
+        $this->assertSame('second@theater.example', $user->fresh()->pending_email);
+    }
+
+    #[Test]
+    public function confirmation_is_rejected_when_the_address_was_taken_in_the_meantime(): void
+    {
+        $user = $this->userWithPassword(['pending_email' => 'taken@theater.example']);
+        $oldEmail = $user->email;
+        User::factory()->create(['email' => 'taken@theater.example']);
+        $this->actingAs($user);
+
+        $this->get($this->confirmationUrl($user, 'taken@theater.example'))
+            ->assertSessionHasErrors('email')
+            ->assertSessionHas('error');
+
+        $this->assertSame($oldEmail, $user->fresh()->email);
+        $this->assertNull($user->fresh()->pending_email);
     }
 
     #[Test]
@@ -249,6 +336,20 @@ final class SecurityAuditTakeoverChainsRegressionTest extends FeatureTestCase
     }
 
     #[Test]
+    public function admin_email_change_discards_a_pending_own_request(): void
+    {
+        $this->actingAsAdmin();
+        $target = $this->userWithPassword(['pending_email' => 'own-request@theater.example']);
+        $newEmail = 'moved-' . Str::random(6) . '@theater.example';
+
+        $this->patch(route('user.update', $target), $this->detailsPayload($target, ['email' => $newEmail]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame($newEmail, $target->fresh()->email);
+        $this->assertNull($target->fresh()->pending_email);
+    }
+
+    #[Test]
     public function fortify_profile_update_requires_current_password_for_email_change(): void
     {
         $user = $this->userWithPassword();
@@ -266,8 +367,10 @@ final class SecurityAuditTakeoverChainsRegressionTest extends FeatureTestCase
             $this->assertArrayHasKey('current_password', $exception->errors());
         }
 
+        $previousEmail = $user->email;
         $action->update($user, $input + ['current_password' => self::PASSWORD]);
-        $this->assertSame($input['email'], $user->fresh()->email);
+        $this->assertSame($previousEmail, $user->fresh()->email);
+        $this->assertSame($input['email'], $user->fresh()->pending_email);
 
         $this->expectException(ValidationException::class);
         $action->update($user, array_merge($input, [

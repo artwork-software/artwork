@@ -172,6 +172,7 @@
 </template>
 
 <script setup lang="ts">
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import { ref, computed, watch } from 'vue'
 import InventorySettingsHeader from '@/Pages/InventorySetting/Components/InventorySettingsHeader.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
@@ -209,7 +210,7 @@ const filteredSets = computed(() => {
 const VIEW_MODE_STORAGE_KEY = 'material-sets.view-mode'
 const readStoredViewMode = (): 'table' | 'cards' => {
     try {
-        const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY)
+        const stored = safeGetItem(VIEW_MODE_STORAGE_KEY)
         return stored === 'cards' ? 'cards' : 'table'
     } catch {
         return 'table'
@@ -218,7 +219,7 @@ const readStoredViewMode = (): 'table' | 'cards' => {
 const viewMode = ref<'table' | 'cards'>(readStoredViewMode())
 watch(viewMode, (mode) => {
     try {
-        localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode)
+        safeSetItem(VIEW_MODE_STORAGE_KEY, mode)
     } catch {
         // localStorage nicht verfügbar — Auswahl gilt dann nur für die Sitzung
     }

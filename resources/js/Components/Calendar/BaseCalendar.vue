@@ -197,11 +197,17 @@
             <!-- Zellen ausgewählt: erstellen bzw. (mit Terminen kombiniert) duplizieren -->
             <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-if="selectedCellCount > 0">
                 <FormButton
-                    v-if="checkedCount === 0 && (isAdmin || can('create events without request') || can('can edit planning calendar') || (directBookingOnly && can('request room occupancy')))"
+                    v-if="checkedCount === 0 && canCreateInSelectedCells"
                     class="transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="showMultiCellCreateModal = true"
-                    :text="$t('Create event in {0} cells', [selectedCellCount])"
+                    :text="$t(requestsOnlyInSelectedCells ? 'Request event in {0} cells' : 'Create event in {0} cells', [selectedCellCount])"
                 />
+                <span
+                    v-else-if="checkedCount === 0"
+                    class="rounded-full bg-surface-inverse/90 text-white text-xs px-3 py-1 select-none"
+                >
+                    {{ $t('You may neither create nor request events in at least one of the selected rooms.') }}
+                </span>
                 <FormButton
                     v-else
                     class="transition-all duration-300 ease-in-out pointer-events-auto"
@@ -349,7 +355,7 @@
             @close="showBulkConvertToPlanningModal = false"
             @convert="bulkConvertToPlanning"
         />
-        <MultiDuplicateModal v-if="showMultiDuplicateModal" :checked-events="editEvents" :rooms="rooms" :is-planning="isPlanning" @closed="closeMultiDuplicateModal" />
+        <MultiDuplicateModal v-if="showMultiDuplicateModal" :checked-events="editEvents" :rooms="rooms" :is-planning="isPlanning" :booking-mode-for-room="bulkBookingModeForRoom" @closed="closeMultiDuplicateModal" />
 
         <MultiCellEventCreateModal
             v-if="showMultiCellCreateModal"
@@ -358,6 +364,7 @@
             :event-statuses="eventStatuses"
             :rooms="rooms"
             :is-planning="isPlanning"
+            :booking-mode-for-room="bulkBookingModeForRoom"
             @closed="closeMultiCellCreateModal"
         />
         <MultiCellDuplicateModal
@@ -366,6 +373,7 @@
             :cells="selectedCellsList"
             :rooms="rooms"
             :is-planning="isPlanning"
+            :booking-mode-for-room="bulkBookingModeForRoom"
             @closed="closeMultiCellDuplicateModal"
         />
         <MultiCellMoveModal
@@ -433,7 +441,11 @@ import {
     canRequestVerificationInBulk,
     requestOnlyApprovesSelection,
 } from "@/Helper/verificationRights.js";
-import {mayAnswerRoomRequestIn as mayAnswerRoomRequestInRoom} from "@/Helper/roomAdminRights.js";
+import {
+    bulkBookingModeIn,
+    findRoom,
+    mayAnswerRoomRequestIn as mayAnswerRoomRequestInRoom,
+} from "@/Helper/roomAdminRights.js";
 import ConvertToPlanningModal from "@/Components/Modals/ConvertToPlanningModal.vue";
 import {canViewPlanning} from "@/Helper/planningRights.js";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
@@ -1450,6 +1462,23 @@ function toggleMultiEdit(value) {
 const selectedCells = ref(new Map());
 const selectedCellCount = computed(() => selectedCells.value.size);
 const selectedCellsList = computed(() => Array.from(selectedCells.value.values()));
+// Mehrfach-Aktionen je Raum: fest buchen, als Raumanfrage anlegen oder gar nicht (wie der Server prüft);
+// ohne Raum-ID gilt ein Raum ohne eigene Rechte
+const bulkBookingModeForRoom = (roomId) => bulkBookingModeIn({
+    room: findRoom(props.rooms, roomId),
+    userId: page.props.auth.user?.id,
+    isAdmin: isAdmin.value,
+    isPlanning: props.isPlanning,
+    directBookingOnly: directBookingOnly.value,
+    canBookWithoutRequest: can('create events without request'),
+    canEditPlanning: can('can edit planning calendar'),
+    canRequestRooms: can('request room occupancy'),
+});
+const selectedCellBookingModes = computed(() => selectedCellsList.value.map((cell) => bulkBookingModeForRoom(cell.room_id)));
+const canCreateInSelectedCells = computed(() => selectedCellBookingModes.value.length > 0
+    && !selectedCellBookingModes.value.includes('none'));
+const requestsOnlyInSelectedCells = computed(() => selectedCellBookingModes.value.length > 0
+    && selectedCellBookingModes.value.every((mode) => mode === 'request'));
 const showMultiCellCreateModal = ref(false);
 const showMultiCellDuplicateModal = ref(false);
 const showMultiCellMoveModal = ref(false);

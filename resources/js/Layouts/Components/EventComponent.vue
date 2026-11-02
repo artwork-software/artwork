@@ -223,7 +223,7 @@
                             :aria-label="$t('Set end to {0} minutes after start', [defaultDurationMin])"
                             :title="$t('Set end to {0} minutes after start', [defaultDurationMin])"
                         >
-                            Standard: {{ defaultDurationMin }} {{ $t('min') }}
+                            {{ $t('Default') }}: {{ defaultDurationMin }} {{ $t('min') }}
                         </button>
                     </div>
 
@@ -416,8 +416,8 @@
                             </div>
                         </template>
 
-                        <!-- Segment: Bestehend / Neu -->
-                        <div class="inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]" role="tablist" aria-label="Project source">
+                        <!-- Segment: Bestehend / Neu (ohne Projektanlage aus Terminen nur Bestehend) -->
+                        <div v-if="projectCreationFromEventsEnabled" class="inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]" role="tablist" aria-label="Project source">
                             <button
                                 type="button"
                                 class="inline-flex items-center justify-center h-[26px] px-3 rounded-[6px] text-[12.5px] font-semibold transition"
@@ -1351,6 +1351,8 @@ function removeSelectedRoom() {
 }
 const error = ref(null)
 const creatingProject = ref(false)
+// Kalender-Einstellung: ohne Projektanlage aus Terminen nur bestehende Projekte verknüpfen
+const projectCreationFromEventsEnabled = computed(() => page.props.project_creation_from_events_enabled !== false)
 const description = ref(null)
 // Der Kalender liefert den Beschreibungs-Volltext nur mit, wenn die Anzeige-
 // einstellung ihn in der Kachel zeigt. Sonst wird er beim Oeffnen nachgeladen —

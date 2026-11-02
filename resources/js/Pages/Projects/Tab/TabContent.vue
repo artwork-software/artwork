@@ -142,6 +142,7 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import {computed, onMounted, provide, ref} from 'vue';
 import {usePage} from "@inertiajs/vue3";
 import ProjectHeaderComponent from "@/Pages/Projects/Tab/Components/ProjectHeaderComponent.vue";
@@ -260,6 +261,10 @@ const innerWidthClass = (component) => {
     if (component?.type === 'Title' && component?.data?.bar_color) {
         return '';
     }
+    // Lange Fließtexte bekommen mehr Lesebreite als einzeilige Formularfelder
+    if (component?.type === 'TextArea') {
+        return 'max-w-4xl';
+    }
     return PROSE_COMPONENT_TYPES.includes(component?.type) ? 'max-w-2xl' : '';
 };
 
@@ -289,7 +294,7 @@ onMounted(() => {
         if (!project?.id || !project?.name) return;
 
         // Bestehende Liste abrufen oder leeres Array initialisieren
-        const stored = localStorage.getItem('lastedProjects');
+        const stored = safeGetItem('lastedProjects');
         let lastedProjects = Array.isArray(JSON.parse(stored)) ? JSON.parse(stored) : [];
 
         // Projekt, falls vorhanden, entfernen
@@ -312,7 +317,7 @@ onMounted(() => {
         }
 
         // In LocalStorage speichern
-        localStorage.setItem('lastedProjects', JSON.stringify(lastedProjects));
+        safeSetItem('lastedProjects', JSON.stringify(lastedProjects));
     } catch (error) {
         console.warn('Fehler beim Aktualisieren der letzten Projekte:', error);
     }

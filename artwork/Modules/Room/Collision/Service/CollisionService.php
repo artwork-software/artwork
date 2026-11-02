@@ -8,20 +8,37 @@ use Carbon\Carbon;
 
 class CollisionService
 {
-    public function findCollisionCountForRoom(
-        Room $room,
+    /**
+     * Überschneidende Termine je Raum mit einer gruppierten Abfrage. Der Termin-Dialog fragt das bei jeder
+     * Datums-/Zeitänderung ab; vorher lief je Raum eine eigene COUNT-Abfrage.
+     *
+     * @param array<int, int> $roomIds
+     * @return array<int, int> Raum-ID => Anzahl, Räume ohne Überschneidung mit 0
+     */
+    public function findCollisionCountsForRooms(
+        array $roomIds,
         Carbon $startDate,
         Carbon $endDate,
         int|null $currentEventId = null
-    ): int {
+    ): array {
         $query = Event::query()
             ->startAndEndTimeOverlap($startDate, $endDate)
-            ->where('room_id', $room->id);
+            ->whereIn('room_id', $roomIds);
 
         if ($currentEventId) {
             $query->isNotId($currentEventId);
         }
 
-        return $query->count();
+        $countsByRoom = $query->toBase()
+            ->selectRaw('room_id, COUNT(*) as aggregate')
+            ->groupBy('room_id')
+            ->pluck('aggregate', 'room_id');
+
+        $collisions = [];
+        foreach ($roomIds as $roomId) {
+            $collisions[$roomId] = (int) ($countsByRoom[$roomId] ?? 0);
+        }
+
+        return $collisions;
     }
 }

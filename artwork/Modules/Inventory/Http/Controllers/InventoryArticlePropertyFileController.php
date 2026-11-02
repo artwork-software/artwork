@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Rules\InventoryPropertyFileValue;
 use Artwork\Modules\Inventory\Http\Requests\UploadInventoryPropertyFileRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class InventoryArticlePropertyFileController extends Controller
 {
-    private const BASE_DIR = 'uploads/inventory-properties';
+    private const BASE_DIR = InventoryPropertyFileValue::BASE_DIR;
 
     public function upload(UploadInventoryPropertyFileRequest $request): JsonResponse
     {
@@ -71,12 +72,7 @@ class InventoryArticlePropertyFileController extends Controller
     {
         $path = (string) ($request->input('path') ?? $request->query('path', ''));
 
-        abort_unless(
-            preg_match('#^' . preg_quote(self::BASE_DIR, '#') . '/[A-Za-z0-9-]+/[^/]+$#', $path) === 1
-            && !str_contains($path, '..')
-            && basename($path) !== '.',
-            403
-        );
+        abort_unless(InventoryPropertyFileValue::isSafePath($path), 403);
 
         return $path;
     }

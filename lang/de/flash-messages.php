@@ -174,5 +174,15 @@ return [
             'account_deleted' => 'Dein artwork-Konto wurde gelöscht. Bitte wende dich an die Administration, wenn du wieder Zugang brauchst.',
             'multi_tenant_not_allowed' => 'Diese Anmeldung ist falsch eingerichtet (Multi-Tenant-Endpunkt). Bitte wende dich an die Administration.'
         ]
+    ],
+    'user' => [
+        'error' => [
+            'account_deactivated' => 'Dein artwork-Konto ist deaktiviert. Bitte wende dich an die Administration, wenn du wieder Zugang brauchst.',
+            'cannot_deactivate_self' => 'Du kannst deinen eigenen Account nicht deaktivieren.',
+        ],
+        'success' => [
+            'deactivated' => 'Account deaktiviert',
+            'reactivated' => 'Account wieder aktiviert',
+        ]
     ]
 ];

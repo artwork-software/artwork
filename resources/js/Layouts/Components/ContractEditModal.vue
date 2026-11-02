@@ -65,7 +65,8 @@
                         <BaseInput
                             v-model="contractPartner"
                             id="eventTitle"
-                            :label="$t('Contract partner*')"
+                            label="Contract partner"
+                            required
                         />
                     </div>
                     <div class="">

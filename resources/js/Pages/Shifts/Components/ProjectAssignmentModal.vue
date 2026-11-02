@@ -183,6 +183,7 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import axios from 'axios';
 import { failedRequestMessage } from '@/Helper/appToast.js';
@@ -287,7 +288,7 @@ function preselectLastUsedProject() {
 
     let lastProjectId = null;
     try {
-        lastProjectId = Number(localStorage.getItem(lastProjectStorageKey));
+        lastProjectId = Number(safeGetItem(lastProjectStorageKey));
     } catch (e) {
         return;
     }
@@ -301,7 +302,7 @@ function preselectLastUsedProject() {
 
 function rememberLastUsedProject() {
     try {
-        localStorage.setItem(lastProjectStorageKey, String(selectedProject.value.id));
+        safeSetItem(lastProjectStorageKey, String(selectedProject.value.id));
     } catch (e) {
         // localStorage nicht verfügbar (z. B. Private Mode) — Vorauswahl ist optional
     }

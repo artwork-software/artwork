@@ -132,6 +132,27 @@ final class CrmMultiselectPropertyTest extends FeatureTestCase
     }
 
     #[Test]
+    public function reordering_options_keeps_contact_values(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::CRM_MANAGER->value);
+        $property = $this->multiselectProperty();
+        $contact = $this->contactWith($property, '["Tanz","Theater"]');
+
+        $this->patch(route('crm.properties.update', $property), ['select_values' => ['Theater', 'Tanz']])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(['Theater', 'Tanz'], $property->fresh()->select_values);
+        $this->assertSame('["Tanz","Theater"]', $this->storedValue($contact, $property));
+
+        // nächstes Speichern folgt der neuen Reihenfolge
+        $this->actingAsAdmin();
+        $this->patch(route('crm.contacts.update', $contact), [
+            'property_values' => [$property->id => ['Tanz', 'Theater']],
+        ])->assertRedirect();
+        $this->assertSame('["Theater","Tanz"]', $this->storedValue($contact, $property));
+    }
+
+    #[Test]
     public function display_text_joins_options(): void
     {
         $this->assertSame('Tanz, Theater', CrmPropertyValueFormat::displayText('multiselect', '["Tanz","Theater"]'));

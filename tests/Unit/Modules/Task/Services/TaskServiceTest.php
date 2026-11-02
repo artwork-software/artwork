@@ -277,9 +277,52 @@ final class TaskServiceTest extends TestCase
 
         $this->assertSame('new name', $updated->name);
         $this->assertSame('new desc', $updated->description);
-        $this->assertFalse($updated->done);
+        // Bearbeiten lässt den Erledigt-Status unberührt (Entscheidung 26.10.2026)
+        $this->assertTrue($updated->fresh()->done);
         $this->assertNotNull($updated->deadline);
         $this->assertTrue($updated->task_users()->where('user_id', $user->id)->exists());
+    }
+
+    #[Test]
+    public function update_by_request_with_new_deadline_resets_sent_reminders(): void
+    {
+        $task = Task::factory()->create([
+            'checklist_id' => Checklist::factory()->create()->id,
+            'deadline' => '2026-06-15 23:59:59',
+            'sent_deadline_notification' => true,
+            'sent_deadline_tomorrow_notification' => true,
+        ]);
+
+        $this->service->updateByRequest($task, new SupportCollection([
+            'name' => $task->name,
+            'deadlineDate' => '2026-06-22',
+            'users' => [],
+        ]));
+
+        $task->refresh();
+        $this->assertFalse($task->sent_deadline_notification);
+        $this->assertFalse($task->sent_deadline_tomorrow_notification);
+    }
+
+    #[Test]
+    public function update_by_request_with_same_deadline_keeps_sent_reminders(): void
+    {
+        $task = Task::factory()->create([
+            'checklist_id' => Checklist::factory()->create()->id,
+            'deadline' => '2026-06-15 23:59:59',
+            'sent_deadline_notification' => true,
+            'sent_deadline_tomorrow_notification' => true,
+        ]);
+
+        $this->service->updateByRequest($task, new SupportCollection([
+            'name' => 'Nur Text korrigiert',
+            'deadlineDate' => '2026-06-15',
+            'users' => [],
+        ]));
+
+        $task->refresh();
+        $this->assertTrue($task->sent_deadline_notification);
+        $this->assertTrue($task->sent_deadline_tomorrow_notification);
     }
 
     #[Test]

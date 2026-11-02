@@ -54,6 +54,7 @@
 </template>
 
 <script setup>
+import { useI18n } from "vue-i18n";
 
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
@@ -63,6 +64,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {IconCheck, IconChevronDown, IconExclamationCircle} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+const { t } = useI18n();
 
 const props = defineProps({
     project: {
@@ -87,7 +89,7 @@ const openPrintDialog = () => {
     }), '_blank', 'width=1000,height=1000');
 
     if (!printWindow) {
-        alert("Popup-Blocker aktiv? Bitte deaktivieren!");
+        alert(t('The print window was blocked. Please allow pop-ups for this page.'));
         return;
     }
 

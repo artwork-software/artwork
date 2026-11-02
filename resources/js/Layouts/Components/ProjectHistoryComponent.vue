@@ -70,7 +70,7 @@
                                         {{ historyItem.created_at }}
                                       </span>
 
-                                    <UserPopoverTooltip :user="historyItem.changer" :id="`project-${index}`" height="6" width="6" />
+                                    <UserPopoverTooltip :user="historyItem.changer" :id="`project-${index}`" height="6" width="6" lazy-load />
 
                                     <div class="min-w-0 grow text-xs text-text-muted subpixel-antialiased">
                                         {{ $t(historyItem.changes[0].translationKey, historyItem.changes[0].translationKeyPlaceholderValues) }}
@@ -104,7 +104,7 @@
                                         <span class="inline-flex h-6 items-center rounded-full border border-warning-border/70 bg-warning-surface/70 px-2 text-[11px] font-medium text-warning tabular-nums">
                                           {{ historyItem.created_at }}
                                         </span>
-                                        <UserPopoverTooltip :user="historyItem.changer" :id="`budget-${index}`" height="6" width="6" />
+                                        <UserPopoverTooltip :user="historyItem.changer" :id="`budget-${index}`" height="6" width="6" lazy-load />
                                         <div class="min-w-0 grow text-xs text-warning subpixel-antialiased">
                                             {{ $t(historyItem.changes[0].translationKey, historyItem.changes[0].translationKeyPlaceholderValues) }}
                                         </div>

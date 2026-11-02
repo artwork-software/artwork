@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Modules\Project\Services\ProjectTeamService;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -30,6 +31,7 @@ use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftWorkerService
 {
@@ -284,7 +286,7 @@ class ShiftWorkerService
         $shift = $pivot->shift;
         $roomId = $shift->event_id ? $shift->event?->room_id : $shift->room_id;
         if ($roomId !== null) {
-            broadcast(new UpdateShiftInShiftPlan($shift, (int) $roomId));
+            SafeBroadcast::send(new UpdateShiftInShiftPlan($shift, (int) $roomId));
         }
     }
 
@@ -626,7 +628,7 @@ class ShiftWorkerService
         $project = $shift->event?->project;
 
         if ($project && ! $project->users->contains($user->id)) {
-            $project->users()->attach($user->id);
+            $project->users()->attach($user->id, ProjectTeamService::IMPLICIT_MEMBER_PIVOT);
             $this->projectTeamNotificationService->notifyAddedToTeam($project, [$user->id]);
         }
     }
@@ -695,7 +697,7 @@ class ShiftWorkerService
         }
 
         if ($worker instanceof User) {
-            broadcast(new ShiftAssigned($worker, $shift));
+            SafeBroadcast::send(new ShiftAssigned($worker, $shift));
         }
     }
 

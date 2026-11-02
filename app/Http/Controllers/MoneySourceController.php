@@ -46,11 +46,18 @@ class MoneySourceController extends Controller
 
     public function index(MoneySourceCalculationService $moneySourceCalculationService): Response|ResponseFactory
     {
-        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks', 'activities'])->get();
+        // Verursacher gesammelt laden (vorher ein User je Aktivität) und nur mit Avatar-Feldern ausliefern;
+        // die rohen activities liest die Seite nicht und gehen nicht mehr mit.
+        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks', 'activities.causer'])->get();
 
         foreach ($moneySources as $moneySource) {
             $moneySource->sumOfPositions = $moneySourceCalculationService->getPositionSumOfOneMoneySource($moneySource);
+            $moneySource->activities
+                ->pluck('causer')
+                ->filter(fn ($causer): bool => $causer instanceof User)
+                ->each(fn (User $causer) => $causer->setVisible(User::AVATAR_FIELDS));
             $moneySource->history = $this->changeService->historyForFrontend($moneySource);
+            $moneySource->unsetRelation('activities');
         }
 
         return inertia('MoneySources/MoneySourceManagement', [

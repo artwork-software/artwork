@@ -893,17 +893,19 @@ class ProjectService
     /**
      * Replace the manager list without wiping other pivot flags: continuing
      * managers keep access_budget/can_write/roles (the previous detach-all +
-     * re-attach reset them on every project update).
+     * re-attach reset them on every project update). Who may change the list
+     * and who may become manager is decided by the caller
+     * (ProjectTeamService::mayChangeManagers / allowedManagerIds).
      */
     public function syncManagementUsers(Project $project, array $userIds): void
     {
         $newManagerIds = collect($userIds)->map(fn ($id) => (int) $id)->unique();
         $currentManagerIds = $project->managerUsers()->pluck('users.id');
 
-        // Managers removed from the list leave the project (previous behaviour).
-        $removedIds = $currentManagerIds->diff($newManagerIds);
-        if ($removedIds->isNotEmpty()) {
-            $project->users()->detach($removedIds->all());
+        // Removed managers stay in the team and only lose the manager flag; this path
+        // must never evict people from the project.
+        foreach ($currentManagerIds->diff($newManagerIds) as $removedId) {
+            $project->users()->updateExistingPivot($removedId, ['is_manager' => false]);
         }
 
         $existingUserIds = $project->users()->pluck('users.id');

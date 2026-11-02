@@ -150,10 +150,13 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
     {
         $user = User::factory()->create();
         $calendarAbo = $this->createCalendarAbo($user);
+        // Dieselbe Zuweisung doppelt verhindert seit 26.10.2026 ein Unique-Index; zwei gleichnamige
+        // Tagesdienste am selben Tag bleiben trotzdem zwei Einträge mit eigener UID.
         $dayService = DayService::factory()->create(['name' => 'Bereitschaft']);
+        $sameNamedDayService = DayService::factory()->create(['name' => 'Bereitschaft']);
 
         $user->dayServices()->attach($dayService->id, ['date' => '2026-07-15']);
-        $user->dayServices()->attach($dayService->id, ['date' => '2026-07-15']);
+        $user->dayServices()->attach($sameNamedDayService->id, ['date' => '2026-07-15']);
 
         $assignmentIds = $user->dayServices()->withPivot('id')->get()->pluck('pivot.id');
         $response = $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id));

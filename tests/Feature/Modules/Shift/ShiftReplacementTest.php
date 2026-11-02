@@ -300,6 +300,9 @@ final class ShiftReplacementTest extends FeatureTestCase
         $workerIds = collect($response->json('workers'))->pluck('id')->all();
         $this->assertContains($replacement->id, $workerIds);
         $this->assertNotContains($declinedUser->id, $workerIds);
+        // Geänderte Schicht für die Tagesansicht (übernimmt sie ohne Seiten-Reload)
+        $this->assertSame($shift->id, $response->json('shift.id'));
+        $this->assertSame($workerIds, collect($response->json('shift.workers'))->pluck('id')->all());
 
         // Bestehende Notification-Typen: „entfernt" an die abgesagte, „zugewiesen" an die neue Person
         Notification::assertSentTo($declinedUser, ShiftNotification::class);

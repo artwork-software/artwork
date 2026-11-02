@@ -88,7 +88,8 @@ import { IconAlertTriangle, IconInfoCircle, IconTicket } from '@tabler/icons-vue
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
 import TicketingSaleMarks from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSaleMarks.vue'
-import { capacityOf, classesOf, formatEuro, formatWhen, isPast, isReleasable, isReleased, offeredIdsOf, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { formatEuro } from '@/Helper/ticketingFormat.js'
+import { capacityOf, classesOf, formatWhen, isPast, isReleasable, isReleased, offeredIdsOf, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 
 const props = defineProps({
     projectId: { type: Number, required: true },

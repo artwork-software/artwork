@@ -94,6 +94,19 @@ final class EventExportDisplaySettingsTest extends TestCase
     }
 
     #[Test]
+    public function distinct_parts_drops_empty_and_case_insensitive_duplicates(): void
+    {
+        $display = EventExportDisplaySettings::fromRequest(null, null);
+
+        $this->assertSame(['TE'], $display->distinctParts(['TE', 'TE']));
+        $this->assertSame(['Day Off'], $display->distinctParts(['Day Off', ' day off ']));
+        $this->assertSame(['Ab', 'Abbau'], $display->distinctParts(['Ab', 'Abbau']));
+        $this->assertSame(['Abbau'], $display->distinctParts(['', 'Abbau']));
+        $this->assertSame(['Projekt'], $display->distinctParts(['Projekt', null]));
+        $this->assertSame([], $display->distinctParts([null, '  ']));
+    }
+
+    #[Test]
     public function extra_content_lines_follow_the_flags_and_skip_duplicate_artists(): void
     {
         $event = (object) [

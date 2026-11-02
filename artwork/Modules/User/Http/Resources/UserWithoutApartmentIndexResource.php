@@ -26,6 +26,7 @@ class UserWithoutApartmentIndexResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_photo_url,
+            'deactivated_at' => User::deactivatedAtFor($this->resource),
             'email' => $this->visibleEmailFor($request->user()),
             'description' => $this->description,
             'position' => $this->position,

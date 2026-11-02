@@ -536,11 +536,11 @@ class EventController extends Controller
             ->with([
                 'project:id,name,state,artists,linked_artists,is_group,color,icon',
                 'project.status:id,name,color',
-                'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path',
+                'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path,deactivated_at',
                 'project.groups',
                 'project.users:id',
                 'project.categories',
-                'creator:id,first_name,last_name,position,email,profile_photo_path',
+                'creator:id,first_name,last_name,position,email,profile_photo_path,deactivated_at',
                 'eventStatus:id,name,color',
                 'eventProperties',
                 'subEvents' => fn ($query) => $query->without('creator'),
@@ -1010,7 +1010,7 @@ class EventController extends Controller
                     // müssen trotzdem mit, weil die $appends der Modelle beim
                     // Serialisieren darauf zugreifen (ServiceProvider::getNameAttribute
                     // wirft ohne provider_name einen TypeError).
-                    'managingUsers:id,first_name,last_name,profile_photo_path,work_time_balance',
+                    'managingUsers:id,first_name,last_name,profile_photo_path,deactivated_at,work_time_balance',
                     'managingFreelancers:id,first_name,last_name,profile_image',
                     'managingServiceProviders:id,provider_name,profile_image',
                     'qualifications:id,name,icon,available',
@@ -3995,13 +3995,9 @@ class EventController extends Controller
         return true;
     }
 
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
     public function updateMultiEdit(Request $request): void
     {
-        $desiredRoomIds = [];
-        $desiredDaysOfEvents = [];
-
+        $this->validateMultiEditTime($request);
         $eventIds = $request->collect('events');
         $events = $this->authorizedMultiEditEvents($eventIds, $this->multiEditTargetRoom($request), false);
         $openRoomRequestsBefore = $this->openRoomRequestSnapshot(
@@ -4009,160 +4005,12 @@ class EventController extends Controller
         );
 
         // Ein Termin im Verkauf kann das Speichern ablehnen; dann bleibt keiner der anderen halb verschoben.
-        DB::transaction(function () use ($request, $events, &$desiredRoomIds, &$desiredDaysOfEvents): void {
+        DB::transaction(function () use ($request, $events): void {
             foreach ($events as $event) {
-                $desiredRoomIds[] = $event->getAttribute('room_id');
-
-                foreach (
-                    CarbonPeriod::create(
-                        $event->getAttribute('start_time'),
-                        $event->getAttribute('end_time')
-                    ) as $desiredDayOfEvent
-                ) {
-                    $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
-                }
-
                 if ($request->get('newRoomId') !== null) {
                     $event->setAttribute('room_id', $request->integer('newRoomId'));
-                    $desiredRoomIds[] = $event->getAttribute('room_id');
                 }
-
-                if ($request->string('date')->toString() === '') {
-                    if ($request->integer('value') !== 0) {
-                        $endDate = Carbon::parse($event->getAttribute('end_time'));
-                        $startDate = Carbon::parse($event->getAttribute('start_time'));
-                        $shifts = $event->getAttribute('shifts');
-                        $calculationType = $request->integer('calculationType');
-                        $value = $request->integer('value');
-                        $type = $request->integer('type');
-
-                        // plus
-                        if ($calculationType === 1) {
-                            // stunden
-                            if ($type === 1) {
-                                $event->setAttribute('start_time', $startDate->addHours($value));
-                                $event->setAttribute('end_time', $endDate->addHours($value));
-                            }
-
-                            // Tage
-                            if ($type === 2) {
-                                $event->setAttribute('start_time', $startDate->addDays($value));
-                                $event->setAttribute('end_time', $endDate->addDays($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->addDays($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->addDays($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Wochen
-                            if ($type === 3) {
-                                $event->setAttribute('start_time', $startDate->addWeeks($value));
-                                $event->setAttribute('end_time', $endDate->addWeeks($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->addWeeks($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->addWeeks($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Monate
-                            if ($type === 4) {
-                                $event->setAttribute('start_time', $startDate->addMonths($value));
-                                $event->setAttribute('end_time', $endDate->addMonths($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->addMonths($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->addMonths($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Jahre
-                            if ($type === 5) {
-                                $event->setAttribute('start_time', $startDate->addYears($value));
-                                $event->setAttribute('end_time', $endDate->addYears($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->addYears($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->addYears($value));
-                                    $shift->save();
-                                }
-                            }
-                        }
-
-                        // minus
-                        if ($calculationType === 2) {
-                            // stunden
-                            if ($type === 1) {
-                                $event->setAttribute('start_time', $startDate->subHours($value));
-                                $event->setAttribute('end_time', $endDate->subHours($value));
-                            }
-                            // Tage
-                            if ($type === 2) {
-                                $event->setAttribute('start_time', $startDate->subDays($value));
-                                $event->setAttribute('end_time', $endDate->subDays($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->subDays($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->subDays($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Wochen
-                            if ($type === 3) {
-                                $event->setAttribute('start_time', $startDate->subWeeks($value));
-                                $event->setAttribute('end_time', $endDate->subWeeks($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->subWeeks($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->subWeeks($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Monate
-                            if ($type === 4) {
-                                $event->setAttribute('start_time', $startDate->subMonths($value));
-                                $event->setAttribute('end_time', $endDate->subMonths($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->subMonths($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->subMonths($value));
-                                    $shift->save();
-                                }
-                            }
-                            // Jahre
-                            if ($type === 5) {
-                                $event->setAttribute('start_time', $startDate->subYears($value));
-                                $event->setAttribute('end_time', $endDate->subYears($value));
-                                foreach ($shifts as $shift) {
-                                    $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                    $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                    $shift->setAttribute('start_date', $shiftStart->subYears($value));
-                                    $shift->setAttribute('end_date', $shiftEnd->subYears($value));
-                                    $shift->save();
-                                }
-                            }
-                        }
-                    }
-                    $desiredDaysOfEvents[] = $event->getAttribute('start_time')->format('d.m.Y');
-                    $desiredDaysOfEvents[] = $event->getAttribute('end_time')->format('d.m.Y');
-                } else {
-                    $endTime = Carbon::parse($event->getAttribute('end_time'))->format('H:i:s');
-                    $startTime = Carbon::parse($event->getAttribute('start_time'))->format('H:i:s');
-
-                    $newDate = Carbon::parse($request->string('date'));
-                    $desiredDaysOfEvents[] = $newDate->format('d.m.Y');
-                    $date = $newDate->format('Y-m-d');
-                    $event->setAttribute('start_time', $date . ' ' . $startTime);
-                    $event->setAttribute('end_time', $date . ' ' . $endTime);
-                }
+                $this->applyMultiEditTime($event, $request);
                 $event->save();
                 $freshEvent = $event->fresh();
                 SafeBroadcast::send(new EventCreated($freshEvent, $freshEvent->room_id));
@@ -4170,215 +4018,136 @@ class EventController extends Controller
         });
 
         $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
-
-        /*return new JsonResponse([
-            'desiredRoomIds' => array_values(array_unique($desiredRoomIds)),
-            'desiredDays' => array_values(array_unique($desiredDaysOfEvents))
-        ]);*/
     }
 
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
     public function updateMultiDuplicate(Request $request): void
     {
-        $desiredRoomIds = [];
-        $desiredDaysOfEvents = [];
+        $this->validateMultiEditTime($request);
         $eventIds = $request->collect('events');
-        $duplicatedEvents = [];
         // Aus dem Planungskalender heraus erzeugte Duplikate sind immer geplante Termine
         $forcePlanning = $request->boolean('isPlanning');
-        // Kopien werden fest gebucht (Buchungsstatus des Originals, kein Anfrage-Workflow) – deshalb wie
-        // bei duplicateEventsToCells Buchungsrecht im Zielraum (neuer Raum oder Raum des Originals) nötig.
+        // Kopien übernehmen den Buchungsstatus des Originals – wie bei duplicateEventsToCells mit Buchungsrecht
+        // im Zielraum (neuer Raum oder Raum des Originals); mit reinem Anfragerecht werden sie Raumanfragen.
+        $copiesAsRoomRequest = [];
         $originalEvents = $this->authorizedMultiEditEvents(
             $eventIds,
             $this->multiEditTargetRoom($request),
             true,
-            $forcePlanning
+            $forcePlanning,
+            $copiesAsRoomRequest
         );
 
-        foreach ($originalEvents as $originalEvent) {
-            $duplicatedEvent = $originalEvent->replicate();
-            $duplicatedEvent->series_id = null;
-            $duplicatedEvent->is_series = false;
-            if ($forcePlanning) {
-                $duplicatedEvent->is_planning = true;
-            }
-            $duplicatedEvent->save();
+        // Ein Fehler mitten in der Auswahl hinterließ sonst halbe Kopien.
+        $duplicatedEvents = DB::transaction(function () use (
+            $request,
+            $originalEvents,
+            $forcePlanning,
+            $copiesAsRoomRequest
+        ): array {
+            $duplicatedEvents = [];
+            foreach ($originalEvents as $originalEvent) {
+                $duplicatedEvent = $originalEvent->replicate();
+                $duplicatedEvent->series_id = null;
+                $duplicatedEvent->is_series = false;
+                if ($forcePlanning) {
+                    $duplicatedEvent->is_planning = true;
+                }
+                if (isset($copiesAsRoomRequest[(int) $originalEvent->id])) {
+                    $this->markCopyAsRoomRequest($duplicatedEvent);
+                }
+                $duplicatedEvent->save();
 
-            $shifts = $originalEvent->shifts;
-            foreach ($shifts as $shift) {
-                $duplicatedShift = $shift->replicate();
-                $duplicatedShift->event_id = $duplicatedEvent->id;
-                $duplicatedShift->save();
-            }
-            $duplicatedEvents[] = $duplicatedEvent;
-        }
-
-        foreach ($duplicatedEvents as $event) {
-            $desiredRoomIds[] = $event->getAttribute('room_id');
-
-            foreach (
-                CarbonPeriod::create(
-                    $event->getAttribute('start_time'),
-                    $event->getAttribute('end_time')
-                ) as $desiredDayOfEvent
-            ) {
-                $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
-            }
-
-            if ($request->get('newRoomId') !== null) {
-                $event->setAttribute('room_id', $request->integer('newRoomId'));
-                $desiredRoomIds[] = $event->getAttribute('room_id');
-            }
-            if ($request->string('date')->toString() === '') {
-                if ($request->integer('value') !== 0) {
-                    $endDate = Carbon::parse($event->getAttribute('end_time'));
-                    $startDate = Carbon::parse($event->getAttribute('start_time'));
-                    $shifts = $event->getAttribute('shifts');
-                    $calculationType = $request->integer('calculationType');
-                    $value = $request->integer('value');
-                    $type = $request->integer('type');
-
-                    // plus
-                    if ($calculationType === 1) {
-                        // stunden
-                        if ($type === 1) {
-                            $event->setAttribute('start_time', $startDate->addHours($value));
-                            $event->setAttribute('end_time', $endDate->addHours($value));
-                        }
-
-                        // Tage
-                        if ($type === 2) {
-                            $event->setAttribute('start_time', $startDate->addDays($value));
-                            $event->setAttribute('end_time', $endDate->addDays($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->addDays($value));
-                                $shift->setAttribute('end_date', $shiftEnd->addDays($value));
-                                $shift->save();
-                            }
-                        }
-                        // Wochen
-                        if ($type === 3) {
-                            $event->setAttribute('start_time', $startDate->addWeeks($value));
-                            $event->setAttribute('end_time', $endDate->addWeeks($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->addWeeks($value));
-                                $shift->setAttribute('end_date', $shiftEnd->addWeeks($value));
-                                $shift->save();
-                            }
-                        }
-                        // Monate
-                        if ($type === 4) {
-                            $event->setAttribute('start_time', $startDate->addMonths($value));
-                            $event->setAttribute('end_time', $endDate->addMonths($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->addMonths($value));
-                                $shift->setAttribute('end_date', $shiftEnd->addMonths($value));
-                                $shift->save();
-                            }
-                        }
-                        // Jahre
-                        if ($type === 5) {
-                            $event->setAttribute('start_time', $startDate->addYears($value));
-                            $event->setAttribute('end_time', $endDate->addYears($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->addYears($value));
-                                $shift->setAttribute('end_date', $shiftEnd->addYears($value));
-                                $shift->save();
-                            }
-                        }
-                    }
-
-                    // minus
-                    if ($calculationType === 2) {
-                        // stunden
-                        if ($type === 1) {
-                            $event->setAttribute('start_time', $startDate->subHours($value));
-                            $event->setAttribute('end_time', $endDate->subHours($value));
-                        }
-                        // Tage
-                        if ($type === 2) {
-                            $event->setAttribute('start_time', $startDate->subDays($value));
-                            $event->setAttribute('end_time', $endDate->subDays($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->subDays($value));
-                                $shift->setAttribute('end_date', $shiftEnd->subDays($value));
-                                $shift->save();
-                            }
-                        }
-                        // Wochen
-                        if ($type === 3) {
-                            $event->setAttribute('start_time', $startDate->subWeeks($value));
-                            $event->setAttribute('end_time', $endDate->subWeeks($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->subWeeks($value));
-                                $shift->setAttribute('end_date', $shiftEnd->subWeeks($value));
-                                $shift->save();
-                            }
-                        }
-                        // Monate
-                        if ($type === 4) {
-                            $event->setAttribute('start_time', $startDate->subMonths($value));
-                            $event->setAttribute('end_time', $endDate->subMonths($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->subMonths($value));
-                                $shift->setAttribute('end_date', $shiftEnd->subMonths($value));
-                                $shift->save();
-                            }
-                        }
-                        // Jahre
-                        if ($type === 5) {
-                            $event->setAttribute('start_time', $startDate->subYears($value));
-                            $event->setAttribute('end_time', $endDate->subYears($value));
-                            foreach ($shifts as $shift) {
-                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
-                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
-                                $shift->setAttribute('start_date', $shiftStart->subYears($value));
-                                $shift->setAttribute('end_date', $shiftEnd->subYears($value));
-                                $shift->save();
-                            }
-                        }
-                    }
+                foreach ($originalEvent->shifts as $shift) {
+                    $duplicatedShift = $shift->replicate();
+                    $duplicatedShift->event_id = $duplicatedEvent->id;
+                    $duplicatedShift->save();
                 }
 
-                foreach (
-                    CarbonPeriod::create(
-                        $event->getAttribute('start_time'),
-                        $event->getAttribute('end_time')
-                    ) as $desiredDayOfEvent
-                ) {
-                    $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
+                if ($request->get('newRoomId') !== null) {
+                    $duplicatedEvent->setAttribute('room_id', $request->integer('newRoomId'));
                 }
-            } else {
-                $endTime = Carbon::parse($event->getAttribute('end_time'))->format('H:i:s');
-                $startTime = Carbon::parse($event->getAttribute('start_time'))->format('H:i:s');
-
-                $newDate = Carbon::parse($request->string('date'));
-                $desiredDaysOfEvents[] = $newDate->format('d.m.Y');
-                $date = $newDate->format('Y-m-d');
-                $event->setAttribute('start_time', $date . ' ' . $startTime);
-                $event->setAttribute('end_time', $date . ' ' . $endTime);
+                $this->applyMultiEditTime($duplicatedEvent, $request);
+                $duplicatedEvent->save();
+                $duplicatedEvents[] = $duplicatedEvent->fresh();
             }
-            $event->save();
-            $freshEvent = $event->fresh();
-            SafeBroadcast::send(new EventCreated($freshEvent, $freshEvent->room_id));
+
+            return $duplicatedEvents;
+        });
+
+        // Neue Raumanfragen (auch Kopien angefragter Originale) an die Raumverwaltung melden
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            collect($duplicatedEvents)->pluck('id')->all()
+        );
+
+        foreach ($duplicatedEvents as $duplicatedEvent) {
+            SafeBroadcast::send(new EventCreated($duplicatedEvent, $duplicatedEvent->room_id));
         }
     }
 
+    private function validateMultiEditTime(Request $request): void
+    {
+        $request->validate([
+            'date' => ['nullable', 'date'],
+            'value' => ['nullable', 'integer', 'min:0'],
+            'calculationType' => ['nullable', 'integer', 'in:1,2'],
+            'type' => ['nullable', 'integer', 'between:1,5'],
+        ]);
+    }
+
+    /**
+     * Eine Kopie, die mangels Buchungsrecht zur Raumanfrage wird, ist eine neue Anfrage der handelnden
+     * Person: sie steht als Anfragende drin (Zu-/Absage geht an sie) und erbt keine alte Absage des Originals.
+     */
+    private function markCopyAsRoomRequest(Event $copy): void
+    {
+        $copy->setAttribute('occupancy_option', true);
+        $copy->setAttribute('accepted', false);
+        $copy->setAttribute('declined_room_id', null);
+        $copy->setAttribute('user_id', $this->authManager->id());
+    }
+
+    /**
+     * Zeit-Teil der Mehrfachbearbeitung: entweder um einen Versatz (Stunden … Jahre) verschieben oder auf
+     * ein festes Datum legen. Beim festen Datum bleibt die Dauer erhalten – vorher endeten Termine über
+     * Mitternacht vor ihrem Start und mehrtägige schrumpften auf einen Tag.
+     * Alt-Schichten mit event_id (Legacy) wandern bei Tagen bis Jahren weiter mit wie bisher.
+     */
+    private function applyMultiEditTime(Event $event, Request $request): void
+    {
+        $startDate = Carbon::parse($event->getAttribute('start_time'));
+        $endDate = Carbon::parse($event->getAttribute('end_time'));
+
+        if ($request->string('date')->toString() !== '') {
+            $durationInSeconds = max(0, $endDate->getTimestamp() - $startDate->getTimestamp());
+            $newStart = Carbon::parse($request->string('date')->toString())
+                ->setTimeFrom($startDate);
+            $event->setAttribute('start_time', $newStart->copy());
+            $event->setAttribute('end_time', $newStart->copy()->addSeconds($durationInSeconds));
+
+            return;
+        }
+
+        $value = $request->integer('value');
+        $unit = [1 => 'hours', 2 => 'days', 3 => 'weeks', 4 => 'months', 5 => 'years'][$request->integer('type')]
+            ?? null;
+        if ($value === 0 || $unit === null) {
+            return;
+        }
+        $signedValue = $request->integer('calculationType') === 2 ? -$value : $value;
+        $move = static fn (Carbon $date): Carbon => $date->add($unit, $signedValue);
+
+        $event->setAttribute('start_time', $move($startDate));
+        $event->setAttribute('end_time', $move($endDate));
+
+        if ($unit === 'hours') {
+            return;
+        }
+        foreach ($event->shifts as $shift) {
+            $shift->setAttribute('start_date', $move(Carbon::parse($shift->getAttribute('start_date'))));
+            $shift->setAttribute('end_date', $move(Carbon::parse($shift->getAttribute('end_date'))));
+            $shift->save();
+        }
+    }
 
     /**
      * Zielraum der Mehrfachbearbeitung im Kalender (newRoomId). Unbekannte Räume enden vor jeder Änderung in 404.
@@ -4395,19 +4164,22 @@ class EventController extends Controller
     /**
      * Lädt und autorisiert ALLE Termine der Mehrfachbearbeitung, bevor etwas geändert wird – sonst blieben
      * bei einem 403 mitten in der Auswahl die ersten Termine schon geändert bzw. kopiert zurück.
-     * Verschieben in einen anderen Raum und Kopieren buchen direkt (kein Anfrage-Workflow), deshalb gilt
-     * dafür dieselbe Raumprüfung wie beim Bulk-Anlegen.
+     * Verschieben in einen anderen Raum bucht direkt (kein Anfrage-Workflow), deshalb gilt dafür dieselbe
+     * Raumprüfung wie beim Bulk-Anlegen. Kopien werden zur Raumanfrage, wo die Person im Zielraum nur
+     * anfragen darf (wie im Termin-Dialog).
      *
      * @param \Illuminate\Support\Collection<int, mixed> $eventIds
      * @param bool $createsCopies true = Duplizieren: Zielraum ist der neue Raum oder der Raum des Originals
      * @param bool $forcePlanning Kopien werden geplante Termine (Planungskalender)
+     * @param array<int, true> $copiesAsRoomRequest IDs der Originale, deren Kopie als Raumanfrage entsteht
      * @return array<int, Event>
      */
     private function authorizedMultiEditEvents(
         \Illuminate\Support\Collection $eventIds,
         ?Room $targetRoom,
         bool $createsCopies,
-        bool $forcePlanning = false
+        bool $forcePlanning = false,
+        array &$copiesAsRoomRequest = []
     ): array {
         // Eine Abfrage mit den Relationen, die Policy und Raumprüfung lesen (statt Lazy-Loads je Termin)
         $loadedEvents = Event::query()
@@ -4427,14 +4199,23 @@ class EventController extends Controller
             $this->authorize('update', $event);
 
             $isPlanning = $forcePlanning || (bool) $event->is_planning;
+            $copyAsRoomRequest = false;
             if ($targetRoom !== null) {
                 if ($createsCopies || (int) $event->room_id !== (int) $targetRoom->id) {
-                    $this->authorizeBulkEventCreationOnce($checkedRooms, $isPlanning, $targetRoom);
+                    $copyAsRoomRequest = $this->authorizeBulkEventCreationOnce(
+                        $checkedRooms,
+                        $isPlanning,
+                        $targetRoom,
+                        $createsCopies
+                    );
                 }
             } elseif ($createsCopies) {
-                $this->authorizeCopyIntoOriginalRoom($event, $isPlanning, $checkedRooms);
+                $copyAsRoomRequest = $this->authorizeCopyIntoOriginalRoom($event, $isPlanning, $checkedRooms);
             }
 
+            if ($copyAsRoomRequest) {
+                $copiesAsRoomRequest[(int) $event->id] = true;
+            }
             $events[] = $event;
         }
 
@@ -4445,12 +4226,13 @@ class EventController extends Controller
      * Kopie ohne neuen Zielraum landet im Raum des Originals:
      * - Raum im Papierkorb: keine Kopie (sonst Geistertermin in einem gelöschten Raum, vgl. duplicateEventsToCells)
      * - ohne Raum: dieselbe Prüfung wie „Termin ohne Raum anlegen“ (storeEvent)
-     * - sonst: Buchungsrecht im Raum wie beim Bulk-Anlegen
+     * - sonst: Buchungsrecht im Raum wie beim Bulk-Anlegen, ersatzweise Anfragerecht (Kopie wird Raumanfrage)
      *
-     * @param array<string, true> $checkedRooms
+     * @param array<string, bool> $checkedRooms
+     * @return bool true = Kopie als Raumanfrage anlegen
      * @throws ValidationException
      */
-    private function authorizeCopyIntoOriginalRoom(Event $event, bool $isPlanning, array &$checkedRooms): void
+    private function authorizeCopyIntoOriginalRoom(Event $event, bool $isPlanning, array &$checkedRooms): bool
     {
         if ($event->room_id === null) {
             $key = ($isPlanning ? 'planning:' : 'regular:') . 'without-room';
@@ -4458,10 +4240,10 @@ class EventController extends Controller
                 /** @var User $user */
                 $user = $this->authManager->user();
                 $this->resolveRoomBookingOption($user, null, $isPlanning, false);
-                $checkedRooms[$key] = true;
+                $checkedRooms[$key] = false;
             }
 
-            return;
+            return false;
         }
 
         // Die Relation lädt Räume im Papierkorb nicht
@@ -4472,23 +4254,35 @@ class EventController extends Controller
             ]);
         }
 
-        $this->authorizeBulkEventCreationOnce($checkedRooms, $isPlanning, $room);
+        return $this->authorizeBulkEventCreationOnce($checkedRooms, $isPlanning, $room, true);
     }
 
     /**
-     * authorizeBulkEventCreation() je (Termin-Art, Raum) nur einmal pro Request auswerten.
+     * authorizeBulkEventCreation() bzw. authorizeBulkEventCreationOrRoomRequest() je (Termin-Art, Raum)
+     * nur einmal pro Request auswerten.
      *
-     * @param array<string, true> $checkedRooms bereits erlaubte Kombinationen
+     * @param array<string, bool> $checkedRooms bereits erlaubte Kombinationen (true = als Raumanfrage)
+     * @return bool true = als Raumanfrage anlegen (nur mit $allowsRoomRequest)
      */
-    private function authorizeBulkEventCreationOnce(array &$checkedRooms, bool $isPlanning, Room $room): void
-    {
-        $key = ($isPlanning ? 'planning:' : 'regular:') . $room->id;
+    private function authorizeBulkEventCreationOnce(
+        array &$checkedRooms,
+        bool $isPlanning,
+        Room $room,
+        bool $allowsRoomRequest = false
+    ): bool {
+        $key = ($isPlanning ? 'planning:' : 'regular:') . ($allowsRoomRequest ? 'request:' : '') . $room->id;
         if (isset($checkedRooms[$key])) {
-            return;
+            return $checkedRooms[$key];
         }
 
-        $this->authorizeBulkEventCreation($isPlanning, $room);
-        $checkedRooms[$key] = true;
+        if ($allowsRoomRequest) {
+            $checkedRooms[$key] = $this->authorizeBulkEventCreationOrRoomRequest($isPlanning, $room);
+        } else {
+            $this->authorizeBulkEventCreation($isPlanning, $room);
+            $checkedRooms[$key] = false;
+        }
+
+        return $checkedRooms[$key];
     }
 
     /**
@@ -4499,23 +4293,45 @@ class EventController extends Controller
      */
     private function authorizeBulkEventCreation(bool $isPlanning, Room $room): void
     {
+        abort_unless($this->mayCreateBulkEventDirectly($isPlanning, $room), 403);
+    }
+
+    private function mayCreateBulkEventDirectly(bool $isPlanning, Room $room): bool
+    {
         $user = $this->authManager->user();
 
         if ($isPlanning) {
-            abort_unless($user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value), 403);
-
-            return;
+            return $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value);
         }
 
         // "Termine immer direkt buchbar": "Raumbelegungen anfragen" bedeutet dann "Termine anlegen"
         // und schließt Bulk-Anlage und Serien ein (Entscheidung 18.09.2026).
-        $mayCreateRegularEvent = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
+        return $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
             || ($this->eventSettingsService->alwaysDirectBooking()
                 && $user->can(PermissionEnum::EVENT_REQUEST->value))
             || $room->everyone_can_book
             || $room->isAdministeredBy($user);
+    }
 
-        abort_unless($mayCreateRegularEvent, 403);
+    /**
+     * Kalender-Mehrfachbearbeitung (Anlegen in Zellen, Duplizieren): wer im Raum nicht direkt buchen, aber
+     * anfragen darf, legt Raumanfragen an – wie im Termin-Dialog (resolveRoomBookingOption). Geplante Termine
+     * und "Termine immer direkt buchbar" kennen keine Raumanfrage.
+     *
+     * @return bool true = als Raumanfrage anlegen
+     */
+    private function authorizeBulkEventCreationOrRoomRequest(bool $isPlanning, Room $room): bool
+    {
+        if ($this->mayCreateBulkEventDirectly($isPlanning, $room)) {
+            return false;
+        }
+
+        $mayRequestRoom = !$isPlanning
+            && !$this->eventSettingsService->alwaysDirectBooking()
+            && $this->authManager->user()->can('book', [Event::class, $room, true, false]);
+        abort_unless($mayRequestRoom, 403);
+
+        return true;
     }
 
     public function bulkProjectEventStore(
@@ -4783,8 +4599,10 @@ class EventController extends Controller
             ->get()
             ->keyBy('id');
 
+        // Wo die Person nur anfragen darf, entsteht je Zelle eine Raumanfrage (wie im Termin-Dialog)
+        $roomRequestByRoom = [];
         foreach ($rooms as $room) {
-            $this->authorizeBulkEventCreation($isPlanning, $room);
+            $roomRequestByRoom[(int) $room->id] = $this->authorizeBulkEventCreationOrRoomRequest($isPlanning, $room);
         }
 
         $eventStatusId = null;
@@ -4793,7 +4611,13 @@ class EventController extends Controller
                 ?? EventStatus::where('default', true)->first()?->id;
         }
 
-        $createdEvents = DB::transaction(function () use ($cells, $validated, $eventStatusId, $isPlanning): array {
+        $createdEvents = DB::transaction(function () use (
+            $cells,
+            $validated,
+            $eventStatusId,
+            $isPlanning,
+            $roomRequestByRoom
+        ): array {
             $events = [];
 
             foreach ($cells as $cell) {
@@ -4816,12 +4640,16 @@ class EventController extends Controller
                     'room_id' => $cell['room_id'],
                     'user_id' => $this->authManager->id(),
                     'is_planning' => $isPlanning,
+                    'occupancy_option' => $roomRequestByRoom[(int) $cell['room_id']] ?? false,
                 ]);
             }
 
             return $events;
         }, attempts: 3);
 
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            collect($createdEvents)->pluck('id')->all()
+        );
         $this->broadcastCreatedEventsAfterResponse($createdEvents);
     }
 
@@ -4855,16 +4683,26 @@ class EventController extends Controller
             ->whereIn('id', collect($cells)->pluck('room_id')->unique())
             ->get();
 
+        // Kopien übernehmen den Buchungsstatus des Originals; wo die Person nur anfragen darf, werden sie Raumanfragen
+        $checkedRooms = [];
+        $copiesAsRoomRequest = [];
         foreach ($originals as $original) {
             $this->authorize('update', $original);
 
             $isPlanning = $forcePlanning || (bool) $original->is_planning;
             foreach ($rooms as $room) {
-                $this->authorizeBulkEventCreation($isPlanning, $room);
+                if ($this->authorizeBulkEventCreationOnce($checkedRooms, $isPlanning, $room, true)) {
+                    $copiesAsRoomRequest[$original->id . ':' . $room->id] = true;
+                }
             }
         }
 
-        $duplicatedEvents = DB::transaction(function () use ($originals, $cells, $forcePlanning): array {
+        $duplicatedEvents = DB::transaction(function () use (
+            $originals,
+            $cells,
+            $forcePlanning,
+            $copiesAsRoomRequest
+        ): array {
             $duplicates = [];
 
             foreach ($originals as $original) {
@@ -4883,6 +4721,9 @@ class EventController extends Controller
                         $duplicated->setAttribute('is_planning', true);
                     }
                     $duplicated->setAttribute('room_id', $cell['room_id']);
+                    if (isset($copiesAsRoomRequest[$original->id . ':' . $cell['room_id']])) {
+                        $this->markCopyAsRoomRequest($duplicated);
+                    }
                     $duplicated->setAttribute('start_time', $newStart);
                     $duplicated->setAttribute(
                         'end_time',
@@ -4911,6 +4752,10 @@ class EventController extends Controller
             return $duplicates;
         }, attempts: 3);
 
+        // Neue Raumanfragen (auch Kopien angefragter Originale) an die Raumverwaltung melden
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            collect($duplicatedEvents)->pluck('id')->all()
+        );
         $this->broadcastCreatedEventsAfterResponse($duplicatedEvents);
     }
 
@@ -5332,7 +5177,7 @@ class EventController extends Controller
             // der Modelle beim Serialisieren (siehe viewShiftPlan). Mit reinem
             // ':id' warf ServiceProvider::getNameAttribute() einen TypeError,
             // sobald überhaupt eine Gewerksleitung hinterlegt war.
-            $eagerLoad[] = 'managingUsers:id,first_name,last_name,profile_photo_path,work_time_balance';
+            $eagerLoad[] = 'managingUsers:id,first_name,last_name,profile_photo_path,deactivated_at,work_time_balance';
             $eagerLoad[] = 'managingFreelancers:id,first_name,last_name,profile_image';
             $eagerLoad[] = 'managingServiceProviders:id,provider_name,profile_image';
         }

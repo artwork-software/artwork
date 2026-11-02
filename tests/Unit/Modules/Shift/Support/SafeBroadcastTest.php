@@ -117,4 +117,48 @@ final class SafeBroadcastTest extends TestCase
         $this->assertSame('gespeichert', $result);
         $this->assertSame(1, SafeBroadcastTestEvent::$attempts);
     }
+
+    #[Test]
+    public function in_a_web_request_the_broadcast_is_sent_after_the_response(): void
+    {
+        $this->simulateWebRequest();
+
+        SafeBroadcast::send(new SafeBroadcastTestEvent());
+
+        // Ein langsamer WebSocket-Server hält die Antwort nicht mehr auf
+        $this->assertSame(0, SafeBroadcastTestEvent::$attempts);
+
+        $this->app->terminate();
+
+        $this->assertSame(1, SafeBroadcastTestEvent::$attempts);
+    }
+
+    #[Test]
+    public function a_broadcast_sent_during_the_terminate_phase_still_goes_out(): void
+    {
+        // Wie dispatch(...)->afterResponse(): läuft selbst schon in der Terminate-Phase
+        $this->simulateWebRequest();
+        $this->app->terminating(static fn () => SafeBroadcast::send(new SafeBroadcastTestEvent()));
+
+        $this->app->terminate();
+
+        $this->assertSame(1, SafeBroadcastTestEvent::$attempts);
+    }
+
+    #[Test]
+    public function a_failing_broadcast_after_the_response_is_only_reported(): void
+    {
+        $this->simulateWebRequest();
+        SafeBroadcastTestEvent::$fail = true;
+
+        SafeBroadcast::send(new SafeBroadcastTestEvent());
+        $this->app->terminate();
+
+        $this->assertSame(1, SafeBroadcastTestEvent::$attempts);
+    }
+
+    private function simulateWebRequest(): void
+    {
+        (fn () => $this->isRunningInConsole = false)->call($this->app);
+    }
 }

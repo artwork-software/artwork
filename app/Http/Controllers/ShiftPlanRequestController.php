@@ -37,6 +37,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Spatie\Activitylog\Models\Activity;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftPlanRequestController extends Controller
 {
@@ -558,6 +559,7 @@ class ShiftPlanRequestController extends Controller
                     'id' => $u->id,
                     'full_name' => $u->full_name ?? ($u->first_name . ' ' . $u->last_name),
                     'profile_photo_url' => $u->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($u),
                     'is_freelancer' => (bool) $u->is_freelancer,
                 ]),
                 'freelancers' => $craftFreelancers->map(fn ($f) => [
@@ -1243,7 +1245,7 @@ class ShiftPlanRequestController extends Controller
                     })
                     ->log('Shift rejected as part of shift plan request');
 
-                broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
+                SafeBroadcast::send(new UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
             }
 
             $rejected = true;
@@ -1741,6 +1743,7 @@ class ShiftPlanRequestController extends Controller
                     'id' => $u->id,
                     'full_name' => $u->full_name ?? ($u->first_name . ' ' . $u->last_name),
                     'profile_photo_url' => $u->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($u),
                     'is_freelancer' => (bool) $u->is_freelancer,
                 ]),
                 'freelancers' => $craftFreelancers->map(fn ($f) => [

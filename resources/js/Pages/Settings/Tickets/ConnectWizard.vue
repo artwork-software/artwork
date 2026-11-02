@@ -183,7 +183,8 @@ import ReductionsEditor from '@/Pages/Settings/Tickets/ReductionsEditor.vue'
 import BillingFieldsEditor from '@/Pages/Settings/Tickets/BillingFieldsEditor.vue'
 import PlatformTermsConsent from '@/Pages/Settings/Tickets/PlatformTermsConsent.vue'
 import PayoutAccount from '@/Pages/Settings/Tickets/PayoutAccount.vue'
-import { formatEuro, LEGAL_PAGES, missingDetails, noLegalFiles, legalFormNames, reductionPayload, reductionsValid, roomDraft, roomPayload, roomsValid, toCents, zonePlaces } from '@/Pages/Settings/Tickets/drafts.js'
+import { formatEuro } from '@/Helper/ticketingFormat.js'
+import { LEGAL_PAGES, missingDetails, noLegalFiles, legalFormNames, reductionPayload, reductionsValid, roomDraft, roomPayload, roomsValid, toCents, zonePlaces } from '@/Pages/Settings/Tickets/drafts.js'
 
 const props = defineProps({
     rooms: { type: Array, default: () => [] },

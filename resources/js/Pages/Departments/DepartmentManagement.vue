@@ -184,6 +184,7 @@
                                   </button>
                               </div>
                           </div>
+                          <p v-if="form.errors.assigned_users" class="mt-3 text-xs text-danger">{{ form.errors.assigned_users }}</p>
 
                           <div class="w-full text-center mt-6">
                               <FormButton @click="addTeam" :disabled="form.name === '' || form.svg_name === ''" :text="$t('Create Team')" />
@@ -267,7 +268,7 @@ import UserHeader from "@/Pages/Users/UserHeader.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 // Props
-const props = defineProps<{ departments: any; users: any }>()
+const props = defineProps<{ departments: any }>()
 
 const { t: $t } = useI18n()
 

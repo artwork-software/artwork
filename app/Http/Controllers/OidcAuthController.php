@@ -119,6 +119,13 @@ class OidcAuthController extends Controller
             ]);
         }
 
+        // Die Deaktivierung in artwork gilt auch für SSO – der IdP-Login hebt sie nicht auf.
+        if ($user->isDeactivated()) {
+            return redirect()->route('login')->withErrors([
+                'email' => __('flash-messages.user.error.account_deactivated'),
+            ]);
+        }
+
         // Kein Remember-Me für SSO-Logins: erneuter Zugriff läuft über den IdP.
         Auth::guard(config('fortify.guard'))->login($user, false);
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Calendar\Services\EventExportDisplaySettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Enums\UserFilterTypes;
@@ -170,5 +171,53 @@ final class ExportPDFControllerTest extends FeatureTestCase
             ->assertSessionHasErrors(['project', 'filter']);
 
         self::assertNull($capturedViewData);
+    }
+
+    #[Test]
+    public function monthly_overview_shows_identical_type_and_names_only_once(): void
+    {
+        // Kundenfall: Terminart-Kürzel = Name ("TE TE") und Terminname = Projektname
+        $eventTypeAbbreviationOnly = (object) ['abbreviation' => 'TE', 'name' => 'TE', 'hex_code' => '#A7A6B1'];
+        $eventTypeDistinct = (object) ['abbreviation' => 'Ab', 'name' => 'Abbau', 'hex_code' => '#A7A6B1'];
+        $project = (object) ['name' => 'Love is a Verb #2'];
+        $room = (object) ['id' => 1, 'name' => 'HAU1'];
+
+        $html = view('pdf.calendarMonthlyOverview', [
+            'title' => 'Monatsübersicht',
+            'rooms' => [$room],
+            'calendarLookup' => [
+                1 => ['01.10.2026' => ['events' => [
+                    (object) [
+                        'start' => '2026-10-01 10:00:00',
+                        'end' => '2026-10-01 20:00:00',
+                        'eventType' => $eventTypeAbbreviationOnly,
+                        'project' => $project,
+                        'eventName' => 'Love is a Verb #2',
+                    ],
+                    (object) [
+                        'start' => '2026-10-01 21:00:00',
+                        'end' => '2026-10-01 22:00:00',
+                        'eventType' => $eventTypeDistinct,
+                        'project' => $project,
+                        'eventName' => 'Bühne leeren',
+                    ],
+                ]]],
+            ],
+            'pages' => [[
+                'monthLabel' => 'Oktober 2026',
+                'days' => [['fullDay' => '01.10.2026', 'display' => 'Do, 01.10', 'isWeekend' => false]],
+            ]],
+            'created_by' => 'Test',
+            'created_date' => '27.10.2026',
+            'bigLogoBase64' => null,
+            'display' => EventExportDisplaySettings::fromRequest(null, null),
+            'paperSize' => 'a3',
+        ])->render();
+
+        self::assertStringContainsString('10:00-20:00 TE', $html);
+        self::assertStringNotContainsString('TE TE', $html);
+        self::assertSame(1, substr_count($html, 'Love is a Verb #2,'));
+        self::assertStringContainsString('Love is a Verb #2, Bühne leeren', $html);
+        self::assertStringContainsString('21:00-22:00 Ab Abbau', $html);
     }
 }

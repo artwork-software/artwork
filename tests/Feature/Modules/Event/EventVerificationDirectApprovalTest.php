@@ -100,6 +100,22 @@ final class EventVerificationDirectApprovalTest extends FeatureTestCase
     }
 
     #[Test]
+    public function approving_a_single_tile_that_cannot_be_approved_reports_it(): void
+    {
+        $this->actingAsAdmin();
+        $event = Event::factory()->create(['is_planning' => false, 'occupancy_option' => true]);
+
+        $this->post(route('event-verifications.approved-by-event', $event))
+            ->assertSessionHas(
+                'error',
+                __('This event could not be approved: it is already approved or you may not approve it. '
+                    . 'Reload the page to see the current state.')
+            );
+
+        $this->assertSame(0, $event->verifications()->count());
+    }
+
+    #[Test]
     public function the_specific_verifier_approves_an_own_planned_event_without_request(): void
     {
         [$event, $verifiers] = $this->planningEventWithVerifiers('specific', 1);

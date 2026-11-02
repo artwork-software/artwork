@@ -14,7 +14,7 @@
             :name="name || undefined"
             :value="modelValue"
             :placeholder="placeholder"
-            @input="$emit('update:modelValue', $event.target.value)"
+            @input="onInput"
             @blur="($event) => emit('focusout', $event)"
             :disabled="disabled"
             :readonly="readonly"
@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 defineOptions({
     inheritAttrs: false
@@ -95,6 +95,15 @@ const props = defineProps({
         type: String,
         default: 'bg-surface'
     },
+    /** Höhe wächst mit dem Inhalt (ab `rows`) bis `maxRows`, erst danach scrollt das Feld */
+    autoGrow: {
+        type: Boolean,
+        default: false
+    },
+    maxRows: {
+        type: Number,
+        default: 30
+    },
     /** NEU: optionale Fehlermeldung (danger-Rahmen + Text unter dem Feld) */
     error: {
         type: String,
@@ -109,6 +118,34 @@ const hasLabel = computed(() => typeof props.label === 'string' && props.label.t
 const errorId = computed(() => `${props.id}-error`)
 
 const textareaRef = ref(null)
+
+function onInput(event) {
+    emit('update:modelValue', event.target.value)
+    resizeToContent()
+}
+
+function resizeToContent() {
+    const textarea = textareaRef.value
+    if (!props.autoGrow || !textarea) {
+        return
+    }
+    const style = window.getComputedStyle(textarea)
+    const lineHeight = parseFloat(style.lineHeight) || 20
+    const verticalChrome = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
+        + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
+    const minHeight = lineHeight * Number(props.rows) + verticalChrome
+    const maxHeight = lineHeight * props.maxRows + verticalChrome
+
+    // Auf Mindesthöhe statt 'auto' messen: das Feld fällt nie kleiner zusammen, die Seite springt beim Tippen nicht
+    textarea.style.height = `${minHeight}px`
+    const contentHeight = textarea.scrollHeight + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
+    textarea.style.height = `${Math.min(Math.max(contentHeight, minHeight), maxHeight)}px`
+    textarea.style.overflowY = contentHeight > maxHeight ? 'auto' : 'hidden'
+}
+
+// Externe Wertänderungen (Live-Update, Zurücksetzen) passen die Höhe ebenfalls an
+watch(() => props.modelValue, () => nextTick(resizeToContent))
+onMounted(resizeToContent)
 
 /** Fokus für Eltern über ref (z. B. ShiftNoteComponent beim Öffnen des Felds) */
 function focus(options) {

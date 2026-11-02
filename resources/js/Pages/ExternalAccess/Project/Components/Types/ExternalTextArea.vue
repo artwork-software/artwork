@@ -7,7 +7,7 @@
         <textarea
             :id="inputId"
             v-model="text"
-            rows="4"
+            rows="6"
             :placeholder="schema.placeholder"
             :disabled="!editable"
             class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-base sm:text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600 disabled:bg-surface-sunken disabled:text-text-subtle"

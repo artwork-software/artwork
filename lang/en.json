@@ -9595,5 +9595,12 @@
     "If you did not request this change, you can ignore this email.": "If you did not request this change, you can ignore this email.",
     "This confirmation link is no longer valid.": "This confirmation link is no longer valid.",
     "Your new email address has been confirmed.": "Your new email address has been confirmed.",
-    "Confirmation pending: we sent a link to {email}.": "Confirmation pending: we sent a link to {email}."
+    "Confirmation pending: we sent a link to {email}.": "Confirmation pending: we sent a link to {email}.",
+    "Default values for artist residencies in this accommodation. Leave empty to use the general default from the artist residency settings.": "Default values for artist residencies in this accommodation. Leave empty to use the general default from the artist residency settings.",
+    "If project creation from events is deactivated, events can only be linked to existing projects.": "If project creation from events is deactivated, events can only be linked to existing projects.",
+    "Project link of events": "Project link of events",
+    "Controls whether a new project can be created directly from an event.": "Controls whether a new project can be created directly from an event.",
+    "Project creation possible when creating events": "Project creation possible when creating events",
+    "If activated, a new project can be created directly in the event dialog when linking a project. If deactivated, events can only be linked to existing projects, so that projects are not created by accident.": "If activated, a new project can be created directly in the event dialog when linking a project. If deactivated, events can only be linked to existing projects, so that projects are not created by accident.",
+    "Creating new projects from events is deactivated in the calendar settings.": "Creating new projects from events is deactivated in the calendar settings."
 }

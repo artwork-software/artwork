@@ -29,6 +29,8 @@ class UpdateAccommodationRequest extends FormRequest
             'zip_code' => 'nullable|string|max:20',
             'location' => 'nullable|string|max:255',
             'note' => 'nullable|string|max:65535',
+            'daily_allowance' => 'nullable|numeric|min:0|max:10000',
+            'breakfast_deduction_per_day' => 'nullable|numeric|min:0|max:10000',
             'room_types' => 'required|array|min:1',
             'room_types.*' => 'exists:accommodation_room_types,id',
             'room_type_costs' => 'nullable|array',

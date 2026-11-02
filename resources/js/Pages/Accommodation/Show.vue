@@ -35,6 +35,13 @@
                     <div class="col-span-full">
                         <BaseTextarea id="note" v-model="accommodationForm.note" label="Note" @focusout="updateAccommodation" />
                     </div>
+                    <div class="col-span-1">
+                        <BaseInput id="daily_allowance" type="number" :step="0.01" v-model="accommodationForm.daily_allowance" label="Daily allowance" @focusout="updateAccommodation" />
+                    </div>
+                    <div class="col-span-1">
+                        <BaseInput id="breakfast_deduction_per_day" type="number" :step="0.01" v-model="accommodationForm.breakfast_deduction_per_day" label="Deduction per breakfast" @focusout="updateAccommodation" />
+                    </div>
+                    <p class="col-span-full -mt-2 text-xs text-text-muted">{{ $t('Default values for artist residencies in this accommodation. Leave empty to use the general default from the artist residency settings.') }}</p>
                 </div>
 
                 <div>
@@ -225,6 +232,8 @@ const props = defineProps({
             zip_code: '',
             location: '',
             note: '',
+            daily_allowance: null,
+            breakfast_deduction_per_day: null,
             room_types: [],
         })
     },
@@ -263,6 +272,8 @@ const accommodationForm = useForm({
     zip_code: props.accommodation.zip_code,
     location: props.accommodation.location,
     note: props.accommodation.note,
+    daily_allowance: props.accommodation.daily_allowance ?? null,
+    breakfast_deduction_per_day: props.accommodation.breakfast_deduction_per_day ?? null,
     room_types: props.accommodation.room_types ?? [],
     room_type_costs: {}
 })

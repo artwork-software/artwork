@@ -120,8 +120,9 @@
             text-align: center;
             padding: 2px 1px;
             border-bottom: 1.5px solid #404040;
-            white-space: nowrap;
-            font-size: {{ $s(6) }};
+            /* Raumnamen dürfen umbrechen, damit sie in der größeren Schrift nicht abgeschnitten werden */
+            white-space: normal;
+            font-size: {{ $s(10) }};
         }
 
         table.monthly thead th.corner {

@@ -318,6 +318,10 @@ class HandleInertiaRequests extends Middleware
                 'event_status_module' => $eventSettings->enable_status,
                 'event_admission_module' => $eventSettings->enable_admission,
                 'event_direct_booking_only' => $alwaysDirectBooking,
+                // false = Termin-Dialoge bieten nur „Bestehendes Projekt“ an (Kalender-Einstellung)
+                'project_creation_from_events_enabled' => (bool) (
+                    $generalCalendarSettings->project_creation_from_events_enabled ?? true
+                ),
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,

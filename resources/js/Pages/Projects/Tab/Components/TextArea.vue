@@ -12,7 +12,9 @@
             <div v-if="canEditComponent" class="mt-2 w-full flex" @focusin="isFocused = true" @focusout="isFocused = false">
                 <BaseTextarea
                     :placeholder="data.data.placeholder"
-                    :rows="4"
+                    :rows="6"
+                    auto-grow
+                    :max-rows="30"
                     :bg-color="inSidebar ? '!bg-surface-inverse !border-white/10 !w-80' : 'bg-white'"
                     class="w-full"
                     :class="inSidebar ? '!w-80' : 'w-full'"

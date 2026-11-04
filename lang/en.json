@@ -9714,5 +9714,13 @@
     "Artwork-Tickets did not accept the key of this connection.": "Artwork-Tickets did not accept the key of this connection.",
     "Artwork-Tickets no longer has this entry. Refresh the view and try again.": "Artwork-Tickets no longer has this entry. Refresh the view and try again.",
     "Something went wrong in Artwork-Tickets. Please try again later.": "Something went wrong in Artwork-Tickets. Please try again later.",
-    "The pass of a subscription follows its paid periods, so its last day cannot be set by hand.": "The pass of a subscription follows its paid periods, so its last day cannot be set by hand."
+    "The pass of a subscription follows its paid periods, so its last day cannot be set by hand.": "The pass of a subscription follows its paid periods, so its last day cannot be set by hand.",
+    "Greyed-out shifts belong to other crafts and are not part of this request. They are shown so you can see the full week of the person.": "Greyed-out shifts belong to other crafts and are not part of this request. They are shown so you can see the full week of the person.",
+    "Other craft": "Other craft",
+    "Shift in another craft": "Shift in another craft",
+    "Not part of this request": "Not part of this request",
+    "Shifts in other crafts in this week": "Shifts in other crafts in this week",
+    "in other crafts": "in other crafts",
+    "Working hours in this week across all crafts": "Working hours in this week across all crafts",
+    "h total": "h total"
 }

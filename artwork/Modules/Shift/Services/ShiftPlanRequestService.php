@@ -180,6 +180,130 @@ class ShiftPlanRequestService
     }
 
     /**
+     * Schichten aus ANDEREN Gewerken in derselben KW für alle Personen, die mindestens einer Schicht
+     * der Anfrage zugeordnet sind. Damit sieht die prüfende Person bei Personen aus "universellen"
+     * Gewerken (z. B. Azubis), wie viel sie in der Woche insgesamt arbeiten. Die Schichten sind nicht
+     * Teil der Anfrage und werden im Frontend nur ausgegraut angezeigt (nicht ablehnbar, kein Verlauf),
+     * deshalb geht nur ein schlanker Payload raus.
+     *
+     * @param Collection<int,Shift> $requestShifts Bereits geladene Schichten der Anfrage
+     *        (inkl. users/freelancer/serviceProvider).
+     * @return array<int, array{
+     *     id: int,
+     *     start: ?string,
+     *     end: ?string,
+     *     break_minutes: int,
+     *     date: string,
+     *     end_date: string,
+     *     is_committed: bool,
+     *     room_name: ?string,
+     *     craft: ?array{id: int, name: string, abbreviation: ?string, color: ?string},
+     *     workers: array<int, array{type: string, id: int, shift_qualification_id: ?int}>
+     * }>
+     */
+    public function buildForeignCraftShifts(
+        ShiftPlanRequest $request,
+        \Carbon\Carbon $start,
+        \Carbon\Carbon $end,
+        Collection $requestShifts
+    ): array {
+        $workerIdsByType = [
+            User::class => $this->collectWorkerIds($requestShifts, 'users'),
+            Freelancer::class => $this->collectWorkerIds($requestShifts, 'freelancer'),
+            ServiceProvider::class => $this->collectWorkerIds($requestShifts, 'serviceProvider'),
+        ];
+        $workerIdsByType = array_filter($workerIdsByType, fn (array $ids) => $ids !== []);
+
+        if ($workerIdsByType === []) {
+            return [];
+        }
+
+        $typeShort = [
+            User::class            => 'user',
+            Freelancer::class      => 'freelancer',
+            ServiceProvider::class => 'service_provider',
+        ];
+        $startYmd = $start->toDateString();
+        $endYmd = $end->toDateString();
+        $requestShiftIds = $requestShifts->pluck('id')->all();
+
+        $assignments = ShiftWorker::query()
+            ->where(function ($query) use ($workerIdsByType): void {
+                foreach ($workerIdsByType as $type => $ids) {
+                    $query->orWhere(fn ($q) => $q
+                        ->where('employable_type', $type)
+                        ->whereIn('employable_id', $ids));
+                }
+            })
+            ->whereIn('shift_id', Shift::query()
+                ->select('shifts.id')
+                ->where(fn ($q) => $q
+                    ->where('craft_id', '!=', $request->craft_id)
+                    ->orWhereNull('craft_id'))
+                ->when($requestShiftIds !== [], fn ($q) => $q->whereNotIn('shifts.id', $requestShiftIds))
+                ->startAndEndDateOverlap($startYmd, $endYmd))
+            ->get(['shift_id', 'employable_type', 'employable_id', 'shift_qualification_id'])
+            ->groupBy('shift_id');
+
+        if ($assignments->isEmpty()) {
+            return [];
+        }
+
+        return Shift::query()
+            ->whereIn('id', $assignments->keys())
+            ->with([
+                'craft:id,name,abbreviation,color',
+                'room:id,name',
+                'event:id,room_id',
+                'event.room:id,name',
+            ])
+            ->orderBy('start_date')
+            ->orderBy('start')
+            ->get()
+            ->map(fn (Shift $shift) => [
+                'id' => $shift->id,
+                'start' => $shift->start,
+                'end' => $shift->end,
+                'break_minutes' => (int) $shift->break_minutes,
+                'date' => Carbon::parse($shift->start_date)->toDateString(),
+                'end_date' => Carbon::parse($shift->end_date)->toDateString(),
+                'is_committed' => (bool) $shift->is_committed,
+                'room_name' => $shift->room?->name ?? $shift->event?->room?->name,
+                'craft' => $shift->craft ? [
+                    'id' => $shift->craft->id,
+                    'name' => $shift->craft->name,
+                    'abbreviation' => $shift->craft->abbreviation,
+                    'color' => $shift->craft->color,
+                ] : null,
+                'workers' => $assignments->get($shift->id)
+                    ->map(fn (ShiftWorker $worker) => [
+                        'type' => $typeShort[$worker->employable_type],
+                        'id' => (int) $worker->employable_id,
+                        'shift_qualification_id' => $worker->shift_qualification_id,
+                    ])
+                    ->values()
+                    ->all(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param Collection<int,Shift> $shifts
+     * @return array<int,int>
+     */
+    protected function collectWorkerIds(Collection $shifts, string $relation): array
+    {
+        return $shifts
+            ->flatMap(fn (Shift $shift) => $shift->relationLoaded($relation)
+                ? $shift->getRelation($relation)->pluck('id')
+                : [])
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * Löst die Anzeigenamen für (soft-gelöschte) ShiftWorker auf, gruppiert nach Typ.
      *
      * @param Collection<int,ShiftWorker> $workers

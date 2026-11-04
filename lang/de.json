@@ -9714,5 +9714,13 @@
     "Artwork-Tickets did not accept the key of this connection.": "Artwork-Tickets hat den Schlüssel dieser Verbindung nicht angenommen.",
     "Artwork-Tickets no longer has this entry. Refresh the view and try again.": "Artwork-Tickets hat diesen Eintrag nicht mehr. Bitte die Ansicht aktualisieren und es erneut versuchen.",
     "Something went wrong in Artwork-Tickets. Please try again later.": "In Artwork-Tickets ist etwas schiefgegangen. Bitte später noch einmal versuchen.",
-    "The pass of a subscription follows its paid periods, so its last day cannot be set by hand.": "Die Karte eines Abos folgt seinen bezahlten Zeiträumen; ihr letzter Tag lässt sich nicht von Hand setzen."
+    "The pass of a subscription follows its paid periods, so its last day cannot be set by hand.": "Die Karte eines Abos folgt seinen bezahlten Zeiträumen; ihr letzter Tag lässt sich nicht von Hand setzen.",
+    "Greyed-out shifts belong to other crafts and are not part of this request. They are shown so you can see the full week of the person.": "Ausgegraute Schichten gehören zu anderen Gewerken und sind nicht Teil dieser Anfrage. Sie werden angezeigt, damit du die ganze Woche der Person siehst.",
+    "Other craft": "Anderes Gewerk",
+    "Shift in another craft": "Schicht in einem anderen Gewerk",
+    "Not part of this request": "Nicht Teil dieser Anfrage",
+    "Shifts in other crafts in this week": "Schichten in anderen Gewerken in dieser KW",
+    "in other crafts": "in anderen Gewerken",
+    "Working hours in this week across all crafts": "Arbeitsstunden in dieser KW über alle Gewerke",
+    "h total": "Std. gesamt"
 }

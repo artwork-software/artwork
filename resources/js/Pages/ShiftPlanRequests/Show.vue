@@ -46,6 +46,14 @@
                 @update:sort-by="rowPrefs.sortBy = $event"
             />
 
+            <div
+                v-if="hasForeignCraftEntries"
+                class="flex items-center gap-2 rounded-xl border border-dashed border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-text-muted"
+            >
+                <IconInfoCircle class="h-4 w-4 shrink-0 text-text-subtle"/>
+                <span>{{ $t('Greyed-out shifts belong to other crafts and are not part of this request. They are shown so you can see the full week of the person.') }}</span>
+            </div>
+
             <!-- Rows: User / Freelancer / ServiceProvider / Unassigned -->
             <div class="space-y-4">
                 <ShiftPlanRequestRow
@@ -170,7 +178,7 @@ import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {Link, router} from '@inertiajs/vue3';
 import {computed, reactive, ref, watch} from 'vue';
-import {IconArrowLeft} from '@tabler/icons-vue';
+import {IconArrowLeft, IconInfoCircle} from '@tabler/icons-vue';
 import ShiftPlanRequestHeader from './components/ShiftPlanRequestHeader.vue';
 import ShiftPlanRequestRow from './components/ShiftPlanRequestRow.vue';
 import ShiftPlanRequestRowControls from './components/ShiftPlanRequestRowControls.vue';
@@ -187,6 +195,7 @@ import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
 import {useShiftPlanRequestActions} from './components/useShiftPlanRequestActions.js';
 import {useI18n} from 'vue-i18n';
 import {useShiftPlanRequestWeekNavigation} from './components/useShiftPlanRequestWeekNavigation.js';
+import {appendForeignCraftEntries, sortDayEntriesByStart} from './components/shiftPlanRequestHelpers.js';
 
 const {t} = useI18n();
 
@@ -224,6 +233,8 @@ const props = defineProps({
     individualTimes: {type: Array, default: () => []},
     craftWorkers: {type: Object, default: () => ({users: [], freelancers: [], service_providers: []})},
     overviewChanges: {type: Object, default: () => ({removed: []})},
+    // Schichten der eingeteilten Personen aus anderen Gewerken derselben KW (nur Anzeige, nicht Teil der Anfrage)
+    foreignCraftShifts: {type: Array, default: () => []},
     isMyRequest: {type: Boolean, required: false, default: false},
     navigation: {type: Object, default: () => ({previous: null, next: null})},
     shiftQualifications: {type: Array, default: () => []},
@@ -496,7 +507,7 @@ const rows = computed(() => {
                 typeLabel: base.typeLabel,
                 days: {},
                 violations: base.type === 'user' ? (props.shiftRuleViolations?.[base.id] ?? {}) : {},
-                totals: {total_shifts: 0, total_hours: 0}
+                totals: {total_shifts: 0, total_hours: 0, foreign_shifts: 0, foreign_hours: 0}
             });
         }
         return map.get(key);
@@ -645,6 +656,11 @@ const rows = computed(() => {
         }
     }
 
+    // Gewerksfremde Schichten nur bei Personen zeigen, die bereits eine Zeile haben (das Backend liefert
+    // ohnehin nur Personen mit mindestens einer Schicht dieses Gewerks). Sie zählen nicht zu den
+    // Schichten der Anfrage, fließen aber in die Wochenstunden ein.
+    appendForeignCraftEntries(map, props.foreignCraftShifts, dayDates, qualificationNames.value);
+
     // Individual Times zu den Rows hinzufügen
     for (const it of props.individualTimes) {
         const type = it.timeable_type_short;
@@ -699,8 +715,16 @@ const rows = computed(() => {
         });
     }
 
+    // Innerhalb eines Tages chronologisch sortieren, damit sich eigene und gewerksfremde Schichten
+    // zu einem zusammenhängenden Tagesbild fügen (Einträge ohne Startzeit, z. B. ganztägig, zuerst).
+    for (const row of map.values()) {
+        Object.values(row.days).forEach(sortDayEntriesByStart);
+    }
+
     return Array.from(map.values());
 });
+
+const hasForeignCraftEntries = computed(() => rows.value.some(row => row.totals.foreign_shifts > 0));
 
 // Filter & Sortierung der Personen-Zeilen (Einstellungen überleben das Blättern zwischen Anfragen)
 const ROW_PREFS_STORAGE_KEY = 'artwork.shiftPlanRequest.rowPrefs';

@@ -3,9 +3,12 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\User\Models\User;
 use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -139,6 +142,168 @@ final class ShiftPlanRequestControllerTest extends FeatureTestCase
         $this->get(route('shift-plan-requests.show', $request))
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('shifts.0.room_name', 'Halle K1'));
+    }
+
+    // --- Prüfansicht: Schichten aus anderen Gewerken (Wochenlast der Person) --------------------
+
+    /**
+     * KW 28/2026 = 06.07.–12.07.2026. Anfrage des Gewerks "Licht", eine Person ist dort und in "Ton"
+     * eingeteilt.
+     *
+     * @return array{0: ShiftPlanRequest, 1: Craft, 2: Shift}
+     */
+    private function requestWithAssignedWorkerShift(User|Freelancer $worker, string $relation): array
+    {
+        $craft = Craft::factory()->create(['name' => 'Licht', 'abbreviation' => 'LI']);
+        $request = ShiftPlanRequest::factory()->create([
+            'craft_id' => $craft->id,
+            'week_number' => 28,
+            'year' => 2026,
+        ]);
+        $shift = Shift::factory()->create([
+            'craft_id' => $craft->id,
+            'start_date' => '2026-07-07',
+            'end_date' => '2026-07-07',
+            'start' => '08:00',
+            'end' => '16:00',
+        ]);
+        $this->assign($shift, $relation, $worker->id);
+        $request->requestedShifts()->attach($shift->id, ['snapshot' => json_encode([])]);
+
+        return [$request, $craft, $shift];
+    }
+
+    /**
+     * shift_workers.shift_qualification_id hat keinen Default, deshalb immer mit Qualifikation zuordnen.
+     *
+     * @param array<int,int>|int $ids
+     */
+    private function assign(Shift $shift, string $relation, array|int $ids): void
+    {
+        $qualificationId = ShiftQualification::factory()->create()->id;
+        foreach ((array) $ids as $id) {
+            $shift->{$relation}()->attach($id, ['shift_qualification_id' => $qualificationId]);
+        }
+    }
+
+    private function foreignShift(Craft $craft, string $date, array $attributes = []): Shift
+    {
+        return Shift::factory()->create(array_merge([
+            'craft_id' => $craft->id,
+            'start_date' => $date,
+            'end_date' => $date,
+            'start' => '18:00',
+            'end' => '23:00',
+            'break_minutes' => 30,
+        ], $attributes));
+    }
+
+    #[Test]
+    public function show_contains_shifts_of_other_crafts_for_assigned_people(): void
+    {
+        $this->actingAsAdmin();
+        $worker = User::factory()->create();
+        [$request] = $this->requestWithAssignedWorkerShift($worker, 'users');
+        $sound = Craft::factory()->create(['name' => 'Ton', 'abbreviation' => 'TO']);
+        $room = Room::factory()->create(['name' => 'Studio']);
+        $foreign = $this->foreignShift($sound, '2026-07-08', ['room_id' => $room->id, 'is_committed' => true]);
+        $this->assign($foreign, 'users', $worker->id);
+
+        $this->get(route('shift-plan-requests.show', $request))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('foreignCraftShifts', 1)
+                ->where('foreignCraftShifts.0.id', $foreign->id)
+                ->where('foreignCraftShifts.0.date', '2026-07-08')
+                ->where('foreignCraftShifts.0.start', '18:00')
+                ->where('foreignCraftShifts.0.end', '23:00')
+                ->where('foreignCraftShifts.0.break_minutes', 30)
+                ->where('foreignCraftShifts.0.is_committed', true)
+                ->where('foreignCraftShifts.0.room_name', 'Studio')
+                ->where('foreignCraftShifts.0.craft.abbreviation', 'TO')
+                ->where('foreignCraftShifts.0.craft.name', 'Ton')
+                ->where('foreignCraftShifts.0.workers.0.type', 'user')
+                ->where('foreignCraftShifts.0.workers.0.id', $worker->id)
+                ->where('foreignCraftShifts.0.workers.0.shift_qualification_id', fn ($id) => is_int($id))
+                // Die Schichten der Anfrage selbst bleiben unverändert
+                ->has('shifts', 1));
+    }
+
+    #[Test]
+    public function foreign_craft_shifts_only_cover_people_of_the_request_and_its_week(): void
+    {
+        $this->actingAsAdmin();
+        $worker = User::factory()->create();
+        $otherPerson = User::factory()->create();
+        [$request, $craft] = $this->requestWithAssignedWorkerShift($worker, 'users');
+        $sound = Craft::factory()->create();
+
+        // Person ohne Schicht in der Anfrage: ihre fremden Schichten gehören nicht in die Ansicht
+        $this->assign($this->foreignShift($sound, '2026-07-08'), 'users', $otherPerson->id);
+        // Gleiche Person, aber andere KW
+        $this->assign($this->foreignShift($sound, '2026-07-14'), 'users', $worker->id);
+        // Gleiches Gewerk: ist keine fremde Schicht
+        $this->assign($this->foreignShift($craft, '2026-07-09'), 'users', $worker->id);
+        // Zuordnung wieder entfernt (soft-gelöscht)
+        $removed = $this->foreignShift($sound, '2026-07-10');
+        $this->assign($removed, 'users', $worker->id);
+        $removed->users()->updateExistingPivot($worker->id, ['deleted_at' => now()]);
+
+        $this->get(route('shift-plan-requests.show', $request))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->has('foreignCraftShifts', 0));
+    }
+
+    #[Test]
+    public function foreign_craft_shifts_only_list_the_people_of_the_request(): void
+    {
+        $this->actingAsAdmin();
+        $worker = User::factory()->create();
+        $otherPerson = User::factory()->create();
+        [$request] = $this->requestWithAssignedWorkerShift($worker, 'users');
+        $foreign = $this->foreignShift(Craft::factory()->create(), '2026-07-08');
+        $this->assign($foreign, 'users', [$worker->id, $otherPerson->id]);
+
+        $this->get(route('shift-plan-requests.show', $request))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('foreignCraftShifts', 1)
+                ->has('foreignCraftShifts.0.workers', 1)
+                ->where('foreignCraftShifts.0.workers.0.id', $worker->id));
+    }
+
+    #[Test]
+    public function foreign_craft_shifts_include_freelancers_and_the_requesters_view(): void
+    {
+        $this->actingAsAdmin();
+        $freelancer = Freelancer::factory()->create();
+        [$request] = $this->requestWithAssignedWorkerShift($freelancer, 'freelancer');
+        $foreign = $this->foreignShift(Craft::factory()->create(['abbreviation' => 'AZ']), '2026-07-12');
+        $this->assign($foreign, 'freelancer', $freelancer->id);
+
+        $this->get(route('shift-plan-requests.my.show', $request))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('foreignCraftShifts', 1)
+                ->where('foreignCraftShifts.0.craft.abbreviation', 'AZ')
+                ->where('foreignCraftShifts.0.workers.0.type', 'freelancer')
+                ->where('foreignCraftShifts.0.workers.0.id', $freelancer->id));
+    }
+
+    #[Test]
+    public function show_without_assigned_people_has_no_foreign_craft_shifts(): void
+    {
+        $this->actingAsAdmin();
+        $craft = Craft::factory()->create();
+        $request = ShiftPlanRequest::factory()->create([
+            'craft_id' => $craft->id,
+            'week_number' => 28,
+            'year' => 2026,
+        ]);
+        $foreign = $this->foreignShift(Craft::factory()->create(), '2026-07-08');
+        $this->assign($foreign, 'users', User::factory()->create()->id);
+
+        $this->get(route('shift-plan-requests.show', $request))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('foreignCraftShifts', []));
     }
 
     #[Test]

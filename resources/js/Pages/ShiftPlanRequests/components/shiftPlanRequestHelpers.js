@@ -40,3 +40,60 @@ export function shiftPlanRequestWeekLabel(request) {
     if (!range) return `KW ${request?.week_number ?? '–'} / ${request?.year ?? '–'}`;
     return `KW ${request.week_number} / ${request.year} (${toDmy(range.monday)} – ${toDmy(range.sunday)})`;
 }
+
+/**
+ * Dauer einer Schicht in Stunden (Ende minus Start minus Pause). Endet die Schicht vor ihrem Start,
+ * läuft sie über Mitternacht (z. B. 22:00–06:00).
+ * @param {{start?: string, end?: string, break_minutes?: number}} shift
+ */
+export function shiftDurationHours(shift) {
+    if (!shift?.start || !shift?.end) return 0;
+    const [sh, sm] = String(shift.start).split(':').map(Number);
+    const [eh, em] = String(shift.end).split(':').map(Number);
+    let diff = (eh * 60 + em) - (sh * 60 + sm);
+    if (diff < 0) diff += 24 * 60;
+    if (shift.break_minutes) diff -= shift.break_minutes;
+    return diff > 0 ? diff / 60 : 0;
+}
+
+/**
+ * Hängt gewerksfremde Schichten (Prop foreignCraftShifts) an die vorhandenen Personen-Zeilen der
+ * Prüfansicht. Neue Zeilen entstehen dabei nicht: gezeigt wird nur, wer schon eine Zeile hat.
+ * Die Einträge zählen nicht als Schichten der Anfrage, sondern in totals.foreign_shifts/_hours.
+ * @param {Map<string, {days: Object<string, Array>, totals: Object}>} rowsByKey
+ * @param {Array} foreignCraftShifts
+ * @param {Array<string>} dayDates
+ * @param {Object<number, string>} qualificationNames
+ */
+export function appendForeignCraftEntries(rowsByKey, foreignCraftShifts, dayDates, qualificationNames = {}) {
+    for (const shift of (foreignCraftShifts || [])) {
+        const date = shift.date;
+        if (!date || !dayDates.includes(date)) continue;
+        for (const worker of (shift.workers || [])) {
+            const row = rowsByKey.get(`${worker.type}-${worker.id}`);
+            if (!row) continue;
+            if (!row.days[date]) row.days[date] = [];
+            const uniqueKey = `foreign-${shift.id}-${worker.type}-${worker.id}`;
+            if (row.days[date].some(e => e.unique_key === uniqueKey)) continue;
+            row.days[date].push({
+                unique_key: uniqueKey,
+                is_foreign_craft: true,
+                shift_id: shift.id,
+                start_time: shift.start,
+                end_time: shift.end,
+                room_name: shift.room_name || null,
+                qualification: qualificationNames[worker.shift_qualification_id] ?? null,
+                is_committed: !!shift.is_committed,
+                craft_name: shift.craft?.name || null,
+                craft_abbreviation: shift.craft?.abbreviation || shift.craft?.name || null,
+            });
+            row.totals.foreign_shifts = (row.totals.foreign_shifts || 0) + 1;
+            row.totals.foreign_hours = (row.totals.foreign_hours || 0) + shiftDurationHours(shift);
+        }
+    }
+}
+
+/** Tageseinträge chronologisch sortieren (stabil; Einträge ohne Startzeit, z. B. ganztägig, zuerst) */
+export function sortDayEntriesByStart(entries) {
+    return entries.sort((a, b) => String(a.start_time || '').localeCompare(String(b.start_time || '')));
+}

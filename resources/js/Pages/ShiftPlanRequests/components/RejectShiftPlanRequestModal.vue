@@ -206,7 +206,8 @@ defineEmits([
 // Geister-Einträge entfernter Schichten ("ghost-…") haben kein parsebares shift_id-Format
 // und würden beim Absenden die Backend-Validierung des gesamten Requests scheitern lassen.
 const selectableEntries = (row, date) => (row.days?.[date] || [])
-    .filter(e => !e.is_individual_time && !e.is_removed_ghost);
+    // Gewerksfremde Schichten gehören nicht zur Anfrage und sind daher nicht ablehnbar.
+    .filter(e => !e.is_individual_time && !e.is_removed_ghost && !e.is_foreign_craft);
 
 const hasAnyShiftForDay = (date) => props.rows.some(r => selectableEntries(r, date).length);
 </script>

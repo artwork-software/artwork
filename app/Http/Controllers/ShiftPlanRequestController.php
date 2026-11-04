@@ -540,6 +540,10 @@ class ShiftPlanRequestController extends Controller
         $overviewChanges = app(ShiftPlanRequestService::class)
             ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
 
+        // Schichten der eingeteilten Personen aus anderen Gewerken (nur zur Einordnung der Wochenlast)
+        $foreignCraftShifts = app(ShiftPlanRequestService::class)
+            ->buildForeignCraftShifts($shiftPlanRequest, $start, $end, $shifts);
+
         $this->slimShowPayload($shiftPlanRequest, $shifts);
 
         return Inertia::render('ShiftPlanRequests/Show', [
@@ -548,6 +552,7 @@ class ShiftPlanRequestController extends Controller
             'days'    => $days,
             'individualTimes' => $individualTimes,
             'overviewChanges' => $overviewChanges,
+            'foreignCraftShifts' => $foreignCraftShifts,
             'navigation' => $this->buildRequestNavigation($shiftPlanRequest),
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
@@ -1719,6 +1724,10 @@ class ShiftPlanRequestController extends Controller
         $overviewChanges = app(ShiftPlanRequestService::class)
             ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
 
+        // Schichten der eingeteilten Personen aus anderen Gewerken (nur zur Einordnung der Wochenlast)
+        $foreignCraftShifts = app(ShiftPlanRequestService::class)
+            ->buildForeignCraftShifts($shiftPlanRequest, $start, $end, $shifts);
+
         $this->slimShowPayload($shiftPlanRequest, $shifts);
 
         return Inertia::render('ShiftPlanRequests/Show', [
@@ -1727,6 +1736,7 @@ class ShiftPlanRequestController extends Controller
             'days'    => $days,
             'individualTimes' => $individualTimes,
             'overviewChanges' => $overviewChanges,
+            'foreignCraftShifts' => $foreignCraftShifts,
             // Blättern nur über Anfragen, die der User auch sehen darf: bei Zugriff aufs
             // Gewerk (oder als Genehmiger/Admin) alle Anfragen des Gewerks, sonst nur eigene.
             'navigation' => $this->buildRequestNavigation(

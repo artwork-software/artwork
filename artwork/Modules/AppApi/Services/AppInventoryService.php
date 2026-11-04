@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Inventory for the crew on site: look an article up, see its stock per status, where it is and
- * whether it is free on a date. Viewing follows the web (any user while the module is on); the
+ * whether it is free on a date. Viewing follows the web ("View inventory" while the module is on); the
  * list, search and availability are the web's own (InventoryArticleService, readyQuantity).
  */
 class AppInventoryService
@@ -32,11 +32,13 @@ class AppInventoryService
     ) {
     }
 
-    /** Mirrors the routes' module gate, so the app never shows an Inventar that answers 403. */
+    /** Mirrors the routes' module and permission gate, so the app never shows an Inventar that answers 403. */
     public function canViewInventory(User $user): bool
     {
-        return $this->moduleSettingsService->isModuleVisible('inventory')
+        $moduleIsOpen = $this->moduleSettingsService->isModuleVisible('inventory')
             || $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+
+        return $moduleIsOpen && $user->can('view-inventory');
     }
 
     /**

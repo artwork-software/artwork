@@ -6899,7 +6899,6 @@
     "Button \"Add Article\"": "Button „Artikel hinzufügen“",
     "Edit mode in the article dialog": "Bearbeiten im Artikel-Dialog",
     "Create and edit articles, their properties and file attachments": "Artikel anlegen und ändern, Eigenschaften, Dateianhänge",
-    "The inventory list itself is visible to everyone as soon as the module is enabled.": "Die Inventarliste selbst ist für alle sichtbar, sobald das Modul aktiv ist.",
     "\"Delete\" in the article dialog": "„Löschen“ im Artikel-Dialog",
     "Tab \"Articles\" in the \"Recycle bin\"": "Tab „Artikel“ im „Papierkorb“",
     "Move articles to the trash, restore and permanently delete them": "Artikel in den Papierkorb legen, wiederherstellen und endgültig löschen",
@@ -9748,5 +9747,17 @@
     "Day part": "Tageszeit",
     "Absence or availability of the person entered, changed or removed for the day.": "Abwesenheit oder Verfügbarkeit der Person für den Tag eingetragen, geändert oder entfernt.",
     "Note on the day of the person added, changed or removed.": "Notiz zum Tag der Person hinzugefügt, geändert oder entfernt.",
-    "Work-free day": "Arbeitsfreier Tag"
+    "Work-free day": "Arbeitsfreier Tag",
+    "View inventory": "Inventar sehen",
+    "Menu \"Inventory\"": "Menü „Inventar“",
+    "Browse, search and filter articles, open the article details": "Artikel durchsuchen und filtern, Artikeldetails öffnen",
+    "Does not include \"Article Planning\" and \"Material Issues\"; they require \"Inventory disposition\".": "Enthält nicht „Artikelplanung“ und „Materialausgaben“; dafür braucht es „Inventardisposition“.",
+    "Can see the inventory overview and its articles": "Kann die Inventarübersicht und ihre Artikel sehen",
+    "Enter own individual times": "Darf eigene individuelle Zeiten eintragen",
+    "Can enter individual times for themselves in the own roster": "Kann im eigenen Einsatzplan individuelle Zeiten für sich selbst eintragen",
+    "Plus button per day in the own roster": "Plus-Button pro Tag im eigenen Einsatzplan",
+    "Edit and delete own individual times": "Eigene individuelle Zeiten bearbeiten und löschen",
+    "Create, edit and delete own individual times from today on, also as a recurring series": "Eigene individuelle Zeiten ab heute anlegen, bearbeiten und löschen, auch als wiederkehrende Zeitreihe",
+    "Entries apply immediately without approval": "Einträge gelten sofort, ohne Freigabe",
+    "Past days stay reserved for people with \"Manage availability of others\" or \"Plan shifts\".": "Vergangene Tage bleiben Personen mit „Verfügbarkeiten anderer pflegen“ oder „Schichten planen“ vorbehalten."
 }

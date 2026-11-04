@@ -6899,7 +6899,6 @@
     "Button \"Add Article\"": "Button \"Add Article\"",
     "Edit mode in the article dialog": "Edit mode in the article dialog",
     "Create and edit articles, their properties and file attachments": "Create and edit articles, their properties and file attachments",
-    "The inventory list itself is visible to everyone as soon as the module is enabled.": "The inventory list itself is visible to everyone as soon as the module is enabled.",
     "\"Delete\" in the article dialog": "\"Delete\" in the article dialog",
     "Tab \"Articles\" in the \"Recycle bin\"": "Tab \"Articles\" in the \"Recycle bin\"",
     "Move articles to the trash, restore and permanently delete them": "Move articles to the trash, restore and permanently delete them",
@@ -9748,5 +9747,17 @@
     "Day part": "Day part",
     "Absence or availability of the person entered, changed or removed for the day.": "Absence or availability of the person entered, changed or removed for the day.",
     "Note on the day of the person added, changed or removed.": "Note on the day of the person added, changed or removed.",
-    "Work-free day": "Work-free day"
+    "Work-free day": "Work-free day",
+    "View inventory": "View inventory",
+    "Menu \"Inventory\"": "Menu \"Inventory\"",
+    "Browse, search and filter articles, open the article details": "Browse, search and filter articles, open the article details",
+    "Does not include \"Article Planning\" and \"Material Issues\"; they require \"Inventory disposition\".": "Does not include \"Article Planning\" and \"Material Issues\"; they require \"Inventory disposition\".",
+    "Can see the inventory overview and its articles": "Can see the inventory overview and its articles",
+    "Enter own individual times": "Enter own individual times",
+    "Can enter individual times for themselves in the own roster": "Can enter individual times for themselves in the own roster",
+    "Plus button per day in the own roster": "Plus button per day in the own roster",
+    "Edit and delete own individual times": "Edit and delete own individual times",
+    "Create, edit and delete own individual times from today on, also as a recurring series": "Create, edit and delete own individual times from today on, also as a recurring series",
+    "Entries apply immediately without approval": "Entries apply immediately without approval",
+    "Past days stay reserved for people with \"Manage availability of others\" or \"Plan shifts\".": "Past days stay reserved for people with \"Manage availability of others\" or \"Plan shifts\"."
 }

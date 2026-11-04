@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ArtistResidency\Http\Requests;
 
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Crm\Rules\SafeCrmLinkValue;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ArtistResidencyCreateRequest extends FormRequest
@@ -42,7 +43,7 @@ class ArtistResidencyCreateRequest extends FormRequest
             'artist_id' => 'nullable|integer|exists:artists,id',
             'artist_crm_contact_id' => 'nullable|integer|exists:crm_contacts,id',
             'crm_property_values' => 'nullable|array',
-            'crm_property_values.*' => 'nullable|string',
+            'crm_property_values.*' => ['nullable', 'string', new SafeCrmLinkValue()],
             'accommodation_id' => 'nullable|integer|exists:accommodations,id',
             'accommodation_crm_contact_id' => 'nullable|integer|exists:crm_contacts,id',
             'project_id' => 'required|integer|exists:projects,id',

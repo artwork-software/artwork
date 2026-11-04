@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ExternalAccess\Http\Requests;
 
 use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Rules\SafeCrmLinkValue;
 use Artwork\Modules\ExternalAccess\DTOs\InviteExternalCommand;
 use Artwork\Modules\ExternalAccess\DTOs\TabScopeInput;
 use Artwork\Modules\ExternalAccess\Enums\ExternalAccessType;
@@ -63,7 +64,7 @@ class StoreExternalInvitationRequest extends FormRequest
             'tab_scopes.*.valid_to' => ['required', 'date', 'after:tab_scopes.*.valid_from'],
 
             'confidential_field_values' => ['array'],
-            'confidential_field_values.*' => ['nullable', 'string'],
+            'confidential_field_values.*' => ['nullable', 'string', new SafeCrmLinkValue()],
             'public_field_values' => ['array'],
             'public_field_values.*' => ['nullable', 'string'],
         ];

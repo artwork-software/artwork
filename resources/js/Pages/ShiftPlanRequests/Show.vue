@@ -195,7 +195,7 @@ import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
 import {useShiftPlanRequestActions} from './components/useShiftPlanRequestActions.js';
 import {useI18n} from 'vue-i18n';
 import {useShiftPlanRequestWeekNavigation} from './components/useShiftPlanRequestWeekNavigation.js';
-import {appendForeignCraftEntries, sortDayEntriesByStart} from './components/shiftPlanRequestHelpers.js';
+import {appendAbsenceEntries, appendForeignCraftEntries, sortDayEntriesByStart} from './components/shiftPlanRequestHelpers.js';
 
 const {t} = useI18n();
 
@@ -235,6 +235,8 @@ const props = defineProps({
     overviewChanges: {type: Object, default: () => ({removed: []})},
     // Schichten der eingeteilten Personen aus anderen Gewerken derselben KW (nur Anzeige, nicht Teil der Anfrage)
     foreignCraftShifts: {type: Array, default: () => []},
+    // Abwesenheiten der Personen + Zuweisungen, die damit kollidieren (key: shiftId-typ-personId)
+    workerAbsences: {type: Object, default: () => ({absences: [], unavailable_assignments: {}})},
     isMyRequest: {type: Boolean, required: false, default: false},
     navigation: {type: Object, default: () => ({previous: null, next: null})},
     shiftQualifications: {type: Array, default: () => []},
@@ -532,7 +534,8 @@ const rows = computed(() => {
             workflow_rejection_reason: rejectedMap.value[uniqueKey]?.reason ?? meta.workflow_rejection_reason ?? null,
             has_changes_after_commit: meta.has_changes_after_commit ?? false,
             has_changes_after_workflow: meta.has_changes_after_workflow ?? false,
-            is_subsequently_added: !!shift.is_subsequently_added
+            is_subsequently_added: !!shift.is_subsequently_added,
+            unavailable_status: props.workerAbsences?.unavailable_assignments?.[uniqueKey] ?? null
         });
         row.totals.total_shifts += 1;
         row.totals.total_hours += computeDurationHours(shift);
@@ -660,6 +663,9 @@ const rows = computed(() => {
     // ohnehin nur Personen mit mindestens einer Schicht dieses Gewerks). Sie zählen nicht zu den
     // Schichten der Anfrage, fließen aber in die Wochenstunden ein.
     appendForeignCraftEntries(map, props.foreignCraftShifts, dayDates, qualificationNames.value);
+
+    // Abwesenheiten („Nicht verfügbar“, arbeitsfreier Tag, frei) bei den Personen-Zeilen zeigen
+    appendAbsenceEntries(map, props.workerAbsences?.absences, dayDates);
 
     // Individual Times zu den Rows hinzufügen
     for (const it of props.individualTimes) {

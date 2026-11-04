@@ -97,3 +97,47 @@ export function appendForeignCraftEntries(rowsByKey, foreignCraftShifts, dayDate
 export function sortDayEntriesByStart(entries) {
     return entries.sort((a, b) => String(a.start_time || '').localeCompare(String(b.start_time || '')));
 }
+
+/**
+ * Hängt Abwesenheiten (Prop workerAbsences.absences: alles außer „Verfügbar“) an die vorhandenen
+ * Personen-Zeilen der Prüfansicht. Wie bei gewerksfremden Schichten entstehen keine neuen Zeilen.
+ * @param {Map<string, {days: Object<string, Array>}>} rowsByKey
+ * @param {Array} absences
+ * @param {Array<string>} dayDates
+ */
+export function appendAbsenceEntries(rowsByKey, absences, dayDates) {
+    for (const absence of (absences || [])) {
+        const date = absence.date;
+        if (!date || !dayDates.includes(date)) continue;
+        const row = rowsByKey.get(`${absence.worker_type}-${absence.worker_id}`);
+        if (!row) continue;
+        if (!row.days[date]) row.days[date] = [];
+        const uniqueKey = `absence-${absence.id}`;
+        if (row.days[date].some(e => e.unique_key === uniqueKey)) continue;
+        row.days[date].push({
+            unique_key: uniqueKey,
+            is_absence: true,
+            absence_type: absence.type,
+            full_day: !!absence.full_day,
+            day_part: absence.day_part || null,
+            start_time: absence.full_day ? null : (absence.start_time || null),
+            end_time: absence.full_day ? null : (absence.end_time || null),
+            comment: absence.comment || null,
+        });
+    }
+}
+
+/** Bezeichnung wie im Tagesdialog des Dienstplans (Übersetzungs-Keys) */
+export const ABSENCE_TYPE_LABEL_KEYS = {
+    OFF_WORK: 'Work-free day',
+    NOT_AVAILABLE: 'Not available',
+    FREE_WORK: 'Day off',
+};
+
+/** "08:00 – 12:00", Vormittag/Nachmittag oder ganztägig */
+export function absenceTimeLabel(entry, t = (key) => key) {
+    if (!entry?.full_day && entry?.start_time && entry?.end_time) return `${entry.start_time} – ${entry.end_time}`;
+    if (entry?.day_part === 'morning') return t('Morning');
+    if (entry?.day_part === 'afternoon') return t('Afternoon');
+    return t('Full day');
+}

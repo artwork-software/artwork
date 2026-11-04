@@ -23,6 +23,7 @@ trait GoesOnVacation
             'full_day' => $vacation->full_day,
             'start_time' => $vacation->start_time?->format('H:i'),
             'end_time' => $vacation->end_time?->format('H:i'),
+            'comment' => $vacation->comment,
             'created_by' => $vacation->created_by,
         ])->toArray();
     }

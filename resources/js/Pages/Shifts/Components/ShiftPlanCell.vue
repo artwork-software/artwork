@@ -188,16 +188,12 @@ const vacationLabel = computed(() => {
     return label
 })
 
-/** Verfügbarkeit-Label: Zeitraum + Kommentar */
+/** Verfügbarkeit-Label: nur der Zeitraum; der Kommentar steht unten nach den Schichten (cellParts) */
 function availabilityLabel(av) {
-    const parts = []
     if (!av.full_day && av.start_time && av.end_time) {
-        parts.push(`${av.start_time} - ${av.end_time}`)
+        return `${av.start_time} - ${av.end_time}`
     }
-    if (av.comment) {
-        parts.push(`„${av.comment}"`)
-    }
-    return parts.length ? parts.join(' ') : t('Available')
+    return t('Available')
 }
 
 /** ID des Users der Zelle (für italic-Prüfung) */
@@ -346,6 +342,29 @@ const cellParts = computed(() => {
         })
     }
 
+    // Kommentare zu Abwesenheit und Verfügbarkeit: unten nach den Schichten, in der Farbe des Eintrags
+    const vacationComment = vacationToday.value?.comment?.trim()
+    if (vacationComment) {
+        parts.push({
+            key: 'vacation-comment',
+            text: `„${vacationComment}"`,
+            class: 'text-[var(--uo-orange-text)]',
+            title: `${vacationLabel.value}: ${vacationComment}`,
+            suffix: ', ',
+        })
+    }
+    for (const av of availabilitiesToday.value) {
+        const availabilityComment = av?.comment?.trim()
+        if (!availabilityComment) continue
+        parts.push({
+            key: `av-comment:${av.id}`,
+            text: `„${availabilityComment}"`,
+            class: 'text-[var(--uo-success-text)]',
+            title: `${t('Available')} ${availabilityLabel(av)}: ${availabilityComment}`,
+            suffix: ', ',
+        })
+    }
+
     // Comment
     const comment = shiftCommentToday.value
     if (comment?.comment) {
@@ -354,6 +373,12 @@ const cellParts = computed(() => {
             text: comment.comment,
             class: isSelfCreated(comment.created_by) ? 'italic' : '',
         })
+    }
+
+    // Ein Kommentar zu Abwesenheit oder Verfügbarkeit als letzter Eintrag braucht kein Komma dahinter
+    const lastPart = parts[parts.length - 1]
+    if (lastPart && (lastPart.key === 'vacation-comment' || lastPart.key.startsWith('av-comment:'))) {
+        lastPart.suffix = null
     }
 
     return parts

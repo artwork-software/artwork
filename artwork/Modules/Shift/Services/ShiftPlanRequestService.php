@@ -13,6 +13,8 @@ use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -287,6 +289,117 @@ class ShiftPlanRequestService
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Abwesenheiten (alles außer „Verfügbar“) der Personen einer Anfrage in deren KW, dazu die
+     * Zuweisungen der Anfrage, die mit einer Abwesenheit kollidieren (gleiche Regel wie das
+     * Warndreieck im Dienstplan, ShiftWorkerAvailability).
+     *
+     * @param Collection<int,Shift> $requestShifts Bereits geladene Schichten der Anfrage
+     *        (inkl. users/freelancer/serviceProvider mit Pivot).
+     * @return array{
+     *     absences: array<int, array{
+     *         id: int, worker_type: string, worker_id: int, date: string, type: string,
+     *         full_day: bool, day_part: ?string, start_time: ?string, end_time: ?string, comment: ?string
+     *     }>,
+     *     unavailable_assignments: array<string, string>
+     * }
+     */
+    public function buildWorkerAbsences(
+        ShiftPlanRequest $request,
+        \Carbon\Carbon $start,
+        \Carbon\Carbon $end,
+        Collection $requestShifts
+    ): array {
+        $typeShort = [
+            User::class            => 'user',
+            Freelancer::class      => 'freelancer',
+            ServiceProvider::class => 'service_provider',
+        ];
+        $relationByType = [
+            User::class            => 'users',
+            Freelancer::class      => 'freelancer',
+            ServiceProvider::class => 'serviceProvider',
+        ];
+
+        $workerIdsByType = $this->requestWorkerIdsByType($request, $start, $end);
+        foreach ($relationByType as $type => $relation) {
+            $workerIdsByType[$type] = array_values(array_unique(array_merge(
+                $workerIdsByType[$type] ?? [],
+                $this->collectWorkerIds($requestShifts, $relation)
+            )));
+        }
+        $workerIdsByType = array_filter($workerIdsByType, fn (array $ids) => $ids !== []);
+
+        if ($workerIdsByType === []) {
+            return ['absences' => [], 'unavailable_assignments' => []];
+        }
+
+        $vacations = Vacation::query()
+            ->without(['series', 'conflicts'])
+            ->where(function ($query) use ($workerIdsByType): void {
+                foreach ($workerIdsByType as $type => $ids) {
+                    $query->orWhere(fn ($q) => $q
+                        ->where('vacationer_type', $type)
+                        ->whereIn('vacationer_id', $ids));
+                }
+            })
+            ->where('type', '!=', VacationType::AVAILABLE->value)
+            // Einen Tag früher: Schichten über Mitternacht reichen in den Vortag zurück
+            ->whereBetween('date', [$start->copy()->subDay()->toDateString(), $end->toDateString()])
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->get();
+
+        $startYmd = $start->toDateString();
+        $absences = $vacations
+            ->filter(fn (Vacation $vacation) => Carbon::parse($vacation->date)->toDateString() >= $startYmd)
+            ->map(fn (Vacation $vacation) => [
+                'id' => $vacation->id,
+                'worker_type' => $typeShort[$vacation->vacationer_type] ?? 'user',
+                'worker_id' => (int) $vacation->vacationer_id,
+                'date' => Carbon::parse($vacation->date)->toDateString(),
+                'type' => $vacation->type instanceof VacationType ? $vacation->type->value : (string) $vacation->type,
+                'full_day' => (bool) $vacation->full_day,
+                'day_part' => $vacation->day_part,
+                'start_time' => $vacation->full_day ? null : $vacation->start_time?->format('H:i'),
+                'end_time' => $vacation->full_day ? null : $vacation->end_time?->format('H:i'),
+                'comment' => $vacation->comment !== null && trim($vacation->comment) !== ''
+                    ? $vacation->comment
+                    : null,
+            ])
+            ->values()
+            ->all();
+
+        $vacationsByWorker = $vacations->groupBy(
+            fn (Vacation $vacation) => $vacation->vacationer_type . '-' . $vacation->vacationer_id
+        );
+
+        $unavailableAssignments = [];
+        foreach ($requestShifts as $shift) {
+            foreach ($relationByType as $type => $relation) {
+                if (!$shift->relationLoaded($relation)) {
+                    continue;
+                }
+                foreach ($shift->getRelation($relation) as $worker) {
+                    $workerVacations = $vacationsByWorker->get($type . '-' . $worker->id);
+                    if ($workerVacations === null) {
+                        continue;
+                    }
+                    // Relation nur für die Prüfung setzen, damit sie nicht im Schicht-Payload landet
+                    $worker->setRelation('vacations', $workerVacations);
+                    $status = ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $worker);
+                    $worker->unsetRelation('vacations');
+
+                    if ($status !== null) {
+                        $unavailableAssignments[$shift->id . '-' . $typeShort[$type] . '-' . $worker->id] = $status;
+                    }
+                }
+            }
+        }
+
+        return ['absences' => $absences, 'unavailable_assignments' => $unavailableAssignments];
     }
 
     /**

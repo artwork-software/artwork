@@ -21,6 +21,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property Carbon $end_time
  * @property Carbon $date
  * @property boolean $full_day
+ * @property string|null $day_part
  * @property string $comment
  * @property boolean $is_series
  * @property int $series_id

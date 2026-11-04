@@ -589,6 +589,11 @@ class ShiftPlanRequestController extends Controller
         $foreignCraftShifts = app(ShiftPlanRequestService::class)
             ->buildForeignCraftShifts($shiftPlanRequest, $start, $end, $shifts);
 
+        // Abwesenheiten der Personen und Zuweisungen, die damit kollidieren (vor dem Verschlanken,
+        // weil die Prüfung die Pivot-Zeiten der Zuweisungen braucht)
+        $workerAbsences = app(ShiftPlanRequestService::class)
+            ->buildWorkerAbsences($shiftPlanRequest, $start, $end, $shifts);
+
         $this->slimShowPayload($shiftPlanRequest, $shifts);
 
         return Inertia::render('ShiftPlanRequests/Show', [
@@ -598,6 +603,7 @@ class ShiftPlanRequestController extends Controller
             'individualTimes' => $individualTimes,
             'overviewChanges' => $overviewChanges,
             'foreignCraftShifts' => $foreignCraftShifts,
+            'workerAbsences' => $workerAbsences,
             'navigation' => $this->buildRequestNavigation($shiftPlanRequest),
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
@@ -1756,6 +1762,11 @@ class ShiftPlanRequestController extends Controller
         $foreignCraftShifts = app(ShiftPlanRequestService::class)
             ->buildForeignCraftShifts($shiftPlanRequest, $start, $end, $shifts);
 
+        // Abwesenheiten der Personen und Zuweisungen, die damit kollidieren (vor dem Verschlanken,
+        // weil die Prüfung die Pivot-Zeiten der Zuweisungen braucht)
+        $workerAbsences = app(ShiftPlanRequestService::class)
+            ->buildWorkerAbsences($shiftPlanRequest, $start, $end, $shifts);
+
         $this->slimShowPayload($shiftPlanRequest, $shifts);
 
         return Inertia::render('ShiftPlanRequests/Show', [
@@ -1765,6 +1776,7 @@ class ShiftPlanRequestController extends Controller
             'individualTimes' => $individualTimes,
             'overviewChanges' => $overviewChanges,
             'foreignCraftShifts' => $foreignCraftShifts,
+            'workerAbsences' => $workerAbsences,
             // Blättern nur über Anfragen, die der User auch sehen darf: bei Zugriff aufs
             // Gewerk (oder als Genehmiger/Admin) alle Anfragen des Gewerks, sonst nur eigene.
             'navigation' => $this->buildRequestNavigation(
@@ -2218,11 +2230,6 @@ class ShiftPlanRequestController extends Controller
         $notificationService->setNotificationConstEnum(
             NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST
         );
-        $notificationService->setBroadcastMessage([
-            'id' => Str::uuid()->toString(),
-            'type' => $approved ? 'success' : 'error',
-            'message' => $notificationTitle,
-        ]);
         $description = [
             0 => [
                 'type' => 'link',
@@ -2232,18 +2239,27 @@ class ShiftPlanRequestController extends Controller
         ];
 
         // Hinweis des Genehmigers (beim Akzeptieren) bzw. globaler Ablehnungsgrund
-        // wird der anfragenden Person direkt in der Benachrichtigung mitgeliefert.
+        // wird der anfragenden Person direkt in der Benachrichtigung, der Mail und im Toast mitgeliefert.
         $comment = $comment !== null ? trim($comment) : null;
+        $commentLine = null;
         if ($comment !== null && $comment !== '') {
+            $commentLine = __('notification.shift.commit_request_comment', [
+                'user' => $shiftPlanRequest->reviewedBy?->full_name ?? '',
+                'comment' => $comment,
+            ], $requester->language);
             $description[] = [
                 'type' => 'text',
-                'title' => __('notification.shift.commit_request_comment', [
-                    'user' => $shiftPlanRequest->reviewedBy?->full_name ?? '',
-                    'comment' => $comment,
-                ], $requester->language),
+                'title' => $commentLine,
                 'href' => null,
             ];
         }
+
+        $notificationService->setBroadcastMessage(array_filter([
+            'id' => Str::uuid()->toString(),
+            'type' => $approved ? 'success' : 'error',
+            'message' => $notificationTitle,
+            'detail' => $commentLine,
+        ], fn ($value) => $value !== null));
 
         // Ablehnung rollt die Schichten der Anfrage auf den Stand vor der Anfrage (_initial)
         // zurück — das passierte bisher still; die anfragende Person erfährt es jetzt hier.

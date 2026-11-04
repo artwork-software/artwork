@@ -135,3 +135,27 @@ test('sortDayEntriesByStart orders a day chronologically, entries without start 
     ];
     assert.deepEqual(sortDayEntriesByStart(entries).map(e => e.unique_key), ['full-day', 'a', 'b']);
 });
+
+test('appendAbsenceEntries adds absences to existing person rows only', async () => {
+    const { appendAbsenceEntries, absenceTimeLabel } = await import(
+        '../../resources/js/Pages/ShiftPlanRequests/components/shiftPlanRequestHelpers.js'
+    );
+    const rows = new Map([['user-1', { days: {}, totals: {} }]]);
+    const absences = [
+        { id: 5, worker_type: 'user', worker_id: 1, date: '2026-11-24', type: 'NOT_AVAILABLE', full_day: false, start_time: '08:00', end_time: '12:00', comment: 'Arzt' },
+        { id: 6, worker_type: 'user', worker_id: 2, date: '2026-11-24', type: 'OFF_WORK', full_day: true },
+        { id: 7, worker_type: 'user', worker_id: 1, date: '2026-12-01', type: 'OFF_WORK', full_day: true },
+    ];
+    appendAbsenceEntries(rows, absences, ['2026-11-24']);
+    appendAbsenceEntries(rows, absences, ['2026-11-24']);
+
+    const entries = rows.get('user-1').days['2026-11-24'];
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].is_absence, true);
+    assert.equal(entries[0].absence_type, 'NOT_AVAILABLE');
+    assert.equal(entries[0].comment, 'Arzt');
+    assert.equal(absenceTimeLabel(entries[0]), '08:00 – 12:00');
+    assert.equal(absenceTimeLabel({ full_day: true }), 'Full day');
+    assert.equal(absenceTimeLabel({ full_day: false, day_part: 'afternoon' }), 'Afternoon');
+    assert.equal(rows.has('user-2'), false);
+});

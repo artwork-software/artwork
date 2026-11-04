@@ -9,6 +9,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -304,6 +305,103 @@ final class ShiftPlanRequestControllerTest extends FeatureTestCase
 
         $this->get(route('shift-plan-requests.show', $request))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('foreignCraftShifts', []));
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function absence(User|Freelancer $worker, string $date, string $type, array $attributes = []): Vacation
+    {
+        return Vacation::query()->create(array_merge([
+            'vacationer_type' => $worker::class,
+            'vacationer_id' => $worker->id,
+            'date' => $date,
+            'type' => $type,
+            'full_day' => true,
+        ], $attributes));
+    }
+
+    #[Test]
+    public function show_contains_absences_of_the_people_and_marks_conflicting_assignments(): void
+    {
+        $this->actingAsAdmin();
+        $worker = User::factory()->create();
+        [$request, , $shift] = $this->requestWithAssignedWorkerShift($worker, 'users');
+        // kollidiert mit der Schicht 08:00–16:00 am 07.07.
+        $this->absence($worker, '2026-07-07', 'NOT_AVAILABLE', [
+            'full_day' => false,
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+            'comment' => 'Arzttermin',
+        ]);
+        // anderer Tag ohne Schicht, "Verfügbar" und Einträge außerhalb der KW zählen nicht
+        $this->absence($worker, '2026-07-09', 'OFF_WORK');
+        $this->absence($worker, '2026-07-10', 'AVAILABLE');
+        $this->absence($worker, '2026-07-20', 'NOT_AVAILABLE');
+
+        $this->get(route('shift-plan-requests.show', $request))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('workerAbsences.absences', 2)
+                ->where('workerAbsences.absences.0.worker_type', 'user')
+                ->where('workerAbsences.absences.0.worker_id', $worker->id)
+                ->where('workerAbsences.absences.0.date', '2026-07-07')
+                ->where('workerAbsences.absences.0.type', 'NOT_AVAILABLE')
+                ->where('workerAbsences.absences.0.full_day', false)
+                ->where('workerAbsences.absences.0.start_time', '10:00')
+                ->where('workerAbsences.absences.0.end_time', '12:00')
+                ->where('workerAbsences.absences.0.comment', 'Arzttermin')
+                ->where('workerAbsences.absences.1.date', '2026-07-09')
+                ->where('workerAbsences.absences.1.type', 'OFF_WORK')
+                ->where('workerAbsences.unavailable_assignments', [
+                    $shift->id . '-user-' . $worker->id => 'NOT_AVAILABLE',
+                ])
+                // die Prüfung lädt Abwesenheiten nur intern, nicht in den Schicht-Payload
+                ->missing('shifts.0.users.0.vacations'));
+    }
+
+    #[Test]
+    public function absence_outside_the_working_time_is_shown_but_no_conflict(): void
+    {
+        $this->actingAsAdmin();
+        $freelancer = Freelancer::factory()->create();
+        [$request] = $this->requestWithAssignedWorkerShift($freelancer, 'freelancer');
+        $this->absence($freelancer, '2026-07-07', 'NOT_AVAILABLE', [
+            'full_day' => false,
+            'start_time' => '17:00',
+            'end_time' => '20:00',
+        ]);
+
+        $this->get(route('shift-plan-requests.my.show', $request))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('workerAbsences.absences', 1)
+                ->where('workerAbsences.absences.0.worker_type', 'freelancer')
+                ->where('workerAbsences.absences.0.comment', null)
+                ->where('workerAbsences.unavailable_assignments', []));
+    }
+
+    #[Test]
+    public function absences_of_craft_members_without_shifts_are_included(): void
+    {
+        $this->actingAsAdmin();
+        $craft = Craft::factory()->create();
+        $member = User::factory()->create(['can_work_shifts' => true]);
+        $craft->users()->attach($member->id);
+        $request = ShiftPlanRequest::factory()->create([
+            'craft_id' => $craft->id,
+            'week_number' => 28,
+            'year' => 2026,
+        ]);
+        $this->absence($member, '2026-07-08', 'FREE_WORK');
+        $this->absence(User::factory()->create(), '2026-07-08', 'FREE_WORK');
+
+        $this->get(route('shift-plan-requests.show', $request))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('workerAbsences.absences', 1)
+                ->where('workerAbsences.absences.0.worker_id', $member->id)
+                ->where('workerAbsences.absences.0.type', 'FREE_WORK'));
     }
 
     #[Test]

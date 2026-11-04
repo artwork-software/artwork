@@ -241,7 +241,8 @@ final class SecurityAuditDataExposureRegressionTest extends FeatureTestCase
         $chat->users()->attach($sender->id);
         $message = ChatMessage::factory()->create(['chat_id' => $chat->id, 'sender_id' => $sender->id]);
 
-        $expectedKeys = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
+        // deactivated_at: deaktivierte Accounts werden überall gekennzeichnet (kein Kontaktdatum)
+        $expectedKeys = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url', 'deactivated_at'];
         $created = (new ChatCreated($chat))->broadcastWith();
         $this->assertSame($expectedKeys, array_keys($created['chat']['users'][0]));
 

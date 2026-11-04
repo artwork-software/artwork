@@ -2296,11 +2296,6 @@ parameters:
 			count: 1
 			path: artwork/Modules/Shift/Services/ShiftFreelancerService.php
 
-		-
-			message: '#^Access to an undefined property Artwork\\Modules\\Vacation\\Models\\Vacation\:\:\$day_part\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Shift/Services/ShiftKpiTrackingService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currentRequest\.$#'

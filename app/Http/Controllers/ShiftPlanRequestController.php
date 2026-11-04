@@ -1758,14 +1758,22 @@ class ShiftPlanRequestController extends Controller
         $overviewChanges = app(ShiftPlanRequestService::class)
             ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
 
+        // Schichten anderer Gewerke und Abwesenheiten (samt Kommentar) betreffen Personen über das Gewerk hinaus:
+        // nur mit Dienstplan-Recht. Die Ansicht selbst erreichen auch Personen über assignable_by_all.
+        $mayViewWorkerDetails = $user->can('approve-shift-plan-requests')
+            || $user->can(PermissionEnum::VIEW_SHIFT_PLAN->value)
+            || $user->can(PermissionEnum::SHIFT_PLANNER->value);
+
         // Schichten der eingeteilten Personen aus anderen Gewerken (nur zur Einordnung der Wochenlast)
-        $foreignCraftShifts = app(ShiftPlanRequestService::class)
-            ->buildForeignCraftShifts($shiftPlanRequest, $start, $end, $shifts);
+        $foreignCraftShifts = $mayViewWorkerDetails
+            ? app(ShiftPlanRequestService::class)->buildForeignCraftShifts($shiftPlanRequest, $start, $end, $shifts)
+            : [];
 
         // Abwesenheiten der Personen und Zuweisungen, die damit kollidieren (vor dem Verschlanken,
         // weil die Prüfung die Pivot-Zeiten der Zuweisungen braucht)
-        $workerAbsences = app(ShiftPlanRequestService::class)
-            ->buildWorkerAbsences($shiftPlanRequest, $start, $end, $shifts);
+        $workerAbsences = $mayViewWorkerDetails
+            ? app(ShiftPlanRequestService::class)->buildWorkerAbsences($shiftPlanRequest, $start, $end, $shifts)
+            : ['absences' => [], 'unavailable_assignments' => []];
 
         $this->slimShowPayload($shiftPlanRequest, $shifts);
 

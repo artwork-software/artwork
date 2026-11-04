@@ -405,6 +405,51 @@ final class ShiftPlanRequestControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function overnight_shift_into_monday_conflicts_with_an_absence_on_monday(): void
+    {
+        $this->actingAsAdmin();
+        $worker = User::factory()->create();
+        [$request, , $shift] = $this->requestWithAssignedWorkerShift($worker, 'users');
+        // Sonntag 22:00 bis Montag 06:00 (Montag gehört schon zur nächsten KW)
+        $shift->update(['start_date' => '2026-07-12', 'end_date' => '2026-07-13', 'start' => '22:00', 'end' => '06:00']);
+        $this->absence($worker, '2026-07-13', 'NOT_AVAILABLE');
+
+        $this->get(route('shift-plan-requests.show', $request))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('workerAbsences.absences', 0)
+                ->where('workerAbsences.unavailable_assignments', [
+                    $shift->id . '-user-' . $worker->id => 'NOT_AVAILABLE',
+                ]));
+    }
+
+    #[Test]
+    public function own_request_view_without_shift_plan_right_hides_absences_and_other_crafts(): void
+    {
+        $worker = User::factory()->create();
+        [$request, $craft] = $this->requestWithAssignedWorkerShift($worker, 'users');
+        $craft->update(['assignable_by_all' => true]);
+        $this->absence($worker, '2026-07-07', 'NOT_AVAILABLE', ['comment' => 'Arzttermin']);
+        $foreign = $this->foreignShift(Craft::factory()->create(), '2026-07-08');
+        $this->assign($foreign, 'users', $worker->id);
+
+        $this->actingAsUserWith([]);
+        $this->get(route('shift-plan-requests.my.show', $request))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('workerAbsences.absences', [])
+                ->where('workerAbsences.unavailable_assignments', [])
+                ->where('foreignCraftShifts', []));
+
+        $this->actingAsUserWith(['can view shift plan']);
+        $this->get(route('shift-plan-requests.my.show', $request))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('workerAbsences.absences', 1)
+                ->has('foreignCraftShifts', 1));
+    }
+
+    #[Test]
     public function navigation_orders_across_year_boundary(): void
     {
         $this->actingAsAdmin();

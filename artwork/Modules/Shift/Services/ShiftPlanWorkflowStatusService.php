@@ -189,6 +189,10 @@ class ShiftPlanWorkflowStatusService
         $individualTimes = IndividualTime::query()
             ->individualByDateRange($rangeStart, $rangeEnd)
             ->whereIn('timeable_type', array_keys(self::TYPE_KEYS))
+            // Nur Zeiten mit Freigabe-Bezug (angefragt oder freigegeben). Zeiten außerhalb jeder Anfrage
+            // (Bestand vor dem Workflow, Häuser ohne Freigabe-Workflow, direktes Festschreiben) dürfen eine
+            // festgeschriebene Woche nicht wieder auf „offen“ setzen.
+            ->where(fn ($query) => $query->where('is_committed', true)->orWhere('in_workflow', true))
             ->when(
                 $onlyEmployableType !== null && $onlyEmployableId !== null,
                 fn ($query) => $query

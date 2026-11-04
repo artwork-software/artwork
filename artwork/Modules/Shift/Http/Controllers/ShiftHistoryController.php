@@ -126,6 +126,8 @@ class ShiftHistoryController
             ->activityQuery($filters, $matchedShiftIds, $person, $personShiftIds)
             ->reorder()
             ->where('activity_log.subject_type', Shift::class)
+            // select ersetzt ein vorhandenes activity_log.* (Gruppierung nach Schichttag); pluck allein behielte es
+            ->select('activity_log.subject_id')
             ->distinct()
             ->pluck('activity_log.subject_id')
             ->map(fn ($id) => (int) $id)

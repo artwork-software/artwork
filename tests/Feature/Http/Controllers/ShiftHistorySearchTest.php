@@ -316,6 +316,13 @@ final class ShiftHistorySearchTest extends FeatureTestCase
             'end_date' => '2026-05-31',
         ]))->assertOk();
         $this->assertSame([$withEntries->id], collect($response->json('shifts'))->pluck('id')->all());
+        // Gruppierung nach Schichttag (Join + select activity_log.*): dieselbe schlanke Liste
+        $byShiftDay = $this->getJson(route('shift.history.index', [
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'sort' => 'shift_day',
+        ]))->assertOk();
+        $this->assertSame([$withEntries->id], collect($byShiftDay->json('shifts'))->pluck('id')->all());
 
         // gewählte Schicht ohne Einträge bleibt für den Hinweis beschriftbar
         $selected = $this->getJson(route('shift.history.index', [

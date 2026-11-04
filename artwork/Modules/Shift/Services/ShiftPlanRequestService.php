@@ -346,15 +346,20 @@ class ShiftPlanRequestService
                 }
             })
             ->where('type', '!=', VacationType::AVAILABLE->value)
-            // Einen Tag früher: Schichten über Mitternacht reichen in den Vortag zurück
-            ->whereBetween('date', [$start->copy()->subDay()->toDateString(), $end->toDateString()])
+            // Je einen Tag davor und danach: Schichten über Mitternacht reichen in den Nachbartag (z. B. So → Mo)
+            ->whereBetween('date', [$start->copy()->subDay()->toDateString(), $end->copy()->addDay()->toDateString()])
             ->orderBy('date')
             ->orderBy('start_time')
             ->get();
 
         $startYmd = $start->toDateString();
+        $endYmd = $end->toDateString();
         $absences = $vacations
-            ->filter(fn (Vacation $vacation) => Carbon::parse($vacation->date)->toDateString() >= $startYmd)
+            ->filter(function (Vacation $vacation) use ($startYmd, $endYmd): bool {
+                $day = Carbon::parse($vacation->date)->toDateString();
+
+                return $day >= $startYmd && $day <= $endYmd;
+            })
             ->map(fn (Vacation $vacation) => [
                 'id' => $vacation->id,
                 'worker_type' => $typeShort[$vacation->vacationer_type] ?? 'user',

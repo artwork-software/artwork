@@ -290,6 +290,40 @@ final class IndividualTimeReleaseWorkflowTest extends FeatureTestCase
     }
 
     #[Test]
+    public function editing_a_series_keeps_released_times_released_and_records_the_change(): void
+    {
+        $this->actingAsAdmin();
+        [, $member, $time] = $this->approvedIndividualTime();
+        $series = IndividualTimeSeries::factory()->create();
+        $time->forceFill(['series_uuid' => $series->uuid])->saveQuietly();
+
+        // Mittwoch 06.05. bleibt (Titel neu), Donnerstag 07.05. kommt dazu
+        $this->put(route('individual-time-series.update', $series->uuid), [
+            'title' => 'Berufsschule Block',
+            'start_date' => '2026-05-04',
+            'end_date' => '2026-05-10',
+            'start_time' => '08:00',
+            'end_time' => '15:00',
+            'full_day' => false,
+            'break_minutes' => 0,
+            'frequency' => 'weekly',
+            'interval' => 1,
+            'weekdays' => [3, 4],
+            'subjects' => [['id' => $member->id, 'type' => 'user']],
+        ])->assertSuccessful();
+
+        $time->refresh();
+        $this->assertSame('Berufsschule Block', $time->title);
+        $this->assertTrue($time->is_committed, 'Freigabe bleibt beim Bearbeiten der Serie erhalten');
+        $this->assertSame(['individual_time_updated'], $this->individualTimeChanges($time)->pluck('change_type')->all());
+        $added = IndividualTime::query()
+            ->where('timeable_id', $member->id)
+            ->whereDate('start_date', '2026-05-07')
+            ->sole();
+        $this->assertFalse($added->is_committed);
+    }
+
+    #[Test]
     public function only_real_changes_of_released_times_are_recorded(): void
     {
         $this->actingAsAdmin();
@@ -443,6 +477,28 @@ final class IndividualTimeReleaseWorkflowTest extends FeatureTestCase
         // Offene Schicht im anderen Gewerk: nicht grün, und kein Rückfall auf den Wert der individuellen Zeiten
         $this->assertSame('open', $status[$craftOpen->id][19]);
         $this->assertSame('committed', $status[ShiftPlanWorkflowStatusService::INDIVIDUAL_TIMES_KEY][19]);
+    }
+
+    #[Test]
+    public function an_individual_time_outside_any_request_keeps_a_committed_week_green(): void
+    {
+        // Bestand vor dem Workflow bzw. direktes Festschreiben ohne Anfrage: die Zeit hat keinen Freigabe-Bezug
+        $member = User::factory()->create();
+        $craft = Craft::factory()->create();
+        $shift = Shift::factory()->create([
+            'craft_id' => $craft->id,
+            'start_date' => '2026-05-05',
+            'end_date' => '2026-05-05',
+        ]);
+        $shift->users()->attach($member->id, ['shift_qualification_id' => ShiftQualification::factory()->create()->id]);
+        Shift::query()->whereKey($shift->id)->update(['is_committed' => true]);
+        $this->individualTimeFor($member);
+
+        $status = app(ShiftPlanWorkflowStatusService::class)
+            ->computeForDateRange(Carbon::parse('2026-05-04'), Carbon::parse('2026-05-10'))['user'][$member->id];
+
+        $this->assertSame('committed', $status[$craft->id][19]);
+        $this->assertArrayNotHasKey(ShiftPlanWorkflowStatusService::INDIVIDUAL_TIMES_KEY, $status);
     }
 
     #[Test]

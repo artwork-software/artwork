@@ -7,6 +7,7 @@ use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Permission\Catalog\PermissionCatalog;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Permission\Models\PermissionPreset;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -134,6 +135,28 @@ final class InventoryViewPermissionTest extends FeatureTestCase
                 'Bestandsperson ' . $user->id . ' muss "Inventar sehen" bekommen'
             );
         }
+    }
+
+    #[Test]
+    public function migrationAddsViewToExistingPresetsOnce(): void
+    {
+        $byName = PermissionPreset::query()->create(['name' => 'Bühne', 'permissions' => ['can view shift plan']]);
+        $alreadyThere = PermissionPreset::query()->create([
+            'name' => 'Lager',
+            'permissions' => [PermissionEnum::INVENTORY_VIEW->value],
+        ]);
+
+        $migration = require database_path(
+            'migrations/2026_11_04_155853_grant_inventory_view_permission_to_existing_users.php'
+        );
+        $migration->up();
+        $migration->up();
+
+        $this->assertSame(
+            ['can view shift plan', PermissionEnum::INVENTORY_VIEW->value],
+            $byName->fresh()->permissions
+        );
+        $this->assertSame([PermissionEnum::INVENTORY_VIEW->value], $alreadyThere->fresh()->permissions);
     }
 
     /** @return string[] */

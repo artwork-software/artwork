@@ -5,12 +5,14 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Die Inventarübersicht braucht seit 04.11.2026 das Recht "inventory.view" (Gate view-inventory). Bis dahin sah
  * sie jede Person, sobald das Modul aktiv war. Damit sich für Bestandsumgebungen nichts still ändert, bekommen
- * alle vorhandenen Personen das Recht einmalig explizit; Admins können es danach gezielt entziehen.
+ * alle vorhandenen Personen und alle Rechte-Vorlagen das Recht einmalig explizit; Admins können es danach
+ * gezielt entziehen.
  *
  * Läuft in artwork:update VOR artwork:update-permissions, daher legt die Migration das Recht selbst an. Auf
  * frischen Instanzen (noch keine Rechte angelegt) passiert nichts: dort seedet der Katalog später alle Rechte,
@@ -40,7 +42,33 @@ return new class extends Migration
             );
         });
 
+        $this->grantToPresets($permissionId);
+
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    /**
+     * Auch die Rechte-Vorlagen bekommen das Recht: wer nach dem Update mit einer Vorlage angelegt wird, soll das
+     * Inventar weiter sehen wie bisher. Vorlagen speichern Rechte-Namen, ältere teils IDs.
+     */
+    private function grantToPresets(int $permissionId): void
+    {
+        if (!Schema::hasTable('permission_presets')) {
+            return;
+        }
+
+        $name = PermissionEnum::INVENTORY_VIEW->value;
+        foreach (DB::table('permission_presets')->get(['id', 'permissions']) as $preset) {
+            $permissions = json_decode((string) $preset->permissions, true) ?: [];
+            $numericIds = array_map('intval', array_filter($permissions, 'is_numeric'));
+            if (in_array($name, $permissions, true) || in_array($permissionId, $numericIds, true)) {
+                continue;
+            }
+            $permissions[] = $name;
+            DB::table('permission_presets')->where('id', $preset->id)->update([
+                'permissions' => json_encode(array_values($permissions), JSON_THROW_ON_ERROR),
+            ]);
+        }
     }
 
     public function down(): void

@@ -10,6 +10,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Support\ShiftHistoryDayEntryPerson;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftQualification;
@@ -202,22 +203,8 @@ class ShiftChangeRecorder
 
     protected function individualTimeOwnerName(?string $type, mixed $id): ?string
     {
-        if ($type === null || $id === null || ! class_exists($type)) {
-            return null;
-        }
-
-        /** @var Model|null $owner */
-        $owner = $type::query()->find($id);
-        if ($owner === null) {
-            return null;
-        }
-
-        $name = $owner->getAttribute('full_name')
-            ?? $owner->getAttribute('provider_name')
-            ?? $owner->getAttribute('name')
-            ?? trim($owner->getAttribute('first_name') . ' ' . $owner->getAttribute('last_name'));
-
-        return $name !== '' ? $name : null;
+        // gecacht pro Request: beim Löschen einer Serie kommt dieselbe Person viele Male vor
+        return ShiftHistoryDayEntryPerson::nameOf($type, $id !== null ? (int) $id : null);
     }
 
     /**

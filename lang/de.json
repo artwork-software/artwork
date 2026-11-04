@@ -9734,5 +9734,19 @@
     "Individual time changed ({0})": "Individuelle Zeit geändert ({0})",
     "Individual time changed": "Individuelle Zeit geändert",
     "Individual time deleted": "Individuelle Zeit gelöscht",
-    "Working time": "Arbeitszeit"
+    "Working time": "Arbeitszeit",
+    "Absence entered: {0}": "Abwesenheit eingetragen: {0}",
+    "Absence changed: {0}": "Abwesenheit geändert: {0}",
+    "Absence removed: {0}": "Abwesenheit entfernt: {0}",
+    "Availability entered: {0}": "Verfügbarkeit eingetragen: {0}",
+    "Availability changed: {0}": "Verfügbarkeit geändert: {0}",
+    "Availability removed: {0}": "Verfügbarkeit entfernt: {0}",
+    "Note added: {0}": "Notiz hinzugefügt: {0}",
+    "Note changed: {0}": "Notiz geändert: {0}",
+    "Note removed: {0}": "Notiz entfernt: {0}",
+    "Day off": "Frei",
+    "Day part": "Tageszeit",
+    "Absence or availability of the person entered, changed or removed for the day.": "Abwesenheit oder Verfügbarkeit der Person für den Tag eingetragen, geändert oder entfernt.",
+    "Note on the day of the person added, changed or removed.": "Notiz zum Tag der Person hinzugefügt, geändert oder entfernt.",
+    "Work-free day": "Arbeitsfreier Tag"
 }

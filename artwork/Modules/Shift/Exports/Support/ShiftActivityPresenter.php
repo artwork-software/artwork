@@ -2,6 +2,9 @@
 
 namespace Artwork\Modules\Shift\Exports\Support;
 
+use Artwork\Modules\Availability\Models\Availability;
+use Artwork\Modules\Shift\Models\ShiftPlanComment;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Carbon\Carbon;
 use Spatie\Activitylog\Models\Activity;
 
@@ -19,7 +22,43 @@ final class ShiftActivityPresenter
         'lifecycle' => 'Shift created/deleted',
         'commitment' => 'Commitment & request',
         'confirmation' => 'Confirmations',
+        'availability' => 'Availability & absence',
+        'note' => 'Notes',
         'other' => 'Other',
+    ];
+
+    /** Tageseinträge einer Person im Verlauf (LogsShiftPlanDayActivity): Subject → Art */
+    private const DAY_ENTRY_KINDS = [
+        Vacation::class => 'absence',
+        Availability::class => 'availability',
+        ShiftPlanComment::class => 'note',
+    ];
+
+    /** Meldung je Art und Vorgang; {0} = Beschreibung (Typ, Zeit, Kommentar bzw. Notiztext) */
+    private const DAY_ENTRY_MESSAGES = [
+        'absence' => [
+            'created' => 'Absence entered: {0}',
+            'updated' => 'Absence changed: {0}',
+            'deleted' => 'Absence removed: {0}',
+        ],
+        'availability' => [
+            'created' => 'Availability entered: {0}',
+            'updated' => 'Availability changed: {0}',
+            'deleted' => 'Availability removed: {0}',
+        ],
+        'note' => [
+            'created' => 'Note added: {0}',
+            'updated' => 'Note changed: {0}',
+            'deleted' => 'Note removed: {0}',
+        ],
+    ];
+
+    private const ABSENCE_TYPE_LABELS = [
+        // Bezeichnungen wie im Tagesdialog des Dienstplans
+        'OFF_WORK' => 'Work-free day',
+        'NOT_AVAILABLE' => 'Not available',
+        'FREE_WORK' => 'Day off',
+        'AVAILABLE' => 'Available',
     ];
 
     private const FIELD_LABELS = [
@@ -47,6 +86,11 @@ final class ShiftActivityPresenter
         'workflow_rejection_reason' => 'workflow_rejection_reason',
         'shift_qualification_id' => 'shift_qualification_id',
         'assignment' => 'Assignment',
+        'comment' => 'Comment',
+        'type' => 'Type',
+        'date' => 'Date',
+        'full_day' => 'Full day',
+        'day_part' => 'Day part',
     ];
 
     public function __construct(private readonly ?string $locale = null)
@@ -56,6 +100,14 @@ final class ShiftActivityPresenter
     /** Übersetzte Nachricht wie messageForLog() im Modal. */
     public function message(Activity $log): string
     {
+        $dayEntry = $this->dayEntry($log);
+        if ($dayEntry !== null) {
+            $key = self::DAY_ENTRY_MESSAGES[$dayEntry['kind']][$log->event]
+                ?? self::DAY_ENTRY_MESSAGES[$dayEntry['kind']]['updated'];
+
+            return str_replace('{0}', $this->dayEntryDescription($dayEntry), $this->tr($key));
+        }
+
         $properties = $this->properties($log);
         $key = $properties['translation_key'] ?? null;
 
@@ -93,6 +145,11 @@ final class ShiftActivityPresenter
 
     public function category(Activity $log): string
     {
+        $dayEntry = $this->dayEntry($log);
+        if ($dayEntry !== null) {
+            return $dayEntry['kind'] === 'note' ? 'note' : 'availability';
+        }
+
         $properties = $this->properties($log);
         $desc = mb_strtolower((string) $log->description);
         $ev = (string) $log->event;
@@ -167,6 +224,17 @@ final class ShiftActivityPresenter
      */
     public function shiftDetails(Activity $log, array $shiftsById): array
     {
+        // Tageseinträge haben keine Schicht: subject_id ist die Abwesenheit/Notiz, nicht eine Schicht-ID
+        $dayEntry = $this->dayEntry($log);
+        if ($dayEntry !== null) {
+            return [
+                'date' => self::dateDe($dayEntry['day']),
+                'time' => $dayEntry['kind'] === 'note' ? '' : $this->dayEntryTime($dayEntry['data']),
+                'room' => '',
+                'craft' => '',
+            ];
+        }
+
         $properties = $this->properties($log);
         $summary = $properties['commit_summary'] ?? null;
 
@@ -271,6 +339,95 @@ final class ShiftActivityPresenter
         }
 
         return $lines;
+    }
+
+    /**
+     * Tageseintrag (Abwesenheit, Verfügbarkeit, Notiz) eines Verlaufseintrags oder null. Inhalt aus
+     * day_entry (LogsShiftPlanDayActivity), bei älteren Einträgen aus attributes bzw. old (gelöscht).
+     *
+     * @return array{kind: string, day: ?string, data: array<string, mixed>}|null
+     */
+    public function dayEntry(Activity $log): ?array
+    {
+        $kind = self::DAY_ENTRY_KINDS[$log->subject_type] ?? null;
+        if ($kind === null) {
+            return null;
+        }
+
+        $properties = $this->properties($log);
+        $data = $properties['day_entry'] ?? null;
+        if (! is_array($data)) {
+            $data = (array) ($log->event === 'deleted'
+                ? ($properties['old'] ?? [])
+                : ($properties['attributes'] ?? []));
+        }
+
+        return [
+            'kind' => $kind,
+            'day' => $properties['worker_day']
+                ?? $properties['attributes']['date']
+                ?? $properties['old']['date']
+                ?? null,
+            'data' => $data,
+        ];
+    }
+
+    /**
+     * "Nicht verfügbar · Ganztägig · „Arzttermin“" bzw. bei Notizen „Text“.
+     *
+     * @param array{kind: string, data: array<string, mixed>} $dayEntry
+     */
+    public function dayEntryDescription(array $dayEntry): string
+    {
+        $data = $dayEntry['data'];
+        $comment = trim((string) ($data['comment'] ?? ''));
+
+        if ($dayEntry['kind'] === 'note') {
+            return $comment !== '' ? '„' . $comment . '“' : '–';
+        }
+
+        $type = (string) ($data['type'] ?? '');
+        $parts = [];
+        if ($dayEntry['kind'] === 'absence' && $type !== '') {
+            $parts[] = $this->tr(self::ABSENCE_TYPE_LABELS[$type] ?? $type);
+        }
+        $time = $this->dayEntryTime($data);
+        if ($time !== '') {
+            $parts[] = $time;
+        }
+        // Abwesenheiten speichern im Kommentar teils nur den Typ — nicht doppelt zeigen
+        if ($comment !== '' && $comment !== $type) {
+            $parts[] = '„' . $comment . '“';
+        }
+
+        return $parts !== [] ? implode(' · ', $parts) : '–';
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function dayEntryTime(array $data): string
+    {
+        $start = self::timeOfDay($data['start_time'] ?? null);
+        $end = self::timeOfDay($data['end_time'] ?? null);
+        if (empty($data['full_day']) && $start !== null && $end !== null) {
+            return $start . ' – ' . $end;
+        }
+
+        return match ($data['day_part'] ?? null) {
+            'morning' => $this->tr('Morning'),
+            'afternoon' => $this->tr('Afternoon'),
+            default => ! empty($data['full_day']) ? $this->tr('Full day') : '',
+        };
+    }
+
+    private static function timeOfDay(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return preg_match('/(\d{2}:\d{2})(:\d{2})?$/', (string) $value, $match) ? $match[1] : null;
     }
 
     private function assignmentLabel(mixed $payload, string $fallbackKey): ?string

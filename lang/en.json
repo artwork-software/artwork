@@ -9734,5 +9734,19 @@
     "Individual time changed ({0})": "Individual time changed ({0})",
     "Individual time changed": "Individual time changed",
     "Individual time deleted": "Individual time deleted",
-    "Working time": "Working time"
+    "Working time": "Working time",
+    "Absence entered: {0}": "Absence entered: {0}",
+    "Absence changed: {0}": "Absence changed: {0}",
+    "Absence removed: {0}": "Absence removed: {0}",
+    "Availability entered: {0}": "Availability entered: {0}",
+    "Availability changed: {0}": "Availability changed: {0}",
+    "Availability removed: {0}": "Availability removed: {0}",
+    "Note added: {0}": "Note added: {0}",
+    "Note changed: {0}": "Note changed: {0}",
+    "Note removed: {0}": "Note removed: {0}",
+    "Day off": "Day off",
+    "Day part": "Day part",
+    "Absence or availability of the person entered, changed or removed for the day.": "Absence or availability of the person entered, changed or removed for the day.",
+    "Note on the day of the person added, changed or removed.": "Note on the day of the person added, changed or removed.",
+    "Work-free day": "Work-free day"
 }

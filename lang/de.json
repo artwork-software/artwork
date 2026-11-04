@@ -9722,5 +9722,13 @@
     "Shifts in other crafts in this week": "Schichten in anderen Gewerken in dieser KW",
     "in other crafts": "in anderen Gewerken",
     "Working hours in this week across all crafts": "Arbeitsstunden in dieser KW über alle Gewerke",
-    "h total": "Std. gesamt"
+    "h total": "Std. gesamt",
+    "Released": "Freigegeben",
+    "In release request": "In Freigabe-Anfrage",
+    "Individual time released": "Individuelle Zeit freigegeben",
+    "Individual time in release request": "Individuelle Zeit in Freigabe-Anfrage",
+    "Part of the release request of another craft": "Teil der Freigabe-Anfrage eines anderen Gewerks",
+    "This individual time has been released. If you change it, it has to be requested for release again.": "Diese individuelle Zeit ist freigegeben. Wenn du sie änderst, muss sie erneut zur Freigabe angefragt werden.",
+    "This individual time is part of an open release request. Reviewers will see your changes.": "Diese individuelle Zeit ist Teil einer offenen Freigabe-Anfrage. Die Prüfenden sehen deine Änderungen.",
+    "Individual times released": "Individuelle Zeiten freigegeben"
 }

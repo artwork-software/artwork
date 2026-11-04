@@ -47,7 +47,12 @@
                     <span class="truncate">{{ part.text }}</span>
                 </span>
                 <span v-else :class="part.class" :title="part.title || undefined">
-                    {{ part.text }}
+                    <!-- Freigabe-Status einer individuellen Zeit: Punkt in den Farben der KW-Kachel -->
+                    <span
+                        v-if="part.marker"
+                        class="mr-0.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
+                        :class="part.marker"
+                    ></span>{{ part.text }}
                 </span>
                 <span v-if="part.suffix">{{ part.suffix }}</span>
             </template>
@@ -331,10 +336,13 @@ const cellParts = computed(() => {
             }
         }
 
+        const workflow = individualTimeWorkflowMarker(it?.workflow_status)
         parts.push({
             key: `it:${it.id}`,
             text: `${time} ${it?.title ?? ''}, `,
             class: '',
+            marker: workflow?.marker ?? null,
+            title: workflow?.title ?? null,
         })
     }
 
@@ -350,6 +358,18 @@ const cellParts = computed(() => {
 
     return parts
 })
+
+/** Freigabe-Status einer individuellen Zeit (gleiche Farben wie die KW-Kachel: blau angefragt, grün freigegeben) */
+function individualTimeWorkflowMarker(status) {
+    switch (status) {
+        case 'committed':
+            return { marker: 'bg-success', title: t('Individual time released') }
+        case 'requested':
+            return { marker: 'bg-accent-600', title: t('Individual time in release request') }
+        default:
+            return null
+    }
+}
 
 /** Compensation day offs am Tag */
 const compensationDayToday = computed(() => {

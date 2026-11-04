@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
@@ -474,6 +475,160 @@ class ShiftPlanRequestService
                         $sub->whereIn('status', ['rejected', 'approved']);
                     });
             });
+    }
+
+    /**
+     * Personen, deren individuelle Zeiten zu einer Anfrage gehören können: Mitglieder des Gewerks
+     * plus alle, die in der KW auf einer Schicht des Gewerks eingeteilt sind (auch aus anderen
+     * Gewerken ausgeliehene Personen erscheinen in der Prüfansicht als eigene Zeile).
+     *
+     * @return array<class-string, array<int, int>>
+     */
+    public function requestWorkerIdsByType(
+        ShiftPlanRequest $request,
+        \Carbon\Carbon $start,
+        \Carbon\Carbon $end
+    ): array {
+        $craft = $request->craft()->first();
+
+        $idsByType = [
+            User::class => $craft?->users()->pluck('users.id')->all() ?? [],
+            Freelancer::class => $craft?->freelancers()->pluck('freelancers.id')->all() ?? [],
+            ServiceProvider::class => $craft?->serviceProviders()->pluck('service_providers.id')->all() ?? [],
+        ];
+
+        $assigned = ShiftWorker::query()
+            ->whereIn('shift_id', Shift::query()
+                ->select('shifts.id')
+                ->where('craft_id', $request->craft_id)
+                ->startAndEndDateOverlap($start->toDateString(), $end->toDateString()))
+            ->get(['employable_type', 'employable_id']);
+
+        foreach ($assigned as $worker) {
+            if (array_key_exists($worker->employable_type, $idsByType)) {
+                $idsByType[$worker->employable_type][] = (int) $worker->employable_id;
+            }
+        }
+
+        return array_map(
+            fn (array $ids) => array_values(array_unique(array_map('intval', $ids))),
+            $idsByType
+        );
+    }
+
+    /**
+     * Individuelle Zeiten der Personen einer Anfrage in deren KW (alle, unabhängig vom Freigabe-Status).
+     *
+     * @param array<class-string, array<int, int>> $workerIdsByType
+     * @return \Illuminate\Database\Eloquent\Builder<IndividualTime>
+     */
+    public function individualTimesOfWorkersQuery(
+        array $workerIdsByType,
+        \Carbon\Carbon $start,
+        \Carbon\Carbon $end
+    ): \Illuminate\Database\Eloquent\Builder {
+        $workerIdsByType = array_filter($workerIdsByType, fn (array $ids) => $ids !== []);
+
+        return IndividualTime::query()
+            ->individualByDateRange($start->toDateString(), $end->toDateString())
+            ->where(function ($query) use ($workerIdsByType): void {
+                if ($workerIdsByType === []) {
+                    $query->whereRaw('1 = 0');
+                }
+                foreach ($workerIdsByType as $type => $ids) {
+                    $query->orWhere(fn ($q) => $q
+                        ->where('timeable_type', $type)
+                        ->whereIn('timeable_id', $ids));
+                }
+            });
+    }
+
+    /**
+     * Individuelle Zeiten, die eine Anfrage aufnehmen darf: noch nicht freigegeben und nicht in einer
+     * offenen Anfrage (auch nicht in der eines anderen Gewerks – jede Zeit gehört genau einer Anfrage).
+     * Zeiten aus abgelehnten Anfragen sind wieder frei.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder<IndividualTime>
+     */
+    public function freeIndividualTimesForRequestQuery(ShiftPlanRequest $request): \Illuminate\Database\Eloquent\Builder
+    {
+        [$start, $end] = $this->helperService->getDateRangeByCalendarWeekAndYear(
+            $request->week_number,
+            $request->year
+        );
+
+        return $this->individualTimesOfWorkersQuery($this->requestWorkerIdsByType($request, $start, $end), $start, $end)
+            ->where('is_committed', false)
+            ->where(function ($query): void {
+                $query
+                    ->whereNull('current_request_id')
+                    ->orWhereDoesntHave('currentRequest')
+                    ->orWhereHas('currentRequest', fn ($sub) => $sub->whereIn('status', ['rejected', 'approved']));
+            });
+    }
+
+    /**
+     * Hängt die freien individuellen Zeiten an die Anfrage (Verlauf + Workflow-Flags).
+     *
+     * @return array<int, int> IDs der angehängten Zeiten
+     */
+    public function attachFreeIndividualTimesToRequest(ShiftPlanRequest $request): array
+    {
+        $ids = $this->freeIndividualTimesForRequestQuery($request)->pluck('id')->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $request->requestedIndividualTimes()->syncWithoutDetaching($ids);
+
+        IndividualTime::query()->whereIn('id', $ids)->update([
+            'current_request_id' => $request->id,
+            'in_workflow' => true,
+        ]);
+
+        return $ids;
+    }
+
+    /**
+     * Genehmigung: alle individuellen Zeiten der Anfrage freigeben. Der Live-Zeiger wird wie bei
+     * Schichten gelöst, die Zugehörigkeit bleibt im Verlauf (requestedIndividualTimes).
+     */
+    public function commitIndividualTimesOfRequest(ShiftPlanRequest $request, ?User $causer): int
+    {
+        return IndividualTime::query()
+            ->where('current_request_id', $request->id)
+            ->update([
+                'is_committed' => true,
+                'in_workflow' => false,
+                'current_request_id' => null,
+                'committing_user_id' => $causer?->id,
+            ]);
+    }
+
+    /**
+     * Ablehnung: Zeiten verlassen den Workflow. Der Zeiger auf die abgelehnte Anfrage bleibt (wie bei
+     * Schichten); über deren Status gelten die Zeiten für die nächste Anfrage wieder als frei.
+     */
+    public function releaseIndividualTimesOfRejectedRequest(ShiftPlanRequest $request): int
+    {
+        return IndividualTime::query()
+            ->where('current_request_id', $request->id)
+            ->update(['in_workflow' => false]);
+    }
+
+    /**
+     * Zurückziehen: Zeiten verlassen den Workflow, Zeiger und Verlauf der gelöschten Anfrage entfallen.
+     */
+    public function releaseIndividualTimesOfWithdrawnRequest(ShiftPlanRequest $request): int
+    {
+        $released = IndividualTime::query()
+            ->where('current_request_id', $request->id)
+            ->update(['in_workflow' => false, 'current_request_id' => null]);
+
+        $request->requestedIndividualTimes()->detach();
+
+        return $released;
     }
 
     public function attachFreeShiftsToRequest(

@@ -6,6 +6,19 @@
     >
 
         <div class="p-4 space-y-4">
+            <!-- Freigegebene Zeit: Änderungen heben die Freigabe auf (muss neu angefragt werden) -->
+            <BaseAlertComponent
+                v-if="individualTime.workflow_status === 'committed'"
+                type="warning"
+                use-translation
+                message="This individual time has been released. If you change it, it has to be requested for release again."
+            />
+            <BaseAlertComponent
+                v-else-if="individualTime.workflow_status === 'requested'"
+                type="info"
+                use-translation
+                message="This individual time is part of an open release request. Reviewers will see your changes."
+            />
             <!-- Datum (nur Anzeige) -->
             <div>
                 <label class="block text-sm font-medium text-text-muted mb-1">
@@ -100,6 +113,7 @@
 import { ref, reactive, toRef } from 'vue'
 import { router } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue'
 import axios from 'axios'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'

@@ -160,7 +160,7 @@ class WorkerService
             return collect();
         }
 
-        return $individualTimes->map(function ($individualTime) {
+        return $individualTimes->map(function (IndividualTime $individualTime) {
             return [
                 'id' => $individualTime->id,
                 'title' => $individualTime->title,
@@ -173,6 +173,8 @@ class WorkerService
                 'break_minutes' => $individualTime->break_minutes,
                 'series_uuid' => $individualTime->series_uuid,
                 'days_of_individual_time' => $individualTime->days_of_individual_time ?? [],
+                // Dienstplan-Freigabe: 'committed' | 'requested' | null
+                'workflow_status' => $individualTime->workflowStatus(),
             ];
         });
     }

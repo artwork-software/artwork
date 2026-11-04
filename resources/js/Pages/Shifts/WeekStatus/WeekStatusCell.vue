@@ -35,6 +35,14 @@
                 {{ cell.shifts_committed }}/{{ cell.shifts_total }}
             </span>
             <span
+                v-if="cell.individual_times_total > 0"
+                class="inline-flex items-center gap-0.5 whitespace-nowrap"
+                :title="$t('Individual times released')"
+            >
+                <IconClock class="h-3 w-3" stroke-width="1.5" />
+                {{ cell.individual_times_committed }}/{{ cell.individual_times_total }}
+            </span>
+            <span
                 :class="['inline-flex items-center gap-0.5 whitespace-nowrap', cell.open_changes > 0 ? 'text-warning font-medium' : '']"
                 :title="$t('Unacknowledged changes')"
             >
@@ -62,7 +70,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { IconAlertTriangle, IconPencil, IconUsers } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconPencil, IconUsers, IconClock } from '@tabler/icons-vue'
 import { deadlineMeta, isEmptyCell, statusMeta } from '@/Pages/Shifts/WeekStatus/weekStatus.js'
 
 const props = defineProps({

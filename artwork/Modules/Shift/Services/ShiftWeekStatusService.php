@@ -236,6 +236,8 @@ class ShiftWeekStatusService
             'violation_ids' => [],
             'pending_request' => null,
             'latest_request' => null,
+            // Individuelle Zeiten der Anfragen dieser Zelle (id => freigegeben?)
+            'individual_times' => [],
         ];
     }
 
@@ -379,6 +381,7 @@ class ShiftWeekStatusService
             ->orderByDesc('id')
             ->get();
 
+        $cellByRequestId = [];
         foreach ($requests as $request) {
             $craftId = (int) $request->craft_id;
             $weekKey = $this->weekKeyFor((int) $request->year, (int) $request->week_number);
@@ -397,6 +400,8 @@ class ShiftWeekStatusService
                 'review_comment' => $request->review_comment,
             ];
 
+            $cellByRequestId[(int) $request->id] = [$craftId, $weekKey];
+
             $cell = &$cells[$craftId][$weekKey];
             // orderByDesc('id') → der erste Treffer je Zelle ist die neueste Anfrage
             $cell['latest_request'] ??= $payload;
@@ -404,6 +409,41 @@ class ShiftWeekStatusService
                 $cell['pending_request'] = $payload;
             }
             unset($cell);
+        }
+
+        $this->applyIndividualTimes($cells, $cellByRequestId);
+    }
+
+    /**
+     * Individuelle Zeiten zählen wie Schichten in den Status der Gewerk-Woche, sobald sie Teil einer
+     * Anfrage dieses Gewerks/dieser KW waren (Verlaufstabelle). So wird eine KW, in der nur
+     * individuelle Zeiten freigegeben wurden, ebenfalls als festgeschrieben angezeigt.
+     *
+     * @param array<int, array{0: int, 1: string}> $cellByRequestId
+     */
+    private function applyIndividualTimes(array &$cells, array $cellByRequestId): void
+    {
+        if ($cellByRequestId === []) {
+            return;
+        }
+
+        $rows = DB::table('shift_plan_request_individual_times')
+            ->join(
+                'individual_times',
+                'individual_times.id',
+                '=',
+                'shift_plan_request_individual_times.individual_time_id'
+            )
+            ->whereIn('shift_plan_request_individual_times.shift_plan_request_id', array_keys($cellByRequestId))
+            ->get([
+                'shift_plan_request_individual_times.shift_plan_request_id',
+                'individual_times.id',
+                'individual_times.is_committed',
+            ]);
+
+        foreach ($rows as $row) {
+            [$craftId, $weekKey] = $cellByRequestId[(int) $row->shift_plan_request_id];
+            $cells[$craftId][$weekKey]['individual_times'][(int) $row->id] = (bool) $row->is_committed;
         }
     }
 
@@ -511,6 +551,8 @@ class ShiftWeekStatusService
             'status' => $status,
             'shifts_total' => $aggregate['shifts_total'],
             'shifts_committed' => $aggregate['shifts_committed'],
+            'individual_times_total' => count($aggregate['individual_times']),
+            'individual_times_committed' => count(array_filter($aggregate['individual_times'])),
             'open_changes' => $aggregate['open_changes'],
             'open_violations' => count($aggregate['violation_ids']),
             'required_slots' => $aggregate['required_slots'],
@@ -533,11 +575,14 @@ class ShiftWeekStatusService
      */
     private function deriveStatus(array $aggregate): string
     {
-        if ($aggregate['shifts_total'] === 0) {
+        $total = $aggregate['shifts_total'] + count($aggregate['individual_times']);
+        $committed = $aggregate['shifts_committed'] + count(array_filter($aggregate['individual_times']));
+
+        if ($total === 0) {
             return self::STATUS_NONE;
         }
 
-        if ($aggregate['shifts_committed'] === $aggregate['shifts_total']) {
+        if ($committed === $total) {
             return self::STATUS_COMMITTED;
         }
 
@@ -549,7 +594,7 @@ class ShiftWeekStatusService
             return self::STATUS_REJECTED;
         }
 
-        if ($aggregate['shifts_committed'] > 0) {
+        if ($committed > 0) {
             return self::STATUS_PARTIAL;
         }
 

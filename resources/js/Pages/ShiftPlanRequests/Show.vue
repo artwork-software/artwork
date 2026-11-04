@@ -681,6 +681,8 @@ const rows = computed(() => {
                 end_time: it.end_time,
                 full_day: it.full_day,
                 working_time_minutes: it.working_time_minutes,
+                workflow_status: it.workflow_status ?? null,
+                in_this_request: !!it.in_this_request,
             });
         }
     }

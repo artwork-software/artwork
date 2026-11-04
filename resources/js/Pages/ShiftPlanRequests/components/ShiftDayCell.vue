@@ -123,6 +123,13 @@
                         <IconClock class="h-3 w-3 text-accent-500" />
                     </div>
                     <span class="text-[10px] text-accent-600 truncate">{{ entry.title || $t('Individual time') }}</span>
+                    <span
+                        v-if="entry.workflow_status"
+                        class="inline-flex"
+                        :title="entry.in_this_request ? null : $t('Part of the release request of another craft')"
+                    >
+                        <IndividualTimeWorkflowBadge :status="entry.workflow_status" />
+                    </span>
                 </template>
             </div>
         </template>
@@ -138,6 +145,7 @@ import { IconAlertTriangle, IconClock, IconLock, IconMapPin, IconNote, IconTrash
 import {computed} from 'vue';
 import {useI18n} from 'vue-i18n';
 import {formatViolationMeasure} from '@/Pages/ShiftWarnings/ruleTypes.js';
+import IndividualTimeWorkflowBadge from '@/Pages/Shifts/Components/IndividualTimeWorkflowBadge.vue';
 
 const {t} = useI18n();
 

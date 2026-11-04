@@ -1132,6 +1132,7 @@ import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
 import {isWorkTimeAccountingEnabled} from '@/Helper/workTimeAccounting.js'
 import {messageForFailedRequest} from '@/Helper/appToast.js'
+import {resolveKwWorkflowStatus} from '@/Helper/kwWorkflowStatus.js'
 
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftPlanOpenViolationsFilterNotice from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue'
@@ -3178,9 +3179,10 @@ function shiftPlanCellInnerClass(row: any, day: any) {
 
 // Freigabe-Workflow-Status der KW-Kachel (Dienstplanfreigabe):
 // requested = angefragt (blau), committed = festgeschrieben (grün),
-// attention = nach Festschreibung geändert / nicht verfügbar (gelb)
+// attention = nach Festschreibung geändert / nicht verfügbar (gelb).
+// Individuelle Zeiten zählen mit, auch in Wochen ohne Schicht im Gewerk.
 function kwWorkflowStatus(row: any, day: any): string | null {
-    return row.worker?.weeklyWorkflowStatus?.[row.craft.id]?.[day.weekNumber] ?? null
+    return resolveKwWorkflowStatus(row.worker?.weeklyWorkflowStatus, row.craft.id, day.weekNumber)
 }
 
 function kwWorkflowStatusClass(row: any, day: any): string {

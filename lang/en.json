@@ -9722,5 +9722,13 @@
     "Shifts in other crafts in this week": "Shifts in other crafts in this week",
     "in other crafts": "in other crafts",
     "Working hours in this week across all crafts": "Working hours in this week across all crafts",
-    "h total": "h total"
+    "h total": "h total",
+    "Released": "Released",
+    "In release request": "In release request",
+    "Individual time released": "Individual time released",
+    "Individual time in release request": "Individual time in release request",
+    "Part of the release request of another craft": "Part of the release request of another craft",
+    "This individual time has been released. If you change it, it has to be requested for release again.": "This individual time has been released. If you change it, it has to be requested for release again.",
+    "This individual time is part of an open release request. Reviewers will see your changes.": "This individual time is part of an open release request. Reviewers will see your changes.",
+    "Individual times released": "Individual times released"
 }

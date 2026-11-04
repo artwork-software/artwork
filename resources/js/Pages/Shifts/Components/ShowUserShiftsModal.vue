@@ -281,12 +281,12 @@
                                             <PropertyIcon name="IconCoffee" class="h-3.5 w-3.5" stroke-width="1.5" />
                                             {{ individual_time.break_minutes }} {{ t('min. break') }}
                                         </span>
-                                        <!-- Freigabe-Status; bei freigegebenen Zeiten hebt Bearbeiten die Freigabe auf -->
+                                        <!-- Freigabe-Status; Änderungen an freigegebenen Zeiten erscheinen als Änderung nach Festschreibung -->
                                         <span
                                             v-if="individual_time.workflow_status"
                                             class="inline-flex"
                                             :title="individual_time.workflow_status === 'committed'
-                                                ? t('This individual time has been released. If you change it, it has to be requested for release again.')
+                                                ? t('This individual time has been released. Changes appear under changes after commitment and have to be confirmed.')
                                                 : t('This individual time is part of an open release request. Reviewers will see your changes.')"
                                         >
                                             <IndividualTimeWorkflowBadge :status="individual_time.workflow_status" />

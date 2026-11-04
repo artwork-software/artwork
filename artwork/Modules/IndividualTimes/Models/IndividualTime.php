@@ -4,6 +4,7 @@ namespace Artwork\Modules\IndividualTimes\Models;
 
 use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
+use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,9 +35,9 @@ class IndividualTime extends Model
     ];
 
     /**
-     * Inhaltliche Felder: Ändert sich eines davon an einer freigegebenen Zeit, verfällt die Freigabe
-     * (sie muss neu angefragt werden). In einer offenen Anfrage bleibt die Zeit; die Prüfenden sehen
-     * dann den aktuellen Stand.
+     * Inhaltliche Felder: Ändert sich eines davon an einer freigegebenen Zeit, bleibt sie freigegeben,
+     * die Änderung erscheint aber wie bei Schichten als Änderung nach Freigabe (ShiftChangeRecorder).
+     * In einer offenen Anfrage bleibt die Zeit; die Prüfenden sehen dann den aktuellen Stand.
      */
     public const CONTENT_FIELDS = [
         'title',
@@ -71,15 +72,13 @@ class IndividualTime extends Model
 
     protected static function booted(): void
     {
-        static::updating(function (IndividualTime $individualTime): void {
-            if (
-                $individualTime->getOriginal('is_committed')
-                && !$individualTime->isDirty('is_committed')
-                && $individualTime->isDirty(self::CONTENT_FIELDS)
-            ) {
-                $individualTime->is_committed = false;
-                $individualTime->committing_user_id = null;
-            }
+        static::updated(function (IndividualTime $individualTime): void {
+            app(ShiftChangeRecorder::class)->recordIndividualTimeChange($individualTime, 'updated');
+        });
+
+        // deleting statt deleted: die Verlaufstabelle (Gewerk der Freigabe) wird per Cascade mitgelöscht
+        static::deleting(function (IndividualTime $individualTime): void {
+            app(ShiftChangeRecorder::class)->recordIndividualTimeChange($individualTime, 'deleted');
         });
     }
 

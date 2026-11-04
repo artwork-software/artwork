@@ -189,16 +189,36 @@ class ShiftPlanRequestController extends Controller
             ServiceProvider::class => 'service_provider',
         ];
 
-        return $service
+        $individualTimes = $service
             ->individualTimesOfWorkersQuery(
                 $service->requestWorkerIdsByType($shiftPlanRequest, $start, $end),
                 $start,
                 $end
             )
             ->when($requestTimeIds !== [], fn ($query) => $query->orWhereIn('id', $requestTimeIds))
-            ->get()
+            ->get();
+
+        // Offene Änderungen nach Freigabe (wie der "Geändert"-Marker an Schichten)
+        $changedIds = CommittedShiftChange::query()
+            ->where('subject_type', IndividualTime::class)
+            ->whereIn('subject_id', $individualTimes->modelKeys())
+            ->whereNull('acknowledged_at')
+            ->pluck('subject_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return $individualTimes
             ->makeVisible(['timeable_type', 'timeable_id'])
-            ->each(function (IndividualTime $individualTime) use ($typeMap, $shiftPlanRequest, $requestTimeIds): void {
+            ->each(function (IndividualTime $individualTime) use (
+                $typeMap,
+                $shiftPlanRequest,
+                $requestTimeIds,
+                $changedIds
+            ): void {
+                $individualTime->setAttribute(
+                    'has_changes_after_commit',
+                    in_array($individualTime->id, $changedIds, true)
+                );
                 $individualTime->setAttribute(
                     'timeable_type_short',
                     $typeMap[$individualTime->timeable_type] ?? 'unknown'

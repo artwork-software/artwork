@@ -9728,7 +9728,11 @@
     "Individual time released": "Individuelle Zeit freigegeben",
     "Individual time in release request": "Individuelle Zeit in Freigabe-Anfrage",
     "Part of the release request of another craft": "Teil der Freigabe-Anfrage eines anderen Gewerks",
-    "This individual time has been released. If you change it, it has to be requested for release again.": "Diese individuelle Zeit ist freigegeben. Wenn du sie änderst, muss sie erneut zur Freigabe angefragt werden.",
     "This individual time is part of an open release request. Reviewers will see your changes.": "Diese individuelle Zeit ist Teil einer offenen Freigabe-Anfrage. Die Prüfenden sehen deine Änderungen.",
-    "Individual times released": "Individuelle Zeiten freigegeben"
+    "Individual times released": "Individuelle Zeiten freigegeben",
+    "This individual time has been released. Changes appear under changes after commitment and have to be confirmed.": "Diese individuelle Zeit ist freigegeben. Änderungen erscheinen unter „Änderungen nach Festschreibung“ und müssen bestätigt werden.",
+    "Individual time changed ({0})": "Individuelle Zeit geändert ({0})",
+    "Individual time changed": "Individuelle Zeit geändert",
+    "Individual time deleted": "Individuelle Zeit gelöscht",
+    "Working time": "Arbeitszeit"
 }

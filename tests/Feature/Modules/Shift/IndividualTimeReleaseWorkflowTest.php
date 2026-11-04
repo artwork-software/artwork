@@ -5,9 +5,13 @@ namespace Tests\Feature\Modules\Shift;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
+use Artwork\Modules\IndividualTimes\Models\IndividualTimeSeries;
+use Artwork\Modules\Shift\Exports\Support\CommittedShiftChangePresenter;
+use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Artwork\Modules\Shift\Services\ShiftPlanWorkflowStatusService;
 use Artwork\Modules\Shift\Services\ShiftWeekStatusService;
 use Artwork\Modules\User\Models\User;
@@ -19,7 +23,8 @@ use Tests\Feature\FeatureTestCase;
 /**
  * Individuelle Zeiten laufen wie Schichten durch die Dienstplan-Freigabe: eine Anfrage nimmt die
  * freien Zeiten der Personen des Gewerks auf, die Genehmigung gibt sie frei, Ablehnung und Rückzug
- * lösen sie wieder. Jede Zeit gehört genau einer Anfrage; Änderungen heben eine Freigabe auf.
+ * lösen sie wieder. Jede Zeit gehört genau einer Anfrage. Änderungen an freigegebenen Zeiten erscheinen
+ * wie bei Schichten als Änderung nach Festschreibung.
  *
  * KW 19/2026 = Mo 04.05. – So 10.05.2026.
  */
@@ -192,18 +197,6 @@ final class IndividualTimeReleaseWorkflowTest extends FeatureTestCase
     }
 
     #[Test]
-    public function changing_a_released_individual_time_revokes_the_release(): void
-    {
-        $owner = User::factory()->create();
-        $time = $this->individualTimeFor($owner, attributes: ['is_committed' => true]);
-
-        $time->update(['end_time' => '16:00']);
-
-        $this->assertFalse($time->refresh()->is_committed);
-        $this->assertNull($time->workflowStatus());
-    }
-
-    #[Test]
     public function changing_a_requested_individual_time_keeps_it_in_the_request(): void
     {
         $this->actingAsAdmin();
@@ -218,14 +211,180 @@ final class IndividualTimeReleaseWorkflowTest extends FeatureTestCase
         $this->assertSame($request->id, $time->current_request_id);
     }
 
-    #[Test]
-    public function release_survives_updates_that_do_not_touch_the_content(): void
+    /**
+     * @return array{0: Craft, 1: User, 2: IndividualTime, 3: ShiftPlanRequest}
+     */
+    private function approvedIndividualTime(): array
     {
-        $time = $this->individualTimeFor(User::factory()->create(), attributes: ['is_committed' => true]);
+        [$craft, $member] = $this->craftWithMember();
+        $time = $this->individualTimeFor($member);
+        $request = $this->submitRequest($craft);
+        $this->post(route('shift-plan-requests.accept', $request))->assertRedirect();
 
-        $time->update(['end_time' => '15:00', 'in_workflow' => false]);
+        return [$craft, $member, $time->refresh(), $request];
+    }
 
+    private function individualTimeChanges(IndividualTime $time): \Illuminate\Support\Collection
+    {
+        return CommittedShiftChange::query()
+            ->where('subject_type', IndividualTime::class)
+            ->where('subject_id', $time->id)
+            ->get();
+    }
+
+    #[Test]
+    public function changing_a_released_individual_time_is_listed_as_change_after_commitment(): void
+    {
+        $editor = $this->actingAsAdmin();
+        [$craft, $member, $time] = $this->approvedIndividualTime();
+
+        $time->update(['end_time' => '16:00', 'title' => 'Berufsschule Block']);
+
+        // Bleibt freigegeben, wie eine festgeschriebene Schicht
         $this->assertTrue($time->refresh()->is_committed);
+
+        $change = $this->individualTimeChanges($time)->sole();
+        $this->assertSame('individual_time_updated', $change->change_type);
+        $this->assertNull($change->shift_id);
+        $this->assertSame($craft->id, $change->craft_id);
+        $this->assertSame($member->getMorphClass(), $change->affected_user_type);
+        $this->assertSame($member->id, (int) $change->affected_user_id);
+        $this->assertSame($editor->id, $change->changed_by_user_id);
+        $this->assertNull($change->acknowledged_at);
+        $this->assertSame(['old' => '15:00', 'new' => '16:00'], $change->field_changes['end_time']);
+        $this->assertSame(
+            ['old' => 'Berufsschule', 'new' => 'Berufsschule Block'],
+            $change->field_changes['title']
+        );
+        $this->assertSame('2026-05-06', $change->field_changes['_individual_time']['start_date']);
+        $this->assertSame('16:00', $change->field_changes['_individual_time']['end_time']);
+    }
+
+    #[Test]
+    public function deleting_a_released_individual_time_is_listed_as_change_after_commitment(): void
+    {
+        $this->actingAsAdmin();
+        [$craft, , $time] = $this->approvedIndividualTime();
+
+        $time->delete();
+
+        $change = $this->individualTimeChanges($time)->sole();
+        $this->assertSame('individual_time_deleted', $change->change_type);
+        $this->assertSame($craft->id, $change->craft_id);
+        $this->assertSame('15:00', $change->field_changes['_deleted']['end_time']);
+        $this->assertSame('Berufsschule', $change->field_changes['_individual_time']['title']);
+    }
+
+    #[Test]
+    public function deleting_a_series_records_its_released_individual_times(): void
+    {
+        $this->actingAsAdmin();
+        [, , $time] = $this->approvedIndividualTime();
+        $series = IndividualTimeSeries::factory()->create();
+        $time->forceFill(['series_uuid' => $series->uuid])->saveQuietly();
+
+        $this->delete(route('individual-time-series.destroy', $series->uuid))->assertSuccessful();
+
+        $this->assertDatabaseMissing('individual_times', ['id' => $time->id]);
+        $this->assertSame('individual_time_deleted', $this->individualTimeChanges($time)->sole()->change_type);
+    }
+
+    #[Test]
+    public function only_real_changes_of_released_times_are_recorded(): void
+    {
+        $this->actingAsAdmin();
+        [$craft, $member] = $this->craftWithMember();
+        $open = $this->individualTimeFor($member, '2026-05-07');
+        [, , $released] = $this->approvedIndividualTime();
+
+        // Nicht freigegeben: keine Änderung nach Freigabe
+        $open->update(['end_time' => '18:00']);
+        // Gleicher Wert bzw. reines Workflow-Feld: nichts aufzuzeichnen
+        $released->update(['end_time' => '15:00', 'in_workflow' => false]);
+        // Unterdrückt (z. B. beim Zurücksetzen einer Änderung)
+        ShiftChangeRecorder::withoutRecording(fn () => $released->update(['end_time' => '17:00']));
+
+        $this->assertCount(0, $this->individualTimeChanges($open));
+        $this->assertCount(0, $this->individualTimeChanges($released));
+    }
+
+    #[Test]
+    public function changes_page_and_export_present_individual_time_changes(): void
+    {
+        $this->actingAsAdmin();
+        [$craft, $member, $time] = $this->approvedIndividualTime();
+        $time->update(['end_time' => '16:00']);
+
+        $this->get(route('shifts.approvals.changes', $craft))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('ShiftPlanRequests/Changes')
+                ->where('pendingCount', 1)
+                ->where('changes.data.0.change_type', 'individual_time_updated')
+                ->where('changes.data.0.affected_name', $member->full_name)
+                ->where('changes.data.0.before_label', '06.05.2026 08:00 - 15:00 Berufsschule')
+                ->where('changes.data.0.after_label', '06.05.2026 08:00 - 16:00 Berufsschule'));
+
+        $presented = CommittedShiftChangePresenter::present($this->individualTimeChanges($time)->sole());
+        $this->assertSame(
+            'Individual time changed (End time)',
+            CommittedShiftChangePresenter::describe($presented, 'en')
+        );
+    }
+
+    #[Test]
+    public function an_unacknowledged_change_turns_the_kw_tile_yellow_until_it_is_confirmed(): void
+    {
+        $this->actingAsAdmin();
+        [, $member, $time] = $this->approvedIndividualTime();
+        $range = [Carbon::parse('2026-05-04'), Carbon::parse('2026-05-10')];
+        $key = ShiftPlanWorkflowStatusService::INDIVIDUAL_TIMES_KEY;
+
+        $time->update(['end_time' => '16:00']);
+        $status = app(ShiftPlanWorkflowStatusService::class)->computeForDateRange(...$range);
+        $this->assertSame('attention', $status['user'][$member->id][$key][19]);
+
+        $change = $this->individualTimeChanges($time)->sole();
+        $this->post(route('committed-shift-changes.acknowledge', $change))->assertRedirect();
+
+        $status = app(ShiftPlanWorkflowStatusService::class)->computeForDateRange(...$range);
+        $this->assertSame('committed', $status['user'][$member->id][$key][19]);
+    }
+
+    #[Test]
+    public function a_deleted_released_time_keeps_the_kw_tile_yellow_until_confirmed(): void
+    {
+        $this->actingAsAdmin();
+        [, $member, $time] = $this->approvedIndividualTime();
+
+        $time->delete();
+
+        $status = app(ShiftPlanWorkflowStatusService::class)
+            ->computeForDateRange(Carbon::parse('2026-05-04'), Carbon::parse('2026-05-10'));
+        $this->assertSame(
+            'attention',
+            $status['user'][$member->id][ShiftPlanWorkflowStatusService::INDIVIDUAL_TIMES_KEY][19]
+        );
+    }
+
+    #[Test]
+    public function week_status_and_review_show_open_changes_of_released_times(): void
+    {
+        $this->actingAsAdmin();
+        [$craft, , $time, $request] = $this->approvedIndividualTime();
+        $time->update(['end_time' => '16:00']);
+
+        $week = app(ShiftWeekStatusService::class)
+            ->compute(Carbon::parse('2026-05-04'), Carbon::parse('2026-05-10'), [$craft->id])
+            ['rows'][$craft->id]['2026-W19'];
+        $this->assertSame(1, $week['open_changes']);
+        $this->assertSame('committed', $week['status']);
+
+        $this->get(route('shift-plan-requests.show', $request))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('individualTimes.0.id', $time->id)
+                ->where('individualTimes.0.workflow_status', 'committed')
+                ->where('individualTimes.0.has_changes_after_commit', true));
     }
 
     #[Test]

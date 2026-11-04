@@ -130,6 +130,10 @@
                     >
                         <IndividualTimeWorkflowBadge :status="entry.workflow_status" />
                     </span>
+                    <span v-if="entry.has_changes_after_commit" class="inline-flex items-center gap-1 text-[10px] text-danger">
+                        <IconAlertTriangle class="h-3 w-3" />
+                        {{ $t('Changed') }}
+                    </span>
                 </template>
             </div>
         </template>

@@ -9728,7 +9728,11 @@
     "Individual time released": "Individual time released",
     "Individual time in release request": "Individual time in release request",
     "Part of the release request of another craft": "Part of the release request of another craft",
-    "This individual time has been released. If you change it, it has to be requested for release again.": "This individual time has been released. If you change it, it has to be requested for release again.",
     "This individual time is part of an open release request. Reviewers will see your changes.": "This individual time is part of an open release request. Reviewers will see your changes.",
-    "Individual times released": "Individual times released"
+    "Individual times released": "Individual times released",
+    "This individual time has been released. Changes appear under changes after commitment and have to be confirmed.": "This individual time has been released. Changes appear under changes after commitment and have to be confirmed.",
+    "Individual time changed ({0})": "Individual time changed ({0})",
+    "Individual time changed": "Individual time changed",
+    "Individual time deleted": "Individual time deleted",
+    "Working time": "Working time"
 }

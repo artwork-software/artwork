@@ -6,12 +6,12 @@
     >
 
         <div class="p-4 space-y-4">
-            <!-- Freigegebene Zeit: Änderungen heben die Freigabe auf (muss neu angefragt werden) -->
+            <!-- Freigegebene Zeit: Änderungen erscheinen wie bei Schichten als Änderung nach Festschreibung -->
             <BaseAlertComponent
                 v-if="individualTime.workflow_status === 'committed'"
                 type="warning"
                 use-translation
-                message="This individual time has been released. If you change it, it has to be requested for release again."
+                message="This individual time has been released. Changes appear under changes after commitment and have to be confirmed."
             />
             <BaseAlertComponent
                 v-else-if="individualTime.workflow_status === 'requested'"

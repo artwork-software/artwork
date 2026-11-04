@@ -683,6 +683,7 @@ const rows = computed(() => {
                 working_time_minutes: it.working_time_minutes,
                 workflow_status: it.workflow_status ?? null,
                 in_this_request: !!it.in_this_request,
+                has_changes_after_commit: !!it.has_changes_after_commit,
             });
         }
     }

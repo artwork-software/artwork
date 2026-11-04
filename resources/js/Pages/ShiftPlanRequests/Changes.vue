@@ -669,8 +669,8 @@ const goToPage = (page) => {
 const describeChange = (change) => {
     const fieldChanges = change.field_changes || {};
 
-    // Relevante Keys (ohne _initial)
-    const keys = Object.keys(fieldChanges).filter((k) => k !== '_initial');
+    // Relevante Keys (ohne interne Schlüssel)
+    const keys = Object.keys(fieldChanges).filter((k) => !['_initial', '_individual_time', '_deleted'].includes(k));
 
     // Mapping Feldname -> Label (alles über $t())
     const fieldLabel = (key) => {
@@ -691,6 +691,20 @@ const describeChange = (change) => {
                 return t('Individual working time');
             case 'worker_short_description':
                 return t('Short description');
+            case 'start_time':
+                return t('Start time');
+            case 'end_time':
+                return t('End time');
+            case 'start_date':
+                return t('Start date');
+            case 'end_date':
+                return t('End date');
+            case 'title':
+                return t('Title');
+            case 'full_day':
+                return t('Full day');
+            case 'working_time_minutes':
+                return t('Working time');
             default:
                 return key;
         }
@@ -727,6 +741,16 @@ const describeChange = (change) => {
                 return t('Change reverted ({0})', [fieldList]);
             }
             return t('Change reverted');
+
+        // Freigegebene individuelle Zeit nachträglich geändert / gelöscht
+        case 'individual_time_updated':
+            if (fieldList) {
+                return t('Individual time changed ({0})', [fieldList]);
+            }
+            return t('Individual time changed');
+
+        case 'individual_time_deleted':
+            return t('Individual time deleted');
 
         default:
             // Fallback: einfach den change_type übersetzen, falls es einen Key gibt

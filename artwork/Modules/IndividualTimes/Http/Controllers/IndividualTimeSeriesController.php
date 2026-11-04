@@ -21,6 +21,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
+use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 
 class IndividualTimeSeriesController extends Controller
 {
@@ -215,6 +216,17 @@ class IndividualTimeSeriesController extends Controller
             ->distinct()
             ->get();
 
+        // Freigegebene Zeiten wie festgeschriebene Schichten als Änderung nach Freigabe erfassen —
+        // das Bulk-Delete unten feuert keine Model-Events
+        $recorder = app(ShiftChangeRecorder::class);
+        $series->individualTimes()
+            ->where('is_committed', true)
+            ->get()
+            ->each(fn (IndividualTime $individualTime) => $recorder->recordIndividualTimeChange(
+                $individualTime,
+                'deleted'
+            ));
+
         // Alle IndividualTimes der Serie löschen
         $series->individualTimes()->delete();
         // Serie selbst löschen
@@ -335,12 +347,18 @@ class IndividualTimeSeriesController extends Controller
 
             $timeableClass = $this->resolveTimeableClassFromSubjectType($subjectType);
 
-            // 1) Alte Zeiten NUR für dieses Subject + alte Serie löschen
-            IndividualTime::query()
+            // 1) Alte Zeiten NUR für dieses Subject + alte Serie löschen. Freigegebene vorher als
+            //    Änderung nach Freigabe erfassen (Bulk-Delete feuert keine Model-Events).
+            $oldTimesQuery = IndividualTime::query()
                 ->where('series_uuid', $sourceSeries->uuid)
                 ->where('timeable_type', $timeableClass)
-                ->where('timeable_id', $subjectId)
-                ->delete();
+                ->where('timeable_id', $subjectId);
+            (clone $oldTimesQuery)
+                ->where('is_committed', true)
+                ->get()
+                ->each(fn (IndividualTime $individualTime) => app(ShiftChangeRecorder::class)
+                    ->recordIndividualTimeChange($individualTime, 'deleted'));
+            $oldTimesQuery->delete();
 
             // 2) Neue Zeiten für dieses Subject + neue Serie erzeugen
             foreach ($occurrences as $date) {

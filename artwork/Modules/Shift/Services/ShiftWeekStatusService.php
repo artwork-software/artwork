@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
@@ -86,6 +87,7 @@ class ShiftWeekStatusService
             $this->applyStaffing($cells, $shifts);
             $this->applyRequests($cells, $craftIds, $weeks);
             $this->applyChanges($cells, $shifts);
+            $this->applyIndividualTimeChanges($cells, $craftIds, $from, $to);
             $this->applyViolations($cells, $shifts, $from, $to);
         }
 
@@ -444,6 +446,33 @@ class ShiftWeekStatusService
         foreach ($rows as $row) {
             [$craftId, $weekKey] = $cellByRequestId[(int) $row->shift_plan_request_id];
             $cells[$craftId][$weekKey]['individual_times'][(int) $row->id] = (bool) $row->is_committed;
+        }
+    }
+
+    /**
+     * Unbestätigte Änderungen an freigegebenen individuellen Zeiten (ohne Schicht) zählen wie
+     * Schicht-Änderungen in die offenen Änderungen der Gewerk-Woche (Gewerk der Freigabe, KW des
+     * Starttags der Zeit).
+     */
+    private function applyIndividualTimeChanges(array &$cells, array $craftIds, Carbon $from, Carbon $to): void
+    {
+        $startPath = "JSON_UNQUOTE(JSON_EXTRACT(field_changes, '$._individual_time.start_date'))";
+
+        $counts = CommittedShiftChange::query()
+            ->selectRaw("craft_id, $startPath as start_date, COUNT(*) as change_count")
+            ->where('subject_type', IndividualTime::class)
+            ->whereNull('acknowledged_at')
+            ->whereIn('craft_id', $craftIds)
+            ->whereRaw("$startPath BETWEEN ? AND ?", [$from->toDateString(), $to->toDateString()])
+            ->groupBy('craft_id', 'start_date')
+            ->get();
+
+        foreach ($counts as $row) {
+            $craftId = (int) $row->craft_id;
+            $weekKey = $this->weekKey(Carbon::parse($row->getAttribute('start_date')));
+            if (isset($cells[$craftId][$weekKey])) {
+                $cells[$craftId][$weekKey]['open_changes'] += (int) $row->getAttribute('change_count');
+            }
         }
     }
 

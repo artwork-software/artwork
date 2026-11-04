@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
@@ -89,6 +90,147 @@ class ShiftChangeRecorder
         if ($meta['is_committed']) {
             $this->recordCommittedChange($meta, $fieldChanges, $eventName);
         }
+    }
+
+    /** change_type für nachträglich geänderte bzw. gelöschte freigegebene individuelle Zeiten */
+    public const INDIVIDUAL_TIME_UPDATED = 'individual_time_updated';
+    public const INDIVIDUAL_TIME_DELETED = 'individual_time_deleted';
+
+    /**
+     * Freigegebene individuelle Zeiten verhalten sich wie festgeschriebene Schichten: Änderungen und
+     * Löschungen bleiben freigegeben, landen aber als offene Änderung nach Freigabe in
+     * committed_shift_changes (Änderungsübersicht, gelbe KW-Kachel bis zur Bestätigung).
+     *
+     * field_changes: je geändertem Feld {old, new} bzw. `_deleted` mit dem letzten Stand, dazu
+     * `_individual_time` als Stand der Zeit (nach der Änderung bzw. vor dem Löschen) mit Person und
+     * Datum — die Zeile existiert beim Löschen nicht mehr und hat keine Schicht.
+     *
+     * Aufruf aus den Model-Events updated/deleted (IndividualTime::booted).
+     */
+    public function recordIndividualTimeChange(IndividualTime $individualTime, string $eventName): void
+    {
+        if (self::$suppressed || ! in_array($eventName, ['updated', 'deleted'], true)) {
+            return;
+        }
+
+        // Nur freigegebene Zeiten; Wechsel des Freigabe-Status selbst ist keine Änderung
+        if (! $individualTime->getOriginal('is_committed') || $individualTime->wasChanged('is_committed')) {
+            return;
+        }
+
+        $original = $individualTime->getOriginal();
+        $fieldChanges = [];
+
+        if ($eventName === 'deleted') {
+            $fieldChanges['_deleted'] = $this->individualTimeState($original);
+        } else {
+            foreach (array_keys($individualTime->getChanges()) as $field) {
+                if (! in_array($field, IndividualTime::CONTENT_FIELDS, true)) {
+                    continue;
+                }
+                $old = $this->normalizeIndividualTimeValue($field, $original[$field] ?? null);
+                $new = $this->normalizeIndividualTimeValue($field, $individualTime->getAttribute($field));
+                if ($old == $new) {
+                    continue;
+                }
+                $fieldChanges[$field] = ['old' => $old, 'new' => $new];
+            }
+
+            if ($fieldChanges === []) {
+                return;
+            }
+        }
+
+        $state = $eventName === 'deleted' ? $original : $individualTime->getAttributes();
+        $timeableType = $state['timeable_type'] ?? null;
+        $timeableId = $state['timeable_id'] ?? null;
+
+        $fieldChanges['_individual_time'] = $this->individualTimeState($state) + [
+            'person_name' => $this->individualTimeOwnerName($timeableType, $timeableId),
+        ];
+
+        CommittedShiftChange::create([
+            'craft_id'                => $this->approvingCraftId($individualTime),
+            'shift_id'                => null,
+            'subject_type'            => IndividualTime::class,
+            'subject_id'              => $individualTime->getKey(),
+            'change_type'             => $eventName === 'deleted'
+                ? self::INDIVIDUAL_TIME_DELETED
+                : self::INDIVIDUAL_TIME_UPDATED,
+            'field_changes'           => $fieldChanges,
+            'affected_user_type'      => $timeableType,
+            'affected_user_id'        => $timeableId,
+            'changed_by_user_id'      => Auth::id(),
+            'changed_at'              => now(),
+            'acknowledged_at'         => null,
+            'acknowledged_by_user_id' => null,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     * @return array<string, mixed>
+     */
+    protected function individualTimeState(array $attributes): array
+    {
+        $state = [];
+        $fields = [
+            'title', 'start_date', 'end_date', 'start_time', 'end_time', 'full_day', 'working_time_minutes',
+            'break_minutes',
+        ];
+        foreach ($fields as $field) {
+            $state[$field] = $this->normalizeIndividualTimeValue($field, $attributes[$field] ?? null);
+        }
+
+        return $state;
+    }
+
+    protected function normalizeIndividualTimeValue(string $field, mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return match ($field) {
+            'start_date', 'end_date' => Carbon::parse($value)->toDateString(),
+            'start_time', 'end_time' => substr((string) $value, 0, 5),
+            'full_day' => (bool) $value,
+            'working_time_minutes', 'break_minutes', 'timeable_id' => (int) $value,
+            default => $value,
+        };
+    }
+
+    protected function individualTimeOwnerName(?string $type, mixed $id): ?string
+    {
+        if ($type === null || $id === null || ! class_exists($type)) {
+            return null;
+        }
+
+        /** @var Model|null $owner */
+        $owner = $type::query()->find($id);
+        if ($owner === null) {
+            return null;
+        }
+
+        $name = $owner->getAttribute('full_name')
+            ?? $owner->getAttribute('provider_name')
+            ?? $owner->getAttribute('name')
+            ?? trim($owner->getAttribute('first_name') . ' ' . $owner->getAttribute('last_name'));
+
+        return $name !== '' ? $name : null;
+    }
+
+    /**
+     * Gewerk der Anfrage, mit der die Zeit freigegeben wurde (Filter der Änderungsübersicht).
+     */
+    protected function approvingCraftId(IndividualTime $individualTime): ?int
+    {
+        $craftId = $individualTime->shiftPlanRequests()
+            ->where('status', 'approved')
+            ->orderByDesc('shift_plan_requests.id')
+            ->value('shift_plan_requests.craft_id');
+
+        return $craftId !== null ? (int) $craftId : null;
     }
 
     /**

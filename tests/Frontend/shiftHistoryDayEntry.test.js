@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+    dayEntryCategory,
+    dayEntryDayLabel,
     dayEntryMessageKey,
     dayEntryOf,
     dayEntryTime,
@@ -23,6 +25,7 @@ test('dayEntryOf recognises day entries and ignores shift logs', () => {
     assert.deepEqual(entry, {
         kind: 'absence',
         day: '2026-05-06',
+        dayEnd: null,
         data: { kind: 'absence', type: 'NOT_AVAILABLE', full_day: true },
     });
 });
@@ -66,4 +69,64 @@ test('dayEntryMessageKey picks the message per kind and event', () => {
     assert.equal(dayEntryMessageKey({ kind: 'note' }, 'updated'), 'Note changed: {0}');
     assert.equal(dayEntryMessageKey({ kind: 'note' }, 'restored'), 'Note changed: {0}');
     assert.equal(dayEntryMessageKey({ kind: 'unknown' }, 'created'), null);
+});
+
+const INDIVIDUAL_TIME = 'Artwork\\Modules\\IndividualTimes\\Models\\IndividualTime';
+const COMPENSATION = 'Artwork\\Modules\\Shift\\Models\\CompensationDayOff';
+
+test('individual times are day entries spanning their days', () => {
+    const entry = dayEntryOf({
+        subject_type: INDIVIDUAL_TIME,
+        event: 'created',
+        properties: {
+            worker_day: '2026-11-24',
+            worker_day_end: '2026-11-25',
+            day_entry: { kind: 'individual_time', title: 'Aufbau', full_day: false, start_time: '22:00', end_time: '02:00' },
+        },
+    });
+    assert.equal(entry.kind, 'individual_time');
+    assert.equal(dayEntryCategory(entry), 'day_planning');
+    assert.equal(describeDayEntry(entry), 'Aufbau · 22:00 – 02:00');
+    assert.equal(dayEntryMessageKey(entry, 'deleted'), 'Individual time removed: {0}');
+    assert.equal(dayEntryDayLabel(entry, (day) => day.split('-').reverse().join('.')), '24.11.2026 – 25.11.2026');
+});
+
+test('compensation days describe half or full day and holiday', () => {
+    const entry = dayEntryOf({
+        subject_type: COMPENSATION,
+        event: 'deleted_with_reason',
+        properties: {
+            worker_day: '2026-11-24',
+            day_entry: { kind: 'compensation', value: 0.5, half_day_period: 'morning', for_holiday: true },
+        },
+    });
+    assert.equal(describeDayEntry(entry), 'Morning · For a public holiday');
+    assert.equal(dayEntryMessageKey(entry, 'deleted_with_reason'), 'Compensation day off removed: {0}');
+    assert.equal(dayEntryDayLabel(entry), '2026-11-24');
+});
+
+test('project assignments are recognised by log name and keep their own message', () => {
+    const entry = dayEntryOf({
+        subject_type: null,
+        log_name: 'project_day_assignment',
+        event: 'created',
+        properties: { worker_day: '2026-11-24', day_entry: { kind: 'project_assignment', project: 'Faust' } },
+    });
+    assert.equal(entry.kind, 'project_assignment');
+    assert.equal(dayEntryCategory(entry), 'day_planning');
+    assert.equal(dayEntryMessageKey(entry, 'created'), null);
+});
+
+test('day services are recognised by log name and named in the description', () => {
+    const entry = dayEntryOf({
+        subject_type: 'Artwork\\Modules\\DayService\\Models\\DayService',
+        log_name: 'day_service',
+        event: 'deleted',
+        properties: { worker_day: '2026-11-24', day_entry: { kind: 'day_service', name: 'Abenddienst' } },
+    });
+    assert.equal(entry.kind, 'day_service');
+    assert.equal(dayEntryCategory(entry), 'day_planning');
+    assert.equal(describeDayEntry(entry), 'Abenddienst');
+    assert.equal(dayEntryTime(entry.data), '');
+    assert.equal(dayEntryMessageKey(entry, 'deleted'), 'Day service removed: {0}');
 });

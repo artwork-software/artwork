@@ -119,10 +119,11 @@ class DayServiceController extends Controller
 
         abort_if($modelInstance === null, 422, 'Unbekannter modelType oder ungültige ID.');
 
-        $modelInstance->dayServices()->wherePivot(
-            'date',
-            $request->string('date')
-        )->detach($request->integer('dayService'));
+        $this->dayServicesService->removeDayServiceable(
+            $modelInstance,
+            $request->integer('dayService'),
+            (string) $request->string('date')
+        );
 
         $dayServicesPerDay = [];
         /** @var DayService $dayService */

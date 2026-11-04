@@ -47,14 +47,16 @@ class ShiftHistoryExcelExport implements
      * @param array<int, int> $matchedShiftIds
      * @param (\Closure(Activity): array<int, string>)|null $matchReasons Bezugsgründe pro Eintrag bei aktivem
      *     Personenfilter (ShiftHistoryQueryService::matchReasons); null = kein Personenfilter, keine Spalte
+     * @param bool $namePersonOfDayEntries Tageseinträge nennen die betroffene Person (Verlauf ohne Personenfilter)
      */
     public function __construct(
         private readonly Builder $activityQuery,
         private readonly array $matchedShiftIds,
         private readonly ?string $locale = null,
         private readonly ?\Closure $matchReasons = null,
+        bool $namePersonOfDayEntries = false,
     ) {
-        $this->presenter = new ShiftActivityPresenter($locale);
+        $this->presenter = new ShiftActivityPresenter($locale, $namePersonOfDayEntries);
     }
 
     public function query(): Builder

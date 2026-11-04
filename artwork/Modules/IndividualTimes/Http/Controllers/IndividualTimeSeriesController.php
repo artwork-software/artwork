@@ -21,7 +21,6 @@ use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
-use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 
 class IndividualTimeSeriesController extends Controller
 {
@@ -216,19 +215,9 @@ class IndividualTimeSeriesController extends Controller
             ->distinct()
             ->get();
 
-        // Freigegebene Zeiten wie festgeschriebene Schichten als Änderung nach Freigabe erfassen —
-        // das Bulk-Delete unten feuert keine Model-Events
-        $recorder = app(ShiftChangeRecorder::class);
-        $series->individualTimes()
-            ->where('is_committed', true)
-            ->get()
-            ->each(fn (IndividualTime $individualTime) => $recorder->recordIndividualTimeChange(
-                $individualTime,
-                'deleted'
-            ));
-
-        // Alle IndividualTimes der Serie löschen
-        $series->individualTimes()->delete();
+        // Alle IndividualTimes der Serie einzeln löschen: die Model-Events erfassen freigegebene Zeiten
+        // als Änderung nach Freigabe und schreiben den Schichtverlauf
+        $series->individualTimes()->get()->each(fn (IndividualTime $individualTime) => $individualTime->delete());
         // Serie selbst löschen
         $series->delete();
 
@@ -347,18 +336,14 @@ class IndividualTimeSeriesController extends Controller
 
             $timeableClass = $this->resolveTimeableClassFromSubjectType($subjectType);
 
-            // 1) Alte Zeiten NUR für dieses Subject + alte Serie löschen. Freigegebene vorher als
-            //    Änderung nach Freigabe erfassen (Bulk-Delete feuert keine Model-Events).
-            $oldTimesQuery = IndividualTime::query()
+            // 1) Alte Zeiten NUR für dieses Subject + alte Serie einzeln löschen: die Model-Events erfassen
+            //    freigegebene Zeiten als Änderung nach Freigabe und schreiben den Schichtverlauf
+            IndividualTime::query()
                 ->where('series_uuid', $sourceSeries->uuid)
                 ->where('timeable_type', $timeableClass)
-                ->where('timeable_id', $subjectId);
-            (clone $oldTimesQuery)
-                ->where('is_committed', true)
+                ->where('timeable_id', $subjectId)
                 ->get()
-                ->each(fn (IndividualTime $individualTime) => app(ShiftChangeRecorder::class)
-                    ->recordIndividualTimeChange($individualTime, 'deleted'));
-            $oldTimesQuery->delete();
+                ->each(fn (IndividualTime $individualTime) => $individualTime->delete());
 
             // 2) Neue Zeiten für dieses Subject + neue Serie erzeugen
             foreach ($occurrences as $date) {

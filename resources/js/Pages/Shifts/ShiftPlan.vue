@@ -158,7 +158,7 @@
                         <!-- Column Header (Tage) -->
                         <template #colHeader="{ day }">
                             <div
-                                class="relative h-full w-full flex flex-col
+                                class="group/dayhead relative h-full w-full flex flex-col
                                    text-[11px] leading-none text-white
                                    bg-surface-inverse/95 backdrop-blur
                                    border-b border-white/10 border-r
@@ -196,6 +196,16 @@
                                             <span class="opacity-90 tabular-nums truncate">
                                         {{ isCompactShiftZoom ? day.day : day.fullDay }}
                                       </span>
+                                            <!-- Schichtverlauf genau dieses Tages (alle Personen), erscheint beim Überfahren -->
+                                            <button
+                                                type="button"
+                                                class="ml-0.5 shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-white/15 focus-visible:opacity-100 group-hover/dayhead:opacity-80"
+                                                :aria-label="$t('Show history of this day')"
+                                                v-tooltip.top="{ value: $t('Show history of this day'), class: 'aw-tooltip', appendTo: 'body' }"
+                                                @click.stop="openHistoryForDay(day)"
+                                            >
+                                                <PropertyIcon name="IconHistory" class="h-3 w-3" />
+                                            </button>
                                         </div>
                                     </div>
 
@@ -4340,6 +4350,15 @@ function openHistoryForWorkerDay(payload: { search: string; person?: HistoryModa
         person: payload.person ?? null,
         startDate: payload.date,
         endDate: payload.date,
+        autoLoad: true,
+    })
+}
+
+// Shortcut im Tageskopf: Schichtverlauf eines Tages für alle Personen (inkl. Abwesenheiten, Notizen, Tagesdienste).
+function openHistoryForDay(day: { withoutFormat: string }) {
+    openHistoryModal({
+        startDate: day.withoutFormat,
+        endDate: day.withoutFormat,
         autoLoad: true,
     })
 }

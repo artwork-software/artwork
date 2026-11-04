@@ -4,6 +4,7 @@ namespace Artwork\Modules\IndividualTimes\Models;
 
 use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
+use Artwork\Modules\Shift\Models\Traits\LogsShiftPlanDayActivity;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,10 +12,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class IndividualTime extends Model
 {
     use HasFactory;
+    use LogsActivity;
+    use LogsShiftPlanDayActivity;
 
     protected $fillable = [
         'title',
@@ -69,6 +74,62 @@ class IndividualTime extends Model
         'start_time' => TimeWithoutSeconds::class,
         'end_time' => TimeWithoutSeconds::class,
     ];
+
+    /**
+     * Schichtverlauf: Anlegen, inhaltliche Änderungen und Löschen der Zeit (nicht die Freigabe-Spalten,
+     * die laufen über die Anfrage).
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('individual_time')
+            ->logOnly(self::CONTENT_FIELDS)
+            ->logOnlyDirty()
+            ->dontLogIfAttributesChangedOnly(['series_uuid'])
+            ->dontSubmitEmptyLogs();
+    }
+
+    protected function shiftHistoryDayEntryKind(): string
+    {
+        return 'individual_time';
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    protected function shiftHistoryPersonColumns(): array
+    {
+        return ['timeable_type', 'timeable_id'];
+    }
+
+    /**
+     * @return array{0: ?string, 1: ?string}
+     */
+    protected function shiftHistoryDayRange(): array
+    {
+        $raw = $this->getAttributes();
+        $start = !empty($raw['start_date']) ? \Carbon\Carbon::parse($raw['start_date'])->toDateString() : null;
+        $end = !empty($raw['end_date']) ? \Carbon\Carbon::parse($raw['end_date'])->toDateString() : $start;
+
+        return [$start, $end ?? $start];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function shiftHistoryDayEntryData(): array
+    {
+        $raw = $this->getAttributes();
+
+        return [
+            'title' => $this->getAttribute('title'),
+            'full_day' => (bool) $this->getAttribute('full_day'),
+            'start_time' => self::shiftHistoryTime($raw['start_time'] ?? null),
+            'end_time' => self::shiftHistoryTime($raw['end_time'] ?? null),
+            'working_time_minutes' => $this->getAttribute('working_time_minutes'),
+            'break_minutes' => $this->getAttribute('break_minutes'),
+        ];
+    }
 
     protected static function booted(): void
     {

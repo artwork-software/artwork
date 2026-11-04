@@ -3,7 +3,9 @@
 namespace Artwork\Modules\Shift\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Shift\Models\Traits\LogsShiftPlanDayActivity;
 use Artwork\Modules\User\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
@@ -12,6 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class CompensationDayOff extends Model
 {
     use LogsActivity;
+    use LogsShiftPlanDayActivity;
 
     protected static array $recordEvents = ['created', 'updated'];
 
@@ -33,6 +36,46 @@ class CompensationDayOff extends Model
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
+    }
+
+    protected function shiftHistoryDayEntryKind(): string
+    {
+        return 'compensation';
+    }
+
+    /**
+     * @return array{0: ?string, 1: ?int}
+     */
+    protected function shiftHistoryPerson(): array
+    {
+        return [User::class, $this->user_id !== null ? (int) $this->user_id : null];
+    }
+
+    /**
+     * Tag im Schichtverlauf: der genommene Ausgleichstag (granted_date). Beim Zurücknehmen der Tag, der
+     * vorher eingetragen war; ein reines Guthaben ohne Tag erscheint nicht im Tagesverlauf.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    protected function shiftHistoryDayRange(): array
+    {
+        $date = $this->getAttributes()['granted_date'] ?? $this->getRawOriginal('granted_date');
+        $day = $date ? Carbon::parse($date)->toDateString() : null;
+
+        return [$day, $day];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function shiftHistoryDayEntryData(): array
+    {
+        return [
+            'value' => $this->value !== null ? (float) $this->value : null,
+            'half_day_period' => $this->half_day_period,
+            'granted' => !empty($this->getAttributes()['granted_date']),
+            'for_holiday' => (bool) $this->for_holiday,
+        ];
     }
 
     protected $fillable = [

@@ -184,6 +184,7 @@ class TicketsClient
             'PASS_PERIOD_LIMIT_REACHED' => __('This pass has reached its limit for this period.'),
             'HOLD_EXPIRED' => __('The place could not be held. Please try again.'),
             'ADMISSION_RUNNING' => __('This admission has not finished yet. Check the guest list before trying again.'),
+            'HOUSE_LIVE' => __('This ticket house already sells for real; test mode has ended.'),
             'HOUSE_DETAILS_LOCKED' => __('Artwork-Tickets keeps the legal details once they are complete. They can be changed, but not removed.'),
             'PASS_NOT_ENOUGH_USES' => __('Fewer uses are left on this pass than should be taken off.'),
             'SUBSCRIPTION_NOT_PAUSED' => __('This subscription is not paused.'),

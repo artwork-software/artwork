@@ -4,17 +4,21 @@
             {{ $t('Artwork-Tickets is not configured for this installation. Ask your Caldero contact to set it up.') }}
         </div>
 
-        <ConnectStart v-else-if="!connection.connected && !wizardOpen" :user-email="userEmail" @start="wizardOpen = true" />
+        <ConnectStart v-else-if="!connection.connected && !wizardOpen" :user-email="userEmail" @start="startWizard" />
 
         <ConnectWizard v-else-if="wizardOpen"
                        :rooms="rooms" :house-defaults="houseDefaults" :countries="countries" :legal-forms="legalForms" :user-email="userEmail" :tickets-url="connection.url"
-                       :payout="connection.payout" @close="wizardOpen = false" />
+                       :payout="connection.payout" :test-mode="wizardTestMode" @close="wizardOpen = false" />
 
         <!-- Connected: the house on the left, the state of each tab on the right. -->
         <div v-else>
             <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_400px] items-start">
                 <div>
-                    <BaseChip variant="success" class="mb-3.5">
+                    <BaseChip v-if="connection.testMode" variant="warning" class="mb-3.5">
+                        <IconFlask class="size-3.5" />
+                        {{ $t('Connected · test mode') }}
+                    </BaseChip>
+                    <BaseChip v-else variant="success" class="mb-3.5">
                         <span class="size-1.5 rounded-full bg-success"></span>
                         {{ $t('Connected') }}
                     </BaseChip>
@@ -29,6 +33,8 @@
                     <p class="mt-6 max-w-[520px] text-[13px] leading-5 text-text-muted">
                         {{ $t('Dates are released for sale from the ticketing tab of a project. Sales and payouts live in Artwork-Tickets.') }}
                     </p>
+
+                    <TestShopAccess v-if="connection.testMode" class="mt-6 max-w-[520px]" :access="connection.shopAccess" :shop-url="shopUrl" />
                 </div>
 
                 <div class="rounded-lg bg-surface-sunken border border-border-subtle px-5 py-4">
@@ -48,7 +54,16 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border-hairline pt-4">
+            <!-- In test mode there is nothing to keep: the test house goes with everything in it. -->
+            <div v-if="connection.testMode" class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border-hairline pt-4">
+                <p class="text-xs text-text-subtle max-w-[560px]">
+                    {{ $t('Start over: deletes the test house in Artwork-Tickets with everything sold and set up there, and disconnects this installation. Released dates become drafts again.') }}
+                </p>
+                <button type="button" class="ui-button text-danger hover:bg-danger-surface" @click="confirmErase = true">
+                    <IconTrash class="size-4" />{{ $t('Delete test house') }}
+                </button>
+            </div>
+            <div v-else class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border-hairline pt-4">
                 <p class="text-xs text-text-subtle max-w-[560px]">
                     {{ connection.datesOnSale > 0
                         ? $t('{count} dates are on sale. Withdraw them in the ticketing component of their projects before disconnecting.', { count: connection.datesOnSale })
@@ -67,6 +82,13 @@
             :confirm="$t('Disconnect')"
             @closed="handleDisconnect"
         />
+        <confirmation-component
+            v-if="confirmErase"
+            :titel="$t('Delete test house')"
+            :description="$t('The test house is deleted in Artwork-Tickets with all its test sales, cards, codes and settings, and this installation is disconnected. This cannot be undone. Continue?')"
+            :confirm="$t('Delete test house')"
+            @closed="handleErase"
+        />
     </div>
 </template>
 
@@ -74,11 +96,12 @@
 import { computed, ref } from 'vue'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
-import { IconChevronRight, IconExternalLink, IconPlugConnectedX } from '@tabler/icons-vue'
+import { IconChevronRight, IconExternalLink, IconFlask, IconPlugConnectedX, IconTrash } from '@tabler/icons-vue'
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
 import ConnectStart from '@/Pages/Settings/Tickets/ConnectStart.vue'
 import ConnectWizard from '@/Pages/Settings/Tickets/ConnectWizard.vue'
+import TestShopAccess from '@/Pages/Settings/Tickets/TestShopAccess.vue'
 import { formatDateTime } from '@/Helper/ticketingFormat.js'
 import { usePermission } from '@/Composeables/Permission.js'
 
@@ -97,9 +120,17 @@ const { hasAdminRole } = usePermission(usePage().props)
 
 const userEmail = usePage().props.auth.user.email
 const confirmDisconnect = ref(false)
+const confirmErase = ref(false)
 const wizardOpen = ref(false)
+const wizardTestMode = ref(false)
+
+function startWizard(mode) {
+    wizardTestMode.value = mode === 'test'
+    wizardOpen.value = true
+}
 
 const shopHost = computed(() => String(props.connection.url ?? '').replace(/^https?:\/\//, '').replace(/\/$/, ''))
+const shopUrl = computed(() => `${props.connection.url}/${props.connection.organizationSlug}`)
 
 /* One row per tab; the ones with a known state carry it, the rest say what they are for. */
 const setup = computed(() => [
@@ -144,6 +175,13 @@ const setup = computed(() => [
         state: null,
     }] : []),
 ])
+
+function handleErase(confirmed) {
+    confirmErase.value = false
+    if (confirmed) {
+        router.delete(route('settings.tickets.erase'), { preserveScroll: true })
+    }
+}
 
 function handleDisconnect(confirmed) {
     confirmDisconnect.value = false

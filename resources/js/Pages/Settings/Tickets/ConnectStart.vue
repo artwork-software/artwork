@@ -9,13 +9,24 @@
             <p class="text-sm leading-[22px] text-text-muted max-w-[560px] mb-5">
                 {{ $t('Artwork-Tickets is the ticket shop of the suite. Connecting creates a ticket house for this installation and syncs rooms and reductions. Afterwards you release dates for sale straight from artwork.') }}
             </p>
-            <div class="flex items-center gap-3">
-                <button type="button" class="ui-button-add min-h-9 px-4" @click="$emit('start')">
-                    <IconPlugConnected class="size-4" />
-                    {{ $t('Connect Artwork-Tickets') }}
+            <!-- Test first or go live straight away: the wizard is the same, only the house differs. -->
+            <div class="grid gap-3 sm:grid-cols-2 max-w-[640px]">
+                <button type="button" class="group flex cursor-pointer flex-col items-start gap-1.5 rounded-lg border border-accent-600 bg-accent-50 px-4 py-3.5 text-left transition hover:bg-accent-100 hover:shadow-raised" @click="$emit('start', 'test')">
+                    <span class="flex w-full items-center gap-2 font-lexend text-[13px] font-semibold text-accent-700">
+                        <IconFlask class="size-4" />{{ $t('Try it first') }}
+                        <IconArrowRight class="ml-auto size-4 transition group-hover:translate-x-0.5" />
+                    </span>
+                    <span class="text-xs leading-[18px] text-text-muted">{{ $t('Test payments only, the shop opens with a login you share, nothing is paid out. Go live later with one click.') }}</span>
                 </button>
-                <span class="text-xs text-text-subtle">{{ $t('About 5 minutes · nothing is created without confirmation') }}</span>
+                <button type="button" class="group flex cursor-pointer flex-col items-start gap-1.5 rounded-lg border border-border-subtle bg-surface px-4 py-3.5 text-left transition hover:border-border hover:bg-surface-sunken hover:shadow-raised" @click="$emit('start', 'live')">
+                    <span class="flex w-full items-center gap-2 font-lexend text-[13px] font-semibold text-text">
+                        <IconPlugConnected class="size-4" />{{ $t('Connect live') }}
+                        <IconArrowRight class="ml-auto size-4 text-text-subtle transition group-hover:translate-x-0.5 group-hover:text-text" />
+                    </span>
+                    <span class="text-xs leading-[18px] text-text-muted">{{ $t('The shop is public and sells for real as soon as the house is verified.') }}</span>
+                </button>
             </div>
+            <span class="mt-2 block text-xs text-text-subtle">{{ $t('About 5 minutes · nothing is created without confirmation') }}</span>
             <p class="mt-5 flex items-center gap-2 text-[13px] text-text-muted">
                 <IconUser class="size-4 text-text-subtle shrink-0" />
                 <span><strong class="font-medium text-text">{{ userEmail }}</strong> {{ $t('becomes the owner of the house and signs in with an e-mail code afterwards.') }}</span>
@@ -39,7 +50,7 @@
 
 <script setup>
 import { useI18n } from 'vue-i18n'
-import { IconPlugConnected, IconUser } from '@tabler/icons-vue'
+import { IconArrowRight, IconFlask, IconPlugConnected, IconUser } from '@tabler/icons-vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
 
 defineProps({

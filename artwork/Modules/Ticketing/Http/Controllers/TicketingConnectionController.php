@@ -9,6 +9,8 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Http\Controllers\Concerns\CallsTickets;
 use Artwork\Modules\Ticketing\Http\Requests\ConnectTicketingRequest;
+use Artwork\Modules\Ticketing\Http\Requests\GoLiveRequest;
+use Artwork\Modules\Ticketing\Http\Requests\ShopAccessRequest;
 use Artwork\Modules\Ticketing\Http\Requests\SyncReductionsRequest;
 use Artwork\Modules\Ticketing\Http\Requests\SyncRoomsRequest;
 use Artwork\Modules\Ticketing\Http\Requests\TicketingDraftRules;
@@ -41,11 +43,13 @@ class TicketingConnectionController extends Controller
     {
         $connection = $this->connections->current();
         $billing = null;
+        $shopAccess = null;
 
-        // Ohne Antwort von tickets keine Warnung und kein Stripe-Formular, die Seite selbst bleibt.
+        // Ohne Antwort von tickets keine Warnung, kein Stripe-Formular und kein Testzugang, die Seite selbst bleibt.
         if ($connection) {
             try {
                 $billing = $this->billing->status($connection);
+                $shopAccess = $connection->isTestMode() ? $this->connections->shopAccess($connection) : null;
             } catch (TicketingConnectionException) {
             }
         }
@@ -59,6 +63,7 @@ class TicketingConnectionController extends Controller
                     'state' => $billing['payout_account'],
                     'stripe_key' => $billing['stripe_key'],
                 ],
+                'shopAccess' => $shopAccess,
             ],
             'houseDefaults' => $this->connections->houseDefaults($request->user()),
             'countries' => TicketingDraftRules::COUNTRIES,
@@ -154,6 +159,45 @@ class TicketingConnectionController extends Controller
         );
     }
 
+    public function saveShopAccess(ShopAccessRequest $request): RedirectResponse
+    {
+        return $this->sendToTickets(
+            $this->requireConnection(),
+            fn (TicketingConnection $connection) => $this->connections->saveShopAccess(
+                $connection,
+                $request->validated('user'),
+                $request->validated('password'),
+            ),
+            __('Test shop access saved.'),
+        );
+    }
+
+    public function goLive(GoLiveRequest $request): RedirectResponse
+    {
+        return $this->sendToTickets(
+            $this->requireConnection(),
+            fn (TicketingConnection $connection) => $this->connections->goLive($connection, [
+                'keep_shop_look' => $request->boolean('keep_shop_look'),
+                'keep_pass_types' => $request->boolean('keep_pass_types'),
+                'keep_coupons' => $request->boolean('keep_coupons'),
+                'keep_dates' => $request->boolean('keep_dates'),
+            ]),
+            __('Artwork-Tickets is live. Sales from now on are real.'),
+        );
+    }
+
+    /** Nur im Testmodus: das Ticket-Haus mit allem darin löschen und die Verbindung trennen. */
+    public function erase(): RedirectResponse
+    {
+        try {
+            $this->connections->erase();
+        } catch (TicketingConnectionException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back()->with('success', __('The test house has been deleted.'));
+    }
+
     public function destroy(): RedirectResponse
     {
         try {
@@ -178,6 +222,7 @@ class TicketingConnectionController extends Controller
             'connectedAt' => $connection?->created_at,
             'connectedBy' => $connection?->connectedBy?->full_name,
             'datesOnSale' => $connection === null ? 0 : $this->connections->datesOnSale(),
+            'testMode' => $connection?->isTestMode() ?? false,
         ];
     }
 

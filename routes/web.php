@@ -422,6 +422,10 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('settings.tickets.availability');
         Route::post('/connection', [TicketingConnectionController::class, 'store'])->name('settings.tickets.connect');
         Route::delete('/connection', [TicketingConnectionController::class, 'destroy'])->name('settings.tickets.disconnect');
+        Route::put('/shop-access', [TicketingConnectionController::class, 'saveShopAccess'])
+            ->name('settings.tickets.shop-access');
+        Route::post('/go-live', [TicketingConnectionController::class, 'goLive'])->name('settings.tickets.go-live');
+        Route::delete('/house', [TicketingConnectionController::class, 'erase'])->name('settings.tickets.erase');
         Route::get('/billing', [TicketingBillingController::class, 'index'])->name('settings.tickets.billing');
         // POST: mit PDFs kommt das Formular als multipart, und das liest PHP nur bei POST.
         Route::post('/billing', [TicketingBillingController::class, 'update'])->name('settings.tickets.billing.save');

@@ -29,6 +29,8 @@ class ConnectTicketingRequest extends FormRequest
             ...TicketingDraftRules::reductions(),
             // Verbinden heißt unterschreiben: die Nutzungsbedingungen und der AVV von tickets.
             'accept_platform_terms' => 'accepted',
+            // Erst testen: Testzahlungen, Shop hinter einem Zugang, kein Käufer im CRM.
+            'test_mode' => 'required|boolean',
         ];
     }
 

@@ -12,11 +12,13 @@ use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
+use Artwork\Modules\Ticketing\Jobs\SyncTicketingCustomersJob;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Bus;
 use Laravel\Passport\Client;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
@@ -41,6 +43,7 @@ final class TicketingConnectionTest extends FeatureTestCase
             'rooms' => $rooms,
             'reductions' => $reductions,
             'accept_platform_terms' => true,
+            'test_mode' => false,
         ];
     }
 
@@ -233,6 +236,170 @@ final class TicketingConnectionTest extends FeatureTestCase
         $this->delete(route('settings.tickets.disconnect'))->assertRedirect()->assertSessionHas('error');
 
         $this->assertDatabaseCount('ticketing_connections', 1);
+    }
+
+    #[Test]
+    public function connecting_in_test_mode_asks_for_a_test_house_and_keeps_buyers_out_of_the_crm(): void
+    {
+        Bus::fake([SyncTicketingCustomersJob::class]);
+        $this->fakeHappyTickets();
+
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+
+        $this->post(route('settings.tickets.connect'), ['test_mode' => true] + $this->draft())
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Http::assertSent(
+            fn (Request $request): bool => str_ends_with($request->url(), '/api/integration/v1/houses')
+                && $request['testMode'] === true
+        );
+        $this->assertTrue(TicketingConnection::query()->firstOrFail()->isTestMode());
+        Bus::assertNotDispatched(SyncTicketingCustomersJob::class);
+    }
+
+    #[Test]
+    public function connecting_live_starts_live_and_syncs_buyers(): void
+    {
+        Bus::fake([SyncTicketingCustomersJob::class]);
+        $this->fakeHappyTickets();
+
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), $this->draft())->assertSessionHas('success');
+
+        Http::assertSent(
+            fn (Request $request): bool => str_ends_with($request->url(), '/api/integration/v1/houses')
+                && $request['testMode'] === false
+        );
+        $this->assertFalse(TicketingConnection::query()->firstOrFail()->isTestMode());
+        Bus::assertDispatched(SyncTicketingCustomersJob::class);
+    }
+
+    #[Test]
+    public function going_live_turns_withdrawn_dates_back_into_drafts(): void
+    {
+        Bus::fake([SyncTicketingCustomersJob::class]);
+        $this->fakeHappyTickets([
+            self::TICKETS_URL . '/api/integration/v1/house/go-live' => Http::response([
+                'liveAt' => now()->toIso8601String(),
+                'withdrawnDateIds' => ['date_1'],
+            ]),
+        ]);
+
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), ['test_mode' => true] + $this->draft());
+        $withdrawn = TicketingEventRelease::query()->create([
+            'event_id' => Event::factory()->create()->id, 'state' => TicketingEventRelease::STATE_RELEASED,
+            'tickets_date_id' => 'date_1', 'classes' => [],
+        ]);
+        $other = TicketingEventRelease::query()->create([
+            'event_id' => Event::factory()->create()->id, 'state' => TicketingEventRelease::STATE_RELEASED,
+            'tickets_date_id' => 'date_2', 'classes' => [],
+        ]);
+
+        $this->post(route('settings.tickets.go-live'), [
+            'keep_shop_look' => true,
+            'keep_pass_types' => false,
+            'keep_coupons' => true,
+            'keep_dates' => false,
+        ])->assertRedirect()->assertSessionHas('success');
+
+        Http::assertSent(
+            fn (Request $request): bool => str_ends_with($request->url(), '/api/integration/v1/house/go-live')
+                && $request->hasHeader('x-api-key', 'tk_plain')
+                && $request['keepShopLook'] === true
+                && $request['keepPassTypes'] === false
+                && $request['keepCoupons'] === true
+                && $request['keepDates'] === false
+        );
+        $this->assertFalse(TicketingConnection::query()->firstOrFail()->isTestMode());
+        $this->assertSame(TicketingEventRelease::STATE_DRAFT, $withdrawn->fresh()->state);
+        $this->assertNull($withdrawn->fresh()->tickets_date_id);
+        $this->assertSame(TicketingEventRelease::STATE_RELEASED, $other->fresh()->state);
+        Bus::assertDispatched(SyncTicketingCustomersJob::class);
+    }
+
+    #[Test]
+    public function a_live_house_cannot_go_live_or_be_erased(): void
+    {
+        $this->fakeHappyTickets();
+
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), $this->draft());
+
+        $this->post(route('settings.tickets.go-live'), [
+            'keep_shop_look' => true, 'keep_pass_types' => true, 'keep_coupons' => true, 'keep_dates' => true,
+        ])->assertSessionHas('error');
+        $this->delete(route('settings.tickets.erase'))->assertSessionHas('error');
+
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/api/integration/v1/house/')
+            || str_ends_with($request->url(), '/api/integration/v1/house'));
+        $this->assertDatabaseCount('ticketing_connections', 1);
+    }
+
+    #[Test]
+    public function erasing_the_test_house_deletes_it_and_forgets_the_connection(): void
+    {
+        $this->fakeHappyTickets([
+            self::TICKETS_URL . '/api/integration/v1/house' => Http::response(['deleted' => true]),
+        ]);
+
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), ['test_mode' => true] + $this->draft());
+        $clientId = TicketingConnection::query()->firstOrFail()->oauth_client_id;
+        $release = TicketingEventRelease::query()->create([
+            'event_id' => Event::factory()->create()->id, 'state' => TicketingEventRelease::STATE_RELEASED,
+            'tickets_date_id' => 'date_1', 'classes' => [['zone_key' => null, 'name' => 'Parkett', 'price_cents' => 2900, 'quota' => 100]],
+        ]);
+
+        $this->delete(route('settings.tickets.erase'))->assertRedirect()->assertSessionHas('success');
+
+        Http::assertSent(
+            fn (Request $request): bool => $request->method() === 'DELETE'
+                && str_ends_with($request->url(), '/api/integration/v1/house')
+        );
+        $this->assertDatabaseCount('ticketing_connections', 0);
+        $this->assertDatabaseHas('oauth_clients', ['id' => $clientId, 'revoked' => true]);
+        $this->assertSame(TicketingEventRelease::STATE_DRAFT, $release->fresh()->state);
+        $this->assertNull($release->fresh()->tickets_date_id);
+        $this->assertSame('Parkett', $release->fresh()->classes[0]['name']);
+    }
+
+    #[Test]
+    public function the_test_shop_login_is_shown_and_saved_through_tickets(): void
+    {
+        $this->fakeHappyTickets([
+            self::TICKETS_URL . '/api/integration/v1/house/test-mode' => Http::response([
+                'live' => false, 'liveAt' => null, 'shopAccess' => ['user' => 'theater-sued', 'password' => 'abc234defg'],
+            ]),
+            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response([
+                'profile' => [], 'legalComplete' => false, 'shopLegalFiles' => ['terms' => null, 'privacy' => null, 'imprint' => null],
+                'shopLegalComplete' => false, 'payoutAccount' => 'open', 'stripePublishableKey' => 'pk_test_1',
+                'platformTerms' => ['accepted' => true, 'termsUrl' => 'https://x.test/agb', 'dpaUrl' => 'https://x.test/avv'],
+            ]),
+        ]);
+
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), ['test_mode' => true] + $this->draft());
+
+        $this->get(route('settings.tickets'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('connection.testMode', true)
+                ->where('connection.shopAccess.user', 'theater-sued')
+                ->where('connection.shopAccess.password', 'abc234defg')
+                ->where('ticketing.testMode', true));
+
+        $this->put(route('settings.tickets.shop-access'), ['user' => 'probe', 'password' => 'premiere26'])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Http::assertSent(
+            fn (Request $request): bool => $request->method() === 'PUT'
+                && str_ends_with($request->url(), '/api/integration/v1/house/test-mode')
+                && $request['user'] === 'probe'
+                && $request['password'] === 'premiere26'
+        );
     }
 
     #[Test]

@@ -220,6 +220,22 @@ final class TicketingCustomerSyncTest extends FeatureTestCase
     }
 
     #[Test]
+    public function a_house_in_test_mode_brings_no_buyers_into_the_crm(): void
+    {
+        $this->connect()->update(['live_at' => null]);
+        Http::fake();
+
+        $this->runSync();
+
+        Http::assertNothingSent();
+        $this->assertDatabaseCount('ticketing_customers', 0);
+
+        $this->actingAsUserWith([PermissionEnum::CRM_VIEW->value, PermissionEnum::CRM_MANAGER->value]);
+        $this->post(route('crm.ticketing-customers.sync'))->assertRedirect()->assertSessionHas('error');
+        Bus::assertNotDispatched(SyncTicketingCustomersJob::class);
+    }
+
+    #[Test]
     public function the_button_starts_a_sync_for_crm_managers_only(): void
     {
         $this->connect();

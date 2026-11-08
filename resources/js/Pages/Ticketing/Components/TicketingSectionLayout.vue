@@ -18,6 +18,8 @@
 
             <BaseTabs :tabs="tabs" :use-translation="false" />
 
+            <TicketingTestModeBanner v-if="connected && $page.props.ticketing?.testMode" class="mt-4" />
+
             <div class="mt-6">
                 <NotConnected v-if="!connected" :message="$t('Sales appear here once this installation is connected to Artwork-Tickets.')" />
                 <div v-else-if="ticketsError" class="flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
@@ -37,6 +39,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import BaseTabs from '@/Artwork/Tabs/BaseTabs.vue'
 import NotConnected from '@/Pages/Settings/Tickets/NotConnected.vue'
+import TicketingTestModeBanner from '@/Pages/Ticketing/Components/TicketingTestModeBanner.vue'
 
 /* Main menu → Artwork-Tickets: what the ticket house sells, without switching to its dashboard. */
 defineProps({

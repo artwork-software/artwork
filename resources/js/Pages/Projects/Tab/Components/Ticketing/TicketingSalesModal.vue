@@ -9,6 +9,7 @@
         <!-- Kopf (Zahlen, Reiter) steht, nur die Liste darunter scrollt -->
         <div v-else class="flex flex-col gap-4 text-[13px]" :class="!sales.guests_hidden && 'h-[min(68vh,720px)]'">
             <div class="flex shrink-0 flex-col gap-3">
+                <TicketingTestModeBanner v-if="$page.props.ticketing?.testMode" />
                 <dl class="grid grid-cols-2 gap-2 sm:grid-cols-5">
                     <div v-for="stat in stats" :key="stat.label" class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2">
                         <dt class="font-lexend text-[11px] text-text-subtle">{{ stat.label }}</dt>
@@ -48,6 +49,7 @@ import BaseTabs from '@/Artwork/Tabs/BaseTabs.vue'
 import TicketingGuestList from '@/Pages/Projects/Tab/Components/Ticketing/TicketingGuestList.vue'
 import TicketingPassAdmission from '@/Pages/Projects/Tab/Components/Ticketing/TicketingPassAdmission.vue'
 import { formatEuro } from '@/Helper/ticketingFormat.js'
+import TicketingTestModeBanner from '@/Pages/Ticketing/Components/TicketingTestModeBanner.vue'
 
 /* Sales, guest list and door of one date, read from tickets when opened — never cached, so the numbers
    are those of the moment. Used from the project component, the calendar and the event dialog. */

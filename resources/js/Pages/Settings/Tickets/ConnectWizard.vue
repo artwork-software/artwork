@@ -17,6 +17,8 @@
             </template>
         </ol>
 
+        <TicketingTestModeBanner v-if="testMode" class="mb-5" />
+
         <div class="mb-5">
             <h2 class="font-lexend text-lg font-semibold text-text mb-1">{{ steps[step] }}</h2>
             <p class="text-[13px] leading-5 text-text-subtle max-w-[720px]">{{ intros[step] }}</p>
@@ -183,6 +185,7 @@ import ReductionsEditor from '@/Pages/Settings/Tickets/ReductionsEditor.vue'
 import BillingFieldsEditor from '@/Pages/Settings/Tickets/BillingFieldsEditor.vue'
 import PlatformTermsConsent from '@/Pages/Settings/Tickets/PlatformTermsConsent.vue'
 import PayoutAccount from '@/Pages/Settings/Tickets/PayoutAccount.vue'
+import TicketingTestModeBanner from '@/Pages/Ticketing/Components/TicketingTestModeBanner.vue'
 import { formatEuro } from '@/Helper/ticketingFormat.js'
 import { LEGAL_PAGES, missingDetails, noLegalFiles, legalFormNames, reductionPayload, reductionsValid, roomDraft, roomPayload, roomsValid, toCents, zonePlaces } from '@/Pages/Settings/Tickets/drafts.js'
 
@@ -195,6 +198,8 @@ const props = defineProps({
     ticketsUrl: { type: String, default: '' },
     /** The house's Stripe state once connected — `{ state, stripe_key }`, null before. */
     payout: { type: Object, default: null },
+    /** The house starts in test mode: test payments, shop behind a login. */
+    testMode: { type: Boolean, default: false },
 })
 
 defineEmits(['close'])
@@ -263,6 +268,7 @@ const form = useForm({
     rooms: [],
     reductions: [],
     accept_platform_terms: false,
+    test_mode: props.testMode,
 })
 
 const legalFormLabel = (form) => legalFormNames(t)[form] ?? form

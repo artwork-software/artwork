@@ -14,6 +14,8 @@
             </template>
         </ToolbarHeader>
 
+        <TicketingTestModeBanner v-if="$page.props.ticketing?.testMode" class="mt-4" />
+
         <div class="mt-6">
             <div v-if="loading" class="flex items-center gap-2 text-sm text-text-subtle">
                 <IconLoader2 class="size-4 animate-spin" />{{ $t('Loading…') }}
@@ -264,6 +266,7 @@ import TicketingReleaseModal from '@/Pages/Projects/Tab/Components/Ticketing/Tic
 import TicketingSaleMarks from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSaleMarks.vue'
 import TicketingSalesModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue'
 import TicketingProductionCard from '@/Pages/Projects/Tab/Components/Ticketing/TicketingProductionCard.vue'
+import TicketingTestModeBanner from '@/Pages/Ticketing/Components/TicketingTestModeBanner.vue'
 import { formatDateTime, formatDay, formatEuro, formatTime } from '@/Helper/ticketingFormat.js'
 import { capacityOf, classesOf, isPast, isReleasable, isReleased, releaseBlocker, roomChangeNote } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 

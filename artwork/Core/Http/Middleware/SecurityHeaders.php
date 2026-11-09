@@ -46,13 +46,17 @@ class SecurityHeaders
         // HMR-WebSocket des Vite-Dev-Servers (https://host:5173 -> wss://host:5173).
         $devWs = $devOrigin === null ? '' : ' ' . preg_replace('#^http#', 'ws', $devOrigin);
 
+        // Stripe Connect embedded components (Auszahlungskonto unter Einstellungen → Artwork-Tickets).
+        $stripe = ' https://connect-js.stripe.com https://js.stripe.com';
+
         $directives = [
             "default-src 'self'",
-            "script-src 'self' 'nonce-{$nonce}'{$dev}",
+            "script-src 'self' 'nonce-{$nonce}'{$stripe}{$dev}",
+            "frame-src 'self'{$stripe}",
             "style-src 'self' 'unsafe-inline'{$dev}",
-            "img-src 'self' data: blob:{$dev}",
+            "img-src 'self' data: blob: https://*.stripe.com{$dev}",
             "font-src 'self' data:{$dev}",
-            "connect-src 'self' ws: wss:{$dev}{$devWs}",
+            "connect-src 'self' ws: wss: https://api.stripe.com{$dev}{$devWs}",
             "frame-ancestors 'self'",
             "base-uri 'self'",
             "form-action 'self'",

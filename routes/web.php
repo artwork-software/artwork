@@ -422,6 +422,10 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('settings.tickets.availability');
         Route::post('/connection', [TicketingConnectionController::class, 'store'])->name('settings.tickets.connect');
         Route::delete('/connection', [TicketingConnectionController::class, 'destroy'])->name('settings.tickets.disconnect');
+        Route::put('/shop-access', [TicketingConnectionController::class, 'saveShopAccess'])
+            ->name('settings.tickets.shop-access');
+        Route::post('/go-live', [TicketingConnectionController::class, 'goLive'])->name('settings.tickets.go-live');
+        Route::delete('/house', [TicketingConnectionController::class, 'erase'])->name('settings.tickets.erase');
         Route::get('/billing', [TicketingBillingController::class, 'index'])->name('settings.tickets.billing');
         // POST: mit PDFs kommt das Formular als multipart, und das liest PHP nur bei POST.
         Route::post('/billing', [TicketingBillingController::class, 'update'])->name('settings.tickets.billing.save');
@@ -1302,6 +1306,15 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     ], function (): void {
         Route::get('/sales', [TicketingSectionController::class, 'sales'])->name('ticketing.section.sales');
         Route::get('/passes', [TicketingSectionController::class, 'passes'])->name('ticketing.section.passes');
+        Route::get('/holdings', [TicketingSectionController::class, 'holdings'])->name('ticketing.section.holdings');
+        Route::get('/passes/{pass}', [TicketingSectionController::class, 'pass'])
+            ->whereUuid('pass')->name('ticketing.section.pass');
+        Route::group(['middleware' => 'can:' . PermissionEnum::TICKETING_MANAGE_PASSES->value], function (): void {
+            Route::post('/passes/{pass}/commands', [TicketingSectionController::class, 'correctPass'])
+                ->whereUuid('pass')->name('ticketing.section.pass.correct');
+            Route::post('/subscriptions/{subscription}/commands', [TicketingSectionController::class, 'changeSubscription'])
+                ->whereUuid('subscription')->name('ticketing.section.subscription.change');
+        });
     });
     Route::get('/response/all/shift-plan-events', [
         EventController::class,
@@ -3224,19 +3237,24 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
 
 
     Route::group(['prefix' => 'inventory'], function (): void {
+        // Übersicht: Recht "Inventar sehen" (Gate view-inventory). Die Artikel-Endpunkte darunter bleiben offen,
+        // weil Materialausgaben und Material-Sets sie auch ohne Übersichtsrecht nutzen.
         Route::get('/', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->middleware('can:view-inventory')
             ->name('inventory.index');
 
         Route::get('/category/{inventoryCategory}', [
             \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
             'index',
         ])
+            ->middleware('can:view-inventory')
             ->name('inventory.category.show');
 
         Route::get('/category/{inventoryCategory}/sub/{inventorySubCategory}', [
             \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
             'index',
         ])
+            ->middleware('can:view-inventory')
             ->name('inventory.sub.category.show');
 
         // post inventory-management.articles.store

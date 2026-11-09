@@ -54,6 +54,7 @@ enum PermissionEnum : string
 
     case SET_CREATE_EDIT = 'set.create_edit';
     case SET_DELETE = 'set.delete';
+    case INVENTORY_VIEW = 'inventory.view';
     case INVENTORY_CREATE_EDIT = 'inventory.create_edit';
     case INVENTORY_DELETE = 'inventory.delete';
     case INVENTORY_DISPOSITION = 'inventory.disposition';
@@ -108,6 +109,7 @@ enum PermissionEnum : string
     case TICKETING_MOVE_ON_SALE = 'move dates on sale';
     case TICKETING_VIEW_SALES = 'view ticket sales';
     case TICKETING_ADMISSION = 'run ticket admission';
+    case TICKETING_MANAGE_PASSES = 'manage ticket passes';
 
     // Eigene Rechte für bisher admin-only Bereiche (Konzept Nutzerrechte, Entscheidung 8)
     case TRASH_ACCESS = 'can access trash';

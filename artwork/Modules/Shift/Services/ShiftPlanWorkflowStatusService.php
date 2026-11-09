@@ -3,11 +3,13 @@
 namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 
 /**
  * Berechnet pro Person und Kalenderwoche den Freigabe-Zustand für die
@@ -23,6 +25,14 @@ use Carbon\Carbon;
  *
  * Priorität: attention > requested > committed. Wochen ohne eindeutigen
  * Zustand fehlen in der Map (neutral).
+ *
+ * Individuelle Zeiten laufen wie Schichten durch die Freigabe, gehören aber zur
+ * Person statt zu einem Gewerk. Sie zählen deshalb in jeder Gewerk-Zeile der
+ * Person mit; Wochen, in denen die Person in einem Gewerk keine Schicht hat,
+ * stehen unter dem Schlüssel INDIVIDUAL_TIMES_KEY (nur individuelle Zeiten).
+ * Hat eine Gewerk-Woche dadurch keinen eindeutigen Zustand, obwohl die Person
+ * individuelle Zeiten hat, steht dort 'open', damit das Frontend nicht auf den
+ * Wert unter INDIVIDUAL_TIMES_KEY zurückfällt.
  */
 class ShiftPlanWorkflowStatusService
 {
@@ -31,6 +41,9 @@ class ShiftPlanWorkflowStatusService
         Freelancer::class => 'freelancer',
         ServiceProvider::class => 'service_provider',
     ];
+
+    /** Gewerk-Schlüssel für Wochen, in denen die Person nur individuelle Zeiten hat */
+    public const INDIVIDUAL_TIMES_KEY = '*';
 
     /** @var array<string, string> */
     private array $weekNumberCache = [];
@@ -118,6 +131,21 @@ class ShiftPlanWorkflowStatusService
 
         $this->applyUnacknowledgedChanges($aggregate, $shifts, $rangeStart, $rangeEnd, $craftIds);
 
+        $individualTimeWeeks = $this->aggregateIndividualTimes(
+            $rangeStart,
+            $rangeEnd,
+            $onlyEmployableType,
+            $onlyEmployableId
+        );
+        $this->mergeIndividualTimes($aggregate, $individualTimeWeeks);
+        $this->applyUnacknowledgedIndividualTimeChanges(
+            $aggregate,
+            $rangeStart,
+            $rangeEnd,
+            $onlyEmployableType,
+            $onlyEmployableId
+        );
+
         $statusMap = [];
         foreach ($aggregate as $typeKey => $workerWeeks) {
             foreach ($workerWeeks as $workerId => $craftWeeks) {
@@ -132,6 +160,11 @@ class ShiftPlanWorkflowStatusService
 
                         if ($status !== null) {
                             $statusMap[$typeKey][$workerId][$craftId][$week] = $status;
+                        } elseif (
+                            $craftId !== self::INDIVIDUAL_TIMES_KEY
+                            && isset($individualTimeWeeks[$typeKey][$workerId][$week])
+                        ) {
+                            $statusMap[$typeKey][$workerId][$craftId][$week] = 'open';
                         }
                     }
                 }
@@ -139,6 +172,141 @@ class ShiftPlanWorkflowStatusService
         }
 
         return $statusMap;
+    }
+
+    /**
+     * Zähler je Person und KW für individuelle Zeiten im Zeitraum (mehrtägige Zeiten zählen in jeder
+     * berührten KW).
+     *
+     * @return array<string, array<int, array<string, array{total: int, committed: int, requested: bool}>>>
+     */
+    private function aggregateIndividualTimes(
+        string $rangeStart,
+        string $rangeEnd,
+        ?string $onlyEmployableType,
+        ?int $onlyEmployableId
+    ): array {
+        $individualTimes = IndividualTime::query()
+            ->individualByDateRange($rangeStart, $rangeEnd)
+            ->whereIn('timeable_type', array_keys(self::TYPE_KEYS))
+            // Nur Zeiten mit Freigabe-Bezug (angefragt oder freigegeben). Zeiten außerhalb jeder Anfrage
+            // (Bestand vor dem Workflow, Häuser ohne Freigabe-Workflow, direktes Festschreiben) dürfen eine
+            // festgeschriebene Woche nicht wieder auf „offen“ setzen.
+            ->where(fn ($query) => $query->where('is_committed', true)->orWhere('in_workflow', true))
+            ->when(
+                $onlyEmployableType !== null && $onlyEmployableId !== null,
+                fn ($query) => $query
+                    ->where('timeable_type', $onlyEmployableType)
+                    ->where('timeable_id', $onlyEmployableId)
+            )
+            ->get(['id', 'timeable_type', 'timeable_id', 'start_date', 'end_date', 'in_workflow', 'is_committed']);
+
+        $weeks = [];
+        foreach ($individualTimes as $individualTime) {
+            $typeKey = self::TYPE_KEYS[$individualTime->timeable_type];
+            $from = max($individualTime->start_date, $rangeStart);
+            $to = min($individualTime->end_date, $rangeEnd);
+
+            $touchedWeeks = [];
+            foreach (CarbonPeriod::create($from, $to) as $day) {
+                $touchedWeeks[$this->weekNumber($day->toDateString())] = true;
+            }
+
+            foreach (array_keys($touchedWeeks) as $week) {
+                $entry = &$weeks[$typeKey][(int) $individualTime->timeable_id][(string) $week];
+                $entry ??= ['total' => 0, 'committed' => 0, 'requested' => false];
+                $entry['total']++;
+                if ($individualTime->is_committed) {
+                    $entry['committed']++;
+                } elseif ($individualTime->in_workflow) {
+                    $entry['requested'] = true;
+                }
+                unset($entry);
+            }
+        }
+
+        return $weeks;
+    }
+
+    /**
+     * Zählt die individuellen Zeiten in jede vorhandene Gewerk-Woche der Person ein und legt sie
+     * zusätzlich unter INDIVIDUAL_TIMES_KEY ab (Gewerk-Zeilen ohne Schicht in der KW).
+     *
+     * @param array<string, array<int, array<string, array<string, int|bool>>>> $individualTimeWeeks
+     */
+    private function mergeIndividualTimes(array &$aggregate, array $individualTimeWeeks): void
+    {
+        foreach ($individualTimeWeeks as $typeKey => $workers) {
+            foreach ($workers as $workerId => $weeks) {
+                foreach ($weeks as $week => $counts) {
+                    foreach ($aggregate[$typeKey][$workerId] ?? [] as $craftId => $craftWeeks) {
+                        if (!isset($craftWeeks[$week])) {
+                            continue;
+                        }
+                        $entry = &$aggregate[$typeKey][$workerId][$craftId][$week];
+                        $entry['total'] += $counts['total'];
+                        $entry['committed'] += $counts['committed'];
+                        $entry['requested'] = $entry['requested'] || $counts['requested'];
+                        unset($entry);
+                    }
+
+                    $aggregate[$typeKey][$workerId][self::INDIVIDUAL_TIMES_KEY][$week] = $counts
+                        + ['attention' => false];
+                }
+            }
+        }
+    }
+
+    /**
+     * Unbestätigte Änderungen an freigegebenen individuellen Zeiten (auch gelöschten) machen die KW
+     * der Person gelb — in jeder Gewerk-Zeile und unter INDIVIDUAL_TIMES_KEY, wie bei Schichten.
+     */
+    private function applyUnacknowledgedIndividualTimeChanges(
+        array &$aggregate,
+        string $rangeStart,
+        string $rangeEnd,
+        ?string $onlyEmployableType,
+        ?int $onlyEmployableId
+    ): void {
+        $startPath = "JSON_UNQUOTE(JSON_EXTRACT(field_changes, '$._individual_time.start_date'))";
+        $endPath = "JSON_UNQUOTE(JSON_EXTRACT(field_changes, '$._individual_time.end_date'))";
+
+        $changes = CommittedShiftChange::query()
+            ->where('subject_type', IndividualTime::class)
+            ->whereNull('acknowledged_at')
+            ->whereIn('affected_user_type', array_keys(self::TYPE_KEYS))
+            ->whereRaw("$startPath <= ?", [$rangeEnd])
+            ->whereRaw("COALESCE($endPath, $startPath) >= ?", [$rangeStart])
+            ->when(
+                $onlyEmployableType !== null && $onlyEmployableId !== null,
+                fn ($query) => $query
+                    ->where('affected_user_type', $onlyEmployableType)
+                    ->where('affected_user_id', $onlyEmployableId)
+            )
+            ->get(['affected_user_type', 'affected_user_id', 'field_changes']);
+
+        foreach ($changes as $change) {
+            $typeKey = self::TYPE_KEYS[$change->affected_user_type];
+            $workerId = (int) $change->affected_user_id;
+            $state = $change->field_changes['_individual_time'] ?? [];
+            $from = max((string) $state['start_date'], $rangeStart);
+            $to = min((string) ($state['end_date'] ?? $state['start_date']), $rangeEnd);
+
+            foreach (CarbonPeriod::create($from, $to) as $day) {
+                $week = $this->weekNumber($day->toDateString());
+
+                foreach ($aggregate[$typeKey][$workerId] ?? [] as $craftId => $craftWeeks) {
+                    if (isset($craftWeeks[$week])) {
+                        $aggregate[$typeKey][$workerId][$craftId][$week]['attention'] = true;
+                    }
+                }
+
+                $entry = &$aggregate[$typeKey][$workerId][self::INDIVIDUAL_TIMES_KEY][$week];
+                $entry ??= ['total' => 0, 'committed' => 0, 'requested' => false, 'attention' => false];
+                $entry['attention'] = true;
+                unset($entry);
+            }
+        }
     }
 
     /**

@@ -329,6 +329,8 @@ class HandleInertiaRequests extends Middleware
                 'ticketing' => [
                     'configured' => $ticketingConnections->isConfigured(),
                     'active' => $ticketingConnections->isActive(),
+                    // Testmodus: jede Ansicht des Ticketings sagt, dass nichts davon echt verkauft ist.
+                    'testMode' => $ticketingConnections->isTestMode(),
                 ],
                 // Externe Zugänge: gated Einladen-Buttons und CRM-Verwaltungslinks im Frontend
                 'externalAccessEnabled' => app(ExternalAccessSettingsResolver::class)->isEnabled(),

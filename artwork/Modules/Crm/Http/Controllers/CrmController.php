@@ -240,7 +240,7 @@ class CrmController extends Controller
     /**
      * Stand des Käufer-Abgleichs aus Artwork-Tickets für den Kopf des Typs "Ticketing-Kunde".
      *
-     * @return array{connected: bool, synced_at: string|null, running: bool, error: string|null}
+     * @return array{connected: bool, test_mode: bool, synced_at: string|null, running: bool, error: string|null}
      */
     private function ticketingSyncState(): array
     {
@@ -248,6 +248,7 @@ class CrmController extends Controller
 
         return [
             'connected' => $connection !== null,
+            'test_mode' => $connection?->isTestMode() ?? false,
             'synced_at' => $connection?->customers_synced_at?->toIso8601String(),
             // Ein aufgegebener Lauf behält seine Stelle für den nächsten, darf den Knopf aber nicht sperren.
             'running' => $connection?->customers_sync_started_at !== null && $connection->customers_sync_error === null,

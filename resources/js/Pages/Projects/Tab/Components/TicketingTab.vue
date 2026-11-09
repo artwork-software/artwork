@@ -14,6 +14,8 @@
             </template>
         </ToolbarHeader>
 
+        <TicketingTestModeBanner v-if="$page.props.ticketing?.testMode" class="mt-4" />
+
         <div class="mt-6">
             <div v-if="loading" class="flex items-center gap-2 text-sm text-text-subtle">
                 <IconLoader2 class="size-4 animate-spin" />{{ $t('Loading…') }}
@@ -177,7 +179,8 @@
                                         <span v-if="!event.room" class="block leading-6 text-text-subtle">{{ $t('No room') }}</span>
                                         <span v-else class="flex items-center gap-2 min-w-0 leading-6">
                                             <span class="truncate">{{ event.room.name }}</span>
-                                            <IconCheck v-if="event.venue" class="size-3.5 shrink-0 text-success" :title="$t('In Artwork-Tickets')" />
+                                            <BaseChip v-if="event.release?.roomChanged" variant="warning" class="whitespace-nowrap" :title="roomChangeNote(event, $t)">{{ $t('Check prices') }}</BaseChip>
+                                            <IconCheck v-else-if="event.venue" class="size-3.5 shrink-0 text-success" :title="$t('In Artwork-Tickets')" />
                                             <BaseChip v-else variant="warning" class="whitespace-nowrap">{{ $t('Room not synced') }}</BaseChip>
                                         </span>
                                     </td>
@@ -237,7 +240,7 @@
         </div>
 
         <TicketingDateModal v-if="editing" :project-id="project.id" :events="editing" :all-events="payload.events" :production="payload.production" :reductions="payload.reductions"
-                            @close="editing = null" @saved="applyPayload" />
+                            :rooms="payload.rooms" @close="editing = null" @saved="applyPayload" />
         <TicketingSalesModal v-if="viewingSales" :event-id="viewingSales.id" :description="`${viewingSales.name} · ${formatDay(viewingSales.start, locale)}`" @close="viewingSales = null" />
         <TicketingReleaseModal v-if="confirming" :project-id="project.id" :events="confirming.events" :all-events="payload.events" :withdrawing="confirming.withdrawing"
                                :production="payload.production" :reductions="payload.reductions"
@@ -263,8 +266,9 @@ import TicketingReleaseModal from '@/Pages/Projects/Tab/Components/Ticketing/Tic
 import TicketingSaleMarks from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSaleMarks.vue'
 import TicketingSalesModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue'
 import TicketingProductionCard from '@/Pages/Projects/Tab/Components/Ticketing/TicketingProductionCard.vue'
+import TicketingTestModeBanner from '@/Pages/Ticketing/Components/TicketingTestModeBanner.vue'
 import { formatDateTime, formatDay, formatEuro, formatTime } from '@/Helper/ticketingFormat.js'
-import { capacityOf, classesOf, isPast, isReleasable, isReleased, releaseBlocker } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { capacityOf, classesOf, isPast, isReleasable, isReleased, releaseBlocker, roomChangeNote } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 
 const props = defineProps({
     project: { type: Object, required: true },

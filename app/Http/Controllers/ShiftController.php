@@ -1827,7 +1827,8 @@ class ShiftController extends Controller
                     $vacationsCleared = true;
                 }
 
-                $entityModel->shiftPlanComments()->where('date', $day)->delete();
+                // Einzeln löschen, damit das Entfernen der Notiz im Schichtverlauf erscheint
+                $entityModel->shiftPlanComments()->where('date', $day)->get()->each->delete();
 
                 $dayShifts = $entityModel->shifts()->where('shifts.start_date', $day)->get();
                 $this->shiftService->detachFromShifts($dayShifts, $modelClass, $entityModel);

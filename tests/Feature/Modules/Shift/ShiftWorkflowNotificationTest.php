@@ -3,11 +3,14 @@
 namespace Tests\Feature\Modules\Shift;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Notification\Events\NewNotificationBroadcast;
+use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Notifications\ShiftNotification;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -105,6 +108,60 @@ final class ShiftWorkflowNotificationTest extends FeatureTestCase
             ShiftNotification::class,
             fn (ShiftNotification $notification) => collect($notification->toArray()->description)
                 ->contains(fn ($row) => str_contains((string) ($row['title'] ?? ''), 'Bitte Pausenzeiten beachten'))
+        );
+    }
+
+    #[Test]
+    public function decision_toast_carries_the_comment_as_detail_line(): void
+    {
+        Event::fake([NewNotificationBroadcast::class]);
+        $requester = User::factory()->create();
+        app(NotificationSettingService::class)->ensureDefaultsForUser($requester);
+        $requester->notificationSettings()->update(['enabled_push' => true]);
+        $this->actingAsAdmin();
+        $request = ShiftPlanRequest::create([
+            'craft_id' => Craft::factory()->create()->id,
+            'week_number' => 19,
+            'year' => 2026,
+            'status' => 'pending',
+            'requested_by_user_id' => $requester->id,
+            'requested_at' => now(),
+        ]);
+
+        $this->post(route('shift-plan-requests.accept', $request), [
+            'comment' => 'Bitte Pausenzeiten beachten',
+        ]);
+
+        Event::assertDispatched(
+            NewNotificationBroadcast::class,
+            fn (NewNotificationBroadcast $event) => $event->user->is($requester)
+                && str_contains((string) ($event->message['detail'] ?? ''), 'Bitte Pausenzeiten beachten')
+        );
+    }
+
+    #[Test]
+    public function decision_toast_without_comment_has_no_detail_line(): void
+    {
+        Event::fake([NewNotificationBroadcast::class]);
+        $requester = User::factory()->create();
+        app(NotificationSettingService::class)->ensureDefaultsForUser($requester);
+        $requester->notificationSettings()->update(['enabled_push' => true]);
+        $this->actingAsAdmin();
+        $request = ShiftPlanRequest::create([
+            'craft_id' => Craft::factory()->create()->id,
+            'week_number' => 19,
+            'year' => 2026,
+            'status' => 'pending',
+            'requested_by_user_id' => $requester->id,
+            'requested_at' => now(),
+        ]);
+
+        $this->post(route('shift-plan-requests.accept', $request));
+
+        Event::assertDispatched(
+            NewNotificationBroadcast::class,
+            fn (NewNotificationBroadcast $event) => $event->user->is($requester)
+                && !array_key_exists('detail', $event->message)
         );
     }
 

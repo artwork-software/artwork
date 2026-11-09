@@ -12,6 +12,7 @@ use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\Client;
@@ -147,7 +148,8 @@ class TicketingConnectionService
      *     billing: array<string, string|UploadedFile|null>|null,
      *     rooms: list<array<string, mixed>>,
      *     reductions: list<array<string, mixed>>,
-     *     accept_platform_terms: bool
+     *     accept_platform_terms: bool,
+     *     test_mode: bool
      * } $draft
      */
     public function connect(User $user, array $draft): TicketingConnection
@@ -173,6 +175,7 @@ class TicketingConnectionService
                 // Als String: je nach Installation ist der Client-Schlüssel numerisch oder eine UUID.
                 'coreClientId' => (string) $client->getKey(),
                 'coreClientSecret' => $client->plainSecret,
+                'testMode' => $draft['test_mode'],
             ]);
         } catch (TicketingConnectionException $exception) {
             $this->clients->delete($client);
@@ -188,10 +191,14 @@ class TicketingConnectionService
             'api_key' => $house['apiKey'],
             'oauth_client_id' => $client->getKey(),
             'connected_by_user_id' => $user->id,
+            'live_at' => $draft['test_mode'] ? null : now(),
         ]);
 
-        // Legt den CRM-Typ "Ticketing-Kunde" an, damit es den Knopf für den Abgleich ab jetzt gibt.
-        SyncTicketingCustomersJob::dispatch();
+        // Legt den CRM-Typ "Ticketing-Kunde" an, damit es den Knopf für den Abgleich ab jetzt gibt;
+        // im Testmodus erst mit dem Live-Schalten, Testkäufer gehören nicht ins CRM.
+        if (!$connection->isTestMode()) {
+            SyncTicketingCustomersJob::dispatch();
+        }
 
         // Ab hier besteht die Verbindung; scheitert der Abgleich, bleibt sie und die Meldung nennt den Rest.
         try {
@@ -324,6 +331,113 @@ class TicketingConnectionService
             ));
         }
 
+        $this->forget($connection);
+    }
+
+    /** Verbunden und noch im Testmodus — für Hinweise in jeder Ansicht des Ticketings. */
+    public function isTestMode(): bool
+    {
+        return TicketingConnection::query()->whereNull('live_at')->exists();
+    }
+
+    /**
+     * Im Testmodus: Benutzername und Passwort, mit denen der Shop sich öffnet; live null.
+     *
+     * @return array{user: string, password: string}|null
+     * @throws TicketingConnectionException
+     */
+    public function shopAccess(TicketingConnection $connection): ?array
+    {
+        $access = $this->tickets->get($connection, '/house/test-mode')['shopAccess'] ?? null;
+
+        return is_array($access)
+            ? ['user' => (string) $access['user'], 'password' => (string) $access['password']]
+            : null;
+    }
+
+    /** @throws TicketingConnectionException */
+    public function saveShopAccess(TicketingConnection $connection, string $user, string $password): void
+    {
+        $this->tickets->put($connection, '/house/test-mode', ['user' => $user, 'password' => $password]);
+    }
+
+    /**
+     * Ende des Testmodus: tickets löscht alles Verkaufte und behält die Einrichtung, soweit gewählt.
+     * Termine, die dabei aus dem Shop gehen, werden hier wieder Entwürfe. Das Auszahlungskonto
+     * prüft der Zahlungsdienstleister neu; ab jetzt kommen auch Käufer ins CRM.
+     *
+     * @param array{keep_shop_look: bool, keep_pass_types: bool, keep_coupons: bool, keep_dates: bool} $choice
+     * @throws TicketingConnectionException
+     */
+    public function goLive(TicketingConnection $connection, array $choice): void
+    {
+        $this->assertTestMode($connection);
+
+        $result = $this->tickets->post($connection, '/house/go-live', [
+            'keepShopLook' => $choice['keep_shop_look'],
+            'keepPassTypes' => $choice['keep_pass_types'],
+            'keepCoupons' => $choice['keep_coupons'],
+            'keepDates' => $choice['keep_dates'],
+        ], timeout: 30);
+
+        DB::transaction(function () use ($connection, $result): void {
+            $this->resetReleases(TicketingEventRelease::query()->whereIn(
+                'tickets_date_id',
+                array_map('strval', (array) ($result['withdrawnDateIds'] ?? [])),
+            ));
+            $connection->update(['live_at' => now()]);
+        });
+
+        SyncTicketingCustomersJob::dispatch();
+    }
+
+    /**
+     * Neu anfangen: im Testmodus löscht tickets das ganze Haus, hier gehen Verbindung und alle
+     * Verweise darauf. Freigegebene Termine werden wieder Entwürfe, ihre Einstellungen bleiben.
+     *
+     * @throws TicketingConnectionException
+     */
+    public function erase(): void
+    {
+        $connection = $this->current();
+
+        if (!$connection) {
+            return;
+        }
+
+        $this->assertTestMode($connection);
+
+        $this->tickets->delete($connection, '/house');
+
+        $this->resetReleases(TicketingEventRelease::query());
+        $this->forget($connection);
+    }
+
+    /** @throws TicketingConnectionException */
+    private function assertTestMode(TicketingConnection $connection): void
+    {
+        if (!$connection->isTestMode()) {
+            throw new TicketingConnectionException(
+                __('This ticket house already sells for real; test mode has ended.')
+            );
+        }
+    }
+
+    /** @param Builder<TicketingEventRelease> $releases */
+    private function resetReleases(Builder $releases): void
+    {
+        $releases->where('state', TicketingEventRelease::STATE_RELEASED)->update([
+            'state' => TicketingEventRelease::STATE_DRAFT,
+            'tickets_date_id' => null,
+            'released_at' => null,
+            'released_by_user_id' => null,
+            'sync_error' => null,
+        ]);
+    }
+
+    /** Zugang und Verweise auf das bisherige Haus; ein neu verbundenes Haus kennt sie nicht. */
+    private function forget(TicketingConnection $connection): void
+    {
         $client = Client::query()->find($connection->oauth_client_id);
 
         if ($client) {
@@ -331,7 +445,6 @@ class TicketingConnectionService
         }
 
         DB::transaction(function () use ($connection): void {
-            // Diese Kennungen gehören zum bisherigen Haus; ein neu verbundenes Haus kennt sie nicht.
             TicketingRoomLink::query()->delete();
             TicketingProduction::query()->update(['production_id' => null, 'hero_synced_at' => null]);
             TicketingProductionImage::query()->update(['remote_id' => null]);

@@ -241,7 +241,7 @@
                         :disabled="loading"
                         :useTranslations="false"
                         :placeholder="t('All shifts')"
-                        :emptyText="t('No shifts in selected range')"
+                        :emptyText="t('No shifts with entries in the selected range')"
                         is-small
                         label="Shift"
                         :optionLabel="(s) => shiftLabel(s)"
@@ -441,7 +441,7 @@
                                         @click="block.shift && focusShift(block.shift)"
                                     >
                                         <span class="text-[10px] font-semibold uppercase tracking-wide text-text-subtle">
-                                            {{ block.commitSummary ? t('Commitment') : t('Shift') }}<span v-if="block.details.id"> #{{ block.details.id }}</span>
+                                            {{ block.commitSummary ? t('Commitment') : (block.isDayEntry ? t('Day') : t('Shift')) }}<span v-if="block.details.id"> #{{ block.details.id }}</span>
                                         </span>
                                         <span class="min-w-0 truncate text-[11.5px] font-medium text-text" :title="block.headline">{{ block.headline }}</span>
                                         <span
@@ -597,6 +597,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
 
 import { useShiftPlanRequest } from '../../ShiftPlanRequests/components/useShiftPlanRequest.js'
+import { dayEntryCategory, dayEntryDayLabel, dayEntryOf, describeDayEntry, dayEntryMessageKey, dayEntryTime } from '@/Helper/shiftHistoryDayEntry.js'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
@@ -625,6 +626,10 @@ type RawShiftActivity = {
     description: string
     event: string
     subject_id: number | null
+    /** Shift bzw. bei Tageseinträgen Vacation / Availability / ShiftPlanComment / IndividualTime / … */
+    subject_type?: string | null
+    /** Betroffene Person eines Tageseintrags (Backend: ShiftHistoryDayEntryPerson) */
+    day_entry_person_name?: string | null
     created_at: string
     properties: ShiftActivityProperties
     /** Bezugsgründe bei aktivem Personenfilter (Backend: ShiftHistoryQueryService::matchReasons) */
@@ -862,7 +867,7 @@ const expandRangeToMonths = () => {
     endDate.value = b.last
 }
 
-type ActionCategory = 'staffing' | 'shift_data' | 'lifecycle' | 'commitment' | 'confirmation' | 'other'
+type ActionCategory = 'staffing' | 'shift_data' | 'lifecycle' | 'commitment' | 'confirmation' | 'availability' | 'note' | 'day_planning' | 'other'
 
 const ACTION_META: Record<ActionCategory, { label: string; description: string; chip: string }> = {
     staffing: { label: 'Staffing', description: 'Person assigned to or removed from a shift.', chip: 'border-accent-200 bg-accent-50 text-accent-700' },
@@ -870,6 +875,9 @@ const ACTION_META: Record<ActionCategory, { label: string; description: string; 
     lifecycle: { label: 'Shift created/deleted', description: 'Shift created, deleted or restored.', chip: 'border-border-strong bg-surface-sunken text-text' },
     commitment: { label: 'Commitment & request', description: 'Shifts committed, commitment revoked or requested for approval.', chip: 'border-success-border bg-success-surface text-success' },
     confirmation: { label: 'Confirmations', description: 'Shift assignments accepted or declined by the scheduled person.', chip: 'border-special-teal-border bg-special-teal-surface text-special-teal' },
+    availability: { label: 'Availability & absence', description: 'Absence or availability of the person entered, changed or removed for the day.', chip: 'border-danger-border bg-danger-surface text-danger' },
+    note: { label: 'Notes', description: 'Note on the day of the person added, changed or removed.', chip: 'border-border-strong bg-white text-text-muted' },
+    day_planning: { label: 'Other day entries', description: 'Individual times, day services, compensation days off and project assignments of the person for the day.', chip: 'border-accent-200 bg-white text-accent-700' },
     other: { label: 'Other', description: 'Rare entries that do not fit any other category, e.g. older log entries.', chip: 'border-border-subtle bg-surface-sunken text-text-muted' },
 }
 
@@ -890,6 +898,16 @@ const actionItems = computed(() => {
     // (Backend filtert sie je nach Setting bereits heraus).
     if (normalizedLogs.value.some((e) => e.category === 'confirmation')) {
         items.push({ id: 'confirmation', name: ACTION_META.confirmation.label })
+    }
+    // Rubriken der Tageseinträge nur anbieten, wenn es welche gibt
+    if (normalizedLogs.value.some((e) => e.category === 'availability')) {
+        items.push({ id: 'availability', name: ACTION_META.availability.label })
+    }
+    if (normalizedLogs.value.some((e) => e.category === 'note')) {
+        items.push({ id: 'note', name: ACTION_META.note.label })
+    }
+    if (normalizedLogs.value.some((e) => e.category === 'day_planning')) {
+        items.push({ id: 'day_planning', name: ACTION_META.day_planning.label })
     }
     if (normalizedLogs.value.some((e) => e.category === 'other')) {
         items.push({ id: 'other', name: ACTION_META.other.label })
@@ -974,6 +992,21 @@ const buildShiftDetails = (log: RawShiftActivity): EntryShiftDetails => {
     // Sammel-Einträge (Festschreibung KW/Zeitraum) haben keine einzelne Schicht —
     // Zeitraum/Gewerke kommen aus properties.commit_summary, die Karte wird im
     // Template separat gerendert.
+    // Tageseintrag: keine Schicht — subject_id ist die Abwesenheit/Notiz, Datum aus worker_day
+    const dayEntry = dayEntryOf(log)
+    if (dayEntry) {
+        return {
+            id: null,
+            dayKey: toIsoDay(dayEntry.day),
+            dateLabel: dayEntryDayLabel(dayEntry, normalizeDate),
+            timeLabel: dayEntry.kind === 'note' ? '–' : (dayEntryTime(dayEntry.data, t) || '–'),
+            craft: '–',
+            room: '–',
+            project: '–',
+            deleted: false,
+        }
+    }
+
     const summary = (log.properties as any)?.commit_summary ?? null
     if (summary) {
         const sd = summary.start_date || ''
@@ -1267,6 +1300,8 @@ type NormalizedLogEntry = {
     snapshot: ShiftSnapshot | null
     shiftDetails: EntryShiftDetails
     commitSummary: CommitSummary | null
+    /** Abwesenheit/Verfügbarkeit/Notiz statt Schicht-Vorgang */
+    isDayEntry: boolean
     haystack: string
 }
 
@@ -1327,6 +1362,9 @@ const detectCategory = (log: RawShiftActivity): ActionCategory => {
 
     if (ev === 'confirmation_accepted' || ev === 'confirmation_declined') return 'confirmation'
 
+    const dayEntry = dayEntryOf(log)
+    if (dayEntry) return dayEntryCategory(dayEntry) as ActionCategory
+
     if ((log.properties as any)?.commit_summary) return 'commitment'
     if (ctx === 'commit') return 'commitment'
     if (['committed', 'uncommitted', 'committed_bulk', 'uncommitted_bulk', 'shift_committed'].includes(ev)) return 'commitment'
@@ -1345,6 +1383,16 @@ const detectCategory = (log: RawShiftActivity): ActionCategory => {
 }
 
 const messageForLog = (log: RawShiftActivity) => {
+    // Tageseinträge: Meldung aus Art + Inhalt; ohne Personenfilter mit der betroffenen Person davor.
+    // Projektzuordnungen bringen ihre Meldung (inkl. Name) als translation_key mit.
+    const dayEntry = dayEntryOf(log)
+    if (dayEntry) {
+        const key = dayEntryMessageKey(dayEntry, log.event)
+        if (!key) return activityTranslation(log) || t('Change in shift')
+        const message = t(key, [describeDayEntry(dayEntry, t)])
+        const personName = selectedPerson.value ? null : log.day_entry_person_name
+        return personName ? `${personName}: ${message}` : message
+    }
     const msgFromKey = activityTranslation(log)
     if (msgFromKey) return msgFromKey
     // Lösch-Einträge klar benennen ("Schicht gelöscht") statt nur "gelöscht" – gilt auch
@@ -1382,6 +1430,8 @@ const createdDetailsFor = (log: RawShiftActivity): CreatedDetail[] => {
 }
 
 const normalizeChanges = (log: RawShiftActivity): NormalizedChange[] => {
+    // Ersatzfreie Tage: Meldung und Tag sagen alles, die Rohfelder (IDs, Zeitstempel) nicht
+    if (dayEntryOf(log)?.kind === 'compensation') return []
     const changes = extractActivityChanges(log) || []
     return changes.map((fc: any, index: number) => ({
         index,
@@ -1404,10 +1454,12 @@ const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
             const createdAt = log.created_at
             const createdAtFormatted = formatDateTime(createdAt)
 
-            const shiftId =
-                (log.properties?.shift_id as number | null | undefined) ??
-                (log.subject_id as number | null | undefined) ??
-                null
+            const isDayEntry = dayEntryOf(log) !== null
+            const shiftId = isDayEntry
+                ? null
+                : ((log.properties?.shift_id as number | null | undefined) ??
+                    (log.subject_id as number | null | undefined) ??
+                    null)
             const shiftIds = (log.properties?.shift_ids ?? [])
                 .map(Number)
                 .filter(Number.isFinite)
@@ -1465,6 +1517,7 @@ const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
                 snapshot: (log.properties?.shift_snapshot as ShiftSnapshot | undefined) ?? null,
                 shiftDetails: buildShiftDetails(log),
                 commitSummary,
+                isDayEntry,
                 haystack,
             }
         })
@@ -1542,6 +1595,7 @@ type EntryBlock = {
     shift: ShiftLite | null
     details: EntryShiftDetails
     commitSummary: CommitSummary | null
+    isDayEntry: boolean
     headline: string
     items: NormalizedLogEntry[]
 }
@@ -1595,6 +1649,7 @@ const groupedLogs = computed(() => {
                     shift: entry.commitSummary ? null : shift,
                     details: entry.shiftDetails,
                     commitSummary: entry.commitSummary,
+                    isDayEntry: entry.isDayEntry,
                     headline: blockHeadline(entry),
                     items: [],
                 }

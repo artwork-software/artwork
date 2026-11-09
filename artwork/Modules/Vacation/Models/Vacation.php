@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Vacation\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Shift\Models\Traits\LogsShiftPlanDayActivity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property Carbon $end_time
  * @property Carbon $date
  * @property boolean $full_day
+ * @property string|null $day_part
  * @property string $comment
  * @property boolean $is_series
  * @property int $series_id
@@ -30,6 +32,7 @@ class Vacation extends Model
 {
     use HasFactory;
     use LogsActivity;
+    use LogsShiftPlanDayActivity;
 
     protected $table = 'vacations';
 
@@ -39,7 +42,22 @@ class Vacation extends Model
             ->useLogName('vacation')
             ->logFillable()
             ->logOnlyDirty()
+            // Serienverknüpfung direkt nach dem Anlegen ist kein eigener Vorgang im Schichtverlauf
+            ->dontLogIfAttributesChangedOnly(['series_id', 'is_series'])
             ->dontSubmitEmptyLogs();
+    }
+
+    protected function shiftHistoryDayEntryKind(): string
+    {
+        return 'absence';
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    protected function shiftHistoryPersonColumns(): array
+    {
+        return ['vacationer_type', 'vacationer_id'];
     }
 
     protected $fillable = [

@@ -60,7 +60,7 @@
                         </span>
                     </div>
                     <button
-                        v-if="ticketingSync?.connected && canImport"
+                        v-if="ticketingSync?.connected && !ticketingSync.test_mode && canImport"
                         class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium disabled:opacity-50"
                         :disabled="syncRequested || ticketingSync.running"
                         @click="syncTicketingCustomers"
@@ -353,6 +353,7 @@ const typeHint = computed(() => {
     }
     const sync = props.ticketingSync
     if (!sync) return ''
+    if (sync.test_mode) return $t('Artwork-Tickets is in test mode; buyers are synced once it goes live.')
     if (sync.error) return $t('Last sync with Artwork-Tickets failed: {message}', { message: sync.error })
     if (sync.running) return $t('Syncing with Artwork-Tickets …')
     if (sync.synced_at) return $t('Synced with Artwork-Tickets on {date}', { date: formatDateTime(sync.synced_at) })

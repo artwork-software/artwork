@@ -11,11 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Die Preisklassen eines Termins für den Ticketshop — je Klasse Plätze und Preis — sowie sein
  * Freigabestand. zone_key null heißt: eine Klasse nur für diesen Termin, die der Raum nicht kennt.
  * description ersetzt im Shop die Beschreibung der Produktion; reductions hält nur, worin der
- * Termin von den Ermäßigungen der Produktion abweicht.
+ * Termin von den Ermäßigungen der Produktion abweicht. venue_id ist die Spielstätte, für die die Klassen
+ * gesetzt sind; liegt der Termin inzwischen in einer anderen, gelten sie als überholt.
  *
  * @property int $id
  * @property int $event_id
  * @property list<array{zone_key: string|null, name: string, price_cents: int, quota: int}> $classes
+ * @property string|null $venue_id
  * @property string|null $description
  * @property list<array{id: string, offered: bool}>|null $reductions
  * @property string $state
@@ -31,6 +33,7 @@ class TicketingEventRelease extends Model
     protected $fillable = [
         'event_id',
         'classes',
+        'venue_id',
         'description',
         'reductions',
         'state',

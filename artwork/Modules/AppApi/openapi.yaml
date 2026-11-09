@@ -174,6 +174,82 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/inventory/categories:
+    get:
+      tags: [App]
+      operationId: appInventoryCategories
+      summary: Inventory categories with their subcategories
+      description: Only while `permissions.can_view_inventory`.
+      responses:
+        '200':
+          description: All categories, by name
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppInventoryCategoriesResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/app/v1/inventory/articles:
+    get:
+      tags: [App]
+      operationId: appInventoryArticles
+      summary: One page of inventory articles, searched and filtered like in the web
+      description: >-
+        Ordered by category, subcategory and name. `q` searches name, inventory
+        number and description; a `*` wildcard also searches property values
+        (e.g. a serial number). 30 articles per page.
+      parameters:
+        - { name: q, in: query, required: false, schema: { type: string, maxLength: 100 } }
+        - { name: category_id, in: query, required: false, schema: { type: integer } }
+        - { name: subcategory_id, in: query, required: false, schema: { type: integer } }
+        - { name: page, in: query, required: false, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: The page and where it stands
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppInventoryArticlesResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/inventory/articles/{article}:
+    get:
+      tags: [App]
+      operationId: appInventoryArticle
+      summary: One article with images, stock per status, properties and units
+      parameters:
+        - { $ref: '#/components/parameters/InventoryArticleId' }
+      responses:
+        '200':
+          description: The article
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppInventoryArticleResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/app/v1/inventory/articles/{article}/availability:
+    get:
+      tags: [App]
+      operationId: appInventoryAvailability
+      summary: How much of an article is free in a date range
+      description: >-
+        Ready stock minus the peak of overlapping internal and external material
+        issues in the range, as in the web's planning. Whole days, defaulting to
+        the current week.
+      parameters:
+        - { $ref: '#/components/parameters/InventoryArticleId' }
+        - { $ref: '#/components/parameters/RangeStart' }
+        - { $ref: '#/components/parameters/RangeEnd' }
+      responses:
+        '200':
+          description: Stock in the range
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppInventoryAvailabilityResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/app/v1/projects:
     get:
       tags: [App]
@@ -592,6 +668,132 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /api/app/v1/ticketing/dates:
+    get:
+      tags: [App]
+      operationId: appTicketingDates
+      summary: Dates released to Artwork-Tickets in a range, with their door counters
+      description: >-
+        Only for users with `permissions.can_run_ticket_admission`; dates of
+        projects the user cannot view are left out.
+      parameters:
+        - { $ref: '#/components/parameters/RangeStart' }
+        - { $ref: '#/components/parameters/RangeEnd' }
+      responses:
+        '200':
+          description: Released dates, ordered by start
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppTicketingDatesResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/TicketingError' }
+  /api/app/v1/ticketing/dates/{event}:
+    get:
+      tags: [App]
+      operationId: appTicketingDate
+      summary: One released date with its guest list
+      parameters:
+        - { $ref: '#/components/parameters/EventId' }
+      responses:
+        '200':
+          description: The date and every ticket of it
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppTicketingDateResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/TicketingError' }
+  /api/app/v1/ticketing/dates/{event}/check-ins:
+    post:
+      tags: [App]
+      operationId: appTicketingCheckIn
+      summary: Check a ticket in, scanned or picked from the guest list
+      description: >-
+        Send either the scanned `payload` or a `ticket_id`. `scan_id` is minted
+        on the device per attempt; a retry with the same id replays the first
+        answer instead of admitting twice. A refusal is an outcome, not an error.
+      parameters:
+        - { $ref: '#/components/parameters/EventId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppCheckInRequest' }
+      responses:
+        '200':
+          description: The door's decision
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppCheckInResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/TicketingError' }
+  /api/app/v1/ticketing/dates/{event}/check-ins/revert:
+    post:
+      tags: [App]
+      operationId: appTicketingRevertCheckIn
+      summary: Take a check-in back
+      parameters:
+        - { $ref: '#/components/parameters/EventId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppRevertCheckInRequest' }
+      responses:
+        '200':
+          description: Reverted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppRevertCheckInResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/TicketingError' }
+  /api/app/v1/ticketing/dates/{event}/passes:
+    get:
+      tags: [App]
+      operationId: appTicketingPasses
+      summary: Passes and Abos the door can admit for the date
+      description: >-
+        Searched by holder or card code (`q`, at least two characters) or
+        resolved from a scanned card QR (`payload`). Each card says what keeps
+        it out tonight (`block`) or what its holder still pays per category.
+      parameters:
+        - { $ref: '#/components/parameters/EventId' }
+        - { name: q, in: query, required: false, schema: { type: string, maxLength: 100 } }
+        - { name: payload, in: query, required: false, schema: { type: string, maxLength: 512 } }
+      responses:
+        '200':
+          description: Categories of the date and the matching cards
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppDoorPassesResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/TicketingError' }
+  /api/app/v1/ticketing/dates/{event}/pass-admissions:
+    post:
+      tags: [App]
+      operationId: appTicketingAdmitPass
+      summary: Let a card holder in — a box-office ticket on the card, checked in
+      parameters:
+        - { $ref: '#/components/parameters/EventId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppPassAdmissionRequest' }
+      responses:
+        '200':
+          description: Admitted; `paid_cents` is what the holder paid at the till
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppPassAdmissionResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/TicketingError' }
   /api/app/v1/files/{projectFile}:
     get:
       tags: [App]
@@ -644,6 +846,28 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+    TicketingError:
+      description: >-
+        Invalid input, or Artwork-Tickets refused or could not be reached;
+        `message` says why in the user's language.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [message]
+            properties:
+              message: { type: string }
+              code:
+                type: string
+                description: >-
+                  Artwork-Tickets' code when it refused, e.g. `ADMISSION_RUNNING`
+                  (the first attempt with this id is still running: retry with
+                  the same id) or `HOLD_EXPIRED` (the id is spent: start anew).
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }
     ValidationError:
       description: Validation failed
       content:
@@ -681,6 +905,16 @@ components:
       in: path
       required: true
       schema: { type: integer }
+    InventoryArticleId:
+      name: article
+      in: path
+      required: true
+      schema: { type: integer }
+    EventId:
+      name: event
+      in: path
+      required: true
+      schema: { type: integer }
     PickerQuery:
       name: q
       in: query
@@ -705,9 +939,15 @@ components:
         email: { type: string }
         permissions:
           type: object
-          required: [can_view_shift_plan]
+          required: [can_view_shift_plan, can_run_ticket_admission, can_view_inventory]
           properties:
             can_view_shift_plan: { type: boolean }
+            can_run_ticket_admission:
+              type: boolean
+              description: The house is connected to Artwork-Tickets and the user may run its door.
+            can_view_inventory:
+              type: boolean
+              description: The inventory module is on (or the user is an admin) and the user may view the inventory.
     AppDiscoverRequest:
       type: object
       required: [email_hash]
@@ -756,6 +996,165 @@ components:
       required: [user]
       properties:
         user: { $ref: '#/components/schemas/AppUser' }
+    AppInventoryCategory:
+      type: object
+      required: [id, name, subcategories]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        subcategories:
+          type: array
+          items: { $ref: '#/components/schemas/AppIdName' }
+    AppInventoryCategoriesResponse:
+      type: object
+      required: [categories]
+      properties:
+        categories:
+          type: array
+          items: { $ref: '#/components/schemas/AppInventoryCategory' }
+    AppInventoryArticleSummary:
+      type: object
+      required:
+        - id
+        - name
+        - inventory_number
+        - category
+        - subcategory
+        - thumbnail_url
+        - room
+        - is_detailed_quantity
+        - ready_quantity
+        - total_quantity
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        inventory_number: { type: string }
+        category:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        subcategory:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        thumbnail_url: { type: string, nullable: true }
+        room:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+          description: Where the article is kept.
+        is_detailed_quantity:
+          type: boolean
+          description: The stock consists of numbered units (see `units` on the article).
+        ready_quantity:
+          type: number
+          description: Stock in the ready status — the only stock that counts as available.
+        total_quantity: { type: number }
+    AppInventoryArticlesResponse:
+      type: object
+      required: [articles, meta]
+      properties:
+        articles:
+          type: array
+          items: { $ref: '#/components/schemas/AppInventoryArticleSummary' }
+        meta:
+          type: object
+          required: [current_page, last_page, total]
+          properties:
+            current_page: { type: integer }
+            last_page: { type: integer }
+            total: { type: integer }
+    AppInventoryStatusRef:
+      type: object
+      required: [id, name, color]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        color: { type: string, nullable: true }
+    AppInventoryStatusStock:
+      allOf:
+        - { $ref: '#/components/schemas/AppInventoryStatusRef' }
+        - type: object
+          required: [quantity, ready]
+          properties:
+            quantity: { type: number }
+            ready:
+              type: boolean
+              description: The ready status; its stock is what counts as available.
+    AppInventoryProperty:
+      type: object
+      required: [id, name, type, value]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type:
+          type: string
+          description: >-
+            The property type as configured (text, date, checkbox, select, number,
+            year, manufacturer, …). A checkbox is "1" or "0", a date Y-m-d, a
+            manufacturer its name. Empty and file properties are left out.
+        value: { type: string }
+    AppInventoryUnit:
+      type: object
+      required: [id, inventory_number, name, quantity, status, room, properties]
+      properties:
+        id: { type: integer }
+        inventory_number: { type: string, description: e.g. 00042-001 }
+        name: { type: string, nullable: true }
+        quantity: { type: number }
+        status:
+          anyOf: [{ $ref: '#/components/schemas/AppInventoryStatusRef' }]
+          nullable: true
+        room:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        properties:
+          type: array
+          items: { $ref: '#/components/schemas/AppInventoryProperty' }
+    AppInventoryImage:
+      type: object
+      required: [id, url, thumbnail_url]
+      properties:
+        id: { type: integer }
+        url: { type: string }
+        thumbnail_url: { type: string, nullable: true }
+    AppInventoryArticle:
+      allOf:
+        - { $ref: '#/components/schemas/AppInventoryArticleSummary' }
+        - type: object
+          required: [description, images, statuses, properties, units]
+          properties:
+            description: { type: string, nullable: true }
+            images:
+              type: array
+              description: The main image first.
+              items: { $ref: '#/components/schemas/AppInventoryImage' }
+            statuses:
+              type: array
+              description: Stock per status, in the configured order. Empty for articles kept without statuses.
+              items: { $ref: '#/components/schemas/AppInventoryStatusStock' }
+            properties:
+              type: array
+              items: { $ref: '#/components/schemas/AppInventoryProperty' }
+            units:
+              type: array
+              description: The numbered units; empty unless `is_detailed_quantity`.
+              items: { $ref: '#/components/schemas/AppInventoryUnit' }
+    AppInventoryArticleResponse:
+      type: object
+      required: [article]
+      properties:
+        article: { $ref: '#/components/schemas/AppInventoryArticle' }
+    AppInventoryAvailabilityResponse:
+      type: object
+      required: [start, end, available, reserved, total]
+      properties:
+        start: { type: string, format: date }
+        end: { type: string, format: date }
+        available: { type: number }
+        reserved:
+          type: number
+          description: Peak quantity booked by overlapping material issues in the range.
+        total:
+          type: number
+          description: Ready stock.
     AppIdName:
       type: object
       required: [id, name]
@@ -1216,9 +1615,14 @@ components:
         event: { $ref: '#/components/schemas/AppEvent' }
     AppEventShowResponse:
       type: object
-      required: [event, rooms, event_types]
+      required: [event, ticketing_on_sale, rooms, event_types]
       properties:
         event: { $ref: '#/components/schemas/AppEvent' }
+        ticketing_on_sale:
+          type: boolean
+          description: >-
+            The date is on sale in Artwork-Tickets; moving it needs the
+            user's confirmation (X-Ticketing-Move-Confirmed on the update).
         rooms:
           type: array
           items: { $ref: '#/components/schemas/AppIdName' }
@@ -1529,3 +1933,169 @@ components:
         cost_center: { type: string, nullable: true }
         description: { type: string, nullable: true }
         gema: { type: boolean }
+    AppTicketingDate:
+      type: object
+      required: [event_id, name, project, room, start, end, cancelled, capacity, sold, checked_in]
+      properties:
+        event_id: { type: integer }
+        name: { type: string, nullable: true, description: "The event's own name, if it has one" }
+        project: { $ref: '#/components/schemas/AppIdName' }
+        room: { type: string, nullable: true }
+        start: { type: string, format: date-time }
+        end: { type: string, format: date-time, nullable: true }
+        cancelled: { type: boolean }
+        capacity: { type: integer }
+        sold: { type: integer }
+        checked_in: { type: integer }
+    AppTicketingDatesResponse:
+      type: object
+      required: [start, end, dates]
+      properties:
+        start: { type: string, format: date }
+        end: { type: string, format: date }
+        dates:
+          type: array
+          items: { $ref: '#/components/schemas/AppTicketingDate' }
+    AppTicketSeat:
+      type: object
+      required: [section, row, number]
+      description: All three null on a date without a seating plan.
+      properties:
+        section: { type: string, nullable: true }
+        row: { type: string, nullable: true }
+        number: { type: string, nullable: true }
+    AppDoorTicket:
+      type: object
+      required: [id, code, status, holder_name, email, category_name, reduction_name, requires_proof, seat, checked_in_at]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        status: { type: string, enum: [valid, cancelled, refunded] }
+        holder_name: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        category_name: { type: string }
+        reduction_name: { type: string, nullable: true }
+        requires_proof: { type: boolean, description: The reduction wants a proof shown at the door }
+        seat: { $ref: '#/components/schemas/AppTicketSeat' }
+        checked_in_at: { type: string, format: date-time, nullable: true }
+    AppTicketingDateDetail:
+      allOf:
+        - { $ref: '#/components/schemas/AppTicketingDate' }
+        - type: object
+          required: [doors_at, ticket_count, tickets]
+          properties:
+            doors_at: { type: string, format: date-time, nullable: true }
+            ticket_count: { type: integer, description: "Valid tickets of the date, all of them even when the guest list stops at 1000" }
+            tickets:
+              type: array
+              description: The guest list, at most 1000 tickets; ticket_count is the real total.
+              items: { $ref: '#/components/schemas/AppDoorTicket' }
+    AppTicketingDateResponse:
+      type: object
+      required: [date]
+      properties:
+        date: { $ref: '#/components/schemas/AppTicketingDateDetail' }
+    AppCheckInRequest:
+      type: object
+      required: [scan_id]
+      properties:
+        scan_id: { type: string, format: uuid }
+        payload: { type: string, maxLength: 512, description: 'The scanned QR, as read' }
+        ticket_id: { type: string, format: uuid, description: A ticket picked from the guest list }
+    AppCheckedTicket:
+      type: object
+      required: [id, code, holder_name, category_name, requires_proof, seat, checked_in_at]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        holder_name: { type: string, nullable: true }
+        category_name: { type: string }
+        requires_proof: { type: boolean }
+        seat: { $ref: '#/components/schemas/AppTicketSeat' }
+        checked_in_at: { type: string, format: date-time, nullable: true }
+    AppCheckInResponse:
+      type: object
+      required: [scan_id, outcome, ticket]
+      properties:
+        scan_id: { type: string, format: uuid }
+        outcome:
+          type: string
+          enum: [accepted, already_checked_in, wrong_event_date, cancelled, refunded, unknown]
+        ticket:
+          anyOf: [{ $ref: '#/components/schemas/AppCheckedTicket' }]
+          nullable: true
+    AppRevertCheckInRequest:
+      type: object
+      required: [ticket_id]
+      properties:
+        ticket_id: { type: string, format: uuid }
+    AppRevertCheckInResponse:
+      type: object
+      required: [reverted]
+      properties:
+        reverted: { type: boolean }
+    AppDoorCategory:
+      type: object
+      required: [id, name, price_cents, available]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        price_cents: { type: integer }
+        available: { type: integer, description: Places left in the category tonight }
+    AppDoorPass:
+      type: object
+      required: [id, code, name, holder_name, holder_email, subscription, uses_left, valid_until, block, to_pay]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        name: { type: string }
+        holder_name: { type: string }
+        holder_email: { type: string }
+        subscription: { type: boolean, description: The card behind an Abo }
+        uses_left: { type: integer }
+        valid_until: { type: string, format: date-time, nullable: true }
+        block:
+          type: string
+          nullable: true
+          enum: [inactive, expired, exhausted, notForEvent, notAtDoor, null]
+          description: Why the card cannot be used tonight; null when it can
+        to_pay:
+          type: array
+          description: What the holder still pays per category after one use
+          items:
+            type: object
+            required: [price_category_id, cents]
+            properties:
+              price_category_id: { type: string, format: uuid }
+              cents: { type: integer }
+    AppDoorPassesResponse:
+      type: object
+      required: [seated, categories, passes]
+      properties:
+        seated: { type: boolean, description: Seated dates admit card holders in Artwork-Tickets only }
+        categories:
+          type: array
+          items: { $ref: '#/components/schemas/AppDoorCategory' }
+        passes:
+          type: array
+          items: { $ref: '#/components/schemas/AppDoorPass' }
+    AppPassAdmissionRequest:
+      type: object
+      required: [admission_id, pass_id, price_category_id]
+      properties:
+        admission_id:
+          type: string
+          format: uuid
+          description: >-
+            Minted by the app once per admission and sent again on a retry, so a
+            retry answers with the first admission instead of using the pass twice.
+        pass_id: { type: string, format: uuid }
+        price_category_id: { type: string, format: uuid }
+    AppPassAdmissionResponse:
+      type: object
+      required: [order_number, ticket_code, paid_cents, checked_in_at]
+      properties:
+        order_number: { type: string }
+        ticket_code: { type: string }
+        paid_cents: { type: integer }
+        checked_in_at: { type: string, format: date-time, nullable: true }

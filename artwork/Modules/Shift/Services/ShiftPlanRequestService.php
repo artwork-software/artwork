@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
@@ -12,6 +13,8 @@ use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -177,6 +180,246 @@ class ShiftPlanRequestService
         return [
             'removed' => $removed,
         ];
+    }
+
+    /**
+     * Schichten aus ANDEREN Gewerken in derselben KW für alle Personen, die mindestens einer Schicht
+     * der Anfrage zugeordnet sind. Damit sieht die prüfende Person bei Personen aus "universellen"
+     * Gewerken (z. B. Azubis), wie viel sie in der Woche insgesamt arbeiten. Die Schichten sind nicht
+     * Teil der Anfrage und werden im Frontend nur ausgegraut angezeigt (nicht ablehnbar, kein Verlauf),
+     * deshalb geht nur ein schlanker Payload raus.
+     *
+     * @param Collection<int,Shift> $requestShifts Bereits geladene Schichten der Anfrage
+     *        (inkl. users/freelancer/serviceProvider).
+     * @return array<int, array{
+     *     id: int,
+     *     start: ?string,
+     *     end: ?string,
+     *     break_minutes: int,
+     *     date: string,
+     *     end_date: string,
+     *     is_committed: bool,
+     *     room_name: ?string,
+     *     craft: ?array{id: int, name: string, abbreviation: ?string, color: ?string},
+     *     workers: array<int, array{type: string, id: int, shift_qualification_id: ?int}>
+     * }>
+     */
+    public function buildForeignCraftShifts(
+        ShiftPlanRequest $request,
+        \Carbon\Carbon $start,
+        \Carbon\Carbon $end,
+        Collection $requestShifts
+    ): array {
+        $workerIdsByType = [
+            User::class => $this->collectWorkerIds($requestShifts, 'users'),
+            Freelancer::class => $this->collectWorkerIds($requestShifts, 'freelancer'),
+            ServiceProvider::class => $this->collectWorkerIds($requestShifts, 'serviceProvider'),
+        ];
+        $workerIdsByType = array_filter($workerIdsByType, fn (array $ids) => $ids !== []);
+
+        if ($workerIdsByType === []) {
+            return [];
+        }
+
+        $typeShort = [
+            User::class            => 'user',
+            Freelancer::class      => 'freelancer',
+            ServiceProvider::class => 'service_provider',
+        ];
+        $startYmd = $start->toDateString();
+        $endYmd = $end->toDateString();
+        $requestShiftIds = $requestShifts->pluck('id')->all();
+
+        $assignments = ShiftWorker::query()
+            ->where(function ($query) use ($workerIdsByType): void {
+                foreach ($workerIdsByType as $type => $ids) {
+                    $query->orWhere(fn ($q) => $q
+                        ->where('employable_type', $type)
+                        ->whereIn('employable_id', $ids));
+                }
+            })
+            ->whereIn('shift_id', Shift::query()
+                ->select('shifts.id')
+                ->where(fn ($q) => $q
+                    ->where('craft_id', '!=', $request->craft_id)
+                    ->orWhereNull('craft_id'))
+                ->when($requestShiftIds !== [], fn ($q) => $q->whereNotIn('shifts.id', $requestShiftIds))
+                ->startAndEndDateOverlap($startYmd, $endYmd))
+            ->get(['shift_id', 'employable_type', 'employable_id', 'shift_qualification_id'])
+            ->groupBy('shift_id');
+
+        if ($assignments->isEmpty()) {
+            return [];
+        }
+
+        return Shift::query()
+            ->whereIn('id', $assignments->keys())
+            ->with([
+                'craft:id,name,abbreviation,color',
+                'room:id,name',
+                'event:id,room_id',
+                'event.room:id,name',
+            ])
+            ->orderBy('start_date')
+            ->orderBy('start')
+            ->get()
+            ->map(fn (Shift $shift) => [
+                'id' => $shift->id,
+                'start' => $shift->start,
+                'end' => $shift->end,
+                'break_minutes' => (int) $shift->break_minutes,
+                'date' => Carbon::parse($shift->start_date)->toDateString(),
+                'end_date' => Carbon::parse($shift->end_date)->toDateString(),
+                'is_committed' => (bool) $shift->is_committed,
+                'room_name' => $shift->room?->name ?? $shift->event?->room?->name,
+                'craft' => $shift->craft ? [
+                    'id' => $shift->craft->id,
+                    'name' => $shift->craft->name,
+                    'abbreviation' => $shift->craft->abbreviation,
+                    'color' => $shift->craft->color,
+                ] : null,
+                'workers' => $assignments->get($shift->id)
+                    ->map(fn (ShiftWorker $worker) => [
+                        'type' => $typeShort[$worker->employable_type],
+                        'id' => (int) $worker->employable_id,
+                        'shift_qualification_id' => $worker->shift_qualification_id,
+                    ])
+                    ->values()
+                    ->all(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Abwesenheiten (alles außer „Verfügbar“) der Personen einer Anfrage in deren KW, dazu die
+     * Zuweisungen der Anfrage, die mit einer Abwesenheit kollidieren (gleiche Regel wie das
+     * Warndreieck im Dienstplan, ShiftWorkerAvailability).
+     *
+     * @param Collection<int,Shift> $requestShifts Bereits geladene Schichten der Anfrage
+     *        (inkl. users/freelancer/serviceProvider mit Pivot).
+     * @return array{
+     *     absences: array<int, array{
+     *         id: int, worker_type: string, worker_id: int, date: string, type: string,
+     *         full_day: bool, day_part: ?string, start_time: ?string, end_time: ?string, comment: ?string
+     *     }>,
+     *     unavailable_assignments: array<string, string>
+     * }
+     */
+    public function buildWorkerAbsences(
+        ShiftPlanRequest $request,
+        \Carbon\Carbon $start,
+        \Carbon\Carbon $end,
+        Collection $requestShifts
+    ): array {
+        $typeShort = [
+            User::class            => 'user',
+            Freelancer::class      => 'freelancer',
+            ServiceProvider::class => 'service_provider',
+        ];
+        $relationByType = [
+            User::class            => 'users',
+            Freelancer::class      => 'freelancer',
+            ServiceProvider::class => 'serviceProvider',
+        ];
+
+        $workerIdsByType = $this->requestWorkerIdsByType($request, $start, $end);
+        foreach ($relationByType as $type => $relation) {
+            $workerIdsByType[$type] = array_values(array_unique(array_merge(
+                $workerIdsByType[$type] ?? [],
+                $this->collectWorkerIds($requestShifts, $relation)
+            )));
+        }
+        $workerIdsByType = array_filter($workerIdsByType, fn (array $ids) => $ids !== []);
+
+        if ($workerIdsByType === []) {
+            return ['absences' => [], 'unavailable_assignments' => []];
+        }
+
+        $vacations = Vacation::query()
+            ->without(['series', 'conflicts'])
+            ->where(function ($query) use ($workerIdsByType): void {
+                foreach ($workerIdsByType as $type => $ids) {
+                    $query->orWhere(fn ($q) => $q
+                        ->where('vacationer_type', $type)
+                        ->whereIn('vacationer_id', $ids));
+                }
+            })
+            ->where('type', '!=', VacationType::AVAILABLE->value)
+            // Je einen Tag davor und danach: Schichten über Mitternacht reichen in den Nachbartag (z. B. So → Mo)
+            ->whereBetween('date', [$start->copy()->subDay()->toDateString(), $end->copy()->addDay()->toDateString()])
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->get();
+
+        $startYmd = $start->toDateString();
+        $endYmd = $end->toDateString();
+        $absences = $vacations
+            ->filter(function (Vacation $vacation) use ($startYmd, $endYmd): bool {
+                $day = Carbon::parse($vacation->date)->toDateString();
+
+                return $day >= $startYmd && $day <= $endYmd;
+            })
+            ->map(fn (Vacation $vacation) => [
+                'id' => $vacation->id,
+                'worker_type' => $typeShort[$vacation->vacationer_type] ?? 'user',
+                'worker_id' => (int) $vacation->vacationer_id,
+                'date' => Carbon::parse($vacation->date)->toDateString(),
+                'type' => $vacation->type instanceof VacationType ? $vacation->type->value : (string) $vacation->type,
+                'full_day' => (bool) $vacation->full_day,
+                'day_part' => $vacation->day_part,
+                'start_time' => $vacation->full_day ? null : $vacation->start_time?->format('H:i'),
+                'end_time' => $vacation->full_day ? null : $vacation->end_time?->format('H:i'),
+                'comment' => $vacation->comment !== null && trim($vacation->comment) !== ''
+                    ? $vacation->comment
+                    : null,
+            ])
+            ->values()
+            ->all();
+
+        $vacationsByWorker = $vacations->groupBy(
+            fn (Vacation $vacation) => $vacation->vacationer_type . '-' . $vacation->vacationer_id
+        );
+
+        $unavailableAssignments = [];
+        foreach ($requestShifts as $shift) {
+            foreach ($relationByType as $type => $relation) {
+                if (!$shift->relationLoaded($relation)) {
+                    continue;
+                }
+                foreach ($shift->getRelation($relation) as $worker) {
+                    $workerVacations = $vacationsByWorker->get($type . '-' . $worker->id);
+                    if ($workerVacations === null) {
+                        continue;
+                    }
+                    // Relation nur für die Prüfung setzen, damit sie nicht im Schicht-Payload landet
+                    $worker->setRelation('vacations', $workerVacations);
+                    $status = ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $worker);
+                    $worker->unsetRelation('vacations');
+
+                    if ($status !== null) {
+                        $unavailableAssignments[$shift->id . '-' . $typeShort[$type] . '-' . $worker->id] = $status;
+                    }
+                }
+            }
+        }
+
+        return ['absences' => $absences, 'unavailable_assignments' => $unavailableAssignments];
+    }
+
+    /**
+     * @param Collection<int,Shift> $shifts
+     * @return array<int,int>
+     */
+    protected function collectWorkerIds(Collection $shifts, string $relation): array
+    {
+        return $shifts
+            ->flatMap(fn (Shift $shift) => $shift->relationLoaded($relation)
+                ? $shift->getRelation($relation)->pluck('id')
+                : [])
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
@@ -350,6 +593,160 @@ class ShiftPlanRequestService
                         $sub->whereIn('status', ['rejected', 'approved']);
                     });
             });
+    }
+
+    /**
+     * Personen, deren individuelle Zeiten zu einer Anfrage gehören können: Mitglieder des Gewerks
+     * plus alle, die in der KW auf einer Schicht des Gewerks eingeteilt sind (auch aus anderen
+     * Gewerken ausgeliehene Personen erscheinen in der Prüfansicht als eigene Zeile).
+     *
+     * @return array<class-string, array<int, int>>
+     */
+    public function requestWorkerIdsByType(
+        ShiftPlanRequest $request,
+        \Carbon\Carbon $start,
+        \Carbon\Carbon $end
+    ): array {
+        $craft = $request->craft()->first();
+
+        $idsByType = [
+            User::class => $craft?->users()->pluck('users.id')->all() ?? [],
+            Freelancer::class => $craft?->freelancers()->pluck('freelancers.id')->all() ?? [],
+            ServiceProvider::class => $craft?->serviceProviders()->pluck('service_providers.id')->all() ?? [],
+        ];
+
+        $assigned = ShiftWorker::query()
+            ->whereIn('shift_id', Shift::query()
+                ->select('shifts.id')
+                ->where('craft_id', $request->craft_id)
+                ->startAndEndDateOverlap($start->toDateString(), $end->toDateString()))
+            ->get(['employable_type', 'employable_id']);
+
+        foreach ($assigned as $worker) {
+            if (array_key_exists($worker->employable_type, $idsByType)) {
+                $idsByType[$worker->employable_type][] = (int) $worker->employable_id;
+            }
+        }
+
+        return array_map(
+            fn (array $ids) => array_values(array_unique(array_map('intval', $ids))),
+            $idsByType
+        );
+    }
+
+    /**
+     * Individuelle Zeiten der Personen einer Anfrage in deren KW (alle, unabhängig vom Freigabe-Status).
+     *
+     * @param array<class-string, array<int, int>> $workerIdsByType
+     * @return \Illuminate\Database\Eloquent\Builder<IndividualTime>
+     */
+    public function individualTimesOfWorkersQuery(
+        array $workerIdsByType,
+        \Carbon\Carbon $start,
+        \Carbon\Carbon $end
+    ): \Illuminate\Database\Eloquent\Builder {
+        $workerIdsByType = array_filter($workerIdsByType, fn (array $ids) => $ids !== []);
+
+        return IndividualTime::query()
+            ->individualByDateRange($start->toDateString(), $end->toDateString())
+            ->where(function ($query) use ($workerIdsByType): void {
+                if ($workerIdsByType === []) {
+                    $query->whereRaw('1 = 0');
+                }
+                foreach ($workerIdsByType as $type => $ids) {
+                    $query->orWhere(fn ($q) => $q
+                        ->where('timeable_type', $type)
+                        ->whereIn('timeable_id', $ids));
+                }
+            });
+    }
+
+    /**
+     * Individuelle Zeiten, die eine Anfrage aufnehmen darf: noch nicht freigegeben und nicht in einer
+     * offenen Anfrage (auch nicht in der eines anderen Gewerks – jede Zeit gehört genau einer Anfrage).
+     * Zeiten aus abgelehnten Anfragen sind wieder frei.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder<IndividualTime>
+     */
+    public function freeIndividualTimesForRequestQuery(ShiftPlanRequest $request): \Illuminate\Database\Eloquent\Builder
+    {
+        [$start, $end] = $this->helperService->getDateRangeByCalendarWeekAndYear(
+            $request->week_number,
+            $request->year
+        );
+
+        return $this->individualTimesOfWorkersQuery($this->requestWorkerIdsByType($request, $start, $end), $start, $end)
+            ->where('is_committed', false)
+            ->where(function ($query): void {
+                $query
+                    ->whereNull('current_request_id')
+                    ->orWhereDoesntHave('currentRequest')
+                    ->orWhereHas('currentRequest', fn ($sub) => $sub->whereIn('status', ['rejected', 'approved']));
+            });
+    }
+
+    /**
+     * Hängt die freien individuellen Zeiten an die Anfrage (Verlauf + Workflow-Flags).
+     *
+     * @return array<int, int> IDs der angehängten Zeiten
+     */
+    public function attachFreeIndividualTimesToRequest(ShiftPlanRequest $request): array
+    {
+        $ids = $this->freeIndividualTimesForRequestQuery($request)->pluck('id')->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $request->requestedIndividualTimes()->syncWithoutDetaching($ids);
+
+        IndividualTime::query()->whereIn('id', $ids)->update([
+            'current_request_id' => $request->id,
+            'in_workflow' => true,
+        ]);
+
+        return $ids;
+    }
+
+    /**
+     * Genehmigung: alle individuellen Zeiten der Anfrage freigeben. Der Live-Zeiger wird wie bei
+     * Schichten gelöst, die Zugehörigkeit bleibt im Verlauf (requestedIndividualTimes).
+     */
+    public function commitIndividualTimesOfRequest(ShiftPlanRequest $request, ?User $causer): int
+    {
+        return IndividualTime::query()
+            ->where('current_request_id', $request->id)
+            ->update([
+                'is_committed' => true,
+                'in_workflow' => false,
+                'current_request_id' => null,
+                'committing_user_id' => $causer?->id,
+            ]);
+    }
+
+    /**
+     * Ablehnung: Zeiten verlassen den Workflow. Der Zeiger auf die abgelehnte Anfrage bleibt (wie bei
+     * Schichten); über deren Status gelten die Zeiten für die nächste Anfrage wieder als frei.
+     */
+    public function releaseIndividualTimesOfRejectedRequest(ShiftPlanRequest $request): int
+    {
+        return IndividualTime::query()
+            ->where('current_request_id', $request->id)
+            ->update(['in_workflow' => false]);
+    }
+
+    /**
+     * Zurückziehen: Zeiten verlassen den Workflow, Zeiger und Verlauf der gelöschten Anfrage entfallen.
+     */
+    public function releaseIndividualTimesOfWithdrawnRequest(ShiftPlanRequest $request): int
+    {
+        $released = IndividualTime::query()
+            ->where('current_request_id', $request->id)
+            ->update(['in_workflow' => false, 'current_request_id' => null]);
+
+        $request->requestedIndividualTimes()->detach();
+
+        return $released;
     }
 
     public function attachFreeShiftsToRequest(

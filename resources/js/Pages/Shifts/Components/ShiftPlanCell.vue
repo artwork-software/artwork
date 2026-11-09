@@ -47,7 +47,12 @@
                     <span class="truncate">{{ part.text }}</span>
                 </span>
                 <span v-else :class="part.class" :title="part.title || undefined">
-                    {{ part.text }}
+                    <!-- Freigabe-Status einer individuellen Zeit: Punkt in den Farben der KW-Kachel -->
+                    <span
+                        v-if="part.marker"
+                        class="mr-0.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
+                        :class="part.marker"
+                    ></span>{{ part.text }}
                 </span>
                 <span v-if="part.suffix">{{ part.suffix }}</span>
             </template>
@@ -183,16 +188,12 @@ const vacationLabel = computed(() => {
     return label
 })
 
-/** Verfügbarkeit-Label: Zeitraum + Kommentar */
+/** Verfügbarkeit-Label: nur der Zeitraum; der Kommentar steht unten nach den Schichten (cellParts) */
 function availabilityLabel(av) {
-    const parts = []
     if (!av.full_day && av.start_time && av.end_time) {
-        parts.push(`${av.start_time} - ${av.end_time}`)
+        return `${av.start_time} - ${av.end_time}`
     }
-    if (av.comment) {
-        parts.push(`„${av.comment}"`)
-    }
-    return parts.length ? parts.join(' ') : t('Available')
+    return t('Available')
 }
 
 /** ID des Users der Zelle (für italic-Prüfung) */
@@ -331,10 +332,36 @@ const cellParts = computed(() => {
             }
         }
 
+        const workflow = individualTimeWorkflowMarker(it?.workflow_status)
         parts.push({
             key: `it:${it.id}`,
             text: `${time} ${it?.title ?? ''}, `,
             class: '',
+            marker: workflow?.marker ?? null,
+            title: workflow?.title ?? null,
+        })
+    }
+
+    // Kommentare zu Abwesenheit und Verfügbarkeit: unten nach den Schichten, in der Farbe des Eintrags
+    const vacationComment = vacationToday.value?.comment?.trim()
+    if (vacationComment) {
+        parts.push({
+            key: 'vacation-comment',
+            text: `„${vacationComment}"`,
+            class: 'text-[var(--uo-orange-text)]',
+            title: `${vacationLabel.value}: ${vacationComment}`,
+            suffix: ', ',
+        })
+    }
+    for (const av of availabilitiesToday.value) {
+        const availabilityComment = av?.comment?.trim()
+        if (!availabilityComment) continue
+        parts.push({
+            key: `av-comment:${av.id}`,
+            text: `„${availabilityComment}"`,
+            class: 'text-[var(--uo-success-text)]',
+            title: `${t('Available')} ${availabilityLabel(av)}: ${availabilityComment}`,
+            suffix: ', ',
         })
     }
 
@@ -348,8 +375,26 @@ const cellParts = computed(() => {
         })
     }
 
+    // Ein Kommentar zu Abwesenheit oder Verfügbarkeit als letzter Eintrag braucht kein Komma dahinter
+    const lastPart = parts[parts.length - 1]
+    if (lastPart && (lastPart.key === 'vacation-comment' || lastPart.key.startsWith('av-comment:'))) {
+        lastPart.suffix = null
+    }
+
     return parts
 })
+
+/** Freigabe-Status einer individuellen Zeit (gleiche Farben wie die KW-Kachel: blau angefragt, grün freigegeben) */
+function individualTimeWorkflowMarker(status) {
+    switch (status) {
+        case 'committed':
+            return { marker: 'bg-success', title: t('Individual time released') }
+        case 'requested':
+            return { marker: 'bg-accent-600', title: t('Individual time in release request') }
+        default:
+            return null
+    }
+}
 
 /** Compensation day offs am Tag */
 const compensationDayToday = computed(() => {

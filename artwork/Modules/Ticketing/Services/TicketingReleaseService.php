@@ -4,6 +4,7 @@ namespace Artwork\Modules\Ticketing\Services;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
+use Artwork\Modules\Ticketing\Exceptions\TicketingLockedException;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
@@ -46,7 +47,10 @@ class TicketingReleaseService
             $this->leaveSeriesWhenPartial($targets);
 
             foreach ($targets as $target) {
-                TicketingEventRelease::query()->updateOrCreate(['event_id' => $target->id], $draft);
+                TicketingEventRelease::query()->updateOrCreate(
+                    ['event_id' => $target->id],
+                    $draft + ['venue_id' => $this->venueIdOf($target)],
+                );
             }
         });
 
@@ -102,7 +106,8 @@ class TicketingReleaseService
             TicketingEventRelease::query()->updateOrCreate(
                 ['event_id' => $target->id],
                 [
-                    'classes' => $target->ticketingRelease?->classes ?? $this->defaultClasses($target),
+                    'classes' => $this->classesFor($target),
+                    'venue_id' => $this->venueIdOf($target),
                     'state' => TicketingEventRelease::STATE_RELEASED,
                     'tickets_date_id' => $pushed[$target->id],
                     'released_at' => now(),
@@ -269,20 +274,80 @@ class TicketingReleaseService
     }
 
     /**
-     * Vorgabe der Spielstätte: jede Preisklasse mit ihren Plätzen und ihrem Standardpreis.
+     * Die Preisklassen eines Termins in der Spielstätte, in der er jetzt liegt: die eigenen, solange sie
+     * für sie gesetzt sind, sonst die Vorgabe der Spielstätte. Nach einem Raumwechsel behalten Zonen, die
+     * beide Räume kennen, ihren Preis; eigene Klassen bleiben nur in einem Raum ohne Saalplan.
      *
-     * @return list<array{zone_key: string, name: string, price_cents: int, quota: int}>
+     * @param array<string, mixed>|null $venue die Spielstätte aus tickets, null bei nicht abgeglichenem Raum
+     * @return list<array{zone_key: string|null, name: string, price_cents: int, quota: int}>
      */
-    public function defaultClasses(Event $event): array
+    public static function fittedClasses(?TicketingEventRelease $release, ?array $venue): array
     {
-        $venue = $this->venueOf($event);
+        $classes = $release?->classes ?? [];
 
-        return array_map(static fn (array $zone): array => [
+        if ($venue === null || ($classes !== [] && !self::pricedElsewhere($release, $venue))) {
+            return $classes;
+        }
+
+        $prices = collect($classes)->whereNotNull('zone_key')->pluck('price_cents', 'zone_key');
+        $fitted = array_map(static fn (array $zone): array => [
             'zone_key' => $zone['key'],
             'name' => $zone['name'],
-            'price_cents' => (int) ($zone['defaultPriceCents'] ?? 0),
+            'price_cents' => (int) ($prices[$zone['key']] ?? $zone['defaultPriceCents'] ?? 0),
             'quota' => (int) ($zone['capacity'] ?? 0),
         ], $venue['zones'] ?? []);
+
+        if ($venue['seated'] ?? false) {
+            return $fitted;
+        }
+
+        return [...$fitted, ...array_values(array_filter(
+            $classes,
+            static fn (array $class): bool => $class['zone_key'] === null,
+        ))];
+    }
+
+    /**
+     * Ob die eigenen Preisklassen eines Termins für eine andere Spielstätte gesetzt sind als die, in der er
+     * jetzt liegt — er hat den Raum gewechselt, seit jemand sie zuletzt gespeichert hat.
+     *
+     * @param array<string, mixed>|null $venue
+     */
+    public static function pricedElsewhere(?TicketingEventRelease $release, ?array $venue): bool
+    {
+        return $venue !== null
+            && $release !== null
+            && $release->classes !== []
+            && $release->venue_id !== null
+            && $release->venue_id !== $venue['id'];
+    }
+
+    /**
+     * Ob ein Termin im Verkauf die Spielstätte wechseln darf. Verkaufte Plätze hängen an den Stühlen ihres
+     * Raums, also wechselt ein Termin mit verkauften Karten nur zwischen Räumen ohne Saalplan. tickets prüft
+     * dasselbe; hier steht es vorab, damit der Kalender nie in einem anderen Raum ist als der Shop.
+     */
+    public function assertVenueChangeable(Event $event, ?string $from, string $to): void
+    {
+        if ($event->ticketingRelease?->tickets_date_id === null) {
+            return;
+        }
+
+        try {
+            $sold = $this->summaries(collect([$event]))[$event->id]['sold'] ?? 0;
+            $this->venues ??= $this->connections->venues($this->requireConnection());
+        } catch (TicketingConnectionException) {
+            throw new TicketingLockedException(__(
+                'Artwork-Tickets could not be reached. The room of a date on sale only changes while it answers.'
+            ));
+        }
+
+        $seated = collect([$from, $to])
+            ->contains(fn (?string $venueId): bool => $venueId !== null && ($this->venues[$venueId]['seated'] ?? false));
+
+        if ($sold > 0 && $seated) {
+            throw new TicketingLockedException(TicketsClient::roomStaysMessage());
+        }
     }
 
     public function isReleased(Event $event): bool
@@ -347,7 +412,7 @@ class TicketingReleaseService
     private function pushDate(TicketingConnection $connection, string $productionId, Event $event): array
     {
         $release = $event->ticketingRelease;
-        $classes = $release?->classes ?: $this->defaultClasses($event);
+        $classes = $this->classesFor($event);
 
         return $this->tickets->put($connection, '/dates', [
             'externalRef' => (string) $event->id,
@@ -371,6 +436,12 @@ class TicketingReleaseService
                 'offered' => $reduction['offered'],
             ], $release?->reductions ?? []),
         ]);
+    }
+
+    /** @return list<array{zone_key: string|null, name: string, price_cents: int, quota: int}> */
+    private function classesFor(Event $event): array
+    {
+        return self::fittedClasses($event->ticketingRelease, $this->venueOf($event));
     }
 
     private function venueIdOf(Event $event): ?string

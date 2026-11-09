@@ -868,6 +868,7 @@ readonly class EventService
                     'full_day' => (bool)$it->full_day,
                     'title' => $it->title,
                     'series' => $it->series,
+                    'workflow_status' => $it->workflowStatus(),
                 ];
             }
         }

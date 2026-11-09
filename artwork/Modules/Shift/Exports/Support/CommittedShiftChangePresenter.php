@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Exports\Support;
 
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Carbon\Carbon;
 
@@ -28,8 +29,25 @@ final class CommittedShiftChangePresenter
         $beforeLabel        = null;
         $afterLabel         = null;
 
-        // Fall 1: User-Zuweisung / Entfernen -> Daten aus assignment
-        if ($assignment) {
+        // Fall 0: freigegebene individuelle Zeit nachträglich geändert/gelöscht (keine Schicht)
+        if ($change->subject_type === IndividualTime::class) {
+            $state = is_array($fieldChanges['_individual_time'] ?? null) ? $fieldChanges['_individual_time'] : [];
+            $affectedName = $state['person_name'] ?? null;
+
+            if ($change->change_type === 'individual_time_deleted') {
+                $beforeLabel = self::individualTimeLabel($state);
+            } else {
+                $before = $state;
+                foreach ($fieldChanges as $field => $value) {
+                    if (is_array($value) && array_key_exists('old', $value)) {
+                        $before[$field] = $value['old'];
+                    }
+                }
+                $beforeLabel = self::individualTimeLabel($before);
+                $afterLabel = self::individualTimeLabel($state);
+            }
+        } elseif ($assignment) {
+            // Fall 1: User-Zuweisung / Entfernen -> Daten aus assignment
             $affectedName      = $assignment['user_name']           ?? null;
             $profilePictureUrl = $assignment['profile_picture_url'] ?? null;
             $beforeLabel       = $assignment['before_label']        ?? null;
@@ -92,7 +110,7 @@ final class CommittedShiftChangePresenter
         $fieldChanges = is_array($presented['field_changes'] ?? null) ? $presented['field_changes'] : [];
         $labels = [];
         foreach (array_keys($fieldChanges) as $key) {
-            if ($key === '_initial' || $key === 'assignment') {
+            if (in_array($key, ['_initial', 'assignment', '_individual_time', '_deleted'], true)) {
                 continue;
             }
             $labels[] = self::fieldLabel((string) $key, $locale);
@@ -113,6 +131,10 @@ final class CommittedShiftChangePresenter
             'revert' => $fieldList !== ''
                 ? self::tr('Change reverted ({0})', [$fieldList], $locale)
                 : self::tr('Change reverted', [], $locale),
+            'individual_time_updated' => $fieldList !== ''
+                ? self::tr('Individual time changed ({0})', [$fieldList], $locale)
+                : self::tr('Individual time changed', [], $locale),
+            'individual_time_deleted' => self::tr('Individual time deleted', [], $locale),
             default => self::tr((string) ($presented['change_type'] ?? ''), [], $locale),
         };
     }
@@ -128,6 +150,13 @@ final class CommittedShiftChangePresenter
             'assignment' => __('Assignment', [], $locale),
             'individual_time' => __('Individual working time', [], $locale),
             'worker_short_description' => __('Short description', [], $locale),
+            'start_time' => __('Start time', [], $locale),
+            'end_time' => __('End time', [], $locale),
+            'start_date' => __('Start date', [], $locale),
+            'end_date' => __('End date', [], $locale),
+            'title' => __('Title', [], $locale),
+            'full_day' => __('Full day', [], $locale),
+            'working_time_minutes' => __('Working time', [], $locale),
             default => $key,
         };
     }
@@ -143,6 +172,31 @@ final class CommittedShiftChangePresenter
         }
 
         return $text;
+    }
+
+    /**
+     * "05.06.2026 08:00 - 15:00 Berufsschule" bzw. mit Zeitraum/ganztägig für eine individuelle Zeit.
+     *
+     * @param array<string, mixed> $state
+     */
+    private static function individualTimeLabel(array $state): ?string
+    {
+        $format = fn (?string $date) => $date ? Carbon::parse($date)->format('d.m.Y') : null;
+        $start = $format($state['start_date'] ?? null);
+        $end = $format($state['end_date'] ?? null);
+        $date = $start && $end && $start !== $end ? $start . ' – ' . $end : $start;
+
+        $time = ! empty($state['full_day'])
+            ? __('Full day')
+            : self::timeLabel(
+                null,
+                self::toTime($state['start_time'] ?? null),
+                self::toTime($state['end_time'] ?? null)
+            );
+
+        $label = trim(implode(' ', array_filter([$date, $time, $state['title'] ?? null])));
+
+        return $label !== '' ? $label : null;
     }
 
     private static function timeLabel(?string $date, ?string $start, ?string $end): ?string

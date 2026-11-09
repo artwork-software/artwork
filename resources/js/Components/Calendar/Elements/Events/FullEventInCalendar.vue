@@ -976,7 +976,7 @@
         <TicketingSalesModal
             v-if="showTicketDetails"
             :event-id="event.id"
-            :description="eventNameLabel"
+            :description="ticketDetailsLabel"
             @close="showTicketDetails = false"
         />
     </div>
@@ -1173,6 +1173,11 @@ const eventNameLabel = computed(() => {
     const abbreviation = props.event.eventType?.abbreviation;
     return abbreviation ? `${abbreviation}: ${effectiveEventName.value}` : effectiveEventName.value;
 });
+
+// Projekt und Termin, auch wenn der Termin keinen eigenen Namen hat (dann die Terminart).
+const ticketDetailsLabel = computed(() =>
+    [...new Set([props.event.title, effectiveEventName.value ?? props.event.eventType?.name].filter(Boolean))].join(' · ')
+);
 
 const isSameDay = computed(() => {
     if (!props.event.start || !props.event.end) return false;

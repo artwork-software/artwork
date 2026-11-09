@@ -6,6 +6,7 @@ use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContactType;
+use Artwork\Modules\Project\Services\ProjectComponentValueNormalizer;
 use Artwork\Modules\Crm\Support\CrmPropertyValueFormat;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -672,8 +673,12 @@ readonly class CrmImportService
     {
         return match ($property->type) {
             CrmPropertyTypeEnum::TEXT,
-            CrmPropertyTypeEnum::TEXTAREA,
-            CrmPropertyTypeEnum::LINK => $value,
+            CrmPropertyTypeEnum::TEXTAREA => $value,
+
+            // ausführbare Schemata (javascript: …) wie beim Speichern im Formular abweisen
+            CrmPropertyTypeEnum::LINK => ProjectComponentValueNormalizer::isDangerousLinkTarget($value)
+                ? false
+                : $value,
 
             CrmPropertyTypeEnum::NUMBER => is_numeric($value) ? $value : false,
 

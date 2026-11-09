@@ -266,8 +266,11 @@
                                                 class="rounded-lg border border-border-subtle bg-white shadow-sm overflow-hidden transition hover:shadow-md"
                                             >
                                                 <div class="flex items-start justify-between gap-2 px-2 py-1.5 bg-surface-sunken text-text">
-                                                    <span class="break-words min-w-0 text-xs font-semibold">
-                                                        {{ $t('Individual time') }}: {{ i.title ?? '' }}
+                                                    <span class="flex min-w-0 flex-col gap-0.5">
+                                                        <span class="break-words min-w-0 text-xs font-semibold">
+                                                            {{ $t('Individual time') }}: {{ i.title ?? '' }}
+                                                        </span>
+                                                        <IndividualTimeWorkflowBadge :status="i.workflow_status" />
                                                     </span>
                                                     <button
                                                         v-if="!isOwnPlan || canEnterOwnTimesOn(individualTimeDate(i))"
@@ -419,6 +422,7 @@ import { router, Link, usePage } from '@inertiajs/vue3'
 import UserShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue'
 import SingleUserShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
 import EditIndividualTimeModal from '@/Layouts/Components/ShiftPlanComponents/EditIndividualTimeModal.vue'
+import IndividualTimeWorkflowBadge from '@/Pages/Shifts/Components/IndividualTimeWorkflowBadge.vue'
 import { usePermission } from '@/Composeables/Permission.js'
 import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";

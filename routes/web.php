@@ -3237,19 +3237,24 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
 
 
     Route::group(['prefix' => 'inventory'], function (): void {
+        // Übersicht: Recht "Inventar sehen" (Gate view-inventory). Die Artikel-Endpunkte darunter bleiben offen,
+        // weil Materialausgaben und Material-Sets sie auch ohne Übersichtsrecht nutzen.
         Route::get('/', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->middleware('can:view-inventory')
             ->name('inventory.index');
 
         Route::get('/category/{inventoryCategory}', [
             \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
             'index',
         ])
+            ->middleware('can:view-inventory')
             ->name('inventory.category.show');
 
         Route::get('/category/{inventoryCategory}/sub/{inventorySubCategory}', [
             \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
             'index',
         ])
+            ->middleware('can:view-inventory')
             ->name('inventory.sub.category.show');
 
         // post inventory-management.articles.store

@@ -22,6 +22,17 @@
                             <IconCalendarTime class="h-3 w-3" />
                             {{ row.totals.total_shifts }} {{ row.totals.total_shifts > 1 ? $t('Shifts') : $t('Shift') }}
                         </span>
+                        <!-- Wochenlast inkl. Schichten aus anderen Gewerken (z. B. Azubis in mehreren Gewerken) -->
+                        <template v-if="row.totals.foreign_shifts > 0">
+                            <span class="inline-flex items-center gap-1" :title="$t('Shifts in other crafts in this week')">
+                                · +{{ row.totals.foreign_shifts }} {{ $t('in other crafts') }}
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-medium text-text-muted" :title="$t('Working hours in this week across all crafts')">
+                                ·
+                                <IconClock class="h-3 w-3" />
+                                {{ formatHours(row.totals.total_hours + row.totals.foreign_hours) }} {{ $t('h total') }}
+                            </span>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -49,7 +60,11 @@
 </template>
 <script setup>
 import ShiftDayCell from './ShiftDayCell.vue';
-import { IconCalendarTime } from '@tabler/icons-vue';
+import { IconCalendarTime, IconClock } from '@tabler/icons-vue';
+import { useI18n } from 'vue-i18n';
+
+const { locale } = useI18n();
+const formatHours = (hours) => Number(hours || 0).toLocaleString(locale.value, { maximumFractionDigits: 2 });
 defineProps({
     row: {type: Object, required: true},
     days: {type: Array, required: true},

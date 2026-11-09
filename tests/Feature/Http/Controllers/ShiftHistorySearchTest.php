@@ -304,6 +304,39 @@ final class ShiftHistorySearchTest extends FeatureTestCase
     }
 
     #[Test]
+    public function shiftListOnlyContainsShiftsWithEntriesInTheFilter(): void
+    {
+        $this->actingAsAdmin();
+        $withEntries = $this->makeShift();
+        $withoutEntries = $this->makeShift();
+        Activity::query()->where('subject_type', Shift::class)->where('subject_id', $withoutEntries->id)->delete();
+
+        $response = $this->getJson(route('shift.history.index', [
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+        ]))->assertOk();
+        $this->assertSame([$withEntries->id], collect($response->json('shifts'))->pluck('id')->all());
+        // Gruppierung nach Schichttag (Join + select activity_log.*): dieselbe schlanke Liste
+        $byShiftDay = $this->getJson(route('shift.history.index', [
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'sort' => 'shift_day',
+        ]))->assertOk();
+        $this->assertSame([$withEntries->id], collect($byShiftDay->json('shifts'))->pluck('id')->all());
+
+        // gewählte Schicht ohne Einträge bleibt für den Hinweis beschriftbar
+        $selected = $this->getJson(route('shift.history.index', [
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'shiftId' => $withoutEntries->id,
+        ]))->assertOk()->assertJsonPath('logs.meta.total', 0);
+        $this->assertEqualsCanonicalizing(
+            [$withEntries->id, $withoutEntries->id],
+            collect($selected->json('shifts'))->pluck('id')->all()
+        );
+    }
+
+    #[Test]
     public function exactShiftFilterCannotBypassTheCraftFilter(): void
     {
         $this->actingAsAdmin();

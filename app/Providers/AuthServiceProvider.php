@@ -299,5 +299,17 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('plan-shifts', static function (User $user): bool {
             return $user->can(PermissionEnum::SHIFT_PLANNER->value);
         });
+
+        // Inventarübersicht (Web und App): "Inventar sehen" oder ein Recht, das es im Katalog enthält
+        // (Anlegen/Bearbeiten, Löschen, Disposition). Artikelplanung und Materialausgaben bleiben an der
+        // Disposition; der Modul-Schalter wird separat geprüft. Admins via Gate::before.
+        Gate::define('view-inventory', static function (User $user): bool {
+            return $user->canAny([
+                PermissionEnum::INVENTORY_VIEW->value,
+                PermissionEnum::INVENTORY_CREATE_EDIT->value,
+                PermissionEnum::INVENTORY_DELETE->value,
+                PermissionEnum::INVENTORY_DISPOSITION->value,
+            ]);
+        });
     }
 }

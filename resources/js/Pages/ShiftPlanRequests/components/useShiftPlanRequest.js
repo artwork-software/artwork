@@ -1,5 +1,6 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { shiftDurationHours } from './shiftPlanRequestHelpers.js';
 
 export function useShiftPlanRequest() {
     const { t } = useI18n();
@@ -97,16 +98,7 @@ export function useShiftPlanRequest() {
         });
     };
 
-    const computeDurationHours = (shift) => {
-        if (!shift.start || !shift.end) return 0;
-        const [sh, sm] = String(shift.start).split(':').map(Number);
-        const [eh, em] = String(shift.end).split(':').map(Number);
-        const startMinutes = sh * 60 + sm;
-        const endMinutes = eh * 60 + em;
-        let diff = endMinutes - startMinutes;
-        if (shift.break_minutes) diff -= shift.break_minutes;
-        return diff > 0 ? diff / 60 : 0;
-    };
+    const computeDurationHours = shiftDurationHours;
 
     const fieldLabel = (fieldName) => {
         if (typeof fieldName === 'string') {

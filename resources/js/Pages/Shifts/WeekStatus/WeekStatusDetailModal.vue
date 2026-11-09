@@ -20,6 +20,9 @@
                 <div class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2">
                     <dt class="text-[11px] uppercase tracking-wide text-text-subtle">{{ $t('Shifts committed') }}</dt>
                     <dd class="mt-0.5 text-sm font-semibold text-text">{{ cell.shifts_committed }} / {{ cell.shifts_total }}</dd>
+                    <dd v-if="cell.individual_times_total > 0" class="mt-0.5 text-xs text-text-subtle">
+                        {{ $t('Individual times released') }}: {{ cell.individual_times_committed }} / {{ cell.individual_times_total }}
+                    </dd>
                 </div>
                 <div class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2">
                     <dt class="text-[11px] uppercase tracking-wide text-text-subtle">{{ $t('Unacknowledged changes') }}</dt>

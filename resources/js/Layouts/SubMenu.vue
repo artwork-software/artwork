@@ -549,6 +549,11 @@ const moduleIsVisible = (module) => {
     return is('artwork admin') || usePage().props.module_settings[module];
 }
 
+// Spiegel des Gates view-inventory: "Inventar sehen" oder ein Recht, das es enthält
+const canViewInventory = () => {
+    return is('artwork admin') || can('inventory.view | inventory.create_edit | inventory.delete | inventory.disposition')
+}
+
 const getVisibleSubMenus = (item) => {
     if (!item?.subMenus?.length) {
         return []
@@ -718,7 +723,7 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: moduleIsVisible('inventory'),
+        has_permission: moduleIsVisible('inventory') && canViewInventory(),
         prefetch: false,
         subMenus: [
             {
@@ -726,7 +731,7 @@ const navigation = ref([
                 href: route('inventory.index'),
                 icon: 'IconBuildingWarehouse',
                 current: route().current('inventory.index'),
-                has_permission: moduleIsVisible('inventory')
+                has_permission: moduleIsVisible('inventory') && canViewInventory()
             },
             {
                 name: 'Article Planning',

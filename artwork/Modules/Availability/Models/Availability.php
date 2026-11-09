@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Availability\Models;
 
+use Artwork\Modules\Shift\Models\Traits\LogsShiftPlanDayActivity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,6 +31,7 @@ class Availability extends Model
 {
     use HasFactory;
     use LogsActivity;
+    use LogsShiftPlanDayActivity;
 
     protected $table = 'availabilities';
 
@@ -39,7 +41,22 @@ class Availability extends Model
             ->useLogName('availability')
             ->logFillable()
             ->logOnlyDirty()
+            // Serienverknüpfung direkt nach dem Anlegen ist kein eigener Vorgang im Schichtverlauf
+            ->dontLogIfAttributesChangedOnly(['series_id', 'is_series'])
             ->dontSubmitEmptyLogs();
+    }
+
+    protected function shiftHistoryDayEntryKind(): string
+    {
+        return 'availability';
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    protected function shiftHistoryPersonColumns(): array
+    {
+        return ['available_type', 'available_id'];
     }
 
     protected $fillable = [

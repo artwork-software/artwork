@@ -301,12 +301,6 @@ parameters:
 			path: app/Http/Controllers/ShiftController.php
 
 		-
-			message: '#^Access to an undefined property Artwork\\Modules\\IndividualTimes\\Models\\IndividualTime\:\:\$timeable_type_short\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/ShiftPlanRequestController.php
-
-		-
 			message: '#^PHPDoc tag @param references unknown parameter\: \$changeId$#'
 			identifier: parameter.notFound
 			count: 1
@@ -2302,11 +2296,6 @@ parameters:
 			count: 1
 			path: artwork/Modules/Shift/Services/ShiftFreelancerService.php
 
-		-
-			message: '#^Access to an undefined property Artwork\\Modules\\Vacation\\Models\\Vacation\:\:\$day_part\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Shift/Services/ShiftKpiTrackingService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currentRequest\.$#'
@@ -2855,30 +2844,6 @@ parameters:
 			path: artwork/Modules/WorkTime/Services/WorkTimeOverviewExportService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$break_minutes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Worker/Services/WorkerService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_date\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Worker/Services/WorkerService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_time\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Worker/Services/WorkerService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$full_day\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Worker/Services/WorkerService.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$hex_color\.$#'
 			identifier: property.notFound
 			count: 1
@@ -2893,7 +2858,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: artwork/Modules/Worker/Services/WorkerService.php
 
 		-
@@ -2903,39 +2868,9 @@ parameters:
 			path: artwork/Modules/Worker/Services/WorkerService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$series_uuid\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Worker/Services/WorkerService.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shifts\.$#'
 			identifier: property.notFound
 			count: 3
-			path: artwork/Modules/Worker/Services/WorkerService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_date\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Worker/Services/WorkerService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_time\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Worker/Services/WorkerService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Worker/Services/WorkerService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$working_time_minutes\.$#'
-			identifier: property.notFound
-			count: 1
 			path: artwork/Modules/Worker/Services/WorkerService.php
 
 		-

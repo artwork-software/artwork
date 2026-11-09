@@ -167,6 +167,73 @@ class ShiftPlanRequestController extends Controller
     }
 
     /**
+     * Individuelle Zeiten für die Prüfansicht: dieselben Personen, deren Zeiten die Anfrage aufnimmt
+     * (Gewerk + auf Schichten des Gewerks eingeteilt), plus alle Zeiten, die laut Verlauf zur Anfrage
+     * gehören. Je Zeit: Freigabe-Status und ob sie Teil DIESER Anfrage ist.
+     *
+     * @return \Illuminate\Support\Collection<int, IndividualTime>
+     */
+    private function loadIndividualTimesForRequest(
+        ShiftPlanRequest $shiftPlanRequest,
+        Carbon $start,
+        Carbon $end
+    ): \Illuminate\Support\Collection {
+        $service = app(ShiftPlanRequestService::class);
+        $requestTimeIds = $shiftPlanRequest->requestedIndividualTimes()
+            ->pluck('individual_times.id')
+            ->all();
+
+        $typeMap = [
+            User::class => 'user',
+            Freelancer::class => 'freelancer',
+            ServiceProvider::class => 'service_provider',
+        ];
+
+        $individualTimes = $service
+            ->individualTimesOfWorkersQuery(
+                $service->requestWorkerIdsByType($shiftPlanRequest, $start, $end),
+                $start,
+                $end
+            )
+            ->when($requestTimeIds !== [], fn ($query) => $query->orWhereIn('id', $requestTimeIds))
+            ->get();
+
+        // Offene Änderungen nach Freigabe (wie der "Geändert"-Marker an Schichten)
+        $changedIds = CommittedShiftChange::query()
+            ->where('subject_type', IndividualTime::class)
+            ->whereIn('subject_id', $individualTimes->modelKeys())
+            ->whereNull('acknowledged_at')
+            ->pluck('subject_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return $individualTimes
+            ->makeVisible(['timeable_type', 'timeable_id'])
+            ->each(function (IndividualTime $individualTime) use (
+                $typeMap,
+                $shiftPlanRequest,
+                $requestTimeIds,
+                $changedIds
+            ): void {
+                $individualTime->setAttribute(
+                    'has_changes_after_commit',
+                    in_array($individualTime->id, $changedIds, true)
+                );
+                $individualTime->setAttribute(
+                    'timeable_type_short',
+                    $typeMap[$individualTime->timeable_type] ?? 'unknown'
+                );
+                $individualTime->setAttribute('workflow_status', $individualTime->workflowStatus());
+                $individualTime->setAttribute(
+                    'in_this_request',
+                    in_array($individualTime->id, $requestTimeIds, true)
+                        || (int) $individualTime->current_request_id === (int) $shiftPlanRequest->id
+                );
+            })
+            ->values();
+    }
+
+    /**
      * Regelverstöße (ShiftRuleViolations) der Craft-User im Wochenzeitraum, gruppiert
      * nach User-ID und Datum — für die Marker in der Prüfansicht. Der Payload entspricht dem des
      * Hauptplans (WorkingHourService), damit das ViolationEditModal aus der Prüfansicht heraus
@@ -439,6 +506,8 @@ class ShiftPlanRequestController extends Controller
             //    Pivot-Historie, Workflow-Flags). Gemeinsame Logik in ShiftPlanRequestService, damit
             //    der Backfill-Command exakt dasselbe Verhalten nutzt.
             $service->attachFreeShiftsToRequest($shiftPlanRequest, $user, true);
+            // Individuelle Zeiten der Personen laufen wie Schichten mit durch die Freigabe
+            $service->attachFreeIndividualTimesToRequest($shiftPlanRequest);
 
             // Genehmiger ueber die neue Anfrage benachrichtigen (nur bei Neuanlage,
             // nicht beim Nachreichen weiterer Schichten an eine bestehende Anfrage).
@@ -510,35 +579,20 @@ class ShiftPlanRequestController extends Controller
         $craftFreelancerIds = $craftFreelancers->pluck('id');
         $craftServiceProviderIds = $craftServiceProviders->pluck('id');
 
-        // Individual Times für alle Craft-Worker im Wochenzeitraum laden
-        $individualTimes = IndividualTime::query()
-            ->individualByDateRange($start->toDateString(), $end->toDateString())
-            ->where(function ($q) use ($craftUserIds, $craftFreelancerIds, $craftServiceProviderIds): void {
-                $q->where(function ($q) use ($craftUserIds): void {
-                    $q->where('timeable_type', User::class)
-                      ->whereIn('timeable_id', $craftUserIds);
-                })->orWhere(function ($q) use ($craftFreelancerIds): void {
-                    $q->where('timeable_type', Freelancer::class)
-                      ->whereIn('timeable_id', $craftFreelancerIds);
-                })->orWhere(function ($q) use ($craftServiceProviderIds): void {
-                    $q->where('timeable_type', ServiceProvider::class)
-                      ->whereIn('timeable_id', $craftServiceProviderIds);
-                });
-            })
-            ->get()
-            ->makeVisible(['timeable_type', 'timeable_id'])
-            ->map(function ($it) {
-                $typeMap = [
-                    User::class => 'user',
-                    Freelancer::class => 'freelancer',
-                    ServiceProvider::class => 'service_provider',
-                ];
-                $it->timeable_type_short = $typeMap[$it->timeable_type] ?? 'unknown';
-                return $it;
-            });
+        // Individuelle Zeiten der Personen dieser Anfrage im Wochenzeitraum (inkl. Freigabe-Status)
+        $individualTimes = $this->loadIndividualTimesForRequest($shiftPlanRequest, $start, $end);
 
         $overviewChanges = app(ShiftPlanRequestService::class)
             ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
+        // Schichten der eingeteilten Personen aus anderen Gewerken (nur zur Einordnung der Wochenlast)
+        $foreignCraftShifts = app(ShiftPlanRequestService::class)
+            ->buildForeignCraftShifts($shiftPlanRequest, $start, $end, $shifts);
+
+        // Abwesenheiten der Personen und Zuweisungen, die damit kollidieren (vor dem Verschlanken,
+        // weil die Prüfung die Pivot-Zeiten der Zuweisungen braucht)
+        $workerAbsences = app(ShiftPlanRequestService::class)
+            ->buildWorkerAbsences($shiftPlanRequest, $start, $end, $shifts);
 
         $this->slimShowPayload($shiftPlanRequest, $shifts);
 
@@ -548,6 +602,8 @@ class ShiftPlanRequestController extends Controller
             'days'    => $days,
             'individualTimes' => $individualTimes,
             'overviewChanges' => $overviewChanges,
+            'foreignCraftShifts' => $foreignCraftShifts,
+            'workerAbsences' => $workerAbsences,
             'navigation' => $this->buildRequestNavigation($shiftPlanRequest),
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
@@ -652,6 +708,8 @@ class ShiftPlanRequestController extends Controller
                     ->event('shift_committed')
                     ->log('Shift committed as part of approved shift plan request');
             }
+
+            app(ShiftPlanRequestService::class)->commitIndividualTimesOfRequest($shiftPlanRequest, $user);
 
             $approved = true;
 
@@ -816,6 +874,8 @@ class ShiftPlanRequestController extends Controller
                     'workflow_rejection_reason' => null,
                 ]);
 
+            app(ShiftPlanRequestService::class)->releaseIndividualTimesOfWithdrawnRequest($shiftPlanRequest);
+
             // Pivot-Historie der Anfrage entfernen und Anfrage löschen
             $shiftPlanRequest->requestedShifts()->detach();
             $shiftPlanRequest->delete();
@@ -875,6 +935,9 @@ class ShiftPlanRequestController extends Controller
             }
 
             $shiftPlanRequest->refresh();
+
+            // Individuelle Zeiten verlassen den Workflow und sind für die nächste Anfrage wieder frei
+            app(ShiftPlanRequestService::class)->releaseIndividualTimesOfRejectedRequest($shiftPlanRequest);
 
             // Alle Schichten, die zu diesem Request gehören
             $shifts = Shift::query()
@@ -1689,35 +1752,28 @@ class ShiftPlanRequestController extends Controller
         $craftFreelancerIds = $craftFreelancers->pluck('id');
         $craftServiceProviderIds = $craftServiceProviders->pluck('id');
 
-        // Individual Times für alle Craft-Worker im Wochenzeitraum laden
-        $individualTimes = IndividualTime::query()
-            ->individualByDateRange($start->toDateString(), $end->toDateString())
-            ->where(function ($q) use ($craftUserIds, $craftFreelancerIds, $craftServiceProviderIds): void {
-                $q->where(function ($q) use ($craftUserIds): void {
-                    $q->where('timeable_type', User::class)
-                      ->whereIn('timeable_id', $craftUserIds);
-                })->orWhere(function ($q) use ($craftFreelancerIds): void {
-                    $q->where('timeable_type', Freelancer::class)
-                      ->whereIn('timeable_id', $craftFreelancerIds);
-                })->orWhere(function ($q) use ($craftServiceProviderIds): void {
-                    $q->where('timeable_type', ServiceProvider::class)
-                      ->whereIn('timeable_id', $craftServiceProviderIds);
-                });
-            })
-            ->get()
-            ->makeVisible(['timeable_type', 'timeable_id'])
-            ->map(function ($it) {
-                $typeMap = [
-                    User::class => 'user',
-                    Freelancer::class => 'freelancer',
-                    ServiceProvider::class => 'service_provider',
-                ];
-                $it->timeable_type_short = $typeMap[$it->timeable_type] ?? 'unknown';
-                return $it;
-            });
+        // Individuelle Zeiten der Personen dieser Anfrage im Wochenzeitraum (inkl. Freigabe-Status)
+        $individualTimes = $this->loadIndividualTimesForRequest($shiftPlanRequest, $start, $end);
 
         $overviewChanges = app(ShiftPlanRequestService::class)
             ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
+        // Schichten anderer Gewerke und Abwesenheiten (samt Kommentar) betreffen Personen über das Gewerk hinaus:
+        // nur mit Dienstplan-Recht. Die Ansicht selbst erreichen auch Personen über assignable_by_all.
+        $mayViewWorkerDetails = $user->can('approve-shift-plan-requests')
+            || $user->can(PermissionEnum::VIEW_SHIFT_PLAN->value)
+            || $user->can(PermissionEnum::SHIFT_PLANNER->value);
+
+        // Schichten der eingeteilten Personen aus anderen Gewerken (nur zur Einordnung der Wochenlast)
+        $foreignCraftShifts = $mayViewWorkerDetails
+            ? app(ShiftPlanRequestService::class)->buildForeignCraftShifts($shiftPlanRequest, $start, $end, $shifts)
+            : [];
+
+        // Abwesenheiten der Personen und Zuweisungen, die damit kollidieren (vor dem Verschlanken,
+        // weil die Prüfung die Pivot-Zeiten der Zuweisungen braucht)
+        $workerAbsences = $mayViewWorkerDetails
+            ? app(ShiftPlanRequestService::class)->buildWorkerAbsences($shiftPlanRequest, $start, $end, $shifts)
+            : ['absences' => [], 'unavailable_assignments' => []];
 
         $this->slimShowPayload($shiftPlanRequest, $shifts);
 
@@ -1727,6 +1783,8 @@ class ShiftPlanRequestController extends Controller
             'days'    => $days,
             'individualTimes' => $individualTimes,
             'overviewChanges' => $overviewChanges,
+            'foreignCraftShifts' => $foreignCraftShifts,
+            'workerAbsences' => $workerAbsences,
             // Blättern nur über Anfragen, die der User auch sehen darf: bei Zugriff aufs
             // Gewerk (oder als Genehmiger/Admin) alle Anfragen des Gewerks, sonst nur eigene.
             'navigation' => $this->buildRequestNavigation(
@@ -2180,11 +2238,6 @@ class ShiftPlanRequestController extends Controller
         $notificationService->setNotificationConstEnum(
             NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST
         );
-        $notificationService->setBroadcastMessage([
-            'id' => Str::uuid()->toString(),
-            'type' => $approved ? 'success' : 'error',
-            'message' => $notificationTitle,
-        ]);
         $description = [
             0 => [
                 'type' => 'link',
@@ -2194,18 +2247,27 @@ class ShiftPlanRequestController extends Controller
         ];
 
         // Hinweis des Genehmigers (beim Akzeptieren) bzw. globaler Ablehnungsgrund
-        // wird der anfragenden Person direkt in der Benachrichtigung mitgeliefert.
+        // wird der anfragenden Person direkt in der Benachrichtigung, der Mail und im Toast mitgeliefert.
         $comment = $comment !== null ? trim($comment) : null;
+        $commentLine = null;
         if ($comment !== null && $comment !== '') {
+            $commentLine = __('notification.shift.commit_request_comment', [
+                'user' => $shiftPlanRequest->reviewedBy?->full_name ?? '',
+                'comment' => $comment,
+            ], $requester->language);
             $description[] = [
                 'type' => 'text',
-                'title' => __('notification.shift.commit_request_comment', [
-                    'user' => $shiftPlanRequest->reviewedBy?->full_name ?? '',
-                    'comment' => $comment,
-                ], $requester->language),
+                'title' => $commentLine,
                 'href' => null,
             ];
         }
+
+        $notificationService->setBroadcastMessage(array_filter([
+            'id' => Str::uuid()->toString(),
+            'type' => $approved ? 'success' : 'error',
+            'message' => $notificationTitle,
+            'detail' => $commentLine,
+        ], fn ($value) => $value !== null));
 
         // Ablehnung rollt die Schichten der Anfrage auf den Stand vor der Anfrage (_initial)
         // zurück — das passierte bisher still; die anfragende Person erfährt es jetzt hier.

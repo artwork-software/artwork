@@ -11,13 +11,14 @@ use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-/** Inventory in the app: lookup on site — list, search, article, availability — for every user. */
+/** Inventory in the app: lookup on site — list, search, article, availability — with "View inventory". */
 final class AppInventoryTest extends TestCase
 {
     private InventoryArticleStatus $ready;
@@ -26,7 +27,7 @@ final class AppInventoryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Passport::actingAs(User::factory()->create(), ['app']);
+        $this->actingAsApiUserWith(PermissionEnum::INVENTORY_VIEW->value);
         $this->ready = $this->createStatus('Einsatzbereit', 1, default: true);
         $this->broken = $this->createStatus('Defekt', 2);
     }
@@ -42,6 +43,25 @@ final class AppInventoryTest extends TestCase
 
         $this->getJson(route('app.v1.me'))->assertJsonPath('user.permissions.can_view_inventory', false);
         $this->getJson(route('app.v1.inventory.articles'))->assertForbidden();
+    }
+
+    #[Test]
+    public function withoutTheViewPermissionTheInventoryIsClosed(): void
+    {
+        Passport::actingAs(User::factory()->create(), ['app']);
+
+        $this->getJson(route('app.v1.me'))->assertJsonPath('user.permissions.can_view_inventory', false);
+        $this->getJson(route('app.v1.inventory.categories'))->assertForbidden();
+        $this->getJson(route('app.v1.inventory.articles'))->assertForbidden();
+    }
+
+    #[Test]
+    public function inventoryDispositionAlsoOpensTheInventory(): void
+    {
+        $this->actingAsApiUserWith(PermissionEnum::INVENTORY_DISPOSITION->value);
+
+        $this->getJson(route('app.v1.me'))->assertJsonPath('user.permissions.can_view_inventory', true);
+        $this->getJson(route('app.v1.inventory.articles'))->assertOk();
     }
 
     #[Test]

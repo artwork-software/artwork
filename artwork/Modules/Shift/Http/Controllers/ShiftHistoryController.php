@@ -3,8 +3,10 @@
 namespace Artwork\Modules\Shift\Http\Controllers;
 
 use Artwork\Modules\Shift\Exports\ShiftHistoryExcelExport;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Serializers\ShiftHistorySerializer;
 use Artwork\Modules\Shift\Services\ShiftHistoryQueryService;
+use Artwork\Modules\Shift\Support\ShiftHistoryDayEntryPerson;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\Activitylog\Models\Activity;
@@ -27,52 +29,13 @@ class ShiftHistoryController
         $perPage = max(1, min(200, $perPage));
 
         $page = max(1, (int) $request->query('page', 1));
-        // Die vollständige Shift-Liste (inkl. Relationen) ändert sich beim Paginieren nicht
-        // und wird daher nur für die erste Seite geladen & serialisiert. Beim "Mehr laden"
-        // brauchen wir nur die IDs, um die passenden Activities zu filtern.
-        $loadShiftDetails = $page === 1;
 
         $shiftQuery = $this->queryService->shiftQuery($filters);
-
-        if ($loadShiftDetails) {
-            // Avoid serializing expensive Shift appends for the filter dropdown.
-            $shifts = (clone $shiftQuery)
-                ->select([
-                    'id',
-                    'craft_id',
-                    'start_date',
-                    'end_date',
-                    'start',
-                    'end',
-                    'description',
-                    'room_id',
-                    'project_id',
-                    'is_committed',
-                    'in_workflow',
-                    'deleted_at',
-                ])
-                ->with([
-                    'room:id,name',
-                    'project:id,name',
-                    'craft:id,name,abbreviation',
-                ])
-                ->orderBy('start_date')
-                ->orderBy('start')
-                ->get()
-                ->map($this->serializer->serializeShift(...))
-                ->values();
-
-            $shiftIds = $shiftId > 0
-                ? $shifts->where('id', $shiftId)->pluck('id')->all()
-                : $shifts->pluck('id')->all();
-        } else {
-            // Folgeseiten: nur die IDs, um die Activities zu filtern.
-            $shifts = null;
-            $shiftIds = (clone $shiftQuery)
-                ->when($shiftId > 0, fn ($query) => $query->whereKey($shiftId))
-                ->pluck('id')
-                ->all();
-        }
+        // IDs aller Schichten im Zeitraum (ohne Einzelschicht-Filter), daraus die gefilterten
+        $rangeShiftIds = (clone $shiftQuery)->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $shiftIds = $shiftId > 0
+            ? array_values(array_intersect($rangeShiftIds, [$shiftId]))
+            : $rangeShiftIds;
 
         $matchedShiftIds = $this->queryService->matchedShiftIds($filters, $shiftIds);
 
@@ -84,6 +47,12 @@ class ShiftHistoryController
             ->activityQuery($filters, $matchedShiftIds, $person, $personShiftIds)
             ->paginate($perPage);
 
+        // Schichtliste (Auswahlfeld „Schicht“, Beschriftungen) nur auf der ersten Seite und nur mit Schichten,
+        // zu denen es im Filter Einträge gibt: vorher kam jede Schicht des Zeitraums mit (Jahr: >10.000)
+        $shifts = $page === 1
+            ? $this->shiftsWithEntries($filters, $rangeShiftIds, $matchedShiftIds, $person, $personShiftIds)
+            : null;
+
         $items = collect($paginator->items())->map(function ($log) use ($person, $personShiftIds) {
             // Der Verlauf zeigt nur den Namen der handelnden Person — kein volles User-Modell
             // (E-Mail, Stundenkonto, Einstellungen) je Eintrag ausliefern
@@ -92,6 +61,13 @@ class ShiftHistoryController
                 'match_reasons',
                 $person ? $this->queryService->matchReasons($log, $person, $personShiftIds) : []
             );
+            // Tageseinträge: betroffene Person (für den Verlauf ohne Personenfilter)
+            if (ShiftHistoryQueryService::isDayEntryLog($log)) {
+                $properties = $log->getAttribute('properties');
+                $log->setAttribute('day_entry_person_name', ShiftHistoryDayEntryPerson::nameFromProperties(
+                    $properties instanceof \Illuminate\Support\Collection ? $properties->all() : (array) $properties
+                ));
+            }
 
             return $log;
         })->values();
@@ -112,12 +88,84 @@ class ShiftHistoryController
             ],
         ];
 
-        // Shift-Liste nur auf der ersten Seite mitschicken (siehe $loadShiftDetails).
-        if ($loadShiftDetails) {
+        // Shift-Liste nur auf der ersten Seite mitschicken
+        if ($shifts !== null) {
             $response['shifts'] = $shifts;
         }
 
         return response()->json($response);
+    }
+
+    /**
+     * Schichten mit mindestens einem Verlaufseintrag im Filter, schlank serialisiert. Ein Einzelschicht-Filter
+     * grenzt die Liste nicht ein (Wechsel zu einer anderen Schicht bleibt möglich); die gewählte Schicht ist immer
+     * dabei, damit ihr Hinweis beschriftet werden kann.
+     *
+     * @param array<string, mixed> $filters
+     * @param array<int, int> $rangeShiftIds
+     * @param array<int, int> $matchedShiftIds
+     * @param array<string, mixed>|null $person
+     * @param array<int, int> $personShiftIds
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private function shiftsWithEntries(
+        array $filters,
+        array $rangeShiftIds,
+        array $matchedShiftIds,
+        ?array $person,
+        array $personShiftIds
+    ): \Illuminate\Support\Collection {
+        $shiftId = $filters['shift_id'];
+        if ($shiftId > 0) {
+            $filters['shift_id'] = 0;
+            $matchedShiftIds = $this->queryService->matchedShiftIds($filters, $rangeShiftIds);
+            $personShiftIds = $person ? $this->queryService->personShiftIds($person, $matchedShiftIds) : [];
+        }
+
+        $ids = $this->queryService
+            ->activityQuery($filters, $matchedShiftIds, $person, $personShiftIds)
+            ->reorder()
+            ->where('activity_log.subject_type', Shift::class)
+            // select ersetzt ein vorhandenes activity_log.* (Gruppierung nach Schichttag); pluck allein behielte es
+            ->select('activity_log.subject_id')
+            ->distinct()
+            ->pluck('activity_log.subject_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+        if ($shiftId > 0 && in_array($shiftId, $rangeShiftIds, true)) {
+            $ids[] = $shiftId;
+        }
+
+        if ($ids === []) {
+            return collect();
+        }
+
+        return Shift::withTrashed()
+            ->whereIn('id', array_values(array_unique($ids)))
+            ->select([
+                'id',
+                'craft_id',
+                'start_date',
+                'end_date',
+                'start',
+                'end',
+                'description',
+                'room_id',
+                'project_id',
+                'is_committed',
+                'in_workflow',
+                'deleted_at',
+            ])
+            ->with([
+                'room:id,name',
+                'project:id,name',
+                'craft:id,name,abbreviation',
+            ])
+            ->orderBy('start_date')
+            ->orderBy('start')
+            ->get()
+            ->map($this->serializer->serializeShift(...))
+            ->values();
     }
 
     /**
@@ -153,7 +201,9 @@ class ShiftHistoryController
             $request->user()?->language ?? app()->getLocale(),
             $person
                 ? fn (Activity $log) => $this->queryService->matchReasons($log, $person, $personShiftIds)
-                : null
+                : null,
+            // Ohne Personenfilter nennt die Nachricht eines Tageseintrags die betroffene Person
+            $person === null
         );
 
         return $export->download(sprintf(

@@ -69,9 +69,9 @@ Route::middleware(['auth:api', 'throttle:api-token', CheckToken::using('app')])-
             ->name('pass-admissions');
     });
 
-    // Inventar zum Nachschlagen vor Ort; Ansehen darf wie im Web jede*r, solange das Modul an ist.
+    // Inventar zum Nachschlagen vor Ort; Ansehen wie im Web mit "Inventar sehen", solange das Modul an ist.
     Route::prefix('inventory')
-        ->middleware(EnsureAppModuleEnabled::class . ':inventory')
+        ->middleware([EnsureAppModuleEnabled::class . ':inventory', 'can:view-inventory'])
         ->name('inventory.')
         ->group(function (): void {
             Route::get('categories', [AppInventoryController::class, 'categories'])->name('categories');

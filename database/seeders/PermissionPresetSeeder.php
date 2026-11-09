@@ -24,6 +24,7 @@ class PermissionPresetSeeder extends Seeder
             PermissionEnum::CAN_SUBSCRIBE_SHIFT_CALENDAR,
             PermissionEnum::DAY_REMARKS_VIEW,
             PermissionEnum::CONTRACT_SEE_DOWNLOAD,
+            PermissionEnum::INVENTORY_VIEW,
         ];
 
         return [

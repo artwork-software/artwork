@@ -10,6 +10,7 @@ use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Rules\SafeCrmLinkValue;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Services\CrmContactService;
@@ -212,7 +213,7 @@ class CrmContactController extends Controller
             // auf beliebige Dateien der public-Disk).
             'is_active' => 'boolean',
             'property_values' => 'array',
-            'property_values.*' => 'nullable',
+            'property_values.*' => ['nullable', new SafeCrmLinkValue()],
         ]);
 
         $propertyValues = $validated['property_values'] ?? [];
@@ -253,7 +254,7 @@ class CrmContactController extends Controller
             'display_name' => 'sometimes|string|max:255',
             'is_active' => 'sometimes|boolean',
             'property_values' => 'array',
-            'property_values.*' => 'nullable',
+            'property_values.*' => ['nullable', new SafeCrmLinkValue()],
         ]);
 
         // Deaktivieren wirkt wie Löschen und ist wie dieses der CRM-Verwaltung vorbehalten.

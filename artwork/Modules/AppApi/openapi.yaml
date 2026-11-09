@@ -947,7 +947,7 @@ components:
               description: The house is connected to Artwork-Tickets and the user may run its door.
             can_view_inventory:
               type: boolean
-              description: The inventory module is on (or the user is an admin).
+              description: The inventory module is on (or the user is an admin) and the user may view the inventory.
     AppDiscoverRequest:
       type: object
       required: [email_hash]

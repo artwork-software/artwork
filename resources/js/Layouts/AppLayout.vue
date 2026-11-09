@@ -18,7 +18,11 @@
                         <img alt="Notification" v-if="pushNotification.type === 'error'" class="h-9 w-9"
                              src="/Svgs/IconSvgs/icon_push_notification_red.svg"/>
                     </div>
-                    <div class="ml-4 text-sm font-semibold text-text">{{ pushNotification.message }}</div>
+                    <div class="ml-4 min-w-0">
+                        <div class="text-sm font-semibold text-text">{{ pushNotification.message }}</div>
+                        <!-- Optionale Zusatzzeile, z. B. der Kommentar zur Entscheidung über eine Freigabe-Anfrage -->
+                        <div v-if="pushNotification.detail" class="mt-1 text-xs text-text-muted break-words line-clamp-4">{{ pushNotification.detail }}</div>
+                    </div>
                 </button>
                 <button type="button" class="self-start p-2" :aria-label="$t('Close')"
                         @click="closePushNotification(pushNotification.id)">

@@ -161,7 +161,11 @@ class TicketsClient
         // Die Geschäftsregeln kommen als Code; die, an denen Freigabe, Karte oder Einlass scheitern können, in Worten.
         $code = $response->json('error.code');
         $message = match ($code) {
-            'HOUSE_DETAILS_MISSING' => __('Artwork-Tickets is still missing details of the house: the legal details, the payout account verified by the payment provider or the legal pages of the shop. Until they are complete, nothing can be released for sale.'),
+            'HOUSE_DETAILS_MISSING' => __(
+                'Artwork-Tickets is still missing details of the house: the legal details, the payout account '
+                . 'verified by the payment provider or the legal pages of the shop. Until they are complete, '
+                . 'nothing can be released for sale.'
+            ),
             'HOUSE_IN_REVIEW' => __('Artwork-Tickets is still reviewing the house. Until it is approved, nothing can be released for sale.'),
             'PASS_TYPE_SOLD' => __('Passes of this kind have been sold already: uses, value, limits and term stay as they are, productions can only be added.'),
             'PASS_IN_USE' => __('Passes of this kind have been sold already, so it cannot be deleted. Archive it to end the sale.'),

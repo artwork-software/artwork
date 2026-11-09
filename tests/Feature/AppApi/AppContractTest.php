@@ -403,7 +403,7 @@ final class AppContractTest extends TestCase
             'detail_number' => 1,
             'quantity' => 1,
         ]);
-        Passport::actingAs(User::factory()->create(), ['app']);
+        $this->actingAsApiUserWith(PermissionEnum::INVENTORY_VIEW->value);
 
         $this->getJson(route('app.v1.inventory.categories'))->assertValidRequest()->assertValidResponse(200);
         $this->getJson(route('app.v1.inventory.articles', ['category_id' => $category->id, 'page' => 1]))

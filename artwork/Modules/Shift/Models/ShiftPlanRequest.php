@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\Models;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -93,6 +94,21 @@ class ShiftPlanRequest extends Model
             'shift_plan_request_id',
             'shift_id'
         )->withPivot(['snapshot'])->withTimestamps();
+    }
+
+    /**
+     * Individuelle Zeiten, die zu dieser Anfrage gehör(t)en — Verlauf analog requestedShifts.
+     *
+     * @return BelongsToMany<IndividualTime, $this>
+     */
+    public function requestedIndividualTimes(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            IndividualTime::class,
+            'shift_plan_request_individual_times',
+            'shift_plan_request_id',
+            'individual_time_id'
+        )->withTimestamps();
     }
 
     /**

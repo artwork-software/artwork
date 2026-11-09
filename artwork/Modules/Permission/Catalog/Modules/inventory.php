@@ -17,6 +17,16 @@ return new PermissionModuleDefinition(
     hint: 'Tag releases ("restricted tags") additionally restrict editing per article.',
     tiers: [
         new PermissionDefinition(
+            name: PermissionEnum::INVENTORY_VIEW,
+            title: 'View inventory',
+            effect: 'Can see the inventory overview and its articles',
+            unlocks: ['Menu "Inventory"'],
+            allows: ['Browse, search and filter articles, open the article details'],
+            requires: [$module],
+            personas: [Persona::INVENTORY, Persona::CRAFT_LEAD],
+            note: 'Does not include "Article Planning" and "Material Issues"; they require "Inventory disposition".',
+        ),
+        new PermissionDefinition(
             name: PermissionEnum::INVENTORY_CREATE_EDIT,
             title: 'Create & edit inventory',
             effect: 'Can create and edit articles',
@@ -26,8 +36,8 @@ return new PermissionModuleDefinition(
             ],
             allows: ['Create and edit articles, their properties and file attachments'],
             requires: [$module],
+            implies: [PermissionEnum::INVENTORY_VIEW],
             personas: [Persona::INVENTORY],
-            note: 'The inventory list itself is visible to everyone as soon as the module is enabled.',
         ),
         new PermissionDefinition(
             name: PermissionEnum::INVENTORY_DELETE,
@@ -58,6 +68,7 @@ return new PermissionModuleDefinition(
                 'Confirm or decline returns, manage attachments',
             ],
             requires: [$module],
+            implies: [PermissionEnum::INVENTORY_VIEW],
             personas: [Persona::INVENTORY, Persona::CRAFT_LEAD],
             note: 'Project team members with write permission can create and edit the material issues of their own project without this permission (project tab).',
         ),

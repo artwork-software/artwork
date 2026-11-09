@@ -2,11 +2,14 @@
     "Inventory & material issues": "Inventar & Materialausgabe",
     "Tag releases (\"restricted tags\") additionally restrict editing per article.": "Tag-Freigaben („eingeschränkte Tags“) schränken das Bearbeiten pro Artikel zusätzlich ein.",
     "Module \"Inventory\" enabled": "Modul „Inventar“ aktiv",
+    "View inventory": "Inventar sehen",
+    "Menu \"Inventory\"": "Menü „Inventar“",
+    "Browse, search and filter articles, open the article details": "Artikel durchsuchen und filtern, Artikeldetails öffnen",
+    "Does not include \"Article Planning\" and \"Material Issues\"; they require \"Inventory disposition\".": "Enthält nicht „Artikelplanung“ und „Materialausgaben“; dafür braucht es „Inventardisposition“.",
     "Create & edit inventory": "Inventar anlegen & bearbeiten",
     "Button \"Add Article\"": "Button „Artikel hinzufügen“",
     "Edit mode in the article dialog": "Bearbeiten im Artikel-Dialog",
     "Create and edit articles, their properties and file attachments": "Artikel anlegen und ändern, Eigenschaften, Dateianhänge",
-    "The inventory list itself is visible to everyone as soon as the module is enabled.": "Die Inventarliste selbst ist für alle sichtbar, sobald das Modul aktiv ist.",
     "Delete inventory": "Inventar löschen",
     "\"Delete\" in the article dialog": "„Löschen“ im Artikel-Dialog",
     "Tab \"Articles\" in the \"Recycle bin\"": "Tab „Artikel“ im „Papierkorb“",
@@ -38,5 +41,6 @@
     "Can see the change history of material issues": "Kann die Änderungshistorie der Materialausgaben sehen",
     "Can create and edit material sets": "Kann Material-Sets anlegen und bearbeiten",
     "Can delete material sets": "Kann Material-Sets löschen",
-    "Can manage categories, properties, status, tags and manufacturers": "Kann Kategorien, Eigenschaften, Status, Tags und Hersteller verwalten"
+    "Can manage categories, properties, status, tags and manufacturers": "Kann Kategorien, Eigenschaften, Status, Tags und Hersteller verwalten",
+    "Can see the inventory overview and its articles": "Kann die Inventarübersicht und ihre Artikel sehen"
 }

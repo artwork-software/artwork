@@ -39,6 +39,8 @@ readonly class WorkerShiftPlanService
                     'series_uuid',
                     'timeable_type',
                     'timeable_id',
+                    'in_workflow',
+                    'is_committed',
                 ])
                     ->with(['series:uuid,title'])
                     ->individualByDateRange($startDate->toDateString(), $endDate->toDateString());

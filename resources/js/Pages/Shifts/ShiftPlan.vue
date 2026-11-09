@@ -158,7 +158,7 @@
                         <!-- Column Header (Tage) -->
                         <template #colHeader="{ day }">
                             <div
-                                class="relative h-full w-full flex flex-col
+                                class="group/dayhead relative h-full w-full flex flex-col
                                    text-[11px] leading-none text-white
                                    bg-surface-inverse/95 backdrop-blur
                                    border-b border-white/10 border-r
@@ -196,6 +196,16 @@
                                             <span class="opacity-90 tabular-nums truncate">
                                         {{ isCompactShiftZoom ? day.day : day.fullDay }}
                                       </span>
+                                            <!-- Schichtverlauf genau dieses Tages (alle Personen), erscheint beim Überfahren -->
+                                            <button
+                                                type="button"
+                                                class="ml-0.5 shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-white/15 focus-visible:opacity-100 group-hover/dayhead:opacity-80"
+                                                :aria-label="$t('Show history of this day')"
+                                                v-tooltip.top="{ value: $t('Show history of this day'), class: 'aw-tooltip', appendTo: 'body' }"
+                                                @click.stop="openHistoryForDay(day)"
+                                            >
+                                                <PropertyIcon name="IconHistory" class="h-3 w-3" />
+                                            </button>
                                         </div>
                                     </div>
 
@@ -1132,6 +1142,7 @@ import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
 import {isWorkTimeAccountingEnabled} from '@/Helper/workTimeAccounting.js'
 import {messageForFailedRequest} from '@/Helper/appToast.js'
+import {resolveKwWorkflowStatus} from '@/Helper/kwWorkflowStatus.js'
 
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftPlanOpenViolationsFilterNotice from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue'
@@ -3178,9 +3189,10 @@ function shiftPlanCellInnerClass(row: any, day: any) {
 
 // Freigabe-Workflow-Status der KW-Kachel (Dienstplanfreigabe):
 // requested = angefragt (blau), committed = festgeschrieben (grün),
-// attention = nach Festschreibung geändert / nicht verfügbar (gelb)
+// attention = nach Festschreibung geändert / nicht verfügbar (gelb).
+// Individuelle Zeiten zählen mit, auch in Wochen ohne Schicht im Gewerk.
 function kwWorkflowStatus(row: any, day: any): string | null {
-    return row.worker?.weeklyWorkflowStatus?.[row.craft.id]?.[day.weekNumber] ?? null
+    return resolveKwWorkflowStatus(row.worker?.weeklyWorkflowStatus, row.craft.id, day.weekNumber)
 }
 
 function kwWorkflowStatusClass(row: any, day: any): string {
@@ -4338,6 +4350,15 @@ function openHistoryForWorkerDay(payload: { search: string; person?: HistoryModa
         person: payload.person ?? null,
         startDate: payload.date,
         endDate: payload.date,
+        autoLoad: true,
+    })
+}
+
+// Shortcut im Tageskopf: Schichtverlauf eines Tages für alle Personen (inkl. Abwesenheiten, Notizen, Tagesdienste).
+function openHistoryForDay(day: { withoutFormat: string }) {
+    openHistoryModal({
+        startDate: day.withoutFormat,
+        endDate: day.withoutFormat,
         autoLoad: true,
     })
 }

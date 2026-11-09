@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Exports;
 
+use Illuminate\Support\Str;
 use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
@@ -34,7 +35,8 @@ class ProjectContentWordWriter
             $this->writeBlock($section, $cells);
         }
 
-        $path = tempnam(sys_get_temp_dir(), 'project-content-') . '.docx';
+        // Eindeutiger Name statt tempnam(): tempnam legt die Datei ohne Endung an, die sonst liegen bleibt
+        $path = sys_get_temp_dir() . '/project-content-' . Str::uuid()->toString() . '.docx';
         IOFactory::createWriter($phpWord, 'Word2007')->save($path);
 
         return $path;

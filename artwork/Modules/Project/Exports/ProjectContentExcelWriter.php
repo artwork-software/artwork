@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Exports;
 
+use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -66,7 +67,8 @@ class ProjectContentExcelWriter
                 ->setWidth(min(max($longestLine + 2, 12), 60));
         }
 
-        $path = tempnam(sys_get_temp_dir(), 'project-content-') . '.xlsx';
+        // Eindeutiger Name statt tempnam(): tempnam legt die Datei ohne Endung an, die sonst liegen bleibt
+        $path = sys_get_temp_dir() . '/project-content-' . Str::uuid()->toString() . '.xlsx';
         (new Xlsx($spreadsheet))->save($path);
         $spreadsheet->disconnectWorksheets();
 

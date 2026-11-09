@@ -2,6 +2,7 @@
 
 use Artwork\Modules\Permission\Catalog\PermissionCatalog;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -66,6 +67,31 @@ return new class extends Migration
         $this->grantToPresets($targetId, $sourceIds->all());
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->forgetSharedPermissionsOfHolders($targetId);
+    }
+
+    /**
+     * Die Rechte fürs Frontend sind je Person 5 Minuten gecacht (HandleInertiaRequests): ohne Leeren erschiene der
+     * Export-Button erst verzögert.
+     */
+    private function forgetSharedPermissionsOfHolders(int $targetId): void
+    {
+        $userMorphClass = (new User())->getMorphClass();
+        $roleIds = DB::table('role_has_permissions')->where('permission_id', $targetId)->pluck('role_id');
+
+        DB::table('model_has_permissions')
+            ->where('permission_id', $targetId)
+            ->where('model_type', $userMorphClass)
+            ->pluck('model_id')
+            ->merge(
+                DB::table('model_has_roles')
+                    ->whereIn('role_id', $roleIds)
+                    ->where('model_type', $userMorphClass)
+                    ->pluck('model_id')
+            )
+            ->unique()
+            ->chunk(500)
+            ->each(static fn ($userIds) => User::forgetCachedShareDataForIds($userIds->all()));
     }
 
     /**

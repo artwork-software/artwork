@@ -4,6 +4,7 @@ namespace Tests\Feature\Projects\ContentExport;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
@@ -43,6 +44,8 @@ final class GrantProjectOverviewExportPermissionMigrationTest extends FeatureTes
             'updated_at' => now(),
         ]);
 
+        Cache::put("user:{$reader->id}:roles_permissions", [['stale'], ['stale'], ['stale']], 300);
+
         $migration = require database_path('migrations/2026_11_09_123007_grant_project_overview_export_permission.php');
         $migration->up();
         $migration->up(); // idempotent
@@ -51,6 +54,7 @@ final class GrantProjectOverviewExportPermissionMigrationTest extends FeatureTes
         $this->assertTrue($reader->fresh()->hasDirectPermission(self::EXPORT));
         $this->assertTrue($writer->fresh()->hasDirectPermission(self::EXPORT));
         $this->assertFalse($teamOnly->fresh()->hasDirectPermission(self::EXPORT));
+        $this->assertFalse(Cache::has("user:{$reader->id}:roles_permissions"), 'Frontend-Rechte-Cache geleert');
         $this->assertTrue($role->fresh()->hasPermissionTo(self::EXPORT));
         $this->assertSame(
             ['view projects', self::EXPORT],

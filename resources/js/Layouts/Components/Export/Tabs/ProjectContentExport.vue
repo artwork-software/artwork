@@ -31,6 +31,16 @@
                                 @update:model-value="applyTemplate"
                             />
                         </div>
+                        <button
+                            v-if="selectedTemplateId !== null"
+                            type="button"
+                            class="mb-2 rounded p-1 text-text-subtle hover:text-text"
+                            :title="$t('Use without template')"
+                            :aria-label="$t('Use without template')"
+                            @click="clearTemplate"
+                        >
+                            <IconX class="size-4" stroke-width="1.5" />
+                        </button>
                         <BaseUIButton
                             v-if="selectedTemplate?.can_manage"
                             :label="$t('Update template')"
@@ -81,14 +91,28 @@
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <BaseInput id="projectContentDateStart" v-model="form.filters.date_start" type="date" label="Start date" />
                         <BaseInput id="projectContentDateEnd" v-model="form.filters.date_end" type="date" label="End date" />
-                        <BaseCombobox
-                            v-model="form.filters.project_group_id"
-                            :items="options.project_groups"
-                            option-label="name"
-                            option-key="id"
-                            :label="$t('Project group')"
-                            :placeholder="$t('All project groups')"
-                        />
+                        <div class="flex items-end gap-1">
+                            <div class="min-w-0 flex-1">
+                                <BaseCombobox
+                                    v-model="form.filters.project_group_id"
+                                    :items="options.project_groups"
+                                    option-label="name"
+                                    option-key="id"
+                                    :label="$t('Project group')"
+                                    :placeholder="$t('All project groups')"
+                                />
+                            </div>
+                            <button
+                                v-if="form.filters.project_group_id !== null"
+                                type="button"
+                                class="mb-2 rounded p-1 text-text-subtle hover:text-text"
+                                :title="$t('All project groups')"
+                                :aria-label="$t('All project groups')"
+                                @click="form.filters.project_group_id = null"
+                            >
+                                <IconX class="size-4" stroke-width="1.5" />
+                            </button>
+                        </div>
                     </div>
                     <p v-if="dateRangeInvalid" class="text-xs text-danger">
                         {{ $t('Please enter both start and end date, the start must not be after the end.') }}
@@ -157,11 +181,11 @@
                 <section class="space-y-4 rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
                     <h2 class="text-sm font-semibold text-text">{{ $t('Columns') }}</h2>
                     <AlertComponent
-                        v-if="hiddenColumns > 0"
+                        v-if="templateHiddenColumns > 0"
                         type="info"
                         show-icon
                         icon-size="h-4 w-4"
-                        :text="$t('{0} columns of this template are not visible to you and will be omitted.', [hiddenColumns])"
+                        :text="$t('{0} columns of this template are not available to you and will be omitted.', [templateHiddenColumns])"
                     />
                     <ProjectContentColumnPicker
                         v-model="form.columns"
@@ -170,9 +194,9 @@
                     />
 
                     <div v-if="hasEventsColumn" class="space-y-2 rounded-lg border border-border-subtle p-4">
-                        <div class="text-xs font-medium text-text">{{ $t('Event types in the events column') }}</div>
+                        <div class="text-xs font-medium text-text">{{ $t('Event types for the columns events and rooms') }}</div>
                         <p class="text-xs text-text-subtle">
-                            {{ $t('Each event is listed as event type, date, time and room. Without a selection, all event types are listed.') }}
+                            {{ $t('Each event is listed as event type, date, time and room; the rooms column lists the rooms of these events. Without a selection, all event types are used.') }}
                         </p>
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
                             <BaseCheckbox
@@ -212,7 +236,7 @@
 import {computed, onMounted, reactive, ref, watch} from "vue";
 import axios from "axios";
 import debounce from "lodash.debounce";
-import {IconChevronDown} from "@tabler/icons-vue";
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
@@ -268,7 +292,7 @@ const selectedTemplateId = ref(null);
 const members = ref([]);
 const openGroups = ref({});
 const projectCount = ref(null);
-const hiddenColumns = ref(0);
+const templateHiddenColumns = ref(0);
 const exporting = ref(false);
 const exportError = ref("");
 const showNewTemplateName = ref(false);
@@ -284,7 +308,8 @@ const form = reactive({
 });
 
 const selectedTemplate = computed(() => templates.value.find((template) => template.id === selectedTemplateId.value) ?? null);
-const hasEventsColumn = computed(() => form.columns.some((column) => column.key === "system:events"));
+// Die Terminarten gelten für die Spalten Termine und Räume
+const hasEventsColumn = computed(() => form.columns.some((column) => ["system:events", "system:rooms"].includes(column.key)));
 
 const dateRangeInvalid = computed(() => {
     const {date_start: start, date_end: end} = form.filters;
@@ -311,7 +336,7 @@ const payload = () => ({
         date_end: form.filters.date_end || null,
         member_ids: members.value.map((member) => member.id),
     },
-    event_column: {event_type_ids: [...form.event_column.event_type_ids]},
+    event_column: {event_type_ids: hasEventsColumn.value ? [...form.event_column.event_type_ids] : []},
 });
 
 const toggleGroup = (key) => {
@@ -338,23 +363,50 @@ const removeMember = (id) => {
     members.value = members.value.filter((member) => member.id !== id);
 };
 
+// Nur IDs übernehmen, die es noch gibt (gelöschte Gruppen, Status, Terminarten … aus älteren Vorlagen)
+const existingIds = (ids, items) => {
+    const known = new Set((items ?? []).map((item) => item.id));
+    return (ids ?? []).filter((id) => known.has(id));
+};
+
 const applyTemplate = () => {
     templateMessage.value = "";
+    templateHiddenColumns.value = 0;
     const template = selectedTemplate.value;
     if (!template) {
         return;
     }
     const filters = template.settings?.filters ?? {};
-    form.columns = template.columns.map((column) => ({...column}));
+    // Spalten, die die Person nicht sehen darf oder die es nicht mehr gibt, entfallen (Server prüft ebenso)
+    const availableKeys = new Set(options.value.columns.map((column) => column.key));
+    const columns = template.columns.filter((column) => availableKeys.has(column.key));
+    templateHiddenColumns.value = template.columns.length - columns.length;
+    form.columns = columns.map((column) => ({...column}));
+    // Arrays kopieren, damit Häkchen die gespeicherte Vorlage nicht verändern
     form.filters = {
         ...emptyFilters(),
-        ...filters,
+        project_group_id: existingIds([filters.project_group_id], options.value.project_groups)[0] ?? null,
+        project_state_ids: existingIds(filters.project_state_ids, options.value.project_states),
+        category_ids: existingIds(filters.category_ids, options.value.categories),
+        genre_ids: existingIds(filters.genre_ids, options.value.genres),
+        sector_ids: existingIds(filters.sector_ids, options.value.sectors),
+        event_type_ids: existingIds(filters.event_type_ids, options.value.event_types),
         // Zeitraum gehört nicht zur Vorlage: aktuelle Eingabe behalten
         date_start: form.filters.date_start,
         date_end: form.filters.date_end,
     };
-    form.event_column = {event_type_ids: [...(template.settings?.event_column?.event_type_ids ?? [])]};
+    form.event_column = {
+        event_type_ids: existingIds(template.settings?.event_column?.event_type_ids, options.value.event_types),
+    };
     members.value = (template.members ?? []).map((member) => ({...member}));
+};
+
+// Vorlage abwählen: die aktuelle Zusammenstellung bleibt, Export und Verlauf nennen keine Vorlage mehr
+const clearTemplate = () => {
+    selectedTemplateId.value = null;
+    templateHiddenColumns.value = 0;
+    templateMessage.value = "";
+    templateError.value = "";
 };
 
 const loadTemplates = async () => {
@@ -401,7 +453,10 @@ const deleteTemplate = async () => {
     }
 };
 
+// Nur die Antwort der jüngsten Anfrage zählt (ältere können später eintreffen)
+let previewRequest = 0;
 const refreshPreview = debounce(async () => {
+    const request = ++previewRequest;
     if (dateRangeInvalid.value) {
         projectCount.value = null;
         return;
@@ -409,10 +464,13 @@ const refreshPreview = debounce(async () => {
     try {
         const {columns, filters, event_column} = payload();
         const response = await axios.post(route("projects.content-export.preview"), {columns, filters, event_column});
-        projectCount.value = response.data.count;
-        hiddenColumns.value = response.data.hidden_columns;
+        if (request === previewRequest) {
+            projectCount.value = response.data.count;
+        }
     } catch {
-        projectCount.value = null;
+        if (request === previewRequest) {
+            projectCount.value = null;
+        }
     }
 }, 400);
 

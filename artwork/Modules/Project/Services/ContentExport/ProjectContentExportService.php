@@ -99,7 +99,14 @@ class ProjectContentExportService
             ? ProjectContentExportTemplate::query()->find($configuration->templateId)
             : null;
 
-        $this->logExport($user, $projects->modelKeys(), $isWord ? 'Word' : 'Excel', $template?->name);
+        try {
+            $this->logExport($user, $projects->modelKeys(), $isWord ? 'Word' : 'Excel', $template?->name);
+        } catch (Throwable $throwable) {
+            if (is_file($path)) {
+                unlink($path);
+            }
+            throw $throwable;
+        }
 
         return [
             'path' => $path,

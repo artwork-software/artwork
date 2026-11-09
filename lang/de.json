@@ -9829,9 +9829,6 @@
     "Projects with events of type": "Projekte mit Terminen der Art",
     "Project members": "Projektmitglieder",
     "Only projects with at least one of these persons in the project team are exported.": "Exportiert werden nur Projekte, in deren Projektteam mindestens eine dieser Personen ist.",
-    "{0} columns of this template are not visible to you and will be omitted.": "{0} Spalten dieser Vorlage sind für dich nicht sichtbar und werden ausgelassen.",
-    "Event types in the events column": "Terminarten in der Spalte Termine",
-    "Each event is listed as event type, date, time and room. Without a selection, all event types are listed.": "Jeder Termin wird mit Terminart, Datum, Uhrzeit und Raum aufgeführt. Ohne Auswahl erscheinen alle Terminarten.",
     "{0} projects will be exported.": "{0} Projekte werden exportiert.",
     "Template saved.": "Vorlage gespeichert.",
     "Template could not be saved.": "Vorlage konnte nicht gespeichert werden.",
@@ -9847,5 +9844,10 @@
     "Project contents": "Projektinhalte",
     "Project contents were exported as {0}": "Projektinhalte wurden als {0} exportiert",
     "Project contents were exported as {0} (template \"{1}\")": "Projektinhalte wurden als {0} exportiert (Vorlage „{1}“)",
-    "A template with this name already exists.": "Eine Vorlage mit diesem Namen existiert bereits."
+    "A template with this name already exists.": "Eine Vorlage mit diesem Namen existiert bereits.",
+    "Use without template": "Ohne Vorlage weiterarbeiten",
+    "{0} columns of this template are not available to you and will be omitted.": "{0} Spalten dieser Vorlage stehen dir nicht zur Verfügung und werden ausgelassen.",
+    "Event types for the columns events and rooms": "Terminarten für die Spalten Termine und Räume",
+    "Each event is listed as event type, date, time and room; the rooms column lists the rooms of these events. Without a selection, all event types are used.": "Jeder Termin wird mit Terminart, Datum, Uhrzeit und Raum aufgeführt; die Spalte Räume nennt die Räume dieser Termine. Ohne Auswahl gelten alle Terminarten.",
+    "None of the selected columns is available to you.": "Keine der gewählten Spalten steht dir zur Verfügung."
 }

@@ -16,6 +16,7 @@ use Artwork\Modules\Sector\Models\Sector;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -65,6 +66,13 @@ class ProjectContentExportController extends Controller
      */
     public function cache(ProjectContentExportRequest $request): string
     {
+        // Ohne eine einzige Spalte, die die Person sehen darf (z. B. fremde Vorlage), gäbe es nichts zu exportieren
+        if ($this->exportService->resolveColumns($request->user(), $request->configuration())['columns'] === []) {
+            throw ValidationException::withMessages([
+                'columns' => __('None of the selected columns is available to you.'),
+            ]);
+        }
+
         return $this->exportService->cacheConfiguration($request->user(), $request->validated());
     }
 

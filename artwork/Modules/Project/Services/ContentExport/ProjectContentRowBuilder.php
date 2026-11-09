@@ -46,17 +46,26 @@ class ProjectContentRowBuilder
         $this->loadProjectRelations($projects, $keys);
 
         $projectIds = $projects->modelKeys();
-        $events = $this->eventsByProject($projectIds, $configuration);
+        // Termine nur laden, wenn Termine oder Räume ausgegeben werden; sortiert wird über ein Aggregat
+        $needsEvents = array_intersect(
+            [ProjectContentExportColumns::EVENTS, ProjectContentExportColumns::ROOMS],
+            $keys
+        ) !== [];
+        $events = $needsEvents ? $this->eventsByProject($projectIds, $configuration) : collect();
+        $firstEventStarts = $this->firstEventStarts($projectIds, $configuration);
         $values = $this->componentValues($projectIds, $columns);
         $periods = in_array(ProjectContentExportColumns::PROJECT_PERIOD, $keys, true)
             ? $this->projectPeriods($projectIds)
             : [];
 
-        $rows = $projects->map(function (Project $project) use ($columns, $events, $values, $periods, $configuration) {
-            $projectEvents = $events->get($project->id, collect());
-            $columnEvents = $configuration->eventColumnTypeIds === []
-                ? $projectEvents
-                : $projectEvents->whereIn('event_type_id', $configuration->eventColumnTypeIds)->values();
+        $rows = $projects->map(function (Project $project) use (
+            $columns,
+            $events,
+            $values,
+            $periods,
+            $firstEventStarts
+        ) {
+            $columnEvents = $events->get($project->id, collect());
 
             $cells = array_map(fn (array $column): array => [
                 'title' => $column['title'],
@@ -69,14 +78,14 @@ class ProjectContentRowBuilder
             return [
                 'project' => $project,
                 'cells' => $cells,
-                'first_event' => $projectEvents->first()?->start_time,
+                'first_event' => $firstEventStarts[$project->id] ?? PHP_INT_MAX,
             ];
         })->all();
 
         // Chronologisch nach dem ersten Termin (im Zeitraum), Projekte ohne Termin ans Ende, dann nach Name
         usort($rows, static function (array $left, array $right): int {
-            $leftTime = $left['first_event']?->getTimestamp() ?? PHP_INT_MAX;
-            $rightTime = $right['first_event']?->getTimestamp() ?? PHP_INT_MAX;
+            $leftTime = $left['first_event'];
+            $rightTime = $right['first_event'];
 
             return [$leftTime, mb_strtolower((string) $left['project']->name)] <=>
                 [$rightTime, mb_strtolower((string) $right['project']->name)];
@@ -257,7 +266,18 @@ class ProjectContentRowBuilder
     {
         $query = Event::query()
             ->whereIn('events.project_id', $projectIds)
-            ->with(['event_type:id,name', 'room:id,name'])
+            ->whereNotNull('events.start_time')
+            ->whereNotNull('events.end_time')
+            // Terminarten der Termin-Spalte gelten auch für die Räume-Spalte
+            ->when(
+                $configuration->eventColumnTypeIds !== [],
+                fn ($events) => $events->whereIn('events.event_type_id', $configuration->eventColumnTypeIds)
+            )
+            ->with([
+                'event_type:id,name',
+                // Raum ohne seine Standard-Relationen (Raum-Admins, Ersteller)
+                'room' => fn ($rooms) => $rooms->without(['admins', 'creator'])->select(['id', 'name']),
+            ])
             ->orderBy('events.start_time')
             ->orderBy('events.id');
 
@@ -265,6 +285,30 @@ class ProjectContentRowBuilder
             ->get(['events.id', 'events.project_id', 'events.event_type_id', 'events.room_id', 'events.start_time',
                 'events.end_time', 'events.allDay'])
             ->groupBy('project_id');
+    }
+
+    /**
+     * Beginn des ersten Termins je Projekt (bei gesetztem Zeitraum im Zeitraum) als Zeitstempel, für die Sortierung.
+     *
+     * @param array<int, int> $projectIds
+     * @return array<int, int>
+     */
+    private function firstEventStarts(array $projectIds, ProjectContentExportConfiguration $configuration): array
+    {
+        $query = Event::query()
+            ->whereIn('events.project_id', $projectIds)
+            ->whereNotNull('events.start_time')
+            ->whereNotNull('events.end_time')
+            ->groupBy('events.project_id')
+            ->selectRaw('events.project_id, MIN(events.start_time) as first_start');
+
+        return $this->query->overlapping($query, $configuration)
+            ->toBase()
+            ->get()
+            ->mapWithKeys(fn (object $row): array => [
+                (int) $row->project_id => Carbon::parse($row->first_start)->getTimestamp(),
+            ])
+            ->all();
     }
 
     /**

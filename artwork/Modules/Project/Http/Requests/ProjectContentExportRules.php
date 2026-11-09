@@ -4,6 +4,7 @@ namespace Artwork\Modules\Project\Http\Requests;
 
 use Artwork\Modules\Project\Services\ContentExport\ProjectContentExportColumns;
 use Closure;
+use Illuminate\Validation\Rule;
 
 /**
  * Gemeinsame Regeln für Projektinhalte-Export und seine Vorlagen (Spalten, Filter, Termin-Spalte).
@@ -49,13 +50,17 @@ final class ProjectContentExportRules
 
     /**
      * @param bool $withDateRange Vorlagen speichern den Zeitraum bewusst nicht
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, mixed>>
      */
     public static function filters(string $prefix = 'filters', bool $withDateRange = true): array
     {
         $rules = [
             $prefix => ['sometimes', 'array'],
-            "$prefix.project_group_id" => ['nullable', 'integer', 'exists:projects,id'],
+            "$prefix.project_group_id" => [
+                'nullable',
+                'integer',
+                Rule::exists('projects', 'id')->where('is_group', true)->whereNull('deleted_at'),
+            ],
         ];
         foreach (ProjectContentExportRules::LIST_FILTERS as $key) {
             $rules["$prefix.$key"] = ['sometimes', 'array', 'max:500'];

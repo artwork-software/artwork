@@ -61,7 +61,8 @@ class ProjectContentExportQuery
     }
 
     /**
-     * Termine, die den Zeitraum überschneiden (Beginn vor Zeitraumende, Ende nach Zeitraumbeginn).
+     * Termine, die den Zeitraum überschneiden (Beginn bis Zeitraumende, Ende echt nach Zeitraumbeginn: ein Termin,
+     * der genau um 0:00 des ersten Tags endet, gehört nicht dazu).
      *
      * @param Builder<\Artwork\Modules\Event\Models\Event> $events
      * @return Builder<\Artwork\Modules\Event\Models\Event>
@@ -74,7 +75,7 @@ class ProjectContentExportQuery
 
         return $events
             ->where('events.start_time', '<=', $configuration->dateEnd)
-            ->where('events.end_time', '>=', $configuration->dateStart);
+            ->where('events.end_time', '>', $configuration->dateStart);
     }
 
     /**

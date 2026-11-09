@@ -3058,7 +3058,11 @@ class ProjectController extends Controller
 
         $headerObject->project->project_managers = $project->managerUsers;
 
-        $latestActivity = $project->activities()->latest()->first();
+        // Exporte (Projektinhalte-Export) stehen im Verlauf, sind aber keine Änderung am Projekt
+        $latestActivity = $project->activities()
+            ->where(fn ($query) => $query->whereNull('event')->orWhere('event', '!=', 'exported'))
+            ->latest()
+            ->first();
         $latestChange  = [];
         if ($latestActivity !== null) {
             $properties = $latestActivity->properties;

@@ -9829,9 +9829,6 @@
     "Projects with events of type": "Projects with events of type",
     "Project members": "Project members",
     "Only projects with at least one of these persons in the project team are exported.": "Only projects with at least one of these persons in the project team are exported.",
-    "{0} columns of this template are not visible to you and will be omitted.": "{0} columns of this template are not visible to you and will be omitted.",
-    "Event types in the events column": "Event types in the events column",
-    "Each event is listed as event type, date, time and room. Without a selection, all event types are listed.": "Each event is listed as event type, date, time and room. Without a selection, all event types are listed.",
     "{0} projects will be exported.": "{0} projects will be exported.",
     "Template saved.": "Template saved.",
     "Template could not be saved.": "Template could not be saved.",
@@ -9847,5 +9844,10 @@
     "Project contents": "Project contents",
     "Project contents were exported as {0}": "Project contents were exported as {0}",
     "Project contents were exported as {0} (template \"{1}\")": "Project contents were exported as {0} (template \"{1}\")",
-    "A template with this name already exists.": "A template with this name already exists."
+    "A template with this name already exists.": "A template with this name already exists.",
+    "Use without template": "Use without template",
+    "{0} columns of this template are not available to you and will be omitted.": "{0} columns of this template are not available to you and will be omitted.",
+    "Event types for the columns events and rooms": "Event types for the columns events and rooms",
+    "Each event is listed as event type, date, time and room; the rooms column lists the rooms of these events. Without a selection, all event types are used.": "Each event is listed as event type, date, time and room; the rooms column lists the rooms of these events. Without a selection, all event types are used.",
+    "None of the selected columns is available to you.": "None of the selected columns is available to you."
 }

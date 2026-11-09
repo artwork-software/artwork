@@ -64,7 +64,9 @@ use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
+use Artwork\Modules\Project\Models\ProjectContentExportTemplate;
 use Artwork\Modules\Project\Policies\CommentPolicy;
+use Artwork\Modules\Project\Policies\ProjectContentExportTemplatePolicy;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
@@ -103,6 +105,7 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Department::class => DepartmentPolicy::class,
         Project::class => ProjectPolicy::class,
+        ProjectContentExportTemplate::class => ProjectContentExportTemplatePolicy::class,
         Checklist::class => ChecklistPolicy::class,
         Sector::class => SectorPolicy::class,
         Category::class => CategoryPolicy::class,

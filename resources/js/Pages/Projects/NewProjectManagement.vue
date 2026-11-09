@@ -125,7 +125,7 @@
                     </BaseMenu>
                 </div>
                     <!-- Export -->
-                    <button type="button" @click="openExportModal">
+                    <button type="button" @click="openExportModal" v-if="canUseOverviewExports">
                         <ToolTipComponent :icon="IconFileExport" icon-size="size-6" white-icon :tooltip-text="$t('Export project list')" direction="bottom" :classes-button="bandIconButtonClasses" />
                     </button>
 
@@ -302,7 +302,7 @@
         />
 
         <export-modal
-            v-if="showExportModal"
+            v-if="showExportModal && canUseOverviewExports"
             @close="showExportModal = false"
             :enums="exportTabs"
             :configuration="getExportModalConfiguration()"
@@ -667,15 +667,23 @@ const reloadProjectsDebounced = debounce(reloadProjects, 800);
 watch(project_search, () => reloadProjectsDebounced());
 
 // Export-Konfig
+// Recht "Exporte aus der Projektübersicht" steuert den ganzen Export-Button; Budget und Rollenmatrix
+// lesen alle Projekte und brauchen zusätzlich das globale Leserecht (Budget auch den globalen Budgetzugriff)
+const canUseOverviewExports = computed(() => role('artwork admin') || can('can export from project overview'));
+const canReadAllProjects = computed(() => role('artwork admin') || can('view projects'));
+
 const exportTabs = computed(() => {
     const tabs = [
         exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
         exportTabEnums.EXCEL_CALENDAR_EXPORT,
+        exportTabEnums.PROJECT_CONTENT_EXCEL_EXPORT,
+        exportTabEnums.PROJECT_CONTENT_WORD_EXPORT,
     ];
-    if (props.createSettings.budget_deadline) {
+    if (props.createSettings.budget_deadline && canReadAllProjects.value &&
+        (role('artwork admin') || can('can manage global project budgets'))) {
         tabs.push(exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT);
     }
-    if (can('view projects') || role('artwork admin')) {
+    if (canReadAllProjects.value) {
         tabs.push(exportTabEnums.EXCEL_PROJECT_ROLE_MATRIX_EXPORT);
     }
     return tabs;

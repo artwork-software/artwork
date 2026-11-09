@@ -96,5 +96,21 @@ return new PermissionModuleDefinition(
             personas: [Persona::PRODUCTION_LEAD],
             note: 'Grants no access to and no write permission for other projects.',
         ),
+        new PermissionDefinition(
+            name: PermissionEnum::PROJECT_OVERVIEW_EXPORT,
+            title: 'Exports from the project overview',
+            effect: 'Can use the export button of the project overview',
+            unlocks: [
+                'Button "Export project list" in the project overview',
+                'Exports "Project contents (Excel)" and "Project contents (Word)"',
+            ],
+            allows: [
+                'Export contents of several projects into one Excel or Word file',
+                'Only projects the person may open and components the person may see are exported',
+            ],
+            requires: [Requirement::module('projects', 'Module "Projects" enabled')],
+            personas: [Persona::BASIS, Persona::PRODUCTION_LEAD],
+            note: 'The budget export by key date additionally requires "Read all projects" and "Global budget access", the project role matrix additionally requires "Read all projects".',
+        ),
     ],
 );

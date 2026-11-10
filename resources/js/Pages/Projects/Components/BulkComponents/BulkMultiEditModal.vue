@@ -1,225 +1,121 @@
 <template>
-    <BaseModal @closed="$emit('close')">
+    <ArtworkBaseModal
+        title="Bulk Multi Edit"
+        description="Edit multiple events at once"
+        modal-size="sm:max-w-2xl"
+        @close="emits('close')"
+    >
+        <BaseAlertComponent
+            v-if="!hasEvents"
+            type="error"
+            message="No events selected"
+            use-translation
+        />
 
-        <div>
-            <ModalHeader
-                :title="$t('Bulk Multi Edit')"
-                :description="$t('Edit multiple events at once')"
-            />
+        <div
+            v-if="validationErrors.length > 0"
+            class="mb-4 rounded-md border border-danger-border bg-danger-surface px-3 py-2"
+            role="alert"
+            aria-live="assertive"
+        >
+            <p v-for="error in validationErrors" :key="error" class="text-sm text-danger">
+                {{ $t(error) }}
+            </p>
         </div>
 
-        <div v-if="multiEditForm.eventIds.length === 0">
-            <div class="rounded-md bg-danger-surface p-4">
-                <div class="flex">
-                    <div class="shrink-0">
-                        <component :is="IconMoodWrrr" class="size-5 text-danger" aria-hidden="true"/>
-                    </div>
-                    <div class="ml-3 flex-1 md:flex md:justify-between">
-                        <p class="text-sm text-danger">
-                            {{ $t('No events selected') }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="validationErrors.length > 0" class="mb-4">
-            <div class="rounded-md bg-danger-surface p-3">
-                <div class="text-sm text-danger">
-                    <div v-for="error in validationErrors" :key="error" class="mb-1 last:mb-0">
-                        {{ $t(error) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <form @submit.prevent="submit" v-if="multiEditForm.eventIds.length > 0">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="" v-if="usePage().props.event_status_module">
-                    <div class="text-sm/5 font-semibold text-text mb-1">
-                        {{ $t('Event Status') }}
-                    </div>
-                    <Listbox v-model="multiEditForm.selectedEventStatus"
-                             id="type"
-                             as="div"
-                             class="relative">
-                        <ListboxButton :class="['menu-button']" class="print:border-0">
-                            <div class="flex items-center gap-x-2">
-                                <div v-if="multiEditForm?.selectedEventStatus?.color">
-                                    <div class="block w-5 h-5 rounded-full"
-                                         :style="{'backgroundColor' : multiEditForm?.selectedEventStatus?.color }"/>
-                                </div>
-                                <div class="truncate w-full text-sm/5 font-semibold text-text">
-                                    {{ multiEditForm?.selectedEventStatus?.name ?? $t('No change') }}
-                                </div>
-                            </div>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text print:hidden"
-                                             aria-hidden="true"/>
-                        </ListboxButton>
-                        <ListboxOptions
-                            class="w-full rounded-lg bg-surface-inverse max-h-56 overflow-y-auto text-sm absolute z-30">
-                            <ListboxOption
-                                class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
-                                v-for="status in eventStatuses"
-                                :key="status.name"
-                                :value="status"
-                                v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']"
-                                     class="flex items-center gap-x-2">
-                                    <div>
-                                        <div class="block w-3 h-3 rounded-full"
-                                             :style="{'backgroundColor' : status?.color }"/>
-                                    </div>
-                                    {{ status.name }}
-                                </div>
-                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                           aria-hidden="true"/>
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </Listbox>
-                </div>
-                <div class="">
-                    <div class="text-sm/5 font-semibold text-text mb-1">
-                        {{ $t('Event type') }}
-                    </div>
-                    <Listbox v-model="multiEditForm.selectedEventType"
-                             id="type"
-                             as="div"
-                             class="relative"
-                    >
-                        <ListboxButton :class="['menu-button']" class="print:border-0 ">
-                            <div class="flex items-center gap-x-2">
-                                <div class="" v-if="multiEditForm?.selectedEventType?.hex_code">
-                                    <div class="block w-5 h-5 rounded-full"
-                                         :style="{'backgroundColor' : multiEditForm?.selectedEventType?.hex_code }"/>
-                                </div>
-                                <div class="truncate text-sm/5 font-semibold text-text">
-                                    {{ multiEditForm?.selectedEventType?.name ?? $t('No change') }}
-                                </div>
-                            </div>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text print:hidden"
-                                             aria-hidden="true"/>
-                        </ListboxButton>
-                        <ListboxOptions
-                            class="w-full rounded-lg bg-surface-inverse max-h-56 overflow-y-auto text-sm absolute z-30">
-                            <ListboxOption
-                                class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
-                                v-for="eventType in eventTypes"
-                                :key="eventType.name"
-                                :value="eventType"
-                                v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']"
-                                     class="flex items-center gap-x-2">
-                                    <div>
-                                        <div class="block w-3 h-3 rounded-full"
-                                             :style="{'backgroundColor' : eventType?.hex_code }"/>
-                                    </div>
-                                    {{ eventType.name }}
-                                </div>
-                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                           aria-hidden="true"/>
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </Listbox>
-                </div>
-                <div>
-                    <div class="text-sm/5 font-semibold text-text mb-1">
-                        {{ $t('Room') }}
-                    </div>
-                    <Listbox id="room"
-                             as="div"
-                             class="relative"
-                             v-model="multiEditForm.selectedRoom"
-                    >
-                        <ListboxButton :class="['menu-button']" class=" print:border-0">
-                            <div class="flex-grow flex text-left text-sm/5 font-semibold text-text">
-                                {{ multiEditForm.selectedRoom?.name ?? $t('No change') }}
-                            </div>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text print:hidden"
-                                             aria-hidden="true"/>
-                        </ListboxButton>
-                        <ListboxOptions
-                            class="w-full rounded-lg bg-surface-inverse max-h-56 overflow-y-auto text-sm absolute z-30">
-                            <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
-                                           :key="room.name"
-                                           :value="room"
-                                           v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
-                                    {{ room.name }}
-                                </div>
-                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                           aria-hidden="true"/>
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </Listbox>
-                </div>
-                <div class="col-span-2">
-                    <div class="mb-2">
-                        <BaseInput
-                            v-model="multiEditForm.eventName"
-                            type="text"
-                            id="event-name"
-                            :label="$t('Event name')"
-                            placeholder="Name"
-                        />
-                    </div>
-                    <div class="relative mt-1">
-                        <BaseInput
-                            v-model="multiEditForm.selectedDay"
-                            type="date"
-                            id="event-day"
-                            :label="$t('Day')"
-                            placeholder="Tag"
-                        />
-                    </div>
-                </div>
-                <div class="col-span-2">
-                    <div class="flex items-center gap-2">
-                        <div class="flex-1">
-                            <BaseInput
-                                v-model="multiEditForm.selectedStartTime"
-                                type="time"
-                                id="event-start-time"
-                                :label="$t('Start time')"
-                                placeholder="Start"
-                            />
-                        </div>
-                        <div class="flex-1">
-                            <BaseInput
-                                v-model="multiEditForm.selectedEndTime"
-                                type="time"
-                                id="event-end-time"
-                                :label="$t('End time')"
-                                placeholder="End"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="flex items-center justify-between mt-5">
-                <FormButton class="bg-danger hover:bg-danger" @click="$emit('close')" type="button"
-                            :text="$t('Cancel')"/>
-                <FormButton type="submit" :text="$t('Save')" :disabled="multiEditForm.eventIds.length === 0"/>
+        <form v-if="hasEvents" id="bulkMultiEditForm" @submit.prevent="submit">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <ArtworkBaseListbox
+                    v-if="usePage().props.event_status_module"
+                    v-model="multiEditForm.selectedEventStatus"
+                    :items="eventStatusOptions"
+                    by="id"
+                    option-label="name"
+                    label="Event Status"
+                    placeholder="No change"
+                    show-color-indicator
+                />
+                <ArtworkBaseListbox
+                    v-model="multiEditForm.selectedEventType"
+                    :items="eventTypeOptions"
+                    by="id"
+                    option-label="name"
+                    label="Event type"
+                    placeholder="No change"
+                    show-color-indicator
+                    color-property="hex_code"
+                />
+                <ArtworkBaseListbox
+                    v-model="multiEditForm.selectedRoom"
+                    :items="roomOptions"
+                    by="id"
+                    option-label="name"
+                    label="Room"
+                    placeholder="No change"
+                />
+                <BaseInput
+                    id="bulk-multi-edit-event-name"
+                    v-model="multiEditForm.eventName"
+                    class="col-span-full"
+                    label="Event name"
+                    :required="isEventNameRequired"
+                    :placeholder="$t('No change')"
+                />
+                <BaseInput
+                    id="bulk-multi-edit-day"
+                    v-model="multiEditForm.selectedDay"
+                    class="col-span-full"
+                    type="date"
+                    label="Day"
+                />
+                <BaseInput
+                    id="bulk-multi-edit-start-time"
+                    v-model="multiEditForm.selectedStartTime"
+                    type="time"
+                    label="Start time"
+                />
+                <BaseInput
+                    id="bulk-multi-edit-end-time"
+                    v-model="multiEditForm.selectedEndTime"
+                    type="time"
+                    label="End time"
+                />
             </div>
         </form>
-    </BaseModal>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="emits('close')"
+            />
+            <BaseUIButton
+                v-if="hasEvents"
+                type="submit"
+                form="bulkMultiEditForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import {computed, ref} from "vue";
 import {useForm, usePage} from "@inertiajs/vue3";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {IconChevronDown, IconCheck, IconAlertCircle, IconMoodWrrr} from "@tabler/icons-vue";
-import {onMounted, ref} from "vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import axios from "axios";
 import {useI18n} from "vue-i18n";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {ticketingMoveHeaders} from "@/Composeables/useTicketingMove.js";
+
+defineOptions({name: 'BulkMultiEditModal'})
 
 const props = defineProps({
     eventIds: {
@@ -242,8 +138,9 @@ const props = defineProps({
 
 const emits = defineEmits(['close']);
 
-const { t } = useI18n();
+const {t} = useI18n();
 const validationErrors = ref([]);
+const processing = ref(false);
 
 const multiEditForm = useForm({
     eventIds: props.eventIds,
@@ -256,61 +153,56 @@ const multiEditForm = useForm({
     selectedEndTime: '',
 })
 
-const submit = async () => {
-    // Clear previous validation errors
-    validationErrors.value = [];
+const hasEvents = computed(() => multiEditForm.eventIds.length > 0)
+const eventStatusOptions = computed(() => Object.values(props.eventStatuses ?? {}))
+const eventTypeOptions = computed(() => Object.values(props.eventTypes ?? {}))
+const roomOptions = computed(() => Object.values(props.rooms ?? {}))
+const isEventNameRequired = computed(() => Boolean(multiEditForm.selectedEventType?.individual_name))
 
-    // Validate event name for individual_name event types
-    if (multiEditForm?.selectedEventType?.individual_name && !multiEditForm.eventName) {
-        validationErrors.value.push('Event name is required for this event type');
-    }
-
-    // If there are validation errors, don't submit
-    if (validationErrors.value.length > 0) {
-        return false;
-    }
-
-    // wenn eine Startzeit angegeben ist, aber keine Endzeit, dann wird die Startzeit +30 min als Endzeit genommen
-    if (multiEditForm.selectedStartTime && !multiEditForm.selectedEndTime) {
-        const startTime = multiEditForm.selectedStartTime.split(':');
-        const endTime = new Date();
-        endTime.setHours(startTime[0]);
-        endTime.setMinutes(startTime[1]);
-        endTime.setMinutes(endTime.getMinutes() + 30);
-        multiEditForm.selectedEndTime = `${endTime.getHours()}:${endTime.getMinutes()}`;
-    }
-
-    /*multiEditForm.post(route('events.bulk-multi-edit'), {
-        preserveScroll: true,
-        preserveState: false,
-        onSuccess: () => {
-            emits('close');
-        },
-        onError: (errors) => {
-            // Handle server-side validation errors
-            validationErrors.value = Object.values(errors).flat();
-        }
-    });*/
-
-    const moves = multiEditForm.selectedRoom || multiEditForm.selectedDay || multiEditForm.selectedStartTime || multiEditForm.selectedEndTime;
-    const headers = moves ? await ticketingMoveHeaders(multiEditForm.eventIds) : {};
-    if (!headers) return;
-
-    axios.post(route('events.bulk-multi-edit'), multiEditForm, { headers, skipErrorToast: true }) // Fehler steht im Modal
-        .then(response => {
-            emits('close');
-        })
-        .catch(error => {
-            if (error.response && error.response.data && error.response.data.errors) {
-                validationErrors.value = Object.values(error.response.data.errors).flat();
-            } else {
-                validationErrors.value.push(t('An unexpected error occurred. Please try again.'));
-            }
-        });
+/**
+ * Startzeit plus 30 Minuten als HH:MM (für <input type="time"> zweistellig).
+ */
+const addThirtyMinutes = (startTime) => {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const endTime = new Date();
+    endTime.setHours(hours, minutes + 30, 0, 0);
+    return `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
 }
 
+const submit = async () => {
+    if (processing.value || !hasEvents.value) {
+        return;
+    }
+    validationErrors.value = [];
+
+    if (isEventNameRequired.value && !multiEditForm.eventName) {
+        validationErrors.value.push('Event name is required for this event type');
+        return;
+    }
+
+    // Startzeit ohne Endzeit: Ende = Start + 30 Minuten
+    if (multiEditForm.selectedStartTime && !multiEditForm.selectedEndTime) {
+        multiEditForm.selectedEndTime = addThirtyMinutes(multiEditForm.selectedStartTime);
+    }
+
+    processing.value = true;
+    try {
+        const moves = multiEditForm.selectedRoom || multiEditForm.selectedDay || multiEditForm.selectedStartTime || multiEditForm.selectedEndTime;
+        const headers = moves ? await ticketingMoveHeaders(multiEditForm.eventIds) : {};
+        if (!headers) {
+            return;
+        }
+
+        await axios.post(route('events.bulk-multi-edit'), multiEditForm.data(), { headers, skipErrorToast: true }); // Fehler steht im Modal
+        emits('close');
+    } catch (error) {
+        if (error?.response?.data?.errors) {
+            validationErrors.value = Object.values(error.response.data.errors).flat();
+        } else {
+            validationErrors.value.push(t('An unexpected error occurred. Please try again.'));
+        }
+    } finally {
+        processing.value = false;
+    }
+}
 </script>
-
-<style scoped>
-
-</style>

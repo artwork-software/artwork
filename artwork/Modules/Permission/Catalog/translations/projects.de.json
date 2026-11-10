@@ -37,5 +37,12 @@
     "Can edit every project, even without being in the team": "Kann jedes Projekt bearbeiten, auch ohne Teamzugehörigkeit",
     "Can delete every project": "Kann jedes Projekt löschen",
     "Can create new projects": "Kann neue Projekte anlegen",
-    "Can be marked as project manager in a project team": "Kann im Projektteam als Projektleitung markiert werden"
+    "Can be marked as project manager in a project team": "Kann im Projektteam als Projektleitung markiert werden",
+    "Exports from the project overview": "Exporte aus der Projektübersicht",
+    "Can use the export button of the project overview": "Kann den Export-Button der Projektübersicht nutzen",
+    "Button \"Export project list\" in the project overview": "Button „Projektliste exportieren“ in der Projektübersicht",
+    "Exports \"Project contents (Excel)\" and \"Project contents (Word)\"": "Exporte „Projektinhalte (Excel)“ und „Projektinhalte (Word)“",
+    "Export contents of several projects into one Excel or Word file": "Inhalte mehrerer Projekte in eine Excel- oder Word-Datei exportieren",
+    "Only projects the person may open and components the person may see are exported": "Exportiert werden nur Projekte, die die Person öffnen darf, und Komponenten, die sie sehen darf",
+    "The budget export by key date additionally requires \"Read all projects\" and \"Global budget access\", the project role matrix additionally requires \"Read all projects\".": "Der Budget-Export nach Stichtag braucht zusätzlich „Leserechte für alle Projekte“ und „Globaler Budgetzugriff“, die Projektrollen-Matrix zusätzlich „Leserechte für alle Projekte“."
 }

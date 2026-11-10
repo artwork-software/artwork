@@ -1,70 +1,57 @@
 <template>
-    <ArtworkBaseModal @close="$emit('close')"  :title="$t('Select print layout')"
-                      :description="$t('Select a print layout to print the project')">
-
-
-        <div v-if="activePrintLayouts.length > 0">
-            <Listbox as="div" v-model="selectedLayout">
-                <ListboxLabel class="block text-sm/6 font-medium text-text">{{ $t('Select print layout')}}</ListboxLabel>
-                <div class="relative mt-2">
-                    <ListboxButton class="menu-button">
-                        <span class="col-start-1 row-start-1 truncate pr-6 !text-sm/5 font-semibold text-text">{{ selectedLayout?.name }}</span>
-                        <component :is="IconChevronDown" class="h-5 w-5 text-text-subtle col-start-1 row-start-1 -mt-1 -mr-1" aria-hidden="true" />
-                    </ListboxButton>
-
-                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                        <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                            <ListboxOption as="template" v-for="layout in activePrintLayouts" :key="layout.id" :value="layout" v-slot="{ active, selected }">
-                                <li :class="[active ? 'bg-accent-600 text-white outline-none' : 'text-text', 'relative select-none py-2 pl-3 pr-9 cursor-pointer']">
-                                    <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ layout.name }}</span>
-
-                                    <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                        <component :is="IconCheck" class="h-5 w-5" aria-hidden="true" />
-                                    </span>
-                                </li>
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </transition>
-                </div>
-            </Listbox>
-
-            <div class="flex items-center justify-center mt-10">
-                <BaseUIButton
-                    @click="openPrintDialog"
-                    :label="$t('Print')"
-                    is-add-button
-                />
-            </div>
-        </div>
-        <div v-else>
-            <div class="bg-danger-surface p-4 rounded-lg">
-                <div class="flex">
-                    <div class="shrink-0">
-                        <component :is="IconExclamationCircle" class="size-5 text-danger" aria-hidden="true" />
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-danger">
-                            {{ $t('No print layouts available') }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <ArtworkBaseModal
+        title="Select print layout"
+        description="Select a print layout to print the project"
+        modal-size="sm:max-w-lg"
+        @close="emit('close')"
+    >
+        <ArtworkBaseListbox
+            v-if="activePrintLayouts.length > 0"
+            v-model="selectedLayout"
+            :items="activePrintLayouts"
+            by="id"
+            option-label="name"
+            label="Select print layout"
+        />
+        <EmptyState
+            v-else
+            icon="IconPrinter"
+            :title="$t('No print layouts available')"
+        />
+        <BaseAlertComponent
+            v-if="popupBlocked"
+            type="error"
+            message="The print window was blocked. Please allow pop-ups for this page."
+            use-translation
+            class="mt-4 !mb-0"
+        />
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                @click="emit('close')"
+            />
+            <BaseUIButton
+                label="Print"
+                variant="primary"
+                icon="IconPrinter"
+                :disabled="!selectedLayout"
+                @click="openPrintDialog"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
 <script setup>
-import { useI18n } from "vue-i18n";
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {ref, computed} from "vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {IconCheck, IconChevronDown, IconExclamationCircle} from "@tabler/icons-vue";
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {computed, ref} from "vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-const { t } = useI18n();
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import EmptyState from "@/Artwork/Feedback/EmptyState.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+
+defineOptions({name: 'PrintLayoutSelectorModal'})
 
 const props = defineProps({
     project: {
@@ -72,24 +59,29 @@ const props = defineProps({
         required: true,
     },
     printLayouts: {
-        type: Object,
-        required: true,
+        type: [Array, Object],
+        default: () => [],
     },
 })
 
-const activePrintLayouts = computed(() => props.printLayouts.filter(layout => layout.is_active));
-const selectedLayout = ref(activePrintLayouts.value[0]);
-
 const emit = defineEmits(['close']);
 
+const activePrintLayouts = computed(() => Object.values(props.printLayouts ?? {}).filter(layout => layout?.is_active));
+const selectedLayout = ref(activePrintLayouts.value[0] ?? null);
+const popupBlocked = ref(false);
+
 const openPrintDialog = () => {
+    if (!selectedLayout.value) {
+        return;
+    }
+    popupBlocked.value = false;
     const printWindow = window.open(route('project-print-layout.show', {
         project: props.project.id,
         projectPrintLayout: selectedLayout.value.id,
     }), '_blank', 'width=1000,height=1000');
 
     if (!printWindow) {
-        alert(t('The print window was blocked. Please allow pop-ups for this page.'));
+        popupBlocked.value = true;
         return;
     }
 
@@ -115,9 +107,4 @@ const openPrintDialog = () => {
         printWindow.close();
     };
 }
-
 </script>
-
-<style scoped>
-
-</style>

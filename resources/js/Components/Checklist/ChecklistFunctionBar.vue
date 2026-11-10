@@ -4,18 +4,16 @@
             {{ $t(title) }}
         </h2>
         <div class="bg-border-subtle text-sm text-text-subtle leading-none border-2 border-border-subtle rounded-full inline-flex print:hidden">
-            <button @click="updateChecklistStyle('kanban')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-accent-500 focus:text-accent-500 rounded-l-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'kanban' ? 'bg-white text-accent-500 rounded-full' : ''" id="grid">
+            <button @click="updateChecklistStyle('kanban')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-accent-500 focus:text-accent-500 rounded-l-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'kanban' ? 'bg-surface text-accent-500 rounded-full' : ''" id="grid">
                 <IconLayoutKanban class="w-4 h-4 mr-2" />
                 <span>{{ $t('Grid') }}</span>
             </button>
-            <button @click="updateChecklistStyle('list')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-accent-500 focus:text-accent-500 rounded-r-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'list' ? 'bg-white text-accent-500 rounded-full' : ''" id="list">
+            <button @click="updateChecklistStyle('list')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-accent-500 focus:text-accent-500 rounded-r-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'list' ? 'bg-surface text-accent-500 rounded-full' : ''" id="list">
                 <IconLayoutList class="w-4 h-4 mr-2" />
                 <span>{{ $t('List') }}</span>
             </button>
         </div>
-        <slot name="buttons" class="print:hidden">
-
-        </slot>
+        <slot name="buttons" />
         <div class="flex items-center justify-center gap-x-4 print:hidden">
             <slot name="search">
 
@@ -46,15 +44,11 @@
 
 <script setup>
 
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import {IconLayoutKanban, IconLayoutList, IconCirclePlus} from "@tabler/icons-vue";
+import {IconLayoutKanban, IconLayoutList} from "@tabler/icons-vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
-
-import {usePermission} from "@/Composeables/Permission.js";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-const { can, canAny } = usePermission(usePage().props)
 
 const props = defineProps({
     title: {
@@ -75,12 +69,12 @@ const props = defineProps({
     projectCanWriteIds: {
         type: Array,
         required: false,
-        default: []
+        default: () => []
     },
     projectManagerIds: {
         type: Array,
         required: false,
-        default: []
+        default: () => []
     },
     project: {
         type: Object,
@@ -105,13 +99,12 @@ const props = defineProps({
     filters: {
         type: Array,
         required: false,
-        default: []
+        default: () => []
     },
 })
 
 const openAddChecklistModal = ref(false);
 
-const selectedFilter = ref(props.filters.find(filter => filter.type ===  Number(usePage().props.urlParameters.filter)) || props.filters[0]);
 const emit = defineEmits(['update:checklistStyle']);
 
 const updateChecklistStyle = (type) => {
@@ -127,17 +120,4 @@ const updateChecklistStyle = (type) => {
         preserveState: true,
     });
 }
-
-const updateTasksFilter = (type) => {
-    router.reload({
-        data: {
-            filter: type
-        },
-        only: ['checklists', 'money_source_task', 'private_checklists']
-    });
-}
 </script>
-
-<style scoped>
-
-</style>

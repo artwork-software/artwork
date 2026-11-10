@@ -1,87 +1,109 @@
 <template>
-    <ArtworkBaseModal @close="$emit('closed', true)" v-if="true" :title="taskToEdit ? $t('Edit task') : $t('New task')" :description="taskToEdit ? '' : $t('Create a new task. You can also add a deadline and a comment.')">
-        <form @submit.prevent="submit" class="">
-            <div class="mt-6">
-                <div class="flex">
-                    <div class="mt-1 w-full">
-                        <BaseInput
-                            id="taskName"
-                            v-model="taskForm.name"
-                            :label="$t('Task') + '*'"
-                            required
-                        />
-                    </div>
-                </div>
-                <div class="flex mt-3">
-                    <BaseInput
-                        id="deadlineDate"
-                        v-model="taskForm.deadlineDate"
-                        :label="$t('To be done until?')"
-                        type="date"
-                    />
-                </div>
-                <div class="mb-2 mt-2" v-if="!checklist.private">
-                    <UserSearch :only-team="isInOwnTaskManagement" :team-member="project?.users?.map((user) => user.id) ?? checklist?.project?.users?.map((user) => user.id)"
-                                @user-selected="addUserToTask" label="Search for users"
-                    />
-                    <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
-                            <span v-for="(user,index) in usersToAdd"
-                                  class="flex mr-5 rounded-full items-center font-bold text-text">
-                                <div class="flex items-center">
-                                    <img class="flex h-11 w-11 rounded-full object-cover"
-                                         :src="user.profile_photo_url"
-                                         alt=""/>
-                                    <span class="flex ml-4 text-base/5 font-semibold text-text">
-                                    {{ user?.first_name }} {{ user?.last_name }}
-                                    </span>
-                                    <button type="button" @click="deleteUserFromTask(index)">
-                                        <span class="sr-only">{{ $t('Remove user from the task') }}</span>
-                                        <IconX
-                                            class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full bg-accent-600 text-white border-0 "/>
-                                    </button>
-                                </div>
+    <ArtworkBaseModal
+        :title="taskToEdit ? 'Edit task' : 'New task'"
+        :description="taskToEdit ? '' : 'Create a new task. You can also add a deadline and a comment.'"
+        modal-size="sm:max-w-xl"
+        @close="closeModal"
+    >
+        <form id="addEditTaskForm" class="space-y-4" @submit.prevent="submit">
+            <BaseInput
+                id="taskName"
+                v-model="taskForm.name"
+                label="Task"
+                required
+                :error="taskForm.errors.name"
+                autofocus
+            />
+            <BaseInput
+                id="deadlineDate"
+                v-model="taskForm.deadlineDate"
+                label="To be done until?"
+                type="date"
+                :error="taskForm.errors.deadlineDate"
+            />
+            <div v-if="!checklist?.private" class="space-y-2">
+                <UserSearch
+                    :only-team="isInOwnTaskManagement"
+                    :team-member="teamMemberIds"
+                    label="Search for users"
+                    @user-selected="addUserToTask"
+                />
+                <ul
+                    v-if="usersToAdd.length > 0"
+                    class="max-h-60 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+                >
+                    <li
+                        v-for="user in usersToAdd"
+                        :key="user.id"
+                        class="flex items-center justify-between gap-x-3 px-3 py-2"
+                    >
+                        <div class="flex min-w-0 items-center gap-x-3">
+                            <img
+                                class="size-8 shrink-0 rounded-full object-cover"
+                                :src="user.profile_photo_url"
+                                alt=""
+                            />
+                            <span class="truncate text-sm font-medium text-text">
+                                {{ user?.first_name }} {{ user?.last_name }}
                             </span>
-                    </div>
-                </div>
-                <div class="mt-4">
-                        <BaseTextarea
-                            id="taskDescription"
-                            v-model="taskForm.description"
-                            :label="$t('Comment')"
-                            :rows="3"
-                        />
-                </div>
-                <div class="w-full flex items-center justify-end text-center">
-                    <BaseUIButton
-                        type="submit"
-                        class="mt-4"
-                        :disabled="taskForm.name === '' || taskForm.processing"
-                        :label="taskToEdit ? $t('Save') : $t('Add')"
-                        is-add-button
-                    />
-                </div>
+                        </div>
+                        <button
+                            type="button"
+                            class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 hover:bg-surface-hover hover:text-danger motion-reduce:transition-none"
+                            :aria-label="$t('Remove user from the task')"
+                            @click="deleteUserFromTask(user)"
+                        >
+                            <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                        </button>
+                    </li>
+                </ul>
             </div>
+            <BaseTextarea
+                id="taskDescription"
+                v-model="taskForm.description"
+                label="Comment"
+                :rows="3"
+            />
         </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="taskForm.processing"
+                @click="closeModal"
+            />
+            <BaseUIButton
+                type="submit"
+                form="addEditTaskForm"
+                :label="taskToEdit ? 'Save' : 'Add'"
+                variant="primary"
+                :icon="taskToEdit ? 'IconDeviceFloppy' : 'IconCirclePlus'"
+                :processing="taskForm.processing"
+                :disabled="!canSubmit"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
 <script setup>
-import {IconX} from "@tabler/icons-vue";
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import UserSearch from "@/Components/SearchBars/UserSearch.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import {computed, ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import {ref} from "vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+
+defineOptions({name: 'AddEditTaskModal'})
 
 const props = defineProps({
+    // Bei Aufgaben in eigenen To-do-Listen ohne Projekt kommt hier null an
     project: {
         type: Object,
-        required: true
+        required: false,
+        default: null
     },
     tab_id: {
         type: Number,
@@ -123,47 +145,52 @@ const emits = defineEmits([
     'closed'
 ])
 
-const usersToAdd = ref(props.taskToEdit ? props.taskToEdit.users : []);
+// Kopie, damit die Personenliste der Aufgabe in der Elternansicht nicht vor dem Speichern mitverändert wird
+const usersToAdd = ref(props.taskToEdit?.users ? [...props.taskToEdit.users] : []);
+
+const teamMemberIds = computed(() => (
+    props.project?.users?.map((user) => user.id)
+    ?? props.checklist?.project?.users?.map((user) => user.id)
+));
+
+const canSubmit = computed(() => Boolean(taskForm.name?.trim()) && !taskForm.processing);
+
+const closeModal = () => {
+    if (taskForm.processing) {
+        return;
+    }
+    emits('closed', true);
+}
 
 const addUserToTask = (user) => {
-    if (!usersToAdd.value.includes(user)) {
+    if (!usersToAdd.value.some((addedUser) => addedUser.id === user.id)) {
         usersToAdd.value.push(user);
     }
 }
 
-const deleteUserFromTask = (index) => {
-    usersToAdd.value.splice(index, 1);
+const deleteUserFromTask = (user) => {
+    usersToAdd.value = usersToAdd.value.filter((addedUser) => addedUser.id !== user.id);
 }
 
 const submit = () => {
-    usersToAdd.value.forEach((user) => {
-        taskForm.users.push(user.id);
-    })
-    if ( props.taskToEdit ) {
-        taskForm.patch(route('tasks.update', {task: props.taskToEdit.id}), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                taskForm.reset();
-                usersToAdd.value = [];
-                emits('closed');
-            }
-        });
+    if (!canSubmit.value) {
+        return;
+    }
+    // Neu setzen statt anhängen, sonst doppeln sich die IDs bei erneutem Absenden nach einem Fehler
+    taskForm.users = usersToAdd.value.map((user) => user.id);
+    const options = {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            taskForm.reset();
+            usersToAdd.value = [];
+            emits('closed');
+        }
+    };
+    if (props.taskToEdit) {
+        taskForm.patch(route('tasks.update', {task: props.taskToEdit.id}), options);
     } else {
-        taskForm.post(route('tasks.store'), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                taskForm.reset();
-                usersToAdd.value = [];
-                emits('closed');
-            }
-        });
+        taskForm.post(route('tasks.store'), options);
     }
 }
-
 </script>
-
-<style scoped>
-
-</style>

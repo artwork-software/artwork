@@ -1,63 +1,78 @@
 <template>
-    <ArtworkBaseModal @close="$emit('close')" :title="$t('Add projects to group')" :description="$t('Select a project to add to this group.')">
-        <div>
+    <ArtworkBaseModal
+        title="Add projects to group"
+        description="Select a project to add to this group."
+        modal-size="sm:max-w-2xl"
+        @close="emits('close')"
+    >
+        <div class="space-y-5">
+            <ProjectSearch no-project-groups @project-selected="addProjectToGroup" />
 
-            <div>
-                <ProjectSearch no-project-groups @project-selected="addProjectToGroup" />
-            </div>
+            <ul v-if="projectGroupForm.projectIdsToAdd.length > 0" class="flex flex-wrap items-center gap-2">
+                <li
+                    v-for="(groupProject, index) in projectGroupForm.projectIdsToAdd"
+                    :key="groupProject.id"
+                    class="flex items-center gap-x-2 rounded-full border border-border-subtle bg-surface-sunken py-1 pr-1.5 pl-1"
+                >
+                    <img
+                        class="size-7 shrink-0 rounded-full object-cover"
+                        :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject.key_visual_path : '/storage/logo/artwork_logo_small.svg'"
+                        alt=""
+                    />
+                    <span class="text-sm font-medium text-text">{{ groupProject.name }}</span>
+                    <button
+                        type="button"
+                        class="inline-flex size-6 cursor-pointer items-center justify-center rounded-full text-text-subtle transition-colors duration-150 hover:bg-surface-hover hover:text-danger motion-reduce:transition-none"
+                        :aria-label="$t('Remove')"
+                        @click="deleteGroupFormListByIndex(index)"
+                    >
+                        <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true" />
+                    </button>
+                </li>
+            </ul>
 
-            <div class="my-5 flex items-center flex-wrap gap-3">
-                <div v-for="(groupProject, index) in projectGroupForm.projectIdsToAdd" class="group block shrink-0 bg-surface-sunken w-fit pr-3 rounded-full border border-border">
-                    <div class="flex items-center">
-                        <div>
-                            <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
-                        </div>
-                        <div class="mx-2">
-                            <p class="text-sm/5 font-semibold text-text group-hover:text-text">{{ groupProject.name}}</p>
-                        </div>
-                        <div class="flex items-center">
-                            <button type="button" @click="deleteGroupFormListByIndex(index)">
-                                <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <LastedProjects
+                :limit="10"
+                without-group
+                @select="addProjectToGroup"
+            />
 
-            <div class="my-4">
-                <LastedProjects
-                    :limit="10"
-                    @select="handleOpenProject"
-                    without-group
-                />
-            </div>
-
-
-            <div class="mb-4">
-                <AlertComponent type="error" :text="$t('Please note: If you remove and save a project here, the project will be removed from the group')" />
-            </div>
-
-            <div class="flex items-center justify-center">
-                <BaseUIButton :label="$t('Add projects to group')" is-add-button @click="addProjectsToGroup" />
-            </div>
+            <BaseAlertComponent
+                type="warning"
+                message="Please note: If you remove and save a project here, the project will be removed from the group"
+                use-translation
+                class="!mb-0"
+            />
         </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="projectGroupForm.processing"
+                @click="emits('close')"
+            />
+            <BaseUIButton
+                label="Add projects to group"
+                variant="primary"
+                icon="IconFolderPlus"
+                :processing="projectGroupForm.processing"
+                @click="addProjectsToGroup"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
 <script setup>
-import {IconX} from "@tabler/icons-vue";
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
-import {ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
-import Button from "@/Jetstream/Button.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+
+defineOptions({name: 'ProjectGroupAddProject'})
 
 const props = defineProps({
     project: {
@@ -65,23 +80,22 @@ const props = defineProps({
         required: true,
     },
     projectsInGroup: {
-        type: Object,
-        required: true,
+        type: [Array, Object],
+        default: () => [],
     }
 })
-
 
 const emits = defineEmits([
     'close',
 ]);
 
+// Eigene Kopie: Ohne Speichern darf sich die Gruppenliste im Projektkopf nicht ändern
 const projectGroupForm = useForm({
-    projectIdsToAdd: props.projectsInGroup ? props.projectsInGroup : [],
+    projectIdsToAdd: [...Object.values(props.projectsInGroup ?? {})],
 });
 
 const addProjectToGroup = (projectToAdd) => {
-    // Prüfen, ob ein Projekt mit derselben ID bereits in der Liste ist
-    if (projectGroupForm.projectIdsToAdd.some(project => project.id === projectToAdd.id)) {
+    if (!projectToAdd?.id || projectGroupForm.projectIdsToAdd.some(project => project.id === projectToAdd.id)) {
         return;
     }
 
@@ -93,6 +107,9 @@ const deleteGroupFormListByIndex = (index) => {
 }
 
 const addProjectsToGroup = () => {
+    if (projectGroupForm.processing) {
+        return;
+    }
     projectGroupForm.post(route('project-group.add-projects', {projectGroup: props.project.id}), {
         preserveScroll: true,
         onSuccess: () => {
@@ -100,12 +117,4 @@ const addProjectsToGroup = () => {
         }
     });
 }
-
-const handleOpenProject = (project) => {
-    addProjectToGroup(project);
-}
 </script>
-
-<style scoped>
-
-</style>

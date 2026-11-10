@@ -1,67 +1,71 @@
 <template>
-    <BaseModal @closed="closeModal">
-        <div class="space-y-6">
-            <div class="font-black font-lexend text-text text-2xl mb-4">
-                {{ title }}
-            </div>
-
-            <div class="flex">
-                <!-- Left side: Color picker -->
-                <div class="mr-4">
-                    <div class="text-sm/5 font-bold text-text-subtle mb-1">{{ $t('Color') }}</div>
-                    <ColorPickerComponent @updateColor="addColor" :color="form.color" />
+    <ArtworkBaseModal
+        v-if="show"
+        :title="title || 'Edit Status'"
+        modal-size="sm:max-w-lg"
+        @close="closeModal"
+    >
+        <form id="projectStateForm" class="space-y-4" @submit.prevent="submit">
+            <div class="flex items-end gap-x-3">
+                <div class="shrink-0">
+                    <span class="mb-1 block font-lexend text-xs font-medium text-text-muted">{{ $t('Color') }}</span>
+                    <ColorPickerComponent :color="form.color" @update-color="addColor"/>
                 </div>
-
-                <!-- Right side: Name and checkbox -->
-                <div class="flex-1">
-                    <!-- Name input -->
-                    <BaseInput
-                        id="name"
-                        v-model="form.name"
-                        label="Name"
-                    />
-
-                    <!-- Checkbox -->
-                    <div class="relative flex items-start mt-4">
-                        <div class="flex h-6 items-center">
-                            <input id="is_planning" v-model="form.is_planning" type="checkbox" class="input-checklist" />
-                        </div>
-                        <div class="ml-3 text-sm leading-6 flex items-center">
-                            <label for="is_planning" class="font-medium text-text">
-                                {{ $t('Project counts as "in planning"') }}
-                            </label>
-                            <div class="relative ml-2 group">
-                                <IconInfoCircle class="h-5 w-5 text-text-subtle" />
-                                <div class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-surface-inverse text-text-inverse text-xs rounded p-2 w-64">
-                                    {{ $t('When a project counts as "in planning", all appointments assigned to this project during creation are initially planned appointments instead of firmly scheduled ones.') }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <BaseInput
+                    id="projectStateName"
+                    v-model="form.name"
+                    label="Name"
+                    required
+                    class="flex-1"
+                />
             </div>
-
-            <!-- Buttons -->
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" @click="closeModal" class="inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken sm:text-sm">
-                    {{ $t('Cancel') }}
-                </button>
-                <button type="button" @click="submit" :disabled="form.name === ''" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-600 text-base font-medium text-white hover:bg-accent-700 sm:text-sm disabled:bg-border disabled:text-text-subtle disabled:cursor-not-allowed">
-                    {{ $t('Save') }}
-                </button>
-            </div>
-        </div>
-    </BaseModal>
+            <BaseCheckbox
+                id="projectStateIsPlanning"
+                v-model="form.is_planning"
+                :label="$t(PLANNING_LABEL_KEY)"
+                :description="$t(PLANNING_DESCRIPTION_KEY)"
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                @click="closeModal"
+            />
+            <BaseUIButton
+                type="submit"
+                form="projectStateForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :disabled="!form.name?.trim()"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-import {IconInfoCircle} from "@tabler/icons-vue";
-import { ref, watch, onMounted } from "vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import {ref, watch} from "vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 
+defineOptions({name: 'ProjectStateModal'})
+
+const DEFAULT_COLOR = '#FCFCFB';
+// Schlüssel enthalten Anführungszeichen, daher nicht direkt im Template-Attribut
+const PLANNING_LABEL_KEY = 'Project counts as "in planning"';
+const PLANNING_DESCRIPTION_KEY = 'When a project counts as "in planning", all appointments assigned to this project during creation are initially planned appointments instead of firmly scheduled ones.';
+
 const props = defineProps({
+    // Projekteinstellungen steuern die Sichtbarkeit über show, der Status-Tag per v-if
+    show: {
+        type: Boolean,
+        default: true
+    },
     title: {
         type: String,
         default: ''
@@ -70,7 +74,7 @@ const props = defineProps({
         type: Object,
         default: () => ({
             name: '',
-            color: '#FCFCFB',
+            color: DEFAULT_COLOR,
             is_planning: false
         })
     }
@@ -78,68 +82,47 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit']);
 
-// Form data
-const form = ref({
-    id: null,
-    name: '',
-    color: '#FCFCFB', // Default color (light gray)
-    is_planning: false
-});
-
-// Initialize form data from state prop
-const initializeForm = () => {
-    console.log("ProjectStateModal initializeForm:", props.state);
-    if (props.state) {
-        form.value.id = props.state.id || null;
-        form.value.name = props.state.name || '';
-        // Convert color from class name to hex if needed
-        form.value.color = props.state.color;
-        form.value.is_planning = props.state.is_planning === 1;
-    }
-};
-
-// Initialize form on component creation
-onMounted(() => {
-    initializeForm();
-});
-
-// Watch for changes to the state prop
-watch(() => props.state, (newValue) => {
-    if (newValue) {
-        form.value.id = newValue.id || null;
-        form.value.name = newValue.name || '';
-        // Convert color from class name to hex if needed
-        form.value.color = newValue.color;
-        form.value.is_planning = newValue.is_planning || false;
-    }
-}, { deep: true, immediate: true });
-
-// Close modal and reset form
-const closeModal = () => {
-    emit('close');
-    // Reset form values to default after closing
-    form.value = {
+function emptyForm() {
+    return {
         id: null,
         name: '',
-        color: '#FCFCFB', // Default color (light gray)
+        color: DEFAULT_COLOR,
         is_planning: false
     };
-};
+}
 
-// Submit form data
-const submit = () => {
-    // Create a copy of the form data before resetting it
-    const formData = { ...form.value };
-    console.log("ProjectStateModal submit:", formData);
-    emit('submit', formData);
+const form = ref(emptyForm());
+
+/**
+ * is_planning kommt je nach Quelle als Boolean oder 0/1. Vorher setzte onMounted nur bei === 1 auf true und
+ * überschrieb damit einen Boolean-Wert true wieder mit false.
+ */
+function fillForm(state) {
+    if (!state) {
+        return;
+    }
+    form.value.id = state.id || null;
+    form.value.name = state.name || '';
+    form.value.color = state.color || DEFAULT_COLOR;
+    form.value.is_planning = Boolean(Number(state.is_planning));
+}
+
+watch(() => props.state, fillForm, {deep: true, immediate: true});
+
+function closeModal() {
+    emit('close');
+    form.value = emptyForm();
+}
+
+function submit() {
+    if (!form.value.name?.trim()) {
+        return;
+    }
+    emit('submit', {...form.value});
     closeModal();
-};
+}
 
-// Add color to form
-const addColor = (color) => {
+function addColor(color) {
     form.value.color = color;
-};
+}
 </script>
-
-<style scoped>
-</style>

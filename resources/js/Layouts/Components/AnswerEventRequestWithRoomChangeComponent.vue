@@ -1,128 +1,96 @@
 <template>
-    <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_appointment.svg">
-            <div class="mx-4">
-                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text mt-2 mb-8">
-                    {{ $t('Event')}}
-                </div>
-                <!-- Type -->
-                <div class=" w-full flex truncate">
-                    <div>
-                        <div class="block w-10 h-10 rounded-full" :style="{'backgroundColor' : eventType?.hex_code }" />
-                    </div>
-                    <p class="ml-2 flex items-center text-lg font-lexend font-semibold">
-                        {{ eventType?.name }}
-                    </p>
-                </div>
-
-                <div class="flex flex-wrap">
-                    <!-- Project and Creator -->
-                    <div class="my-2 flex w-full">
-                        <div class="w-1/2 flex items-center my-auto" v-if="this.project?.id">
-                            {{ $t('assigned to')}}: <a
-                            :href="route('projects.tab', {project: this.project.id, projectTab: this.first_project_calendar_tab_id})"
-                            class="ml-3 mt-1 items-center flex text-xs/[18px] text-accent-600">
-                            {{ this.project?.name }}
-                        </a>
-                        </div>
-                        <div class="flex items-center">
-                            {{ $t('Created by') }} {{ this.creator.first_name }} {{ this.creator.last_name }}
-                            <img v-if="this.creator"
-                                 :data-tooltip-target="this.creator.id"
-                                 :src="this.creator.profile_photo_url"
-                                 :alt="this.creator.last_name"
-                                 class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <div class="text-sm/5 font-bold text-text-subtle ml-3" v-else>
-                                {{ $t('Deleted user')}}
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Time -->
-                    <div class="my-2 flex w-full">
-                        <div
-                            v-if="this.getDateOfDate(this.request.start_time) === this.getDateOfDate(this.request.end_time)">
-                            {{ this.formatDate(this.request.start_time) }} -
-                            {{ this.getTimeOfDate(this.request.end_time) }}
-                        </div>
-                        <div v-else>
-                            {{ this.formatDate(this.request.start_time) }} -
-                            {{ this.formatDate(this.request.end_time) }}
-                        </div>
-                    </div>
-                    <!--    Properties    -->
-                    <div class="flex py-2 w-full">
-                        <div v-if="request.audience">
-                            <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true"></TagComponent>
-                        </div>
-                        <div v-if="request.is_loud">
-                            <TagComponent :displayed-text="$t('It gets loud')" hideX="true"></TagComponent>
-                        </div>
-                    </div>
-                    <!-- Description -->
-                    <div class="mt-4 text-sm/5 font-semibold text-text flex w-full">
-                        {{ this.request.description }}
-                    </div>
-                    <div class="py-1 flex w-11/12">
-                        <Listbox as="div" class="w-full" v-model="this.room" id="room">
-                            <ListboxButton class="border border-border w-full h-10 cursor-pointer truncate flex p-2">
-                                <div class="flex-grow text-left text-sm/5 font-semibold text-text">
-                                    {{ this.room?.name }}
-                                </div>
-                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
-                            </ListboxButton>
-                            <ListboxOptions class="w-10/12 bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute">
-                                <ListboxOption v-for="roomOption in rooms"
-                                               class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between "
-                                               :key="roomOption.name"
-                                               :value="roomOption"
-                                               v-slot="{ active, selected }">
-                                    <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle']">
-                                        {{ roomOption.name }}
-                                    </div>
-                                    <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </Listbox>
-                    </div>
-                </div>
-                <IconX stroke-width="1.5" @click="closeModal(false)"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-text-subtle absolute cursor-pointer"
-                       aria-hidden="true"/>
-                <div class="flex justify-center mt-6">
-                    <FormButton @click="closeModal(true)" :text="$t('Confirm occupancy with room change')"
+    <ArtworkBaseModal
+        title="Confirm occupancy with room change"
+        :description="periodText"
+        modal-size="sm:max-w-xl"
+        @close="closeModal(false)"
+    >
+        <div class="space-y-4">
+            <div class="flex items-start justify-between gap-x-4">
+                <div class="flex min-w-0 items-center gap-x-2">
+                    <span
+                        class="size-4 shrink-0 rounded-full"
+                        :style="{ backgroundColor: eventType?.hex_code }"
                     />
+                    <span class="truncate font-lexend text-sm font-bold text-text">
+                        {{ eventType?.name }}
+                    </span>
+                    <img v-if="request.audience" src="/Svgs/IconSvgs/icon_public.svg" class="size-4 shrink-0" :alt="$t('With audience')" v-tooltip.bottom="{ value: $t('With audience'), class: 'aw-tooltip' }"/>
+                    <img v-if="request.is_loud" src="/Svgs/IconSvgs/icon_loud.svg" class="size-4 shrink-0" :alt="$t('It gets loud')" v-tooltip.bottom="{ value: $t('It gets loud'), class: 'aw-tooltip' }"/>
+                </div>
+                <div class="flex shrink-0 items-center gap-x-2 text-xs text-text-subtle">
+                    {{ $t('Created by') }}
+                    <UserPopoverTooltip
+                        v-if="creator"
+                        :user="creator"
+                        :id="creator.id"
+                        height="4"
+                        width="4"
+                    />
+                    <span v-else class="font-semibold">{{ $t('Deleted user') }}</span>
                 </div>
             </div>
-    </BaseModal>
+
+            <div class="space-y-1 text-sm text-text">
+                <div v-if="project?.id" class="flex items-center gap-x-2 text-xs text-text-subtle">
+                    {{ $t('assigned to') }}
+                    <a
+                        :href="route('projects.tab', {project: project.id, projectTab: first_project_calendar_tab_id})"
+                        class="font-bold text-accent-600 hover:underline"
+                    >
+                        {{ project?.name }}
+                    </a>
+                </div>
+                <div v-else class="text-xs text-text-subtle">
+                    {{ $t('No project assignment') }}
+                </div>
+                <div v-if="request.description" class="text-xs text-text-subtle">
+                    {{ request.description }}
+                </div>
+            </div>
+
+            <ArtworkBaseListbox
+                v-model="room"
+                :items="rooms"
+                by="id"
+                option-label="name"
+                label="New room"
+                placeholder="Select room"
+            />
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                label="Confirm occupancy with room change"
+                variant="primary"
+                icon="IconCheck"
+                :disabled="!room"
+                @click="closeModal(true)"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script>
-import {IconCheck, IconChevronDown, IconX} from "@tabler/icons-vue";
-
-import 'vue-cal/dist/vuecal.css'
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'AnswerEventRequestWithRoomChangeComponent',
     mixins: [Permissions],
     components: {
-      UserPopoverTooltip,
-        BaseModal,
-        FormButton,
-        JetDialogModal,
-        IconX,
-        IconCheck,
-        TagComponent,
-        Listbox,
-        ListboxButton,
-        ListboxOption,
-        ListboxOptions,
-        IconChevronDown,
+        ArtworkBaseModal,
+        ArtworkBaseListbox,
+        BaseUIButton,
+        UserPopoverTooltip,
     },
     props: [
         'type',
@@ -134,9 +102,23 @@ export default {
         'first_project_calendar_tab_id'
     ],
     emits: ['closed'],
+    computed: {
+        periodText() {
+            if (!this.request?.start_time || !this.request?.end_time) {
+                return '';
+            }
+            if (this.getDateOfDate(this.request.start_time) === this.getDateOfDate(this.request.end_time)) {
+                return this.formatDate(this.request.start_time) + ' - ' + this.getTimeOfDate(this.request.end_time);
+            }
+            return this.formatDate(this.request.start_time) + ' - ' + this.formatDate(this.request.end_time);
+        },
+    },
     methods: {
         closeModal(bool) {
-            this.request.room_id = this.room.id;
+            // Der Parent liest room_id aus dem Request-Objekt und schickt es per PUT
+            if (this.room) {
+                this.request.room_id = this.room.id;
+            }
             this.request.occupancy_option = false;
             this.$emit('closed', bool);
         },
@@ -157,11 +139,9 @@ export default {
     data() {
         return {
             eventType: this.eventTypes.find(eventType => eventType.id === this.request.event_type_id),
-            room: this.rooms.find(room => room.id === this.request.room_id),
+            room: this.rooms.find(room => room.id === this.request.room_id) ?? null,
             project: this.projects.find(project => project.id === this.request.project_id),
         }
     }
 }
 </script>
-
-<style scoped></style>

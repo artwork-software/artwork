@@ -85,8 +85,8 @@
 
     <ConfirmationComponent
         v-if="showConfirmDeletePermissionPresetModal"
-        confirm="Löschen"
-        titel="Rechte-Preset löschen?"
+        :confirm="$t('Delete')"
+        :titel="$t('Delete permission preset')"
         :description="confirmDeletePermissionPresetModalDescription"
         @closed="closeConfirmPermissionPresetDeleteModal"
     />

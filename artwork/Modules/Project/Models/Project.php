@@ -21,6 +21,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Project\Services\ProjectArtistService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sector\Models\Sector;
@@ -606,5 +607,26 @@ class Project extends Model
     public function scopeByName(Builder $builder, string $query): Builder
     {
         return $builder->where('name', 'like', "%" . $query . "%");
+    }
+
+    /**
+     * Projekte, die die Person öffnen darf: Query-Gegenstück zu ProjectPolicy::view (globales Projektrecht,
+     * Mitglied im Projektteam oder in einer Abteilung des Projekts). Beide Regeln müssen gleich bleiben.
+     */
+    public function scopeEnterableBy(Builder $builder, User $user): Builder
+    {
+        foreach (ProjectPolicy::GLOBAL_ENTER_PERMISSIONS as $permission) {
+            if ($user->can($permission)) {
+                return $builder;
+            }
+        }
+
+        return $builder->where(function (Builder $query) use ($user): void {
+            $query->whereHas('users', fn (Builder $users) => $users->whereKey($user->id))
+                ->orWhereHas(
+                    'departments.users',
+                    fn (Builder $users) => $users->whereKey($user->id)
+                );
+        });
     }
 }

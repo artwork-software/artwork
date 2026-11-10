@@ -1,52 +1,60 @@
 <template>
-    <BaseModal modal-size="sm:max-w-6xl" @closed="$emit('closed')">
-        <ModalHeader
-            :title="selectedLog ? $t('Protocol details') : $t('Sage protocol')"
-            :description="selectedLog ? formatRunTitle(selectedLog) : $t('Log of imported and deleted Sage bookings')"
-        />
-
-        <!-- Runs list -->
+    <ArtworkBaseModal
+        :title="selectedLog ? 'Protocol details' : 'Sage protocol'"
+        :description="selectedLog ? formatRunTitle(selectedLog) : 'Log of imported and deleted Sage bookings'"
+        modal-size="sm:max-w-6xl"
+        @close="$emit('closed')"
+    >
+        <!-- Liste der Läufe -->
         <div v-if="!selectedLog">
-            <div v-if="loadingRuns" class="py-8 text-center text-sm/5 font-bold text-text-subtle">{{ $t('Loading...') }}</div>
-            <div v-else-if="!runs || runs.data.length === 0" class="py-8 text-center text-sm/5 font-bold text-text-subtle">
-                {{ $t('No entries available') }}
+            <div v-if="loadingRuns" class="flex justify-center py-8">
+                <PropertyIcon name="IconLoader2" class="size-6 animate-spin text-text-muted" aria-hidden="true"/>
+                <span class="sr-only">{{ $t('Loading...') }}</span>
             </div>
+            <EmptyState
+                v-else-if="!runs || runs.data.length === 0"
+                icon="IconHistory"
+                :title="$t('No entries available')"
+            />
             <div v-else>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto rounded-lg border border-border-subtle">
                     <table class="min-w-full text-sm">
-                        <thead>
-                            <tr class="text-left text-sm/5 font-bold text-text-subtle border-b border-border-subtle">
-                                <th class="py-2 pr-4">{{ $t('Date') }}</th>
-                                <th class="py-2 pr-4">{{ $t('Type') }}</th>
-                                <th class="py-2 pr-4">{{ $t('Source') }}</th>
-                                <th class="py-2 pr-4">{{ $t('User') }}</th>
-                                <th class="py-2 pr-4 text-right">{{ $t('Created') }}</th>
-                                <th class="py-2 pr-4 text-right">{{ $t('Updated') }}</th>
-                                <th class="py-2 pr-4 text-right">{{ $t('Deleted') }}</th>
-                                <th class="py-2 pr-4"></th>
+                        <thead class="bg-surface-sunken">
+                            <tr class="text-left text-xs font-medium text-text-muted border-b border-border-subtle">
+                                <th class="py-2 px-3">{{ $t('Date') }}</th>
+                                <th class="py-2 px-3">{{ $t('Type') }}</th>
+                                <th class="py-2 px-3">{{ $t('Source') }}</th>
+                                <th class="py-2 px-3">{{ $t('User') }}</th>
+                                <th class="py-2 px-3 text-right">{{ $t('Created') }}</th>
+                                <th class="py-2 px-3 text-right">{{ $t('Updated') }}</th>
+                                <th class="py-2 px-3 text-right">{{ $t('Deleted') }}</th>
+                                <th class="py-2 px-3"><span class="sr-only">{{ $t('Actions') }}</span></th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="bg-surface">
                             <tr v-for="log in runs.data" :key="log.id"
-                                class="border-b border-border-subtle hover:bg-surface-sunken cursor-pointer"
+                                class="border-b border-border-subtle text-text last:border-b-0 hover:bg-surface-hover cursor-pointer"
                                 @click="openRun(log)">
-                                <td class="py-2 pr-4 whitespace-nowrap">{{ formatDateTime(log.created_at) }}</td>
-                                <td class="py-2 pr-4">
+                                <td class="py-2 px-3 whitespace-nowrap">{{ formatDateTime(log.created_at) }}</td>
+                                <td class="py-2 px-3">
                                     <span :class="[
                                         'inline-block rounded-full px-2 py-0.5 text-xs',
                                         log.type === 'delete' ? 'bg-danger-surface text-danger' : 'bg-success-surface text-success'
                                     ]">{{ translateType(log.type) }}</span>
                                 </td>
-                                <td class="py-2 pr-4">{{ translateSource(log.source) }}</td>
-                                <td class="py-2 pr-4 whitespace-nowrap">{{ log.user?.full_name ?? '–' }}</td>
-                                <td class="py-2 pr-4 text-right text-success">+{{ log.created_count }}</td>
-                                <td class="py-2 pr-4 text-right text-warning">~{{ log.updated_count }}</td>
-                                <td class="py-2 pr-4 text-right text-danger">−{{ log.deleted_count }}</td>
-                                <td class="py-2 pr-4 text-right whitespace-nowrap" @click.stop>
-                                    <button class="text-accent-600 hover:underline text-xs"
-                                            @click="downloadCsv(log)">
-                                        {{ $t('Download CSV') }}
-                                    </button>
+                                <td class="py-2 px-3">{{ translateSource(log.source) }}</td>
+                                <td class="py-2 px-3 whitespace-nowrap">{{ log.user?.full_name ?? '–' }}</td>
+                                <td class="py-2 px-3 text-right tabular-nums text-success">+{{ log.created_count }}</td>
+                                <td class="py-2 px-3 text-right tabular-nums text-warning">~{{ log.updated_count }}</td>
+                                <td class="py-2 px-3 text-right tabular-nums text-danger">−{{ log.deleted_count }}</td>
+                                <td class="py-2 px-3 text-right whitespace-nowrap" @click.stop>
+                                    <BaseUIButton
+                                        label="Download CSV"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon="IconDownload"
+                                        @click="downloadCsv(log)"
+                                    />
                                 </td>
                             </tr>
                         </tbody>
@@ -60,38 +68,35 @@
             </div>
         </div>
 
-        <!-- Entries of a single run -->
+        <!-- Einträge eines einzelnen Laufs -->
         <div v-else>
-            <button class="mb-3 text-sm text-accent-600 hover:underline" @click="backToRuns">
-                &larr; {{ $t('Back to overview') }}
-            </button>
-            <div class="mb-3 flex items-center justify-end">
-                <button class="text-accent-600 hover:underline text-sm" @click="downloadCsv(selectedLog)">
-                    {{ $t('Download CSV') }}
-                </button>
+            <div v-if="loadingEntries" class="flex justify-center py-8">
+                <PropertyIcon name="IconLoader2" class="size-6 animate-spin text-text-muted" aria-hidden="true"/>
+                <span class="sr-only">{{ $t('Loading...') }}</span>
             </div>
-            <div v-if="loadingEntries" class="py-8 text-center text-sm/5 font-bold text-text-subtle">{{ $t('Loading...') }}</div>
-            <div v-else-if="!entries || entries.data.length === 0" class="py-8 text-center text-sm/5 font-bold text-text-subtle">
-                {{ $t('No entries available') }}
-            </div>
+            <EmptyState
+                v-else-if="!entries || entries.data.length === 0"
+                icon="IconHistory"
+                :title="$t('No entries available')"
+            />
             <div v-else>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto rounded-lg border border-border-subtle">
                     <table class="min-w-full text-sm">
-                        <thead>
-                            <tr class="text-left text-sm/5 font-bold text-text-subtle border-b border-border-subtle">
-                                <th class="py-2 pr-4">{{ $t('Action') }}</th>
-                                <th class="py-2 pr-4">{{ $t('Assignment') }}</th>
-                                <th class="py-2 pr-4">{{ $t('Sage ID') }}</th>
-                                <th class="py-2 pr-4">{{ $t('KTR') }}</th>
-                                <th class="py-2 pr-4">{{ $t('Debit account') }}</th>
-                                <th class="py-2 pr-4">{{ $t('Booking date') }}</th>
-                                <th class="py-2 pr-4 text-right">{{ $t('Amount') }}</th>
-                                <th class="py-2 pr-4">{{ $t('Booking text') }}</th>
+                        <thead class="bg-surface-sunken">
+                            <tr class="text-left text-xs font-medium text-text-muted border-b border-border-subtle">
+                                <th class="py-2 px-3">{{ $t('Action') }}</th>
+                                <th class="py-2 px-3">{{ $t('Assignment') }}</th>
+                                <th class="py-2 px-3">{{ $t('Sage ID') }}</th>
+                                <th class="py-2 px-3">{{ $t('KTR') }}</th>
+                                <th class="py-2 px-3">{{ $t('Debit account') }}</th>
+                                <th class="py-2 px-3">{{ $t('Booking date') }}</th>
+                                <th class="py-2 px-3 text-right">{{ $t('Amount') }}</th>
+                                <th class="py-2 px-3">{{ $t('Booking text') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr v-for="entry in entries.data" :key="entry.id" class="border-b border-border-subtle">
-                                <td class="py-2 pr-4">
+                        <tbody class="bg-surface">
+                            <tr v-for="entry in entries.data" :key="entry.id" class="border-b border-border-subtle text-text last:border-b-0">
+                                <td class="py-2 px-3">
                                     <span :class="[
                                         'inline-block rounded-full px-2 py-0.5 text-xs',
                                         entry.action === 'deleted' ? 'bg-danger-surface text-danger'
@@ -99,13 +104,13 @@
                                             : 'bg-success-surface text-success'
                                     ]">{{ translateAction(entry.action) }}</span>
                                 </td>
-                                <td class="py-2 pr-4">{{ translateTarget(entry.target_type) }}</td>
-                                <td class="py-2 pr-4">{{ entry.sage_id }}</td>
-                                <td class="py-2 pr-4">{{ entry.kst_traeger }}</td>
-                                <td class="py-2 pr-4">{{ entry.kto_soll }}</td>
-                                <td class="py-2 pr-4 whitespace-nowrap">{{ entry.buchungsdatum }}</td>
-                                <td class="py-2 pr-4 text-right whitespace-nowrap">{{ entry.buchungsbetrag }}</td>
-                                <td class="py-2 pr-4">{{ entry.buchungstext }}</td>
+                                <td class="py-2 px-3">{{ translateTarget(entry.target_type) }}</td>
+                                <td class="py-2 px-3">{{ entry.sage_id }}</td>
+                                <td class="py-2 px-3">{{ entry.kst_traeger }}</td>
+                                <td class="py-2 px-3">{{ entry.kto_soll }}</td>
+                                <td class="py-2 px-3 whitespace-nowrap">{{ entry.buchungsdatum }}</td>
+                                <td class="py-2 px-3 text-right whitespace-nowrap tabular-nums">{{ entry.buchungsbetrag }}</td>
+                                <td class="py-2 px-3">{{ entry.buchungstext }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -117,19 +122,45 @@
                 </div>
             </div>
         </div>
-    </BaseModal>
+
+        <template #footer>
+            <template v-if="selectedLog">
+                <BaseUIButton
+                    label="Back to overview"
+                    variant="secondary"
+                    icon="IconArrowLeft"
+                    @click="backToRuns"
+                />
+                <BaseUIButton
+                    label="Download CSV"
+                    variant="primary"
+                    icon="IconDownload"
+                    @click="downloadCsv(selectedLog)"
+                />
+            </template>
+            <BaseUIButton
+                v-else
+                label="Close"
+                variant="secondary"
+                hide-icon
+                @click="$emit('closed')"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script>
 import { defineComponent } from "vue";
 import axios from "axios";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import EmptyState from "@/Artwork/Feedback/EmptyState.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 
 export default defineComponent({
     name: "SageBookingLogModal",
-    components: { BaseModal, ModalHeader, BasePaginator },
+    components: { ArtworkBaseModal, BaseUIButton, EmptyState, PropertyIcon, BasePaginator },
     emits: ['closed'],
     data() {
         return {
@@ -156,11 +187,19 @@ export default defineComponent({
             this.fetchEntries(1, 25);
         },
         fetchEntries(page = 1, perPage = 25) {
-            if (!this.selectedLog) return;
+            if (!this.selectedLog) {
+                return;
+            }
+            const logId = this.selectedLog.id;
             this.loadingEntries = true;
-            axios.get(route('tool.interfaces.sage.logs.entries', { sageBookingLog: this.selectedLog.id }),
+            axios.get(route('tool.interfaces.sage.logs.entries', { sageBookingLog: logId }),
                 { params: { page, perPage } })
-                .then(res => { this.entries = res.data.entries; })
+                .then(res => {
+                    // verspätete Antwort eines zuvor geöffneten Laufs verwerfen
+                    if (this.selectedLog?.id === logId) {
+                        this.entries = res.data.entries;
+                    }
+                })
                 .finally(() => { this.loadingEntries = false; });
         },
         backToRuns() {

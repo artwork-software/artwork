@@ -1,34 +1,29 @@
 <template>
-    <BaseModal v-if="true" @closed="$emit('closed')" modal-size="w-[95vw] max-w-screen-2xl">
-        <div class="modal-header">
-            <div class="flex items-center gap-x-4">
-                <div class="model-title">
-                    {{ $t('Events') }}
-                </div>
-                <div class="model-title !text-text-subtle text-md">
-                    ({{ project.name}})
-                </div>
-            </div>
-        </div>
-        <div>
-            <BulkBody
-                :rooms="rooms"
-                :event-types="event_types"
-                :project="project"
-                :can-edit-component="true"
-                is-in-modal
-                @closed="$emit('closed')"
-                :event-statuses="eventStatuses"
-            />
-        </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        title="Events"
+        :description="project?.name ?? ''"
+        modal-size="sm:w-[95vw] sm:max-w-[96rem]"
+        @close="$emit('closed')"
+    >
+        <BulkBody
+            :rooms="rooms"
+            :event-types="event_types"
+            :project="project"
+            :can-edit-component="true"
+            is-in-modal
+            :event-statuses="eventStatuses"
+            @closed="$emit('closed')"
+        />
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BulkBody from "@/Pages/Projects/Components/BulkComponents/BulkBody.vue";
 
-const props = defineProps({
+defineOptions({name: 'AddBulkEventsModal'});
+
+defineProps({
     project: {
         type: Object,
         required: true
@@ -46,4 +41,6 @@ const props = defineProps({
         required: true
     }
 });
+
+defineEmits(['closed']);
 </script>

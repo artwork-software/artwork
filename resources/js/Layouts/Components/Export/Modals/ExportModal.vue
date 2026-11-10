@@ -104,6 +104,18 @@
                                                       :preselected-filters="configuration[exportTabEnums.EXCEL_COMMITTED_SHIFT_CHANGES_EXPORT]?.filters ?? null"
                                                       @close="close()"/>
                 </template>
+                <template v-else-if="tab === exportTabEnums.PROJECT_CONTENT_EXCEL_EXPORT">
+                    <ProjectContentExport v-if="activeTab === exportTabEnums.PROJECT_CONTENT_EXCEL_EXPORT"
+                                          :export-tab-enum="exportTabEnums.PROJECT_CONTENT_EXCEL_EXPORT"
+                                          format="xlsx"
+                                          @close="close()"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.PROJECT_CONTENT_WORD_EXPORT">
+                    <ProjectContentExport v-if="activeTab === exportTabEnums.PROJECT_CONTENT_WORD_EXPORT"
+                                          :export-tab-enum="exportTabEnums.PROJECT_CONTENT_WORD_EXPORT"
+                                          format="docx"
+                                          @close="close()"/>
+                </template>
                 <template v-else>
                     {{ throwUndefinedEnumUsed() }}
                 </template>
@@ -144,6 +156,9 @@ const exportTabEnums = useExportTabEnums(),
     ),
     ExcelProjectRoleMatrixExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/ExcelProjectRoleMatrixExport.vue")
+    ),
+    ProjectContentExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ProjectContentExport.vue")
     ),
     PdfDailyProjectShiftPlanExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/PdfDailyProjectShiftPlanExport.vue")

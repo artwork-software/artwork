@@ -178,6 +178,8 @@ use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
+use Artwork\Modules\Project\Http\Controllers\ProjectContentExportController;
+use Artwork\Modules\Project\Http\Controllers\ProjectContentExportTemplateController;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
@@ -840,7 +842,35 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     // Team-Mitgliedschaft in einzelnen Projekten reicht nicht (Route vor {project}!)
     Route::get('/projects/export/project-role-matrix', ProjectRoleMatrixExportController::class)
         ->name('projects.export.project-role-matrix')
-        ->can('view projects');
+        ->middleware(['can:view projects', 'can:can export from project overview']);
+
+    // Projektinhalte als Excel/Word (Export-Modal der Projektübersicht). Ausgegeben werden nur Projekte, die
+    // die Person öffnen darf, und Komponenten, die sie sehen darf (Route vor {project}!)
+    Route::group([
+        'prefix' => '/projects/content-export',
+        'middleware' => 'can:can export from project overview',
+    ], function (): void {
+        Route::get('/options', [ProjectContentExportController::class, 'options'])
+            ->name('projects.content-export.options');
+        Route::post('/preview', [ProjectContentExportController::class, 'preview'])
+            ->name('projects.content-export.preview');
+        Route::post('/cache', [ProjectContentExportController::class, 'cache'])
+            ->name('projects.content-export.cache');
+        Route::get('/download/{cacheToken}', [ProjectContentExportController::class, 'download'])
+            ->name('projects.content-export.download');
+        Route::get('/templates', [ProjectContentExportTemplateController::class, 'index'])
+            ->name('projects.content-export.templates.index');
+        Route::post('/templates', [ProjectContentExportTemplateController::class, 'store'])
+            ->name('projects.content-export.templates.store');
+        Route::patch(
+            '/templates/{projectContentExportTemplate}',
+            [ProjectContentExportTemplateController::class, 'update']
+        )->name('projects.content-export.templates.update');
+        Route::delete(
+            '/templates/{projectContentExportTemplate}',
+            [ProjectContentExportTemplateController::class, 'destroy']
+        )->name('projects.content-export.templates.destroy');
+    });
     Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])
         ->middleware(CanViewProject::class)
         ->name('projects.show.basic');

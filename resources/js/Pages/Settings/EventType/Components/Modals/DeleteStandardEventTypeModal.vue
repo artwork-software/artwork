@@ -1,35 +1,36 @@
 <template>
-    <BaseModal @closed="$emit('closed')">
-        <div class="mx-4">
-            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
-                {{$t('Delete event type')}}
-            </div>
-            <div class="text-sm/5 text-danger">
-                {{$t('The event type {eventType} cannot be deleted because it is the standard event type.', {eventType: eventType.name})}}
-            </div>
-            <div class="flex justify-between mt-6">
-                <div class="flex my-auto">
-                    <span @click="$emit('closed')"
-                          class="text-text-subtle subpixel-antialiased cursor-pointer">{{$t('Ok')}}</span>
-                </div>
-            </div>
-        </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        title="Delete event type"
+        modal-size="sm:max-w-lg"
+        @close="$emit('closed')"
+    >
+        <BaseAlertComponent
+            type="warning"
+            :message="$t('The event type {eventType} cannot be deleted because it is the standard event type.', {eventType: eventType.name})"
+            class="!mb-0"
+        />
+        <template #footer>
+            <BaseUIButton
+                label="Ok"
+                variant="primary"
+                hide-icon
+                @click="$emit('closed')"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+<script setup>
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
 
-export default {
-    components: {
-        BaseModal
+defineProps({
+    eventType: {
+        type: Object,
+        required: true,
     },
-    props: {
-        eventType: {
-            type: Object,
-            required: true
-        }
-    },
-    emits: ['closed']
-}
+})
+
+defineEmits(['closed'])
 </script>

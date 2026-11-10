@@ -1,125 +1,72 @@
 <template>
-    <ArtworkBaseModal @close="close(false)" v-if="show"   :title="mode === 'create' ? $t('Create qualification') : $t('Edit qualification')"
-                      :description="descriptionText">
-            <div class="mx-4">
-                <div class="flex items-center gap-4">
-                    <IconSelector @update:modelValue="addIconToForm" :current-icon="shiftQualificationForm ? shiftQualificationForm.icon : null" />
-                    <!--<Menu as="div" class="relative col-span-1">
-                        <div>
-                            <MenuButton :class="[this.shiftQualificationForm.icon === '' ? 'border border-border-strong' : '']" class="menu-button mt-5">
-                                <label v-if="this.shiftQualificationForm.icon === null" class="cursor-pointer text-text-subtle text-xs">
-                                    {{$t('Icon')}}*
-                                </label>
-
-                                <ShiftQualificationIconCollection v-if="this.shiftQualificationForm.icon !== null" class="h-12 w-12 p-2" :iconName=this.shiftQualificationForm.icon alt="Qualifikation-Icon"/>
-                                <IconChevronDown class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"/>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to">
-                            <MenuItems class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                <MenuItem v-for="shiftQualificationIcon in this.shiftQualificationIcons"
-                                          v-slot="{ active }">
-                                    <div @click="this.shiftQualificationForm.icon = shiftQualificationIcon.iconName"
-                                         :class="[
-                                             active ?
-                                             ' ' :
-                                             'text-text-subtle',
-                                             'group px-3 py-2 text-sm subpixel-antialiased flex items-center justify-center'
-                                         ]">
-                                        <ShiftQualificationIconCollection
-                                            class="h-12 w-12 mx-auto cursor-pointer flex items-center justify-center"
-                                            :iconName=shiftQualificationIcon.iconName
-                                            alt="Qualifikation-Icon"
-                                        />
-                                    </div>
-                                </MenuItem>
-                            </MenuItems>
-                        </transition>
-                    </Menu>-->
-                    <div class="w-full">
-                        <BaseInput
-                            no-margin-top
-                            id="name"
-                            v-model="this.shiftQualificationForm.name"
-                            :label="$t('Name of the qualification')"
-                        />
-                    </div>
-                </div>
-                <div class="mt-5 -mx-9 px-10 py-6 bg-surface-canvas">
-                    <div class="flex gap-2 items-center">
-                        <input type="checkbox"
-                               v-model="this.shiftQualificationForm.available"
-                               class="input-checklist"
-                        />
-                        <p :class="[this.shiftQualificationForm.available ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle']"
-                           class="my-auto text-sm">
-                            {{ $t('Is taken into account for new shifts')}}
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center justify-end mt-5">
-                    <BaseUIButton
-                        @click="save"
-                        :disabled="this.shiftQualificationForm.icon === null || this.shiftQualificationForm.name === null"
-                        :label="this.mode === 'create' ? $t('Create') : $t('Save')"
-                        is-add-button
-                        />
-                </div>
+    <ArtworkBaseModal
+        v-if="show"
+        :title="mode === 'create' ? 'Create qualification' : 'Edit qualification'"
+        :description="descriptionText"
+        modal-size="sm:max-w-xl"
+        @close="close"
+    >
+        <form id="shiftQualificationForm" class="space-y-4" @submit.prevent="save">
+            <div class="flex items-end gap-4">
+                <IconSelector
+                    :current-icon="shiftQualificationForm.icon"
+                    @update:modelValue="addIconToForm"
+                />
+                <BaseInput
+                    id="shiftQualificationName"
+                    v-model="shiftQualificationForm.name"
+                    label="Name of the qualification"
+                    required
+                    :error="shiftQualificationForm.errors.name"
+                />
             </div>
+            <p v-if="shiftQualificationForm.errors.icon" class="text-[11.5px] text-danger">
+                {{ shiftQualificationForm.errors.icon }}
+            </p>
+            <BaseCheckbox
+                id="shiftQualificationAvailable"
+                v-model="shiftQualificationForm.available"
+                :label="$t('Is taken into account for new shifts')"
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="shiftQualificationForm.processing"
+                @click="close"
+            />
+            <BaseUIButton
+                type="submit"
+                form="shiftQualificationForm"
+                :label="mode === 'create' ? 'Create' : 'Save'"
+                variant="primary"
+                :icon="mode === 'create' ? 'IconCirclePlus' : 'IconDeviceFloppy'"
+                :processing="shiftQualificationForm.processing"
+                :disabled="!canSubmit"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
 <script>
-import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import {useForm} from "@inertiajs/vue3";
 import {defineComponent} from "vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import Label from "@/Jetstream/Label.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-const shiftQualificationIcons = [
-    {iconName: 'user-icon'},
-    {iconName: 'academic-cap-icon'},
-    {iconName: 'bell-icon'},
-    {iconName: 'chat-icon'},
-    {iconName: 'adjustments-icon'},
-    {iconName: 'book-open-icon'},
-    {iconName: 'briefcase-icon'},
-    {iconName: 'camera-icon'},
-    {iconName: 'clipboard-icon'},
-    {iconName: 'eye-icon'},
-    {iconName: 'film-icon'},
-];
+
 export default defineComponent({
     name: 'ShiftQualificationModal',
     components: {
-        PropertyIcon,
         BaseUIButton,
         ArtworkBaseModal,
         BaseInput,
+        BaseCheckbox,
         IconSelector,
-        ModalHeader,
-        TextInputComponent,
-        BaseModal,
-        FormButton,
-        Label,
-        ShiftQualificationIconCollection,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        IconChevronDown,
-        IconX,
-        JetDialogModal
     },
     props: [
         'show',
@@ -131,12 +78,21 @@ export default defineComponent({
     ],
     data () {
         return {
-            descriptionText: this.mode === 'create' ? this.$t('You can create a craft functionality here.') : this.$t('Here you can edit the craft functionality "{0}".', [this.shiftQualification.name]),
+            descriptionText: this.mode === 'create'
+                ? 'You can create a craft functionality here.'
+                : this.$t('Here you can edit the craft functionality "{0}".', [this.shiftQualification?.name ?? '']),
             shiftQualificationForm: useForm({
-                icon: this.mode === 'edit' ? this.shiftQualification.icon : null,
-                name: this.mode === 'edit' ? this.shiftQualification.name : null,
-                available: this.mode === 'edit' ? this.shiftQualification.available : false
+                icon: this.mode === 'edit' ? this.shiftQualification?.icon ?? null : null,
+                name: this.mode === 'edit' ? this.shiftQualification?.name ?? null : null,
+                available: this.mode === 'edit' ? Boolean(this.shiftQualification?.available) : false
             })
+        }
+    },
+    computed: {
+        canSubmit() {
+            return this.shiftQualificationForm.icon !== null
+                && Boolean(this.shiftQualificationForm.name?.trim())
+                && !this.shiftQualificationForm.processing;
         }
     },
     methods: {
@@ -144,7 +100,10 @@ export default defineComponent({
             this.shiftQualificationForm.icon = icon;
         },
         save() {
-            const onSuccessCallback = () => this.close();
+            if (!this.canSubmit) {
+                return;
+            }
+            const onSuccessCallback = () => this.closeAndReset();
 
             if (this.mode === 'edit') {
                 this.shiftQualificationForm.patch(
@@ -170,14 +129,15 @@ export default defineComponent({
             }
         },
         close() {
+            if (this.shiftQualificationForm.processing) {
+                return;
+            }
+            this.closeAndReset();
+        },
+        closeAndReset() {
             this.$emit('close');
             this.shiftQualificationForm.reset();
         }
     },
-    setup() {
-        return {
-            shiftQualificationIcons
-        }
-    }
 });
 </script>

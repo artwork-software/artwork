@@ -137,7 +137,7 @@
             </div>
         </div>
 
-        <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" :title="$t('Service provider successfully processed')" :description="$t('The changes have been saved successfully.')" button="Ok" />
+        <SuccessModal v-if="showSuccessModal" @closed="showSuccessModal = false" :title="$t('Service provider successfully processed')" :description="$t('The changes have been saved successfully.')" button="Ok" />
 
         <GeneralCreateOrUpdateContactModal
             model="provider"
@@ -155,16 +155,6 @@
 import {IconCirclePlus, IconDotsVertical, IconEdit, IconTrash} from "@tabler/icons-vue";
 import {defineComponent} from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption, ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
-} from "@headlessui/vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
@@ -172,9 +162,6 @@ import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPla
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
@@ -194,11 +181,7 @@ export default defineComponent({
         BaseTextarea,
         BaseInput,
         VisualFeedback,
-        ListboxOptions, ListboxOption, Listbox, ListboxLabel, ListboxButton,
         TextareaComponent,
-        TextInputComponent,
-        BaseMenu,
-        FormButton,
         SuccessModal,
         WorkProfileTab,
         BaseSidenav,
@@ -208,10 +191,6 @@ export default defineComponent({
         IconDotsVertical,
         IconTrash,
         AppLayout,
-        Menu,
-        MenuButton,
-        MenuItems,
-        MenuItem,
         IconCirclePlus
     },
     props: [

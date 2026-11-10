@@ -1,39 +1,44 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader
-                :title="$t('Reject Event Verification Request')"
-                :description="$t('Are you sure you want to reject this event verification request?')"
+    <ArtworkBaseModal
+        title="Reject Event Verification Request"
+        description="Are you sure you want to reject this event verification request?"
+        modal-size="sm:max-w-lg"
+        @close="$emit('close')"
+    >
+        <form id="rejectEventVerificationForm" @submit.prevent="rejectRequest">
+            <BaseTextarea
+                id="rejection_reason"
+                v-model="rejectForm.rejection_reason"
+                label="Rejection Reason"
+                autofocus
             />
-        </div>
-
-        <form @submit.prevent="rejectRequest">
-            <div class="grid grid-cols-1 gap-y-2">
-                <TextareaComponent
-                    id="rejection_reason" v-model="rejectForm.rejection_reason" :label="$t('Rejection Reason')" />
-            </div>
-
-            <div class="flex items-center justify-between mt-5">
-                <FormButton
-                    class="bg-danger hover:bg-danger"
-                    @click="rejectRequest()"
-                    :text="$t('Reject Request')"
-                />
-                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="$emit('close')">
-                    {{ $t('No, not really') }}
-                </p>
-            </div>
         </form>
-    </BaseModal>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="rejectForm.processing"
+                @click="$emit('close')"
+            />
+            <BaseUIButton
+                type="submit"
+                form="rejectEventVerificationForm"
+                label="Reject Request"
+                variant="danger"
+                icon="IconCircleX"
+                :processing="rejectForm.processing"
+                :disabled="rejectForm.processing"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import {router, useForm} from "@inertiajs/vue3";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import {useForm} from "@inertiajs/vue3";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     eventVerification: {
@@ -62,6 +67,9 @@ const rejectForm = useForm({
 const emits = defineEmits(['close'])
 
 const rejectRequest = () => {
+    if (rejectForm.processing) {
+        return
+    }
     if (props.event && props.event.id) {
         rejectForm.post(route('event-verifications.reject-by-event', props.event.id),{
             preserveScroll: true,
@@ -78,7 +86,7 @@ const rejectRequest = () => {
                 emits('close')
             },
         })
-    } else {
+    } else if (props.eventVerification?.id) {
         rejectForm.post(route('event-verifications.rejected', props.eventVerification.id), {
             preserveScroll: true,
             preserveState: false,
@@ -89,7 +97,3 @@ const rejectRequest = () => {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

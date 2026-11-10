@@ -174,87 +174,94 @@
     </BaseEventVerificationLayout>
 
     <!-- Approve Room Request Modal -->
-    <BaseModal v-if="showApproveModal" modal-image="/Svgs/Overlays/illu_success.svg" @closed="closeApproveModal">
-        <div class="mx-4">
-            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                {{ $t('Confirm room occupancy') }}
-            </div>
-            <div class="text-sm/5 text-success">
-                {{ $t('Are you sure you want to accept the room allocation?') }}
-            </div>
-            <div v-if="selectedRequest" class="mt-4">
+    <ArtworkBaseModal
+        v-if="showApproveModal"
+        title="Confirm room occupancy"
+        modal-size="sm:max-w-lg"
+        @close="closeApproveModal"
+    >
+        <p class="text-sm text-text">
+            {{ $t('Are you sure you want to accept the room allocation?') }}
+        </p>
+            <div v-if="selectedRequest" class="mt-4 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2.5">
                 <div class="flex items-center gap-x-2">
-                    <div
-                        class="w-5 h-5 rounded-full flex-shrink-0"
+                    <span
+                        class="size-4 shrink-0 rounded-full"
                         :style="{ backgroundColor: selectedRequest.event_type?.hex_code }"
                     />
-                    <span class="font-lexend font-bold text-text">
+                    <span class="truncate font-lexend text-sm font-bold text-text">
                         {{ selectedRequest.event_type?.name }}
                     </span>
                 </div>
-                <p class="mt-1 text-xs text-text-subtle font-lexend">
+                <p class="mt-1 text-xs text-text-muted tabular-nums">
                     {{ selectedRequest.start_time }} - {{ selectedRequest.end_time }}
                 </p>
-                <p class="mt-1 text-xs text-text-subtle font-lexend">
+                <p class="mt-0.5 text-xs text-text-muted">
                     {{ selectedRequest.room?.name }}
                 </p>
             </div>
-            <div class="flex justify-between mt-6">
-                <FormButton
-                    :text="$t('Commitments')"
-                    @click="approveRequest"
-                />
-                <div class="flex my-auto">
-                    <span class="text-sm/5 font-bold text-text-subtle cursor-pointer" @click="closeApproveModal">
-                        {{ $t('No, not really') }}
-                    </span>
-                </div>
-            </div>
-        </div>
-    </BaseModal>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeApproveModal"
+            />
+            <BaseUIButton
+                label="Commitments"
+                variant="primary"
+                icon="IconCheck"
+                :processing="processing"
+                @click="approveRequest"
+            />
+        </template>
+    </ArtworkBaseModal>
 
     <!-- Decline Room Request Modal -->
-    <BaseModal v-if="showDeclineModal" modal-image="/Svgs/Overlays/illu_warning.svg" @closed="closeDeclineModal">
-        <div class="mx-4">
-            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                {{ $t('Cancel room reservation') }}
-            </div>
-            <div class="text-sm/5 text-danger">
-                {{ $t('Are you sure you want to cancel the room reservation?') }}
-            </div>
-            <div v-if="selectedRequest" class="mt-4">
+    <ArtworkBaseModal
+        v-if="showDeclineModal"
+        title="Cancel room reservation"
+        modal-size="sm:max-w-lg"
+        @close="closeDeclineModal"
+    >
+        <p class="text-sm text-text">
+            {{ $t('Are you sure you want to cancel the room reservation?') }}
+        </p>
+            <div v-if="selectedRequest" class="mt-4 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2.5">
                 <div class="flex items-center gap-x-2">
-                    <div
-                        class="w-5 h-5 rounded-full flex-shrink-0"
+                    <span
+                        class="size-4 shrink-0 rounded-full"
                         :style="{ backgroundColor: selectedRequest.event_type?.hex_code }"
                     />
-                    <span class="font-lexend font-bold text-text">
+                    <span class="truncate font-lexend text-sm font-bold text-text">
                         {{ selectedRequest.event_type?.name }}
                     </span>
                 </div>
-                <p class="mt-1 text-xs text-text-subtle font-lexend">
+                <p class="mt-1 text-xs text-text-muted tabular-nums">
                     {{ selectedRequest.start_time }} - {{ selectedRequest.end_time }}
                 </p>
-                <p class="mt-1 text-xs text-text-subtle font-lexend">
+                <p class="mt-0.5 text-xs text-text-muted">
                     {{ selectedRequest.room?.name }}
                 </p>
             </div>
-            <div class="flex justify-between mt-6">
-                <BaseUIButton
-                    is-delete-button
-                    icon="IconProgressX"
-                    :label="$t('Cancellations')"
-                    :disabled="processing"
-                    @click="declineRequest"
-                />
-                <div class="flex my-auto">
-                    <span class="text-sm/5 font-bold text-text-subtle cursor-pointer" @click="closeDeclineModal">
-                        {{ $t('No, not really') }}
-                    </span>
-                </div>
-            </div>
-        </div>
-    </BaseModal>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeDeclineModal"
+            />
+            <BaseUIButton
+                label="Cancellations"
+                variant="danger"
+                icon="IconProgressX"
+                :processing="processing"
+                @click="declineRequest"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -265,9 +272,8 @@ import BaseEventVerificationLayout from "@/Pages/EventVerification/BaseEventVeri
 import PageTitle from "@/Artwork/Titles/PageTitle.vue";
 import BaseCard from "@/Artwork/Cards/BaseCard.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SingleEventVerificationRequest from "@/Pages/EventVerification/Components/SingleEventVerificationRequest.vue";
 
@@ -335,7 +341,7 @@ const closeDeclineModal = () => {
 };
 
 const approveRequest = () => {
-    if (!selectedRequest.value) return;
+    if (!selectedRequest.value || processing.value) return;
     processing.value = true;
     router.put(route('events.accept', {event: selectedRequest.value.id}), {accepted: true}, {
         preserveScroll: true,
@@ -347,7 +353,7 @@ const approveRequest = () => {
 };
 
 const declineRequest = () => {
-    if (!selectedRequest.value) return;
+    if (!selectedRequest.value || processing.value) return;
     processing.value = true;
     router.put(route('events.decline', {event: selectedRequest.value.id}), {accepted: false}, {
         preserveScroll: true,

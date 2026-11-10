@@ -9,6 +9,12 @@ use Tests\Feature\FeatureTestCase;
 
 final class ProjectRoleMatrixExportControllerTest extends FeatureTestCase
 {
+    /** Matrix über alle Produktionen: globales Leserecht plus Recht für die Exporte der Projektübersicht */
+    private const MATRIX_PERMISSIONS = [
+        PermissionEnum::PROJECT_VIEW->value,
+        PermissionEnum::PROJECT_OVERVIEW_EXPORT->value,
+    ];
+
     #[Test]
     public function itRequiresProjectViewPermission(): void
     {
@@ -22,9 +28,20 @@ final class ProjectRoleMatrixExportControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function itValidatesTheDateRange(): void
+    public function itRequiresTheOverviewExportPermission(): void
     {
         $this->actingAsUserWith(PermissionEnum::PROJECT_VIEW->value);
+
+        $this->get(route('projects.export.project-role-matrix', [
+            'start_date' => '2026-06-01',
+            'end_date' => '2026-06-30',
+        ]))->assertForbidden();
+    }
+
+    #[Test]
+    public function itValidatesTheDateRange(): void
+    {
+        $this->actingAsUserWith(self::MATRIX_PERMISSIONS);
 
         $this->get(route('projects.export.project-role-matrix', [
             'start_date' => '2026-06-30',
@@ -35,7 +52,7 @@ final class ProjectRoleMatrixExportControllerTest extends FeatureTestCase
     #[Test]
     public function itRejectsRangesOverThirtySixMonths(): void
     {
-        $this->actingAsUserWith(PermissionEnum::PROJECT_VIEW->value);
+        $this->actingAsUserWith(self::MATRIX_PERMISSIONS);
 
         $this->get(route('projects.export.project-role-matrix', [
             'start_date' => '2026-01-01',
@@ -47,7 +64,7 @@ final class ProjectRoleMatrixExportControllerTest extends FeatureTestCase
     public function itDownloadsTheProjectRoleMatrixWorkbook(): void
     {
         Excel::fake();
-        $this->actingAsUserWith(PermissionEnum::PROJECT_VIEW->value);
+        $this->actingAsUserWith(self::MATRIX_PERMISSIONS);
 
         $this->get(route('projects.export.project-role-matrix', [
             'start_date' => '2026-06-01',

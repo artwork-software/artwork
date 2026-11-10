@@ -1,55 +1,67 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_warning.svg">
-            <div class="mx-4">
-                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                    {{ $t('Delete contract module')}}
-                </div>
-                <div class="text-sm/5 text-danger">
-                    {{ $t('Are you sure you want to delete this module from the system?')}}
-                </div>
-                <div class="flex justify-between mt-6">
-                    <FormButton :text="$t('Delete')"
-                               @click="destroy" />
-                    <div class="flex my-auto">
-                            <span @click="closeModal"
-                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really') }}</span>
-                    </div>
-                </div>
+    <ArtworkBaseModal
+        v-if="show"
+        title="Delete contract module"
+        modal-size="sm:max-w-lg"
+        @close="closeModal"
+    >
+        <div class="space-y-3">
+            <p class="text-sm text-text">
+                {{ $t('Are you sure you want to delete this module from the system?') }}
+            </p>
+            <div
+                v-if="contractModule?.name"
+                class="truncate rounded-md border border-border-subtle bg-surface-sunken px-3 py-2 text-sm font-semibold text-text"
+            >
+                {{ contractModule.name }}
             </div>
-
-    </BaseModal>
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal"
+            />
+            <BaseUIButton
+                label="Delete"
+                variant="danger"
+                icon="IconTrash"
+                :processing="processing"
+                :disabled="!contractModule?.id"
+                @click="destroy"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconX} from "@tabler/icons-vue";
-import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+<script setup>
+import {ref} from 'vue'
+import {router} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
-export default {
-    name: "ContractModuleDeleteModal",
-    mixins: [Permissions],
-    components: {
-        BaseModal,
-        FormButton,
-        JetDialogModal,
-        IconX
-    },
-    props: {
-        contractModule: Object,
-        show: Boolean,
-        closeModal: Function
-    },
-    methods: {
-        destroy() {
-            this.$inertia.delete(`/contract_modules/${this.contractModule.id}`);
-            this.closeModal()
-        },
+defineOptions({name: 'ContractModuleDeleteModal'})
+
+const props = defineProps({
+    contractModule: {type: Object, default: null},
+    show: {type: Boolean, default: false},
+    closeModal: {type: Function, required: true},
+})
+
+const processing = ref(false)
+
+function destroy() {
+    if (!props.contractModule?.id || processing.value) {
+        return
     }
+    processing.value = true
+    router.delete(`/contract_modules/${props.contractModule.id}`, {
+        onSuccess: () => props.closeModal(),
+        onFinish: () => {
+            processing.value = false
+        },
+    })
 }
 </script>
-
-<style scoped>
-
-</style>

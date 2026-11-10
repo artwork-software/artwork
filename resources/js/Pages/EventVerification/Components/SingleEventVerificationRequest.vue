@@ -16,6 +16,27 @@
                     <span class="font-lexend font-bold">{{ $t('Room') }}:</span>
                     <span class="font-lexend">{{ eventVerification?.event?.room?.name }}</span>
                 </p>
+                <div v-if="eventVerification.requester" class="mt-2 flex items-center gap-x-2 text-xs text-text-subtle">
+                    <span class="font-lexend font-bold">{{ $t('Requested by') }}:</span>
+                    <UserPopoverTooltip :user="eventVerification.requester" :id="eventVerification.requester.id" height="6" width="6" />
+                    <span class="font-lexend truncate">{{ eventVerification.requester.full_name }}</span>
+                    <span v-if="eventVerification.created_at" class="font-lexend truncate">· {{ eventVerification.created_at }}</span>
+                </div>
+                <!-- Eine Kachel je Anfrage: alle angefragten Prüfenden mit ihrem Stand -->
+                <div v-if="roundVerifiers.length > 0" class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-subtle">
+                    <span class="font-lexend font-bold">{{ $t('Requested from') }}:</span>
+                    <span
+                        v-for="verifier in roundVerifiers"
+                        :key="verifier.id"
+                        class="inline-flex items-center gap-x-1 rounded-full border py-0.5 pl-0.5 pr-2"
+                        :class="verifierStatusClasses[verifier.status] ?? verifierStatusClasses.pending"
+                        :title="$t(verifier.status)"
+                    >
+                        <UserPopoverTooltip :user="verifier" :id="verifier.id" height="5" width="5" />
+                        <span class="font-lexend">{{ verifier.full_name }}</span>
+                        <component :is="verifierStatusIcons[verifier.status]" v-if="verifierStatusIcons[verifier.status]" class="size-3.5" aria-hidden="true" />
+                    </span>
+                </div>
                 <div class="flex items-center justify-between mt-3">
                     <div>
                         <BaseUIButton variant="secondary" hide-icon @click="openPlanningCalendarWithEventId">
@@ -98,10 +119,10 @@
 
 import {router} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import {defineAsyncComponent, ref} from "vue";
+import {computed, defineAsyncComponent, ref} from "vue";
 import BaseCard from "@/Artwork/Cards/BaseCard.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import {IconBan, IconCalendar, IconCheckbox} from "@tabler/icons-vue";
+import {IconBan, IconCalendar, IconCheck, IconCheckbox, IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     eventVerification: {
@@ -114,6 +135,19 @@ const statuses = {
     approved: 'text-success bg-success-surface ring-success-border',
     pending: 'text-text-muted bg-surface-sunken border-border-subtle',
     rejected: 'text-danger bg-danger-surface ring-danger-border',
+}
+
+const roundVerifiers = computed(() => props.eventVerification?.round_verifiers ?? [])
+
+const verifierStatusClasses = {
+    approved: 'border-success-border bg-success-surface text-success',
+    pending: 'border-border-subtle bg-surface-sunken text-text-muted',
+    rejected: 'border-danger-border bg-danger-surface text-danger',
+}
+
+const verifierStatusIcons = {
+    approved: IconCheck,
+    rejected: IconX,
 }
 
 const showRejectEventVerificationRequestModal = ref(false)

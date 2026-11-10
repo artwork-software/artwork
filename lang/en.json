@@ -3032,6 +3032,7 @@
     "Event Data": "Event Data",
     "Requested at": "Requested at",
     "Requested by": "Requested by",
+    "Requested from": "Requested from",
     "Edit, delete and confirm scheduled events": "Edit and confirm scheduled events",
     "A user with this permission can edit, delete and confirm scheduled events": "A user with this permission can edit, delete and confirm scheduled events",
     "Click on the status to filter the event verification requests": "Click on the status to filter the event verification requests",

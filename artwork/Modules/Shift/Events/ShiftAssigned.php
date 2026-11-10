@@ -9,11 +9,14 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\SerializesModels;
 
 class ShiftAssigned implements ShouldBroadcast
 {
     use Dispatchable;
     use InteractsWithSockets;
+    // In der Queue nur Modell-IDs ablegen, nicht die vollständigen Models (Passwort-Hash, Gage).
+    use SerializesModels;
 
     public function __construct(
         public readonly User $user,

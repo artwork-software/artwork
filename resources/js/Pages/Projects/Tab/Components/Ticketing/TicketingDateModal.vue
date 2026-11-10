@@ -4,7 +4,7 @@
             <!-- Which dates the form applies to: one by name, several as a list. -->
             <p v-if="single" class="text-[13px] leading-5 text-text-subtle">
                 <span class="font-medium text-text">{{ single.name }}</span> ·
-                {{ !single.venue ? $t('The room is not synced with Artwork-Tickets; the price classes have to be entered by hand.')
+                {{ !sharedVenue ? $t('The room is not synced with Artwork-Tickets; the price classes have to be entered by hand.')
                     : seated ? $t('The room has a seating plan: its price classes and places are fixed. Only the prices can change for this date.')
                         : $t('Prefilled from the room. Change places or prices for this date, take a price class off it, or add one only this date has.') }}
             </p>
@@ -18,6 +18,19 @@
                 <p v-if="!uniform" class="mt-2 text-xs leading-5 text-text-muted">{{ $t('The selected dates sell differently right now: prices, description or reductions. Prefilled from the first date; what you save applies to all of them.') }}</p>
                 <p v-else-if="mixedPlan" class="mt-2 text-xs leading-5 text-danger">{{ $t('The selected dates are in different rooms, one of them with a seating plan. Edit them room by room.') }}</p>
                 <p v-else-if="!sharedVenue" class="mt-2 text-xs leading-5 text-text-muted">{{ $t('The selected dates are in different rooms, so there are no room defaults to fall back on.') }}</p>
+            </div>
+
+            <div>
+                <ArtworkBaseListbox v-model="targetRoom" :items="rooms" label="Room" :placeholder="roomPlaceholder" />
+                <p v-if="roomMoved" class="mt-1.5 text-xs leading-[18px] text-text-subtle">
+                    {{ single ? $t('Saving moves the date to this room, as in the calendar. Its price classes now come from the new room; classes both rooms share keep their price.')
+                        : $t('Saving moves these dates to this room, as in the calendar. Their price classes now come from the new room; classes both rooms share keep their price.') }}
+                </p>
+            </div>
+
+            <div v-if="roomChange && !roomMoved" class="flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
+                <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
+                <span>{{ roomChange }}</span>
             </div>
 
             <div class="grid grid-cols-[minmax(0,1fr)_96px_140px_28px] gap-2.5 font-lexend text-xs font-medium text-[#3F424A]">
@@ -102,17 +115,21 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import axios from 'axios'
 import { useI18n } from 'vue-i18n'
 import { IconAlertTriangle, IconInfoCircle, IconPlus, IconTrash } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseRichTextEditor from '@/Artwork/Inputs/BaseRichTextEditor.vue'
 import SeriesScopeChoice from '@/Layouts/Components/SeriesScopeChoice.vue'
 import TicketingReductionChips from '@/Pages/Projects/Tab/Components/Ticketing/TicketingReductionChips.vue'
-import { classesOf, defaultClassesOf, formatEuro, formatWhen, fromCents, grantedIdsOf, isReleased, offeredIdsOf, seriesOf, toCents } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { formatEuro } from '@/Helper/ticketingFormat.js'
+import { fromCents, toCents } from '@/Pages/Settings/Tickets/drafts.js'
+import { ticketingMoveHeaders } from '@/Composeables/useTicketingMove.js'
+import { classesOf, defaultClassesOfVenue, formatWhen, grantedIdsOf, isReleased, offeredIdsOf, roomChangeNote, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 
 const props = defineProps({
     projectId: { type: Number, required: true },
@@ -124,18 +141,32 @@ const props = defineProps({
     production: { type: Object, required: true },
     /** The house reductions. */
     reductions: { type: Array, required: true },
+    /** The rooms that sell in Artwork-Tickets, each with its venue; where a date can move to. */
+    rooms: { type: Array, required: true },
 })
 
 const emit = defineEmits(['close', 'saved'])
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 const single = computed(() => (props.events.length === 1 ? props.events[0] : null))
 const seriesEvents = computed(() => (single.value ? seriesOf(single.value, props.allEvents) : []))
 const releasedCount = computed(() => props.events.filter(isReleased).length)
+const roomChange = computed(() => {
+    if (single.value) return roomChangeNote(single.value, t)
+    const moved = props.events.filter((event) => event.release?.roomChanged).length
+    return moved ? t('{count} of these dates moved to another room. Their price classes now come from the new room; check them and save.', { count: moved }) : null
+})
+
+/* The room the dates sit in, or the one picked to move them to; empty while they sit in different rooms. */
+const currentRoomId = props.events.every((event) => event.room?.id === props.events[0].room?.id) ? props.events[0].room?.id : null
+const targetRoom = ref(props.rooms.find((room) => room.id === currentRoomId) ?? null)
+const roomMoved = computed(() => targetRoom.value !== null && props.events.some((event) => event.room?.id !== targetRoom.value.id))
+const roomPlaceholder = currentRoomId === null && props.events.length > 1 ? 'Different rooms' : 'Room not synced'
 
 /* Room defaults only mean something when every date sits in the same synced room. */
 const sharedVenue = computed(() => {
+    if (roomMoved.value) return targetRoom.value.venue
     const first = props.events[0].venue
     return first && props.events.every((event) => event.venue?.id === first.id) ? first : null
 })
@@ -157,7 +188,7 @@ function customClass() {
 /* A seating plan fixes the room's classes and their places; a date only prices them. */
 const seated = computed(() => sharedVenue.value?.seated === true)
 const mixedPlan = computed(() => !sharedVenue.value && props.events.some((event) => event.venue?.seated))
-const roomClasses = computed(() => (sharedVenue.value ? defaultClassesOf(props.events[0]) : []))
+const roomClasses = computed(() => defaultClassesOfVenue(sharedVenue.value))
 
 /** The saved classes; on a seating plan the room's, carrying the date's saved prices. */
 function initialRows() {
@@ -195,6 +226,16 @@ function resetToRoom() {
     classes.value = roomClasses.value.map(toRow)
 }
 
+/* Same as the server after a move: classes both rooms share keep their price, own ones only survive without a plan. */
+watch(targetRoom, () => {
+    if (!roomMoved.value) return
+    const fitted = roomClasses.value.map((room) => {
+        const kept = classes.value.find((cls) => cls.zone_key === room.zone_key)
+        return kept ? { ...toRow(room), priceInput: kept.priceInput } : toRow(room)
+    })
+    classes.value = seated.value ? fitted : [...fitted, ...classes.value.filter((cls) => cls.zone_key === null)]
+})
+
 /* An own text starts from the production's, which is usually only to be adapted. */
 function setOwnText(on) {
     ownText.value = on
@@ -218,11 +259,22 @@ function save() {
     submit(props.events)
 }
 
+/* The move goes the calendar's multi-edit way, with its rights and its question for dates on sale: one request
+   for all dates, so a refusal of one leaves every date in its room. */
+async function moveRoom(targets) {
+    const moving = targets.filter((event) => event.room?.id !== targetRoom.value.id).map((event) => event.id)
+    const headers = await ticketingMoveHeaders(moving)
+    if (headers === null) return false
+    await axios.patch(route('multi-edit.save'), { events: moving, newRoomId: targetRoom.value.id, value: 0 }, { headers })
+    return true
+}
+
 async function submit(targets) {
     askScope.value = false
     saving.value = true
     error.value = ''
     try {
+        if (roomMoved.value && !(await moveRoom(targets))) return
         const { data } = await axios.put(route('projects.tabs.ticketing.draft', { project: props.projectId }), {
             event_ids: targets.map((event) => event.id),
             classes: classes.value.map((cls) => ({

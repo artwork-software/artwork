@@ -18,7 +18,11 @@
                         <img alt="Notification" v-if="pushNotification.type === 'error'" class="h-9 w-9"
                              src="/Svgs/IconSvgs/icon_push_notification_red.svg"/>
                     </div>
-                    <div class="ml-4 text-sm font-semibold text-text">{{ pushNotification.message }}</div>
+                    <div class="ml-4 min-w-0">
+                        <div class="text-sm font-semibold text-text">{{ pushNotification.message }}</div>
+                        <!-- Optionale Zusatzzeile, z. B. der Kommentar zur Entscheidung über eine Freigabe-Anfrage -->
+                        <div v-if="pushNotification.detail" class="mt-1 text-xs text-text-muted break-words line-clamp-4">{{ pushNotification.detail }}</div>
+                    </div>
                 </button>
                 <button type="button" class="self-start p-2" :aria-label="$t('Close')"
                         @click="closePushNotification(pushNotification.id)">
@@ -92,7 +96,7 @@ const flashDedupe = {key: null, at: 0}
 import { createsNotificationEntry, markNotificationArrived } from "@/Helper/notificationIndicator.js";
 import {onAppToast} from '@/Helper/appToast'
 import {Head, router, usePage} from "@inertiajs/vue3"
-import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
+import {defineAsyncComponent, getCurrentInstance, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
 import PopupChat from "@/Components/Chat/PopupChat.vue";
@@ -101,6 +105,7 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import SubMenu from "@/Layouts/SubMenu.vue";
 import TicketingMoveDialog from "@/Layouts/Components/TicketingMoveDialog.vue";
 const { locale } = useI18n();
+const appInstance = getCurrentInstance();
 
 const props = defineProps({
     title: {
@@ -224,8 +229,13 @@ let notificationChannel = null
 onMounted(() => {
     // Vollständiger Seitenaufruf nach Redirect (kein Inertia-'success'-Event): Flash einmalig zeigen
     showFlashFromPage(usePage())
-    document.documentElement.lang = usePage().props.auth.user.language
-    locale.value = usePage().props.auth.user.language
+    // Über $updateLocale, damit fehlende Übersetzungen der Kontosprache nachgeladen werden
+    const updateLocale = appInstance?.proxy?.$updateLocale
+    if (updateLocale) {
+        updateLocale(usePage().props.auth.user.language)
+    } else {
+        locale.value = usePage().props.auth.user.language
+    }
     notificationChannel = `notifications.${usePage().props.auth.user.id}`
     window.Echo.private(notificationChannel)
         .listen('.incoming-notification', (notification) => {

@@ -465,7 +465,9 @@ export default  {
                 isLoud: event.is_loud,
                 eventNameMandatory: false,
                 projectId: event.project_id,
-                projectName: event.creatingProject ? event.projectName : '',
+                projectName: event.creatingProject && this.$page.props.project_creation_from_events_enabled !== false
+                    ? event.projectName
+                    : '',
                 eventTypeId: event.event_type_id,
                 projectIdMandatory: false,
                 creatingProject: false,

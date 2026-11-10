@@ -403,6 +403,7 @@
                                         @php
                                             $hasSuffix = $entry['count'] > 1 || !empty($entry['rooms']);
                                             $entryColor = ($showEntryColors ?? false) && !empty($entry['color'])
+                                                && preg_match(\Artwork\Core\Validation\Rules\HexColorRule::PATTERN, (string) $entry['color'])
                                                 ? $entry['color']
                                                 : null;
                                             $nameStyle = 'max-width: ' . ($hasSuffix ? '68%' : '100%') . ';';

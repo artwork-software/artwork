@@ -3,6 +3,8 @@
 namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\Validation\Rules\HexColorRule;
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Artwork\Modules\Crm\Events\CrmSettingsChanged;
 use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
@@ -12,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\In;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class CrmPropertyGroupController extends Controller
 {
@@ -24,8 +27,8 @@ class CrmPropertyGroupController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'icon' => 'nullable|string',
-            'color' => 'nullable|string',
+            'icon' => ['nullable', 'string', new IconNameRule()],
+            'color' => ['nullable', 'string', new HexColorRule()],
             'is_confidential' => 'boolean',
             'permissions' => 'nullable|array',
             'permissions.*.permissionable_type' => ['required', 'string', $this->permissionableTypes()],
@@ -40,7 +43,7 @@ class CrmPropertyGroupController extends Controller
             $this->service->updatePermissions($group, $validated['permissions']);
         }
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -49,8 +52,8 @@ class CrmPropertyGroupController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'icon' => 'nullable|string',
-            'color' => 'nullable|string',
+            'icon' => ['nullable', 'string', new IconNameRule()],
+            'color' => ['nullable', 'string', new HexColorRule()],
             'is_confidential' => 'sometimes|boolean',
             'sort_order' => 'sometimes|integer',
             'permissions' => 'nullable|array',
@@ -70,7 +73,7 @@ class CrmPropertyGroupController extends Controller
             }
         }
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -85,7 +88,7 @@ class CrmPropertyGroupController extends Controller
 
         $this->service->reorder($validated['groups']);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -94,7 +97,7 @@ class CrmPropertyGroupController extends Controller
     {
         $this->service->destroy($crmPropertyGroup);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -119,7 +122,7 @@ class CrmPropertyGroupController extends Controller
 
         $this->service->updatePermissions($crmPropertyGroup, $validated['permissions'] ?? []);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }

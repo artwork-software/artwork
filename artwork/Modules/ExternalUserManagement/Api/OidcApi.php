@@ -98,7 +98,7 @@ class OidcApi implements ExternalUserManagementApi
             'first_name' => $raw['given_name'] ?? '',
             'last_name' => $raw['family_name'] ?? '',
             'groups' => $groups,
-            'email_verified' => (bool) ($raw['email_verified'] ?? false),
+            'email_verified' => self::isVerifiedClaim($raw['email_verified'] ?? null),
             'meta_data' => [
                 'sub' => $raw['sub'] ?? null,
                 'preferred_username' => $raw['preferred_username'] ?? null,
@@ -107,6 +107,20 @@ class OidcApi implements ExternalUserManagementApi
                 'groups' => $groups,
             ],
         ];
+    }
+
+    /**
+     * Wertet den email_verified-Claim strikt aus. Manche IdPs (z. B. AWS Cognito)
+     * liefern ihn als String – ein (bool)-Cast machte aus "false" sonst true und
+     * erlaubte die Verknüpfung mit fremden Konten über eine unbestätigte Adresse.
+     */
+    public static function isVerifiedClaim(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return is_string($value) && strtolower(trim($value)) === 'true';
     }
 
     /**
@@ -174,7 +188,9 @@ class OidcApi implements ExternalUserManagementApi
      */
     private function fetchDiscovery(string $url): array
     {
-        return Http::acceptJson()
+        self::assertHttps($url, 'discovery_url');
+
+        $discovery = Http::acceptJson()
             ->connectTimeout(5)
             ->timeout(10)
             // Keine Redirects (SSRF): die Discovery-URL ist gegen private Netze geprüft, ein 302 nicht.
@@ -183,5 +199,22 @@ class OidcApi implements ExternalUserManagementApi
             ->get($url)
             ->throw()
             ->json() ?? [];
+
+        // Die Identität kommt aus dem userinfo-Endpunkt (kein ID-Token-Signaturcheck) – Token und
+        // Claims dürfen deshalb nur über TLS fließen.
+        foreach (['authorization_endpoint', 'token_endpoint', 'userinfo_endpoint'] as $key) {
+            if (!empty($discovery[$key])) {
+                self::assertHttps((string) $discovery[$key], $key);
+            }
+        }
+
+        return $discovery;
+    }
+
+    private static function assertHttps(string $url, string $name): void
+    {
+        if (strtolower((string) parse_url($url, PHP_URL_SCHEME)) !== 'https') {
+            throw new \RuntimeException("OIDC {$name} must use https");
+        }
     }
 }

@@ -101,7 +101,9 @@ function addToSidebarTab(sidebarTab) {
 </script>
 
 <template>
+    <!-- Während der Scope-Auswahl ausblenden: sonst liegt dieser Dialog (z-index 100) über dem Scope-Dialog -->
     <ArtworkBaseModal
+        v-if="!showScopeModal && !showScopeModalForDisclosure"
         :title="$t('Add component')"
         :description="$t('Choose where this component should be added. It will be placed at the end of the selected area.')"
         @close="emit('close')"

@@ -7,6 +7,7 @@ use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Repositories\CrmContactRepository;
 use Artwork\Modules\Crm\Repositories\CrmPropertyValueRepository;
+use Artwork\Modules\Crm\Support\CrmPropertyValueFormat;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -126,7 +127,8 @@ readonly class CrmContactService
 
         $property = CrmProperty::find($propertyId);
 
-        if (!$property) {
+        // Quell-Datensätze (User/Freelancer/…) kennen keine Mehrfachauswahl
+        if (!$property || CrmPropertyValueFormat::isMultiple($property)) {
             return;
         }
 
@@ -151,11 +153,14 @@ readonly class CrmContactService
 
     private function savePropertyValues(CrmContact $contact, array $propertyValues): void
     {
+        $properties = CrmProperty::query()->whereKey(array_keys($propertyValues))->get()->keyBy('id');
+
         foreach ($propertyValues as $propertyId => $value) {
             $this->savePropertyValue(
                 $contact,
                 (int) $propertyId,
-                $value !== null ? (string) $value : null
+                // Mehrfachauswahl als JSON-Liste, alles andere als Text
+                CrmPropertyValueFormat::toStorage($properties->get((int) $propertyId), $value)
             );
         }
     }

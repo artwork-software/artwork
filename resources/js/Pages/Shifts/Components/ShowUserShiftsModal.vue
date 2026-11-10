@@ -281,6 +281,16 @@
                                             <PropertyIcon name="IconCoffee" class="h-3.5 w-3.5" stroke-width="1.5" />
                                             {{ individual_time.break_minutes }} {{ t('min. break') }}
                                         </span>
+                                        <!-- Freigabe-Status; Änderungen an freigegebenen Zeiten erscheinen als Änderung nach Festschreibung -->
+                                        <span
+                                            v-if="individual_time.workflow_status"
+                                            class="inline-flex"
+                                            :title="individual_time.workflow_status === 'committed'
+                                                ? t('This individual time has been released. Changes appear under changes after commitment and have to be confirmed.')
+                                                : t('This individual time is part of an open release request. Reviewers will see your changes.')"
+                                        >
+                                            <IndividualTimeWorkflowBadge :status="individual_time.workflow_status" />
+                                        </span>
                                     </div>
                                     <div class="flex items-center gap-1 shrink-0">
                                         <ToolTipComponent
@@ -991,6 +1001,7 @@ import { legalBreakMinutesFor } from '@/Composeables/useLegalBreak';
 import { toBreakNumber } from '@/Composeables/useAutoBreak';
 import LegalBreakHint from '@/Components/Inputs/LegalBreakHint.vue';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import IndividualTimeWorkflowBadge from "@/Pages/Shifts/Components/IndividualTimeWorkflowBadge.vue";
 import { usePermission } from '@/Composeables/Permission.js';
 import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
 

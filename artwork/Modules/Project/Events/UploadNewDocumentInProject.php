@@ -23,7 +23,11 @@ class UploadNewDocumentInProject implements ShouldBroadcastNow, ShouldDispatchAf
     public $projectFile;
     public $projectId;
 
-    public function __construct(ProjectFile $projectFile, int $projectId)
+    /**
+     * @param bool $visibilityChanged "Sichtbar in" geändert: alle Upload-Bereiche laden nach (auch die, aus denen
+     *        die Datei verschwindet)
+     */
+    public function __construct(ProjectFile $projectFile, int $projectId, public bool $visibilityChanged = false)
     {
         $this->projectFile = $projectFile;
         $this->projectId = $projectId;
@@ -43,7 +47,7 @@ class UploadNewDocumentInProject implements ShouldBroadcastNow, ShouldDispatchAf
      * Nur Ids: der Kanal project.{id} erreicht alle Projektsichtigen, auch ohne Sicht auf den Tab
      * oder die Budget-Freigabe der Datei. Die Listen laden über ihre geprüften Endpunkte nach.
      *
-     * @return array{document: array{id: int, tab_id: int|null, project_id: int}}
+     * @return array{document: array{id: int, tab_id: int|null, project_id: int, visible_in: list<string>|null, visibility_changed: bool}}
      */
     public function broadcastWith(): array
     {
@@ -52,6 +56,9 @@ class UploadNewDocumentInProject implements ShouldBroadcastNow, ShouldDispatchAf
                 'id' => $this->projectFile->id,
                 'tab_id' => $this->projectFile->tab_id,
                 'project_id' => $this->projectId,
+                // Upload-Bereiche (Schlüssel) – keine Inhalte
+                'visible_in' => $this->projectFile->visible_in,
+                'visibility_changed' => $this->visibilityChanged,
             ],
         ];
     }

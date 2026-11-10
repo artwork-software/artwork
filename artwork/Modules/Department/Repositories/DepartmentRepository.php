@@ -4,6 +4,7 @@ namespace Artwork\Modules\Department\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 class DepartmentRepository extends BaseRepository
@@ -41,6 +42,11 @@ class DepartmentRepository extends BaseRepository
      */
     public function syncUsers(Department $department, array $userIds): array
     {
-        return $department->users()->sync($userIds);
+        $changes = $department->users()->sync($userIds);
+
+        // Team-Mitgliedschaft kann Raumadmin-Rechte geben (department_room) – gecachten Anfragen-Status verwerfen
+        User::forgetCachedShareDataForIds(array_merge($changes['attached'], $changes['detached']));
+
+        return $changes;
     }
 }

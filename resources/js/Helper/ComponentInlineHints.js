@@ -6,6 +6,7 @@ export const INLINE_HINT_COMPONENT_TYPES = [
     'TextField',
     'TextArea',
     'DropDown',
+    'CheckboxList',
     'Checkbox',
     'Link',
     'LinkList',

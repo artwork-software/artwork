@@ -49,6 +49,7 @@
                                     :id="`project-${index}`"
                                     height="6"
                                     width="6"
+                                    lazy-load
                                 />
 
                                 <!-- Herkunft: "via Assistent" / "via API (Name)"; bei ui und system leer -->

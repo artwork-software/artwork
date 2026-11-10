@@ -1,78 +1,89 @@
 <template>
-    <BaseModal @closed="$emit('close', false)">
-        <ModalHeader
-            :title="$t('Assign event types')"
-            :description="$t('Select the event types whose events should be counted under this tag.')"
-        />
-        <div class="flex items-center gap-2 mb-4">
-            <span v-if="tag.color" class="w-4 h-4 rounded-full shrink-0" :style="{ backgroundColor: tag.color }" />
-            <span class="font-medium text-sm font-lexend">{{ tag.name_de }}</span>
-            <span class="text-xs text-text-subtle">({{ tag.name }})</span>
-        </div>
+    <ArtworkBaseModal
+        title="Assign event types"
+        description="Select the event types whose events should be counted under this tag."
+        modal-size="sm:max-w-lg"
+        @close="$emit('close', false)"
+    >
+        <div class="space-y-3">
+            <div class="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-sunken px-3 py-2">
+                <span v-if="tag.color" class="size-3.5 shrink-0 rounded-full" :style="{ backgroundColor: tag.color }" />
+                <span class="truncate font-lexend text-sm font-medium text-text">{{ tag.name_de }}</span>
+                <span class="truncate text-xs text-text-muted">({{ tag.name }})</span>
+            </div>
 
-        <BaseInput
-            v-if="eventTypes.length > 8"
-            id="bi_tag_event_type_search"
-            v-model="searchQuery"
-            type="text"
-            :label="$t('Search event types')"
-        />
+            <BaseInput
+                v-if="eventTypes.length > 8"
+                id="bi_tag_event_type_search"
+                v-model="searchQuery"
+                label="Search event types"
+            />
 
-        <div class="flex items-center gap-3 mt-4 mb-2 text-xs">
-            <button type="button" class="text-accent-600 hover:text-accent-700" @click="selectAll">
-                {{ $t('Select all') }}
-            </button>
-            <span class="text-text-subtle">|</span>
-            <button type="button" class="text-accent-600 hover:text-accent-700" @click="deselectAll">
-                {{ $t('Deselect all') }}
-            </button>
-            <span class="ml-auto text-text-subtle">{{ selectedIds.size }} / {{ eventTypes.length }}</span>
-        </div>
+            <div class="flex items-center gap-1 text-xs">
+                <BaseUIButton label="Select all" variant="ghost" size="sm" hide-icon @click="selectAll" />
+                <BaseUIButton label="Deselect all" variant="ghost" size="sm" hide-icon @click="deselectAll" />
+                <span class="ml-auto tabular-nums text-text-muted">{{ selectedIds.size }} / {{ eventTypes.length }}</span>
+            </div>
 
-        <div class="max-h-80 overflow-y-auto divide-y divide-border-subtle border border-border-subtle rounded-lg">
-            <label
-                v-for="eventType in filteredEventTypes"
-                :key="eventType.id"
-                :for="'bi_tag_event_type_' + eventType.id"
-                class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-surface-sunken"
+            <ul
+                v-if="filteredEventTypes.length > 0"
+                class="max-h-80 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
             >
-                <input
-                    :id="'bi_tag_event_type_' + eventType.id"
-                    type="checkbox"
-                    class="input-checklist"
-                    :checked="selectedIds.has(eventType.id)"
-                    @change="toggle(eventType.id)"
-                />
-                <span class="w-3.5 h-3.5 rounded-full shrink-0" :style="{ backgroundColor: eventType.hex_code }" />
-                <span class="text-sm font-lexend text-text">{{ eventType.name }}</span>
-                <span class="text-xs text-text-subtle">({{ eventType.abbreviation }})</span>
-            </label>
-            <p v-if="filteredEventTypes.length === 0" class="px-3 py-4 text-sm text-text-subtle">
-                {{ $t('No results found') }}
-            </p>
-        </div>
+                <li
+                    v-for="eventType in filteredEventTypes"
+                    :key="eventType.id"
+                    class="px-3 py-2.5 transition-colors duration-150 hover:bg-surface-hover motion-reduce:transition-none"
+                >
+                    <BaseCheckbox
+                        :id="'bi_tag_event_type_' + eventType.id"
+                        :model-value="selectedIds.has(eventType.id)"
+                        @update:model-value="toggle(eventType.id)"
+                    >
+                        <template #label>
+                            <span class="flex min-w-0 items-center gap-2">
+                                <span class="size-3 shrink-0 rounded-full" :style="{ backgroundColor: eventType.hex_code }" />
+                                <span class="truncate font-lexend text-text">{{ eventType.name }}</span>
+                                <span class="text-xs font-normal text-text-muted">({{ eventType.abbreviation }})</span>
+                            </span>
+                        </template>
+                    </BaseCheckbox>
+                </li>
+            </ul>
+            <EmptyState
+                v-else
+                icon="IconSearch"
+                :title="$t('No results found')"
+            />
 
-        <div v-if="errorMessage" class="text-sm/5 text-danger mt-3">
-            {{ errorMessage }}
+            <BaseAlertComponent v-if="errorMessage" type="error" :message="errorMessage" />
         </div>
-
-        <div class="flex items-center justify-center mt-6">
+        <template #footer>
             <BaseUIButton
-                :label="$t('Save')"
-                is-add-button
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="saving"
+                @click="$emit('close', false)"
+            />
+            <BaseUIButton
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
                 :processing="saving"
                 :disabled="saving"
                 @click="save"
             />
-        </div>
-    </BaseModal>
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import BaseModal from '@/Components/Modals/BaseModal.vue';
-import ModalHeader from '@/Components/Modals/ModalHeader.vue';
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
+import EmptyState from '@/Artwork/Feedback/EmptyState.vue';
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import { BI_REQUEST_CONFIG, extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
 
@@ -92,7 +103,7 @@ const filteredEventTypes = computed(() => {
     const query = searchQuery.value.trim().toLowerCase();
     if (!query) return props.eventTypes;
     return props.eventTypes.filter(
-        (eventType) => eventType.name.toLowerCase().includes(query)
+        (eventType) => (eventType.name ?? '').toLowerCase().includes(query)
             || (eventType.abbreviation ?? '').toLowerCase().includes(query)
     );
 });
@@ -112,6 +123,9 @@ const deselectAll = () => {
 };
 
 const save = async () => {
+    if (saving.value) {
+        return;
+    }
     saving.value = true;
     errorMessage.value = '';
     try {

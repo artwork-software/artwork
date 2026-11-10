@@ -12,6 +12,8 @@
  * (Entscheidung Jannik 08.09.2026 — keine wirkungslosen Häkchen).
  */
 
+import { canViewPlanning } from '@/Helper/planningRights.js';
+
 export const VIEW = Object.freeze({
     CALENDAR: 'calendar',               // Standard-Kalender (Wochen-/Monatsraster)
     CALENDAR_DAILY: 'calendar_daily',   // Kalender-Tagesansicht
@@ -182,7 +184,7 @@ export const SETTINGS = [
         views: [VIEW.CALENDAR, VIEW.CALENDAR_DAILY],
         label: 'Show planned events',
         description: 'Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.',
-        when: (ctx) => ctx.can('can see planning calendar') || ctx.can('can edit planning calendar') || ctx.is('artwork admin'),
+        when: (ctx) => canViewPlanning({ isAdmin: ctx.is('artwork admin'), can: ctx.can }),
     },
     {
         key: 'show_only_not_fully_staffed_shifts',

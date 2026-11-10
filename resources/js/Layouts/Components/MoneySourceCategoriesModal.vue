@@ -1,133 +1,110 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
-            <div class="mx-4">
-                <ModalHeader
-                    :title="$t('Manage source categories')"
-                />
-                <Menu class="relative">
-                    <div>
-                        <MenuButton class="w-full">
-                            <div class="menu-button">
-                                <div class="flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
-                                    {{ $t('Select source categories')}}
-                                </div>
-                                <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
-                            </div>
-                        </MenuButton>
-
-                        <transition
-                            enter-active-class="transition duration-50 ease-out"
-                            enter-from-class="transform scale-100 opacity-100"
-                            enter-to-class="transform scale-100 opacity-100"
-                            leave-active-class="transition duration-75 ease-in"
-                            leave-from-class="transform scale-100 opacity-100"
-                            leave-to-class="transform scale-95 opacity-0"
-                        >
-                            <MenuItems class="absolute right-0 w-full origin-top-right divide-y divide-white/10 rounded-lg bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                <div v-if="moneySourceCategories.length > 0" class="grid grid-cols-1 gap-2">
-                                    <div v-for="category in moneySourceCategories"
-                                         :key="category.id"
-                                         class="w-full flex items-center">
-                                        <input type="checkbox"
-                                               v-model="selectedCategoryIds"
-                                               :value="category.id"
-                                               class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"
-                                        />
-                                        <p :class="[selectedCategoryIds.includes(category.id) ? 'text-white' : 'text-text-subtle', 'ml-2 text-xs subpixel-antialiased align-text-middle']">
-                                            {{ category.name }}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div v-else class="text-sm text-white/70">
-                                    {{ $t('No source categories have been created yet')}}
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </div>
-                </Menu>
-            </div>
-            <div class="mx-4 mt-2 flex flex-wrap">
-                <TagComponent v-if="moneySourceSelectedCategories.length > 0"
-                              v-for="category in moneySourceSelectedCategories"
-                              :key="category.id"
-                              :displayed-text="category.name"
-                              hide-x="true" property=""/>
-            </div>
-            <div class="justify-center flex w-full my-6">
-                <FormButton :disabled="moneySourceCategories.length === 0" :text="$t('Save')" @click="attachCategories"/>
-            </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        title="Manage source categories"
+        modal-size="sm:max-w-lg"
+        @close="closeModal"
+    >
+        <div v-if="categoryOptions.length > 0" class="space-y-3">
+            <ArtworkBaseListbox
+                v-model="selectedCategories"
+                :items="categoryOptions"
+                by="id"
+                option-label="name"
+                label="Source categories"
+                placeholder="Select source categories"
+                multiple
+            />
+            <ul v-if="selectedCategories.length > 0" class="flex flex-wrap gap-2">
+                <li
+                    v-for="category in selectedCategories"
+                    :key="category.id"
+                    class="inline-flex items-center gap-x-1 rounded-md border border-border-subtle bg-surface-sunken py-1 pl-2.5 pr-1 text-xs font-medium text-text"
+                >
+                    <span class="truncate">{{ category.name }}</span>
+                    <button
+                        type="button"
+                        class="inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-text-subtle transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover hover:text-danger"
+                        :aria-label="$t('Remove')"
+                        @click="removeCategory(category)"
+                    >
+                        <PropertyIcon name="IconX" class="size-3.5" stroke-width="1.5" aria-hidden="true"/>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <EmptyState
+            v-else
+            icon="IconCategory"
+            :title="$t('No source categories have been created yet')"
+        />
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal"
+            />
+            <BaseUIButton
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+                :disabled="categoryOptions.length === 0 || processing"
+                @click="attachCategories"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconChevronDown, IconX} from "@tabler/icons-vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
-import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {router} from "@inertiajs/vue3";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+<script setup>
+import {computed, ref} from 'vue'
+import {router} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import EmptyState from '@/Artwork/Feedback/EmptyState.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 
-export default {
-    mixins: [Permissions],
-    name: "MoneySourceCategoriesModal",
-    components: {
-        ModalHeader,
-        BaseModal,
-        FormButton,
-        TagComponent,
-        MenuItem,
-        MenuItems,
-        MenuButton,
-        Menu,
-        BaseFilterTag,
-        IconChevronDown,
-        BaseFilterDisclosure,
-        JetDialogModal,
-        IconX
-    },
-    props: ['show', 'closeModal', 'moneySourceId', 'moneySourceCategories', 'moneySourceCurrentCategories'],
-    data() {
-        return {
-            selectedCategoryIds: []
-        }
-    },
-    computed: {
-        moneySourceSelectedCategories() {
-            let moneySourceSelectedCategories = [];
+defineOptions({name: 'MoneySourceCategoriesModal'})
 
-            this.selectedCategoryIds.forEach((moneySourceCategoryId) => {
-                moneySourceSelectedCategories.push(
-                    this.moneySourceCategories.find(
-                        (moneySourceCategory) => moneySourceCategory.id === moneySourceCategoryId
-                    )
-                );
-            });
+const props = defineProps({
+    show: {type: Boolean, default: true},
+    closeModal: {type: Function, required: true},
+    moneySourceId: {type: Number, required: true},
+    moneySourceCategories: {type: Array, default: () => []},
+    moneySourceCurrentCategories: {type: Array, default: () => []},
+})
 
-            return moneySourceSelectedCategories;
-        }
-    },
-    mounted: function() {
-        this.moneySourceCurrentCategories.forEach((moneySourceCurrentCategory) => {
-            this.selectedCategoryIds.push(moneySourceCurrentCategory.id)
-        });
-    },
-    methods: {
-        attachCategories() {
-            router.post(
-                route('money_sources.categories.sync', {moneySource: this.moneySourceId}),
-                {
-                    categoryIds: this.selectedCategoryIds
-                },
-                {
-                    onSuccess: () => this.closeModal()
-                }
-            )
-        }
+const processing = ref(false)
+
+const categoryOptions = computed(() => props.moneySourceCategories ?? [])
+
+// Bereits zugeordnete Kategorien über die Auswahlliste auflösen, damit die Objekte identisch sind
+const currentCategoryIds = (props.moneySourceCurrentCategories ?? []).map((category) => category.id)
+const selectedCategories = ref(
+    categoryOptions.value.filter((category) => currentCategoryIds.includes(category.id))
+)
+
+function removeCategory(categoryToRemove) {
+    selectedCategories.value = selectedCategories.value.filter((category) => category.id !== categoryToRemove.id)
+}
+
+function attachCategories() {
+    if (processing.value) {
+        return
     }
+    processing.value = true
+    router.post(
+        route('money_sources.categories.sync', {moneySource: props.moneySourceId}),
+        {categoryIds: selectedCategories.value.map((category) => category.id)},
+        {
+            preserveScroll: true,
+            onSuccess: () => props.closeModal(),
+            onFinish: () => {
+                processing.value = false
+            },
+        }
+    )
 }
 </script>

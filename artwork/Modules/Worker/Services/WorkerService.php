@@ -52,7 +52,8 @@ class WorkerService
         $eagerLoads = WorkerEagerLoadConfig::getShiftPlanEagerLoads($startDate, $endDate);
         // Polymorphe Query basierend auf Worker-Typ
         $query = match ($workerType) {
-            User::class => User::query()->canWorkShifts(),
+            // Deaktivierte nur, solange sie im Zeitraum noch Schichten haben (bestehende Zuteilungen sichtbar)
+            User::class => User::query()->canWorkShifts()->activeOrWithShiftsBetween($startDate, $endDate),
             Freelancer::class => Freelancer::query()->canWorkShifts(),
             ServiceProvider::class => ServiceProvider::query()->canWorkShifts(),
             default => throw new \InvalidArgumentException("Unbekannter Worker-Typ: {$workerType}"),
@@ -159,7 +160,7 @@ class WorkerService
             return collect();
         }
 
-        return $individualTimes->map(function ($individualTime) {
+        return $individualTimes->map(function (IndividualTime $individualTime) {
             return [
                 'id' => $individualTime->id,
                 'title' => $individualTime->title,
@@ -172,6 +173,8 @@ class WorkerService
                 'break_minutes' => $individualTime->break_minutes,
                 'series_uuid' => $individualTime->series_uuid,
                 'days_of_individual_time' => $individualTime->days_of_individual_time ?? [],
+                // Dienstplan-Freigabe: 'committed' | 'requested' | null
+                'workflow_status' => $individualTime->workflowStatus(),
             ];
         });
     }

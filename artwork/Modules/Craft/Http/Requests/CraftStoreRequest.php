@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Craft\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
@@ -25,7 +26,7 @@ class CraftStoreRequest extends FormRequest
             'universally_applicable' => 'required|boolean',
             'qualifications' => 'nullable|array',
             'qualifications.*.id' => 'integer|exists:shift_qualifications,id',
-            'color' => 'nullable|string|max:7',
+            'color' => ['nullable', 'string', 'max:7', new HexColorRule()],
             'notify_days' => 'nullable|integer|min:0',
             'commit_request_deadline_days' => 'nullable|integer|min:0|max:365',
             'managersToBeAssigned' => 'sometimes|array',

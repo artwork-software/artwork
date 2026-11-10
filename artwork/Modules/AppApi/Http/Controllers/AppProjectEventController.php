@@ -10,6 +10,7 @@ use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomRequestNotificationService;
+use Artwork\Modules\Ticketing\Services\TicketingLock;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,19 +20,24 @@ class AppProjectEventController extends Controller
     public function __construct(
         private readonly AppSystemComponentService $systemComponentService,
         private readonly RoomRequestNotificationService $roomRequestNotificationService,
+        private readonly TicketingLock $ticketingLock,
     ) {
     }
 
     /**
      * One event with the editor's picker options — deeplinks do not have to
-     * load the whole tab payload to edit a single event.
+     * load the whole tab payload to edit a single event. A date on sale tells
+     * the editor to ask before moving it (TicketingLock::MOVE_CONFIRMED_HEADER).
      */
     public function show(Request $request, Project $project, Event $event): JsonResponse
     {
         $this->authorize('view', $project);
+        // Planungstermine nur mit Planungskalender-Recht (EventPolicy::view).
+        $this->authorize('view', $event);
 
         return response()->json([
             'event' => $this->systemComponentService->eventPayload($request->user(), $event),
+            'ticketing_on_sale' => $this->ticketingLock->isOnSale($event),
             ...$this->systemComponentService->eventEditorOptions(),
         ]);
     }
@@ -83,6 +89,7 @@ class AppProjectEventController extends Controller
     public function update(AppEventRequest $request, Project $project, Event $event): JsonResponse
     {
         $this->authorize('view', $project);
+        $this->authorize('view', $event);
         $this->authorize('update', $event);
 
         $attributes = $this->eventAttributes($request);

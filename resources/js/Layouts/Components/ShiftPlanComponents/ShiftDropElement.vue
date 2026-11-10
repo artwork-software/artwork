@@ -538,11 +538,15 @@ watch(() => props.multiEditMode, (val) => {
     }
 })
 
-watch(() => props.userForMultiEdit, (val) => {
-    if (props.shift) {
-        props.shift.isCheckedForMultiEdit = val ? val.shift_ids?.includes(props.shift.id) : false
+// Nur das Ergebnis beobachten statt deep auf userForMultiEdit: der Deep-Watch lief je Schicht bei jeder Änderung
+watch(
+    () => props.userForMultiEdit ? (props.userForMultiEdit.shift_ids?.includes(props.shift?.id) ?? false) : false,
+    (isChecked) => {
+        if (props.shift) {
+            props.shift.isCheckedForMultiEdit = isChecked
+        }
     }
-}, { deep: true })
+)
 
 /* ---------------- Methoden (als Funktionen) ---------------- */
 function isIdHighlighted(highlightedId?: number | null, highlightedType?: 0 | 1 | 2 | null) {

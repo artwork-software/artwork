@@ -56,7 +56,7 @@
                         :columns="userCols"
                         row-key="id"
                         empty-title="Keine Teammitglieder"
-                        empty-message="Derzeit sind keine Teammitglieder vorhanden."
+                        empty-message="No team members added yet"
                     >
                         <!-- Name (Avatar + Name) -->
                         <template #cell-name="{ row }">
@@ -96,115 +96,134 @@
 
         </div>
         <!-- Team löschen Modal -->
-        <BaseModal @closed="closeDeleteTeamModal" v-if="deletingTeam" modal-image="/Svgs/Overlays/illu_warning.svg" >
-                <div class="mx-4">
-                    <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                        {{ $t('Delete Team')}}
-                    </div>
-                    <div class="text-sm/5 text-danger">
-                        {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: department.name })}}
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm "
-                                @click="deleteTeam">
-                            {{ $t('Delete')}}
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteTeamModal()"
-                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{$t('No, not really')}}</span>
-                        </div>
-                    </div>
-                </div>
-        </BaseModal>
+        <ArtworkBaseModal
+            v-if="deletingTeam"
+            title="Delete Team"
+            modal-size="sm:max-w-lg"
+            @close="closeDeleteTeamModal"
+        >
+            <p class="text-sm text-text">
+                {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: department.name }) }}
+            </p>
+            <template #footer>
+                <BaseUIButton
+                    label="No, not really"
+                    is-cancel-button
+                    hide-icon
+                    @click="closeDeleteTeamModal"
+                />
+                <BaseUIButton
+                    label="Delete"
+                    variant="danger"
+                    icon="IconTrash"
+                    @click="deleteTeam"
+                />
+            </template>
+        </ArtworkBaseModal>
         <!--Alle Nutzer aus Team löschen Modal -->
-        <BaseModal @closed="closeDeleteAllTeamMembersModal" v-if="deletingAllTeamMembers" modal-image="/Svgs/Overlays/illu_warning.svg" >
-                <div class="mx-4">
-                    <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                        {{$t('Delete all team members')}}
-                    </div>
-                    <div class="text-sm/5 text-danger">
-                        {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: department.name })}}
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm "
-                                @click="deleteAllTeamMembers">
-                            {{ $t('Delete all team members')}}
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteAllTeamMembersModal"
-                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{$t('No, not really')}}</span>
-                        </div>
-                    </div>
-                </div>
-        </BaseModal>
+        <ArtworkBaseModal
+            v-if="deletingAllTeamMembers"
+            title="Delete all team members"
+            modal-size="sm:max-w-lg"
+            @close="closeDeleteAllTeamMembersModal"
+        >
+            <p class="text-sm text-text">
+                {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: department.name }) }}
+            </p>
+            <template #footer>
+                <BaseUIButton
+                    label="No, not really"
+                    is-cancel-button
+                    hide-icon
+                    @click="closeDeleteAllTeamMembersModal"
+                />
+                <BaseUIButton
+                    label="Delete all team members"
+                    variant="danger"
+                    icon="IconTrash"
+                    @click="deleteAllTeamMembers"
+                />
+            </template>
+        </ArtworkBaseModal>
         <!-- Change TeamMember Modal -->
-        <BaseModal @closed="closeChangeTeamMembersModal" v-if="showChangeTeamMemberModal" modal-image="/Svgs/Overlays/illu_team_edit.svg" >
-                <div class="mx-3">
-                    <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                        {{ $t('Edit team members')}}
-                    </div>
-                    <div class="text-sm/5 font-bold text-text-subtle">
-                        {{ $t('Enter the name of the user you want to add to the team.')}}
-                    </div>
-                    <div class="mt-6 relative">
-                        <div class="my-auto w-full">
-                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-surface-inverse border-l-0 border-t-0 border-r-0 border-b-2 border-border text-text placeholder-text-subtle placeholder-transparent"
-                                   placeholder="placeholder"/>
-                            <label for="userSearch"
-                                   class="absolute left-0 text-base -top-5 text-text-muted text-sm -top-3.5 transition-all subpixel-antialiased text-text-subtle peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
-                        </div>
-
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-surface-inverse shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto sm:text-sm">
-                                <div class="border-border-subtle">
-                                    <div v-for="(user, index) in user_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="addUserToTeamUsersArray(user)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ user.first_name }} {{ user.last_name }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex">
-                        </div>
-                        <span v-for="(user,index) in teamForm.users"
-                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-text">
-                            <div class="flex items-center">
-                                <UserPopoverTooltip :id="user.id" :user="user" height="11" width="11" />
-                                <span class="flex ml-4 text-base/5 font-semibold text-text">
+        <ArtworkBaseModal
+            v-if="showChangeTeamMemberModal"
+            title="Edit team members"
+            description="Enter the name of the user you want to add to the team."
+            modal-size="sm:max-w-lg"
+            @close="closeChangeTeamMembersModal"
+        >
+            <div class="space-y-4">
+                <div>
+                    <BaseInput
+                        id="userSearch"
+                        v-model="user_query"
+                        label="Name"
+                        :placeholder="$t('Search for users')"
+                        autocomplete="off"
+                        autofocus
+                    />
+                    <ul
+                        v-if="user_search_results.length > 0 && user_query.length > 0"
+                        class="mt-2 max-h-60 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+                    >
+                        <li v-for="user in user_search_results" :key="user.id">
+                            <button
+                                type="button"
+                                class="block w-full cursor-pointer truncate px-3 py-2 text-left text-sm font-medium text-text transition-colors duration-150 hover:bg-surface-hover focus-visible:bg-surface-hover motion-reduce:transition-none"
+                                @click="addUserToTeamUsersArray(user)"
+                            >
                                 {{ user.first_name }} {{ user.last_name }}
-                                    </span>
-                            </div>
-                            <button type="button" @click="deleteUserFromTeam(user)">
-                                <span class="sr-only">User aus Team entfernen</span>
-                                <IconCircleX class="ml-2 mt-1 h-5 w-5 hover:text-danger "/>
                             </button>
-                        </span>
-                    </div>
-                    <div class="w-full items-center text-center">
-                        <FormButton
-                            @click="editTeam"
-                            :text="$t('Save')"
-                            class="inline-flex items-center mt-8"
-                        />
-                    </div>
-
+                        </li>
+                    </ul>
                 </div>
-        </BaseModal>
+                <ul
+                    v-if="teamForm.users.length > 0"
+                    class="max-h-72 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+                >
+                    <li
+                        v-for="user in teamForm.users"
+                        :key="user.id"
+                        class="flex items-center justify-between gap-x-3 px-3 py-2"
+                    >
+                        <div class="flex min-w-0 items-center gap-x-3">
+                            <UserPopoverTooltip :id="user.id" :user="user" height="8" width="8" />
+                            <span class="truncate text-sm font-medium text-text">
+                                {{ user.first_name }} {{ user.last_name }}
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 hover:bg-surface-hover hover:text-danger motion-reduce:transition-none"
+                            :aria-label="$t('Remove person from team')"
+                            @click="deleteUserFromTeam(user)"
+                        >
+                            <IconX class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                        </button>
+                    </li>
+                </ul>
+                <p v-else class="text-xs text-text-muted">
+                    {{ $t('No team members added yet') }}
+                </p>
+            </div>
+            <template #footer>
+                <BaseUIButton
+                    label="Cancel"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="teamForm.processing"
+                    @click="closeChangeTeamMembersModal"
+                />
+                <BaseUIButton
+                    label="Save"
+                    variant="primary"
+                    icon="IconDeviceFloppy"
+                    :processing="teamForm.processing"
+                    @click="editTeam"
+                />
+            </template>
+        </ArtworkBaseModal>
     </app-layout>
 </template>
 
@@ -217,7 +236,6 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetButton from "@/Jetstream/Button.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
@@ -225,8 +243,8 @@ import {router} from "@inertiajs/vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTable from "@/Artwork/Table/BaseTable.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
@@ -266,11 +284,11 @@ export default {
     name: "Show",
     props: ['department'],
     components: {
-        BaseModal,
+        ArtworkBaseModal,
+        BaseInput,
         BaseMenu,
         BaseTable,
         BaseUIButton,
-        FormButton,
         UserPopoverTooltip,
         TeamIconCollection,
         AppLayout,
@@ -285,7 +303,6 @@ export default {
         SvgCollection,
         IconCircleX,
         JetButton,
-        JetDialogModal,
         JetInput,
         JetInputError,
         IconCheck,
@@ -350,9 +367,11 @@ export default {
         },
         editTeam() {
 
-            this.teamForm.patch(route('departments.edit', {department: this.department.id}));
+            // Modal erst nach erfolgreichem Speichern schließen
+            this.teamForm.patch(route('departments.edit', {department: this.department.id}), {
+                onSuccess: () => this.closeChangeTeamMembersModal(),
+            });
             this.showSuccessButton();
-            this.closeChangeTeamMembersModal();
         },
         deleteAllTeamMembers() {
             this.teamForm.users = [];

@@ -67,7 +67,12 @@ class FortifyServiceProvider extends ServiceProvider
             $email = $request->input(Fortify::username());
             $email = is_string($email) ? $email : '';
 
-            return Limit::perMinute(5)->by($email . $request->ip());
+            return [
+                Limit::perMinute(5)->by($email . $request->ip()),
+                // Pro Konto unabhängig von der IP: bremst Password-Spraying über viele Adressen.
+                // Höchstens 15 Minuten Wartezeit, damit ein Angreifer ein Konto nicht lange sperren kann.
+                Limit::perMinutes(15, 10)->by('account|' . Str::lower(trim($email))),
+            ];
         });
 
         RateLimiter::for('two-factor', function (Request $request) {

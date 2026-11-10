@@ -325,7 +325,7 @@ class ProjectDayAssignmentController extends Controller
         $workersByType = [
             User::class => User::query()
                 ->whereIn('id', $rows->where('employable_type', User::class)->pluck('employable_id')->unique())
-                ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path'])
+                ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path', 'deactivated_at'])
                 ->keyBy('id'),
             Freelancer::class => Freelancer::query()
                 ->whereIn('id', $rows->where('employable_type', Freelancer::class)->pluck('employable_id')->unique())
@@ -353,6 +353,7 @@ class ProjectDayAssignmentController extends Controller
                     'last_name' => $worker->last_name,
                     'position' => $worker->position,
                     'profile_photo_url' => $worker->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($worker),
                 ] : null,
                 Freelancer::class => $worker ? [
                     'id' => $worker->id,

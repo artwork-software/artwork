@@ -11,6 +11,7 @@ use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\Crm\Models\CrmPropertyValue;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
+use Artwork\Modules\Crm\Support\CrmPropertyValueFormat;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -32,8 +33,8 @@ use Spatie\Activitylog\Models\Activity;
  * bearbeiten und entfernen — intern wie extern.
  *
  * Regeln:
- *  - Nur die in der Komponente eingestellten Kontakttypen (gespiegelte Typen wie User/Freelancer
- *    sind nie erlaubt, die werden an ihrer Quelle gepflegt).
+ *  - Nur die in der Komponente eingestellten Kontakttypen. Gespiegelte Typen werden an ihrer Quelle
+ *    gepflegt: Freelancer/Dienstleister lassen sich (wenn ausgewählt) nur verknüpfen, User nie.
  *  - Externe sehen/füllen nur Eigenschaften aus nicht vertraulichen Gruppen und bearbeiten/entfernen
  *    nur Kontakte, die sie selbst angelegt haben. Vertrauliche Pflichtfelder sind für sie keine Pflicht.
  *  - Intern gelten die normalen CRM-Gruppenrechte (sichtbar/bearbeitbar).
@@ -62,6 +63,8 @@ class ProjectComponentCrmContactService
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
         private readonly DatabaseManager $db,
+        private readonly ProjectCrmContactRoleService $roleService,
+        private readonly ProjectArtistService $projectArtistService,
     ) {
     }
 
@@ -72,18 +75,16 @@ class ProjectComponentCrmContactService
 
     /**
      * Kontakttypen, die in dieser Komponente angelegt/verknüpft werden dürfen (in Typ-Reihenfolge).
+     * Ohne Auswahl in den Einstellungen gelten alle frei anlegbaren Typen.
      *
      * @return Collection<int, CrmContactType>
      */
     public function allowedContactTypes(Component $component): Collection
     {
-        $ids = array_values(array_filter(
-            array_map('intval', (array) ($component->data['contact_type_ids'] ?? [])),
-            static fn (int $id): bool => $id > 0,
-        ));
+        $ids = $this->configuredContactTypeIds($component);
 
         if ($ids === []) {
-            return collect();
+            return $this->selectableContactTypes();
         }
 
         return CrmContactType::query()
@@ -106,6 +107,54 @@ class ProjectComponentCrmContactService
             ->whereNotIn('slug', CrmSystemContactTypeEnum::mirroredSlugs())
             ->orderBy('sort_order')
             ->get();
+    }
+
+    /**
+     * Kontakttypen, deren Kontakte sich in dieser Komponente verknüpfen lassen: die anlegbaren Typen plus
+     * ausdrücklich ausgewählte gespiegelte Typen (Freelancer/Dienstleister). Ohne Auswahl keine gespiegelten.
+     *
+     * @return Collection<int, CrmContactType>
+     */
+    public function linkableContactTypes(Component $component): Collection
+    {
+        $ids = $this->configuredContactTypeIds($component);
+        $linkOnly = $ids === []
+            ? collect()
+            : CrmContactType::query()
+                ->whereIn('id', $ids)
+                ->where('is_active', true)
+                ->whereIn('slug', CrmSystemContactTypeEnum::linkOnlySlugs())
+                ->get();
+
+        return $this->allowedContactTypes($component)
+            ->concat($linkOnly)
+            ->sortBy('sort_order')
+            ->values();
+    }
+
+    /**
+     * Aktive gespiegelte Typen, die sich in den Komponenten-Einstellungen zum Verknüpfen auswählen lassen.
+     *
+     * @return Collection<int, CrmContactType>
+     */
+    public function linkOnlySelectableContactTypes(): Collection
+    {
+        return CrmContactType::query()
+            ->where('is_active', true)
+            ->whereIn('slug', CrmSystemContactTypeEnum::linkOnlySlugs())
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function configuredContactTypeIds(Component $component): array
+    {
+        return array_values(array_filter(
+            array_map('intval', (array) ($component->data['contact_type_ids'] ?? [])),
+            static fn (int $id): bool => $id > 0,
+        ));
     }
 
     public function maxContacts(Component $component): ?int
@@ -134,6 +183,21 @@ class ProjectComponentCrmContactService
             ])
             ->orderBy('id')
             ->get();
+    }
+
+    /**
+     * Verknüpfungen der Liste (ohne Kontakte im CRM-Papierkorb), schlank und nach Kontakt-ID geschlüsselt.
+     *
+     * @return Collection<int, ProjectComponentCrmContact>
+     */
+    public function linkedEntries(Project $project, Component $component): Collection
+    {
+        return ProjectComponentCrmContact::query()
+            ->where('project_id', $project->id)
+            ->where('component_id', $component->id)
+            ->whereHas('crmContact')
+            ->get(['id', 'crm_contact_id', 'roles', 'is_artist'])
+            ->keyBy('crm_contact_id');
     }
 
     public function findEntry(Project $project, Component $component, CrmContact $contact): ?ProjectComponentCrmContact
@@ -219,6 +283,7 @@ class ProjectComponentCrmContactService
                             'name' => $property->name,
                             'type' => $property->type->value,
                             'select_values' => $property->select_values,
+                            'multiselect_display' => $property->multiselect_display,
                             'tooltip_text' => $property->tooltip_text,
                             'is_required' => (bool) ($property->pivot->is_required ?? false),
                         ])
@@ -246,6 +311,8 @@ class ProjectComponentCrmContactService
         string $displayName,
         array $propertyValues,
         User|ExternalAccess $actor,
+        ?array $roles = null,
+        ?bool $isArtist = null,
     ): ProjectComponentCrmContact {
         $this->assertTypeAllowed($component, $contactType);
 
@@ -260,6 +327,8 @@ class ProjectComponentCrmContactService
             $displayName,
             $values,
             $actor,
+            $roles,
+            $isArtist,
         ): ProjectComponentCrmContact {
             $this->assertCapacity($project, $component);
 
@@ -282,9 +351,13 @@ class ProjectComponentCrmContactService
                 // intern Angelegtes gilt als geprüft, extern Angelegtes erst mit der Bestätigung des Tabs
                 'reviewed_at' => $isExternal ? null : now(),
                 'reviewed_by_user_id' => $isExternal ? null : $actor->id,
+                // Sonderrolle „Künstler*in“: bei Kontakten vom Typ Künstler*in vorbelegt; Rollen nur intern
+                'is_artist' => $isExternal || $isArtist === null ? $this->isArtistType($contactType) : $isArtist,
             ]);
 
-            $this->linkAsProjectArtist($project, $contact, $contactType);
+            if (!$isExternal && $roles !== null) {
+                $this->roleService->assignToEntry($entry, $roles, null);
+            }
             $this->logProjectHistory(
                 $project,
                 $actor,
@@ -304,15 +377,28 @@ class ProjectComponentCrmContactService
         Component $component,
         CrmContact $contact,
         User $actor,
+        ?array $roles = null,
+        ?bool $isArtist = null,
     ): ProjectComponentCrmContact {
         $contact->loadMissing('contactType');
-        if ($contact->contactType === null) {
+        if (
+            $contact->contactType === null
+            || !$this->linkableContactTypes($component)->contains('id', $contact->contactType->id)
+        ) {
             throw ValidationException::withMessages(['crm_contact_id' => __('This contact type is not allowed here.')]);
         }
-        $this->assertTypeAllowed($component, $contact->contactType);
 
         $existing = $this->findEntry($project, $component, $contact);
         if ($existing !== null) {
+            // erneut „als Rolle verknüpfen“: Rolle ergänzen statt einer zweiten Zeile
+            if ($roles !== null || $isArtist !== null) {
+                $this->roleService->assignToEntry(
+                    $existing,
+                    $roles !== null ? [...(array) $existing->roles, ...$roles] : null,
+                    $isArtist === true ? true : null,
+                );
+            }
+
             return $existing;
         }
 
@@ -321,6 +407,8 @@ class ProjectComponentCrmContactService
             $component,
             $contact,
             $actor,
+            $roles,
+            $isArtist,
         ): ProjectComponentCrmContact {
             $this->assertCapacity($project, $component);
 
@@ -331,9 +419,12 @@ class ProjectComponentCrmContactService
                 'created_by_user_id' => $actor->id,
                 'reviewed_at' => now(),
                 'reviewed_by_user_id' => $actor->id,
+                'is_artist' => $isArtist ?? $this->isArtistType($contact->contactType),
             ]);
 
-            $this->linkAsProjectArtist($project, $contact, $contact->contactType);
+            if ($roles !== null) {
+                $this->roleService->assignToEntry($entry, $roles, null);
+            }
             $this->logProjectHistory(
                 $project,
                 $actor,
@@ -402,7 +493,6 @@ class ProjectComponentCrmContactService
 
             if ($actor instanceof ExternalAccess) {
                 if (!$this->isUsedElsewhere($contact, $project)) {
-                    $project->crmContacts()->detach($contact->id);
                     $contact->delete();
                 }
                 $this->logProjectHistory(
@@ -434,12 +524,20 @@ class ProjectComponentCrmContactService
         ExternalAccess $external,
         User $reviewer,
     ): int {
-        return ProjectComponentCrmContact::query()
+        $reviewed = ProjectComponentCrmContact::query()
             ->where('project_id', $project->id)
             ->whereIn('component_id', $this->componentIdsInTab($tab))
             ->where('created_by_external_access_id', $external->id)
             ->whereNull('reviewed_at')
             ->update(['reviewed_at' => now(), 'reviewed_by_user_id' => $reviewer->id]);
+
+        // Massen-Update ohne Model-Events: geprüfte Künstler*innen erscheinen erst jetzt am Projekt
+        if ($reviewed > 0) {
+            $projectId = (int) $project->id;
+            $this->db->afterCommit(fn () => $this->projectArtistService->refresh($projectId));
+        }
+
+        return $reviewed;
     }
 
     public function countCreatedByExternal(Project $project, ProjectTab $tab, ExternalAccess $external): int
@@ -464,27 +562,51 @@ class ProjectComponentCrmContactService
     }
 
     /**
-     * Verknüpfbare CRM-Kontakte der erlaubten Typen (ohne bereits verknüpfte).
+     * Verknüpfbare CRM-Kontakte der erlaubten Typen. Ohne Zielrolle ohne bereits verknüpfte. Mit Zielrolle (bzw. „Künstler*in“) bleiben bereits verknüpfte Kontakte
+     * auswählbar, solange sie diese Rolle noch nicht haben — eine Person kann mehrere Rollen haben.
+     * Ist die Höchstzahl erreicht, sind nur noch bereits verknüpfte Kontakte auswählbar.
      *
      * @return Collection<int, CrmContact>
      */
-    public function searchLinkable(Project $project, Component $component, string $search): Collection
-    {
-        $typeIds = $this->allowedContactTypes($component)->pluck('id')->all();
+    public function searchLinkable(
+        Project $project,
+        Component $component,
+        string $search,
+        ?int $contactTypeId = null,
+        ?string $targetRole = null,
+        bool $targetArtist = false,
+    ): Collection {
+        $typeIds = $this->linkableContactTypes($component)->pluck('id')->all();
+        // Filter nach Kontakttyp im Auswahldialog (nur innerhalb der erlaubten Typen)
+        if ($contactTypeId !== null) {
+            $typeIds = array_values(array_intersect($typeIds, [$contactTypeId]));
+        }
         if ($typeIds === []) {
             return collect();
         }
 
-        $linkedIds = ProjectComponentCrmContact::query()
-            ->where('project_id', $project->id)
-            ->where('component_id', $component->id)
-            ->pluck('crm_contact_id')
+        $targetRole = $targetRole !== null && trim($targetRole) !== '' ? mb_strtolower(trim($targetRole)) : null;
+        $hasTarget = $targetRole !== null || $targetArtist;
+        $entries = $this->linkedEntries($project, $component);
+
+        $excludedIds = $entries
+            ->filter(fn (ProjectComponentCrmContact $entry) => !$hasTarget || ($targetArtist
+                ? (bool) $entry->is_artist
+                : in_array($targetRole, array_map('mb_strtolower', (array) ($entry->roles ?? [])), true)))
+            ->keys()
             ->all();
+
+        $max = $this->maxContacts($component);
+        $onlyLinked = $max !== null && $entries->count() >= $max;
+        if ($onlyLinked && !$hasTarget) {
+            return collect();
+        }
 
         return CrmContact::query()
             ->with('contactType')
             ->whereIn('crm_contact_type_id', $typeIds)
-            ->whereNotIn('id', $linkedIds)
+            ->whereNotIn('id', $excludedIds)
+            ->when($onlyLinked, fn (Builder $q) => $q->whereIn('id', $entries->keys()->all()))
             ->when(
                 trim($search) !== '',
                 fn (Builder $q) => $q->where('display_name', 'like', '%' . trim($search) . '%'),
@@ -582,6 +704,8 @@ class ProjectComponentCrmContactService
             'contact_type' => $contact->contactType ? $this->serializeContactType($contact->contactType) : null,
             'fields' => $fields,
             'values' => (object) $values,
+            'roles' => array_values((array) ($entry->roles ?? [])),
+            'is_artist' => (bool) $entry->is_artist,
             'created_at' => $entry->created_at?->toIso8601String(),
             'created_by_external' => $createdByExternal !== null && !$isExternalViewer
                 ? ['id' => $createdByExternal->id, 'name' => $createdByExternal->displayName()]
@@ -626,6 +750,11 @@ class ProjectComponentCrmContactService
             return $entry->isCreatedByExternal($actor)
                 && $contact !== null
                 && (int) $contact->created_by_external_access_id === (int) $actor->id;
+        }
+
+        // Gespiegelte Kontakte (Freelancer, Dienstleister …) werden nur an ihrer Quelle gepflegt
+        if (CrmSystemContactTypeEnum::isMirrored($entry->crmContact?->contactType?->slug)) {
+            return false;
         }
 
         if ($actor->can(PermissionEnum::CRM_VIEW->value)) {
@@ -718,6 +847,11 @@ class ProjectComponentCrmContactService
             if (!$isWritable) {
                 continue;
             }
+            if (CrmPropertyValueFormat::isMultiple($property)) {
+                // Mehrfachauswahl: Liste oder JSON-Text → JSON-Liste der gültigen Optionen
+                $values[$propertyId] = CrmPropertyValueFormat::toStorage($property, $value);
+                continue;
+            }
             if (is_array($value)) {
                 continue;
             }
@@ -803,13 +937,12 @@ class ProjectComponentCrmContactService
     }
 
     /**
-     * Künstler*innen erscheinen zusätzlich als Projekt-Künstler*innen (Projektsuche, Kopfdaten).
+     * Kontakte vom Typ Künstler*in bekommen in Kontaktlisten die Sonderrolle „Künstler*in“ vorbelegt (sie
+     * sind damit Projektkünstler*innen); intern lässt sie sich ab- und für andere Typen zuschalten.
      */
-    private function linkAsProjectArtist(Project $project, CrmContact $contact, CrmContactType $contactType): void
+    private function isArtistType(?CrmContactType $contactType): bool
     {
-        if ($contactType->slug === CrmSystemContactTypeEnum::ARTIST->value) {
-            $project->crmContacts()->syncWithoutDetaching([$contact->id]);
-        }
+        return $contactType?->slug === CrmSystemContactTypeEnum::ARTIST->value;
     }
 
     /**

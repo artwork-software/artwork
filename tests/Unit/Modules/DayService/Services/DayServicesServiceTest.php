@@ -8,6 +8,8 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -96,6 +98,41 @@ final class DayServicesServiceTest extends TestCase
             'day_serviceable_type' => ServiceProvider::class,
             'date' => '2024-05-15',
         ]);
+    }
+
+    #[Test]
+    public function attaching_the_same_day_service_twice_keeps_one_row(): void
+    {
+        $dayService = DayService::factory()->create();
+        $user = User::factory()->create();
+
+        $this->service->attachDayServiceable($dayService, $user, '2024-05-15');
+        $this->service->attachDayServiceable($dayService, $user, '2024-05-15');
+        $this->service->attachDayServiceable($dayService, $user, '2024-05-16');
+
+        $this->assertSame(1, DB::table('day_serviceables')->where([
+            'day_service_id' => $dayService->id,
+            'day_serviceable_id' => $user->id,
+            'date' => '2024-05-15',
+        ])->count());
+        $this->assertSame(2, DB::table('day_serviceables')->where('day_service_id', $dayService->id)->count());
+    }
+
+    #[Test]
+    public function database_rejects_duplicate_day_service_assignments(): void
+    {
+        $dayService = DayService::factory()->create();
+        $user = User::factory()->create();
+        $row = [
+            'day_service_id' => $dayService->id,
+            'date' => '2024-05-15',
+            'day_serviceable_type' => $user->getMorphClass(),
+            'day_serviceable_id' => $user->id,
+        ];
+        DB::table('day_serviceables')->insert($row);
+
+        $this->expectException(UniqueConstraintViolationException::class);
+        DB::table('day_serviceables')->insert($row);
     }
 
     #[Test]

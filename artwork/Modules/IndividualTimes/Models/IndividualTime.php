@@ -3,15 +3,23 @@
 namespace Artwork\Modules\IndividualTimes\Models;
 
 use Artwork\Core\Casts\TimeWithoutSeconds;
+use Artwork\Modules\Shift\Models\ShiftPlanRequest;
+use Artwork\Modules\Shift\Models\Traits\LogsShiftPlanDayActivity;
+use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class IndividualTime extends Model
 {
     use HasFactory;
+    use LogsActivity;
+    use LogsShiftPlanDayActivity;
 
     protected $fillable = [
         'title',
@@ -24,7 +32,29 @@ class IndividualTime extends Model
         'break_minutes',
         'series_uuid',
         'timeable_type',
-        'timeable_id'
+        'timeable_id',
+        'in_workflow',
+        'is_committed',
+        'current_request_id',
+        'committing_user_id',
+    ];
+
+    /**
+     * Inhaltliche Felder: Ändert sich eines davon an einer freigegebenen Zeit, bleibt sie freigegeben,
+     * die Änderung erscheint aber wie bei Schichten als Änderung nach Freigabe (ShiftChangeRecorder).
+     * In einer offenen Anfrage bleibt die Zeit; die Prüfenden sehen dann den aktuellen Stand.
+     */
+    public const CONTENT_FIELDS = [
+        'title',
+        'start_time',
+        'end_time',
+        'start_date',
+        'end_date',
+        'full_day',
+        'working_time_minutes',
+        'break_minutes',
+        'timeable_type',
+        'timeable_id',
     ];
 
     protected $hidden = [
@@ -39,9 +69,115 @@ class IndividualTime extends Model
         'full_day' => 'boolean',
         'working_time_minutes' => 'integer',
         'break_minutes' => 'integer',
+        'in_workflow' => 'boolean',
+        'is_committed' => 'boolean',
         'start_time' => TimeWithoutSeconds::class,
         'end_time' => TimeWithoutSeconds::class,
     ];
+
+    /**
+     * Schichtverlauf: Anlegen, inhaltliche Änderungen und Löschen der Zeit (nicht die Freigabe-Spalten,
+     * die laufen über die Anfrage).
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('individual_time')
+            ->logOnly(self::CONTENT_FIELDS)
+            ->logOnlyDirty()
+            ->dontLogIfAttributesChangedOnly(['series_uuid'])
+            ->dontSubmitEmptyLogs();
+    }
+
+    protected function shiftHistoryDayEntryKind(): string
+    {
+        return 'individual_time';
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    protected function shiftHistoryPersonColumns(): array
+    {
+        return ['timeable_type', 'timeable_id'];
+    }
+
+    /**
+     * @return array{0: ?string, 1: ?string}
+     */
+    protected function shiftHistoryDayRange(): array
+    {
+        $raw = $this->getAttributes();
+        $start = !empty($raw['start_date']) ? \Carbon\Carbon::parse($raw['start_date'])->toDateString() : null;
+        $end = !empty($raw['end_date']) ? \Carbon\Carbon::parse($raw['end_date'])->toDateString() : $start;
+
+        return [$start, $end ?? $start];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function shiftHistoryDayEntryData(): array
+    {
+        $raw = $this->getAttributes();
+
+        return [
+            'title' => $this->getAttribute('title'),
+            'full_day' => (bool) $this->getAttribute('full_day'),
+            'start_time' => self::shiftHistoryTime($raw['start_time'] ?? null),
+            'end_time' => self::shiftHistoryTime($raw['end_time'] ?? null),
+            'working_time_minutes' => $this->getAttribute('working_time_minutes'),
+            'break_minutes' => $this->getAttribute('break_minutes'),
+        ];
+    }
+
+    protected static function booted(): void
+    {
+        static::updated(function (IndividualTime $individualTime): void {
+            app(ShiftChangeRecorder::class)->recordIndividualTimeChange($individualTime, 'updated');
+        });
+
+        // deleting statt deleted: die Verlaufstabelle (Gewerk der Freigabe) wird per Cascade mitgelöscht
+        static::deleting(function (IndividualTime $individualTime): void {
+            app(ShiftChangeRecorder::class)->recordIndividualTimeChange($individualTime, 'deleted');
+        });
+    }
+
+    /**
+     * Status in der Dienstplan-Freigabe: 'committed' (freigegeben), 'requested' (in offener Anfrage)
+     * oder null (nicht Teil einer Freigabe).
+     */
+    public function workflowStatus(): ?string
+    {
+        if ($this->is_committed) {
+            return 'committed';
+        }
+
+        return $this->in_workflow ? 'requested' : null;
+    }
+
+    /**
+     * @return BelongsTo<ShiftPlanRequest, $this>
+     */
+    public function currentRequest(): BelongsTo
+    {
+        return $this->belongsTo(ShiftPlanRequest::class, 'current_request_id');
+    }
+
+    /**
+     * Alle Freigabe-Anfragen, zu denen die Zeit gehörte (Verlauf).
+     *
+     * @return BelongsToMany<ShiftPlanRequest, $this>
+     */
+    public function shiftPlanRequests(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ShiftPlanRequest::class,
+            'shift_plan_request_individual_times',
+            'individual_time_id',
+            'shift_plan_request_id'
+        )->withTimestamps();
+    }
 
     public function timeable(): MorphTo
     {

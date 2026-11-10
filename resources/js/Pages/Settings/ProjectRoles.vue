@@ -16,7 +16,7 @@
                     'If the option “CRM contacts in project team” is enabled, roles can also be assigned to CRM contacts in the team.',
                 ]"
             />
-            <div v-for="role in projectRoles">
+            <div v-for="role in projectRoles" :key="role.id">
                 <div class="rounded-lg bg-surface-sunken px-4 py-5 mb-3">
                     <div class="flex items-center justify-between">
                         <div>
@@ -24,24 +24,64 @@
                                 {{role.name}}
                             </div>
                         </div>
-                        <div class="flex gap-x-3">
-                            <PropertyIcon name="IconEdit" class="w-5 h-5 text-text-muted cursor-pointer" @click="openRoleEditForm(role)"/>
-                            <PropertyIcon name="IconTrash "class="w-5 h-5 text-text-muted cursor-pointer" @click="openDeleteRoleModal(role)"/>
+                        <div class="flex gap-x-1">
+                            <button
+                                type="button"
+                                class="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors duration-150 hover:bg-surface-hover hover:text-text motion-reduce:transition-none"
+                                :aria-label="$t('Edit project role')"
+                                @click="openRoleEditForm(role)"
+                            >
+                                <PropertyIcon name="IconEdit" class="size-5" stroke-width="1.5" aria-hidden="true"/>
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors duration-150 hover:bg-surface-hover hover:text-danger motion-reduce:transition-none"
+                                :aria-label="$t('Delete project role')"
+                                @click="openDeleteRoleModal(role)"
+                            >
+                                <PropertyIcon name="IconTrash" class="size-5" stroke-width="1.5" aria-hidden="true"/>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-        <BaseModal  modal-image="/Svgs/Overlays/illu_project_edit.svg" v-if="showAddProjectRoleModal" @closed="closeAddProjectRoleModal">
-            <ModalHeader
-                :title="projectRoleForm.id ? $t('Edit project role') : $t('Add Project Role')"
-                :description="$t('Add a new project role.')"
-            />
-            <BaseInput label="Name" id="title" v-model="projectRoleForm.name" />
-            <div class="justify-center flex w-full my-6">
-                <FormButton :text="$t('Save')" :disabled="projectRoleForm.name.length < 1" @click="addProjectRole"/>
-            </div>
-        </BaseModal>
+        <ArtworkBaseModal
+            v-if="showAddProjectRoleModal"
+            :title="projectRoleForm.id ? 'Edit project role' : 'Add Project Role'"
+            :description="projectRoleForm.id ? '' : 'Add a new project role.'"
+            modal-size="sm:max-w-lg"
+            @close="closeAddProjectRoleModal"
+        >
+            <form id="projectRoleForm" @submit.prevent="addProjectRole">
+                <BaseInput
+                    id="projectRoleName"
+                    v-model="projectRoleForm.name"
+                    label="Name"
+                    required
+                    :error="projectRoleForm.errors.name"
+                    autofocus
+                />
+            </form>
+            <template #footer>
+                <BaseUIButton
+                    label="Cancel"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="projectRoleForm.processing"
+                    @click="closeAddProjectRoleModal"
+                />
+                <BaseUIButton
+                    type="submit"
+                    form="projectRoleForm"
+                    label="Save"
+                    variant="primary"
+                    icon="IconDeviceFloppy"
+                    :processing="projectRoleForm.processing"
+                    :disabled="projectRoleForm.processing || projectRoleForm.name.trim().length < 1"
+                />
+            </template>
+        </ArtworkBaseModal>
 
         <ConfirmDeleteModal
             v-if="showDeleteRoleModal"
@@ -55,15 +95,9 @@
 
 <script>
 import ProjectSettingsHeader from "@/Pages/Settings/Components/ProjectSettingsHeader.vue";
-import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {useForm} from "@inertiajs/vue3";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import Input from "@/Jetstream/Input.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import {IconCirclePlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
@@ -72,13 +106,14 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 export default {
     name: "ProjectRoles",
     components: {
+        ArtworkBaseModal,
         BaseUIButton,
         ConfirmDeleteModal,
         SettingsGuideBanner,
         PropertyIcon,
         ProjectSettingsHeader,
         BaseInput,
-        TextInputComponent, ModalHeader, FormButton, Input, BaseModal, PlusButton},
+    },
     props: {
         projectRoles: {
             type: Array,
@@ -97,11 +132,16 @@ export default {
         }
     },
     methods: {
-        IconCirclePlus,
         closeAddProjectRoleModal() {
             this.showAddProjectRoleModal = false;
+            // sonst bleibt nach "Bearbeiten" die id stehen und "Hinzufügen" überschreibt die alte Rolle
+            this.projectRoleForm.reset();
+            this.projectRoleForm.clearErrors();
         },
         addProjectRole() {
+            if (this.projectRoleForm.processing || this.projectRoleForm.name.trim().length < 1) {
+                return;
+            }
             if (this.projectRoleForm.id) {
                 this.projectRoleForm.patch(
                     route('project-roles.update', {project_role: this.projectRoleForm.id}),

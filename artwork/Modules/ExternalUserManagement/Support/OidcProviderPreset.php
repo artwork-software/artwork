@@ -15,6 +15,54 @@ class OidcProviderPreset
     public const CUSTOM = 'custom';
 
     /**
+     * Entra-Endpunkte, über die sich Konten beliebiger fremder Tenants anmelden können.
+     */
+    public const MULTI_TENANT_SEGMENTS = ['common', 'organizations', 'consumers'];
+
+    /**
+     * Unveränderliche Kennungen. email/preferred_username kann die Person selbst ändern.
+     */
+    public const ALLOWED_IDENTIFIER_CLAIMS = ['sub', 'oid'];
+
+    private const MICROSOFT_LOGIN_HOSTS = ['login.microsoftonline.com', 'login.microsoft.com', 'sts.windows.net'];
+
+    public static function isMultiTenantTenantId(?string $tenantId): bool
+    {
+        return in_array(strtolower(trim((string) $tenantId)), self::MULTI_TENANT_SEGMENTS, true);
+    }
+
+    /**
+     * Erkennt Microsoft-Multi-Tenant-Endpunkte, auch in einer Custom-Discovery-URL.
+     */
+    public static function isMultiTenantUrl(?string $url): bool
+    {
+        $host = strtolower((string) parse_url((string) $url, PHP_URL_HOST));
+
+        if (!in_array($host, self::MICROSOFT_LOGIN_HOSTS, true)) {
+            return false;
+        }
+
+        $firstSegment = explode('/', ltrim((string) parse_url((string) $url, PHP_URL_PATH), '/'))[0];
+
+        return self::isMultiTenantTenantId($firstSegment);
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    public static function isMultiTenant(array $config): bool
+    {
+        $isMicrosoftPreset = ($config['provider_preset'] ?? null) === self::MICROSOFT;
+
+        if ($isMicrosoftPreset && self::isMultiTenantTenantId($config['tenant_id'] ?? null)) {
+            return true;
+        }
+
+        return self::isMultiTenantUrl($config['discovery_url'] ?? null)
+            || self::isMultiTenantUrl($config['issuer'] ?? null);
+    }
+
+    /**
      * @param array<string, mixed> $config
      * @return array<string, mixed>
      */

@@ -76,3 +76,64 @@ export function prioritizeChunks(ranges, visibleDays) {
     const isVisible = (range) => visible.some((day) => day >= range.start && day <= range.end);
     return [...ranges.filter(isVisible), ...ranges.filter((range) => !isVisible(range))];
 }
+
+/** Besitzt der Block den Tag? (erster/letzter Block auch Tage vor/nach dem Zeitraum) */
+function ownsDay(range, day, periodStart, periodEnd) {
+    const owned = ownedRange(range, periodStart, periodEnd);
+    return (owned.from === null || day >= owned.from) && (owned.to === null || day <= owned.to);
+}
+
+/**
+ * Blöcke im oder am sichtbaren Bereich: mit sichtbaren Tagen oder ohne gerenderten Tag zwischen Block und
+ * sichtbarem Bereich. Leere Wochen haben keine Zeile, die der IntersectionObserver melden könnte — sie
+ * gelten als sichtbar, sobald ihre gerenderten Nachbartage es sind. Ohne gerenderte Tage (leere Liste) sind
+ * alle Blöcke betroffen; sind Tage gerendert, aber (noch) keine sichtbar, keiner.
+ *
+ * @param {Array<{start: string, end: string}>} ranges
+ * @param {{periodStart: string, periodEnd: string, visibleDays: Iterable<string>, renderedDays: Iterable<string>}} view
+ */
+export function rangesNearVisibleDays(ranges, { periodStart, periodEnd, visibleDays, renderedDays }) {
+    const visible = [...(visibleDays || [])].sort();
+    const rendered = [...(renderedDays || [])];
+    if (!visible.length) {
+        return rendered.length ? [] : [...ranges];
+    }
+    const firstVisible = visible[0];
+    const lastVisible = visible[visible.length - 1];
+    // nächstgelegene gerenderte, nicht sichtbare Tage vor bzw. nach dem sichtbaren Bereich
+    let renderedBefore = null;
+    let renderedAfter = null;
+    for (const day of rendered) {
+        if (day < firstVisible && (renderedBefore === null || day > renderedBefore)) renderedBefore = day;
+        if (day > lastVisible && (renderedAfter === null || day < renderedAfter)) renderedAfter = day;
+    }
+
+    return ranges.filter((range) => {
+        const owned = ownedRange(range, periodStart, periodEnd);
+        return (owned.to === null || renderedBefore === null || owned.to > renderedBefore)
+            && (owned.from === null || renderedAfter === null || owned.from < renderedAfter);
+    });
+}
+
+/**
+ * Blöcke, die nach einer Aktion bzw. einem fremden Broadcast sofort neu laden: die am sichtbaren Bereich
+ * und die mit betroffenen Tagen, sichtbare zuerst. Alle übrigen gelten als veraltet und laden beim
+ * Hineinscrollen (rangesNearVisibleDays) nach.
+ *
+ * @param {Array<{start: string, end: string}>} ranges
+ * @param {{periodStart: string, periodEnd: string, visibleDays: Iterable<string>, renderedDays: Iterable<string>,
+ *     affectedDays?: Iterable<string>}} view
+ */
+export function chunksToLoadNow(ranges, view) {
+    const due = new Set([
+        ...rangesNearVisibleDays(ranges, view),
+        ...chunksOwningDays(ranges, view.affectedDays, view.periodStart, view.periodEnd),
+    ]);
+    return prioritizeChunks(ranges.filter((range) => due.has(range)), view.visibleDays);
+}
+
+/** Blöcke, die einen der Tage besitzen */
+export function chunksOwningDays(ranges, days, periodStart, periodEnd) {
+    const wanted = [...(days || [])].filter(Boolean);
+    return ranges.filter((range) => wanted.some((day) => ownsDay(range, day, periodStart, periodEnd)));
+}

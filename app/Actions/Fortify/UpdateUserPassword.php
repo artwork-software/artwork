@@ -2,6 +2,8 @@
 
 namespace App\Actions\Fortify;
 
+use Artwork\Modules\AppApi\Services\AppTokenService;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -10,6 +12,10 @@ use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 class UpdateUserPassword implements UpdatesUserPasswords
 {
     use PasswordValidationRules;
+
+    public function __construct(private readonly AppTokenService $appTokenService)
+    {
+    }
 
     /**
      * @throws ValidationException
@@ -31,5 +37,10 @@ class UpdateUserPassword implements UpdatesUserPasswords
         )->validateWithBag('updatePassword');
 
         $user->forceFill(['password' => Hash::make($input['password'])])->save();
+
+        // Angemeldete App-Geräte müssen sich mit dem neuen Passwort neu anmelden.
+        if ($user instanceof User) {
+            $this->appTokenService->revokeAll($user);
+        }
     }
 }

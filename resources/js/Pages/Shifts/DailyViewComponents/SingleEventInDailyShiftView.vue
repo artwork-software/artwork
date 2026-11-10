@@ -51,7 +51,7 @@
                     class="truncate max-w-40 text-xs font-bold shrink-0"
                     v-tooltip.bottom="{ value: project.artistNames, class: 'aw-tooltip' }"
                 >
-                    {{ project.artistNames }}
+                    <ProjectArtistNames :text="project.artistNames" :linked-artists="project.linkedArtists ?? []" />
                 </span>
                 <!-- Projektleitung (Anzeigeeinstellung "Projektleitung") -->
                 <div
@@ -200,6 +200,7 @@
 
 <script setup>
 
+import ProjectArtistNames from '@/Components/Crm/ProjectArtistNames.vue'
 import {computed, defineAsyncComponent, ref, watch, onMounted, onBeforeUnmount, nextTick} from "vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {usePage} from "@inertiajs/vue3";

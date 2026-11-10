@@ -1,3 +1,5 @@
+import { selectedValues } from './ComponentSelection.js';
+
 const textValueState = {
     read: (data) => data?.text,
     normalize: (value) => String(value ?? '')
@@ -8,17 +10,21 @@ const textValueState = {
     isMeaningful: (value) => value.length > 0,
 };
 
+const selectionValueState = {
+    read: (data) => data?.selected,
+    normalize: (value) => selectedValues(value).map((entry) => entry.trim()).filter((entry) => entry.length > 0),
+    isMeaningful: (values) => values.length > 0,
+};
+
 const componentValueStates = {
     Checkbox: {
         read: (data) => data?.checked,
         normalize: (value) => value === true || value === 1 || value === '1' || value === 'true',
         isMeaningful: (value) => value,
     },
-    DropDown: {
-        read: (data) => data?.selected,
-        normalize: (value) => String(value?.value ?? value ?? '').trim(),
-        isMeaningful: (value) => value.length > 0,
-    },
+    // Einzel- oder Mehrfachauswahl: immer als Liste vergleichen
+    DropDown: selectionValueState,
+    CheckboxList: selectionValueState,
     Link: textValueState,
     LinkList: {
         read: (data) => data?.links,

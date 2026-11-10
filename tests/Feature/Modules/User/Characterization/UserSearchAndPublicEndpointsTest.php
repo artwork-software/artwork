@@ -83,6 +83,7 @@ final class UserSearchAndPublicEndpointsTest extends FeatureTestCase
             'first_name' => 'Zxqgelöscht',
             'last_name' => 'Zxqnutzer',
             'email' => config('artwork.deleted_user_email', 'deleted-user@artwork.local'),
+            'is_deleted_placeholder' => true,
         ]);
         foreach (range(1, 30) as $number) {
             User::factory()->create([

@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Rules\InventoryPropertyFileValue;
 use Artwork\Modules\Inventory\Http\Requests\UploadInventoryPropertyFileRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class InventoryArticlePropertyFileController extends Controller
 {
-    private const BASE_DIR = 'uploads/inventory-properties';
+    private const BASE_DIR = InventoryPropertyFileValue::BASE_DIR;
 
     public function upload(UploadInventoryPropertyFileRequest $request): JsonResponse
     {
@@ -52,7 +53,7 @@ class InventoryArticlePropertyFileController extends Controller
     {
         $path = $this->validatedPath($request);
 
-        if (Storage::exists($path)) {
+        if (Storage::fileExists($path)) {
             Storage::delete($path);
             // Remove the now-empty uuid folder so storage doesn't accumulate dirs.
             Storage::deleteDirectory(dirname($path));
@@ -62,19 +63,16 @@ class InventoryArticlePropertyFileController extends Controller
     }
 
     /**
-     * Resolve and harden the path from the request to prevent traversal or
-     * access to files outside the property uploads directory.
+     * Resolve and harden the path from the request: only exactly one file inside
+     * an upload folder below the property uploads directory is accepted, so neither
+     * traversal nor directory paths (e.g. "uploads/inventory-properties/." –
+     * destroy() would otherwise wipe the whole base folder) get through.
      */
     private function validatedPath(Request $request): string
     {
         $path = (string) ($request->input('path') ?? $request->query('path', ''));
 
-        abort_unless(
-            $path !== ''
-            && str_starts_with($path, self::BASE_DIR . '/')
-            && !str_contains($path, '..'),
-            403
-        );
+        abort_unless(InventoryPropertyFileValue::isSafePath($path), 403);
 
         return $path;
     }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\RoomController;
 use Artwork\Core\Api\Middleware\EnsureTokenNotExpired;
+use Artwork\Core\Api\Middleware\RejectTransientTokens;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
 use Artwork\Modules\User\Services\UserStatusService;
@@ -90,7 +91,9 @@ Route::post('/inventory/article/search', [
 // Ab hier scope-pflichtig: Tokens, die vor Einführung der Scopes ausgegeben wurden, tragen eine
 // leere Scope-Menge im signierten JWT und lassen sich nicht nachrüsten — sie müssen neu erstellt
 // werden. Bewusst ein eigener Deploy, damit dafür ein Zeitfenster bleibt.
-Route::middleware(['auth:api', EnsureTokenNotExpired::class, CheckToken::using('inventory:read')])->group(function (): void {
+Route::middleware([
+    RejectTransientTokens::class,'auth:api', EnsureTokenNotExpired::class, CheckToken::using('inventory:read'),
+])->group(function (): void {
     Route::get('/inventory', [InventoryCategoryApiController::class, 'index']);
     Route::get('/inventory/articles', [InventoryArticleApiController::class, 'index']);
     Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show']);

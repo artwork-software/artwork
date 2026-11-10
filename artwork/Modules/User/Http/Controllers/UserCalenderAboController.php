@@ -7,6 +7,7 @@ use Artwork\Modules\User\Http\Requests\StoreUserCalendarAboRequest;
 use Artwork\Modules\User\Http\Requests\UpdateUserCalendarAboRequest;
 use Artwork\Modules\User\Models\UserCalendarAbo;
 use Artwork\Modules\User\Services\UserCalendarAboService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Properties\TextProperty;
@@ -48,6 +49,8 @@ class UserCalenderAboController extends Controller
     \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\Response|\Illuminate\Foundation\Application
     {
         $calendarAbo = UserCalendarAbo::where('calendar_abo_id', $calendar_abo_id)->firstOrFail();
+        // Abos deaktivierter Accounts liefern nichts mehr (nach Reaktivierung wieder)
+        abort_if($calendarAbo->user?->isDeactivated() === true, 404);
 
         // Create Calendar
         $calendar = Calendar::create('Alle Termine')
@@ -88,10 +91,18 @@ class UserCalenderAboController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Link erneuern: neuer Feed-Token, der alte Abo-Link funktioniert sofort nicht mehr.
      */
-    public function destroy(UserCalendarAbo $userCalenderAbo): void
+    public function destroy(UserCalendarAbo $userCalenderAbo): RedirectResponse
     {
-        //
+        abort_unless(
+            $userCalenderAbo->user_id === Auth::id(),
+            403,
+            __('You can only renew your own calendar subscription link.')
+        );
+
+        $this->userCalendarAboService->renewToken($userCalenderAbo);
+
+        return back()->with('success', __('Calendar link renewed. The old link is no longer valid.'));
     }
 }

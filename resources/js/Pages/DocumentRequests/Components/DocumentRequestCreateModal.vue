@@ -171,6 +171,16 @@
                     </div>
                 </div>
 
+                <!-- Comment -->
+                <div class="col-span-full">
+                    <BaseTextarea
+                        :label="$t('Comment / Note')"
+                        id="comment"
+                        v-model="form.comment"
+                        rows="3"
+                    />
+                </div>
+
                 <!-- KSK -->
                 <div class="col-span-full">
                     <div class="flex items-center mb-2">
@@ -254,16 +264,6 @@
                         id="deadlineDate"
                         v-model="form.deadline_date"
                         :label="$t('Deadline date')"
-                    />
-                </div>
-
-                <!-- Comment -->
-                <div class="col-span-full">
-                    <BaseTextarea
-                        :label="$t('Comment / Note')"
-                        id="comment"
-                        v-model="form.comment"
-                        rows="3"
                     />
                 </div>
 

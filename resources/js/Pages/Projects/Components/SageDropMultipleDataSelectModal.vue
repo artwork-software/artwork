@@ -1,193 +1,164 @@
-<script>
-import {IconX} from "@tabler/icons-vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
-import {router} from "@inertiajs/vue3";
-import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-
-export default {
-    name: "SageDropMultipleDataSelectModal",
-    mixins: [CurrencyFloatToStringFormatter],
-    components: {
-        BaseUIButton,
-        FormButton,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        IconX, DialogPanel
-    },
-    data(){
-        return {
-            open: true,
-        }
-    },
-    props: ['cellData', 'cell', 'type'],
-    emits: ['close', 'budget-updated'],
-    computed: {
-        checkIfAllSelected(){
-            return this.cellData.sage_assigned_data.every(data => data.checked);
-        },
-        checkIfOneSelected(){
-            return this.cellData.sage_assigned_data.some(data => data.checked);
-        }
-    },
-    unmounted() {
-        this.cellData.sage_assigned_data.forEach(data => data.checked = false)
-    },
-    mounted() {
-        this.cellData.sage_assigned_data.forEach(data => data.checked = false)
-    },
-    methods: {
-        closeModal(bool){
-            this.$emit('close', bool)
-        },
-        moveRow(){
-            // get all checked data form cellData.sage_assigned_data only the id
-            let checkedData = this.cellData.sage_assigned_data.filter(data => data.checked).map(data => data.id);
-            if(this.type === 'dropOnValue') {
-                router.post(route('project.budget.move.sage.row', {
-                    columnCell: this.cell.id,
-                    movedColumn: this.cellData.id
-                }), {
-                    multiple: true,
-                    selectedData: checkedData
-                }, {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.$emit('budget-updated');
-                        this.closeModal(false);
-                    },
-                });
-            }
-
-            if(this.type === 'dropOnRow') {
-                router.post(this.route('project.budget.move.sage.to.row', {
-                    table_id: this.cellData.table_id,
-                    sub_position_id: this.cellData.sub_position_id,
-                    positionBefore: this.cellData.positionBefore,
-                    columnCell: this.cellData.id
-                }), {
-                    multiple: true,
-                    selectedData: checkedData
-                }, {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.$emit('budget-updated');
-                        this.closeModal(false);
-                    },
-                });
-            }
-        },
-        formatBookingDataDate(dateString) {
-            let parts = dateString.split('T');
-            parts = parts[0].split('-');
-
-            return parts[2] + '.' + parts[1] + '.' + parts[0];
-        },
-        SelectAllSageAssignedData(){
-            this.cellData.sage_assigned_data.forEach(data => data.checked = true)
-        },
-        DeselectAllSageAssignedData(){
-            this.cellData.sage_assigned_data.forEach(data => data.checked = false)
-        }
-    }
-}
-</script>
-
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
-            </TransitionChild>
-            <div class="fixed inset-0 z-50 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:max-w-4xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
-                                    <span class="sr-only">{{ $t('Close') }}</span>
-                                    <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <div class="relative z-40 pl-4">
-                                <div class="font-black font-lexend text-text text-3xl my-2 mb-6">
-                                    Sage Daten auswählen
-                                </div>
-                                <p class="subpixel-antialiased">
-                                    Welche Daten sollen verschoben werden?
-                                </p>
-                                <div>
-                                    <div class="flex flex-row font-bold my-3">
-                                        <div class="relative flex items-start w-4 mr-3">
-                                        </div>
-                                        <div class="w-28">
-                                            {{ $t('KTO') }}
-                                        </div>
-                                        <div class="w-28">
-                                            {{ $t('KST') }}
-                                        </div>
-                                        <div class="w-64 truncate">
-                                            {{ $t('Booking text') }}
-                                        </div>
-                                        <div class="w-52 text-right">
-                                            {{ $t('Booking amount') }}
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center my-2" v-for="data in cellData.sage_assigned_data">
-                                        <div class="relative flex items-start mr-3">
-                                            <div class="flex h-6 items-center">
-                                                <input id="candidates" v-model="data.checked" aria-describedby="candidates-description" name="candidates" type="checkbox" class="h-4 w-4 rounded border-border text-accent-700 focus:ring-0" />
-                                            </div>
-                                        </div>
-                                        <div class="w-28">
-                                            {{ data.sa_kto }}
-                                        </div>
-                                        <div class="w-28">
-                                            {{ data.kst_stelle }}
-                                        </div>
-                                        <div class="w-64 truncate">
-                                            {{ data.buchungstext }}
-                                        </div>
-                                        <div class="w-52 text-right">
-                                            {{ this.toCurrencyString(data.buchungsbetrag) }}
-                                        </div>
-                                    </div>
-                                    <div class="flex justify-between my-3">
-                                        <div>
-                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-if="checkIfOneSelected">{{ $t('Deselect all records') }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="SelectAllSageAssignedData" v-if="!checkIfAllSelected">{{ $t('Select all records') }}</p>
-                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-else>{{ $t('Deselect all records') }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex justify-between mt-5 items-center pr-4">
-                                <BaseUIButton
-                                    @click="moveRow(true)"
-                                    :label="$t('Move')"
-                                    is-add-button
-                                />
-
-                                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="closeModal">
-                                    {{ $t('No, not really') }}
-                                </p>
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
-                </div>
-            </div>
-        </Dialog>
-    </TransitionRoot>
+    <ArtworkBaseModal
+        title="Select Sage data"
+        description="Which data should be moved?"
+        modal-size="sm:max-w-3xl"
+        @close="closeModal(false)"
+    >
+        <div class="overflow-x-auto rounded-md border border-border-subtle">
+            <table class="w-full text-sm text-text">
+                <thead class="bg-surface-sunken text-left text-xs font-semibold text-text-muted">
+                    <tr>
+                        <th scope="col" class="w-10 px-3 py-2">
+                            <BaseCheckbox
+                                id="sageDataSelectAll"
+                                :model-value="selectAllState"
+                                @update:model-value="toggleAll"
+                            />
+                        </th>
+                        <th scope="col" class="px-3 py-2">{{ $t('KTO') }}</th>
+                        <th scope="col" class="px-3 py-2">{{ $t('KST') }}</th>
+                        <th scope="col" class="px-3 py-2">{{ $t('Booking text') }}</th>
+                        <th scope="col" class="px-3 py-2 text-right">{{ $t('Booking amount') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border-subtle">
+                    <tr
+                        v-for="data in sageAssignedData"
+                        :key="data.id"
+                        class="hover:bg-surface-hover"
+                    >
+                        <td class="px-3 py-2">
+                            <BaseCheckbox
+                                :id="`sageDataSelect-${data.id}`"
+                                :model-value="selectedIds.has(data.id)"
+                                @update:model-value="(checked) => toggleRow(data.id, checked)"
+                            />
+                        </td>
+                        <td class="px-3 py-2 tabular-nums">{{ data.sa_kto }}</td>
+                        <td class="px-3 py-2 tabular-nums">{{ data.kst_stelle }}</td>
+                        <td class="max-w-64 truncate px-3 py-2" :title="data.buchungstext">{{ data.buchungstext }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums">{{ toCurrencyString(data.buchungsbetrag) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                label="Move"
+                variant="primary"
+                icon="IconArrowsMove"
+                :processing="processing"
+                :disabled="selectedIds.size === 0"
+                @click="moveRow"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<style scoped>
+<script setup>
+import {computed, ref} from 'vue'
+import {router, usePage} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
+import {createInstanceFormatter} from '@/Helper/instanceFormat.js'
 
-</style>
+defineOptions({name: 'SageDropMultipleDataSelectModal'})
+
+const props = defineProps({
+    cellData: {type: Object, required: true},
+    cell: {type: Object, default: null},
+    type: {type: String, required: true},
+})
+
+const emit = defineEmits(['close', 'budget-updated'])
+
+const page = usePage()
+
+// Auswahl lokal halten, statt checked in die Prop-Daten zu schreiben
+const selectedIds = ref(new Set())
+const processing = ref(false)
+
+const sageAssignedData = computed(() => props.cellData?.sage_assigned_data ?? [])
+
+const selectAllState = computed(() => {
+    if (selectedIds.value.size === 0) {
+        return false
+    }
+    return selectedIds.value.size === sageAssignedData.value.length ? true : 'indeterminate'
+})
+
+function toCurrencyString(value) {
+    return createInstanceFormatter(page.props.instanceFormat).formatNumber(value ?? 0)
+}
+
+function toggleRow(id, checked) {
+    const next = new Set(selectedIds.value)
+    if (checked) {
+        next.add(id)
+    } else {
+        next.delete(id)
+    }
+    selectedIds.value = next
+}
+
+function toggleAll(checked) {
+    selectedIds.value = checked
+        ? new Set(sageAssignedData.value.map((data) => data.id))
+        : new Set()
+}
+
+function closeModal(bool) {
+    emit('close', bool)
+}
+
+function moveUrl() {
+    if (props.type === 'dropOnValue') {
+        return route('project.budget.move.sage.row', {
+            columnCell: props.cell.id,
+            movedColumn: props.cellData.id,
+        })
+    }
+    if (props.type === 'dropOnRow') {
+        return route('project.budget.move.sage.to.row', {
+            table_id: props.cellData.table_id,
+            sub_position_id: props.cellData.sub_position_id,
+            positionBefore: props.cellData.positionBefore,
+            columnCell: props.cellData.id,
+        })
+    }
+    return null
+}
+
+function moveRow() {
+    const url = moveUrl()
+    if (!url || selectedIds.value.size === 0 || processing.value) {
+        return
+    }
+    processing.value = true
+    router.post(url, {
+        multiple: true,
+        selectedData: sageAssignedData.value
+            .filter((data) => selectedIds.value.has(data.id))
+            .map((data) => data.id),
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            emit('budget-updated')
+            closeModal(false)
+        },
+        onFinish: () => {
+            processing.value = false
+        },
+    })
+}
+</script>

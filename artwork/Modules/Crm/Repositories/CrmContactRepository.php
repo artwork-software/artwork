@@ -5,6 +5,7 @@ namespace Artwork\Modules\Crm\Repositories;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmProperty;
+use Artwork\Modules\Crm\Support\CrmPropertyValueFormat;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -74,13 +75,22 @@ class CrmContactRepository
                 continue;
             }
 
-            $query->whereHas('propertyValues', function ($q) use ($propId, $filterValue): void {
+            $property = CrmProperty::find($propId);
+
+            $query->whereHas('propertyValues', function ($q) use ($propId, $filterValue, $property): void {
                 $q->where('crm_property_id', $propId);
 
-                if (is_array($filterValue)) {
+                if (CrmPropertyValueFormat::isMultiple($property)) {
+                    // Mehrfachauswahl (JSON-Liste): Kontakt passt, wenn mindestens eine gewählte Option enthalten ist
+                    $options = CrmPropertyValueFormat::decode(is_array($filterValue) ? $filterValue : (string) $filterValue);
+                    $q->where(function ($any) use ($options): void {
+                        foreach ($options as $option) {
+                            $any->orWhere('value', 'like', CrmPropertyValueFormat::likePatternFor($option));
+                        }
+                    });
+                } elseif (is_array($filterValue)) {
                     $q->whereIn('value', $filterValue);
                 } else {
-                    $property = CrmProperty::find($propId);
                     match ($property?->type) {
                         CrmPropertyTypeEnum::TEXT, CrmPropertyTypeEnum::TEXTAREA, CrmPropertyTypeEnum::LINK
                             => $q->where('value', 'like', '%' . $filterValue . '%'),

@@ -20,7 +20,7 @@
                     <div class="px-4 py-2">
                         <div>
                             <p class="text-xs text-text-muted mb-2 font-lexend font-bold">
-                                Schichtzeiten für {{ person.name || person.full_name }} anpassen
+                                {{ $t('Adjust shift times for {name}', { name: person.name || person.full_name }) }}
                             </p>
                         </div>
                         <div class="flex items-center gap-x-2">
@@ -178,7 +178,7 @@
                                 <div class="px-4 py-2">
                                     <div>
                                         <p class="text-xs text-text-muted mb-2 font-lexend font-bold">
-                                            Schichtbeschreibung für {{ person.name || person.full_name }} anpassen
+                                            {{ $t('Adjust shift description for {name}', { name: person.name || person.full_name }) }}
                                         </p>
                                     </div>
                                     <div class="flex items-end gap-x-2">
@@ -262,10 +262,10 @@ import {
 } from "@headlessui/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Float} from "@headlessui-float/vue";
-import {router, usePage} from "@inertiajs/vue3";
+import {usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
-import {computed, ref, onMounted, onBeforeUnmount} from "vue";
+import {computed, inject, ref, onMounted, onBeforeUnmount} from "vue";
 import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash, IconCircleCheck, IconCircleX, IconClockQuestion} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -306,6 +306,9 @@ function normalizeTime(val) {
 }
 
 const emit = defineEmits(['userRemoved'])
+
+// Von der Tagesansicht bereitgestellt; in anderen Ansichten aktualisiert der Broadcast
+const applySavedShift = inject('applySavedShift', null)
 
 const props = defineProps({
     person: {
@@ -532,25 +535,15 @@ const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState =
         console.error('deleteUserFromShift: pivot id missing on worker payload', user);
         return;
     }
-    router.delete(
-        route(
-            'shift.removeUserByType',
-            {
-                usersPivotId: usersPivotId,
-                userType: userType,
-                isShiftTab: true
-            }
-        ),
-        {
-            data: {
-                removeFromSingleShift: removeFromSingleShift
-            },
-            preserveScroll: true,
-            // Verhindere kompletten Page-Reload – WebSockets übernehmen das UI-Update
-            preserveState: true,
-            onSuccess: () => emit('userRemoved', { person: user }),
-        }
-    );
+    // axios statt router.delete: der Redirect baute die ganze Tagesansicht neu auf. Die Antwort trägt die
+    // geänderte Schicht (wie der Broadcast) und wird sofort übernommen.
+    axios.delete(
+        route('shift.removeUserByType', { usersPivotId: usersPivotId, userType: userType }),
+        { data: { removeFromSingleShift: removeFromSingleShift, withShiftUpdate: true } }
+    ).then(({ data }) => {
+        if (data?.shift) applySavedShift?.(data);
+        emit('userRemoved', { person: user });
+    });
 }
 
 const hasAdminRole = () => is('artwork admin')
@@ -624,11 +617,11 @@ const canSearchReplacement = computed(() =>
     && (can('can plan shifts') || is('artwork admin'))
 );
 
-// Tausch ist serverseitig erledigt (Broadcasts aktualisieren die Kacheln);
-// Props nachladen, damit die Tagesansicht die neue Besetzung ohne Vollreload zeigt.
-const onReplaced = () => {
+// Tausch ist serverseitig erledigt: geänderte Schicht aus der Antwort sofort übernehmen (andere Ansichten
+// per Broadcast) — der frühere router.reload baute dafür die komplette Seite neu auf
+const onReplaced = (payload) => {
     showReplacementModal.value = false;
-    router.reload({ preserveScroll: true, preserveState: true });
+    if (payload?.shiftUpdate) applySavedShift?.(payload.shiftUpdate);
 };
 </script>
 

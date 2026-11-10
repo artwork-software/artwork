@@ -40,7 +40,13 @@ readonly class ProjectComponentValueService
         ?Closure $inTransaction = null,
         bool $toOthers = false,
     ): ProjectComponentValue {
-        $newData = $this->normalizer->normalize($component, $data);
+        // Bisheriger Wert: veraltete Auswahl-Einträge (Option umbenannt/entfernt) blockieren das Speichern nicht
+        $storedData = ProjectComponentValue::query()
+            ->where('project_id', $project->id)
+            ->where('component_id', $component->id)
+            ->first(['id', 'data'])
+            ?->data;
+        $newData = $this->normalizer->normalize($component, $data, is_array($storedData) ? $storedData : null);
         $changed = false;
 
         $value = $this->db->transaction(function () use ($project, $component, $newData, $inTransaction, &$changed) {

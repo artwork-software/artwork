@@ -46,6 +46,14 @@
                 @update:sort-by="rowPrefs.sortBy = $event"
             />
 
+            <div
+                v-if="hasForeignCraftEntries"
+                class="flex items-center gap-2 rounded-xl border border-dashed border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-text-muted"
+            >
+                <IconInfoCircle class="h-4 w-4 shrink-0 text-text-subtle"/>
+                <span>{{ $t('Greyed-out shifts belong to other crafts and are not part of this request. They are shown so you can see the full week of the person.') }}</span>
+            </div>
+
             <!-- Rows: User / Freelancer / ServiceProvider / Unassigned -->
             <div class="space-y-4">
                 <ShiftPlanRequestRow
@@ -166,10 +174,11 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {Link, router} from '@inertiajs/vue3';
 import {computed, reactive, ref, watch} from 'vue';
-import {IconArrowLeft} from '@tabler/icons-vue';
+import {IconArrowLeft, IconInfoCircle} from '@tabler/icons-vue';
 import ShiftPlanRequestHeader from './components/ShiftPlanRequestHeader.vue';
 import ShiftPlanRequestRow from './components/ShiftPlanRequestRow.vue';
 import ShiftPlanRequestRowControls from './components/ShiftPlanRequestRowControls.vue';
@@ -186,6 +195,7 @@ import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
 import {useShiftPlanRequestActions} from './components/useShiftPlanRequestActions.js';
 import {useI18n} from 'vue-i18n';
 import {useShiftPlanRequestWeekNavigation} from './components/useShiftPlanRequestWeekNavigation.js';
+import {appendAbsenceEntries, appendForeignCraftEntries, sortDayEntriesByStart} from './components/shiftPlanRequestHelpers.js';
 
 const {t} = useI18n();
 
@@ -223,6 +233,10 @@ const props = defineProps({
     individualTimes: {type: Array, default: () => []},
     craftWorkers: {type: Object, default: () => ({users: [], freelancers: [], service_providers: []})},
     overviewChanges: {type: Object, default: () => ({removed: []})},
+    // Schichten der eingeteilten Personen aus anderen Gewerken derselben KW (nur Anzeige, nicht Teil der Anfrage)
+    foreignCraftShifts: {type: Array, default: () => []},
+    // Abwesenheiten der Personen + Zuweisungen, die damit kollidieren (key: shiftId-typ-personId)
+    workerAbsences: {type: Object, default: () => ({absences: [], unavailable_assignments: {}})},
     isMyRequest: {type: Boolean, required: false, default: false},
     navigation: {type: Object, default: () => ({previous: null, next: null})},
     shiftQualifications: {type: Array, default: () => []},
@@ -495,7 +509,7 @@ const rows = computed(() => {
                 typeLabel: base.typeLabel,
                 days: {},
                 violations: base.type === 'user' ? (props.shiftRuleViolations?.[base.id] ?? {}) : {},
-                totals: {total_shifts: 0, total_hours: 0}
+                totals: {total_shifts: 0, total_hours: 0, foreign_shifts: 0, foreign_hours: 0}
             });
         }
         return map.get(key);
@@ -520,7 +534,8 @@ const rows = computed(() => {
             workflow_rejection_reason: rejectedMap.value[uniqueKey]?.reason ?? meta.workflow_rejection_reason ?? null,
             has_changes_after_commit: meta.has_changes_after_commit ?? false,
             has_changes_after_workflow: meta.has_changes_after_workflow ?? false,
-            is_subsequently_added: !!shift.is_subsequently_added
+            is_subsequently_added: !!shift.is_subsequently_added,
+            unavailable_status: props.workerAbsences?.unavailable_assignments?.[uniqueKey] ?? null
         });
         row.totals.total_shifts += 1;
         row.totals.total_hours += computeDurationHours(shift);
@@ -644,6 +659,14 @@ const rows = computed(() => {
         }
     }
 
+    // Gewerksfremde Schichten nur bei Personen zeigen, die bereits eine Zeile haben (das Backend liefert
+    // ohnehin nur Personen mit mindestens einer Schicht dieses Gewerks). Sie zählen nicht zu den
+    // Schichten der Anfrage, fließen aber in die Wochenstunden ein.
+    appendForeignCraftEntries(map, props.foreignCraftShifts, dayDates, qualificationNames.value);
+
+    // Abwesenheiten („Nicht verfügbar“, arbeitsfreier Tag, frei) bei den Personen-Zeilen zeigen
+    appendAbsenceEntries(map, props.workerAbsences?.absences, dayDates);
+
     // Individual Times zu den Rows hinzufügen
     for (const it of props.individualTimes) {
         const type = it.timeable_type_short;
@@ -664,6 +687,9 @@ const rows = computed(() => {
                 end_time: it.end_time,
                 full_day: it.full_day,
                 working_time_minutes: it.working_time_minutes,
+                workflow_status: it.workflow_status ?? null,
+                in_this_request: !!it.in_this_request,
+                has_changes_after_commit: !!it.has_changes_after_commit,
             });
         }
     }
@@ -698,8 +724,16 @@ const rows = computed(() => {
         });
     }
 
+    // Innerhalb eines Tages chronologisch sortieren, damit sich eigene und gewerksfremde Schichten
+    // zu einem zusammenhängenden Tagesbild fügen (Einträge ohne Startzeit, z. B. ganztägig, zuerst).
+    for (const row of map.values()) {
+        Object.values(row.days).forEach(sortDayEntriesByStart);
+    }
+
     return Array.from(map.values());
 });
+
+const hasForeignCraftEntries = computed(() => rows.value.some(row => row.totals.foreign_shifts > 0));
 
 // Filter & Sortierung der Personen-Zeilen (Einstellungen überleben das Blättern zwischen Anfragen)
 const ROW_PREFS_STORAGE_KEY = 'artwork.shiftPlanRequest.rowPrefs';
@@ -710,7 +744,7 @@ const defaultRowPrefs = () => ({
 });
 const loadRowPrefs = () => {
     try {
-        const stored = JSON.parse(localStorage.getItem(ROW_PREFS_STORAGE_KEY) ?? 'null');
+        const stored = JSON.parse(safeGetItem(ROW_PREFS_STORAGE_KEY) ?? 'null');
         if (!stored) return defaultRowPrefs();
         return {
             ...defaultRowPrefs(),
@@ -724,7 +758,7 @@ const loadRowPrefs = () => {
 const rowPrefs = reactive(loadRowPrefs());
 watch(rowPrefs, () => {
     try {
-        localStorage.setItem(ROW_PREFS_STORAGE_KEY, JSON.stringify(rowPrefs));
+        safeSetItem(ROW_PREFS_STORAGE_KEY, JSON.stringify(rowPrefs));
     } catch { /* Speichern ist optional */ }
 }, {deep: true});
 

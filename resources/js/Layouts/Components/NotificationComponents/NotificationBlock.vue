@@ -7,7 +7,7 @@
                     <div class="flex gap-5 items-center">
                         <h4 class="text-sm/5 font-semibold text-text">{{ notification.data.title }}</h4>
                         <div class="" v-if="notification.data.showHistory">
-                            <div @click="openHistory" class="text-xs/[18px] text-text-subtle cursor-pointer items-center flex text-accent-600">
+                            <div @click="openHistory" class="text-xs/[18px] cursor-pointer items-center flex text-accent-600">
                                 <IconChevronRight class="h-3 w-3"/>
                                 <span>
                                     {{ $t('View history')}}
@@ -82,8 +82,7 @@
                 />
                 <Link v-if="notification.data?.type && !isDashboard"
                       :href="route('notifications.index', { tab: 'settings', type: notification.data.type })"
-                      class="mt-2 inline-block text-xs text-text-subtle hover:text-accent-600 underline-offset-2 hover:underline focus-visible:opacity-100"
-                      :class="notification.hovered ? '' : 'md:opacity-0'">
+                      class="mt-2 inline-block text-xs text-accent-600 hover:text-accent-700 underline-offset-2 hover:underline">
                     {{ $t('Settings for this type') }}
                 </Link>
             </div>

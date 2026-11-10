@@ -54,6 +54,7 @@ enum PermissionEnum : string
 
     case SET_CREATE_EDIT = 'set.create_edit';
     case SET_DELETE = 'set.delete';
+    case INVENTORY_VIEW = 'inventory.view';
     case INVENTORY_CREATE_EDIT = 'inventory.create_edit';
     case INVENTORY_DELETE = 'inventory.delete';
     case INVENTORY_DISPOSITION = 'inventory.disposition';
@@ -91,6 +92,8 @@ enum PermissionEnum : string
     case CAN_SUBSCRIBE_SHIFT_CALENDAR = 'can subscribe shift calendar';
     // Opt-in je Person für die Schichtbestätigung (Zu-/Absage eigener Zuweisungen)
     case CAN_RESPOND_TO_SHIFT_ASSIGNMENTS = 'can respond to shift assignments';
+    // Eigene individuelle Zeiten im eigenen Einsatzplan anlegen/bearbeiten/löschen (ab heute)
+    case CAN_ENTER_OWN_INDIVIDUAL_TIMES = 'can enter own individual times';
 
     case CAN_VIEW_SHIFT_USER_KPIS = 'can view shift user kpis';
 
@@ -104,12 +107,18 @@ enum PermissionEnum : string
     case WEBHOOKS_MANAGE = 'manage webhooks';
     case TICKETING_MANAGE = 'manage ticketing';
     case TICKETING_MOVE_ON_SALE = 'move dates on sale';
+    case TICKETING_VIEW_SALES = 'view ticket sales';
+    case TICKETING_ADMISSION = 'run ticket admission';
+    case TICKETING_MANAGE_PASSES = 'manage ticket passes';
 
     // Eigene Rechte für bisher admin-only Bereiche (Konzept Nutzerrechte, Entscheidung 8)
     case TRASH_ACCESS = 'can access trash';
     case CALENDAR_SETTINGS_UPDATE = 'change calendar settings';
     case MONEY_SOURCE_SETTINGS_UPDATE = 'change money source settings';
     case BUDGET_SETTINGS_UPDATE = 'change budget settings';
+
+    // Steuert alle Exporte der Projektübersicht, inkl. Projektinhalte als Excel/Word (11/2026)
+    case PROJECT_OVERVIEW_EXPORT = 'can export from project overview';
 
     case AI_ASSISTANT_SETTINGS_UPDATE = 'change ai assistant settings';
 }

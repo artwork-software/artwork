@@ -43,7 +43,7 @@ class DeleteDocumentInProject implements ShouldBroadcastNow, ShouldDispatchAfter
      * Nur Ids: der Kanal project.{id} erreicht alle Projektsichtigen, auch ohne Sicht auf den Tab
      * oder die Budget-Freigabe der Datei. Die Listen laden über ihre geprüften Endpunkte nach.
      *
-     * @return array{document: array{id: int, tab_id: int|null, project_id: int}}
+     * @return array{document: array{id: int, tab_id: int|null, project_id: int, visible_in: list<string>|null, visibility_changed: bool}}
      */
     public function broadcastWith(): array
     {
@@ -52,6 +52,9 @@ class DeleteDocumentInProject implements ShouldBroadcastNow, ShouldDispatchAfter
                 'id' => $this->projectFile->id,
                 'tab_id' => $this->projectFile->tab_id,
                 'project_id' => $this->projectId,
+                // Upload-Bereiche (Schlüssel), in denen die Datei zusätzlich angezeigt wurde – keine Inhalte
+                'visible_in' => $this->projectFile->visible_in,
+                'visibility_changed' => false,
             ],
         ];
     }

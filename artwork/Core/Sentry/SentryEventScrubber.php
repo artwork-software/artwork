@@ -22,6 +22,15 @@ class SentryEventScrubber
         'current_password',
         'code',
         'recovery_code',
+        // Verbindungs-Secrets (LDAP-Bind, OIDC-Client, Sage, Webhooks, API-Schlüssel)
+        'bind_password',
+        'client_secret',
+        'api_key',
+        'secret',
+        'token',
+        'access_token',
+        'refresh_token',
+        'plaintexttoken',
     ];
 
     public static function beforeSend(Event $event, ?EventHint $hint = null): ?Event

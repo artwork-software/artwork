@@ -372,6 +372,11 @@
                                           @click="hasCreateEventsPermission ? openMultiEditModal() : null"
                                           :disabled="selectedMultiEditIds.length === 0 || !hasCreateEventsPermission"
                             />
+                            <!-- Feste Termine der Auswahl in geplante umwandeln (wie das Kachel-Menü im Kalender) -->
+                            <BaseUIButton v-if="canConvertToPlanning" :label="$t('Convert to planned events')"
+                                          @click="showConvertToPlanningModal = true"
+                                          :disabled="selectedFixedEventIds.length === 0 || isLoading"
+                            />
                             <BaseUIButton :label="$t('Delete')" is-delete-button
                                           @click="hasCreateEventsPermission ? (showConfirmDeleteModal = true) : null"
                                           :disabled="selectedMultiEditIds.length === 0 || !hasCreateEventsPermission"
@@ -387,6 +392,12 @@
     </div>
 
     <!-- Modals -->
+    <ConvertToPlanningModal
+        v-if="showConvertToPlanningModal"
+        :count="selectedFixedEventIds.length"
+        @close="showConvertToPlanningModal = false"
+        @convert="convertSelectedToPlanning"
+    />
     <event-component
         v-if="eventComponentIsVisible && eventToEdit"
         :showHints="$page.props?.can?.show_hints"
@@ -435,6 +446,7 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import BulkSingleEvent from "@/Pages/Projects/Components/BulkComponents/BulkSingleEvent.vue";
 import { parseYmd, toYmd } from "@/Helper/IsoWeek.js";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
@@ -458,6 +470,7 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {usePermission} from "@/Composeables/Permission.js";
+import ConvertToPlanningModal from "@/Components/Modals/ConvertToPlanningModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
@@ -511,10 +524,10 @@ const timeArray = ref(true);
 
 // Persisted user preference for showing End date column in Bulk
 const showEndDateStorageKey = computed(() => `bulk_show_end_date_user_${usePage().props.auth.user.id}`);
-const showEndDate = ref(localStorage.getItem(showEndDateStorageKey.value) === 'true');
+const showEndDate = ref(safeGetItem(showEndDateStorageKey.value) === 'true');
 
 const isPlanningEvent = ref((() => {
-    const storedValue = localStorage.getItem(`isPlanningEvent_${props.project.id}`);
+    const storedValue = safeGetItem(`isPlanningEvent_${props.project.id}`);
     return storedValue !== null ? storedValue === 'true' : (props.project?.state?.is_planning || false);
 })());
 
@@ -961,6 +974,11 @@ const sortedEvents = computed(() => {
 
 const selectedMultiEditIds = computed(() =>
     events.value.filter(e => e.isSelectedForMultiEdit).map(e => e.id));
+// Nur gespeicherte, feste Termine lassen sich umwandeln
+const selectedFixedEventIds = computed(() =>
+    events.value.filter(e => e.isSelectedForMultiEdit && e.id && !e.is_planning).map(e => e.id));
+const canConvertToPlanning = computed(() => hasAdminRole() || can('can edit planning calendar'));
+const showConvertToPlanningModal = ref(false);
 
 // --- Actions
 const UpdateMultiEditEmits = (value) => {
@@ -1305,6 +1323,31 @@ const deleteSelectedEvents = () => {
         });
 };
 
+const convertSelectedToPlanning = () => {
+    const eventIds = selectedFixedEventIds.value;
+    if (eventIds.length === 0 || isLoading.value) {
+        return;
+    }
+    isLoading.value = true;
+    axios.post(route('events.bulk.convert-to-planning'), {eventIds})
+        .then(() => {
+            const converted = new Set(eventIds);
+            events.value.forEach(e => {
+                if (converted.has(e.id)) {
+                    e.is_planning = true;
+                }
+                e.isSelectedForMultiEdit = false;
+            });
+            showConvertToPlanningModal.value = false;
+        })
+        .catch(error => {
+            console.error('Convert to planning failed', error);
+        })
+        .finally(() => {
+            isLoading.value = false;
+        });
+};
+
 const openMultiEditModal = () => {
     eventIdsForMultiEdit.value = selectedMultiEditIds.value;
     showMultiEditModal.value = true;
@@ -1425,7 +1468,7 @@ onMounted(async () => {
 
     // persist showEndDate changes
     watch(showEndDate, (v) => {
-        localStorage.setItem(showEndDateStorageKey.value, v ? 'true' : 'false');
+        safeSetItem(showEndDateStorageKey.value, v ? 'true' : 'false');
     });
 
     // Try to fetch data first, fallback to props
@@ -1515,7 +1558,7 @@ watch(() => events.value, (newEvents) => {
 }, {deep: true});
 
 watch(isPlanningEvent, (newValue) => {
-    localStorage.setItem(`isPlanningEvent_${props.project.id}`, newValue.toString());
+    safeSetItem(`isPlanningEvent_${props.project.id}`, newValue.toString());
 });
 
 // Virtualisierte Zeilen mounten asynchron – Sticky-Scrollbar-Breite neu vermessen,

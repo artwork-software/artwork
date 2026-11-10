@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Http\Requests;
 
 use App\Actions\Fortify\PasswordValidationRules;
+use Artwork\Core\Validation\Rules\NotReservedUserEmail;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,7 +19,7 @@ class UserCreateRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users', new NotReservedUserEmail()],
             'password' => $this->passwordRules(),
             'phone_number' => ['nullable', 'string', 'max:30'],
             'position' => ['required', 'string', 'max:255'],
@@ -28,6 +29,9 @@ class UserCreateRequest extends FormRequest
     }
 
     /**
+     * Sprache = die, in der das Formular angezeigt wurde (Localization-Middleware: Session/Cookie/Browser).
+     * Sonst griff der Spalten-Default 'de', obwohl die Person die Registrierung z. B. auf Englisch sah.
+     *
      * @return array<string, mixed>
      */
     public function userData(): array
@@ -41,6 +45,7 @@ class UserCreateRequest extends FormRequest
             'position' => $this->input('position'),
             'business' => $this->input('business'),
             'description' => $this->input('description'),
+            'language' => app()->getLocale(),
             'opened_checklists' => [],
             'opened_areas' => [],
             'use_chat' => true,

@@ -2,12 +2,19 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Modules\Availability\Models\Availability;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
+use Artwork\Modules\Project\Models\ProjectDayAssignment;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftPlanComment;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Support\ExportPeriodLimit;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Activity;
@@ -38,6 +45,71 @@ class ShiftHistoryQueryService
         'freelancer' => Freelancer::class,
         'service_provider' => ServiceProvider::class,
     ];
+
+    /**
+     * Tageseinträge einer Person (Abwesenheit, Verfügbarkeit, Notiz, individuelle Zeit, Ausgleichstag,
+     * Projektzuordnung) — erscheinen im Verlauf als eigene Vorgänge (siehe LogsShiftPlanDayActivity).
+     */
+    public const DAY_ENTRY_SUBJECTS = [
+        Vacation::class,
+        Availability::class,
+        ShiftPlanComment::class,
+        IndividualTime::class,
+        CompensationDayOff::class,
+        ProjectDayAssignment::class,
+    ];
+
+    /**
+     * Tageseinträge, die über den Log-Namen erkannt werden: Projektzuordnungen (teils ohne Subject, Massenanlage
+     * per insert) und Tagesdienste (Subject ist der Dienst, nicht die Zuweisung)
+     */
+    public const DAY_ENTRY_LOG_NAMES = ['project_day_assignment', 'day_service'];
+
+    /**
+     * Log-Name + Subject je Tageseintrag-Art, damit die Abfrage den Index (log_name, subject_type) nutzt statt
+     * activity_log komplett zu lesen. Enthält die Altformate (Vacation-Änderungen im Log „default“,
+     * Availability-Änderungen im Log „vacation“). Subject null = jedes Subject.
+     *
+     * @var array<int, array{0: string, 1: ?class-string}>
+     */
+    private const DAY_ENTRY_LOG_SUBJECTS = [
+        ['vacation', Vacation::class],
+        ['default', Vacation::class],
+        ['availability', Availability::class],
+        ['vacation', Availability::class],
+        ['shift_plan_comment', ShiftPlanComment::class],
+        ['individual_time', IndividualTime::class],
+        ['compensation_day_off', CompensationDayOff::class],
+        ['project_day_assignment', null],
+        ['day_service', null],
+    ];
+
+    /**
+     * Morph-Spalten der Person in properties.attributes/old — für Einträge von vor LogsShiftPlanDayActivity,
+     * die noch kein employable_type/employable_id tragen.
+     */
+    private const DAY_ENTRY_PERSON_PREFIXES = ['vacationer', 'available'];
+
+    /**
+     * Erster Tag eines Tageseintrags: worker_day, sonst das geloggte Datum (Alt-Einträge). NULLIF, weil
+     * JSON_UNQUOTE ein gespeichertes JSON-null als Text "null" liefert, der jedes Datum „überholt“.
+     */
+    private const DAY_ENTRY_DATE_SQL = "COALESCE("
+        . "NULLIF(JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, '$.worker_day')), 'null'), "
+        . "NULLIF(JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, '$.attributes.date')), 'null'), "
+        . "NULLIF(JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, '$.old.date')), 'null'))";
+
+    /** Letzter Tag eines mehrtägigen Eintrags (individuelle Zeit, Projektzuordnung), sonst der erste */
+    private const DAY_ENTRY_END_DATE_SQL = "COALESCE("
+        . "NULLIF(JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, '$.worker_day_end')), 'null'), "
+        . self::DAY_ENTRY_DATE_SQL . ")";
+
+    /** Ist der Activity-Eintrag ein Tageseintrag? (Subject oder Log-Name) */
+    public static function isDayEntryLog(Activity $log): bool
+    {
+        return in_array($log->subject_type, self::DAY_ENTRY_SUBJECTS, true)
+            || in_array($log->log_name, self::DAY_ENTRY_LOG_NAMES, true);
+    }
 
     /** Gründe, warum ein Eintrag bei aktivem Personenfilter angezeigt wird (match_reasons). */
     public const REASON_SUBJECT = 'subject';
@@ -180,12 +252,27 @@ class ShiftHistoryQueryService
         $affected = array_map('strval', (array) ($properties['affected_workers'] ?? []));
         $employableMatch = ($properties['employable_type'] ?? null) === $person['type']
             && (int) ($properties['employable_id'] ?? 0) === $person['id'];
+        $isDayEntry = self::isDayEntryLog($log);
+        // Ältere Tageseinträge ohne employable_*: Person aus den geloggten Morph-Spalten
+        if ($isDayEntry && ! $employableMatch) {
+            foreach (['attributes', 'old'] as $section) {
+                foreach (self::DAY_ENTRY_PERSON_PREFIXES as $prefix) {
+                    $data = (array) ($properties[$section] ?? []);
+                    if (
+                        ($data[$prefix . '_type'] ?? null) === $person['type']
+                        && (int) ($data[$prefix . '_id'] ?? 0) === $person['id']
+                    ) {
+                        $employableMatch = true;
+                    }
+                }
+            }
+        }
         $nameMatch = array_intersect($person['names'], array_merge($placeholders, $affected)) !== [];
         if ($employableMatch || $nameMatch) {
             $reasons[] = self::REASON_SUBJECT;
         }
 
-        if ($person['scope'] !== self::PERSON_SCOPE_SUBJECT) {
+        if ($person['scope'] !== self::PERSON_SCOPE_SUBJECT && ! $isDayEntry) {
             $shiftIds = $log->subject_id !== null
                 ? [(int) $log->subject_id]
                 : array_map('intval', (array) ($properties['shift_ids'] ?? []));
@@ -269,15 +356,18 @@ class ShiftHistoryQueryService
         ?array $person = null,
         array $personShiftIds = []
     ): Builder {
-        $craftId = $filters['craft_id'];
         $shiftId = $filters['shift_id'];
-        $startYmd = $filters['start_ymd'];
-        $endYmd = $filters['end_ymd'];
         $search = $filters['search'];
         $includeCommitSummaries = $shiftId === 0 || in_array($shiftId, $matchedShiftIds, true);
 
+        // Tageseinträge (Abwesenheit, Verfügbarkeit, Notiz, …) ohne Einzelschicht-Filter: mit Personenfilter
+        // die der Person, sonst alle im Zeitraum (mit Gewerk-Filter die der Personen des Gewerks)
+        $includeDayEntries = $shiftId === 0;
+        $dayEntryPersons = $includeDayEntries && $person === null && $filters['craft_id'] > 0
+            ? $this->craftPersonIdsByType($filters['craft_id'], $matchedShiftIds)
+            : null;
+
         return Activity::query()
-            ->where('log_name', 'shift')
             // Zu-/Absagen der Mitarbeitenden werden immer geloggt, aber nur angezeigt, wenn das
             // Setting es erlaubt. NULL-safe filtern: "event NOT IN (...)" würde Einträge ohne
             // event-Wert mit verwerfen.
@@ -291,29 +381,30 @@ class ShiftHistoryQueryService
                 }
             )
             ->where(function ($query) use (
+                $filters,
                 $matchedShiftIds,
-                $startYmd,
-                $endYmd,
-                $craftId,
-                $shiftId,
-                $includeCommitSummaries
+                $includeCommitSummaries,
+                $includeDayEntries,
+                $person,
+                $dayEntryPersons
             ): void {
-                $query->where(function ($subjectQuery) use ($matchedShiftIds): void {
-                    $subjectQuery->where('subject_type', Shift::class)
-                        ->whereIn('subject_id', $matchedShiftIds);
-                })->when($includeCommitSummaries, function ($query) use ($startYmd, $endYmd, $craftId, $shiftId): void {
-                    $query->orWhere(function ($summaryQuery) use ($startYmd, $endYmd, $craftId, $shiftId): void {
-                        $summaryQuery->whereNull('subject_id')
-                            ->where('properties->commit_summary->start_date', '<=', $endYmd)
-                            ->where('properties->commit_summary->end_date', '>=', $startYmd)
-                            ->when(
-                                $shiftId > 0,
-                                fn ($query) => $query->whereJsonContains('properties->shift_ids', $shiftId)
-                            )
-                            ->when(
-                                $craftId > 0,
-                                fn ($query) => $query->whereJsonContains('properties->craft_ids', $craftId)
-                            );
+                $query->where(fn ($shiftLog) => $this->whereShiftLogInScope(
+                    $shiftLog,
+                    $filters,
+                    $matchedShiftIds,
+                    $includeCommitSummaries
+                ))->when($includeDayEntries, function ($query) use ($person, $filters, $dayEntryPersons): void {
+                    $query->orWhere(function ($dayEntry) use ($person, $filters, $dayEntryPersons): void {
+                        if ($person !== null) {
+                            $this->whereDayEntryOfPerson($dayEntry, $person);
+                        } elseif ($dayEntryPersons !== null) {
+                            $this->whereDayEntryOfPersons($dayEntry, $dayEntryPersons);
+                        } else {
+                            $this->whereDayEntry($dayEntry);
+                        }
+                        // Zeitraum-Überlappung: mehrtägige Einträge zählen an jedem ihrer Tage
+                        $dayEntry->whereRaw(self::DAY_ENTRY_DATE_SQL . ' <= ?', [$filters['end_ymd']])
+                            ->whereRaw(self::DAY_ENTRY_END_DATE_SQL . ' >= ?', [$filters['start_ymd']]);
                     });
                 });
             })
@@ -349,12 +440,19 @@ class ShiftHistoryQueryService
                 // Nach Schichttag sortieren: über die (auch soft-deleted) Schicht-Row, mit Fallback auf
                 // Snapshot-Startdatum (force-gelöscht) bzw. Zeitraum-Beginn des Sammel-Eintrags.
                 // select(activity_log.*) verhindert Spaltenkollisionen durch den Join.
-                $q->leftJoin('shifts', 'shifts.id', '=', 'activity_log.subject_id')
+                // Join nur für Schicht-Subjects: Tageseinträge haben eine andere subject_id-Bedeutung
+                $q->leftJoin('shifts', function ($join): void {
+                    $join->on('shifts.id', '=', 'activity_log.subject_id')
+                        ->where('activity_log.subject_type', '=', Shift::class);
+                })
                     ->select('activity_log.*')
                     ->orderByRaw(
                         'COALESCE(shifts.start_date, '
                         . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.shift_snapshot.start_date")), '
-                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.commit_summary.start_date"))'
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.commit_summary.start_date")), '
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.worker_day")), '
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.attributes.date")), '
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.old.date"))'
                         . ') DESC'
                     )
                     ->orderByDesc('activity_log.created_at')
@@ -404,11 +502,149 @@ class ShiftHistoryQueryService
                 });
             }
 
+            // Tageseinträge der Person (Alt-Einträge ohne employable_* über attributes/old)
+            $outer->orWhere(fn ($dayEntry) => $this->whereDayEntryOfPerson($dayEntry, $person));
+
             if ($person['scope'] === self::PERSON_SCOPE_CAUSER && $person['type'] === User::class) {
                 $outer->orWhere(function ($caused) use ($person): void {
                     $caused->where('causer_type', User::class)->where('causer_id', $person['id']);
                 });
             }
         });
+    }
+
+    /**
+     * Einträge des Schicht-Logs im Filterbereich: Vorgänge an den Schichten plus Sammel-Einträge
+     * (Festschreibung KW/Zeitraum) ohne Subject, die den Zeitraum/die Schicht/das Gewerk berühren.
+     *
+     * @param array{craft_id: int, shift_id: int, start_ymd: string, end_ymd: string} $filters
+     * @param array<int, int> $matchedShiftIds
+     */
+    private function whereShiftLogInScope(
+        Builder $query,
+        array $filters,
+        array $matchedShiftIds,
+        bool $includeCommitSummaries
+    ): void {
+        $craftId = $filters['craft_id'];
+        $shiftId = $filters['shift_id'];
+        $startYmd = $filters['start_ymd'];
+        $endYmd = $filters['end_ymd'];
+
+        $query->where('log_name', 'shift')->where(function ($query) use (
+            $matchedShiftIds,
+            $startYmd,
+            $endYmd,
+            $craftId,
+            $shiftId,
+            $includeCommitSummaries
+        ): void {
+            $query->where(function ($subjectQuery) use ($matchedShiftIds): void {
+                $subjectQuery->where('subject_type', Shift::class)
+                    ->whereIn('subject_id', $matchedShiftIds);
+            })->when($includeCommitSummaries, function ($query) use ($startYmd, $endYmd, $craftId, $shiftId): void {
+                $query->orWhere(function ($summaryQuery) use ($startYmd, $endYmd, $craftId, $shiftId): void {
+                    $summaryQuery->whereNull('subject_id')
+                        ->where('properties->commit_summary->start_date', '<=', $endYmd)
+                        ->where('properties->commit_summary->end_date', '>=', $startYmd)
+                        ->when(
+                            $shiftId > 0,
+                            fn ($query) => $query->whereJsonContains('properties->shift_ids', $shiftId)
+                        )
+                        ->when(
+                            $craftId > 0,
+                            fn ($query) => $query->whereJsonContains('properties->craft_ids', $craftId)
+                        );
+                });
+            });
+        });
+    }
+
+    /** Tageseintrag irgendeiner Person (Subject oder Log-Name, siehe isDayEntryLog) */
+    private function whereDayEntry(Builder $query): void
+    {
+        $query->where(function ($kind): void {
+            foreach (self::DAY_ENTRY_LOG_SUBJECTS as [$logName, $subjectType]) {
+                $kind->orWhere(fn ($pair) => $pair
+                    ->where('activity_log.log_name', $logName)
+                    ->when($subjectType !== null, fn ($q) => $q->where('activity_log.subject_type', $subjectType)));
+            }
+        });
+    }
+
+    /**
+     * Tageseintrag der Person: über employable_* (LogsShiftPlanDayActivity) oder bei älteren Einträgen
+     * über die geloggten Morph-Spalten in attributes/old.
+     *
+     * @param array{type: string, id: int} $person
+     */
+    private function whereDayEntryOfPerson(Builder $query, array $person): void
+    {
+        $this->whereDayEntryOfPersons($query, [$person['type'] => [$person['id']]]);
+    }
+
+    /**
+     * Tageseinträge mehrerer Personen (Gewerk-Filter ohne Personenfilter).
+     *
+     * @param array<class-string, array<int, int>> $idsByType
+     */
+    private function whereDayEntryOfPersons(Builder $query, array $idsByType): void
+    {
+        $this->whereDayEntry($query);
+        $query->where(function ($personMatch) use ($idsByType): void {
+            // Ohne Personen: nichts finden statt alles
+            $personMatch->whereRaw('1 = 0');
+            foreach ($idsByType as $type => $ids) {
+                if ($ids === []) {
+                    continue;
+                }
+                $personMatch->orWhere(function ($byEmployable) use ($type, $ids): void {
+                    $byEmployable->where('properties->employable_type', $type)
+                        ->whereIn('properties->employable_id', $ids);
+                });
+                foreach (['attributes', 'old'] as $section) {
+                    foreach (self::DAY_ENTRY_PERSON_PREFIXES as $prefix) {
+                        $personMatch->orWhere(function ($legacy) use ($type, $ids, $section, $prefix): void {
+                            $legacy->where("properties->{$section}->{$prefix}_type", $type)
+                                ->whereIn("properties->{$section}->{$prefix}_id", $ids);
+                        });
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Personen eines Gewerks für den Verlauf ohne Personenfilter: Mitglieder plus alle, die auf Schichten
+     * im Filterbereich eingeteilt sind/waren.
+     *
+     * @param array<int, int> $matchedShiftIds
+     * @return array<class-string, array<int, int>>
+     */
+    private function craftPersonIdsByType(int $craftId, array $matchedShiftIds): array
+    {
+        $craft = Craft::query()->find($craftId);
+        $idsByType = [
+            User::class => $craft?->users()->pluck('users.id')->all() ?? [],
+            Freelancer::class => $craft?->freelancers()->pluck('freelancers.id')->all() ?? [],
+            ServiceProvider::class => $craft?->serviceProviders()->pluck('service_providers.id')->all() ?? [],
+        ];
+
+        if ($matchedShiftIds !== []) {
+            ShiftWorker::withTrashed()
+                ->whereIn('shift_id', $matchedShiftIds)
+                ->distinct()
+                ->get(['employable_type', 'employable_id'])
+                ->each(function (ShiftWorker $worker) use (&$idsByType): void {
+                    if (array_key_exists($worker->employable_type, $idsByType)) {
+                        $idsByType[$worker->employable_type][] = (int) $worker->employable_id;
+                    }
+                });
+        }
+
+        return array_map(
+            fn (array $ids) => array_values(array_unique(array_map('intval', $ids))),
+            $idsByType
+        );
     }
 }

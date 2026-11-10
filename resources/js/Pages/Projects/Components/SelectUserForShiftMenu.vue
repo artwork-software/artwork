@@ -95,7 +95,7 @@
                                                 <ToolTipComponent
                                                     :icon="IconId"
                                                     icon-size="w-4 h-4"
-                                                    tooltip-text="Freelancer*in"
+                                                    :tooltip-text="$t('Freelancer')"
                                                     direction="left"
                                                     classes="text-white/70"
                                                 />

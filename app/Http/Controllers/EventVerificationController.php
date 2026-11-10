@@ -30,6 +30,9 @@ use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class EventVerificationController extends Controller
 {
+    private const string NOT_APPROVABLE_MESSAGE = 'This event could not be approved: it is already approved '
+        . 'or you may not approve it. Reload the page to see the current state.';
+
     /** Gründe, warum requestVerificationFor() nichts angefragt hat */
     private const SKIPPED_NOT_PLANNING = 'not_planning';
     private const SKIPPED_ALREADY_OPEN = 'already_open';
@@ -66,8 +69,8 @@ class EventVerificationController extends Controller
         $roomRequestScopeNames = [];
 
         if (!$canSeeRoomRequests) {
-            $adminRoomIds = Room::whereHas('admins', fn ($q) => $q->where('user_id', $user->id))
-                ->pluck('id');
+            // Raumadmin direkt oder über ein Team
+            $adminRoomIds = Room::query()->administeredBy($user->id)->pluck('id');
             $canSeeRoomRequests = $adminRoomIds->isNotEmpty();
         }
 
@@ -111,17 +114,9 @@ class EventVerificationController extends Controller
 
         $verificationRequests = collect();
         if ($canSeeVerifications) {
-            $query = EventVerification::where('status', 'pending')
-                ->with(['event.room', 'event.event_type', 'event.project', 'verifier', 'requester'])
-                ->whereHas('event');
-
-            if (!$isAdmin) {
-                $query->where('verifier_id', $user->id);
-            }
-
-            $verificationRequests = $query->orderBy('created_at')
-                ->get()
-                ->groupBy(fn ($v) => $v->event->event_type_id ?? 0);
+            $verificationRequests = $this->eventVerificationService
+                ->openRequestsForInbox($user, $isAdmin)
+                ->groupBy(fn (EventVerification $verification) => $verification->event->event_type_id ?? 0);
         }
 
         return Inertia::render('EventVerification/Index', [
@@ -194,7 +189,7 @@ class EventVerificationController extends Controller
             'plannedEvents' => $this->eventVerificationService->getPlannedEvents($user),
             'myRoomRequests' => EventShowResource::collection($myRoomRequests)->resolve(),
             'myRoomRequestsForEdit' => $myRoomRequestsForEdit,
-            'rooms' => Room::select(['id', 'name', 'area_id', 'order', 'everyone_can_book'])->get(),
+            'rooms' => Room::listWithEffectiveAdminIds(['id', 'name', 'area_id', 'order', 'everyone_can_book']),
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'first_project_calendar_tab_id' => $this->projectTabService
@@ -253,7 +248,15 @@ class EventVerificationController extends Controller
             return;
         }
 
-        $this->eventVerificationService->approveVerification($eventVerification);
+        /** @var User $user */
+        $user = $this->authManager->user();
+        // Admins entscheiden die Anfrage direkt, auch mit eigener Prüfung im Modus "alle" (die Eingangsliste zeigt
+        // ihnen die Anfrage nur einmal; vorher blieb sie nach der eigenen Zustimmung mit der nächsten Person stehen)
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value) && $eventVerification->event->is_planning) {
+            $this->eventVerificationService->approveAsAdmin($eventVerification->event, $user);
+        } else {
+            $this->eventVerificationService->approveVerification($eventVerification);
+        }
         $event = $eventVerification->event->fresh();
         SafeBroadcast::send(new EventCreated($event, $event->room_id));
     }
@@ -265,7 +268,14 @@ class EventVerificationController extends Controller
             return;
         }
 
-        $this->eventVerificationService->rejectVerification($eventVerification, $rejectionReason);
+        /** @var User $user */
+        $user = $this->authManager->user();
+        // Admins: die Ablehnung läuft auf sie selbst und entscheidet die Runde (siehe rejectAsAdmin)
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            $this->eventVerificationService->rejectAsAdmin($eventVerification->event, $user, $rejectionReason);
+        } else {
+            $this->eventVerificationService->rejectVerification($eventVerification, $rejectionReason);
+        }
         $event = $eventVerification->event->fresh();
         SafeBroadcast::send(new EventCreated($event, $event->room_id));
     }
@@ -333,8 +343,47 @@ class EventVerificationController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $this->eventVerificationService->approveVerificationByEvent($event, $user);
+        // Veraltete Kachel (schon genehmigt, Recht entzogen): vorher passierte still nichts, gesendet wurde trotzdem
+        if (!$this->approveFor($event, $user)) {
+            session()->flash('error', __(self::NOT_APPROVABLE_MESSAGE));
+
+            return;
+        }
         SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
+    }
+
+    /**
+     * "Genehmigen" im Planungskalender (Kachel und Mehrfachauswahl):
+     * - Admins übernehmen geplante Termine direkt fest, mit oder ohne offene Prüfrunde (Entscheidung 20.10.2026)
+     * - Prüfende beantworten ihre eigene offene Prüfung
+     * - wer den Termin anfragen darf und ihn dabei sofort genehmigen würde (festgelegte Prüfperson, Modus
+     *   "eine Person", Terminart ohne Prüfung), genehmigt ihn auch ohne vorherige Anfrage
+     *
+     * @return bool false, wenn die Person den Termin nicht genehmigen darf oder es nichts zu genehmigen gibt
+     */
+    private function approveFor(Event $event, User $user): bool
+    {
+        if ($event->is_planning && $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            $this->eventVerificationService->approveAsAdmin($event, $user);
+
+            return true;
+        }
+
+        if ($this->eventVerificationService->approveVerificationByEvent($event, $user)) {
+            return true;
+        }
+
+        if (
+            !$this->mayManageVerification($event, $user)
+            || !$this->eventVerificationService->canRequestVerification($event)
+            || !$this->eventVerificationService->approvesOnRequest($event, $user)
+        ) {
+            return false;
+        }
+
+        $this->eventVerificationService->requestVerification($event, $user);
+
+        return true;
     }
 
     public function rejectByEvent(Event $event, Request $request): void
@@ -342,22 +391,75 @@ class EventVerificationController extends Controller
         /** @var User $user */
         $user = $this->authManager->user();
         $rejectionReason = $this->validatedRejectionReason($request);
-        $this->eventVerificationService->rejectVerificationByEvent($event, $user, $rejectionReason);
+        $this->rejectFor($event, $user, $rejectionReason);
         SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
+    }
+
+    /**
+     * "Ablehnen" im Planungskalender: Admins entscheiden eine offene Prüfrunde allein (Gegenstück zu approveFor),
+     * Prüfende lehnen ihre eigene offene Prüfung ab.
+     *
+     * @return bool false, wenn es für die Person nichts abzulehnen gibt
+     */
+    private function rejectFor(Event $event, User $user, string $rejectionReason): bool
+    {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return $this->eventVerificationService->rejectAsAdmin($event, $user, $rejectionReason);
+        }
+
+        return $this->eventVerificationService->rejectVerificationByEvent($event, $user, $rejectionReason);
     }
 
     // Mehrfachauswahl: gelöschte Termine (findEventById → null, vorher TypeError) werden übersprungen
     public function rejectByEvents(Request $request): void
     {
-        foreach ($this->validatedEvents($request) as $event) {
-            $this->rejectByEvent($event, $request);
-        }
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $rejectionReason = $this->validatedRejectionReason($request);
+
+        $this->answerVerificationsInBulk(
+            $this->validatedEvents($request),
+            fn (Event $event): bool => $this->rejectFor($event, $user, $rejectionReason),
+        );
     }
 
     public function approvedByEvents(Request $request): void
     {
-        foreach ($this->validatedEvents($request) as $event) {
-            $this->approvedByEvent($event);
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        $this->answerVerificationsInBulk(
+            $this->validatedEvents($request),
+            fn (Event $event): bool => $this->approveFor($event, $user),
+        );
+    }
+
+    /**
+     * Beantwortet nur Termine, die die Person beantworten darf (eigene offene Prüfung, beim Genehmigen siehe
+     * approveFor). Den Rest der Auswahl übersprang der Server früher stumm – jetzt mit Hinweis.
+     *
+     * @param \Illuminate\Support\Collection<int, Event> $events
+     * @param callable(Event): bool $answer
+     */
+    private function answerVerificationsInBulk(\Illuminate\Support\Collection $events, callable $answer): void
+    {
+        $skippedEvents = 0;
+        foreach ($events as $event) {
+            if (!$answer($event)) {
+                $skippedEvents++;
+                continue;
+            }
+            SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
+        }
+
+        if ($skippedEvents > 0) {
+            session()->flash('error', trans_choice(
+                '{1} One event was skipped: you are not its verifier or its verification is already completed.|'
+                . '[2,*] :count events were skipped: you are not their verifier or their verification '
+                . 'is already completed.',
+                $skippedEvents,
+                ['count' => $skippedEvents]
+            ));
         }
     }
 

@@ -39,9 +39,9 @@
             <div v-for="entry in entries"
                  :key="entry.unique_key"
                  class="rounded-lg px-2 py-1.5 flex flex-col gap-0.5 text-[11px] transition relative"
-                 :class="entry.is_removed_ghost ? 'border border-dashed border-danger-border bg-danger-surface/40'
-                     : (entry.is_individual_time ? 'bg-accent-50 border border-accent-200' : [entryCardClass(entry), 'cursor-pointer'])"
-                 @click="(!entry.is_individual_time && !entry.is_removed_ghost) && $emit('open-history', entry.shift_id)">
+                 :class="entryContainerClass(entry)"
+                 :title="entry.is_foreign_craft ? foreignCraftTooltip(entry) : null"
+                 @click="isClickable(entry) && $emit('open-history', entry.shift_id)">
 
                 <!-- Removed / Deleted Ghost Entry -->
                 <template v-if="entry.is_removed_ghost">
@@ -55,11 +55,52 @@
                     <div v-if="entry.qualification" class="text-[10px] text-danger/80 line-through truncate">{{ entry.qualification }}</div>
                 </template>
 
+                <!-- Abwesenheit der Person (Nicht verfügbar, arbeitsfreier Tag, frei) -->
+                <template v-else-if="entry.is_absence">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-medium text-warning">{{ absenceTimeLabel(entry, t) }}</span>
+                        <IconCalendarOff class="h-3 w-3 shrink-0 text-warning" />
+                    </div>
+                    <span class="text-[10px] font-semibold text-warning truncate">{{ absenceTypeLabel(entry) }}</span>
+                    <div v-if="entry.comment" class="flex items-start gap-1 text-[10px] text-text-subtle">
+                        <IconNote class="h-3 w-3 shrink-0 mt-px" />
+                        <span class="line-clamp-2">{{ entry.comment }}</span>
+                    </div>
+                </template>
+
+                <!-- Gewerksfremde Schicht: nur zur Einordnung der Wochenlast, nicht Teil der Anfrage -->
+                <template v-else-if="entry.is_foreign_craft">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-medium text-text-subtle">{{ entry.start_time }} – {{ entry.end_time }}</span>
+                        <span
+                            v-if="entry.craft_abbreviation"
+                            class="inline-flex max-w-[50%] items-center rounded-full border border-border-subtle bg-white px-1.5 py-0.5 text-[9px] font-semibold uppercase text-text-muted"
+                        >
+                            <span class="truncate">{{ entry.craft_abbreviation }}</span>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] text-text-subtle truncate">{{ entry.qualification || $t('Other craft') }}</span>
+                        <IconLock v-if="entry.is_committed" class="h-3 w-3 shrink-0 text-text-subtle" />
+                    </div>
+                    <div v-if="entry.room_name" class="flex items-center gap-1 text-[10px] text-text-subtle">
+                        <IconMapPin class="h-3 w-3 shrink-0" />
+                        <span class="truncate">{{ entry.room_name }}</span>
+                    </div>
+                </template>
+
                 <!-- Shift Entry -->
                 <template v-else-if="!entry.is_individual_time">
                     <div class="flex items-center justify-between gap-2">
                         <span class="font-medium text-text">{{ entry.start_time }} – {{ entry.end_time }}</span>
                         <div class="flex items-center gap-1">
+                            <span
+                                v-if="entry.unavailable_status"
+                                class="inline-flex items-center"
+                                :title="entry.is_committed ? $t('Assigned but not available (committed shift)') : $t('Assigned but not available')"
+                            >
+                                <IconAlertTriangle class="h-3 w-3" :class="entry.is_committed ? 'text-danger' : 'text-warning'" />
+                            </span>
                             <span v-if="entry.is_subsequently_added" class="inline-flex items-center gap-1 rounded-full bg-warning-surface px-1.5 py-0.5 text-[9px] font-semibold text-warning">
                                 {{ $t('Subsequently added') }}
                             </span>
@@ -102,6 +143,17 @@
                         <IconClock class="h-3 w-3 text-accent-500" />
                     </div>
                     <span class="text-[10px] text-accent-600 truncate">{{ entry.title || $t('Individual time') }}</span>
+                    <span
+                        v-if="entry.workflow_status"
+                        class="inline-flex"
+                        :title="entry.in_this_request ? null : $t('Part of the release request of another craft')"
+                    >
+                        <IndividualTimeWorkflowBadge :status="entry.workflow_status" />
+                    </span>
+                    <span v-if="entry.has_changes_after_commit" class="inline-flex items-center gap-1 text-[10px] text-danger">
+                        <IconAlertTriangle class="h-3 w-3" />
+                        {{ $t('Changed') }}
+                    </span>
                 </template>
             </div>
         </template>
@@ -113,12 +165,16 @@
     </div>
 </template>
 <script setup>
-import { IconAlertTriangle, IconClock, IconLock, IconMapPin, IconNote, IconTrash } from '@tabler/icons-vue';
+import { IconAlertTriangle, IconCalendarOff, IconClock, IconLock, IconMapPin, IconNote, IconTrash } from '@tabler/icons-vue';
 import {computed} from 'vue';
 import {useI18n} from 'vue-i18n';
 import {formatViolationMeasure} from '@/Pages/ShiftWarnings/ruleTypes.js';
+import IndividualTimeWorkflowBadge from '@/Pages/Shifts/Components/IndividualTimeWorkflowBadge.vue';
+import {ABSENCE_TYPE_LABEL_KEYS, absenceTimeLabel} from './shiftPlanRequestHelpers.js';
 
 const {t} = useI18n();
+
+const absenceTypeLabel = (entry) => t(ABSENCE_TYPE_LABEL_KEYS[entry.absence_type] ?? 'Not available');
 
 /** Farbe: Regelfarbe, ohne Regel (manuell "Sonstiges") der Warn-Token */
 const violationColorStyle = (violation) =>
@@ -148,6 +204,23 @@ const props = defineProps({
 });
 defineEmits(['open-history', 'open-violation']);
 const isSelectedDay = computed(() => !!props.selectedDays[props.dayDate]);
+
+/** Verlauf gibt es nur für Schichten der Anfrage, nicht für individuelle Zeiten, Geister oder fremde Gewerke */
+const isClickable = (entry) => !entry.is_individual_time && !entry.is_removed_ghost && !entry.is_foreign_craft && !entry.is_absence;
+
+const entryContainerClass = (entry) => {
+    if (entry.is_removed_ghost) return 'border border-dashed border-danger-border bg-danger-surface/40';
+    if (entry.is_individual_time) return 'bg-accent-50 border border-accent-200';
+    if (entry.is_foreign_craft) return 'border border-dashed border-border bg-surface-sunken opacity-70';
+    if (entry.is_absence) return 'border border-warning-border bg-warning-surface';
+    return [entryCardClass(entry), 'cursor-pointer'];
+};
+
+const foreignCraftTooltip = (entry) => [
+    t('Shift in another craft'),
+    entry.craft_name,
+    t('Not part of this request'),
+].filter(Boolean).join(' · ');
 const entryCardClass = (entry) => {
     let base = entry.has_changes_after_commit ? 'border border-danger-border bg-danger-surface/70 shadow-none hover:border-danger-border' : 'bg-white shadow-sm hover:ring-1 hover:ring-accent-200';
 

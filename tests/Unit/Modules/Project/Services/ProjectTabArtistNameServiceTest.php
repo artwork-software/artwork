@@ -25,7 +25,7 @@ final class ProjectTabArtistNameServiceTest extends TestCase
         $payload = $this->service->buildArtistNamePayload($project);
 
         $this->assertSame(
-            ['artist_name' => 'Some Artist', 'linked_crm_contacts' => []],
+            ['artist_name' => 'Some Artist', 'linked_crm_contacts' => [], 'list_artists' => []],
             $payload
         );
     }

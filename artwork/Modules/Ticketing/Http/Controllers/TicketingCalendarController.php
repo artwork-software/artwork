@@ -5,10 +5,13 @@ namespace Artwork\Modules\Ticketing\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Http\Requests\TicketingEventsRequest;
 use Artwork\Modules\Ticketing\Models\TicketingCustomer;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
+use Artwork\Modules\Ticketing\Services\TicketingDoorService;
 use Artwork\Modules\Ticketing\Services\TicketingReleaseService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -21,6 +24,8 @@ class TicketingCalendarController extends Controller
     public function __construct(
         private readonly TicketingConnectionService $connections,
         private readonly TicketingReleaseService $releases,
+        private readonly ProjectComponentVisibilityService $componentVisibility,
+        private readonly TicketingDoorService $door,
     ) {
     }
 
@@ -57,10 +62,25 @@ class TicketingCalendarController extends Controller
         }
 
         try {
-            return response()->json($this->releases->sales($event));
+            $sales = $this->releases->sales($event);
         } catch (TicketingConnectionException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }
+
+        // Gästeliste (Namen, E-Mails, Ticketcodes) und Umsatz nur mit Sicht auf die Ticketing-Komponente,
+        // wie im Projekt-Tab; der Kalender zeigt sonst nur Verkauft/Plätze/Eingecheckt.
+        $mayViewGuests = $this->componentVisibility->canSeeComponentTypeInProject(
+            $request->user(),
+            [ProjectTabComponentEnum::TICKETING->value]
+        );
+        if (!$mayViewGuests && ($sales['released'] ?? false)) {
+            unset($sales['tickets'], $sales['revenueCents']);
+            $sales['guests_hidden'] = true;
+        }
+
+        $sales['may_admit'] = $this->door->mayAdmit($request->user(), $event);
+
+        return response()->json($sales);
     }
 
     /**
@@ -104,6 +124,9 @@ class TicketingCalendarController extends Controller
     private function destination(Request $request): array
     {
         if ($request->query('to') === 'settings') {
+            // Haus-Einstellungen nur für die Ticketing-Verwaltung (wie die Einstellungsseite in artwork).
+            abort_unless($request->user()->can(PermissionEnum::TICKETING_MANAGE->value), 403);
+
             return $request->filled('tab')
                 ? ['type' => 'houseSettings', 'tab' => $request->string('tab')->value()]
                 : ['type' => 'houseSettings'];

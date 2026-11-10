@@ -6,6 +6,19 @@
     >
 
         <div class="p-4 space-y-4">
+            <!-- Freigegebene Zeit: Änderungen erscheinen wie bei Schichten als Änderung nach Festschreibung -->
+            <BaseAlertComponent
+                v-if="individualTime.workflow_status === 'committed'"
+                type="warning"
+                use-translation
+                message="This individual time has been released. Changes appear under changes after commitment and have to be confirmed."
+            />
+            <BaseAlertComponent
+                v-else-if="individualTime.workflow_status === 'requested'"
+                type="info"
+                use-translation
+                message="This individual time is part of an open release request. Reviewers will see your changes."
+            />
             <!-- Datum (nur Anzeige) -->
             <div>
                 <label class="block text-sm font-medium text-text-muted mb-1">
@@ -63,6 +76,14 @@
 
         <div class="flex justify-end gap-3 p-4 border-t border-border-subtle">
             <button
+                v-if="canDelete"
+                type="button"
+                @click="showDeleteModal = true"
+                class="mr-auto px-4 py-2 text-sm font-medium text-danger bg-white border border-border rounded-lg hover:bg-danger-surface"
+            >
+                {{ $t('Delete') }}
+            </button>
+            <button
                 type="button"
                 @click="$emit('closed')"
                 class="px-4 py-2 text-sm font-medium text-text-muted bg-white border border-border rounded-lg hover:bg-surface-sunken"
@@ -78,6 +99,13 @@
                 {{ saving ? $t('Saving...') : $t('Save') }}
             </button>
         </div>
+        <ArtworkBaseDeleteModal
+            v-if="showDeleteModal"
+            :title="$t('Delete individual time')"
+            :description="$t('Do you really want to delete this individual time?')"
+            @close="showDeleteModal = false"
+            @delete="deleteIndividualTime"
+        />
     </ArtworkBaseModal>
 </template>
 
@@ -85,17 +113,34 @@
 import { ref, reactive, toRef } from 'vue'
 import { router } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
+import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue'
+import axios from 'axios'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import LegalBreakHint from '@/Components/Inputs/LegalBreakHint.vue'
 import { useAutoBreak } from '@/Composeables/useAutoBreak'
 
 const props = defineProps({
-    individualTime: { type: Object, required: true }
+    individualTime: { type: Object, required: true },
+    canDelete: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['closed', 'saved'])
+const emit = defineEmits(['closed', 'saved', 'deleted'])
 
 const saving = ref(false)
+const showDeleteModal = ref(false)
+
+async function deleteIndividualTime() {
+    saving.value = true
+    try {
+        await axios.delete(route('delete.individualTimes', { individualTime: props.individualTime.id }))
+        showDeleteModal.value = false
+        emit('deleted')
+        emit('closed')
+    } finally {
+        saving.value = false
+    }
+}
 
 const form = reactive({
     title: props.individualTime.title ?? '',

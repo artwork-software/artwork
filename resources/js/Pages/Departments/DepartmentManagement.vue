@@ -96,139 +96,192 @@
               </div>
 
               <!-- Team erstellen Modal -->
-              <BaseModal v-if="addingTeam" @closed="closeAddTeamModal" modal-image="/Svgs/Overlays/illu_team_new.svg">
-                  <div class="mx-4">
-                      <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">{{ $t('Create New Team') }}</div>
-                      <div class="text-sm/5 font-bold text-text-subtle subpixel-antialiased mt-4">{{ $t('Create a fixed team/department.') }}</div>
-
-                      <div class="mt-12">
-                          <div class="flex">
-                              <Menu as="div" class="relative">
-                                  <div>
-                                      <MenuButton :class="[form.svg_name === '' ? 'border border-border-strong' : '']"
-                                                  class="items-center rounded-full focus:outline-none h-12 w-12">
-                                          <label v-if="form.svg_name === ''" class="text-text-subtle text-xs">Icon*</label>
-                                          <IconChevronDown v-if="form.svg_name === ''" class="h-4 w-4 mx-auto text-black" />
-                                          <TeamIconCollection v-else class="h-12 w-12" :iconName="form.svg_name" alt="TeamIcon" />
-                                      </MenuButton>
-                                  </div>
-                                  <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from"
-                                              enter-to-class="transition-enter-to" leave-active-class="transition-leave-active"
-                                              leave-from-class="transition-leave-from" leave-to-class="transition-leave-to">
-                                      <MenuItems
-                                          class="z-40 absolute mt-2 h-56 w-24 overflow-y-auto origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+              <ArtworkBaseModal
+                  v-if="addingTeam"
+                  title="Create New Team"
+                  description="Create a fixed team/department."
+                  modal-size="sm:max-w-lg"
+                  @close="closeAddTeamModal"
+              >
+                  <!-- bewusst kein <form>: Enter in der Nutzersuche soll das Team nicht anlegen -->
+                  <div class="space-y-5">
+                      <div>
+                          <div class="flex items-end gap-x-4">
+                              <div class="shrink-0">
+                                  <span class="mb-1 block font-lexend text-xs font-medium text-text-muted">
+                                      {{ $t('Icon') }} <span class="text-danger">*</span>
+                                  </span>
+                                  <Menu as="div" class="relative">
+                                      <MenuButton
+                                          class="flex size-12 cursor-pointer items-center justify-center rounded-lg border bg-surface transition-colors duration-150 hover:bg-surface-hover motion-reduce:transition-none"
+                                          :class="form.svg_name === '' ? 'border-border' : 'border-border-subtle'"
+                                          :aria-label="$t('Icon')"
                                       >
-                                          <MenuItem v-for="item in iconMenuItems" :key="item.iconName" v-slot="{ active }">
-                                              <div @click="form.svg_name = item.iconName"
-                                                   :class="[active ? 'bg-surface-sunken' : '','px-3 py-2']">
-                                                  <TeamIconCollection class="h-14 w-14" :iconName="item.iconName" alt="TeamIcon" />
-                                              </div>
-                                          </MenuItem>
-                                      </MenuItems>
-                                  </transition>
-                              </Menu>
-
-                              <div class="relative my-auto w-full ml-8 mr-12">
-                                  <input id="name" v-model="form.name" type="text"
-                                         class="peer pl-0 h-12 w-full border-b-2 border-border focus:border-accent-600 focus:ring-0"
-                                         />
-                                  <label for="name"
-                                         class="absolute left-0 -top-3.5 text-sm text-text-muted transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
-                                      {{ $t('Name of the team*') }}
-                                  </label>
+                                          <IconChevronDown v-if="form.svg_name === ''" class="size-4 text-text-subtle" stroke-width="1.5" aria-hidden="true" />
+                                          <TeamIconCollection v-else class="size-10" :iconName="form.svg_name" alt="TeamIcon" />
+                                      </MenuButton>
+                                      <transition enter-active-class="transition duration-100 ease-out motion-reduce:transition-none"
+                                                  enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0"
+                                                  leave-active-class="transition duration-75 ease-in motion-reduce:transition-none"
+                                                  leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-1">
+                                          <MenuItems
+                                              class="absolute left-0 z-40 mt-2 grid max-h-64 w-72 grid-cols-4 gap-1 overflow-y-auto rounded-lg border border-border bg-surface p-2 shadow-overlay focus:outline-none"
+                                          >
+                                              <MenuItem v-for="item in iconMenuItems" :key="item.iconName" v-slot="{ active }">
+                                                  <button
+                                                      type="button"
+                                                      :class="[
+                                                          active ? 'bg-surface-hover' : '',
+                                                          form.svg_name === item.iconName ? 'ring-2 ring-accent-500' : '',
+                                                          'flex cursor-pointer items-center justify-center rounded-md p-1'
+                                                      ]"
+                                                      @click="form.svg_name = item.iconName"
+                                                  >
+                                                      <TeamIconCollection class="size-12" :iconName="item.iconName" alt="TeamIcon" />
+                                                  </button>
+                                              </MenuItem>
+                                          </MenuItems>
+                                      </transition>
+                                  </Menu>
                               </div>
+                              <BaseInput
+                                  id="name"
+                                  v-model="form.name"
+                                  label="Name"
+                                  required
+                                  class="flex-1"
+                                  :error="form.errors.name"
+                                  autofocus
+                              />
                           </div>
-                          <span v-if="form.svg_name === ''" class="text-danger text-xs mt-2">{{ $t('Selecting an icon is required') }}*</span>
-
-                          <div class="mt-12">
-                              <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-2">{{ $t('Add users') }}</div>
-                              <div class="text-sm/5 font-bold text-text-subtle subpixel-antialiased">{{ $t('Enter the name of the user you want to add to the team.') }}</div>
-
-                              <div class="mt-6 relative">
-                                  <div class="my-auto w-full">
-                                      <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                             class="peer pl-0 h-12 w-full border-b-2 border-border focus:border-accent-600 focus:ring-0"
-                                             />
-                                      <label for="userSearch"
-                                             class="absolute left-0 -top-3.5 text-sm text-text-muted transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
-                                          {{ $t('Name') }}
-                                      </label>
-                                  </div>
-
-                                  <transition leave-active-class="transition ease-in duration-100"
-                                              leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                      <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                           class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                          <div class="border-border-subtle">
-                                              <div v-for="(user, index) in user_search_results" :key="index" class="flex items-center cursor-pointer">
-                                                  <div class="flex-1 text-sm py-3">
-                                                      <p @click="addUserToAssignedUsersArray(user)" class="font-bold px-4 hover:border-l-4 hover:border-l-emerald-500">
-                                                          {{ user.first_name }} {{ user.last_name }}
-                                                      </p>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </transition>
-                              </div>
-                          </div>
-
-                          <div class="mt-4 space-y-3">
-                              <div v-for="(user,index) in form.assigned_users" :key="user.id"
-                                   class="flex items-center text-text">
-                                  <img class="h-11 w-11 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
-                                  <span class="ml-4">{{ user.first_name }} {{ user.last_name }}</span>
-                                  <button type="button" class="ml-2" @click="deleteUserFromTeam(index)">
-                                      <span class="sr-only">User aus Team entfernen</span>
-                                      <IconX class="h-5 w-5 hover:text-danger"/>
-                                  </button>
-                              </div>
-                          </div>
-
-                          <div class="w-full text-center mt-6">
-                              <FormButton @click="addTeam" :disabled="form.name === '' || form.svg_name === ''" :text="$t('Create Team')" />
-                          </div>
+                          <p v-if="form.svg_name === ''" class="mt-1 text-[11.5px] text-danger">{{ $t('Selecting an icon is required') }}</p>
                       </div>
+
+                      <div>
+                          <h3 class="font-lexend text-sm font-semibold text-text">{{ $t('Add users') }}</h3>
+                          <p class="mb-3 mt-0.5 text-xs text-text-muted">{{ $t('Enter the name of the user you want to add to the team.') }}</p>
+                          <BaseInput
+                              id="userSearch"
+                              v-model="user_query"
+                              label="Name"
+                              :placeholder="$t('Search for users')"
+                              autocomplete="off"
+                          />
+                          <ul
+                              v-if="user_search_results.length > 0 && user_query.length > 0"
+                              class="mt-2 max-h-60 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+                          >
+                              <li v-for="user in user_search_results" :key="user.id">
+                                  <button
+                                      type="button"
+                                      class="block w-full cursor-pointer truncate px-3 py-2 text-left text-sm font-medium text-text transition-colors duration-150 hover:bg-surface-hover focus-visible:bg-surface-hover motion-reduce:transition-none"
+                                      @click="addUserToAssignedUsersArray(user)"
+                                  >
+                                      {{ user.first_name }} {{ user.last_name }}
+                                  </button>
+                              </li>
+                          </ul>
+                      </div>
+
+                      <ul
+                          v-if="form.assigned_users.length > 0"
+                          class="max-h-72 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+                      >
+                          <li
+                              v-for="(user, index) in form.assigned_users"
+                              :key="user.id"
+                              class="flex items-center justify-between gap-x-3 px-3 py-2"
+                          >
+                              <div class="flex min-w-0 items-center gap-x-3">
+                                  <img class="size-8 shrink-0 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
+                                  <span class="truncate text-sm font-medium text-text">{{ user.first_name }} {{ user.last_name }}</span>
+                              </div>
+                              <button
+                                  type="button"
+                                  class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 hover:bg-surface-hover hover:text-danger motion-reduce:transition-none"
+                                  :aria-label="$t('Remove person from team')"
+                                  @click="deleteUserFromTeam(index)"
+                              >
+                                  <IconX class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                              </button>
+                          </li>
+                      </ul>
+                      <p v-if="form.errors.assigned_users" class="text-[11.5px] text-danger">{{ form.errors.assigned_users }}</p>
                   </div>
-              </BaseModal>
+                  <template #footer>
+                      <BaseUIButton
+                          label="Cancel"
+                          is-cancel-button
+                          hide-icon
+                          :disabled="form.processing"
+                          @click="closeAddTeamModal"
+                      />
+                      <BaseUIButton
+                          label="Create Team"
+                          variant="primary"
+                          icon="IconCirclePlus"
+                          :processing="form.processing"
+                          :disabled="form.name === '' || form.svg_name === ''"
+                          @click="addTeam"
+                      />
+                  </template>
+              </ArtworkBaseModal>
 
               <!-- Alle Mitglieder aus Team löschen Modal -->
-              <BaseModal v-if="deletingAllTeamMembers" @closed="closeDeleteAllTeamMembersModal" modal-image="/Svgs/Overlays/illu_warning.svg">
-                  <div class="mx-4">
-                      <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">{{ $t('Delete all team members') }}</div>
-                      <div class="text-sm/5 text-danger mt-4">
-                          {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: teamToDeleteAllMembers?.name }) }}
-                      </div>
-                      <div class="flex justify-between mt-6">
-                          <button class="bg-white inline-flex items-center px-6 py-3 border text-base font-bold shadow-sm text-text"
-                                  @click="deleteAllTeamMembers">
-                              {{ $t('Delete') }}
-                          </button>
-                          <div class="flex my-auto">
-                              <span @click="closeDeleteAllTeamMembersModal" class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really') }}</span>
-                          </div>
-                      </div>
-                  </div>
-              </BaseModal>
+              <ArtworkBaseModal
+                  v-if="deletingAllTeamMembers"
+                  title="Delete all team members"
+                  modal-size="sm:max-w-lg"
+                  @close="closeDeleteAllTeamMembersModal"
+              >
+                  <p class="text-sm text-text">
+                      {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: teamToDeleteAllMembers?.name }) }}
+                  </p>
+                  <template #footer>
+                      <BaseUIButton
+                          label="No, not really"
+                          is-cancel-button
+                          hide-icon
+                          :disabled="deleteMembersForm.processing"
+                          @click="closeDeleteAllTeamMembersModal"
+                      />
+                      <BaseUIButton
+                          label="Delete"
+                          variant="danger"
+                          icon="IconTrash"
+                          :processing="deleteMembersForm.processing"
+                          @click="deleteAllTeamMembers"
+                      />
+                  </template>
+              </ArtworkBaseModal>
 
               <!-- Team löschen Modal -->
-              <BaseModal v-if="deletingTeam" @closed="closeDeleteTeamModal" modal-image="/Svgs/Overlays/illu_warning.svg">
-                  <div class="mx-4">
-                      <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text mt-6 my-2">{{ $t('Delete Team') }}</div>
-                      <div class="text-sm/5 text-danger">
-                          {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: teamToDelete?.name }) }}
-                      </div>
-                      <div class="flex justify-between mt-6">
-                          <button class="bg-white inline-flex items-center px-6 py-3 border text-base font-bold shadow-sm text-text"
-                                  @click="deleteTeam">
-                              {{ $t('Delete Team') }}
-                          </button>
-                          <div class="flex my-auto">
-                              <span @click="closeDeleteTeamModal" class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really') }}</span>
-                          </div>
-                      </div>
-                  </div>
-              </BaseModal>
+              <ArtworkBaseModal
+                  v-if="deletingTeam"
+                  title="Delete Team"
+                  modal-size="sm:max-w-lg"
+                  @close="closeDeleteTeamModal"
+              >
+                  <p class="text-sm text-text">
+                      {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: teamToDelete?.name }) }}
+                  </p>
+                  <template #footer>
+                      <BaseUIButton
+                          label="No, not really"
+                          is-cancel-button
+                          hide-icon
+                          :disabled="deleteTeamProcessing"
+                          @click="closeDeleteTeamModal"
+                      />
+                      <BaseUIButton
+                          label="Delete Team"
+                          variant="danger"
+                          icon="IconTrash"
+                          :processing="deleteTeamProcessing"
+                          @click="deleteTeam"
+                      />
+                  </template>
+              </ArtworkBaseModal>
 
               <!-- Success Modal -->
               <SuccessModal
@@ -254,11 +307,11 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
 // Deine bestehenden Komponenten
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 
 // Icons
@@ -267,7 +320,7 @@ import UserHeader from "@/Pages/Users/UserHeader.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 // Props
-const props = defineProps<{ departments: any; users: any }>()
+const props = defineProps<{ departments: any }>()
 
 const { t: $t } = useI18n()
 
@@ -328,6 +381,7 @@ onMounted(() => {
 const addingTeam = ref(false)
 const deletingTeam = ref(false)
 const teamToDelete = ref<any | null>(null)
+const deleteTeamProcessing = ref(false)
 const deletingAllTeamMembers = ref(false)
 const teamToDeleteAllMembers = ref<any | null>(null)
 const showSuccess = ref(false)
@@ -382,11 +436,15 @@ function closeDeleteTeamModal() {
     teamToDelete.value = null
 }
 function deleteTeam() {
-    if (!teamToDelete.value) return
+    if (!teamToDelete.value || deleteTeamProcessing.value) return
+    deleteTeamProcessing.value = true
     router.delete(route('departments.destroy', { department: teamToDelete.value.id }), {
         onSuccess: () => {
             closeDeleteTeamModal()
             showSuccessModal('delete')
+        },
+        onFinish: () => {
+            deleteTeamProcessing.value = false
         }
     })
 }

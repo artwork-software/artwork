@@ -9,7 +9,8 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 
 /**
  * "Raumverwaltung" (create, delete and update rooms) gilt hausweit; ein Raum-Admin
- * (room_user.is_admin) darf zusätzlich seinen eigenen Raum bearbeiten. Admins via Gate::before.
+ * (room_user.is_admin oder Mitglied eines Admin-Teams in department_room) darf zusätzlich seinen eigenen Raum
+ * bearbeiten. Admins via Gate::before.
  */
 class RoomPolicy
 {
@@ -52,9 +53,7 @@ class RoomPolicy
 
     private function isRoomAdmin(User $user, Room $room): bool
     {
-        return $room->users()
-            ->where('users.id', $user->id)
-            ->wherePivot('is_admin', true)
-            ->exists();
+        // Direkt eingetragen oder Mitglied eines Admin-Teams
+        return $room->isAdministeredBy($user);
     }
 }

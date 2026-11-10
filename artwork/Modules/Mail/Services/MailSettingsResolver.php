@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\Mail\Services;
 
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Mail\Settings\MailSettings;
+use Throwable;
 
 /**
  * Single source of truth for the "effective" mail configuration.
@@ -49,14 +51,11 @@ class MailSettingsResolver
 
     public function username(): ?string
     {
-        // Kein Credential-Mixing: Bei überschriebenem Host niemals die
+        // Kein Credential-Mixing: Bei einem anderen Host als in der .env niemals die
         // .env-Zugangsdaten verwenden — sonst würden die Server-Credentials
         // an einen frei konfigurierbaren Fremd-Host gesendet.
-        if ($this->hasHostOverride()) {
-            return $this->override($this->settings->username);
-        }
-
-        return $this->override($this->settings->username) ?? $this->usernameFallback();
+        return $this->override($this->settings->username)
+            ?? ($this->usesFallbackHost($this->settings->host) ? $this->usernameFallback() : null);
     }
 
     public function usernameFallback(): ?string
@@ -66,11 +65,40 @@ class MailSettingsResolver
 
     public function password(): ?string
     {
-        if ($this->hasHostOverride()) {
-            return $this->override($this->settings->password);
+        $password = $this->override($this->settings->password);
+        if ($password !== null) {
+            return $password;
         }
 
-        return $this->override($this->settings->password) ?? config('mail.fallback.password');
+        return $this->mayUseFallbackPassword($this->settings->host, $this->settings->username)
+            ? $this->override(config('mail.fallback.password'))
+            : null;
+    }
+
+    /**
+     * Das .env-Passwort gehört zum .env-Konto auf dem .env-Host. Es darf nur mit genau diesem
+     * Paar verwendet werden — ein in den Einstellungen eingetragener anderer Benutzername plus
+     * .env-Passwort scheitert sonst mit „535 authentication failed“ (Sentry, Theaterhaus Jena).
+     */
+    public function mayUseFallbackPassword(?string $host, ?string $username): bool
+    {
+        if (!$this->usesFallbackHost($host)) {
+            return false;
+        }
+
+        $username = $this->override($username);
+
+        return $username === null || strcasecmp($username, (string) $this->usernameFallback()) === 0;
+    }
+
+    /**
+     * Kein Host-Override oder derselbe Host wie in der .env (Groß-/Kleinschreibung egal).
+     */
+    public function usesFallbackHost(?string $host): bool
+    {
+        $host = $this->override($host);
+
+        return $host === null || strcasecmp($host, (string) $this->hostFallback()) === 0;
     }
 
     public function hasHostOverride(): bool
@@ -78,9 +106,41 @@ class MailSettingsResolver
         return $this->override($this->settings->host) !== null;
     }
 
+    /**
+     * Woher die SMTP-Anmeldung effektiv kommt — für die Anzeige in den Einstellungen.
+     *
+     * @return 'settings'|'env'|'none'
+     */
+    public function authenticationSource(): string
+    {
+        if ($this->override($this->settings->username) !== null) {
+            return 'settings';
+        }
+
+        return $this->username() !== null ? 'env' : 'none';
+    }
+
     public function fromAddress(): ?string
     {
-        return $this->override($this->settings->from_address) ?? $this->fromAddressFallback();
+        return $this->override($this->settings->from_address) ?? $this->defaultSenderAddress();
+    }
+
+    /**
+     * Absender ohne From-Override — dieselbe Kette wie in den Notifications (Support-Adresse aus
+     * „Kommunikation & Rechtliches“, sonst system_mail), zuletzt MAIL_FROM_ADDRESS. Leere Werte
+     * werden übersprungen, damit keine Mail ohne From-Header entsteht.
+     */
+    public function defaultSenderAddress(): ?string
+    {
+        try {
+            $businessEmail = app(GeneralSettings::class)->business_email;
+        } catch (Throwable) {
+            $businessEmail = null;
+        }
+
+        return $this->override($businessEmail)
+            ?? $this->override(config('mail.system_mail'))
+            ?? $this->fromAddressFallback();
     }
 
     /**
@@ -100,7 +160,7 @@ class MailSettingsResolver
 
     public function fromAddressFallback(): ?string
     {
-        return config('mail.fallback.from_address');
+        return $this->override(config('mail.fallback.from_address'));
     }
 
     public function fromName(): ?string

@@ -103,7 +103,7 @@
                                         v-model="artistSearch"
                                         id="search_artist"
                                         :label="$t('Search artist')"
-                                        placeholder="Name eingeben..."
+                                        :placeholder="$t('Search by name')"
                                         no-margin-top
                                     />
 
@@ -525,6 +525,7 @@
 
 import {useForm, usePage} from "@inertiajs/vue3";
 import { toYmd } from "@/Helper/IsoWeek.js";
+import { accommodationResidencyDefaults } from "@/Pages/Projects/Components/ArtistResidenciesComponents/accommodationResidencyDefaults.js";
 import {computed, ref, watch} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
@@ -623,6 +624,11 @@ const emit = defineEmits(['close'])
 const selectedAccommodation = ref(props.accommodations?.find(accommodation => accommodation.id === props.artist_residency?.accommodation_id) || props.accommodations[0] || null)
 const selectedRoomType = ref(selectedAccommodation.value?.room_types?.find(room => room.id === parseInt(props.artist_residency?.type_of_room)) || null)
 
+const accommodationDefaults = (accommodation) => accommodationResidencyDefaults(accommodation, {
+    dailyAllowance: props.defaultDailyAllowance,
+    breakfastDeduction: props.defaultBreakfastDeduction,
+})
+
 const selectArtist = ref(false)
 const selectedArtist = ref(props.artist_residency?.artist_contact || props.artist_residency?.artist || null)
 const validationErrors = ref({})
@@ -692,10 +698,10 @@ const artistResidency = useForm({
     departure_time: props.artist_residency ? props.artist_residency.departure_time : '',
     type_of_room: null,
     cost_per_night: props.artist_residency ? props.artist_residency.cost_per_night : 0.00,
-    daily_allowance: props.artist_residency ? props.artist_residency.daily_allowance : props.defaultDailyAllowance,
+    daily_allowance: props.artist_residency ? props.artist_residency.daily_allowance : accommodationDefaults(selectedAccommodation.value).daily_allowance,
     additional_daily_allowance: props.artist_residency ? props.artist_residency.additional_daily_allowance : 0.00,
     breakfast_count: props.artist_residency ? (props.artist_residency.breakfast_count ?? 0) : 0,
-    breakfast_deduction_per_day: props.artist_residency ? (props.artist_residency.breakfast_deduction_per_day ?? props.defaultBreakfastDeduction) : props.defaultBreakfastDeduction,
+    breakfast_deduction_per_day: props.artist_residency ? (props.artist_residency.breakfast_deduction_per_day ?? props.defaultBreakfastDeduction) : accommodationDefaults(selectedAccommodation.value).breakfast_deduction_per_day,
     description: props.artist_residency ? props.artist_residency.description : '',
     days: 0,
 })
@@ -848,6 +854,16 @@ watch(selectedArtist, (newArtist) => {
         originalCrmPropertyValues.value = { ...crmPropertyValues.value }
         syncCrmChanges.value = false
     }
+})
+
+// Beim Wechsel der Unterkunft deren Vorgaben übernehmen (beim Öffnen eines bestehenden Aufenthalts bleibt alles stehen)
+watch(selectedAccommodation, (newAccommodation, oldAccommodation) => {
+    if (!newAccommodation || newAccommodation.id === oldAccommodation?.id) {
+        return
+    }
+    const defaults = accommodationDefaults(newAccommodation)
+    artistResidency.daily_allowance = defaults.daily_allowance
+    artistResidency.breakfast_deduction_per_day = defaults.breakfast_deduction_per_day
 })
 
 // Auto-fill cost_per_night when accommodation and room type are selected

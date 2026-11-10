@@ -11,12 +11,19 @@
             title="How does this area work?"
             :paragraphs="[
                 'These settings control the mail account for all outgoing emails. Empty fields fall back to the server configuration (.env) — the effective fallback values are shown below the fields.',
+                'User name and password belong together: both come either from here or from the server configuration. For a server other than the one in the server configuration, its access data are never used.',
                 'Changes take effect immediately after saving.',
             ]"
         />
 
         <div class="max-w-2xl">
+            <p v-if="!mailSettings.can_manage"
+               class="mb-6 rounded border-1 border-border-subtle bg-surface-canvas p-3 text-sm text-text-subtle">
+                {{ $t('Only administrators can change the mail settings and send test emails.') }}
+            </p>
+
             <!-- SMTP settings -->
+            <fieldset :disabled="!mailSettings.can_manage" class="contents">
             <form @submit.prevent="save" class="grid grid-cols-1 gap-4">
                 <h3 class="text-sm font-semibold text-text">{{ $t('SMTP server') }}</h3>
 
@@ -24,13 +31,13 @@
                     <div>
                         <BaseInput id="mail_host" v-model="form.host" :label="$t('Host')" :error="form.errors.host"/>
                         <p v-if="mailSettings.fallback.host" class="text-xs text-text-subtle mt-1">
-                            {{ $t('Fallback: :value', { value: mailSettings.fallback.host }) }}
+                            {{ $t('Fallback: {value}', { value: mailSettings.fallback.host }) }}
                         </p>
                     </div>
                     <div>
                         <BaseInput id="mail_port" v-model="form.port" type="number" :label="$t('Port')" :error="form.errors.port"/>
                         <p v-if="mailSettings.fallback.port" class="text-xs text-text-subtle mt-1">
-                            {{ $t('Fallback: :value', { value: mailSettings.fallback.port }) }}
+                            {{ $t('Fallback: {value}', { value: mailSettings.fallback.port }) }}
                         </p>
                     </div>
                 </div>
@@ -50,23 +57,29 @@
                             {{ form.errors.encryption }}
                         </p>
                         <p v-if="mailSettings.fallback.encryption" class="text-xs text-text-subtle mt-1">
-                            {{ $t('Fallback: :value', { value: mailSettings.fallback.encryption }) }}
+                            {{ $t('Fallback: {value}', { value: mailSettings.fallback.encryption }) }}
                         </p>
                     </div>
                     <div>
-                        <BaseInput id="mail_username" v-model="form.username" :label="$t('Username')" :error="form.errors.username"/>
+                        <!-- Kein Browser-Autofill: sonst landet der artwork-Login als SMTP-Zugang (Sentry, Theaterhaus Jena) -->
+                        <BaseInput id="mail_username" v-model="form.username" :label="$t('Username')" :error="form.errors.username"
+                                   autocomplete="off" data-1p-ignore data-lpignore="true"/>
                     </div>
                 </div>
 
                 <div>
                     <BaseInput id="mail_password" v-model="form.password" type="password"
+                               autocomplete="new-password" data-1p-ignore data-lpignore="true"
                                :label="$t('Password')" :error="form.errors.password"
                                :disabled="form.clear_password"
                                :placeholder="mailSettings.has_password ? '••••••••' : ''"/>
                     <p class="text-xs text-text-subtle mt-1">
                         {{ mailSettings.has_password
                             ? $t('A password is stored. Leave blank to keep it, or enter a new one to replace it.')
-                            : $t('Leave blank to use the server configuration (.env).') }}
+                            : $t('If you enter a user name, enter its password too. Leave both blank to use the server configuration (.env).') }}
+                    </p>
+                    <p v-if="mailSettings.has_password" class="text-xs text-text-subtle mt-1">
+                        {{ $t('If you change the host, enter the password again.') }}
                     </p>
                     <label v-if="mailSettings.has_password" class="mt-2 flex items-center gap-2 text-xs text-text-subtle">
                         <input type="checkbox" v-model="form.clear_password"
@@ -74,6 +87,14 @@
                         {{ $t('Remove stored password (fall back to the server configuration)') }}
                     </label>
                 </div>
+
+                <p v-if="mailSettings.authentication.password_missing"
+                   class="rounded border-1 border-danger bg-danger-surface p-3 text-sm text-danger">
+                    {{ $t('A user name is stored but no password. Enter the password, otherwise the mail server will reject the login.') }}
+                </p>
+                <p v-else class="text-xs text-text-subtle">
+                    {{ authenticationHint }}
+                </p>
 
                 <h3 class="text-sm font-semibold text-text mt-4">{{ $t('Sender (From)') }}</h3>
                 <SettingsGuideBanner
@@ -87,13 +108,13 @@
                     <div>
                         <BaseInput id="mail_from_address" v-model="form.from_address" :label="$t('From address')" :error="form.errors.from_address"/>
                         <p v-if="mailSettings.fallback.from_address" class="text-xs text-text-subtle mt-1">
-                            {{ $t('Fallback: :value', { value: mailSettings.fallback.from_address }) }}
+                            {{ $t('Fallback: {value}', { value: mailSettings.fallback.from_address }) }}
                         </p>
                     </div>
                     <div>
                         <BaseInput id="mail_from_name" v-model="form.from_name" :label="$t('From name')" :error="form.errors.from_name"/>
                         <p v-if="mailSettings.fallback.from_name" class="text-xs text-text-subtle mt-1">
-                            {{ $t('Fallback: :value', { value: mailSettings.fallback.from_name }) }}
+                            {{ $t('Fallback: {value}', { value: mailSettings.fallback.from_name }) }}
                         </p>
                     </div>
                 </div>
@@ -133,6 +154,7 @@
                     {{ testResult.message }}
                 </div>
             </div>
+            </fieldset>
         </div>
     </ToolSettingsHeader>
 </template>
@@ -174,6 +196,18 @@ export default defineComponent({
             testResult: null,
         };
     },
+    computed: {
+        authenticationHint() {
+            switch (this.mailSettings.authentication.source) {
+                case 'settings':
+                    return this.$t('Saved state: login with the user name and password stored here.');
+                case 'env':
+                    return this.$t('Saved state: login with the access data from the server configuration (.env).');
+                default:
+                    return this.$t('Saved state: emails are sent without login. Many mail servers reject this.');
+            }
+        },
+    },
     methods: {
         save() {
             this.form.patch(route('tool.mail.update'), {
@@ -185,7 +219,7 @@ export default defineComponent({
             });
         },
         async sendTestMail() {
-            if (!this.testRecipient) {
+            if (!this.testRecipient || !this.mailSettings.can_manage) {
                 return;
             }
 

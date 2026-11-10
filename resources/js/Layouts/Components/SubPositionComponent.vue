@@ -498,6 +498,7 @@
     />
 </template>
 <script>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import {useForm, usePage} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {nextTick} from "vue";
@@ -835,7 +836,7 @@ export default {
         },
         readClosedSubPositions() {
             try {
-                const stored = JSON.parse(localStorage.getItem(this.closedSubPositionsStorageKey));
+                const stored = JSON.parse(safeGetItem(this.closedSubPositionsStorageKey));
                 return Array.isArray(stored) ? stored : [];
             } catch (e) {
                 return [];
@@ -860,7 +861,7 @@ export default {
                     closed: this.subPosition.closed
                 });
             }
-            localStorage.setItem(this.closedSubPositionsStorageKey, JSON.stringify(closedSubPositions));
+            safeSetItem(this.closedSubPositionsStorageKey, JSON.stringify(closedSubPositions));
         },
         duplicateSubpostion(subPositionId) {
             this.$inertia.post(route('project.budget.sub-position.duplicate', subPositionId), {}, {

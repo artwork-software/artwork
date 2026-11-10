@@ -3,6 +3,7 @@
 namespace Artwork\Modules\DocumentRequest\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Artwork\Modules\User\Models\User;
 
 /**
  * @mixin \Artwork\Modules\DocumentRequest\Models\DocumentRequest
@@ -22,6 +23,7 @@ class DocumentRequestResource extends JsonResource
                 'first_name' => $this->requester->first_name,
                 'last_name' => $this->requester->last_name,
                 'profile_photo_url' => $this->requester->profile_photo_url,
+                'deactivated_at' => User::deactivatedAtFor($this->requester),
                 'email' => $this->requester->visibleEmailFor($request->user()),
             ] : null,
             'requested' => $this->requested ? [
@@ -29,6 +31,7 @@ class DocumentRequestResource extends JsonResource
                 'first_name' => $this->requested->first_name,
                 'last_name' => $this->requested->last_name,
                 'profile_photo_url' => $this->requested->profile_photo_url,
+                'deactivated_at' => User::deactivatedAtFor($this->requested),
                 'email' => $this->requested->visibleEmailFor($request->user()),
             ] : null,
             'project' => $this->project ? [

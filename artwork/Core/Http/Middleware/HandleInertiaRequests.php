@@ -86,8 +86,20 @@ class HandleInertiaRequests extends Middleware
             }
             return $settings;
         };
-        $calendarSettings = $ensureSettings($user, 'calendar_settings');
-        $dailyViewCalendarSettings = $ensureSettings($user, 'daily_view_calendar_settings');
+        // Der Planungskalender hat eigene Anzeigeeinstellungen. Auf seiner Seite liegen sie unter denselben
+        // Schlüsseln (calendar_settings / daily_view_calendar_settings, auch auth.user), damit alle Kalender-
+        // Komponenten ohne Unterscheidung die Einstellungen der gerade offenen Ansicht lesen.
+        if ($user !== null && $request->routeIs('planning-event-calendar.index')) {
+            $calendarSettings = $ensureSettings($user, 'planningCalendarSettings');
+            $dailyViewCalendarSettings = $ensureSettings($user, 'planningDailyViewCalendarSettings');
+            $user->setRelation('calendar_settings', $calendarSettings);
+            $user->setRelation('daily_view_calendar_settings', $dailyViewCalendarSettings);
+            $user->unsetRelation('planningCalendarSettings');
+            $user->unsetRelation('planningDailyViewCalendarSettings');
+        } else {
+            $calendarSettings = $ensureSettings($user, 'calendar_settings');
+            $dailyViewCalendarSettings = $ensureSettings($user, 'daily_view_calendar_settings');
+        }
         $shiftPlanSettings = $ensureSettings($user, 'shift_plan_settings');
         $shiftPlanDailySettings = $ensureSettings($user, 'shift_plan_daily_settings');
 
@@ -216,6 +228,12 @@ class HandleInertiaRequests extends Middleware
                 static fn (): bool => $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
                     || $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
                     || DB::table('room_user')->where('user_id', $user->id)->where('is_admin', true)->exists()
+                    // Raumadmin über ein Team
+                    || DB::table('department_room')
+                        ->join('department_user', 'department_user.department_id', '=', 'department_room.department_id')
+                        ->where('department_user.user_id', $user->id)
+                        ->where('department_room.is_admin', true)
+                        ->exists()
                     || DB::table('event_type_user')->where('user_id', $user->id)->exists()
                     || DB::table('event_types')->where('specific_verifier_id', $user->id)->exists()
             )
@@ -250,6 +268,8 @@ class HandleInertiaRequests extends Middleware
                 'artwork_version' => config('app.version'),
                 'ai' => $this->aiAssistantState($user),
                 'use_chat_module' => config('app.use_chat_module'),
+                // Nur für Angemeldete (Tool-Einstellungen) – Login- und Einladungsseiten verraten die Version nicht
+                'artworkVersion' => $user ? config('app.version') : null,
                 // Effektives PHP-Upload-Limit für transparente „Datei zu groß"-Meldungen
                 // und die Datei-Einstellungsseite (Abnahme RG-04); nginx kann zusätzlich begrenzen
                 'server_upload_limit_mb' => \Artwork\Core\FileHandling\ServerUploadLimit::inMegabytes(),
@@ -303,6 +323,10 @@ class HandleInertiaRequests extends Middleware
                 'event_status_module' => $eventSettings->enable_status,
                 'event_admission_module' => $eventSettings->enable_admission,
                 'event_direct_booking_only' => $alwaysDirectBooking,
+                // false = Termin-Dialoge bieten nur „Bestehendes Projekt“ an (Kalender-Einstellung)
+                'project_creation_from_events_enabled' => (bool) (
+                    $generalCalendarSettings->project_creation_from_events_enabled ?? true
+                ),
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,
@@ -310,6 +334,8 @@ class HandleInertiaRequests extends Middleware
                 'ticketing' => [
                     'configured' => $ticketingConnections->isConfigured(),
                     'active' => $ticketingConnections->isActive(),
+                    // Testmodus: jede Ansicht des Ticketings sagt, dass nichts davon echt verkauft ist.
+                    'testMode' => $ticketingConnections->isTestMode(),
                 ],
                 // Externe Zugänge: gated Einladen-Buttons und CRM-Verwaltungslinks im Frontend
                 'externalAccessEnabled' => app(ExternalAccessSettingsResolver::class)->isEnabled(),

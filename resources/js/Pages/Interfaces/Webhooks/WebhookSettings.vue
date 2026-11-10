@@ -85,89 +85,119 @@
       </table>
     </div>
 
-    <BaseModal v-if="showFormModal" @closed="closeForm" modalSize="sm:max-w-lg">
-      <div>
-        <h3 class="text-lg leading-6 font-medium text-text mb-4">
-          {{ editing ? $t('Edit endpoint') : $t('Add endpoint') }}
-        </h3>
-
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-text-muted">{{ $t('Name') }} <span class="text-danger">*</span></label>
-          <input v-model="form.name" type="text"
-                 class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 sm:text-sm" />
-          <div v-if="form.errors.name" class="text-danger text-xs mt-1">{{ form.errors.name }}</div>
+    <ArtworkBaseModal
+      v-if="showFormModal"
+      :title="editing ? 'Edit endpoint' : 'Add endpoint'"
+      modal-size="sm:max-w-lg"
+      @close="closeForm"
+    >
+      <form id="webhookEndpointForm" class="space-y-4" @submit.prevent="submitForm">
+        <BaseInput
+          id="webhookEndpointName"
+          v-model="form.name"
+          label="Name"
+          required
+          autofocus
+          :error="form.errors.name"
+        />
+        <div>
+          <BaseInput
+            id="webhookEndpointUrl"
+            v-model="form.url"
+            type="url"
+            label="URL"
+            placeholder="https://"
+            required
+            :error="form.errors.url"
+          />
+          <p class="mt-1 text-xs text-text-muted">{{ $t('Must be https — payloads are signed, but not encrypted.') }}</p>
         </div>
-
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-text-muted">{{ $t('URL') }} <span class="text-danger">*</span></label>
-          <input v-model="form.url" type="url" placeholder="https://"
-                 class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 sm:text-sm" />
-          <p class="text-xs text-text-subtle mt-1">{{ $t('Must be https — payloads are signed, but not encrypted.') }}</p>
-          <div v-if="form.errors.url" class="text-danger text-xs mt-1">{{ form.errors.url }}</div>
-        </div>
-
-        <div class="mb-4">
-          <span class="block text-sm font-medium text-text-muted">{{ $t('Events') }} <span class="text-danger">*</span></span>
-          <div v-if="availableEvents.length === 0" class="text-xs text-text-subtle mt-2">
+        <fieldset>
+          <legend class="mb-2 font-lexend text-xs font-medium text-text">
+            {{ $t('Events') }} <span class="text-danger">*</span>
+          </legend>
+          <p v-if="availableEvents.length === 0" class="text-xs text-text-muted">
             {{ $t('No events are available yet.') }}
-          </div>
-          <div v-else class="space-y-2 mt-2">
-            <label v-for="event in availableEvents" :key="event.name" class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" :value="event.name" v-model="form.subscribed_events"
-                     class="mt-0.5 rounded border-border text-accent-600 focus:ring-accent-600" />
-              <span class="text-sm">
+          </p>
+          <div v-else class="space-y-2 rounded-lg border border-border-subtle bg-surface-sunken p-3">
+            <BaseCheckbox
+              v-for="event in availableEvents"
+              :key="event.name"
+              :id="'webhookEvent-' + event.name"
+              :model-value="form.subscribed_events.includes(event.name)"
+              :description="$t(event.description)"
+              @update:model-value="(checked) => toggleEvent(event.name, checked)"
+            >
+              <template #label>
                 <span class="font-mono text-xs">{{ event.name }}</span>
-                <span class="block text-xs text-text-subtle">{{ $t(event.description) }}</span>
-              </span>
-            </label>
+              </template>
+            </BaseCheckbox>
           </div>
-          <div v-if="form.errors.subscribed_events" class="text-danger text-xs mt-1">
+          <p v-if="form.errors.subscribed_events" class="mt-1 text-[11.5px] text-danger">
             {{ form.errors.subscribed_events }}
-          </div>
-        </div>
+          </p>
+        </fieldset>
+        <BaseCheckbox
+          id="webhookEndpointActive"
+          v-model="form.is_active"
+          :label="$t('Active')"
+        />
+      </form>
+      <template #footer>
+        <BaseUIButton
+          label="Cancel"
+          is-cancel-button
+          hide-icon
+          :disabled="form.processing"
+          @click="closeForm"
+        />
+        <BaseUIButton
+          type="submit"
+          form="webhookEndpointForm"
+          label="Save"
+          variant="primary"
+          icon="IconDeviceFloppy"
+          :processing="form.processing"
+          :disabled="form.processing"
+        />
+      </template>
+    </ArtworkBaseModal>
 
-        <label class="flex items-center gap-2 cursor-pointer mb-4">
-          <input type="checkbox" v-model="form.is_active"
-                 class="rounded border-border text-accent-600 focus:ring-accent-600" />
-          <span class="text-sm text-text-muted">{{ $t('Active') }}</span>
-        </label>
-
-        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-          <button @click="submitForm" type="button" :disabled="form.processing"
-                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-600 text-base font-medium text-white hover:bg-accent-700 sm:ml-3 sm:w-auto sm:text-sm">
-            {{ $t('Save') }}
-          </button>
-          <button @click="closeForm" type="button"
-                  class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken sm:mt-0 sm:w-auto sm:text-sm">
-            {{ $t('Cancel') }}
-          </button>
+    <ArtworkBaseModal
+      v-if="newSecret"
+      title="Endpoint secret"
+      modal-size="sm:max-w-lg"
+      @close="newSecret = null"
+    >
+      <div class="space-y-3">
+        <BaseAlertComponent
+          message="Store this secret in the receiving system now. It is not shown again."
+          use-translation
+          type="warning"
+        />
+        <div class="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-sunken p-3">
+          <code class="grow break-all font-mono text-xs text-text">{{ newSecret }}</code>
+          <BaseUIButton
+            label="Copy"
+            variant="ghost"
+            size="sm"
+            icon="IconClipboardCopy"
+            @click="copy(newSecret)"
+          />
         </div>
-      </div>
-    </BaseModal>
-
-    <BaseModal v-if="newSecret" @closed="newSecret = null" modalSize="sm:max-w-lg">
-      <div>
-        <h3 class="text-lg leading-6 font-medium text-text mb-4">{{ $t('Endpoint secret') }}</h3>
-        <p class="text-sm text-text-muted mb-3">
-          {{ $t('Store this secret in the receiving system now. It is not shown again.') }}
-        </p>
-        <div class="flex items-center bg-surface-sunken p-3 rounded border border-border-subtle">
-          <code class="text-xs break-all mr-2 flex-grow">{{ newSecret }}</code>
-          <button @click="copy(newSecret)" class="p-1 text-text-muted hover:bg-border-subtle rounded">
-            <IconClipboardCopy class="h-5 w-5" />
-          </button>
-        </div>
-        <p class="text-xs text-text-subtle mt-3">
+        <p class="text-xs text-text-muted">
           {{ $t('The receiver verifies the X-Artwork-Signature header as sha256=HMAC_SHA256(timestamp + "." + body, secret).') }}
         </p>
-        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-          <button @click="newSecret = null" type="button"
-                  class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken sm:mt-0 sm:w-auto sm:text-sm">
-            {{ $t('Close') }}
-          </button>
-        </div>
       </div>
-    </BaseModal>
+      <template #footer>
+        <BaseUIButton
+          label="Close"
+          variant="secondary"
+          hide-icon
+          @click="newSecret = null"
+        />
+      </template>
+    </ArtworkBaseModal>
 
     <confirmation-component
       v-if="endpointToDelete"
@@ -177,63 +207,99 @@
       @closed="handleDelete"
     />
 
-    <BaseModal v-if="deliveryEndpoint" @closed="deliveryEndpoint = null" modalSize="sm:max-w-4xl">
-      <div>
-        <h3 class="text-lg leading-6 font-medium text-text mb-4">
-          {{ $t('Deliveries') }}: {{ deliveryEndpoint.name }}
-        </h3>
-        <div v-if="loadingDeliveries" class="flex justify-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600"></div>
-        </div>
-        <div v-else-if="deliveries.data && deliveries.data.length" class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-border-subtle">
-            <thead class="bg-surface-sunken">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Date') }}</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Event') }}</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Status') }}</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Attempts') }}</th>
-                <th class="px-4 py-3 text-right text-xs font-medium text-text-subtle uppercase">{{ $t('Actions') }}</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-border-subtle">
-              <tr v-for="delivery in deliveries.data" :key="delivery.id">
-                <td class="px-4 py-3 whitespace-nowrap text-sm">{{ formatDate(delivery.created_at) }}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-mono text-xs">{{ delivery.event_name }}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm">
-                  <span :class="statusClass(delivery.status)" class="px-2 py-1 rounded text-xs font-semibold">
-                    {{ delivery.status }}<template v-if="delivery.response_status"> · {{ delivery.response_status }}</template>
-                  </span>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-text-subtle">{{ delivery.attempt }}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
-                  <!-- Nur erschöpfte Zustellungen: bei pending/failed läuft die Retry-Kette noch -->
-                  <button v-if="delivery.status === 'exhausted'" @click="redeliver(delivery)"
-                          class="text-accent-700 hover:underline">
-                    {{ $t('Send again') }}
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div v-else class="text-center py-8 text-text-subtle">{{ $t('No deliveries yet') }}</div>
+    <ArtworkBaseModal
+      v-if="deliveryEndpoint"
+      title="Deliveries"
+      :description="deliveryEndpoint.name"
+      modal-size="sm:max-w-4xl"
+      @close="closeDeliveries"
+    >
+      <div v-if="loadingDeliveries" class="flex justify-center py-8">
+        <PropertyIcon name="IconLoader2" class="size-6 animate-spin text-text-muted" aria-hidden="true"/>
+        <span class="sr-only">{{ $t('Loading...') }}</span>
       </div>
-    </BaseModal>
+      <div v-else-if="deliveries.data && deliveries.data.length" class="overflow-x-auto rounded-lg border border-border-subtle">
+        <table class="min-w-full divide-y divide-border-subtle">
+          <thead class="bg-surface-sunken">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase">{{ $t('Date') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase">{{ $t('Event') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase">{{ $t('Status') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase">{{ $t('Attempts') }}</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">{{ $t('Actions') }}</th>
+            </tr>
+          </thead>
+          <tbody class="bg-surface divide-y divide-border-subtle">
+            <tr v-for="delivery in deliveries.data" :key="delivery.id">
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-text">{{ formatDate(delivery.created_at) }}</td>
+              <td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-text">{{ delivery.event_name }}</td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
+                <span :class="statusClass(delivery.status)" class="px-2 py-1 rounded text-xs font-semibold">
+                  {{ delivery.status }}<template v-if="delivery.response_status"> · {{ delivery.response_status }}</template>
+                </span>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-text-muted">{{ delivery.attempt }}</td>
+              <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
+                <!-- Nur erschöpfte Zustellungen: bei pending/failed läuft die Retry-Kette noch -->
+                <BaseUIButton
+                  v-if="delivery.status === 'exhausted'"
+                  label="Send again"
+                  variant="ghost"
+                  size="sm"
+                  icon="IconSend"
+                  @click="redeliver(delivery)"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <EmptyState
+        v-else
+        icon="IconWebhook"
+        :title="$t('No deliveries yet')"
+      />
+      <template #footer>
+        <BaseUIButton
+          label="Close"
+          variant="secondary"
+          hide-icon
+          @click="closeDeliveries"
+        />
+      </template>
+    </ArtworkBaseModal>
   </div>
 </template>
 
 <script>
-import { IconClipboardCopy, IconPlus } from '@tabler/icons-vue'
+import { IconPlus } from '@tabler/icons-vue'
 import { defineComponent } from 'vue'
 import { useForm, router } from '@inertiajs/vue3'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import axios from 'axios'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
+import EmptyState from '@/Artwork/Feedback/EmptyState.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import dayjs from 'dayjs'
 
 export default defineComponent({
-  components: { SettingsGuideBanner, ConfirmationComponent, BaseModal, IconPlus, IconClipboardCopy },
+  components: {
+    SettingsGuideBanner,
+    ConfirmationComponent,
+    ArtworkBaseModal,
+    BaseUIButton,
+    BaseInput,
+    BaseCheckbox,
+    EmptyState,
+    PropertyIcon,
+    BaseAlertComponent,
+    IconPlus
+  },
   props: {
     endpoints: { type: Array, default: () => [] },
     availableEvents: { type: Array, default: () => [] }
@@ -272,7 +338,7 @@ export default defineComponent({
       this.editing = endpoint
       this.form.name = endpoint.name
       this.form.url = endpoint.url
-      this.form.subscribed_events = [...endpoint.subscribed_events]
+      this.form.subscribed_events = [...(endpoint.subscribed_events ?? [])]
       this.form.is_active = endpoint.is_active
       this.showFormModal = true
     },
@@ -281,12 +347,22 @@ export default defineComponent({
       this.editing = null
       this.form.clearErrors()
     },
+    toggleEvent(eventName, checked) {
+      const selected = this.form.subscribed_events.filter((name) => name !== eventName)
+      if (checked) {
+        selected.push(eventName)
+      }
+      this.form.subscribed_events = selected
+    },
     submitForm() {
+      if (this.form.processing) {
+        return
+      }
       const options = {
         preserveScroll: true,
         onSuccess: () => {
           this.showFormModal = false
-          // Nur beim Anlegen liefert der Server ein Geheimnis — es ist danach nicht mehr abrufbar.
+          // Nur beim Anlegen liefert der Server ein Geheimnis; danach ist es nicht mehr abrufbar.
           this.newSecret = this.$page.props.flash.webhookSecret ?? null
           this.editing = null
           this.form.reset()
@@ -305,7 +381,15 @@ export default defineComponent({
       }
       this.endpointToDelete = null
     },
+    closeDeliveries() {
+      this.deliveryEndpoint = null
+      this.deliveries = { data: [] }
+    },
     async showDeliveries(endpoint) {
+      // Liste des zuvor geöffneten Empfängers nicht stehen lassen (auch nicht bei Ladefehler)
+      if (this.deliveryEndpoint?.id !== endpoint.id) {
+        this.deliveries = { data: [] }
+      }
       this.deliveryEndpoint = endpoint
       this.loadingDeliveries = true
       try {
@@ -322,7 +406,12 @@ export default defineComponent({
     redeliver(delivery) {
       router.post(route('webhooks.deliveries.redeliver', delivery.id), {}, {
         preserveScroll: true,
-        onSuccess: () => this.showDeliveries(this.deliveryEndpoint)
+        onSuccess: () => {
+          // Modal kann inzwischen geschlossen sein
+          if (this.deliveryEndpoint) {
+            this.showDeliveries(this.deliveryEndpoint)
+          }
+        }
       })
     },
     copy(value) {

@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\Http\Resources;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Policies\UserPolicy;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /** @mixin User */
@@ -18,19 +19,25 @@ class UserIndexResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
+        $viewer = $request->user();
+        // Schichten anderer Personen (Termin, Raum, Zeiten) nur mit Dienstplan-Sicht, wie im Dienstplan selbst.
+        $mayViewShifts = $viewer instanceof User
+            && ($viewer->id === $this->id || UserPolicy::canViewForeignRoster($viewer));
+
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_photo_url,
+            'deactivated_at' => User::deactivatedAtFor($this->resource),
             'email' => $this->visibleEmailFor($request->user()),
             'departments' => $this->departments,
             'position' => $this->position,
             'business' => $this->business,
             'phone_number' => $this->visiblePhoneNumberFor($request->user()),
             'project_management' => $this->can(PermissionEnum::PROJECT_MANAGEMENT->value),
-            'shifts' => $this->getAttribute('shifts')->map(
+            'shifts' => !$mayViewShifts ? [] : $this->getAttribute('shifts')->map(
                 function (Shift $shift): array {
                     $event = $shift->getAttribute('event');
 

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Services;
 
+use Artwork\Modules\Budget\Services\BudgetCacheService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Budget\Services\ColumnRelevanceService;
@@ -42,6 +43,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as IlluminateCollection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProjectService
 {
@@ -52,6 +54,7 @@ class ProjectService
         private readonly CarbonService $carbonService,
         private readonly ProjectTeamNotificationService $projectTeamNotificationService,
         private readonly TicketingProductionService $ticketingProductionService,
+        private readonly BudgetCacheService $budgetCacheService,
     ) {
     }
 
@@ -776,6 +779,7 @@ class ProjectService
     public function syncCrmArtistContacts(Project $project, array $crmContactIds): void
     {
         $project->crmContacts()->sync($this->filterArtistCrmContactIds($crmContactIds));
+        app(ProjectArtistService::class)->refresh($project->id);
     }
 
     /**
@@ -889,17 +893,19 @@ class ProjectService
     /**
      * Replace the manager list without wiping other pivot flags: continuing
      * managers keep access_budget/can_write/roles (the previous detach-all +
-     * re-attach reset them on every project update).
+     * re-attach reset them on every project update). Who may change the list
+     * and who may become manager is decided by the caller
+     * (ProjectTeamService::mayChangeManagers / allowedManagerIds).
      */
     public function syncManagementUsers(Project $project, array $userIds): void
     {
         $newManagerIds = collect($userIds)->map(fn ($id) => (int) $id)->unique();
         $currentManagerIds = $project->managerUsers()->pluck('users.id');
 
-        // Managers removed from the list leave the project (previous behaviour).
-        $removedIds = $currentManagerIds->diff($newManagerIds);
-        if ($removedIds->isNotEmpty()) {
-            $project->users()->detach($removedIds->all());
+        // Removed managers stay in the team and only lose the manager flag; this path
+        // must never evict people from the project.
+        foreach ($currentManagerIds->diff($newManagerIds) as $removedId) {
+            $project->users()->updateExistingPivot($removedId, ['is_manager' => false]);
         }
 
         $existingUserIds = $project->users()->pluck('users.id');
@@ -928,6 +934,42 @@ class ProjectService
     public function updateProject(Project $project, array $data): Project
     {
         $this->projectRepository->update($project, $data);
+        return $project;
+    }
+
+    /**
+     * Wandelt ein Projekt in eine Projektgruppe um oder umgekehrt.
+     *
+     * Projekt → Gruppe: bisherige Gruppenzugehörigkeiten werden gelöst (Gruppen lassen sich
+     * nicht verschachteln). Gruppe → Projekt: die Verbindung zu den Unterprojekten wird gelöst,
+     * die Unterprojekte selbst bleiben als eigenständige Projekte erhalten.
+     *
+     * Die Budget-Payloads aller beteiligten Projekte (eigenes, bisherige Gruppen, bisherige Unterprojekte)
+     * enthalten Gruppensummen bzw. die Spalte "Unterprojekte" und werden deshalb verworfen. Die IDs werden
+     * vor dem Lösen gesammelt, danach wären die alten Verbindungen nicht mehr auffindbar.
+     */
+    public function changeProjectType(Project $project, bool $isGroup): Project
+    {
+        $affectedProjectIds = array_values(array_unique([
+            $project->id,
+            ...$project->groups()->pluck('projects.id')->all(),
+            ...$project->projectsOfGroup()->pluck('projects.id')->all(),
+        ]));
+
+        DB::transaction(function () use ($project, $isGroup): void {
+            if ($isGroup) {
+                $project->groups()->detach();
+            } else {
+                $project->projectsOfGroup()->detach();
+            }
+
+            $this->projectRepository->update($project, ['is_group' => $isGroup]);
+        });
+
+        foreach ($affectedProjectIds as $affectedProjectId) {
+            $this->budgetCacheService->forgetBudgetPayload((int) $affectedProjectId);
+        }
+
         return $project;
     }
 

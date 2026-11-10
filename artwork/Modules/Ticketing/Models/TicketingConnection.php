@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $api_key
  * @property string $oauth_client_id
  * @property int|null $connected_by_user_id
+ * @property Carbon|null $live_at
  * @property Carbon|null $customers_synced_at
  * @property Carbon|null $customers_sync_started_at
  * @property string|null $customers_sync_cursor
@@ -38,6 +39,7 @@ class TicketingConnection extends Model
         'api_key',
         'oauth_client_id',
         'connected_by_user_id',
+        'live_at',
         'customers_synced_at',
         'customers_sync_started_at',
         'customers_sync_cursor',
@@ -46,6 +48,7 @@ class TicketingConnection extends Model
 
     protected $casts = [
         'api_key' => 'encrypted',
+        'live_at' => 'datetime',
         'customers_synced_at' => 'datetime',
         'customers_sync_started_at' => 'datetime',
     ];
@@ -53,6 +56,15 @@ class TicketingConnection extends Model
     protected $hidden = [
         'api_key',
     ];
+
+    /**
+     * Testmodus: das Haus verkauft mit Testzahlungen hinter einem Shop-Zugang, und das CRM übernimmt
+     * keine Käufer. Endet mit dem Live-Schalten.
+     */
+    public function isTestMode(): bool
+    {
+        return $this->live_at === null;
+    }
 
     /** @return BelongsTo<User, $this> */
     public function connectedBy(): BelongsTo

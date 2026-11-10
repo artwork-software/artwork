@@ -185,21 +185,6 @@ final class RoomControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function free_rooms_require_a_valid_period_of_at_most_one_year(): void
-    {
-        $this->actingAsAdmin();
-
-        $this->getJson(route('rooms.free'))->assertJsonValidationErrors(['start', 'end']);
-        $this->getJson(route('rooms.free', ['start' => 'kein-datum', 'end' => '2026-10-10']))
-            ->assertJsonValidationErrors('start');
-        $this->getJson(route('rooms.free', ['start' => '2026-01-01', 'end' => '2027-06-01']))
-            ->assertJsonValidationErrors('end');
-        $this->getJson(route('rooms.free', ['start' => '2026-10-01', 'end' => '2026-10-03']))
-            ->assertOk()
-            ->assertJsonStructure(['rooms']);
-    }
-
-    #[Test]
     public function admin_can_update_room(): void
     {
         $this->actingAsAdmin();
@@ -306,6 +291,55 @@ final class RoomControllerTest extends FeatureTestCase
         $this->patch(route('rooms.update', $room), ['name' => $room->name, 'capacity' => ''])
             ->assertSessionHasNoErrors();
         $this->assertNull($room->fresh()->capacity);
+    }
+
+    #[Test]
+    public function address_is_stored_on_create_and_update_and_reaches_the_edit_modals(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $area = Area::factory()->create();
+
+        $this->post(route('rooms.store'), [
+            'name' => 'Hotel Börse',
+            'area_id' => $area->id,
+            'user_id' => $admin->id,
+            'street' => 'Untermarkt 16',
+            'zip_code' => '02826',
+            'city' => 'Görlitz',
+        ])->assertSessionHasNoErrors();
+        $hotel = Room::query()->where('name', 'Hotel Börse')->firstOrFail();
+        $this->assertSame('Untermarkt 16, 02826 Görlitz', $hotel->formattedAddress());
+
+        $this->patch(route('rooms.update', $hotel), [
+            'name' => 'Hotel Börse',
+            'street' => '',
+            'zip_code' => '02826',
+            'city' => 'Görlitz',
+        ])->assertSessionHasNoErrors();
+        $hotel->refresh();
+        $this->assertNull($hotel->street);
+        $this->assertSame('02826 Görlitz', $hotel->formattedAddress());
+
+        $this->get(route('rooms.show', $hotel))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('room.zip_code', '02826')
+            ->where('room.city', 'Görlitz'));
+        $this->get(route('areas.management'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('areas', fn ($areas) => collect($areas)->flatMap(fn ($area) => $area['rooms'])
+                ->contains(fn ($row) => $row['id'] === $hotel->id && $row['city'] === 'Görlitz')));
+    }
+
+    #[Test]
+    public function address_fields_are_validated_and_empty_address_is_null(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create(['street' => null, 'zip_code' => null, 'city' => null]);
+
+        $this->patch(route('rooms.update', $room), ['name' => $room->name, 'zip_code' => str_repeat('1', 21)])
+            ->assertSessionHasErrors('zip_code');
+        $this->patch(route('rooms.update', $room), ['name' => $room->name, 'street' => ['Array']])
+            ->assertSessionHasErrors('street');
+
+        $this->assertNull($room->fresh()->formattedAddress());
     }
 
     #[Test]
@@ -516,20 +550,5 @@ final class RoomControllerTest extends FeatureTestCase
 
         $response->assertOk();
         $this->assertIsArray($response->json());
-    }
-
-    #[Test]
-    public function admin_can_get_all_day_free_rooms(): void
-    {
-        $this->actingAsAdmin();
-        Room::factory()->count(2)->create();
-
-        $response = $this->getJson(route('rooms.free', [
-            'start' => '2026-01-01',
-            'end' => '2026-01-02',
-        ]));
-
-        $response->assertOk();
-        $response->assertJsonStructure(['rooms']);
     }
 }

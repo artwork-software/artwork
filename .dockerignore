@@ -1,0 +1,14 @@
+# Secrets und lokale Zustände gehören nie ins Image: docker-compose bindet .env und storage
+# zur Laufzeit ein. Abhängigkeiten installiert der Entrypoint beim Start.
+.git
+.env
+.env.*
+!.env.example
+auth.json
+storage/*.key
+storage/app/setup-token.sha256
+storage/logs/*
+storage/framework/sessions/*
+storage/framework/cache/data/*
+.claude
+.ddev

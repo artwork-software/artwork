@@ -80,6 +80,7 @@
 </template>
 
 <script setup>
+import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -146,6 +147,7 @@ function notApplicableLabel(reason) {
 function displayValue(value, fieldType) {
     if (fieldType === 'checkbox') return value === '1' ? $t('Yes') : $t('No')
     if (value === null || value === '' || value === undefined) return '—'
+    if (fieldType === 'multiselect') return crmPropertyDisplayText(value, fieldType) || '—'
     return value
 }
 

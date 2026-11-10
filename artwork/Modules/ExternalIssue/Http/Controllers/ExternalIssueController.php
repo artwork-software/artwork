@@ -87,6 +87,8 @@ class ExternalIssueController extends Controller
         $issuesQuery = ExternalIssue::with([
             'files',
             'articles', 'articles.images',
+            // $appends room/manufacturer/category/subCategory – sonst drei Abfragen je Artikel
+            'articles.properties', 'articles.category', 'articles.subCategory',
             'specialItems',
             'issuedBy',
             'receivedBy',
@@ -144,12 +146,13 @@ class ExternalIssueController extends Controller
         return Inertia::render('IssueOfMaterial/ExternIssueOfMaterialManagement', [
             'issues' => $issues,
             'articlesInFilter' => !empty($articleIds)
-                ? InventoryArticle::whereIn('id', $articleIds)->get()
+                ? InventoryArticle::with(['properties', 'category', 'subCategory'])->whereIn('id', $articleIds)->get()
                 : [],
             'materialSets' => MaterialSet::with(
                 'items.article',
                 'items.article.category',
-                'items.article.subCategory'
+                'items.article.subCategory',
+                'items.article.properties'
             )->get(),
             'detailedArticle' => Inertia::optional(fn () =>
             InventoryArticle::with([

@@ -63,6 +63,24 @@ final class EventExportDownloadTest extends FeatureTestCase
             ->assertDownload();
     }
 
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function downloadRoutes(): array
+    {
+        return array_map(static fn (array $route): array => [$route[0]], self::exportRoutes());
+    }
+
+    #[Test]
+    #[DataProvider('downloadRoutes')]
+    public function expired_or_used_export_link_shows_a_hint_instead_of_redirecting(string $downloadRoute): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route($downloadRoute, ['cacheToken' => 'abgelaufen-' . uniqid()]))
+            ->assertStatus(410)
+            ->assertSee('The export link has expired. Please start the export again.');
+    }
+
     private function cacheExportConfiguration(User $user, Project $project, string $type): string
     {
         return $this->actingAs($user)

@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class TaskController extends Controller
 {
@@ -95,7 +96,7 @@ class TaskController extends Controller
                         $checklist->name
                     ])
             );
-            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($checklist->project_id), true);
         }
 
         $this->createNotificationForAllChecklistUser($checklist);
@@ -151,7 +152,7 @@ class TaskController extends Controller
                             $checklist->name
                         ])
                 );
-                broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+                SafeBroadcast::send(new ChecklistUpdated($checklist->project_id), true);
             }
 
             $this->createNotificationUpdateTask($task);
@@ -210,7 +211,7 @@ class TaskController extends Controller
                         $checklist->name
                     ])
             );
-            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($checklist->project_id), true);
         }
 
         $task->forceDelete();
@@ -229,7 +230,7 @@ class TaskController extends Controller
 
         $checklist = $task->checklist()->first();
         if ($checklist && $checklist->hasProject()) {
-            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($checklist->project_id), true);
         }
 
         return Redirect::back();
@@ -247,12 +248,12 @@ class TaskController extends Controller
 
         // Broadcast for old checklist's project
         if ($oldChecklist && $oldChecklist->hasProject()) {
-            broadcast(new ChecklistUpdated($oldChecklist->project_id))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($oldChecklist->project_id), true);
         }
 
         // Broadcast for new checklist's project
         if ($checklist->hasProject()) {
-            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+            SafeBroadcast::send(new ChecklistUpdated($checklist->project_id), true);
         }
     }
 }

@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Notification\Services;
 
 use Artwork\Modules\Availability\Models\Availability;
+use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -113,9 +114,15 @@ class NotificationDialogDataService
         if ($historyType === 'project') {
             $project = Project::find($modelId);
 
-            return $project !== null && $gate->allows('view', $project)
-                ? $this->changeService->historyForFrontend($project)
-                : [];
+            if ($project === null || $gate->denies('view', $project)) {
+                return [];
+            }
+
+            $history = $this->changeService->historyForFrontend($project);
+
+            return EnsureUserCanAccessProjectBudget::canAccessProjectBudget($viewer, $project)
+                ? $history
+                : $this->changeService->withoutBudgetEntries($history);
         }
 
         if ($historyType === 'event') {

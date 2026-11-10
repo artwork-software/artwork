@@ -86,7 +86,10 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property string $first_name
  * @property string $last_name
  * @property string $email
+ * @property string|null $pending_email
  * @property Carbon $email_verified_at
+ * @property Carbon|null $deactivated_at
+ * @property int|null $deactivated_by
  * @property string $phone_number
  * @property string $password
  * @property string $two_factor_secret
@@ -221,6 +224,14 @@ class User extends Model implements
     use HasCrmFields;
     use DeletesMirroredCrmContact;
 
+    /**
+     * Felder einer Person, die nur als Avatar mit Namens-Tooltip erscheint
+     * (Kontaktdaten lädt der Tooltip bei Bedarf nach). deactivated_at färbt den Avatar grau.
+     *
+     * @var list<string>
+     */
+    public const AVATAR_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url', 'deactivated_at'];
+
     // All permissions/roles live on the web guard. Without this pin, spatie
     // resolves the guard from auth.defaults.guard, which Authenticate/shouldUse
     // switches to 'api' for Passport requests (app API) — every permission
@@ -305,6 +316,7 @@ class User extends Model implements
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'deactivated_at' => 'datetime',
         'opened_checklists' => 'array',
         'opened_areas' => 'array',
         'toggle_hints' => 'boolean',
@@ -329,6 +341,7 @@ class User extends Model implements
         'checklist_completed_tasks' => 'boolean',
         'checklist_show_without_tasks' => 'boolean',
         'is_developer' => 'boolean',
+        'is_deleted_placeholder' => 'boolean',
         'show_qualifications' => 'array',
         'sort_workers_by_qualification' => 'boolean',
         'closed_qualification_groups' => 'array',
@@ -340,6 +353,8 @@ class User extends Model implements
         'shift_plan_daily_view' => 'boolean',
         'share_calendar_date' => 'boolean',
         'bulk_column_size' => 'array',
+        // zuletzt im Künstlerplan gewählte Terminarten (Vorauswahl beim nächsten Export)
+        'artist_plan_event_type_ids' => 'array',
         'show_description_in_bulk' => 'boolean',
         'shift_period_on_start_date_change' => 'boolean',
         'show_project_team_names' => 'boolean',
@@ -350,24 +365,36 @@ class User extends Model implements
     ];
 
     /**
-     * Gehaltsfelder sind versteckt; legitime Ausgabe nur über UserShowResource (greift direkt auf das
-     * Attribut zu) hinter der Vertrags-Sichtprüfung.
+     * Gehalts-, Vertrags- und Zeitkontofelder sowie IdP-Kennungen sind versteckt: rohe User-Models
+     * landen in Suchen, Chats, Broadcasts und Verläufen. Legitime Ausgabe nur über Resources (z. B.
+     * UserShowResource, greift direkt auf das Attribut zu) hinter der jeweiligen Sichtprüfung.
      */
     protected $hidden = [
         'password',
+        // reine Vorauswahl des Künstlerplans, gehört in keinen Payload
+        'artist_plan_event_type_ids',
+        'pending_email',
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
         'salary_per_hour',
         'salary_description',
         'weekly_working_hours',
+        'is_deleted_placeholder',
+        'work_time_balance',
+        'employStart',
+        'employEnd',
+        'temporary',
+        'auth_provider_id',
+        'ad_identifier',
+        'is_developer',
+        'deactivated_by',
     ];
 
     protected $appends = [
         'profile_photo_url',
         'full_name',
         'type',
-        'formated_work_time_balance',
     ];
 
     /**
@@ -518,7 +545,18 @@ class User extends Model implements
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function calendar_settings(): HasOne
     {
-        return $this->hasOne(UserCalendarSettings::class);
+        return $this->hasOne(UserCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserCalendarSettings::SCOPE_CALENDAR]);
+    }
+
+    /**
+     * Anzeigeeinstellungen des Planungskalenders (eigene Zeile, unabhängig vom Kalender).
+     * @return HasOne<UserCalendarSettings, $this>
+     */
+    public function planningCalendarSettings(): HasOne
+    {
+        return $this->hasOne(UserCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserCalendarSettings::SCOPE_PLANNING]);
     }
 
     /**
@@ -528,7 +566,46 @@ class User extends Model implements
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function daily_view_calendar_settings(): HasOne
     {
-        return $this->hasOne(UserDailyViewCalendarSettings::class);
+        return $this->hasOne(UserDailyViewCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserDailyViewCalendarSettings::SCOPE_CALENDAR]);
+    }
+
+    /**
+     * Tagesansicht-Einstellungen des Planungskalenders.
+     * @return HasOne<UserDailyViewCalendarSettings, $this>
+     */
+    public function planningDailyViewCalendarSettings(): HasOne
+    {
+        return $this->hasOne(UserDailyViewCalendarSettings::class)
+            ->withAttributes(['calendar_scope' => UserDailyViewCalendarSettings::SCOPE_PLANNING]);
+    }
+
+    /**
+     * Einstellungszeile der jeweiligen Kalenderansicht; fehlt sie (neues Konto), wird sie angelegt.
+     */
+    public function calendarSettingsFor(
+        bool $isPlanning,
+        bool $isDailyView
+    ): UserCalendarSettings|UserDailyViewCalendarSettings {
+        $relation = match (true) {
+            $isPlanning && $isDailyView => 'planningDailyViewCalendarSettings',
+            $isPlanning => 'planningCalendarSettings',
+            $isDailyView => 'daily_view_calendar_settings',
+            default => 'calendar_settings',
+        };
+
+        // Planungszeilen nicht als Relation cachen: auth.user würde sie sonst zusätzlich serialisieren
+        $settings = $isPlanning && !$this->relationLoaded($relation)
+            ? $this->{$relation}()->first()
+            : $this->getAttribute($relation);
+        if ($settings === null) {
+            $settings = $this->{$relation}()->create();
+            if (!$isPlanning) {
+                $this->setRelation($relation, $settings);
+            }
+        }
+
+        return $settings;
     }
 
     /**
@@ -875,8 +952,10 @@ class User extends Model implements
             'profile_photo_path' => $this->profile_photo_path,
             'position' => $this->position,
             'business' => $this->business,
-            'phone_number' => $this->phone_number,
-            'email' => $this->email,
+            // Als privat markierte Kontaktdaten nicht in den Suchindex: sonst ließe sich über die Suche
+            // prüfen, wem eine Adresse/Nummer gehört.
+            'phone_number' => $this->phone_private ? null : $this->phone_number,
+            'email' => $this->email_private ? null : $this->email,
             'use_chat' => $this->use_chat,
         ];
     }
@@ -1135,19 +1214,88 @@ class User extends Model implements
             });
     }
     /**
-     * Exclude the placeholder "Deleted user" from Scout indexing
+     * Exclude the placeholder "Deleted user" from Scout indexing. Deaktivierte Accounts fallen ebenfalls
+     * heraus – damit tauchen sie in keiner Personensuche (Team, Schicht, Aufgaben, Chat …) mehr auf.
      */
     public function shouldBeSearchable(): bool
     {
-        return $this->email !== config('artwork.deleted_user_email', 'deleted-user@artwork.local');
+        return !$this->is_deleted_placeholder && !$this->isDeactivated();
     }
 
     /**
-     * Convenience scope to hide the placeholder user in queries
+     * Payload-Feld deactivated_at (ISO-8601) für Avatare und Tooltips: null für aktive Accounts und für
+     * Nicht-User (Freelancer, Dienstleister, CRM-Kontakte) – so auch in gemischten Personenlisten nutzbar.
+     */
+    public static function deactivatedAtFor(mixed $subject): ?string
+    {
+        if (!$subject instanceof self) {
+            return null;
+        }
+        $deactivatedAt = $subject->getAttribute('deactivated_at');
+
+        return $deactivatedAt instanceof \DateTimeInterface ? $deactivatedAt->format(DATE_ATOM) : null;
+    }
+
+    /**
+     * Deaktiviert: Login gesperrt, Account samt Zuordnungen bleibt erhalten und sichtbar.
+     */
+    public function isDeactivated(): bool
+    {
+        return $this->getAttribute('deactivated_at') !== null;
+    }
+
+    /**
+     * Ist der Account an diesem Tag (oder später) deaktiviert? Ab dem Deaktivierungstag gilt kein Soll mehr.
+     */
+    public function isDeactivatedOn(Carbon $day): bool
+    {
+        $deactivatedAt = $this->getAttribute('deactivated_at');
+
+        return $deactivatedAt !== null && $day->copy()->startOfDay()->gte($deactivatedAt->copy()->startOfDay());
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<self, $this>
+     */
+    public function deactivatedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(self::class, 'deactivated_by', 'id', 'deactivatedBy');
+    }
+
+    public function scopeActive(Builder $builder): Builder
+    {
+        return $builder->whereNull($builder->qualifyColumn('deactivated_at'));
+    }
+
+    public function scopeDeactivated(Builder $builder): Builder
+    {
+        return $builder->whereNotNull($builder->qualifyColumn('deactivated_at'));
+    }
+
+    /**
+     * Aktive Personen plus deaktivierte, die im Zeitraum noch Schichten haben (Dienstplan: bestehende
+     * Zuteilungen bleiben sichtbar). Ohne Zeitraum nur aktive.
+     */
+    public function scopeActiveOrWithShiftsBetween(Builder $builder, ?Carbon $start, ?Carbon $end): Builder
+    {
+        return $builder->where(function (Builder $query) use ($start, $end): void {
+            $query->whereNull($query->qualifyColumn('deactivated_at'));
+            if ($start !== null && $end !== null) {
+                $query->orWhereHas('shifts', function (Builder $shiftQuery) use ($start, $end): void {
+                    $shiftQuery->where('shifts.start_date', '<=', $end)
+                        ->where('shifts.end_date', '>=', $start);
+                });
+            }
+        });
+    }
+
+    /**
+     * Convenience scope to hide the placeholder user in queries. Über das Flag, nie über die E-Mail:
+     * eine Adresse kann sich jedes Konto selbst geben.
      */
     public function scopeExcludeDeletedPlaceholder(Builder $builder): Builder
     {
-        return $builder->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+        return $builder->where($builder->qualifyColumn('is_deleted_placeholder'), false);
     }
 
     /**

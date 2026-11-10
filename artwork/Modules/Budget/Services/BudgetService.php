@@ -10,9 +10,11 @@ use Artwork\Modules\Budget\Models\BudgetManagementCostUnit;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\SageAssignedDataComment;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
+use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
@@ -20,6 +22,7 @@ use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -219,6 +222,8 @@ class BudgetService
             $table = $project->table()->first();
         }
 
+        $tableId = (int) $table->id;
+
         // Try loading from Redis cache
         $cachedPayload = $this->budgetCacheService->getBudgetPayload($project->id);
 
@@ -229,18 +234,25 @@ class BudgetService
 
         $table = $cachedPayload['table'];
 
-        // Request-specific data (always fresh)
+        // Request-specific data (always fresh). Ausgewählte Zellen/Zeilen/Summen nur aus der Tabelle
+        // dieses Projekts – sonst ließen sich über die Query-Parameter fremde Budgets lesen.
         $selectedCell = request('selectedCell')
-            ? ColumnCell::find(request('selectedCell'))
+            ? ColumnCell::query()
+                ->whereKey(request('selectedCell'))
+                ->whereIn('column_id', $this->columnIdsOfTable($tableId))
+                ->first()
             : null;
 
         $selectedRow = request('selectedRow')
-            ? SubPositionRow::find(request('selectedRow'))
+            ? SubPositionRow::query()
+                ->whereKey(request('selectedRow'))
+                ->whereIn('sub_position_id', $this->subPositionIdsOfTable($tableId))
+                ->first()
             : null;
 
         $templates = $this->budgetCacheService->getTemplates();
 
-        $selectedSumDetail = $this->resolveSelectedSumDetail();
+        $selectedSumDetail = $this->resolveSelectedSumDetail($tableId);
 
         //load commented budget items setting for given user
         Auth::user()->load(['commentedBudgetItemsSetting']);
@@ -491,8 +503,47 @@ class BudgetService
         return $calculateNames;
     }
 
-    private function resolveSelectedSumDetail(): ?array
+    /**
+     * @return Builder<Column>
+     */
+    private function columnIdsOfTable(int $tableId): Builder
     {
+        return Column::query()->select('id')->where('table_id', $tableId);
+    }
+
+    /**
+     * @return Builder<SubPosition>
+     */
+    private function subPositionIdsOfTable(int $tableId): Builder
+    {
+        return SubPosition::query()
+            ->select('id')
+            ->whereIn('main_position_id', MainPosition::query()->select('id')->where('table_id', $tableId));
+    }
+
+    private function resolveSelectedSumDetail(int $tableId): ?array
+    {
+        // Summen-Details werden beim ersten Öffnen angelegt – nur für Spalten/Positionen dieser Tabelle.
+        $columnBelongsToTable = request('selectedColumn')
+            && $this->columnIdsOfTable($tableId)->whereKey(request('selectedColumn'))->exists();
+        if (!$columnBelongsToTable) {
+            return null;
+        }
+
+        if (
+            request('selectedSubPosition')
+            && !$this->subPositionIdsOfTable($tableId)->whereKey(request('selectedSubPosition'))->exists()
+        ) {
+            return null;
+        }
+
+        if (
+            request('selectedMainPosition')
+            && !MainPosition::query()->whereKey(request('selectedMainPosition'))->where('table_id', $tableId)->exists()
+        ) {
+            return null;
+        }
+
         if (request('selectedSubPosition') && request('selectedColumn')) {
             $sumDetail = SubPositionSumDetail::firstOrCreate([
                 'sub_position_id' => request('selectedSubPosition'),

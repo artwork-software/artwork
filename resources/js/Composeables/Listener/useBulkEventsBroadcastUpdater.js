@@ -3,6 +3,7 @@
 import { onMounted, onUnmounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { can, is } from 'laravel-permission-to-vuejs';
+import { canViewPlanning } from '@/Helper/planningRights.js';
 
 // eventsRef: Vue ref auf die Events-Liste (eventsRef.value = array)
 // projectId: ref oder getter für die Projekt-ID – nur Events dieses Projekts werden verarbeitet.
@@ -17,7 +18,7 @@ export function useBulkEventsBroadcastUpdater(eventsRef, projectId, options = {}
     // Geplante Termine kommen vollständig nur auf bulk.events.planning (Planungskalender-Recht); auf bulk.events
     // steht für sie nur ein Hinweis ohne Inhalt ({id, project_id, redacted: true})
     function canSeePlannedEvents() {
-        return is('artwork admin') || can('can see planning calendar') || can('can edit planning calendar');
+        return canViewPlanning({ isAdmin: is('artwork admin'), can });
     }
 
     function getUserBulkSortId() {

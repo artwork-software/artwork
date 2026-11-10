@@ -101,7 +101,7 @@
                 row-key="email"
                 v-model:page="page"
                 empty-title="Keine Adressen"
-                empty-message="Derzeit sind keine Einträge vorhanden."
+                empty-message="No entries available"
             >
 
                 <!-- Name (Avatar + Name + Email) -->
@@ -139,44 +139,43 @@
 
 
             <!-- Delete Modal -->
-            <BaseModal
+            <ArtworkBaseModal
                 v-if="deletingUser"
-                @closed="closeDeleteUserModal"
-                modal-image="/Svgs/Overlays/illu_warning.svg"
+                :title="deleteUserModalTitle"
+                modal-size="sm:max-w-lg"
+                @close="closeDeleteUserModal"
             >
-                <div class="mx-4">
-                    <div class="my-2 text-2xl font-bold text-text">
-                        <span v-if="userToDelete?.type === 'user'">{{ $t('Delete user') }}</span>
-                        <span v-else-if="userToDelete?.type === 'freelancer'">{{ $t('Delete freelancer') }}</span>
-                        <span v-else-if="userToDelete?.type === 'service_provider'">{{ $t('Delete service provider') }}</span>
-                    </div>
-
-                    <div class="text-sm text-danger">
-          <span v-if="userToDelete?.type === 'user' || userToDelete?.type === 'freelancer'">
-            {{
-                  $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
-                      last_name: userToDelete?.last_name,
-                      first_name: userToDelete?.first_name
-                  })
-              }}
-          </span>
-                        <span v-else-if="userToDelete?.type === 'service_provider'">
-            {{
-                                $t('Are you sure you want to delete { serviceProvider } from the system?', {
-                                    serviceProvider: userToDelete?.provider_name
-                                })
-                            }}
-          </span>
-                    </div>
-
-                    <div class="mt-6 flex items-center justify-between">
-                        <BaseUIButton :label="$t('Delete')" is-delete-button @click="deleteUser" />
-                        <button @click="closeDeleteUserModal" class="text-sm text-text-subtle hover:text-text">
-                            {{ $t('No, not really') }}
-                        </button>
-                    </div>
-                </div>
-            </BaseModal>
+                <p class="text-sm text-text">
+                    <template v-if="userToDelete?.type === 'user' || userToDelete?.type === 'freelancer'">
+                        {{ $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
+                            last_name: userToDelete?.last_name,
+                            first_name: userToDelete?.first_name
+                        }) }}
+                    </template>
+                    <template v-else-if="userToDelete?.type === 'service_provider'">
+                        {{ $t('Are you sure you want to delete { serviceProvider } from the system?', {
+                            serviceProvider: userToDelete?.provider_name
+                        }) }}
+                    </template>
+                </p>
+                <template #footer>
+                    <BaseUIButton
+                        label="No, not really"
+                        is-cancel-button
+                        hide-icon
+                        :disabled="deletingUserProcessing"
+                        @click="closeDeleteUserModal"
+                    />
+                    <BaseUIButton
+                        label="Delete"
+                        variant="danger"
+                        icon="IconTrash"
+                        :processing="deletingUserProcessing"
+                        :disabled="!userToDelete?.id"
+                        @click="deleteUser"
+                    />
+                </template>
+            </ArtworkBaseModal>
 
             <!-- Success Modal -->
             <SuccessModal
@@ -561,9 +560,8 @@ import {
 import {IconAddressBook, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconTrash} from "@tabler/icons-vue"
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import UserHeader from '@/Pages/Users/UserHeader.vue'
 import AddUsersModal from '@/Pages/Users/Components/AddUsersModal.vue'
 import { is, can } from 'laravel-permission-to-vuejs'
@@ -606,6 +604,7 @@ const addingUser = ref(false)
 const openSelectAddUsersModal = ref(false)
 const deletingUser = ref(false)
 const userToDelete = ref(null)
+const deletingUserProcessing = ref(false)
 const showSuccessModal = ref(false)
 
 /* Search + sort */
@@ -676,8 +675,13 @@ const closeDeleteUserModal = () => {
     userToDelete.value = null
     deletingUser.value = false
 }
+const deleteUserModalTitle = computed(() => ({
+    user: 'Delete user',
+    freelancer: 'Delete freelancer',
+    service_provider: 'Delete service provider',
+}[userToDelete.value?.type] ?? 'Delete'))
 const deleteUser = () => {
-    if (!userToDelete.value) return
+    if (!userToDelete.value || deletingUserProcessing.value) return
     let desiredRoute = null
     const u = userToDelete.value
     switch (u.type) {
@@ -692,8 +696,10 @@ const deleteUser = () => {
             break
     }
     if (desiredRoute) {
+        deletingUserProcessing.value = true
         router.delete(desiredRoute, {
             onSuccess: () => closeDeleteUserModal(),
+            onFinish: () => (deletingUserProcessing.value = false),
         })
     }
 }

@@ -3,12 +3,15 @@
 namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\Validation\Rules\HexColorRule;
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Artwork\Modules\Crm\Events\CrmSettingsChanged;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Services\CrmContactTypeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class CrmContactTypeController extends Controller
 {
@@ -21,8 +24,8 @@ class CrmContactTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'icon' => 'nullable|string',
-            'color' => 'nullable|string',
+            'icon' => ['nullable', 'string', new IconNameRule()],
+            'color' => ['nullable', 'string', new HexColorRule()],
             'properties' => 'sometimes|array',
             'properties.*.id' => 'required|integer|exists:crm_properties,id',
             'properties.*.is_required' => 'boolean',
@@ -42,7 +45,7 @@ class CrmContactTypeController extends Controller
             $this->service->syncProperties($type, $properties);
         }
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -65,8 +68,8 @@ class CrmContactTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'icon' => 'nullable|string',
-            'color' => 'nullable|string',
+            'icon' => ['nullable', 'string', new IconNameRule()],
+            'color' => ['nullable', 'string', new HexColorRule()],
             'is_active' => 'sometimes|boolean',
             'sort_order' => 'sometimes|integer',
             'properties' => 'sometimes|array',
@@ -86,7 +89,7 @@ class CrmContactTypeController extends Controller
             $this->service->syncProperties($crmContactType, $properties);
         }
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -101,7 +104,7 @@ class CrmContactTypeController extends Controller
 
         $this->service->reorder($validated['types']);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -119,7 +122,7 @@ class CrmContactTypeController extends Controller
 
         $this->service->syncProperties($crmContactType, $validated['properties']);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -128,7 +131,7 @@ class CrmContactTypeController extends Controller
     {
         $this->service->destroy($crmContactType);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }

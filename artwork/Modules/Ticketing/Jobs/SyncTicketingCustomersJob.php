@@ -13,7 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Holt die Käufer aus Artwork-Tickets ins CRM — nachts und auf Knopfdruck. Höchstens ein Lauf auf
+ * Holt die Käufer aus Artwork-Tickets ins CRM — nachts und auf Knopfdruck, erst ab dem Live-Schalten. Höchstens ein Lauf auf
  * einmal; ist tickets nicht erreichbar oder am Limit, macht ein späterer Versuch an derselben Seite weiter.
  */
 class SyncTicketingCustomersJob implements ShouldQueue, ShouldBeUnique
@@ -36,7 +36,8 @@ class SyncTicketingCustomersJob implements ShouldQueue, ShouldBeUnique
     {
         $connection = $connections->current();
 
-        if (!$connection) {
+        // Im Testmodus kauft niemand wirklich: solche Käufer gehören nicht ins CRM.
+        if (!$connection || $connection->isTestMode()) {
             return;
         }
 

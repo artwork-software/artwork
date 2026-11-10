@@ -57,9 +57,15 @@ final class CrmPropertyTypeEnumTest extends UnitTestCase
     }
 
     #[Test]
-    public function it_has_eight_cases(): void
+    public function it_has_multiselect_case(): void
     {
-        $this->assertCount(8, CrmPropertyTypeEnum::cases());
+        $this->assertSame('multiselect', CrmPropertyTypeEnum::MULTISELECT->value);
+    }
+
+    #[Test]
+    public function it_has_nine_cases(): void
+    {
+        $this->assertCount(9, CrmPropertyTypeEnum::cases());
     }
 
     #[Test]

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Modules\Project\Services\ProjectTeamService;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -26,6 +27,7 @@ use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Str;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftUserService
 {
@@ -141,7 +143,7 @@ class ShiftUserService
         $vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
         $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $notificationService, $user);
 
-        broadcast(new ShiftAssigned($user, $shift));
+        SafeBroadcast::send(new ShiftAssigned($user, $shift));
     }
 
     private function assignUserToProjectIfNecessary(Shift $shift, User $user): void
@@ -149,7 +151,7 @@ class ShiftUserService
         $project = $shift->event?->project;
 
         if ($project && ! $project->users->contains($user->id)) {
-            $project->users()->attach($user->id);
+            $project->users()->attach($user->id, ProjectTeamService::IMPLICIT_MEMBER_PIVOT);
             $this->projectTeamNotificationService->notifyAddedToTeam($project, [$user->id]);
         }
     }

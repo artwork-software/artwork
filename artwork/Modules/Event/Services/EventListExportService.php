@@ -131,7 +131,7 @@ class EventListExportService extends EventExportService
     public function aggregateDesiredProjectDataBy(string $column, Project $project): string
     {
         return match ($column) {
-            'artists' => $project->getAttribute('artists'),
+            'artists' => $project->artistDisplayText(),
             'project_name' => $project->getAttribute('name'),
             'project_team' => $project->getAttribute('users')
                 ->map(

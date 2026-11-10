@@ -171,7 +171,10 @@ return [
     // In Produktion standardmaessig nur ueber https; per SESSION_SECURE_COOKIE=false fuer
     // reinen http-Intranetbetrieb abschaltbar. Ausserhalb von production entscheidet
     // Laravel selbst (null = Cookie folgt dem Request-Schema).
-    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production' ? true : null),
+    // filled(): eine leere Zeile SESSION_SECURE_COOKIE= darf den production-Default nicht aushebeln.
+    'secure' => filled(env('SESSION_SECURE_COOKIE'))
+        ? (bool) env('SESSION_SECURE_COOKIE')
+        : (env('APP_ENV') === 'production' ? true : null),
 
     /*
     |--------------------------------------------------------------------------

@@ -9,6 +9,7 @@ use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Services\ComponentSelectionModeService;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
@@ -223,6 +224,9 @@ class BiComponentSettingsController extends Controller
             'data' => ['nullable', 'array'],
             'permission_type' => ['nullable', 'string'],
         ]);
+
+        // Mehrfachauswahl am DropDown umschalten: Werte umwandeln bzw. Ausschalten bei Mehrfachwerten verhindern
+        app(ComponentSelectionModeService::class)->applyChange($component, $request->input('data'));
 
         $component->users()->detach();
         foreach ($request->get('users', []) as $user) {

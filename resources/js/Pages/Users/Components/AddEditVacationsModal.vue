@@ -1,185 +1,117 @@
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closeModal">
-            <!-- Overlay -->
-            <TransitionChild
-                as="template"
-                enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
-                leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0"
-            >
-                <div class="fixed inset-0 bg-black/50 transition-opacity" />
-            </TransitionChild>
-
-            <div class="fixed inset-0 z-50 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <!-- Panel -->
-                    <TransitionChild
-                        as="template"
-                        enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100"
-                        leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    >
-                        <DialogPanel
-                            class="relative transform bg-white shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg rounded-2xl border border-border-subtle text-left"
-                        >
-                            <!-- Header -->
-                            <DialogTitle class="flex items-center justify-between px-6 py-4 border-b border-border-subtle">
-                                <div class="text-base font-semibold text-text">
-                                    {{ isEdit ? $t('Edit entry') : $t('Create entry') }}
-                                </div>
-                                <button
-                                    type="button"
-                                    class="inline-flex items-center justify-center rounded-full p-1.5 text-text-subtle hover:text-text-muted hover:bg-surface-sunken transition"
-                                    @click="closeModal"
-                                >
-                                    <span class="sr-only">{{ $t('Close') }}</span>
-                                    <IconX class="h-6 w-6" aria-hidden="true" />
-                                </button>
-                            </DialogTitle>
-
-                            <!-- Body -->
-                            <div class="px-6 py-5">
-                                <!-- Typ-Auswahl -->
-                                <div class="grid grid-cols-2 rounded-xl border border-border overflow-hidden mb-5 text-sm font-medium">
-                                    <button
-                                        type="button"
-                                        class="px-3 py-2.5 transition"
-                                        :class="entry.type === 'available' ? 'bg-success text-white'
-                                            : 'bg-white text-text-muted hover:bg-surface-sunken'"
-                                        @click="entry.type = 'available'"
-                                    >
-                                        {{ $t('Available') }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="px-3 py-2.5 transition border-l border-border"
-                                        :class="entry.type === 'vacation' ? 'bg-danger text-white'
-                                            : 'bg-white text-text-muted hover:bg-surface-sunken'"
-                                        @click="entry.type = 'vacation'"
-                                    >
-                                        {{ $t('Absent') }}
-                                    </button>
-                                </div>
-
-                                <!-- Zeitraum -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-1">
-                                    <div>
-                                        <BaseInput id="entry_start_date" type="date" v-model="entry.start_date" :label="$t('From')" />
-                                        <div v-show="errors.start_date" class="mt-1 text-danger text-xs">{{ errors.start_date }}</div>
-                                    </div>
-                                    <div>
-                                        <BaseInput id="entry_end_date" type="date" v-model="entry.end_date" :label="$t('To')" />
-                                        <div v-show="errors.end_date" class="mt-1 text-danger text-xs">{{ errors.end_date }}</div>
-                                    </div>
-                                </div>
-                                <p v-if="isRange" class="mb-4 text-xs text-text-subtle">
-                                    {{ $t('One entry is created for each day in the period.') }}
-                                </p>
-                                <div v-else class="mb-4"></div>
-
-                                <!-- Hinweis: Abwesenheit löst bestehende Projektwünsche auf -->
-                                <div
-                                    v-if="entry.type === 'vacation' && conflictingWishDates.length"
-                                    class="mb-4 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning"
-                                >
-                                    {{ $t('There are project wishes on {0}. They will be dissolved by this absence.', [conflictingWishDates.join(', ')]) }}
-                                </div>
-
-                                <!-- Ganztägig -->
-                                <div class="mb-4 flex items-center gap-3">
-                                    <input
-                                        id="entry_full_day"
-                                        v-model="entry.full_day"
-                                        type="checkbox"
-                                        class="h-5 w-5 border-accent-200 text-accent-600 focus:ring-0 ring-0"
-                                    />
-                                    <label for="entry_full_day" class="text-sm font-medium text-text">{{ $t('All day') }}</label>
-                                </div>
-
-                                <!-- Zeiten -->
-                                <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4" v-if="!entry.full_day">
-                                    <div>
-                                        <BaseInput id="entry_start_time" type="time" v-model="entry.start_time" :label="$t('Start time')" />
-                                        <div v-show="errors.start_time" class="mt-1 text-danger text-xs">{{ errors.start_time }}</div>
-                                    </div>
-                                    <div>
-                                        <BaseInput id="entry_end_time" type="time" v-model="entry.end_time" :label="$t('End time')" />
-                                        <div v-show="errors.end_time" class="mt-1 text-danger text-xs">{{ errors.end_time }}</div>
-                                    </div>
-                                </div>
-
-                                <!-- Wöchentliche Wiederholung (nur bei Einzeltag sinnvoll) -->
-                                <div class="mb-4" v-if="!isRange">
-                                    <div class="flex items-center gap-3">
-                                        <input
-                                            id="entry_repeat"
-                                            v-model="entry.repeat_weekly"
-                                            type="checkbox"
-                                            class="h-5 w-5 border-accent-200 text-accent-600 focus:ring-0 ring-0"
-                                        />
-                                        <label for="entry_repeat" class="text-sm font-medium text-text inline-flex items-center gap-1.5">
-                                            <IconRepeat class="h-4 w-4 text-text-muted" />
-                                            {{ $t('Repeat weekly') }}
-                                        </label>
-                                    </div>
-                                    <div v-if="entry.repeat_weekly" class="mt-3">
-                                        <BaseInput id="entry_repeat_until" type="date" v-model="entry.repeat_until" :label="$t('Ends on')" />
-                                        <div v-show="errors.repeat_until" class="mt-1 text-danger text-xs">{{ errors.repeat_until }}</div>
-                                    </div>
-                                </div>
-
-                                <!-- Notiz -->
-                                <div>
-                                    <BaseInput
-                                        id="entry_comment"
-                                        type="text"
-                                        v-model="entry.comment"
-                                        :label="$t('Note (optional)')"
-                                    />
-                                    <div v-show="errors.comment" class="mt-1 text-danger text-xs">{{ errors.comment }}</div>
-                                </div>
-                            </div>
-
-                            <!-- Footer -->
-                            <div class="flex items-center justify-between px-6 py-4 border-t border-border-subtle">
-                                <button
-                                    v-if="!isEdit"
-                                    class="text-accent-700 text-xs underline underline-offset-2 disabled:text-text-subtle disabled:cursor-not-allowed"
-                                    :disabled="submitting"
-                                    @click="save(true)"
-                                >
-                                    {{ $t('Save & make further entries') }}
-                                </button>
-                                <div v-else></div>
-
-                                <div class="flex items-center gap-2">
-                                    <BaseButton
-                                        :text="$t('Cancel')"
-                                        background-color="bg-border-subtle hover:bg-border !text-text"
-                                        @click="closeModal"
-                                    />
-                                    <BaseButton
-                                        :text="$t('Save')"
-                                        :disabled="submitting"
-                                        @click="save(false)"
-                                    />
-                                </div>
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
-                </div>
+    <ArtworkBaseModal
+        :title="isEdit ? 'Edit entry' : 'Create entry'"
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <form id="addEditVacationForm" class="space-y-4" @submit.prevent="save(false)">
+            <!-- Typ-Auswahl -->
+            <div class="grid grid-cols-2 gap-1 rounded-lg bg-surface-sunken p-1 text-sm font-medium" role="radiogroup" :aria-label="$t('Type')">
+                <button
+                    v-for="option in typeOptions"
+                    :key="option.value"
+                    type="button"
+                    role="radio"
+                    :aria-checked="entry.type === option.value"
+                    class="inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 transition-colors duration-150 motion-reduce:transition-none"
+                    :class="entry.type === option.value ? 'bg-surface text-text shadow-raised' : 'text-text-muted hover:text-text'"
+                    @click="entry.type = option.value"
+                >
+                    <span class="size-2 rounded-full" :class="option.dotClass" aria-hidden="true" />
+                    {{ $t(option.label) }}
+                </button>
             </div>
-        </Dialog>
-    </TransitionRoot>
+
+            <!-- Zeitraum -->
+            <div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <BaseInput id="entry_start_date" v-model="entry.start_date" type="date" label="From" required :error="errors.start_date" />
+                    <BaseInput id="entry_end_date" v-model="entry.end_date" type="date" label="To" required :error="errors.end_date" />
+                </div>
+                <p v-if="isRange" class="mt-1 text-xs text-text-muted">
+                    {{ $t('One entry is created for each day in the period.') }}
+                </p>
+            </div>
+
+            <!-- Hinweis: Abwesenheit löst bestehende Projektwünsche auf -->
+            <BaseAlertComponent
+                v-if="entry.type === 'vacation' && conflictingWishDates.length"
+                type="warning"
+                :message="$t('There are project wishes on {0}. They will be dissolved by this absence.', [conflictingWishDates.join(', ')])"
+            />
+
+            <!-- Ganztägig -->
+            <BaseCheckbox id="entry_full_day" v-model="entry.full_day" :label="$t('All day')" />
+
+            <!-- Zeiten -->
+            <div v-if="!entry.full_day" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <BaseInput id="entry_start_time" v-model="entry.start_time" type="time" label="Start time" required :error="errors.start_time" />
+                <BaseInput id="entry_end_time" v-model="entry.end_time" type="time" label="End time" required :error="errors.end_time" />
+            </div>
+
+            <!-- Wöchentliche Wiederholung (nur bei Einzeltag sinnvoll) -->
+            <div v-if="!isRange" class="space-y-3">
+                <BaseCheckbox id="entry_repeat" v-model="entry.repeat_weekly" :label="$t('Repeat weekly')" />
+                <BaseInput
+                    v-if="entry.repeat_weekly"
+                    id="entry_repeat_until"
+                    v-model="entry.repeat_until"
+                    type="date"
+                    label="Ends on"
+                    required
+                    :min="entry.start_date || null"
+                    :error="errors.repeat_until"
+                />
+            </div>
+
+            <!-- Notiz -->
+            <BaseInput
+                id="entry_comment"
+                v-model="entry.comment"
+                label="Note (optional)"
+                maxlength="100"
+                :error="errors.comment"
+            />
+        </form>
+
+        <template #footer>
+            <BaseUIButton
+                v-if="!isEdit"
+                class="mr-auto"
+                label="Save & make further entries"
+                variant="ghost"
+                hide-icon
+                :disabled="submitting"
+                @click="save(true)"
+            />
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="submitting"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                type="submit"
+                form="addEditVacationForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="submitting"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
 import { computed, reactive, ref, watch, getCurrentInstance } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import {IconRepeat, IconX} from "@tabler/icons-vue"
-import BaseButton from '@/Layouts/Components/General/Buttons/BaseButton.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
-import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
+import { followStartDate } from '@/Helper/followStartDate.js'
 
 const props = defineProps({
     user: { type: Object, required: true },
@@ -193,10 +125,11 @@ const props = defineProps({
     projectWishes: { type: Array, default: () => [] },
 })
 
+defineOptions({ name: 'AddEditVacationsModal' })
+
 const emit = defineEmits(['closed'])
 const { proxy } = getCurrentInstance()
 
-const open = ref(true)
 const isEdit = computed(() => !!props.editEntry)
 
 const entry = reactive({
@@ -213,6 +146,11 @@ const entry = reactive({
     comment: props.editEntry?.comment ?? null,
 })
 
+const typeOptions = [
+    { value: 'available', label: 'Available', dotClass: 'bg-success' },
+    { value: 'vacation', label: 'Absent', dotClass: 'bg-danger' },
+]
+
 const isRange = computed(() => !!entry.start_date && !!entry.end_date && entry.end_date > entry.start_date)
 
 /** Wunsch-Tage im gewählten Zeitraum (Abwesenheit würde sie auflösen) — DD.MM.YYYY */
@@ -227,6 +165,11 @@ const conflictingWishDates = computed(() => {
         // Monatsgrenzen sonst falsch
         .sort()
         .map(date => date.split('-').reverse().join('.'))
+})
+
+// „Bis" folgt „Von", solange kein eigener Zeitraum gewählt ist
+watch(() => entry.start_date, (newStart, oldStart) => {
+    entry.end_date = followStartDate(newStart, oldStart, entry.end_date)
 })
 
 // Zeitraum und wöchentliche Wiederholung schließen sich aus
@@ -354,7 +297,6 @@ const resetForm = () => {
 }
 
 const closeModal = (saved = false) => {
-    open.value = false
     emit('closed', saved === true)
 }
 </script>

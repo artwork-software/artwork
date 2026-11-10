@@ -34,7 +34,7 @@ class ExternalUserService
             $source,
             $identifier,
             $externalUserData['email'] ?? null,
-            (bool) ($externalUserData['email_verified'] ?? false),
+            ($externalUserData['email_verified'] ?? false) === true,
             [
                 'first_name' => $externalUserData['first_name'] ?? '',
                 'last_name' => $externalUserData['last_name'] ?? '',

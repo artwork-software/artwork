@@ -67,6 +67,52 @@ class EnsureUserCanAccessProjectBudget
         'sage_assigned_data_id' => SageAssignedData::class,
     ];
 
+    /**
+     * Listen-Ids (Reorder-Endpunkte): jedes Element muss zu einem Projekt mit Budgetzugriff gehören.
+     */
+    private const INPUT_ARRAY_KEY_MODEL_MAP = [
+        'main_position_ids' => MainPosition::class,
+        'sub_position_ids' => SubPosition::class,
+    ];
+
+    /**
+     * Routen, die die Position als generisches "id" senden (Prüfanfragen).
+     */
+    private const ROUTE_ID_MODEL_MAP = [
+        'project.budget.verified.main-position.request' => MainPosition::class,
+        'project.budget.verified.sub-position.request' => SubPosition::class,
+    ];
+
+    /**
+     * Budget-Models, die immer an einer Tabelle hängen: löst eines davon auf kein Projekt auf, ist es
+     * Teil einer Vorlage. SageNotAssignedData fehlt bewusst – projektlose Datensätze sind globale
+     * Sage-Daten und laufen über die SageNotAssignedDataPolicy.
+     */
+    private const TABLE_BOUND_MODELS = [
+        Table::class,
+        Column::class,
+        ColumnCell::class,
+        MainPosition::class,
+        SubPosition::class,
+        SubPositionRow::class,
+        SageAssignedData::class,
+        BudgetSumDetails::class,
+        MainPositionDetails::class,
+        SubPositionSumDetail::class,
+    ];
+
+    /**
+     * Routen, die eine Vorlage nur als Quelle lesen und in ein Projekt übernehmen.
+     */
+    private const TEMPLATE_SOURCE_ROUTES = [
+        'project.budget.template.use',
+    ];
+
+    /**
+     * Wurde im aktuellen Request ein Vorlagen-Objekt (Budget-Model ohne Projekt) referenziert?
+     */
+    private bool $referencesTemplateModel = false;
+
     public function __construct(
         private readonly BudgetModelProjectResolverService $projectResolverService,
     ) {
@@ -98,6 +144,29 @@ class EnsureUserCanAccessProjectBudget
             ->exists();
     }
 
+    /**
+     * Budgetzugriff auf genau dieses Projekt: Admin, globale Budgetrechte oder access_budget im Team.
+     */
+    public static function canAccessProjectBudget(?User $user, Project $project): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        if (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->can(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value)
+        ) {
+            return true;
+        }
+
+        if ($project->relationLoaded('access_budget')) {
+            return $project->access_budget->contains('id', $user->id);
+        }
+
+        return $project->access_budget()->where('users.id', $user->id)->exists();
+    }
+
     public function handle(Request $request, Closure $next): mixed
     {
         $user = $request->user();
@@ -112,7 +181,15 @@ class EnsureUserCanAccessProjectBudget
             return $next($request);
         }
 
+        $this->referencesTemplateModel = false;
         $projectIds = $this->resolveProjectIds($request);
+
+        // Vorlagen-Objekte gehören zu keinem Projekt: eine zusätzlich mitgeschickte eigene project_id
+        // darf sie nicht freischalten – sonst ließen sich Vorlagen mit Budgetzugriff auf irgendein
+        // Projekt bearbeiten oder löschen.
+        if ($this->referencesTemplateModel && !$this->mayTouchTemplates($request, $user)) {
+            abort(403);
+        }
 
         if ($projectIds !== []) {
             // JEDES referenzierte Projekt muss freigegeben sein — sonst ließe
@@ -131,20 +208,39 @@ class EnsureUserCanAccessProjectBudget
         // brauchen die Template-Berechtigung, alles andere (z. B. globale
         // Sage-Aufräumaktionen) bleibt den globalen Rollen oben vorbehalten.
         $routeName = (string) $request->route()?->getName();
-        if (str_contains($routeName, 'template') || str_contains($routeName, 'trashed')) {
-            // Lesen genügt "Budgetvorlagen einsehen"; jede Mutation braucht "Budgetvorlagen bearbeiten".
-            $allowed = $request->isMethodSafe()
-                ? $user->canAny([
-                    PermissionEnum::UPDATE_BUDGET_TEMPLATES->value,
-                    PermissionEnum::VIEW_BUDGET_TEMPLATES->value,
-                ])
-                : $user->can(PermissionEnum::UPDATE_BUDGET_TEMPLATES->value);
-            abort_unless($allowed, 403);
+        if (
+            $this->referencesTemplateModel
+            || str_contains($routeName, 'template')
+            || str_contains($routeName, 'trashed')
+        ) {
+            abort_unless($this->hasTemplatePermission($request, $user), 403);
 
             return $next($request);
         }
 
         abort(403);
+    }
+
+    /**
+     * Lesen genügt "Budgetvorlagen einsehen"; jede Mutation braucht "Budgetvorlagen bearbeiten".
+     */
+    private function hasTemplatePermission(Request $request, User $user): bool
+    {
+        return $request->isMethodSafe()
+            ? $user->canAny([
+                PermissionEnum::UPDATE_BUDGET_TEMPLATES->value,
+                PermissionEnum::VIEW_BUDGET_TEMPLATES->value,
+            ])
+            : $user->can(PermissionEnum::UPDATE_BUDGET_TEMPLATES->value);
+    }
+
+    /**
+     * Vorlage als Quelle in ein Projekt übernehmen braucht nur den Budgetzugriff aufs Zielprojekt.
+     */
+    private function mayTouchTemplates(Request $request, User $user): bool
+    {
+        return in_array($request->route()?->getName(), self::TEMPLATE_SOURCE_ROUTES, true)
+            || $this->hasTemplatePermission($request, $user);
     }
 
     /**
@@ -169,7 +265,17 @@ class EnsureUserCanAccessProjectBudget
                 continue;
             }
 
-            $projectId = $this->projectResolverService->resolveProjectId($this->unwrap($parameter));
+            $projectId = $this->resolveFromModel($this->unwrap($parameter));
+            if ($projectId !== null) {
+                $projectIds[] = $projectId;
+            }
+        }
+
+        // 1b) Prüfanfragen senden die Position als "id"
+        $routeModelClass = self::ROUTE_ID_MODEL_MAP[$request->route()?->getName()] ?? null;
+        // Wie der Controller als Integer lesen – sonst träfe "5.9" hier nichts, dort aber Position 5.
+        if ($routeModelClass !== null && $request->filled('id') && !is_array($request->input('id'))) {
+            $projectId = $this->resolveFromModelId($routeModelClass, $request->integer('id'));
             if ($projectId !== null) {
                 $projectIds[] = $projectId;
             }
@@ -200,6 +306,20 @@ class EnsureUserCanAccessProjectBudget
             }
         }
 
+        // 3b) Id-Listen (Reorder von Haupt-/Unterpositionen)
+        foreach (self::INPUT_ARRAY_KEY_MODEL_MAP as $key => $modelClass) {
+            foreach ((array) $request->input($key, []) as $id) {
+                if ($id === null || is_array($id)) {
+                    continue;
+                }
+
+                $projectId = $this->resolveFromModelId($modelClass, $id);
+                if ($projectId !== null) {
+                    $projectIds[] = $projectId;
+                }
+            }
+        }
+
         // 4) Festschreibungs-Endpunkte senden {position: {id}, type: main|sub}
         $positionId = $request->input('position.id');
         if ($positionId !== null && !is_array($positionId)) {
@@ -223,6 +343,17 @@ class EnsureUserCanAccessProjectBudget
                     $projectIds[] = $projectId;
                 }
             }
+
+            foreach ((array) ($update['row_ids'] ?? []) as $rowId) {
+                if ($rowId === null || is_array($rowId)) {
+                    continue;
+                }
+
+                $projectId = $this->resolveFromModelId(SubPositionRow::class, $rowId);
+                if ($projectId !== null) {
+                    $projectIds[] = $projectId;
+                }
+            }
         }
 
         // 6) Budgetsummen-Endpunkte senden Morph-Paare {sourceable_type, sourceable_id} bzw. {commentable_*}
@@ -234,7 +365,7 @@ class EnsureUserCanAccessProjectBudget
             }
 
             $model = $this->resolveSumMorph($type, $id);
-            $projectId = $model !== null ? $this->projectResolverService->resolveProjectId($model) : null;
+            $projectId = $model !== null ? $this->resolveFromModel($model) : null;
             if ($projectId !== null) {
                 $projectIds[] = $projectId;
             }
@@ -269,7 +400,21 @@ class EnsureUserCanAccessProjectBudget
             return null;
         }
 
-        return $this->projectResolverService->resolveProjectId($model);
+        return $this->resolveFromModel($model);
+    }
+
+    /**
+     * Projekt eines Budget-Models; merkt sich Vorlagen-Objekte (an einer Tabelle, aber ohne Projekt).
+     */
+    private function resolveFromModel(Model $model): ?int
+    {
+        $projectId = $this->projectResolverService->resolveProjectId($model);
+
+        if ($projectId === null && in_array($model::class, self::TABLE_BOUND_MODELS, true)) {
+            $this->referencesTemplateModel = true;
+        }
+
+        return $projectId;
     }
 
     /**

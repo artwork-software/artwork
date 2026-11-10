@@ -187,6 +187,7 @@ const propertyTypeLabels = {
     date: 'Date',
     checkbox: 'Checkbox',
     select: 'Selection',
+    multiselect: 'Multiple choice',
     link: 'Link',
     upload: 'Upload',
 }

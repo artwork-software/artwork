@@ -170,6 +170,30 @@ final class SelfEditFieldTypeParityTest extends TestCase
     }
 
     #[Test]
+    public function multiselect_is_offered_with_options_and_staged_as_json_list(): void
+    {
+        $property = $this->property(CrmPropertyTypeEnum::MULTISELECT, ['Klein', 'Groß']);
+        $external = $this->external();
+
+        $field = $this->fieldFor($external, $property);
+        $this->assertSame('multiselect', $field?->inputType);
+        $this->assertSame(['Klein', 'Groß'], $field?->options);
+
+        $submission = $this->submit($external, ['crm_property:' . $property->id => '["Groß","Klein"]']);
+        $this->assertSame('["Klein","Groß"]', $submission?->fieldChanges()->first()->new_value);
+    }
+
+    #[Test]
+    public function multiselect_value_outside_the_options_is_rejected(): void
+    {
+        $property = $this->property(CrmPropertyTypeEnum::MULTISELECT, ['Klein', 'Groß']);
+
+        $this->expectException(ValidationException::class);
+
+        $this->submit($this->external(), ['crm_property:' . $property->id => '["Klein","Riesig"]']);
+    }
+
+    #[Test]
     public function unchanged_select_value_no_longer_in_options_does_not_block_submit(): void
     {
         $property = $this->property(CrmPropertyTypeEnum::SELECT, ['Klein', 'Groß']);

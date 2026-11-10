@@ -98,12 +98,30 @@ class CommittedShiftChangesExcelExport implements
         $assignment = $presented['field_changes']['assignment'] ?? null;
         $affected = is_array($assignment) ? ($assignment['user_name'] ?? null) : null;
 
+        // Freigegebene individuelle Zeit (ohne Schicht): Datum/Zeit aus dem gespeicherten Stand
+        $individualTime = $presented['field_changes']['_individual_time'] ?? null;
+        if (is_array($individualTime)) {
+            $affected ??= $individualTime['person_name'] ?? null;
+            $date = ! empty($individualTime['start_date'])
+                ? \Carbon\Carbon::parse($individualTime['start_date'])->format('d.m.Y')
+                : '';
+            $time = ! empty($individualTime['full_day'])
+                ? $this->tr('Full day')
+                : trim(implode(' – ', array_filter([
+                    $individualTime['start_time'] ?? null,
+                    $individualTime['end_time'] ?? null,
+                ])));
+        } else {
+            $date = $shift?->start_date?->format('d.m.Y') ?? '';
+            $time = $shift && ($shift->start || $shift->end)
+                ? trim(implode(' – ', array_filter([$shift->start, $shift->end])))
+                : '';
+        }
+
         return [
             $presented['changed_at_formatted'] ?? '',
-            $shift?->start_date?->format('d.m.Y') ?? '',
-            $shift && ($shift->start || $shift->end)
-                ? trim(implode(' – ', array_filter([$shift->start, $shift->end])))
-                : '',
+            $date,
+            $time,
             $shift?->room?->name ?? '',
             $shift?->craft?->abbreviation ?? $shift?->craft?->name ?? $change->craft?->abbreviation ?? '',
             (string) ($affected ?? ''),

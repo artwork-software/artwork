@@ -112,31 +112,32 @@
         />
 
         <!-- Delete Modal -->
-        <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject">
-            <div class="mx-4">
-                <div class="text-2xl sm:text-3xl font-black text-text my-2">
-                    {{ $t('Delete project') }}
-                </div>
-                <div class="text-sm text-danger ">
-                    {{ $t('Are you sure you want to delete the project?', [project.name]) }}
-                </div>
-                <div class="flex flex-col sm:flex-row gap-4 justify-between mt-6">
-                    <button
-                        class="bg-success hover:bg-success text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
-                        @click="deleteProject"
-                    >
-                        {{ $t('Delete') }}
-                    </button>
-                    <button
-                        type="button"
-                        @click="closeDeleteProjectModal()"
-                        class="text-sm text-text-muted dark:text-text-subtle hover:underline underline-offset-4"
-                    >
-                        {{ $t('No, not really') }}
-                    </button>
-                </div>
-            </div>
-        </BaseModal>
+        <ArtworkBaseModal
+            v-if="deletingProject"
+            title="Delete project"
+            modal-size="sm:max-w-lg"
+            @close="closeDeleteProjectModal"
+        >
+            <p class="text-sm text-text">
+                {{ $t('Are you sure you want to delete the project?', [project.name]) }}
+            </p>
+            <template #footer>
+                <BaseUIButton
+                    label="No, not really"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="deleteProcessing"
+                    @click="closeDeleteProjectModal"
+                />
+                <BaseUIButton
+                    label="Delete"
+                    variant="danger"
+                    icon="IconTrash"
+                    :processing="deleteProcessing"
+                    @click="deleteProject"
+                />
+            </template>
+        </ArtworkBaseModal>
     </div>
 </template>
 
@@ -151,6 +152,7 @@ import BuilderProjectTeamComponent from "@/Pages/Projects/BuilderComponents/Buil
 import BuilderActionsComponent from "@/Pages/Projects/BuilderComponents/BuilderActionsComponent.vue";
 import BuilderTextArea from "@/Pages/Projects/BuilderComponents/BuilderTextArea.vue";
 import BuilderProjectStateComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectStateComponent.vue";
+import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectGroupComponent.vue";
 import BuilderShiftContactPersonsComponent from "@/Pages/Projects/BuilderComponents/BuilderShiftContactPersonsComponent.vue";
 import BuilderRelevantDatesForShiftPlanningComponent from "@/Pages/Projects/BuilderComponents/BuilderRelevantDatesForShiftPlanningComponent.vue";
 import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderComponents/BuilderGeneralShiftInformationComponent.vue";
@@ -165,9 +167,11 @@ import { router, usePage } from "@inertiajs/vue3";
 import BuilderTextField from "@/Pages/Projects/BuilderComponents/BuilderTextField.vue";
 import BuilderCheckbox from "@/Pages/Projects/BuilderComponents/BuilderCheckbox.vue";
 import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.vue";
+import BuilderCrmContactListComponent from "@/Pages/Projects/BuilderComponents/BuilderCrmContactListComponent.vue";
 import BuilderLink from "@/Pages/Projects/BuilderComponents/BuilderLinkComponent.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseChip from "@/Artwork/Chips/BaseChip.vue";
 import { IconCopy, IconFolder, IconFolderOpen, IconPin, IconPinnedOff, IconTrash } from "@tabler/icons-vue";
 
@@ -210,6 +214,7 @@ const menuPosition = ref({ x: 0, y: 0 });
 const editingProject = ref(false);
 const showActionComponent = ref(false);
 const deletingProject = ref(false);
+const deleteProcessing = ref(false);
 
 const componentMapping = {
     BuilderProjectTitleComponent,
@@ -218,6 +223,7 @@ const componentMapping = {
     BuilderActionsComponent,
     BuilderTextArea,
     BuilderProjectStateComponent,
+    BuilderProjectGroupComponent,
     BuilderShiftContactPersonsComponent,
     BuilderRelevantDatesForShiftPlanningComponent,
     BuilderGeneralShiftInformationComponent,
@@ -228,6 +234,8 @@ const componentMapping = {
     BuilderTextField,
     BuilderCheckbox,
     BuilderDropDown,
+    BuilderCheckboxList: BuilderDropDown,
+    BuilderCrmContactListComponent,
     BuilderLink,
     BuilderBiKeyFiguresDisplay,
 };
@@ -335,11 +343,14 @@ const duplicateProject = () => {
 const openDeleteProjectModal = () => (deletingProject.value = true);
 
 const deleteProject = () => {
+    if (deleteProcessing.value) return;
+    deleteProcessing.value = true;
     router.delete(route("projects.destroy", { project: props.project.id }), {
         data: { page: page.value, query: query.value },
         preserveScroll: true,
+        onSuccess: () => closeDeleteProjectModal(),
+        onFinish: () => (deleteProcessing.value = false),
     });
-    closeDeleteProjectModal();
 };
 
 const closeDeleteProjectModal = () => (deletingProject.value = false);

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Http\Requests;
 
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateEventPropertyRequest extends FormRequest
@@ -22,7 +23,7 @@ class CreateEventPropertyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'icon' => 'required|string|max:255',
+            'icon' => ['required', 'string', 'max:255', new IconNameRule()],
             'name' => 'required|string|max:255'
         ];
     }

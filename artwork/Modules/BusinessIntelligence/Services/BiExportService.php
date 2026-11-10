@@ -15,6 +15,7 @@ use Artwork\Modules\GeneralSettings\Services\SeasonWindowResolver;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
+use Artwork\Modules\Project\Support\ComponentSelection;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -854,7 +855,7 @@ class BiExportService
                 'project_id' => $project->id,
                 'project_name' => $project->name,
                 'project_state' => $project->status?->name ?? '',
-                'artists' => $project->artists ?? '',
+                'artists' => $project->artistDisplayText(),
                 'cost_center' => $project->costCenter?->name ?? '',
                 'rooms' => $this->getRoomNames($project),
                 'areas' => $this->getAreaNames($project),
@@ -1080,8 +1081,9 @@ class BiExportService
             return $data['checked'] ? __('Yes') : __('No');
         }
 
-        if (isset($data['selected'])) {
-            return $data['selected'];
+        if (array_key_exists('selected', $data)) {
+            // Einzel- oder Mehrfachauswahl (Liste) – Mehrfachwerte kommagetrennt
+            return ComponentSelection::displayText($data['selected']);
         }
 
         return json_encode($data);

@@ -3,6 +3,7 @@
 use Artwork\Modules\AppApi\Http\Controllers\AppAuthController;
 use Artwork\Modules\AppApi\Http\Controllers\AppCalendarController;
 use Artwork\Modules\AppApi\Http\Controllers\AppDashboardController;
+use Artwork\Modules\AppApi\Http\Controllers\AppInventoryController;
 use Artwork\Modules\AppApi\Http\Controllers\AppProjectCommentController;
 use Artwork\Modules\AppApi\Http\Controllers\AppProjectComponentValueController;
 use Artwork\Modules\AppApi\Http\Controllers\AppProjectController;
@@ -14,6 +15,7 @@ use Artwork\Modules\AppApi\Http\Controllers\AppProjectTaskController;
 use Artwork\Modules\AppApi\Http\Controllers\AppProjectTeamController;
 use Artwork\Modules\AppApi\Http\Controllers\AppShiftListController;
 use Artwork\Modules\AppApi\Http\Controllers\AppShiftPlanController;
+use Artwork\Modules\AppApi\Http\Controllers\AppTicketingController;
 use Artwork\Modules\AppApi\Http\Middleware\EnsureAppModuleEnabled;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Middleware\CheckToken;
@@ -54,6 +56,30 @@ Route::middleware(['auth:api', 'throttle:api-token', CheckToken::using('app')])-
     Route::get('calendar', [AppCalendarController::class, 'show'])
         ->middleware(EnsureAppModuleEnabled::class . ':room_assignment')
         ->name('calendar');
+
+    // Der Einlass von Artwork-Tickets; tickets bleibt die Quelle, artwork reicht durch.
+    Route::prefix('ticketing/dates')->name('ticketing.')->group(function (): void {
+        Route::get('', [AppTicketingController::class, 'dates'])->name('dates');
+        Route::get('{event}', [AppTicketingController::class, 'show'])->name('dates.show');
+        Route::post('{event}/check-ins', [AppTicketingController::class, 'checkIn'])->name('check-ins');
+        Route::post('{event}/check-ins/revert', [AppTicketingController::class, 'revert'])
+            ->name('check-ins.revert');
+        Route::get('{event}/passes', [AppTicketingController::class, 'passes'])->name('passes');
+        Route::post('{event}/pass-admissions', [AppTicketingController::class, 'admit'])
+            ->name('pass-admissions');
+    });
+
+    // Inventar zum Nachschlagen vor Ort; Ansehen wie im Web mit "Inventar sehen", solange das Modul an ist.
+    Route::prefix('inventory')
+        ->middleware([EnsureAppModuleEnabled::class . ':inventory', 'can:view-inventory'])
+        ->name('inventory.')
+        ->group(function (): void {
+            Route::get('categories', [AppInventoryController::class, 'categories'])->name('categories');
+            Route::get('articles', [AppInventoryController::class, 'index'])->name('articles');
+            Route::get('articles/{article}', [AppInventoryController::class, 'show'])->name('articles.show');
+            Route::get('articles/{article}/availability', [AppInventoryController::class, 'availability'])
+                ->name('articles.availability');
+        });
 
     Route::get('projects', [AppProjectController::class, 'index'])
         ->middleware(EnsureAppModuleEnabled::class . ':projects')

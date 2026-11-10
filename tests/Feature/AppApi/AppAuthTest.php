@@ -76,6 +76,25 @@ final class AppAuthTest extends TestCase
     }
 
     #[Test]
+    public function deactivatedAccountsCannotLogInAndTheirTokensStopWorkingUntilReactivation(): void
+    {
+        $user = $this->createUser();
+        $headers = ['Authorization' => 'Bearer ' . $this->login()->json('token')];
+
+        $user->forceFill(['deactivated_at' => now()])->save();
+
+        $this->getJson(route('app.v1.me'), $headers)->assertUnauthorized();
+        // Gleiche Antwort wie bei falschem Passwort – verrät nicht, dass es das Konto gibt.
+        $this->login()->assertUnauthorized()
+            ->assertJsonPath('message', __('These credentials do not match our records.'));
+
+        $user->forceFill(['deactivated_at' => null])->save();
+        $this->app['auth']->forgetGuards();
+
+        $this->getJson(route('app.v1.me'), $headers)->assertOk();
+    }
+
+    #[Test]
     public function loginWithWrongPasswordReturns401WithoutCreatingAToken(): void
     {
         $this->createUser();
@@ -236,6 +255,24 @@ final class AppAuthTest extends TestCase
 
         $this->assertNotContains('recovery-code', $user->refresh()->recoveryCodes());
         $this->assertSame(1, Token::query()->count());
+    }
+
+    #[Test]
+    public function loginThrottleAlsoCountsPerAccountAcrossIps(): void
+    {
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.' . ($attempt + 1)])
+                ->login(['email' => 'missing@example.com'])
+                ->assertUnauthorized();
+        }
+
+        $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.7'])
+            ->login(['email' => 'missing@example.com'])
+            ->assertTooManyRequests();
+
+        $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.7'])
+            ->login(['email' => 'other@example.com'])
+            ->assertUnauthorized();
     }
 
     #[Test]

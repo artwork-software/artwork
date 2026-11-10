@@ -47,6 +47,8 @@ class RemoveEntityFormShiftEvent implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         $this->shift->load([
+            // Gewerk wie bei UpdateShiftInShiftPlan: ohne craft sortiert die Tagesansicht die Schicht ans Ende
+            'craft:id,name,abbreviation,color',
             'shiftsQualifications',
             'globalQualifications',
             'users.globalQualifications',

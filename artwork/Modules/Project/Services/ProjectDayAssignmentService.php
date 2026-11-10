@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
+use Artwork\Modules\Shift\Support\ShiftHistoryDayEntryPerson;
 
 use function Illuminate\Support\defer;
 
@@ -164,7 +165,7 @@ class ProjectDayAssignmentService
                 ->where('is_group', false)
                 ->orderBy('name')
                 ->limit(50)
-                ->get(['id', 'name', 'artists']);
+                ->get(['id', 'name', 'artists', 'linked_artists']);
         }
 
         return $projects
@@ -178,7 +179,7 @@ class ProjectDayAssignmentService
                 return [
                     'id' => $project->id,
                     'name' => $project->name,
-                    'artists' => $project->artists ?: null,
+                    'artists' => $project->artistDisplayText() ?: null,
                     'period_start' => $period ? $period['start']->format('Y-m-d') : null,
                     'period_end' => $period ? $period['end']->format('Y-m-d') : null,
                     'covers_all_days' => $coversAllDays,
@@ -217,7 +218,7 @@ class ProjectDayAssignmentService
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->limit($limit)
-            ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path']);
+            ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path', 'deactivated_at']);
 
         $freelancers = Freelancer::query()
             ->canWorkShifts()
@@ -268,6 +269,7 @@ class ProjectDayAssignmentService
             'name' => $user->getFullNameAttribute(),
             'position' => $user->position,
             'profile_photo_url' => $user->profile_photo_url,
+            'deactivated_at' => User::deactivatedAtFor($user),
             'in_project_team' => $teamUserIds->has($user->id),
         ] + $summarize(User::class, $user->id))
             ->concat($freelancers->map(static fn (Freelancer $freelancer) => [
@@ -451,7 +453,15 @@ class ProjectDayAssignmentService
                 $this->getWorkerName($employableType, $employableId),
                 $project->name,
                 $this->formatDateSpanLabel($datesToCreate->first(), $datesToCreate->last()),
-            ]
+            ],
+            $this->assignmentDayEntry(
+                $employableType,
+                $employableId,
+                $datesToCreate->first(),
+                $datesToCreate->last(),
+                $project->name,
+                $type === ProjectDayAssignmentType::BINDING
+            )
         );
 
         $this->broadcastProjectAssignmentsChanged($project->id);
@@ -514,7 +524,15 @@ class ProjectDayAssignmentService
                 $this->getWorkerName($assignment->employable_type, $assignment->employable_id),
                 $assignment->project?->name ?? '',
                 $this->formatDateSpanLabel($firstDate, $lastDate),
-            ]
+            ],
+            $this->assignmentDayEntry(
+                $assignment->employable_type,
+                (int) $assignment->employable_id,
+                $firstDate,
+                $lastDate,
+                $assignment->project?->name,
+                $assignment->isBinding()
+            )
         );
 
         $this->broadcastProjectAssignmentsChanged($assignment->project_id);
@@ -630,7 +648,15 @@ class ProjectDayAssignmentService
                 $this->getWorkerName($assignment->employable_type, $assignment->employable_id),
                 $assignment->project?->name ?? '',
                 $this->formatDateSpanLabel($wishRows->min('date'), $wishRows->max('date')),
-            ]
+            ],
+            $this->assignmentDayEntry(
+                $assignment->employable_type,
+                (int) $assignment->employable_id,
+                $wishRows->min('date'),
+                $wishRows->max('date'),
+                $assignment->project?->name,
+                true
+            )
         );
 
         $this->notifyPersonAboutBindingChange(
@@ -1233,7 +1259,7 @@ class ProjectDayAssignmentService
         }
 
         if (!$project->users()->where('users.id', $employableId)->exists()) {
-            $project->users()->attach($employableId);
+            $project->users()->attach($employableId, ProjectTeamService::IMPLICIT_MEMBER_PIVOT);
         }
     }
 
@@ -1926,11 +1952,47 @@ class ProjectDayAssignmentService
         );
     }
 
+    /**
+     * Person und Tage einer Projektzuordnung für den Schichtverlauf (gleiche Schlüssel wie
+     * LogsShiftPlanDayActivity, damit Personen- und Tagesfilter greifen).
+     *
+     * @return array<string, mixed>
+     */
+    private function assignmentDayEntry(
+        string $employableType,
+        int $employableId,
+        mixed $firstDate,
+        mixed $lastDate,
+        ?string $projectName,
+        bool $isBinding
+    ): array {
+        $first = $firstDate !== null ? Carbon::parse($firstDate)->toDateString() : null;
+        $last = $lastDate !== null ? Carbon::parse($lastDate)->toDateString() : $first;
+
+        return [
+            'employable_type' => $employableType,
+            'employable_id' => $employableId,
+            'person_name' => ShiftHistoryDayEntryPerson::nameOf($employableType, $employableId),
+            'worker_day' => $first,
+            'worker_day_end' => $last !== $first ? $last : null,
+            'day_entry' => [
+                'kind' => 'project_assignment',
+                'project' => $projectName,
+                'binding' => $isBinding,
+            ],
+        ];
+    }
+
+    /**
+     * @param array<int, string> $placeholderValues
+     * @param array<string, mixed> $dayEntryProperties Person/Tage (assignmentDayEntry)
+     */
     private function logAssignmentActivity(
         ?ProjectDayAssignment $assignment,
         string $event,
         string $translationKey,
-        array $placeholderValues
+        array $placeholderValues,
+        array $dayEntryProperties = []
     ): void {
         $activity = activity('project_day_assignment')
             ->causedBy(Auth::user())
@@ -1941,11 +2003,11 @@ class ProjectDayAssignmentService
         }
 
         $activity
-            ->tap(function ($activityModel) use ($translationKey, $placeholderValues): void {
+            ->tap(function ($activityModel) use ($translationKey, $placeholderValues, $dayEntryProperties): void {
                 $activityModel->properties = $activityModel->properties->merge([
                     'translation_key' => $translationKey,
                     'translation_key_placeholder_values' => $placeholderValues,
-                ]);
+                ] + $dayEntryProperties);
             })
             ->log($translationKey);
     }

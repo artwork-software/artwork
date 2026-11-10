@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Http\Resources;
 
+use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\User\Http\Resources\UserIndexResource;
@@ -22,7 +23,11 @@ class ProjectIndexResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $historyArray = app(ChangeService::class)->historyForFrontend($this->resource);
+        $changeService = app(ChangeService::class);
+        $historyArray = $changeService->historyForFrontend($this->resource);
+        if (!EnsureUserCanAccessProjectBudget::canAccessProjectBudget(Auth::user(), $this->resource)) {
+            $historyArray = $changeService->withoutBudgetEntries($historyArray);
+        }
 
         return [
             'resource' => class_basename($this),

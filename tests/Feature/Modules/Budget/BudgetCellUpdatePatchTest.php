@@ -8,8 +8,16 @@ use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySource\Models\MoneySourceReminder;
+use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Queue\CallQueuedClosure;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Exceptions;
+use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 use Tests\Feature\FeatureTestCase;
 
 /**
@@ -139,5 +147,45 @@ final class BudgetCellUpdatePatchTest extends FeatureTestCase
             'value' => '1',
             'is_verified' => false,
         ])->assertNotFound();
+    }
+
+    #[Test]
+    public function failing_money_source_threshold_check_after_response_is_reported_not_thrown(): void
+    {
+        // Läuft nach dem Senden der Antwort: eine Exception dort endete auf Prod als
+        // "headers already sent"-Fatal und verdeckte die eigentliche Ursache.
+        [$table, $valueColumnA, , , $row] = $this->createBudgetStructure();
+        $moneySource = MoneySource::factory()->create();
+        MoneySourceReminder::factory()->create([
+            'money_source_id' => $moneySource->id,
+            'type' => MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_THRESHOLD,
+        ]);
+        ColumnCell::query()
+            ->where('column_id', $valueColumnA->id)
+            ->where('sub_position_row_id', $row->id)
+            ->update(['linked_money_source_id' => $moneySource->id]);
+
+        $exceptions = Exceptions::fake();
+        $this->mock(MoneySourceCalculationService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('getPositionSumOfOneMoneySource')->andThrow(new RuntimeException('Schwellwert kaputt'));
+        });
+
+        $user = User::factory()->create();
+        $table->project->users()->attach($user->id, ['access_budget' => true]);
+        $this->actingAs($user);
+
+        $this->patchJson(route('project.budget.cell.update'), [
+            'column_id' => $valueColumnA->id,
+            'sub_position_row_id' => $row->id,
+            'value' => '10,00',
+            'is_verified' => false,
+        ])->assertSuccessful();
+
+        Bus::dispatchedAfterResponse(CallQueuedClosure::class)
+            ->each(fn (CallQueuedClosure $job) => $job->handle($this->app));
+
+        $exceptions->assertReported(
+            static fn (RuntimeException $exception): bool => $exception->getMessage() === 'Schwellwert kaputt'
+        );
     }
 }

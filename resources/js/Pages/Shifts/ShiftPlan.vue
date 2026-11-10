@@ -117,16 +117,18 @@
                     class="min-h-0 h-[calc(var(--dynamic-height))] relative"
                     :class="[isFullscreen ? '' : '']"
                 >
-                    <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten) -->
+                    <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten / alle weggefiltert) -->
                     <ShiftPlanEmptyState
                         v-if="shiftPlanLoaded && !emptyStateDismissed && !multiEditModeCalendar"
                         overlay
-                        :rooms-count="shiftPlanArrayRef.length"
+                        :rooms-count="displayedShiftPlanRooms.length"
                         :crafts-count="craftsResolved?.length ?? 0"
                         :functions-count="shiftQualifications?.length ?? 0"
                         :has-shifts="planHasShifts"
+                        :has-visible-shifts="planHasVisibleShifts"
                         :filters-active="planFiltersActive"
                         :hide-unoccupied-rooms="!!calendarSettings?.hide_unoccupied_rooms"
+                        :only-not-fully-staffed="!!calendarSettings?.show_only_not_fully_staffed_shifts"
                         @add-shift="openAddShiftForFirstCell"
                         @add-from-template="openAddShiftByPresetForFirstCell"
                         @dismiss="emptyStateDismissed = true"
@@ -156,7 +158,7 @@
                         <!-- Column Header (Tage) -->
                         <template #colHeader="{ day }">
                             <div
-                                class="relative h-full w-full flex flex-col
+                                class="group/dayhead relative h-full w-full flex flex-col
                                    text-[11px] leading-none text-white
                                    bg-surface-inverse/95 backdrop-blur
                                    border-b border-white/10 border-r
@@ -194,6 +196,16 @@
                                             <span class="opacity-90 tabular-nums truncate">
                                         {{ isCompactShiftZoom ? day.day : day.fullDay }}
                                       </span>
+                                            <!-- Schichtverlauf genau dieses Tages (alle Personen), erscheint beim Überfahren -->
+                                            <button
+                                                type="button"
+                                                class="ml-0.5 shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-white/15 focus-visible:opacity-100 group-hover/dayhead:opacity-80"
+                                                :aria-label="$t('Show history of this day')"
+                                                v-tooltip.top="{ value: $t('Show history of this day'), class: 'aw-tooltip', appendTo: 'body' }"
+                                                @click.stop="openHistoryForDay(day)"
+                                            >
+                                                <PropertyIcon name="IconHistory" class="h-3 w-3" />
+                                            </button>
                                         </div>
                                     </div>
 
@@ -318,6 +330,7 @@
                                 :class="[expandDays ? '' : 'h-full']"
                                 :style="{
                                     backgroundColor: day.isExtraRow ? undefined : (dayTintLight(day) ?? '#ffffff'),
+                                    backgroundImage: day.isExtraRow ? undefined : (dayTintLightStripes(day) ?? undefined),
                                     borderLeft: day.isExtraRow
                                         ? undefined
                                         : (day.isFirstDayOfMonth ? '2px solid rgba(0,0,0,0.4)' : '1px solid rgba(0,0,0,0.18)'),
@@ -1121,16 +1134,20 @@
 </template>
 
 <script setup lang="ts">
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
+import { holidayStripes, isSingleDayHoliday, pickDayHolidays, withAlpha } from '@/Helper/holidayTint.js'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
 import {isWorkTimeAccountingEnabled} from '@/Helper/workTimeAccounting.js'
 import {messageForFailedRequest} from '@/Helper/appToast.js'
+import {resolveKwWorkflowStatus} from '@/Helper/kwWorkflowStatus.js'
 
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftPlanOpenViolationsFilterNotice from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue'
 import ShiftPlanEmptyState from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanEmptyState.vue'
+import {hasVisibleShiftInCells} from '@/Layouts/Components/ShiftPlanComponents/shiftPlanEmptyState.js'
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue'
 import {MenuItem} from '@headlessui/vue'
 import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
@@ -1163,6 +1180,7 @@ import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import {can, is} from 'laravel-permission-to-vuejs'
+import {canViewPlanning} from '@/Helper/planningRights.js'
 import {useUserOverviewLayout} from '@/Pages/Shifts/Composables/useUserOverviewLayout.ts'
 import {useSyncedHorizontalScroll} from '@/Pages/Shifts/Composables/useSyncedHorizontalScroll.ts'
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
@@ -1747,7 +1765,20 @@ const planHasShifts = computed<boolean>(() => {
     return false
 })
 
-/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand „keine Räume" */
+/**
+ * Bleibt nach den clientseitigen Anzeige-Filtern noch eine Schicht im Raster? Gewerke- und Raumfilter
+ * wirken serverseitig (dann ist planHasShifts schon false); clientseitig filtert nur „nur nicht voll
+ * besetzte Schichten". Ohne diesen Filter also kein Durchlauf; mit Filter über die gecachte Zellabfrage
+ * des Rasters (getRoomDayShifts), Abbruch bei der ersten sichtbaren Schicht.
+ */
+const planHasVisibleShifts = computed<boolean>(() => {
+    if (!planHasShifts.value) return false
+    if (!calendarSettings.value?.show_only_not_fully_staffed_shifts) return true
+    const dayKeys = (days.value ?? []).filter((d: any) => !d?.isExtraRow).map((d: any) => d.fullDay)
+    return hasVisibleShiftInCells(shiftPlanArrayRef.value, dayKeys, getRoomDayShifts)
+})
+
+/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand */
 const planFiltersActive = computed<boolean>(() => {
     const filters = (props.user_filters ?? {}) as Record<string, any>
     return Object.values(filters).some((value) => Array.isArray(value) && value.length > 0)
@@ -1769,8 +1800,25 @@ function openAddShiftByPresetForFirstCell() {
 
 const shiftPlanArrayRef = computed<any[]>(() => normalizeShiftPlan(newShiftPlanData.value))
 
+// „Leere Räume ausblenden": der Server zählt jede Schicht als Belegung, „Nur nicht voll besetzte Schichten"
+// filtert erst hier — Räume, in denen danach weder Termin noch Schicht sichtbar ist, fallen deshalb hier raus
+const displayedShiftPlanRooms = computed<any[]>(() => {
+    const rooms = shiftPlanArrayRef.value
+    if (!calendarSettings.value?.hide_unoccupied_rooms || !calendarSettings.value?.show_only_not_fully_staffed_shifts) {
+        return rooms
+    }
+    const dayKeys = (days.value ?? []).filter((d: any) => !d?.isExtraRow).map((d: any) => d.fullDay)
+    return rooms.filter((room: any) => {
+        // __v lesen, damit Broadcast-Mutationen (bumpRoomVersion) neu filtern
+        void room?.__v
+        return dayKeys.some((day: string) =>
+            (showEvents.value && getRoomDayEvents(room, day).length > 0) || getRoomDayShifts(room, day).length > 0
+        )
+    })
+})
+
 const shiftRows = computed(() => {
-    const arr = shiftPlanArrayRef.value
+    const arr = displayedShiftPlanRooms.value
     return arr.map((room: any, idx: number) => ({
         key: room.roomId ?? room.room_id ?? room.id ?? `room_${idx}`,
         data: room,
@@ -1865,27 +1913,31 @@ const todayKey = (() => {
 })()
 
 const dayTintByKey = computed(() => {
-    const map = new Map<string, { light: string | null, dark: string | null, accent: string | null }>()
+    const map = new Map<string, { light: string | null, dark: string | null, accent: string | null, lightStripes: string | null, darkStripes: string | null }>()
     const highContrast = !!calendarSettings.value?.high_contrast
     for (const d of (days.value ?? [])) {
         if (!d || d.isExtraRow || !d.fullDay) continue
-        const holidays = d.holidays ?? []
-        const singleDayHoliday = holidays.find(
-            (h: any) => h?.color && (!h.end_date || h.end_date === h.date)
-        )
-        const coloredHoliday = singleDayHoliday ?? holidays.find((h: any) => h?.color)
+        // Mehrere Feiertage: eigene vor API-Feiertagen, zweite Farbe als Schraffur (holidayTint.js)
+        const picked = pickDayHolidays(d.holidays)
         let light: string | null = null
         let dark: string | null = null
         let accent: string | null = null
-        if (coloredHoliday) {
+        let lightStripes: string | null = null
+        let darkStripes: string | null = null
+        if (picked) {
             // Eintägige Feiertage deutlich, Ferienzeiträume dezent (wie im Kalender);
             // Wochenenden im Ferienzeitraum als kräftigere Abstufung derselben Farbe
+            const singleDay = isSingleDayHoliday(picked.primary)
             const periodAlphaLight = d.isWeekend ? (highContrast ? '66' : '40') : (highContrast ? '33' : '1A')
-            const lightAlpha = singleDayHoliday ? (highContrast ? '59' : '33') : periodAlphaLight
-            const darkAlpha = singleDayHoliday ? '4D' : (d.isWeekend ? '4D' : '26')
-            light = `${coloredHoliday.color}${lightAlpha}`
-            dark = `${coloredHoliday.color}${darkAlpha}`
-            accent = coloredHoliday.color
+            const lightAlpha = singleDay ? (highContrast ? '59' : '33') : periodAlphaLight
+            const darkAlpha = singleDay ? '4D' : (d.isWeekend ? '4D' : '26')
+            light = withAlpha(picked.primary.color, lightAlpha)
+            dark = withAlpha(picked.primary.color, darkAlpha)
+            accent = picked.primary.color
+            if (picked.secondary) {
+                lightStripes = holidayStripes(withAlpha(picked.secondary.color, highContrast ? '80' : '59'))
+                darkStripes = holidayStripes(withAlpha(picked.secondary.color, '66'))
+            }
         } else if (d.fullDay === todayKey) {
             light = highContrast ? '#e0e7ff' : '#eef2ff'
             dark = 'rgba(129,140,248,0.18)'
@@ -1896,7 +1948,7 @@ const dayTintByKey = computed(() => {
             accent = '#60a5fa'
         }
         if (d.fullDay === todayKey && !accent) accent = '#818cf8'
-        if (light || dark || accent) map.set(d.fullDay, { light, dark, accent })
+        if (light || dark || accent) map.set(d.fullDay, { light, dark, accent, lightStripes, darkStripes })
     }
     return map
 })
@@ -1924,11 +1976,15 @@ const specialDayTooltip = (day: any) => {
 
 const dayTintLight = (day: any) => dayTintByKey.value.get(day?.fullDay)?.light ?? null
 const dayTintDark = (day: any) => dayTintByKey.value.get(day?.fullDay)?.dark ?? null
+const dayTintLightStripes = (day: any) => dayTintByKey.value.get(day?.fullDay)?.lightStripes ?? null
+const dayTintDarkStripes = (day: any) => dayTintByKey.value.get(day?.fullDay)?.darkStripes ?? null
 // Tages-Tint der Personenzellen je Farbwelt: hell = dieselben Tints wie das weiße Haupt-Grid,
 // dunkel = die niedrig gedeckten Dark-Tints (Map-Lookup, kein Render-Pfad-Aufwand)
 const userOverviewDayTintStyle = (day: any) => {
     const tint = userOverviewLightMode.value ? dayTintLight(day) : dayTintDark(day)
-    return tint ? { backgroundColor: tint } : undefined
+    const stripes = userOverviewLightMode.value ? dayTintLightStripes(day) : dayTintDarkStripes(day)
+    if (!tint) return undefined
+    return stripes ? { backgroundColor: tint, backgroundImage: stripes } : { backgroundColor: tint }
 }
 const dayHeaderAccent = (day: any) => dayTintByKey.value.get(day?.fullDay)?.accent ?? null
 const isTodayColumn = (day: any) => day?.fullDay === todayKey
@@ -2365,7 +2421,7 @@ function recomputeRowHeights() {
                 return
             }
 
-            const rooms = shiftPlanArrayRef.value
+            const rooms = displayedShiftPlanRooms.value
             const dayList = days.value ?? []
             const result: number[] = []
 
@@ -2470,7 +2526,7 @@ watch(
         expandDays.value,
         displayProjectGroups.value,
         calendarSettings.value,
-        shiftPlanArrayRef.value,
+        displayedShiftPlanRooms.value,
         days.value,
         // Spaltenzoom ändert die verfügbaren Textbreiten UND die Kartenhöhen
         // (Kompaktkarte) — Summaries verwerfen und Baseline neu messen
@@ -2901,7 +2957,7 @@ function startShiftCalendarListener() {
         onWorkerNeedReload: reloadSingleWorker,
         onLookupsReceived: mergeLookups,
         // Geplante Termine nur mit Planungskalender-Recht (wie der Server-Load, Event::visiblePlanningFor)
-        subscribePlanningChannels: is('artwork admin') || can('can see planning calendar') || can('can edit planning calendar'),
+        subscribePlanningChannels: canViewPlanning({ isAdmin: is('artwork admin'), can }),
     })
     shiftCalendarListener.init()
 }
@@ -3051,6 +3107,10 @@ onBeforeUnmount(() => {
     if (originalVisit.value) {
         router.visit = originalVisit.value
     }
+    // Sonst fragte der Browser auf fremden Seiten "Seite verlassen?" (tote Closure mit multiEditMode)
+    if (window.onbeforeunload === shiftPlanBeforeUnload) {
+        window.onbeforeunload = null
+    }
 })
 
 function workerMapKey(row: any) {
@@ -3129,9 +3189,10 @@ function shiftPlanCellInnerClass(row: any, day: any) {
 
 // Freigabe-Workflow-Status der KW-Kachel (Dienstplanfreigabe):
 // requested = angefragt (blau), committed = festgeschrieben (grün),
-// attention = nach Festschreibung geändert / nicht verfügbar (gelb)
+// attention = nach Festschreibung geändert / nicht verfügbar (gelb).
+// Individuelle Zeiten zählen mit, auch in Wochen ohne Schicht im Gewerk.
 function kwWorkflowStatus(row: any, day: any): string | null {
-    return row.worker?.weeklyWorkflowStatus?.[row.craft.id]?.[day.weekNumber] ?? null
+    return resolveKwWorkflowStatus(row.worker?.weeklyWorkflowStatus, row.craft.id, day.weekNumber)
 }
 
 function kwWorkflowStatusClass(row: any, day: any): string {
@@ -3397,14 +3458,16 @@ function addDayAndRoomToMultiEditCalendar(day: string, roomId: number) {
     }
 }
 
+function shiftPlanBeforeUnload(event: BeforeUnloadEvent) {
+    if (multiEditMode.value && userForMultiEdit.value && !preventNextNavigation.value) {
+        event.preventDefault()
+        ;(event as any).returnValue = $t('Would you like to save the changes before you leave the page?')
+    }
+}
+
 function setupInertiaNavigationGuard() {
     originalVisit.value = router.visit
-    window.onbeforeunload = (event) => {
-        if (multiEditMode.value && userForMultiEdit.value && !preventNextNavigation.value) {
-            event.preventDefault()
-            ;(event as any).returnValue = $t('Would you like to save the changes before you leave the page?')
-        }
-    }
+    window.onbeforeunload = shiftPlanBeforeUnload
 
     router.visit = async (url: string, options: any = {}) => {
         // Standardmäßig Scroll-Position beibehalten, außer explizit überschrieben
@@ -3649,7 +3712,7 @@ let userOverviewScrollRestored = false
 
 function readUserOverviewScroll(): { top: number, left: number, range: string } | null {
     try {
-        const saved = JSON.parse(localStorage.getItem(userOverviewScrollKey.value) ?? 'null')
+        const saved = JSON.parse(safeGetItem(userOverviewScrollKey.value) ?? 'null')
         return saved && typeof saved.top === 'number' ? saved : null
     } catch {
         return null
@@ -3662,7 +3725,7 @@ function saveUserOverviewScroll() {
     // Mount (scrollTop 0) den gemerkten Stand
     if (!el || !userOverviewScrollRestored) return
     try {
-        localStorage.setItem(userOverviewScrollKey.value, JSON.stringify({
+        safeSetItem(userOverviewScrollKey.value, JSON.stringify({
             top: el.scrollTop,
             left: el.scrollLeft,
             range: userOverviewRangeKey.value,
@@ -3840,7 +3903,9 @@ function setOpenViolationsFilter(active: boolean) {
     router.patch(
         route('update.user.calendar.filter.open-violations', authUser.value.id),
         { filter_type: 'shift_filter', show_only_users_with_open_violations: active },
-        { preserveScroll: true, preserveState: false },
+        // Filter wirkt clientseitig (Verstöße sind geladen): nur user_filters nachladen statt die
+        // Seite neu aufzubauen und alle Räume/Personen erneut zu holen
+        { preserveScroll: true, preserveState: true, only: ['user_filters'] },
     )
 }
 
@@ -4090,6 +4155,10 @@ async function handleWorkerReload() {
     }
 }
 
+// Tagesdienst-Zellen, deren Zuweisung gerade gespeichert wird: ein zweiter Klick vor der Antwort
+// schickte sonst denselben attach erneut (bzw. hob ihn wieder auf)
+const dayServiceCellsInFlight = new Set<string>()
+
 function handleCellClick(user: any, day: any) {
     if (multiEditMode.value && !userForMultiEdit.value) {
         handleMultiEdit(user, day)
@@ -4135,18 +4204,24 @@ function handleCellClick(user: any, day: any) {
             }
         }
 
-        if (hasDayService) {
-            axios.patch(route('remove.day.service.from.user', {dayServiceable: user.element.id}), {
+        const cellKey = `${type}|${user.element.id}|${day.withoutFormat}`
+        if (dayServiceCellsInFlight.has(cellKey)) {
+            return
+        }
+        dayServiceCellsInFlight.add(cellKey)
+        const request = hasDayService
+            ? axios.patch(route('remove.day.service.from.user', {dayServiceable: user.element.id}), {
                 dayService: selectedDayService.value.id, date: day.withoutFormat, modelType: type,
-            }).then(setWorkerDayServicesCallback)
-        } else {
-            axios.post(route('day-service.attach', {
+            })
+            : axios.post(route('day-service.attach', {
                 dayServiceable: user.element.id,
                 dayService: selectedDayService.value.id
             }), {
                 date: day.withoutFormat, modelType: type,
-            }).then(setWorkerDayServicesCallback)
-        }
+            })
+        request.then(setWorkerDayServicesCallback)
+            .catch(() => {})
+            .finally(() => dayServiceCellsInFlight.delete(cellKey))
         return
     }
     const isOwnCell = user.type === 0 && user.element.id === authUser.value.id
@@ -4275,6 +4350,15 @@ function openHistoryForWorkerDay(payload: { search: string; person?: HistoryModa
         person: payload.person ?? null,
         startDate: payload.date,
         endDate: payload.date,
+        autoLoad: true,
+    })
+}
+
+// Shortcut im Tageskopf: Schichtverlauf eines Tages für alle Personen (inkl. Abwesenheiten, Notizen, Tagesdienste).
+function openHistoryForDay(day: { withoutFormat: string }) {
+    openHistoryModal({
+        startDate: day.withoutFormat,
+        endDate: day.withoutFormat,
         autoLoad: true,
     })
 }

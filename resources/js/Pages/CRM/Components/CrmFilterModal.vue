@@ -78,7 +78,7 @@
                     </select>
 
                     <!-- Select (checkboxes per option, OR logic) -->
-                    <div v-else-if="prop.type === 'select'" class="flex flex-wrap gap-3">
+                    <div v-else-if="prop.type === 'select' || prop.type === 'multiselect'" class="flex flex-wrap gap-3">
                         <label
                             v-for="option in (prop.select_values ?? [])"
                             :key="option"
@@ -126,12 +126,15 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'apply'])
 
+// Einfach- und Mehrfachauswahl filtern über Checkboxen je Option (ODER-Verknüpfung)
+const isOptionFilter = (prop) => prop?.type === 'select' || prop?.type === 'multiselect'
+
 // Initialize local filters from currentFilters
 const buildInitialFilters = () => {
     const filters = {}
     for (const prop of props.filterableProperties) {
         const current = props.currentFilters[prop.id]
-        if (prop.type === 'select') {
+        if (isOptionFilter(prop)) {
             filters[prop.id] = Array.isArray(current) ? [...current] : []
         } else {
             filters[prop.id] = current ?? ''
@@ -164,7 +167,7 @@ const formatFilterLabel = (prop) => {
 
 const removeFilter = (propId) => {
     const prop = props.filterableProperties.find(p => p.id === propId)
-    if (prop?.type === 'select') {
+    if (isOptionFilter(prop)) {
         localFilters[propId] = []
     } else {
         localFilters[propId] = ''
@@ -173,7 +176,7 @@ const removeFilter = (propId) => {
 
 const resetFilters = () => {
     for (const prop of props.filterableProperties) {
-        if (prop.type === 'select') {
+        if (isOptionFilter(prop)) {
             localFilters[prop.id] = []
         } else {
             localFilters[prop.id] = ''

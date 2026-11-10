@@ -6,6 +6,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
+use Artwork\Modules\Project\Services\ProjectDocumentPlacementService;
 use Artwork\Modules\Project\Services\ProjectTabDocumentService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -17,6 +18,7 @@ class ProjectFilePolicy
     public function __construct(
         private readonly ProjectComponentVisibilityService $projectComponentVisibilityService,
         private readonly ProjectTabDocumentService $projectTabDocumentService,
+        private readonly ProjectDocumentPlacementService $placementService,
     ) {
     }
 
@@ -27,13 +29,10 @@ class ProjectFilePolicy
         // Check if user has access to the file
         $hasFileAccess = $projectFile->accessingUsers->contains($user->id);
 
-        // Dateien gehören zu dem Tab, in dem sie hochgeladen wurden: ohne Sicht auf diesen Tab kein
-        // Zugriff, außer die Datei wurde der Person ausdrücklich freigegeben (Admins via Gate::before).
-        if (
-            $projectFile->tab_id !== null &&
-            !$hasFileAccess &&
-            !$this->projectComponentVisibilityService->canSeeTab($user, $projectFile->tab_id)
-        ) {
+        // Dateien gehören zu dem Tab, in dem sie hochgeladen wurden, und zu den Tabs der Upload-Bereiche, in denen
+        // sie ausdrücklich angezeigt werden (visible_in): ohne Sicht auf einen dieser Tabs kein Zugriff, außer die
+        // Datei wurde der Person ausdrücklich freigegeben (Admins via Gate::before).
+        if ($projectFile->tab_id !== null && !$hasFileAccess && !$this->canSeeAnyTabOf($user, $projectFile)) {
             return false;
         }
 
@@ -46,6 +45,17 @@ class ProjectFilePolicy
         // Basis ist die Projektsicht (ProjectPolicy::view: "view/write projects", Team, Abteilungen) –
         // dieselbe Regel wie für die Dokumentlisten (CanViewProject); ausdrückliche Freigabe genügt auch.
         return $hasFileAccess || ($project !== null && $user->can('view', $project));
+    }
+
+    private function canSeeAnyTabOf(User $user, ProjectFile $projectFile): bool
+    {
+        foreach ($this->placementService->tabIdsOf($projectFile) as $tabId) {
+            if ($this->projectComponentVisibilityService->canSeeTab($user, $tabId)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function create(User $user, Project $project, ?int $tabId = null): bool

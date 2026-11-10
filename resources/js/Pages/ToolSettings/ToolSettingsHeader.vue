@@ -7,7 +7,28 @@
                 icon-bg-class="bg-accent-50 text-accent-700"
                 :description="$t('Define global settings for your artwork.')"
                 :search-enabled="false"
-            />
+            >
+                <template #subtitle>
+                    <div>{{ $t('Define global settings for your artwork.') }}</div>
+                    <div class="mt-0.5 flex flex-wrap items-center gap-x-1.5">
+                        <span>
+                            {{ $t('Installed version') }}:
+                            <span class="font-medium text-text">{{ artworkVersion ?? $t('unknown') }}</span>
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <a
+                            :href="changelogUrl"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-0.5 font-medium text-accent-600 hover:text-accent-700"
+                            :title="$t('If the changelog lists a newer version, its changes are not live on your installation yet.')"
+                        >
+                            {{ $t('Changelog') }}
+                            <IconExternalLink class="size-3" aria-hidden="true" />
+                        </a>
+                    </div>
+                </template>
+            </ToolbarHeader>
 
             <!-- Tabs outside the header card -->
             <BaseTabs :tabs="tabs" />
@@ -24,7 +45,8 @@ import {defineComponent} from 'vue';
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
-import {IconSettings} from '@tabler/icons-vue';
+import {IconExternalLink, IconSettings} from '@tabler/icons-vue';
+import {changelogManualPath, manualUrl} from "@/Helper/manualLinks.js";
 import Permissions from "@/Mixins/Permissions.vue";
 
 export default defineComponent({
@@ -33,7 +55,16 @@ export default defineComponent({
     components: {
         AppLayout,
         ToolbarHeader,
-        BaseTabs
+        BaseTabs,
+        IconExternalLink
+    },
+    computed: {
+        artworkVersion() {
+            return this.$page.props.artworkVersion ?? null;
+        },
+        changelogUrl() {
+            return manualUrl(changelogManualPath(this.artworkVersion), this.$i18n.locale);
+        }
     },
     data() {
         return {

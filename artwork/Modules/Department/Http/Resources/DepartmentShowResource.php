@@ -30,7 +30,8 @@ class DepartmentShowResource extends JsonResource
                 'email' => $user->visibleEmailFor($request->user()),
                 'phone_number' => $user->visiblePhoneNumberFor($request->user()),
                 'position' => $user->position,
-                'profile_photo_url' => $user->profile_photo_url
+                'profile_photo_url' => $user->profile_photo_url,
+                'deactivated_at' => User::deactivatedAtFor($user)
             ]),
         ];
     }

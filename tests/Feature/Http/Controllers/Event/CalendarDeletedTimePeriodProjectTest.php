@@ -38,7 +38,9 @@ final class CalendarDeletedTimePeriodProjectTest extends FeatureTestCase
         $admin = $this->actingAsAdmin();
         $project = Project::factory()->create();
 
-        $admin->calendar_settings()->updateOrCreate([], [
+        // Kalender und Planungskalender haben je eine eigene Einstellungszeile
+        $relation = $routeName === 'planning-event-calendar.index' ? 'planningCalendarSettings' : 'calendar_settings';
+        $admin->{$relation}()->updateOrCreate([], [
             'use_project_time_period' => $useProjectTimePeriod,
             'time_period_project_id' => $project->id,
         ]);
@@ -49,7 +51,7 @@ final class CalendarDeletedTimePeriodProjectTest extends FeatureTestCase
 
         $this->get(route($routeName))->assertOk();
 
-        $settings = $admin->calendar_settings()->first();
+        $settings = $admin->{$relation}()->first();
         $this->assertFalse($settings->use_project_time_period);
         $this->assertSame(0, (int) $settings->time_period_project_id);
     }

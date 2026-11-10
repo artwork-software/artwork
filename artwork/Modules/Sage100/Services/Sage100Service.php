@@ -38,7 +38,12 @@ class Sage100Service
 
     private const string FILTER_FIELD_KSTTRAEGER = 'KstTraeger';
 
-    private SageClient $sage100Client;
+    /**
+     * Erst beim ersten Abruf erzeugt: der Service steckt im Konstruktor u. a. des ProjectControllers, und ein
+     * nicht entschlüsselbares Sage-Passwort (Deploy vor der Migration, anderer APP_KEY) legte sonst jede
+     * Projektseite mit einem 500er lahm.
+     */
+    private ?SageClient $sage100Client = null;
 
     public function __construct(
         private readonly SageClientFactory $sage100ClientFactory,
@@ -52,7 +57,6 @@ class Sage100Service
         private readonly SageDataBookingTypeSplitter $sageDataBookingTypeSplitter,
         private readonly SageBookingLogRecorder $sageBookingLogRecorder
     ) {
-        $this->sage100Client = $this->sage100ClientFactory->createClient();
     }
 
     public function importDataToBudget(
@@ -795,6 +799,8 @@ class Sage100Service
         string|null $specificDay,
         string|null $ktr = null,
     ): array {
+        $this->sage100Client ??= $this->sage100ClientFactory->createClient();
+
         return $this->sage100Client->getData($this->buildQuery($count, $specificDay, $ktr));
     }
 

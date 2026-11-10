@@ -24,6 +24,7 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Events\AssignUserToShift;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\User\Models\User;
@@ -809,7 +810,7 @@ class ShiftService
             foreach ($shifts as $shift) {
                 $roomId = $shift->room_id ?? $shift->event?->room_id;
                 if ($roomId !== null) {
-                    broadcast(new UpdateEventShiftInShiftPlan($shift, $roomId));
+                    SafeBroadcast::send(new UpdateEventShiftInShiftPlan($shift, $roomId));
                 }
             }
         })->afterResponse();

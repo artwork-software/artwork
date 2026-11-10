@@ -30,6 +30,7 @@ interface ProjectFile {
     created_at?: string
     mime_type?: string | null
     url?: string | null
+    visible_keys?: string[]
 }
 
 const props = defineProps<{
@@ -49,6 +50,11 @@ const loadDocumentsError = ref('')
 const remoteProjectWriteIds = ref<Array<number | string>>(props.projectWriteIds ?? [])
 const remoteProjectManagerIds = ref<Array<number | string>>(props.projectManagerIds ?? [])
 const hiddenTabNames = ref<string[]>([])
+// Upload-Bereiche der Dateiupload-Komponente: Badge „Sichtbar in …“ je Datei
+const placementLabels = ref<Map<string, string>>(new Map())
+function visibleAreaNames(file: ProjectFile): string[] {
+    return (file.visible_keys ?? []).map((key) => placementLabels.value.get(key)).filter(Boolean) as string[]
+}
 
 const documentForm = reactive<{ errors: Record<string, string[] | string> }>({ errors: {} })
 const uploadDocumentFeedback = ref('')
@@ -121,6 +127,8 @@ async function fetchDocuments() {
         }
 
         hiddenTabNames.value = Array.isArray(data?.hiddenTabNames) ? data.hiddenTabNames : []
+        placementLabels.value = new Map((Array.isArray(data?.placements) ? data.placements : [])
+            .map((placement: { key: string, label: string }) => [placement.key, placement.label]))
     } catch (error) {
         if (!documentRequests.isLatest(requestId)) return
         console.error(error)
@@ -438,6 +446,13 @@ function closePreview() {
                                 <span v-if="file.created_at" class="inline-flex items-center gap-1">
                                   • <span>{{ $t('Uploaded') }}:</span>
                                   <time :datetime="file.created_at">{{ formatDate(file.created_at) }}</time>
+                                </span>
+                                <span
+                                    v-if="visibleAreaNames(file).length"
+                                    class="inline-flex items-center rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-text-muted"
+                                    :title="visibleAreaNames(file).join(', ')"
+                                >
+                                    {{ $t('Visible in') }}: {{ visibleAreaNames(file).join(', ') }}
                                 </span>
                             </div>
                         </div>

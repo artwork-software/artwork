@@ -16,15 +16,19 @@ use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectDocumentPlacementService;
+use Artwork\Modules\Project\Services\ProjectTabDocumentService;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectFileController extends Controller
@@ -50,7 +54,9 @@ class ProjectFileController extends Controller
         private readonly ChangeService $changeService,
         private readonly NotificationService $notificationService,
         private readonly ProjectTabService $projectTabService,
-        protected readonly GeneralSettingsService $generalSettingsService
+        protected readonly GeneralSettingsService $generalSettingsService,
+        private readonly ProjectDocumentPlacementService $placementService,
+        private readonly ProjectTabDocumentService $projectTabDocumentService,
     ) {
     }
 
@@ -68,6 +74,21 @@ class ProjectFileController extends Controller
 
         $file = $request->file('file');
         $this->handleFile(ArtworkFileTypes::PROJECT, $file);
+
+        // Upload über einen Bereich der Dateiupload-Komponente: dessen Grenzen und gewählte Sichtbarkeit
+        $placementKey = $this->resolveUploadPlacementKey($request, $tabId);
+        $visibleIn = null;
+        if ($placementKey !== null) {
+            $this->placementService->assertUploadAllowed($project, $placementKey, $file);
+            $visibleIn = $request->has('visibleIn')
+                ? $this->placementService->normalizeVisibleIn(
+                    (array) $request->input('visibleIn', []),
+                    $tabId,
+                    $this->projectTabDocumentService->selectablePlacementKeys($request->user()),
+                )
+                : null;
+        }
+
         $original_name = $file->getClientOriginalName();
         $basename = StoredFileName::forUpload($file);
 
@@ -75,6 +96,8 @@ class ProjectFileController extends Controller
 
         $projectFile = $project->project_files()->create([
             'tab_id' => $tabId,
+            'visible_in' => $visibleIn,
+            'uploaded_via' => $placementKey,
             'name' => $original_name,
             'basename' => $basename,
             // Upload aus den Budget-Informationen (ProjectFileUploadModal): nur Freigabeliste und Admins
@@ -159,6 +182,61 @@ class ProjectFileController extends Controller
 
         //return Redirect::back();
         SafeBroadcast::send(new UploadNewDocumentInProject($projectFile, $project->id));
+    }
+
+    /**
+     * Der Bereich muss existieren und im Upload-Tab liegen; sonst zählt der Upload wie bisher nur zum Tab.
+     */
+    private function resolveUploadPlacementKey(Request $request, ?int $tabId): ?string
+    {
+        $key = $request->input('placementKey');
+        if (!is_string($key) || $key === '' || $tabId === null) {
+            return null;
+        }
+
+        $placement = $this->placementService->find($key);
+        if ($placement === null || !in_array($tabId, $placement['tab_ids'], true)) {
+            throw ValidationException::withMessages(['placementKey' => __('validation.in', ['attribute' => 'placementKey'])]);
+        }
+
+        return $key;
+    }
+
+    /**
+     * "Sichtbar in": Upload-Bereiche, in denen die Datei erscheint (null/Standard = über die Tab-Auswahl).
+     */
+    public function updateVisibility(Request $request, ProjectFile $projectFile): JsonResponse
+    {
+        $this->authorize('update', $projectFile);
+        $request->validate([
+            'visible_in' => ['present', 'nullable', 'array'],
+            'visible_in.*' => ['string'],
+        ]);
+
+        // Bereiche in Tabs, die die Person nicht sieht, darf sie nicht neu wählen; bereits gesetzte bleiben erlaubt
+        $selectableKeys = $this->projectTabDocumentService->selectablePlacementKeys($request->user());
+        if ($selectableKeys !== null) {
+            $selectableKeys = array_values(array_unique([
+                ...$selectableKeys,
+                ...$this->placementService->visibleKeysOf($projectFile),
+            ]));
+        }
+
+        $projectFile->update([
+            'visible_in' => $this->placementService->normalizeVisibleIn(
+                $request->input('visible_in'),
+                $projectFile->tab_id,
+                $selectableKeys,
+            ),
+        ]);
+
+        SafeBroadcast::send(new UploadNewDocumentInProject($projectFile, (int) $projectFile->project_id, true));
+
+        return response()->json([
+            'id' => $projectFile->id,
+            'visible_in' => $projectFile->visible_in,
+            'visible_keys' => $this->placementService->visibleKeysOf($projectFile),
+        ]);
     }
 
     public function download(Request $request, ProjectFile $projectFile): StreamedResponse

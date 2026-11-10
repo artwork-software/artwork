@@ -24,9 +24,6 @@ use Throwable;
 
 class ShiftSettingsController extends Controller
 {
-    /** Gelesene Personenfelder der Schichteinstellungen (Listen, AddCraftsModal) */
-    private const PERSON_FIELDS = ['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url'];
-
     public function __construct(
         private readonly Redirector $redirector,
         private readonly ResponseFactory $responseFactory,
@@ -49,7 +46,7 @@ class ShiftSettingsController extends Controller
             'eventTypes' => EventType::all(),
             // Auswahlliste der Planer:innen (AddCraftsModal): Name, Bild — keine vollen User-Modelle
             'usersWithPermission' => User::permission(PermissionEnum::SHIFT_PLANNER->value)->get()
-                ->each->setVisible(self::PERSON_FIELDS),
+                ->each->setVisible(User::AVATAR_FIELDS),
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByPosition(),
             'shiftTimePresets' => ShiftTimePreset::all(),
             'shiftSettings' => $shiftSettings,
@@ -57,7 +54,7 @@ class ShiftSettingsController extends Controller
                 ->orderBy('user_id')
                 ->get()
                 ->each(static fn (ShiftCommitWorkflowUser $workflowUser) => $workflowUser->user
-                    ?->setVisible(self::PERSON_FIELDS)),
+                    ?->setVisible(User::AVATAR_FIELDS)),
             'globalQualifications' => $this->globalQualificationService->getAll(),
         ]);
     }
@@ -77,7 +74,7 @@ class ShiftSettingsController extends Controller
 
         foreach ($crafts as $craft) {
             \Artwork\Modules\Craft\Services\CraftService::slimPlaners($craft);
-            $craft->managingUsers->each->setVisible([...self::PERSON_FIELDS, 'type', 'pivot']);
+            $craft->managingUsers->each->setVisible([...User::AVATAR_FIELDS, 'type', 'pivot']);
         }
 
         return $crafts;

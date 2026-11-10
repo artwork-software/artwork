@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Auth\ActiveUserProvider;
 use App\Auth\ExtendedTokenValidator;
 use App\Policies\AccommodationPolicy;
 use App\Policies\ArtistPolicy;
@@ -62,7 +63,10 @@ use Artwork\Modules\ModuleSettings\Http\Policies\ModuleSettingsPolicy;
 use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
+use Artwork\Modules\Project\Models\ProjectContentExportTemplate;
 use Artwork\Modules\Project\Policies\CommentPolicy;
+use Artwork\Modules\Project\Policies\ProjectContentExportTemplatePolicy;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
@@ -84,7 +88,10 @@ use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Artwork\Modules\Webhook\Policies\WebhookEndpointPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Auth\EloquentUserProvider;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Horizon\Horizon;
 use Laravel\Passport\Bridge\AccessTokenRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\Token;
@@ -98,6 +105,7 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Department::class => DepartmentPolicy::class,
         Project::class => ProjectPolicy::class,
+        ProjectContentExportTemplate::class => ProjectContentExportTemplatePolicy::class,
         Checklist::class => ChecklistPolicy::class,
         Sector::class => SectorPolicy::class,
         Category::class => CategoryPolicy::class,
@@ -177,6 +185,15 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
+        // Eloquent-Provider für User: deaktivierte Accounts melden sich auf keinem Guard an. Überschreibt den
+        // Treiber "eloquent" statt einen eigenen Namen zu nutzen, weil Passport (HasApiTokens::getProviderName)
+        // nur Provider mit driver "eloquent" findet; andere Models (z. B. externals) bleiben unverändert.
+        Auth::provider('eloquent', static function ($app, array $config): EloquentUserProvider {
+            return is_a($config['model'], User::class, true)
+                ? new ActiveUserProvider($app['hash'], $config['model'])
+                : new EloquentUserProvider($app['hash'], $config['model']);
+        });
+
         Passport::$clientUuids = false;
         // Scopes der Maschinen-API und der App. Ein Scope, der hier fehlt, lässt sich nicht
         // vergeben — die ScopeRepository lehnt ihn beim Anlegen mit invalid_scope ab.
@@ -251,16 +268,57 @@ class AuthServiceProvider extends ServiceProvider
                     return false;
                 }
 
-                return $crmContact->teamProjects()
+                if (
+                    $crmContact->teamProjects()
+                        ->get()
+                        ->contains(static fn ($project): bool => $user->can('view', $project))
+                ) {
+                    return true;
+                }
+
+                // Projektkünstler*innen (Komponente „Projektkünstler*in“ oder Sonderrolle in einer Kontaktliste):
+                // Infokarte für alle, die das Projekt sehen (Kalender, Dienstplan, Übersicht)
+                $artistProjectIds = $crmContact->projects()->pluck('projects.id')
+                    ->merge(ProjectComponentCrmContact::query()
+                        ->where('crm_contact_id', $crmContact->id)
+                        ->where('is_artist', true)
+                        ->pluck('project_id'))
+                    ->unique();
+
+                return Project::query()
+                    ->whereIn('id', $artistProjectIds)
                     ->get()
                     ->contains(static fn ($project): bool => $user->can('view', $project));
             }
         );
 
+        // Horizon zeigt Job-Payloads (u. a. Magic-Link-Tokens). Ohne eigenes Gate wäre das Dashboard
+        // bei APP_ENV=local anonym offen und sonst für niemanden; daher nur für artwork-Admins.
+        Gate::define('viewHorizon', static function (?User $user = null): bool {
+            return $user?->hasRole(RoleEnum::ARTWORK_ADMIN->value) ?? false;
+        });
+        Horizon::auth(static function ($request): bool {
+            $user = $request->user();
+
+            return $user instanceof User && Gate::forUser($user)->allows('viewHorizon');
+        });
+
         // Dienstplaner-Berechtigung als benanntes Gate — die eine Definition
         // für Web und App (Admins via Gate::before).
         Gate::define('plan-shifts', static function (User $user): bool {
             return $user->can(PermissionEnum::SHIFT_PLANNER->value);
+        });
+
+        // Inventarübersicht (Web und App): "Inventar sehen" oder ein Recht, das es im Katalog enthält
+        // (Anlegen/Bearbeiten, Löschen, Disposition). Artikelplanung und Materialausgaben bleiben an der
+        // Disposition; der Modul-Schalter wird separat geprüft. Admins via Gate::before.
+        Gate::define('view-inventory', static function (User $user): bool {
+            return $user->canAny([
+                PermissionEnum::INVENTORY_VIEW->value,
+                PermissionEnum::INVENTORY_CREATE_EDIT->value,
+                PermissionEnum::INVENTORY_DELETE->value,
+                PermissionEnum::INVENTORY_DISPOSITION->value,
+            ]);
         });
     }
 }

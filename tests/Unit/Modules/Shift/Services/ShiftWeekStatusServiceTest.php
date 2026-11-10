@@ -450,7 +450,9 @@ final class ShiftWeekStatusServiceTest extends TestCase
         );
 
         $this->assertSame($small, $large);
-        $this->assertLessThanOrEqual(7, $large);
+        // 9: je eine konstante Abfrage für die individuellen Zeiten der Anfragen (Verlaufstabelle) und
+        // für offene Änderungen an freigegebenen individuellen Zeiten
+        $this->assertLessThanOrEqual(9, $large);
     }
 
     private function countQueries(callable $callback): int

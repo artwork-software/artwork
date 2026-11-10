@@ -15,6 +15,7 @@ use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Database\Eloquent\Collection;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 readonly class DepartmentService
 {
@@ -113,6 +114,8 @@ readonly class DepartmentService
 
     public function deleteDepartment(Department $department, NotificationService $notificationService): void
     {
+        $memberIds = $this->departmentRepository->getDepartmentUsers($department)->pluck('id')->all();
+
         foreach ($this->departmentRepository->getDepartmentUsers($department) as $user) {
             $this->sendTeamNotification(
                 __('notification.department.delete', ['department' => $department->name], $user->language),
@@ -126,6 +129,8 @@ readonly class DepartmentService
         }
 
         $department->delete();
+        // Raumzugriff des Teams (department_room) fällt per FK-Cascade weg – gecachten Anfragen-Status verwerfen
+        User::forgetCachedShareDataForIds($memberIds);
 
         $this->broadcastDepartmentUpdated();
     }
@@ -173,7 +178,7 @@ readonly class DepartmentService
 
     public function broadcastDepartmentUpdated(): void
     {
-        broadcast(new DepartmentUpdated())->toOthers();
+        SafeBroadcast::send(new DepartmentUpdated(), true);
     }
 
     public function createDepartmentShowResource(Department $department): DepartmentShowResource

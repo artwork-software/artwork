@@ -38,6 +38,7 @@ class CalendarEventResource extends JsonResource
             'created_by'  => $creator === null ? null : [
                 'id'               => $creator->getAttribute('id'),
                 'profile_photo_url' => $creator->getAttribute('profile_photo_url'),
+                'deactivated_at' => User::deactivatedAtFor($creator),
                 'first_name'       => $creator->getAttribute('first_name'),
                 'last_name'        => $creator->getAttribute('last_name'),
             ],
@@ -96,7 +97,8 @@ class CalendarEventResource extends JsonResource
 
         return [
             $project->getAttribute('name'),
-            $project->getAttribute('artists'),
+            // Freitext plus verknüpfte CRM-Künstler*innen
+            $project->artistDisplayText(),
             $projectStateColor,
             $this->determineProjectLeaders($project->getAttribute('managerUsers')->all())
         ];
@@ -144,6 +146,7 @@ class CalendarEventResource extends JsonResource
             ? array_map(fn(User $u) => [
                 'id'                => $u->getAttribute('id'),
                 'profile_photo_url' => $u->getAttribute('profile_photo_url'),
+                'deactivated_at' => User::deactivatedAtFor($u),
                 'first_name'        => $u->getAttribute('first_name'),
                 'last_name'         => $u->getAttribute('last_name'),
             ], $managerUsers)

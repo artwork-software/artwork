@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateInventoryTagRequest extends FormRequest
@@ -24,7 +25,7 @@ class UpdateInventoryTagRequest extends FormRequest
         return [
             'id'                     => ['required', 'integer', 'exists:inventory_tags,id'],
             'name'                   => ['required', 'string', 'max:255'],
-            'color'                  => ['required', 'string', 'max:7'],
+            'color'                  => ['required', 'string', 'max:7', new HexColorRule()],
             'has_restricted_permissions' => ['boolean'],
             'permission_mode'        => ['nullable', 'in:all_can_edit,restricted_edit'],
             'inventory_tag_group_id' => ['nullable', 'integer', 'exists:inventory_tag_groups,id'],

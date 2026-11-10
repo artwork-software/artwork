@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $user_id
+ * @property string $calendar_scope 'calendar' (Kalender) oder 'planning' (Planungskalender)
  * @property boolean $project_status
  * @property boolean $project_artists
  * @property boolean $description
@@ -45,6 +46,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserCalendarSettings extends Model
 {
     use HasFactory;
+
+    /** Einstellungszeile des Kalenders */
+    public const SCOPE_CALENDAR = 'calendar';
+
+    /** Einstellungszeile des Planungskalenders – getrennt, damit Einstellungen nicht übergreifen */
+    public const SCOPE_PLANNING = 'planning';
 
     protected $hidden = [
         'id',

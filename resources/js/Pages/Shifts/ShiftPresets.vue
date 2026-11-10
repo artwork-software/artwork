@@ -8,37 +8,6 @@
                 <div class="flex ml-5 mr-4 font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                     {{$t('All shift templates')}}
                 </div>
-                <!-- Right now the templates are not divided in eventtypes so this is not needed
-                <Listbox as="div" class="flex w-72 ml-5" v-model="selectedFilter">
-                    <ListboxButton
-                        class="bg-white w-full relative py-2 cursor-pointer">
-                        <div class="flex items-center my-auto">
-                            <h2 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">{{ selectedFilter.name }}</h2>
-                            <span class="inset-y-0 flex items-center pr-2 pointer-events-none">
-                            <IconChevronDown class="h-5 w-5" aria-hidden="true"/>
-                        </span>
-                        </div>
-                    </ListboxButton>
-                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                        <ListboxOptions class="absolute w-80 z-10 mt-12 bg-surface-inverse shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto">
-                            <ListboxOption as="template" class="max-h-8" key="0" :value="{name: 'Alle Vorlagen', id: 0}" v-slot="{ active, selected }">
-                                <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
-                                <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'block truncate']">
-                                    {{$t('All shift templates')}}
-                                </span>
-                                </li>
-                            </ListboxOption>
-                            <ListboxOption as="template" class="max-h-8" v-for="filter in event_types" :key="filter.name" :value="filter"  v-show="filter.id !== 1" v-slot="{ active, selected }">
-                                <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
-                                <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'block truncate']">
-                                    {{ filter.name }}
-                                </span>
-                                </li>
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </transition>
-                </Listbox>
-                -->
                 <button
                     @click="showAddShiftPresetModal = true"
                     type="button"
@@ -53,20 +22,34 @@
                     <span class="ml-1 my-auto">{{$t('Create a new shift template')}}</span>
                 </div>
             </div>
-            <div>
-                <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
-                     class="cursor-pointer inset-y-0 mr-3">
-                    <IconSearch class="h-5 w-5" aria-hidden="true"/>
-                </div>
-                <div v-else class="flex items-center w-full w-64 mr-2">
-                    <input v-model="preset_search"
-                           id="changeEndTime"
-                           type="text"
-                           required
-                           :placeholder="$t('Name of the template*')"
-                           class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle  disabled:border-none w-full h-12"/>
-
-                    <IconX class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar"/>
+            <div class="mr-3">
+                <button
+                    v-if="!showSearchbar"
+                    type="button"
+                    class="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors duration-150 hover:bg-surface-hover hover:text-text motion-reduce:transition-none"
+                    :aria-label="$t('Search')"
+                    @click="showSearchbar = true"
+                >
+                    <IconSearch class="size-5" stroke-width="1.5" aria-hidden="true"/>
+                </button>
+                <div v-else class="flex w-64 items-center gap-x-2">
+                    <BaseInput
+                        id="shiftPresetSearch"
+                        v-model="preset_search"
+                        label="Search"
+                        :show-label="false"
+                        :placeholder="$t('Search for templates')"
+                        autocomplete="off"
+                        autofocus
+                    />
+                    <button
+                        type="button"
+                        class="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors duration-150 hover:bg-surface-hover hover:text-text motion-reduce:transition-none"
+                        :aria-label="$t('Close')"
+                        @click="closeSearchbar"
+                    >
+                        <IconX class="size-5" stroke-width="1.5" aria-hidden="true"/>
+                    </button>
                 </div>
             </div>
         </div>
@@ -80,50 +63,39 @@
                     />
                 </div>
             </div>
-            <div v-else>
-                <div class="rounded-md bg-danger-surface p-4 ml-5">
-                    <div class="flex text-sm text-danger">
-                        {{$t('No shift templates available.')}}
-                    </div>
-                </div>
-            </div>
+            <EmptyState
+                v-else
+                icon="IconTemplate"
+                :title="$t('No shift templates available.')"
+            />
         </div>
         <AddShiftPresetModal :event_types="event_types" v-if="showAddShiftPresetModal" @closed="showAddShiftPresetModal = false" />
     </ShiftHeader>
 </template>
 <script>
-import {IconChevronDown, IconPlus, IconSearch, IconX} from "@tabler/icons-vue";
+import {IconPlus, IconSearch, IconX} from "@tabler/icons-vue";
 import {defineComponent} from 'vue'
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import SingleShiftPreset from "@/Pages/Shifts/Components/SingleShiftPreset.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import Input from "@/Jetstream/Input.vue";
-import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import ShiftPresetTabs from "@/Pages/Shifts/Components/ShiftPresetTabs.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import EmptyState from "@/Artwork/Feedback/EmptyState.vue";
 
 export default defineComponent({
     name: "ShiftPresets",
     components: {
         ShiftPresetTabs,
-        TabComponent,
-        Input,
-        InputComponent,
+        BaseInput,
+        EmptyState,
         IconX,
         IconSearch,
         AddShiftPresetModal,
-        IconChevronDown,
         SvgCollection,
         IconPlus,
         SingleShiftPreset,
         ShiftHeader,
-        Listbox,
-        ListboxButton,
-        ListboxLabel,
-        ListboxOption,
-        ListboxOptions
     },
     props: [
         'shiftPresets',

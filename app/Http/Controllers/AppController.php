@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Fortify\PasswordValidationRules;
 use App\Providers\RouteServiceProvider;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\SetupTokenService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Http\Requests\UserCreateRequest;
 use Artwork\Modules\User\Models\User;
@@ -17,7 +18,9 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use ZxcvbnPhp\Zxcvbn;
@@ -29,12 +32,15 @@ class AppController extends Controller
     public function __construct(
         private readonly UserService $userService,
         private readonly Redirector $redirector,
+        private readonly SetupTokenService $setupTokenService,
     ) {
     }
 
     public function getPasswordScore(Request $request): int
     {
-        return (new Zxcvbn())->passwordStrength((string) $request->input('password'))['score'];
+        $validated = $request->validate(['password' => ['required', 'string', 'max:255']]);
+
+        return (new Zxcvbn())->passwordStrength($validated['password'])['score'];
     }
 
     //@todo: fix phpcs error - refactor function name to toggleHints
@@ -129,11 +135,7 @@ class AppController extends Controller
         ToggleUseProjectTimePeriodRequest $request
     ): RedirectResponse|bool {
         $user = $this->userService->getAuthUser();
-        $settings = $request->boolean('is_daily_view')
-            ? $user->daily_view_calendar_settings()
-            : $user->calendar_settings();
-
-        $settings->update([
+        $user->calendarSettingsFor($request->boolean('is_planning'), $request->boolean('is_daily_view'))->update([
             'use_project_time_period' => $request->boolean('use_project_time_period'),
             'time_period_project_id' => $request->integer('project_id')
         ]);
@@ -142,7 +144,10 @@ class AppController extends Controller
             return true;
         }
 
-        return $this->redirector->route('events');
+        // Aus dem Planungskalender heraus dort bleiben, statt im normalen Kalender zu landen
+        return $this->redirector->route(
+            $request->boolean('is_planning') ? 'planning-event-calendar.index' : 'events'
+        );
     }
 
     public function toggleCalendarSettingsUseProjectPeriodShiftPlan(
@@ -171,10 +176,29 @@ class AppController extends Controller
         return $settings->setup_finished ? Redirect::route('login') : Redirect::route('setup');
     }
 
-    public function showSetupPage(GeneralSettings $settings): RedirectResponse|Response|ResponseFactory
-    {
+    public function showSetupPage(
+        Request $request,
+        GeneralSettings $settings
+    ): RedirectResponse|Response|ResponseFactory {
         //setup process finished
-        return $settings->setup_finished ? Redirect::route('login') : inertia('Auth/Register');
+        if ($settings->setup_finished) {
+            return Redirect::route('login');
+        }
+
+        // Ohne ENV-Token und ohne gespeicherten Hash (z. B. Installation ohne Docker-Entrypoint)
+        // wird hier einmalig ein Token erzeugt; den Klartext sieht nur, wer das Server-Log lesen kann.
+        $generatedToken = $this->setupTokenService->ensureToken();
+        if ($generatedToken !== null) {
+            Log::warning(
+                'artwork setup token generated. Open the setup URL to create the first administrator: '
+                . $this->setupTokenService->setupUrl($generatedToken)
+            );
+        }
+
+        return inertia('Auth/Register', [
+            'setupToken' => (string) $request->query('token', ''),
+            'setupTokenFromEnv' => $this->setupTokenService->configuredToken() !== null,
+        ]);
     }
 
     public function createAdmin(
@@ -186,6 +210,14 @@ class AppController extends Controller
         // Admin mehr anonym angelegt werden (der GET-Handler leitet bereits um, der POST
         // war bislang ungeschützt).
         abort_if($settings->setup_finished, 403);
+
+        // Der erste Admin braucht den Einmal-Token aus Log/ENV, sonst wird der erste Besucher einer
+        // frisch deployten Instanz Admin.
+        if (!$this->setupTokenService->isValid($request->input('setup_token'))) {
+            throw ValidationException::withMessages([
+                'setup_token' => __('The setup token is invalid.'),
+            ]);
+        }
 
         // Lock gegen parallele Setup-POSTs; die Prüfung wird innerhalb des Locks wiederholt.
         return Cache::lock('setup', 10)->block(
@@ -214,6 +246,8 @@ class AppController extends Controller
         $settings->setup_finished = true;
         $settings->company_name = $request['business'];
         $settings->save();
+
+        $this->setupTokenService->clear();
 
         return redirect(RouteServiceProvider::HOME);
     }

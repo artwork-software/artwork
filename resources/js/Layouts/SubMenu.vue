@@ -526,6 +526,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {useAiAssistant} from "@/Composeables/useAiAssistant";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { is, can } from 'laravel-permission-to-vuejs'
+import { canOpenPlanningCalendar } from '@/Helper/planningRights.js'
 import {Float} from "@headlessui-float/vue";
 import {useI18n} from "vue-i18n";
 import {manualUrl} from "@/Helper/manualLinks.js";
@@ -572,6 +573,11 @@ const unseenNotifications = computed(() =>
 
 const moduleIsVisible = (module) => {
     return is('artwork admin') || usePage().props.module_settings[module];
+}
+
+// Spiegel des Gates view-inventory: "Inventar sehen" oder ein Recht, das es enthält
+const canViewInventory = () => {
+    return is('artwork admin') || can('inventory.view | inventory.create_edit | inventory.delete | inventory.disposition')
 }
 
 const getVisibleSubMenus = (item) => {
@@ -635,7 +641,7 @@ const navigation = ref([
                 href: route('planning-event-calendar.index'),
                 icon: 'IconCalendarCog',
                 current: route().current('planning-event-calendar.index'),
-                has_permission: usePage().props.module_settings['planning_calendar'] !== false && (can('can see planning calendar') || can('can edit planning calendar') || is('artwork admin')),
+                has_permission: canOpenPlanningCalendar({ isAdmin: is('artwork admin'), can, moduleSettings: usePage().props.module_settings }),
             },
             {
                 name: 'Event Verifications',
@@ -743,7 +749,7 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: moduleIsVisible('inventory'),
+        has_permission: moduleIsVisible('inventory') && canViewInventory(),
         prefetch: false,
         subMenus: [
             {
@@ -751,7 +757,7 @@ const navigation = ref([
                 href: route('inventory.index'),
                 icon: 'IconBuildingWarehouse',
                 current: route().current('inventory.index'),
-                has_permission: moduleIsVisible('inventory')
+                has_permission: moduleIsVisible('inventory') && canViewInventory()
             },
             {
                 name: 'Article Planning',
@@ -817,6 +823,16 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('crm') && (can('can view crm') || is('artwork admin')),
+        prefetch: false,
+    },
+    {
+        name: 'Artwork-Tickets',
+        href: route('ticketing.section.sales'),
+        icon: 'IconTicket',
+        current: route().current('ticketing.section.*'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: Boolean(usePage().props.ticketing?.active) && (can('view ticket sales') || is('artwork admin')),
         prefetch: false,
     },
     {

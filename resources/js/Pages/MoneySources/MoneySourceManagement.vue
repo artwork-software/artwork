@@ -378,13 +378,13 @@
                             class="ml-2"
                             :height="6"
                             :width="6"
-                            v-if="moneySource.history[0]?.changes?.[0]?.changed_by"
-                            :user="moneySource.history[0]?.changes?.[0]?.changed_by"
-                            :id="(moneySource.history[0]?.changes?.[0]?.changed_by?.id || 0) + (moneySource.id || 0)"
+                            v-if="lastChanger(moneySource)"
+                            :user="lastChanger(moneySource)"
+                            :id="(lastChanger(moneySource)?.id || 0) + (moneySource.id || 0)"
                         />
                         <span class="ml-1">
-              {{ moneySource.history[0]?.changes?.[0]?.changed_by?.first_name }}
-              {{ moneySource.history[0]?.changes?.[0]?.changed_by?.last_name }}
+              {{ lastChanger(moneySource)?.first_name }}
+              {{ lastChanger(moneySource)?.last_name }}
             </span>
                     </div>
 
@@ -419,25 +419,43 @@
         />
 
         <!-- Zeitraum-Filter Modal -->
-        <BaseModal v-if="timeSpanFilterModalVisible" @closed="closeTimeSpanFilterModal" modal-image="/Svgs/Overlays/illu_project_edit.svg">
-            <div class="mx-4">
-                <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-1">{{ $t('Select period') }}</h1>
-                <h2 class="text-sm/5 font-bold text-text-subtle mb-3 mt-4">
-                    {{ $t('Please select the time period in which the financial sources should be displayed.') }}
-                </h2>
-                <div class="flex gap-2">
-                    <input class="w-1/2 rounded-lg border border-border-subtle p-2" type="date" v-model="timeSpanFilterStart" />
-                    <input class="w-1/2 rounded-lg border border-border-subtle p-2" type="date" v-model="timeSpanFilterEnd" />
-                </div>
-                <div class="my-3 flex w-full justify-center">
-                    <FormButton
-                        :disabled="!timeSpanFilterStart || !timeSpanFilterEnd"
-                        :text="$t('Filtering')"
-                        @click="activateTimeSpanFilter"
-                    />
-                </div>
+        <ArtworkBaseModal
+            v-if="timeSpanFilterModalVisible"
+            title="Select period"
+            description="Please select the time period in which the financial sources should be displayed."
+            modal-size="sm:max-w-lg"
+            @close="closeTimeSpanFilterModal"
+        >
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <BaseInput
+                    id="timeSpanFilterStart"
+                    v-model="timeSpanFilterStart"
+                    type="date"
+                    label="Start date"
+                />
+                <BaseInput
+                    id="timeSpanFilterEnd"
+                    v-model="timeSpanFilterEnd"
+                    type="date"
+                    label="End date"
+                />
             </div>
-        </BaseModal>
+            <template #footer>
+                <BaseUIButton
+                    label="Cancel"
+                    is-cancel-button
+                    hide-icon
+                    @click="closeTimeSpanFilterModal"
+                />
+                <BaseUIButton
+                    label="Filtering"
+                    variant="primary"
+                    icon="IconFilter"
+                    :disabled="!timeSpanFilterStart || !timeSpanFilterEnd"
+                    @click="activateTimeSpanFilter"
+                />
+            </template>
+        </ArtworkBaseModal>
 
         <!-- History Modal -->
         <MoneySourceHistoryComponent
@@ -467,8 +485,8 @@ import CreateMoneySourceComponent from '@/Layouts/Components/CreateMoneySourceCo
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import TagComponent from '@/Layouts/Components/TagComponent.vue'
 import NewUserToolTip from '@/Layouts/Components/NewUserToolTip.vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -505,6 +523,10 @@ const moneySourceFilter = ref(moneySourceFilters.value[0])
 const showSearchbar = ref(false)
 const moneySource_query = ref('')
 const searchBarInput = ref(null)
+
+/** Wer zuletzt geändert hat: historyForFrontend liefert die Person je Zeile (change_by) */
+const lastChanger = (moneySource) =>
+    moneySource.history?.[0]?.change_by ?? moneySource.history?.[0]?.changes?.[0]?.changed_by ?? null
 
 const showMoneySourceModal = ref(false)
 const showDeleteSourceModal = ref(false)

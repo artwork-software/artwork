@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Room\Http\Resources;
 
 use Artwork\Modules\User\Http\Resources\UserIconResource;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -26,11 +27,14 @@ class RoomIndexResource extends JsonResource
             'description' => $this->description,
             'temporary' => $this->temporary,
             // Ersteller nur für Avatar + Tooltip (Kontaktdaten lädt der Tooltip per lazy-load nach)
-            'created_by' => $this->creator?->setVisible(['id', 'first_name', 'last_name', 'full_name', 'profile_photo_url']),
+            'created_by' => $this->creator?->setVisible(User::AVATAR_FIELDS),
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'everyone_can_book' => $this->everyone_can_book,
             'relevant_for_disposition' => $this->relevant_for_disposition,
             'capacity' => $this->capacity,
+            'street' => $this->street,
+            'zip_code' => $this->zip_code,
+            'city' => $this->city,
             // ohne Datum null statt "heute" (Carbon::parse(null)) — sonst schrieb das Bearbeiten-Modal
             // jedem Raum das aktuelle Datum als Zeitraum zurück
             'start_date' => $this->start_date?->format('d.m.Y'),

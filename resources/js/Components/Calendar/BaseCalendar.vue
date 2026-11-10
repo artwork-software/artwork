@@ -48,6 +48,13 @@
                 </div>
             </div>
         </div>
+        <!-- Leerzustand: kein Raum sichtbar (z. B. "Leere Räume ausblenden" ohne Termine im Zeitraum) -->
+        <CalendarEmptyState
+            :rooms-count="roomsCount"
+            :hide-unoccupied-rooms="hideUnoccupiedRooms"
+            :filters-active="calendarFiltersActive"
+            :top-offset="topbarHeight"
+        />
         <!-- Grid -->
         <div :style="{ paddingTop: topbarHeight + 'px' }">
             <!-- Monatsansicht -->
@@ -190,11 +197,17 @@
             <!-- Zellen ausgewählt: erstellen bzw. (mit Terminen kombiniert) duplizieren -->
             <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-if="selectedCellCount > 0">
                 <FormButton
-                    v-if="checkedCount === 0 && (isAdmin || can('create events without request') || can('can edit planning calendar') || (directBookingOnly && can('request room occupancy')))"
+                    v-if="checkedCount === 0 && canCreateInSelectedCells"
                     class="transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="showMultiCellCreateModal = true"
-                    :text="$t('Create event in {0} cells', [selectedCellCount])"
+                    :text="$t(requestsOnlyInSelectedCells ? 'Request event in {0} cells' : 'Create event in {0} cells', [selectedCellCount])"
                 />
+                <span
+                    v-else-if="checkedCount === 0"
+                    class="rounded-full bg-surface-inverse/90 text-white text-xs px-3 py-1 select-none"
+                >
+                    {{ $t('You may neither create nor request events in at least one of the selected rooms.') }}
+                </span>
                 <FormButton
                     v-else
                     class="transition-all duration-300 ease-in-out pointer-events-auto"
@@ -238,29 +251,37 @@
                          Personen mit "Im Planungskalender fest planen" bzw. Raumadmins in ihren Räumen) – "einsehen"
                          allein reicht nicht; fremde Termine der Auswahl überspringt der Server mit Hinweis -->
                     <FormButton
-                        v-if="showBulkVerificationRequest"
+                        v-if="showBulkVerificationRequest && !requestOnlyApproves"
                         :disabled="checkedCount === 0"
                         @click="requestVerification"
-                        :text="checkedCount + ' ' + (directBookingOnly ? $t('Confirm as fixed events') : $t('request verification'))"
+                        :text="(directBookingOnly ? $t('Confirm as fixed events') : $t('request verification')) + ' (' + checkedCount + ')'"
                         class="transition-all duration-300 ease-in-out pointer-events-auto"
                     />
-                    <!-- Genehmigen/Ablehnen wirkt nur auf eigene offene Prüfungen (approve/reject-by-event) –
-                         daher an die Prüfer-Zuordnung gebunden, nicht an das Bearbeitungsrecht -->
+                    <!-- Genehmigen: eigene offene Prüfungen, Admins jeden geplanten Termin, alleinige Prüfende auch ohne
+                         Anfrage (EventVerificationController::approveFor). Ablehnen nur eigene offene Prüfungen. -->
                     <FormButton
-                        v-if="!directBookingOnly && verifierForEventTypIds?.length > 0"
+                        v-if="showBulkApprove"
                         :disabled="checkedCount === 0"
                         @click="approveRequests"
-                        :text="checkedCount + ' ' + $t('Approve events')"
+                        :text="$t('Approve') + ' (' + checkedCount + ')'"
                         class="transition-all duration-300 ease-in-out pointer-events-auto"
                     />
                     <FormButton
-                        v-if="!directBookingOnly && verifierForEventTypIds?.length > 0"
+                        v-if="showBulkVerificationAnswer"
                         class="bg-danger hover:bg-danger/70 transition-all duration-300 ease-in-out pointer-events-auto"
                         @click="showRejectEventVerificationRequestModal = true"
                         :disabled="checkedCount === 0"
-                        :text="checkedCount + ' ' + $t('Reject events')"
+                        :text="$t('Reject') + ' (' + checkedCount + ')'"
                     />
                 </template>
+                <!-- Kompaktansicht hat kein Kachel-Menü: Umwandeln in geplante Termine über die Mehrfachauswahl -->
+                <FormButton
+                    v-if="!isPlanning && (can('can edit planning calendar') || isAdmin)"
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showBulkConvertToPlanningModal = true"
+                    :disabled="selectedFixedEventIds.length === 0"
+                    :text="$t('Convert to planned events') + ' (' + selectedFixedEventIds.length + ')'"
+                />
                 <FormButton
                     v-if="hasSelectedRoomRequests"
                     class="bg-success hover:bg-success/80 transition-all duration-300 ease-in-out pointer-events-auto"
@@ -328,7 +349,13 @@
         />
 
         <MultiEditModal v-if="showMultiEditModal" :checked-events="editEvents" :rooms="rooms" @closed="closeMultiEditModal" />
-        <MultiDuplicateModal v-if="showMultiDuplicateModal" :checked-events="editEvents" :rooms="rooms" :is-planning="isPlanning" @closed="closeMultiDuplicateModal" />
+        <ConvertToPlanningModal
+            v-if="showBulkConvertToPlanningModal"
+            :count="selectedFixedEventIds.length"
+            @close="showBulkConvertToPlanningModal = false"
+            @convert="bulkConvertToPlanning"
+        />
+        <MultiDuplicateModal v-if="showMultiDuplicateModal" :checked-events="editEvents" :rooms="rooms" :is-planning="isPlanning" :booking-mode-for-room="bulkBookingModeForRoom" @closed="closeMultiDuplicateModal" />
 
         <MultiCellEventCreateModal
             v-if="showMultiCellCreateModal"
@@ -337,6 +364,7 @@
             :event-statuses="eventStatuses"
             :rooms="rooms"
             :is-planning="isPlanning"
+            :booking-mode-for-room="bulkBookingModeForRoom"
             @closed="closeMultiCellCreateModal"
         />
         <MultiCellDuplicateModal
@@ -345,6 +373,7 @@
             :cells="selectedCellsList"
             :rooms="rooms"
             :is-planning="isPlanning"
+            :booking-mode-for-room="bulkBookingModeForRoom"
             @closed="closeMultiCellDuplicateModal"
         />
         <MultiCellMoveModal
@@ -393,7 +422,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, provide, reactive, ref, shallowRef, triggerRef, watch} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, provide, reactive, ref, shallowRef, triggerRef, unref, watch} from "vue";
 import { toYmd } from "@/Helper/IsoWeek.js";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
@@ -406,7 +435,19 @@ import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendar
 import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import {can} from "laravel-permission-to-vuejs";
-import {canRequestVerificationInBulk} from "@/Helper/verificationRights.js";
+import {
+    canAnswerVerificationInBulk,
+    canApproveInBulk,
+    canRequestVerificationInBulk,
+    requestOnlyApprovesSelection,
+} from "@/Helper/verificationRights.js";
+import {
+    bulkBookingModeIn,
+    findRoom,
+    mayAnswerRoomRequestIn as mayAnswerRoomRequestInRoom,
+} from "@/Helper/roomAdminRights.js";
+import ConvertToPlanningModal from "@/Components/Modals/ConvertToPlanningModal.vue";
+import {canViewPlanning} from "@/Helper/planningRights.js";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
@@ -414,6 +455,8 @@ import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextCompo
 // stehen, sonst springt die Scroll-Höhe beim Nachladen der Zeilen-Chunks.
 import CalendarDayRow from "@/Components/Calendar/Elements/CalendarDayRow.vue";
 import {cellKey, dayKey, deKeyToIso, itemsInCell} from "@/Components/Calendar/calendarCellItems.js";
+import CalendarEmptyState from "@/Components/Calendar/Elements/CalendarEmptyState.vue";
+import {hasActiveCalendarFilters} from "@/Components/Calendar/calendarEmptyState.js";
 
 const props = defineProps({
     rooms: { type: Object, required: true },
@@ -545,6 +588,18 @@ const directBookingOnly = computed(() => !!usePage().props.event_direct_booking_
 
 const first_project_calendar_tab_id = inject("first_project_calendar_tab_id");
 const first_project_tab_id = inject("first_project_tab_id");
+const injectedUserFilters = inject("user_filters", null);
+
+// Leerzustand: Räume kommen serverseitig bereits gefiltert (Filter + "Leere Räume ausblenden"
+// der jeweils aktiven Ansicht — Tagesansicht hat eigene Anzeigeeinstellungen)
+const roomsCount = computed(() => Array.isArray(props.rooms) ? props.rooms.length : Object.keys(props.rooms ?? {}).length);
+const hideUnoccupiedRooms = computed(() => {
+    const viewSettings = isDaily.value
+        ? (page.props.daily_view_calendar_settings ?? user.value.daily_view_calendar_settings)
+        : (settings.value ?? page.props.calendar_settings);
+    return !!viewSettings?.hide_unoccupied_rooms;
+});
+const calendarFiltersActive = computed(() => hasActiveCalendarFilters(unref(injectedUserFilters)));
 const eventTypes = inject("eventTypes");
 
 const fontSizeCalc = computed(() => `max(calc(${zoom_factor.value} * 0.875rem), 10px)`);
@@ -1144,7 +1199,7 @@ async function runInitialLoad() {
 // Live-Termine nach derselben Regel wie die Server-Abfrage einsortieren (EventPlanningCalendarService /
 // EventCalendarService::filter): vorher landeten feste Termine im Planungskalender und geplante im Kalender,
 // auch ohne „Geplante Termine anzeigen“ bzw. Planungskalender-Recht
-const canSeePlannedEvents = computed(() => isAdmin.value || can('can see planning calendar') || can('can edit planning calendar'));
+const canSeePlannedEvents = computed(() => canViewPlanning({ isAdmin: isAdmin.value, can }));
 const acceptLiveEvent = (evt) => {
     const isPlannedEvent = !!evt?.isPlanning;
     // Tagesansicht filtert der Server nach den Tagesansicht-Einstellungen
@@ -1251,7 +1306,8 @@ const selectedRoomRequestIds = computed(() => {
         for (const slot of Object.values(room.content || {})) {
             for (const evt of (slot.events ?? [])) {
                 // Geplante Termine sind nie Raumanfragen (EventPolicy::answerRoomRequest → 403)
-                if (selectedIds.has(evt.id) && evt.occupancy_option && !evt.isPlanning && !requestIds.includes(evt.id)) {
+                if (selectedIds.has(evt.id) && evt.occupancy_option && !evt.isPlanning && !requestIds.includes(evt.id)
+                    && mayAnswerRoomRequestIn(evt.roomId)) {
                     requestIds.push(evt.id);
                 }
             }
@@ -1260,6 +1316,34 @@ const selectedRoomRequestIds = computed(() => {
     return requestIds;
 });
 const hasSelectedRoomRequests = computed(() => selectedRoomRequestIds.value.length > 0);
+// Feste Termine der Auswahl (geplante lassen sich nicht noch einmal umwandeln)
+const selectedFixedEventIds = computed(() => editEvents.value
+    .filter((eventId) => {
+        const evt = findCalendarEvent(eventId);
+        return evt && !evt.isPlanning;
+    }));
+const showBulkConvertToPlanningModal = ref(false);
+const bulkConvertToPlanning = () => {
+    router.post(route('events.bulk.convert-to-planning'), { eventIds: selectedFixedEventIds.value }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            showBulkConvertToPlanningModal.value = false;
+            clearEventSelection();
+        },
+    });
+};
+
+// Zusagen/Absagen wie EventPolicy::answerRoomRequest (Helper/roomAdminRights.js)
+function mayAnswerRoomRequestIn(roomId) {
+    return mayAnswerRoomRequestInRoom({
+        rooms: props.rooms,
+        roomId,
+        userId: user.value?.id,
+        isAdmin: isAdmin.value,
+        canBookWithoutRequest: can('create events without request'),
+    });
+}
 
 // Sammel-"Prüfung anfragen": Raumadmins ohne "Im Planungskalender fest planen" legen in ihren Räumen geplante
 // Termine an und dürfen sie als Ersteller:innen anfragen (EventVerificationController::mayManageVerification) –
@@ -1269,6 +1353,34 @@ const showBulkVerificationRequest = computed(() => canRequestVerificationInBulk(
     canEditPlanning: can('can edit planning calendar'),
     canPlanFixed: can('can plan fixed in planning calendar'),
     userId: user.value?.id,
+    selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
+}));
+
+// Sammel-"Ablehnen" nur mit mindestens einem prüfbaren Termin in der Auswahl
+const showBulkVerificationAnswer = computed(() => !directBookingOnly.value && canAnswerVerificationInBulk({
+    verifierForEventTypIds: props.verifierForEventTypIds,
+    selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
+}));
+
+// Terminarten, deren Anfrage die Person sofort genehmigt (festgelegte Prüfperson, Modus "eine Person", ohne Prüfung)
+const approvedOnRequestEventTypeIds = computed(() => usePage().props.approvedOnRequestEventTypeIds ?? []);
+
+// Sammel-"Genehmigen": auch Admins (jeder geplante Termin) und alleinige Prüfende ohne vorherige Anfrage
+const showBulkApprove = computed(() => !directBookingOnly.value && canApproveInBulk({
+    isAdmin: isAdmin.value,
+    canEditPlanning: can('can edit planning calendar'),
+    userId: user.value?.id,
+    verifierForEventTypIds: props.verifierForEventTypIds,
+    approvedOnRequestEventTypeIds: approvedOnRequestEventTypeIds.value,
+    selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
+}));
+
+// "Prüfung anfragen" würde für die ganze Auswahl nur sofort genehmigen → stattdessen nur "Genehmigen" zeigen
+const requestOnlyApproves = computed(() => !directBookingOnly.value && requestOnlyApprovesSelection({
+    isAdmin: isAdmin.value,
+    canEditPlanning: can('can edit planning calendar'),
+    userId: user.value?.id,
+    approvedOnRequestEventTypeIds: approvedOnRequestEventTypeIds.value,
     selectedEvents: editEvents.value.length ? editEvents.value.map((eventId) => findCalendarEvent(eventId)) : [],
 }));
 
@@ -1350,6 +1462,23 @@ function toggleMultiEdit(value) {
 const selectedCells = ref(new Map());
 const selectedCellCount = computed(() => selectedCells.value.size);
 const selectedCellsList = computed(() => Array.from(selectedCells.value.values()));
+// Mehrfach-Aktionen je Raum: fest buchen, als Raumanfrage anlegen oder gar nicht (wie der Server prüft);
+// ohne Raum-ID gilt ein Raum ohne eigene Rechte
+const bulkBookingModeForRoom = (roomId) => bulkBookingModeIn({
+    room: findRoom(props.rooms, roomId),
+    userId: page.props.auth.user?.id,
+    isAdmin: isAdmin.value,
+    isPlanning: props.isPlanning,
+    directBookingOnly: directBookingOnly.value,
+    canBookWithoutRequest: can('create events without request'),
+    canEditPlanning: can('can edit planning calendar'),
+    canRequestRooms: can('request room occupancy'),
+});
+const selectedCellBookingModes = computed(() => selectedCellsList.value.map((cell) => bulkBookingModeForRoom(cell.room_id)));
+const canCreateInSelectedCells = computed(() => selectedCellBookingModes.value.length > 0
+    && !selectedCellBookingModes.value.includes('none'));
+const requestsOnlyInSelectedCells = computed(() => selectedCellBookingModes.value.length > 0
+    && selectedCellBookingModes.value.every((mode) => mode === 'request'));
 const showMultiCellCreateModal = ref(false);
 const showMultiCellDuplicateModal = ref(false);
 const showMultiCellMoveModal = ref(false);
@@ -1489,7 +1618,8 @@ const eventComponentClosed = (closedOnPurpose) => {
         if (cs.use_project_time_period) {
             router.patch(route("user.calendar_settings.toggle_calendar_settings_use_project_period"), {
                 use_project_time_period: true,
-                project_id: cs.time_period_project_id
+                project_id: cs.time_period_project_id,
+                is_planning: props.isPlanning
             }, { preserveState: false, preserveScroll: true });
             return;
         }

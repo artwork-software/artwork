@@ -107,6 +107,22 @@
                                 <option value="">{{ $t('Please select') }}</option>
                                 <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
                             </select>
+                            <!-- Mehrfachauswahl: Wert als JSON-Liste wie intern (CrmPropertyValueInput) -->
+                            <div v-else-if="field.inputType === 'multiselect'" class="mt-1 flex flex-wrap gap-x-4 gap-y-1.5">
+                                <label
+                                    v-for="option in field.options"
+                                    :key="option"
+                                    class="inline-flex items-center gap-2 text-sm text-text-muted"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        class="size-5 rounded border-border sm:size-4"
+                                        :checked="decodeMultiselect(form.values[section.key][field.key]).includes(option)"
+                                        @change="form.values[section.key][field.key] = toggledMultiselect(form.values[section.key][field.key], option, $event.target.checked, field.options)"
+                                    />
+                                    {{ option }}
+                                </label>
+                            </div>
                             <!-- url als Textfeld wie intern: type="url" lehnt Adressen ohne https:// ab -->
                             <input
                                 v-else
@@ -139,6 +155,7 @@
 </template>
 
 <script setup>
+import { decodeMultiselect, toggledMultiselect } from '@/Helper/CrmPropertyValue.js'
 import { computed, reactive } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import { IconFile, IconUpload } from '@tabler/icons-vue'

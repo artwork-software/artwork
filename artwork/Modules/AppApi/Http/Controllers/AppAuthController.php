@@ -5,10 +5,13 @@ namespace Artwork\Modules\AppApi\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\AppApi\Http\Requests\AppDiscoverRequest;
 use Artwork\Modules\AppApi\Http\Requests\AppLoginRequest;
+use Artwork\Modules\AppApi\Services\AppInventoryService;
 use Artwork\Modules\AppApi\Services\AppShiftPlanService;
+use Artwork\Modules\AppApi\Services\AppTokenService;
 use Artwork\Modules\AppApi\Services\AppTwoFactorAuthenticationService;
 use Artwork\Modules\ExternalUserManagement\Service\CredentialLoginService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Ticketing\Services\TicketingDoorService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +27,9 @@ class AppAuthController extends Controller
         private readonly CredentialLoginService $credentialLoginService,
         private readonly AppShiftPlanService $shiftPlanService,
         private readonly UserRepository $userRepository,
+        private readonly AppTokenService $appTokenService,
+        private readonly TicketingDoorService $door,
+        private readonly AppInventoryService $inventory,
     ) {
     }
 
@@ -74,7 +80,7 @@ class AppAuthController extends Controller
             ], 422);
         }
 
-        $token = $user->createToken($validated['device_name'], ['app'])->accessToken;
+        $token = $this->appTokenService->issue($user, $validated['device_name']);
 
         return response()->json([
             'token' => $token,
@@ -103,9 +109,19 @@ class AppAuthController extends Controller
      * device — removing or renaming fields breaks logins there. The permissions
      * block drives menu visibility in the app: can_view_shift_plan follows the
      * shift-plan endpoints (own roster permission + shift plan module), so the
-     * app never shows a Dienstplan that answers 403.
+     * app never shows a Dienstplan that answers 403; can_run_ticket_admission
+     * and can_view_inventory follow their endpoints the same way.
      *
-     * @return array{id: int, name: string, email: string, permissions: array{can_view_shift_plan: bool}}
+     * @return array{
+     *     id: int,
+     *     name: string,
+     *     email: string,
+     *     permissions: array{
+     *         can_view_shift_plan: bool,
+     *         can_run_ticket_admission: bool,
+     *         can_view_inventory: bool,
+     *     },
+     * }
      */
     private function userPayload(User $user): array
     {
@@ -115,6 +131,8 @@ class AppAuthController extends Controller
             'email' => $user->email,
             'permissions' => [
                 'can_view_shift_plan' => $this->shiftPlanService->canViewOwnShiftPlan($user),
+                'can_run_ticket_admission' => $this->door->mayRunDoor($user),
+                'can_view_inventory' => $this->inventory->canViewInventory($user),
             ],
         ];
     }

@@ -10,6 +10,7 @@ use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Rules\SafeCrmLinkValue;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Services\CrmContactService;
@@ -107,6 +108,7 @@ class CrmContactController extends Controller
                         'name' => $property->name,
                         'type' => $property->type,
                         'select_values' => $property->select_values,
+                        'multiselect_display' => $property->multiselect_display,
                         'tooltip_text' => $property->tooltip_text,
                         'is_required' => (bool) ($typeProperties[$property->id]->pivot->is_required ?? false),
                     ]);
@@ -207,10 +209,11 @@ class CrmContactController extends Controller
         $validated = $request->validate([
             'crm_contact_type_id' => 'required|exists:crm_contact_types,id',
             'display_name' => 'required|string|max:255',
-            'profile_image' => 'nullable|string',
+            // Kein freier Bildpfad: das Profilbild kommt nur über den Upload-Endpunkt (sonst Verweis
+            // auf beliebige Dateien der public-Disk).
             'is_active' => 'boolean',
             'property_values' => 'array',
-            'property_values.*' => 'nullable',
+            'property_values.*' => ['nullable', new SafeCrmLinkValue()],
         ]);
 
         $propertyValues = $validated['property_values'] ?? [];
@@ -251,7 +254,7 @@ class CrmContactController extends Controller
             'display_name' => 'sometimes|string|max:255',
             'is_active' => 'sometimes|boolean',
             'property_values' => 'array',
-            'property_values.*' => 'nullable',
+            'property_values.*' => ['nullable', new SafeCrmLinkValue()],
         ]);
 
         // Deaktivieren wirkt wie Löschen und ist wie dieses der CRM-Verwaltung vorbehalten.

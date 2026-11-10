@@ -29,7 +29,11 @@ class UpdateAccommodationRequest extends FormRequest
             'zip_code' => 'nullable|string|max:20',
             'location' => 'nullable|string|max:255',
             'note' => 'nullable|string|max:65535',
-            'room_types' => 'required|array|min:1',
+            'daily_allowance' => 'nullable|numeric|min:0|max:10000',
+            'breakfast_deduction_per_day' => 'nullable|numeric|min:0|max:10000',
+            // Leer erlaubt: Die Detailseite speichert jedes Feld einzeln mit — ohne Zimmertyp ließe sich sonst
+            // nichts mehr ändern. Pflicht bleibt das Mitsenden, damit ein fehlendes Feld nicht alle Zimmertypen löst.
+            'room_types' => 'present|array',
             'room_types.*' => 'exists:accommodation_room_types,id',
             'room_type_costs' => 'nullable|array',
             'room_type_costs.*' => 'nullable|numeric|min:0|max:50000',

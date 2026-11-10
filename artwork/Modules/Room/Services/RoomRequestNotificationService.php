@@ -255,7 +255,8 @@ class RoomRequestNotificationService
      */
     private function recipientsFor(Room $room): Collection
     {
-        $admins = $room->users()->wherePivot('is_admin', true)->get();
+        // Raumadmins inkl. Mitgliedern der Admin-Teams
+        $admins = $room->effectiveAdmins();
 
         return $admins->isNotEmpty()
             ? $admins

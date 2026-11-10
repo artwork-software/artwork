@@ -321,6 +321,7 @@
 </template>
 
 <script>
+import { isRoomAdminOf } from '@/Helper/roomAdminRights.js';
 import {IconCirclePlus} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
@@ -393,7 +394,7 @@ export default {
             return height;
         },
         isRoomAdmin() {
-            return this.rooms?.find(room => room.id === this.event.roomId)?.admins.some(admin => admin.id === this.$page.props.auth.user.id) || false;
+            return isRoomAdminOf(this.rooms, this.event.roomId, this.$page.props.auth.user.id);
         },
         isCreator() {
             return this.event?.created_by?.id === this.$page.props.auth.user.id

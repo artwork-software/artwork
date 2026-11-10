@@ -342,7 +342,7 @@ class EventCalendarExportBladeTemplateService
         }
 
         $project = $event->getAttribute('project');
-        $artists = $project?->getAttribute('artists');
+        $artists = $project?->artistDisplayText();
         $primaryName = $display->resolveEventName($event->getAttribute('name'), $artists);
 
         $parts = [];

@@ -1,104 +1,112 @@
 <template>
-    <BaseModal @closed="$emit('closeModal')">
-        <ModalHeader
-            :title="eventStatusToEdit ? $t('Edit event status') : $t('Create event status')"
-        />
-
-        <form @submit.prevent="addOrUpdateEventStatus" class="mt-5">
-            <div class="flex items-center gap-x-4">
-                <div class="col-span-1">
-                    <ColorPickerComponent :color="eventStatus?.color" @updateColor="setColor" />
+    <ArtworkBaseModal
+        :title="eventStatusToEdit ? 'Edit event status' : 'Create event status'"
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <form id="eventStatusForm" class="space-y-4" @submit.prevent="addOrUpdateEventStatus">
+            <div class="flex items-end gap-x-4">
+                <div class="shrink-0">
+                    <ColorPickerComponent :color="eventStatus.color" @update-color="setColor" />
                 </div>
                 <div class="w-full">
                     <BaseInput
-                        id="name"
+                        id="eventStatusName"
                         v-model="eventStatus.name"
                         label="Name"
-                        :show-label="true"
                         required
-                        no-margin-top
+                        :error="eventStatus.errors.name"
+                        autofocus
                     />
                 </div>
             </div>
-
-            <div class="flex items-center gap-x-2 mt-4">
-                <Switch v-model="eventStatus.default" :class="[eventStatus.default ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2']">
-                    <span :class="[eventStatus.default ? 'translate-x-4' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                      <span :class="[eventStatus.default ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                        <svg class="size-4 text-text-subtle" fill="none" viewBox="0 0 12 12">
-                          <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                      </span>
-                      <span :class="[eventStatus.default? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                        <svg class="size-4 text-accent-600" fill="currentColor" viewBox="0 0 12 12">
-                          <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
-                        </svg>
-                      </span>
-                    </span>
-                </Switch>
-                <div>
-                    <p class="text-sm/5 font-semibold text-text">{{ $t('Should this status be set as the default?') }}</p>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-center mt-5">
-                <FormButton type="submit" :text="eventStatusToEdit ? $t('Save') : $t('Create')" />
-            </div>
+            <ArtworkBaseToggle
+                id="eventStatusDefault"
+                v-model="eventStatus.default"
+                label="Should this status be set as the default?"
+                use-translation
+            />
         </form>
-    </BaseModal>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="eventStatus.processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                type="submit"
+                form="eventStatusForm"
+                :label="eventStatusToEdit ? 'Save' : 'Create'"
+                variant="primary"
+                :icon="eventStatusToEdit ? 'IconDeviceFloppy' : 'IconCirclePlus'"
+                :processing="eventStatus.processing"
+                :disabled="!canSubmit"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
+import {computed} from 'vue'
+import {useForm} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import ColorPickerComponent from '@/Components/Globale/ColorPickerComponent.vue'
 
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
-import {useForm} from "@inertiajs/vue3";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {Switch} from "@headlessui/vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+defineOptions({name: 'AddEditEventStatusModal'})
 
 const props = defineProps({
     eventStatusToEdit: {
         type: Object,
         required: false,
-        default: null
-    }
+        default: null,
+    },
 })
 
+// closeModal(true) nach erfolgreichem Speichern, sonst ohne Wert (Eltern zeigen nur bei true Feedback)
+const emit = defineEmits(['closeModal'])
+
 const eventStatus = useForm({
-    id: props.eventStatusToEdit ? props.eventStatusToEdit.id : null,
-    name: props.eventStatusToEdit ? props.eventStatusToEdit.name : '',
-    color: props.eventStatusToEdit ? props.eventStatusToEdit.color : '#ccc',
-    default: props.eventStatusToEdit ? props.eventStatusToEdit.default : false
+    id: props.eventStatusToEdit?.id ?? null,
+    name: props.eventStatusToEdit?.name ?? '',
+    color: props.eventStatusToEdit?.color ?? '#ccc',
+    default: props.eventStatusToEdit ? Boolean(props.eventStatusToEdit.default) : false,
 })
-const emits = defineEmits(['closeModal'])
-const setColor = (color) => {
+
+const canSubmit = computed(() => eventStatus.name.trim() !== '' && !eventStatus.processing)
+
+function closeModal(saved) {
+    if (saved) {
+        emit('closeModal', true)
+        return
+    }
+    emit('closeModal')
+}
+
+function setColor(color) {
     eventStatus.color = color
 }
 
-const addOrUpdateEventStatus = () => {
-    if (props.eventStatusToEdit) {
-        eventStatus.patch(route('event_status.update', {eventStatus: eventStatus.id}), {
-            preserveScroll: true,
-            onSuccess: () => {
-                eventStatus.reset()
-                emits('closeModal', true)
-            }
-        })
-    } else {
-        eventStatus.post(route('event_status.store'), {
-            preserveScroll: true,
-            onSuccess: () => {
-                eventStatus.reset()
-                emits('closeModal', true)
-            },
-        })
+function addOrUpdateEventStatus() {
+    if (!canSubmit.value) {
+        return
     }
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            eventStatus.reset()
+            closeModal(true)
+        },
+    }
+
+    if (props.eventStatusToEdit) {
+        eventStatus.patch(route('event_status.update', {eventStatus: eventStatus.id}), options)
+        return
+    }
+    eventStatus.post(route('event_status.store'), options)
 }
 </script>
-
-<style scoped>
-
-</style>

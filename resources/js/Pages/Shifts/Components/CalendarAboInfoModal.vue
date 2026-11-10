@@ -45,15 +45,20 @@ function downloadICSFile() {
     a.click()
 }
 
-// Link erneuern (Widerruf): nur fürs eigene Schicht-Abo; zweistufig, damit
+// Link erneuern (Widerruf): fürs eigene Schicht- bzw. Termin-Abo; zweistufig, damit
 // niemand versehentlich den in Kalender-Apps hinterlegten Link ungültig macht.
-const shiftAboId = computed(() => props.is_shift_calendar_abo ? (user.value?.shift_calendar_abo?.id ?? null) : null)
+const aboId = computed(() => props.is_shift_calendar_abo
+    ? (user.value?.shift_calendar_abo?.id ?? null)
+    : (user.value?.calendar_abo?.id ?? null))
 const confirmRenew = ref(false)
 const renewing = ref(false)
 function renewLink() {
-    if (!shiftAboId.value || renewing.value) return
+    if (!aboId.value || renewing.value) return
     renewing.value = true
-    router.delete(route('user.shift.calendar.abo.renew', { userShiftCalendarAbo: shiftAboId.value }), {
+    const renewUrl = props.is_shift_calendar_abo
+        ? route('user.shift.calendar.abo.renew', { userShiftCalendarAbo: aboId.value })
+        : route('user.calendar.abo.renew', { userCalenderAbo: aboId.value })
+    router.delete(renewUrl, {
         preserveScroll: true,
         preserveState: true,
         onFinish: () => {
@@ -231,8 +236,8 @@ const instructions = computed(() => ([
                     {{ $t('Click on “Copy” to copy the URL to your clipboard and paste it into the desired calendar application.') }}
                 </div>
 
-                <!-- Link erneuern (Widerruf des alten Links), nur eigenes Schicht-Abo -->
-                <div v-if="shiftAboId" class="mt-4 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2.5">
+                <!-- Link erneuern (Widerruf des alten Links), eigenes Abo -->
+                <div v-if="aboId" class="mt-4 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2.5">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <p class="text-xs text-text-muted max-w-xl">
                             {{ $t('If the link has been shared unintentionally, you can renew it. The old link becomes invalid immediately — re-subscribe with the new link in your calendar app.') }}

@@ -38,10 +38,14 @@ class ProjectFile extends Model
         'project_id',
         'external_access_id',
         'is_budget_document',
+        // Upload-Bereiche (Platzierungs-Schlüssel "tab:<id>"/"folder:<id>"), null = über die Tab-Auswahl
+        'visible_in',
+        'uploaded_via',
     ];
 
     protected $casts = [
         'is_budget_document' => 'boolean',
+        'visible_in' => 'array',
     ];
 
     protected $guarded = [

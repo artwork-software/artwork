@@ -5,11 +5,15 @@ namespace Artwork\Modules\AppApi\Services;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
+use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ComponentTreeProjector;
+use Artwork\Modules\Project\Services\ProjectDocumentPlacementService;
+use Artwork\Modules\Project\Support\ComponentSelection;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -80,7 +84,8 @@ class AppProjectService
             'id' => $project->id,
             'name' => $project->name,
             'is_group' => (bool) $project->is_group,
-            'artists' => $project->artists !== '' ? $project->artists : null,
+            // Freitext plus verknüpfte CRM-Künstler*innen
+            'artists' => ($artistText = $project->artistDisplayText()) !== '' ? $artistText : null,
             'state' => $this->serializeState($project->status),
             'team' => $this->serializeTeam($project),
             'can_edit_team' => $user->can('update', $project),
@@ -124,8 +129,17 @@ class AppProjectService
                     'disclosureComponents.component.departments.users',
                 ],
                 fn (Component $component): bool => $this->isRenderable($user, $project, $component),
-                fn (Component $component, array $scope): array =>
-                    $this->serializeComponent($user, $project, $component, $scope),
+                fn (Component $component, array $scope, ComponentInTab|DisclosureComponents $context): array =>
+                    $this->serializeComponent(
+                        $user,
+                        $project,
+                        $component,
+                        $scope,
+                        ProjectDocumentPlacementService::keyFor(
+                            (int) $context->id,
+                            $context instanceof DisclosureComponents
+                        ),
+                    ),
             ),
         ];
     }
@@ -142,9 +156,18 @@ class AppProjectService
      * @param array<int, int> $scope
      * @return array<string, mixed>
      */
-    private function serializeComponent(User $user, Project $project, Component $component, array $scope): array
-    {
+    private function serializeComponent(
+        User $user,
+        Project $project,
+        Component $component,
+        array $scope,
+        ?string $placementKey = null,
+    ): array {
         $type = ProjectTabComponentEnum::tryFrom((string) $component->type);
+        // DropDown mit Mehrfachauswahl: die App kennt nur Einzelwerte – sie bekommt die Auswahl als Text
+        // (kommagetrennt) und darf nicht schreiben, damit sie keine Liste mit einem Einzelwert überschreibt.
+        $isMultipleSelection = $type === ProjectTabComponentEnum::DROPDOWN
+            && ComponentSelection::allowsMultiple($component->type, $component->data);
 
         return [
             'component_id' => $component->id,
@@ -154,14 +177,19 @@ class AppProjectService
             // System components get a server-built payload; custom components
             // carry the project's stored value.
             'value' => $type?->isAppSystem()
-                ? $this->systemComponentService->valueFor($user, $project, $type, $scope)
-                : $this->dataObjectOrNull($component->projectValue?->data),
+                ? $this->systemComponentService->valueFor($user, $project, $type, $scope, $placementKey)
+                : ($isMultipleSelection
+                    ? $this->dataObjectOrNull([
+                        'selected' => ComponentSelection::displayText($component->projectValue?->data['selected'] ?? null),
+                    ])
+                    : $this->dataObjectOrNull($component->projectValue?->data)),
             // For system components this means "may write through it" (create
             // events, edit shifts, add comments); custom components combine
             // type writability with the component permission settings.
             'is_writable' => $type?->isAppSystem()
                 ? $this->systemComponentService->isWritable($user, $project, $type)
                 : (($type?->isAppWritable() ?? false)
+                    && !$isMultipleSelection
                     && $user->can('writeComponent', [$project, $component])),
         ];
     }

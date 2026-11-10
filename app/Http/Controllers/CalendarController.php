@@ -47,6 +47,7 @@ class CalendarController extends Controller
             'end' => ['required', 'date_format:H:i'],
             'day_remarks_enabled' => ['sometimes', 'boolean'],
             'day_remarks_mandatory' => ['sometimes', 'boolean'],
+            'project_creation_from_events_enabled' => ['sometimes', 'boolean'],
         ]);
 
         $calendarSettings = app(GeneralCalendarSettings::class);
@@ -54,6 +55,10 @@ class CalendarController extends Controller
         $calendarSettings->end = $validated['end'];
         $calendarSettings->day_remarks_enabled = $request->boolean('day_remarks_enabled');
         $calendarSettings->day_remarks_mandatory = $request->boolean('day_remarks_mandatory');
+        $calendarSettings->project_creation_from_events_enabled = $request->boolean(
+            'project_creation_from_events_enabled',
+            true
+        );
         $calendarSettings->save();
 
         return redirect()->back();

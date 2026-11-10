@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\EventType\Http\Requests;
 
+use Artwork\Core\Validation\Rules\HexColorRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -26,7 +27,7 @@ class StoreOrUpdateEventTypeRequest extends FormRequest
 
         return [
             'name' => [$requiredOnCreate, 'string', 'max:255'],
-            'hex_code' => ['nullable', 'string', 'max:255'],
+            'hex_code' => ['nullable', 'string', 'max:255', new HexColorRule()],
             'abbreviation' => ['nullable', 'string', 'max:255'],
             'project_mandatory' => ['nullable', 'boolean'],
             'individual_name' => ['nullable', 'boolean'],

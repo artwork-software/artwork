@@ -3,9 +3,14 @@
 namespace Artwork\Modules\Ticketing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
+use Artwork\Modules\Ticketing\Http\Controllers\Concerns\CallsTickets;
 use Artwork\Modules\Ticketing\Http\Requests\ConnectTicketingRequest;
+use Artwork\Modules\Ticketing\Http\Requests\GoLiveRequest;
+use Artwork\Modules\Ticketing\Http\Requests\ShopAccessRequest;
 use Artwork\Modules\Ticketing\Http\Requests\SyncReductionsRequest;
 use Artwork\Modules\Ticketing\Http\Requests\SyncRoomsRequest;
 use Artwork\Modules\Ticketing\Http\Requests\TicketingDraftRules;
@@ -26,6 +31,8 @@ use Inertia\Response;
  */
 class TicketingConnectionController extends Controller
 {
+    use CallsTickets;
+
     public function __construct(
         private readonly TicketingConnectionService $connections,
         private readonly TicketingBillingService $billing,
@@ -36,11 +43,13 @@ class TicketingConnectionController extends Controller
     {
         $connection = $this->connections->current();
         $billing = null;
+        $shopAccess = null;
 
-        // Ohne Antwort von tickets keine Warnung und kein Stripe-Formular, die Seite selbst bleibt.
+        // Ohne Antwort von tickets keine Warnung, kein Stripe-Formular und kein Testzugang, die Seite selbst bleibt.
         if ($connection) {
             try {
                 $billing = $this->billing->status($connection);
+                $shopAccess = $connection->isTestMode() ? $this->connections->shopAccess($connection) : null;
             } catch (TicketingConnectionException) {
             }
         }
@@ -54,29 +63,27 @@ class TicketingConnectionController extends Controller
                     'state' => $billing['payout_account'],
                     'stripe_key' => $billing['stripe_key'],
                 ],
+                'shopAccess' => $shopAccess,
             ],
             'houseDefaults' => $this->connections->houseDefaults($request->user()),
             'countries' => TicketingDraftRules::COUNTRIES,
             'legalForms' => TicketingDraftRules::LEGAL_FORMS,
             'rooms' => $this->permanentRooms(),
             'linkedRooms' => TicketingRoomLink::query()->count(),
+            'ticketingOnTab' => ComponentInTab::query()
+                ->whereHas('component', fn ($query) => $query->where('type', ProjectTabComponentEnum::TICKETING->value))
+                ->exists(),
         ]);
     }
 
     /** Nach dem Verbinden: die Räume mit dem Stand aus tickets vorbelegt, damit ein Abgleich nichts überschreibt. */
     public function rooms(Request $request): Response
     {
-        $connection = $this->connections->current();
-        $venues = [];
-        $ticketsError = null;
-
-        if ($connection) {
-            try {
-                $venues = $this->connections->venues($connection);
-            } catch (TicketingConnectionException $exception) {
-                $ticketsError = $exception->getMessage();
-            }
-        }
+        [$venues, $ticketsError] = $this->readFromTickets(
+            $this->connections->current(),
+            $this->connections->venues(...),
+            [],
+        );
 
         $links = TicketingRoomLink::query()->pluck('venue_id', 'room_id');
 
@@ -94,17 +101,11 @@ class TicketingConnectionController extends Controller
 
     public function reductions(): Response
     {
-        $connection = $this->connections->current();
-        $reductions = [];
-        $ticketsError = null;
-
-        if ($connection) {
-            try {
-                $reductions = $this->connections->reductions($connection);
-            } catch (TicketingConnectionException $exception) {
-                $ticketsError = $exception->getMessage();
-            }
-        }
+        [$reductions, $ticketsError] = $this->readFromTickets(
+            $this->connections->current(),
+            $this->connections->reductions(...),
+            [],
+        );
 
         return Inertia::render('Settings/Tickets/Reductions', [
             'connection' => $this->connectionProps(),
@@ -140,28 +141,61 @@ class TicketingConnectionController extends Controller
 
     public function syncRooms(SyncRoomsRequest $request): RedirectResponse
     {
-        $connection = $this->requireConnection();
-
-        try {
-            $this->connections->syncRooms($connection, $request->validated('rooms'));
-        } catch (TicketingConnectionException $exception) {
-            return back()->with('error', $exception->getMessage());
-        }
-
-        return back()->with('success', __('Rooms synced with Artwork-Tickets.'));
+        return $this->sendToTickets(
+            $this->requireConnection(),
+            fn (TicketingConnection $connection) => $this->connections
+                ->syncRooms($connection, $request->validated('rooms')),
+            __('Rooms synced with Artwork-Tickets.'),
+        );
     }
 
     public function syncReductions(SyncReductionsRequest $request): RedirectResponse
     {
-        $connection = $this->requireConnection();
+        return $this->sendToTickets(
+            $this->requireConnection(),
+            fn (TicketingConnection $connection) => $this->connections
+                ->syncReductions($connection, $request->validated('reductions')),
+            __('Reductions synced with Artwork-Tickets.'),
+        );
+    }
 
+    public function saveShopAccess(ShopAccessRequest $request): RedirectResponse
+    {
+        return $this->sendToTickets(
+            $this->requireConnection(),
+            fn (TicketingConnection $connection) => $this->connections->saveShopAccess(
+                $connection,
+                $request->validated('user'),
+                $request->validated('password'),
+            ),
+            __('Test shop access saved.'),
+        );
+    }
+
+    public function goLive(GoLiveRequest $request): RedirectResponse
+    {
+        return $this->sendToTickets(
+            $this->requireConnection(),
+            fn (TicketingConnection $connection) => $this->connections->goLive($connection, [
+                'keep_shop_look' => $request->boolean('keep_shop_look'),
+                'keep_pass_types' => $request->boolean('keep_pass_types'),
+                'keep_coupons' => $request->boolean('keep_coupons'),
+                'keep_dates' => $request->boolean('keep_dates'),
+            ]),
+            __('Artwork-Tickets is live. Sales from now on are real.'),
+        );
+    }
+
+    /** Nur im Testmodus: das Ticket-Haus mit allem darin löschen und die Verbindung trennen. */
+    public function erase(): RedirectResponse
+    {
         try {
-            $this->connections->syncReductions($connection, $request->validated('reductions'));
+            $this->connections->erase();
         } catch (TicketingConnectionException $exception) {
             return back()->with('error', $exception->getMessage());
         }
 
-        return back()->with('success', __('Reductions synced with Artwork-Tickets.'));
+        return back()->with('success', __('The test house has been deleted.'));
     }
 
     public function destroy(): RedirectResponse
@@ -188,6 +222,7 @@ class TicketingConnectionController extends Controller
             'connectedAt' => $connection?->created_at,
             'connectedBy' => $connection?->connectedBy?->full_name,
             'datesOnSale' => $connection === null ? 0 : $this->connections->datesOnSale(),
+            'testMode' => $connection?->isTestMode() ?? false,
         ];
     }
 

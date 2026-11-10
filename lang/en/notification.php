@@ -169,6 +169,7 @@ return [
         'new' => 'New request for planned event',
         'open-index' => 'Planning event requests open',
         'approved-finished' => 'Planning event request approved and completed',
+        'approved-finished-by' => 'Planning event request approved and completed by :name',
         'user-approved' => 'Planning event request approved by :name',
         'event-verification-description' => 'The planned event ":event" has been approved',
         'user-rejected' => 'Planning event request rejected by :name',

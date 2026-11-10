@@ -132,7 +132,11 @@ use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCustomerController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingDoorController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingPassTypeController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingProductionGroupController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingProjectController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingSectionController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingTeamController;
 use Artwork\Modules\Ticketing\Services\TicketingBillingService;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
@@ -181,6 +185,9 @@ use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
+use Artwork\Modules\Project\Http\Controllers\ProjectContentExportController;
+use Artwork\Modules\Project\Http\Controllers\ProjectPlanExportController;
+use Artwork\Modules\Project\Http\Controllers\ProjectContentExportTemplateController;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
@@ -203,6 +210,7 @@ use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use Artwork\Modules\User\Http\Controllers\UserContractController;
 use Artwork\Modules\User\Http\Controllers\UserBrowserSessionController;
+use Artwork\Modules\User\Http\Controllers\UserEmailChangeController;
 use Artwork\Modules\User\Http\Controllers\UserController;
 use Artwork\Modules\User\Http\Controllers\UserFilterController;
 use Artwork\Modules\User\Http\Controllers\UserFilterTemplateController;
@@ -225,10 +233,13 @@ use Inertia\Inertia;
 
 Route::get('/', [AppController::class, 'index']);
 
-Route::get('/password_feedback', [AppController::class, 'getPasswordScore']);
+// POST statt GET: das Passwort darf nicht in Access-Logs/Traces landen. Gedrosselt, weil zxcvbn teuer ist.
+Route::post('/password_feedback', [AppController::class, 'getPasswordScore'])->middleware('throttle:60,1');
 
 Route::get('/setup', [AppController::class, 'showSetupPage'])->name('setup');
-Route::post('/setup', [AppController::class, 'createAdmin'])->name('setup.create');
+Route::post('/setup', [AppController::class, 'createAdmin'])
+    ->middleware('throttle:10,1')
+    ->name('setup.create');
 
 Route::get('/users/invitations/accept', [InvitationController::class, 'accept'])->middleware('throttle:10,1');
 Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])
@@ -456,6 +467,10 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->name('settings.tickets.availability');
         Route::post('/connection', [TicketingConnectionController::class, 'store'])->name('settings.tickets.connect');
         Route::delete('/connection', [TicketingConnectionController::class, 'destroy'])->name('settings.tickets.disconnect');
+        Route::put('/shop-access', [TicketingConnectionController::class, 'saveShopAccess'])
+            ->name('settings.tickets.shop-access');
+        Route::post('/go-live', [TicketingConnectionController::class, 'goLive'])->name('settings.tickets.go-live');
+        Route::delete('/house', [TicketingConnectionController::class, 'erase'])->name('settings.tickets.erase');
         Route::get('/billing', [TicketingBillingController::class, 'index'])->name('settings.tickets.billing');
         // POST: mit PDFs kommt das Formular als multipart, und das liest PHP nur bei POST.
         Route::post('/billing', [TicketingBillingController::class, 'update'])->name('settings.tickets.billing.save');
@@ -471,6 +486,22 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');
         Route::post('/reductions', [TicketingConnectionController::class, 'syncReductions'])
             ->name('settings.tickets.reductions.sync');
+        Route::get('/passes', [TicketingPassTypeController::class, 'index'])->name('settings.tickets.passes');
+        Route::post('/passes', [TicketingPassTypeController::class, 'store'])->name('settings.tickets.passes.store');
+        Route::put('/passes/{passType}', [TicketingPassTypeController::class, 'update'])
+            ->whereUuid('passType')->name('settings.tickets.passes.update');
+        Route::delete('/passes/{passType}', [TicketingPassTypeController::class, 'destroy'])
+            ->whereUuid('passType')->name('settings.tickets.passes.destroy');
+        Route::post('/passes/{passType}/publish', [TicketingPassTypeController::class, 'publish'])
+            ->whereUuid('passType')->name('settings.tickets.passes.publish');
+        Route::post('/passes/{passType}/archive', [TicketingPassTypeController::class, 'archive'])
+            ->whereUuid('passType')->name('settings.tickets.passes.archive');
+        Route::get('/groups', [TicketingProductionGroupController::class, 'index'])->name('settings.tickets.groups');
+        Route::post('/groups', [TicketingProductionGroupController::class, 'store'])->name('settings.tickets.groups.store');
+        Route::put('/groups/{group}', [TicketingProductionGroupController::class, 'update'])
+            ->whereUuid('group')->name('settings.tickets.groups.update');
+        Route::delete('/groups/{group}', [TicketingProductionGroupController::class, 'destroy'])
+            ->whereUuid('group')->name('settings.tickets.groups.destroy');
         Route::get('/team', [TicketingTeamController::class, 'index'])->name('settings.tickets.team');
         Route::post('/team/invitations', [TicketingTeamController::class, 'invite'])
             ->name('settings.tickets.team.invite');
@@ -767,6 +798,10 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->name('user.overtime.payout');
 
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
+    // Bestätigungslink für die selbst geänderte Login-E-Mail (UserEmailChangeService::requestSelfChange)
+    Route::get('/user/email-change/{user}/{hash}', [UserEmailChangeController::class, 'confirm'])
+        ->middleware(['signed', 'throttle:10,1'])
+        ->name('user.email-change.confirm');
 
     // user.update.open.crafts
     Route::patch('/users/{user}/open-crafts', [UserController::class, 'updateOpenedCrafts'])
@@ -792,6 +827,8 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.destroy');
+    Route::post('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('user.deactivate');
+    Route::post('/users/{user}/reactivate', [UserController::class, 'reactivate'])->name('user.reactivate');
     // Eigene Browsersitzungen (die Jetstream-Routen hängen am api-Guard)
     Route::get('/user/browser-sessions', [UserBrowserSessionController::class, 'index'])
         ->name('user.browser-sessions.index');
@@ -856,10 +893,50 @@ Route::group(['middleware' => ['auth']], function (): void {
     // Team-Mitgliedschaft in einzelnen Projekten reicht nicht (Route vor {project}!)
     Route::get('/projects/export/project-role-matrix', ProjectRoleMatrixExportController::class)
         ->name('projects.export.project-role-matrix')
-        ->can('view projects');
+        ->middleware(['can:view projects', 'can:can export from project overview']);
+
+    // Projektinhalte als Excel/Word (Export-Modal der Projektübersicht). Ausgegeben werden nur Projekte, die
+    // die Person öffnen darf, und Komponenten, die sie sehen darf (Route vor {project}!)
+    Route::group([
+        'prefix' => '/projects/content-export',
+        'middleware' => 'can:can export from project overview',
+    ], function (): void {
+        Route::get('/options', [ProjectContentExportController::class, 'options'])
+            ->name('projects.content-export.options');
+        Route::post('/preview', [ProjectContentExportController::class, 'preview'])
+            ->name('projects.content-export.preview');
+        Route::post('/cache', [ProjectContentExportController::class, 'cache'])
+            ->name('projects.content-export.cache');
+        Route::get('/download/{cacheToken}', [ProjectContentExportController::class, 'download'])
+            ->name('projects.content-export.download');
+        Route::get('/templates', [ProjectContentExportTemplateController::class, 'index'])
+            ->name('projects.content-export.templates.index');
+        Route::post('/templates', [ProjectContentExportTemplateController::class, 'store'])
+            ->name('projects.content-export.templates.store');
+        Route::patch(
+            '/templates/{projectContentExportTemplate}',
+            [ProjectContentExportTemplateController::class, 'update']
+        )->name('projects.content-export.templates.update');
+        Route::delete(
+            '/templates/{projectContentExportTemplate}',
+            [ProjectContentExportTemplateController::class, 'destroy']
+        )->name('projects.content-export.templates.destroy');
+    });
     Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])
         ->middleware(CanViewProject::class)
         ->name('projects.show.basic');
+    // Veranstaltungsplan und Künstlerplan als Word (Export-Dialog im Projektkopf)
+    Route::group([
+        'prefix' => '/projects/{project}/plans',
+        'middleware' => CanViewProject::class,
+    ], function (): void {
+        Route::get('/options', [ProjectPlanExportController::class, 'options'])
+            ->name('projects.plans.options');
+        Route::get('/event-plan', [ProjectPlanExportController::class, 'eventPlan'])
+            ->name('projects.plans.event-plan');
+        Route::get('/artist-plan', [ProjectPlanExportController::class, 'artistPlan'])
+            ->name('projects.plans.artist-plan');
+    });
     Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
         ->middleware(CanViewProject::class)
         ->name('projects.rooms-with-event-periods');
@@ -921,6 +998,8 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->middleware(CanEditProject::class);
 
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::patch('/projects/{project}/type', [ProjectController::class, 'updateType'])
+        ->name('projects.update.type');
     Route::patch('/projects/{project}/shiftDescription', [ProjectController::class, 'updateShiftDescription'])
         ->name('projects.update.shift_description');
     Route::patch('/projects/{project}/shiftContacts', [ProjectController::class, 'updateShiftContacts'])
@@ -1043,6 +1122,11 @@ Route::group(['middleware' => ['auth']], function (): void {
             Route::get('/mask', 'mask')->name('mask');
             Route::post('/', 'store')->name('store');
             Route::post('/link', 'link')->name('link');
+            // Rollen: Gruppen der Liste und Rollen/Sonderrolle „Künstler*in“ je Kontakt
+            Route::post('/roles', 'storeRole')->name('roles.store');
+            Route::patch('/roles', 'renameRole')->name('roles.rename');
+            Route::delete('/roles', 'destroyRole')->name('roles.destroy');
+            Route::patch('/{crmContact}/roles', 'updateEntryRoles')->name('entry-roles.update');
             Route::patch('/{crmContact}', 'update')->name('update');
             Route::delete('/{crmContact}', 'destroy')->name('destroy');
         });
@@ -1073,6 +1157,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
     Route::post('/project_files/{project_file}', [ProjectFileController::class, 'update'])
         ->name('project_files.update');
+    // "Sichtbar in" der Dateiupload-Komponente
+    Route::patch('/project_files/{project_file}/visibility', [ProjectFileController::class, 'updateVisibility'])
+        ->name('project_files.visibility');
     Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');
     Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy'])
         ->name('project_files.destroy');
@@ -1237,7 +1324,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
     Route::get('/trashedRooms', [RoomController::class, 'getTrashed'])
         ->middleware('can:can access trash')->name('rooms.trashed');
-    Route::get('/rooms/free', [RoomController::class, 'getAllDayFree'])->name('rooms.free');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])
         ->name('rooms.show')->middleware(CanViewRoom::class);
@@ -1299,6 +1385,30 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->name('ticketing.sales');
     Route::get('/ticketing/move-check', [TicketingCalendarController::class, 'moveCheck'])
         ->name('ticketing.move-check');
+    Route::post('/ticketing/events/{event}/check-ins', [TicketingDoorController::class, 'checkIn'])
+        ->name('ticketing.door.check-in');
+    Route::post('/ticketing/events/{event}/check-ins/revert', [TicketingDoorController::class, 'revert'])
+        ->name('ticketing.door.revert');
+    Route::get('/ticketing/events/{event}/passes', [TicketingDoorController::class, 'passes'])
+        ->name('ticketing.door.passes');
+    Route::post('/ticketing/events/{event}/pass-admissions', [TicketingDoorController::class, 'admit'])
+        ->name('ticketing.door.admit');
+    Route::group([
+        'prefix' => 'artwork-tickets',
+        'middleware' => 'can:' . PermissionEnum::TICKETING_VIEW_SALES->value,
+    ], function (): void {
+        Route::get('/sales', [TicketingSectionController::class, 'sales'])->name('ticketing.section.sales');
+        Route::get('/passes', [TicketingSectionController::class, 'passes'])->name('ticketing.section.passes');
+        Route::get('/holdings', [TicketingSectionController::class, 'holdings'])->name('ticketing.section.holdings');
+        Route::get('/passes/{pass}', [TicketingSectionController::class, 'pass'])
+            ->whereUuid('pass')->name('ticketing.section.pass');
+        Route::group(['middleware' => 'can:' . PermissionEnum::TICKETING_MANAGE_PASSES->value], function (): void {
+            Route::post('/passes/{pass}/commands', [TicketingSectionController::class, 'correctPass'])
+                ->whereUuid('pass')->name('ticketing.section.pass.correct');
+            Route::post('/subscriptions/{subscription}/commands', [TicketingSectionController::class, 'changeSubscription'])
+                ->whereUuid('subscription')->name('ticketing.section.subscription.change');
+        });
+    });
     Route::get('/response/all/shift-plan-events', [
         EventController::class,
         'shiftPlanEventAPI',
@@ -1345,6 +1455,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     // das Termin-Modal laedt sie beim Oeffnen nach.
     Route::get('/events/{event}/description', [EventController::class, 'showDescription'])
         ->name('events.description');
+    // Vor /events/{event}/convert-to-planning: "bulk" würde sonst als {event} gebunden (404)
+    Route::post('/events/bulk/convert-to-planning', [EventController::class, 'bulkConvertToPlanning'])
+        ->name('events.bulk.convert-to-planning');
     Route::post('/events/{event}/convert-to-planning', [EventController::class, 'convertToPlanning'])
         ->name('events.convertToPlanning');
     Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])
@@ -2986,6 +3099,16 @@ Route::group(['middleware' => ['auth']], function (): void {
                 'updateComponentScope'
             ])->name('tab.update.component.scope');
 
+            // Upload-Bereiche der Dateiupload-Komponente: erlaubte Typen, Größe, Anzahl
+            Route::patch('/component-in-tab/{componentInTab}/upload-settings', [
+                ProjectTabController::class,
+                'updateUploadSettings'
+            ])->name('tab.update.component.upload-settings');
+            Route::patch('/disclosure-component/{disclosureComponent}/upload-settings', [
+                ProjectTabController::class,
+                'updateFolderUploadSettings'
+            ])->name('tab.update.disclosure-component.upload-settings');
+
             // patch tab.update.default
             Route::patch('/{projectTab}/update/default', [ProjectTabController::class, 'updateDefault'])
                 ->name('tab.update.default');
@@ -3152,6 +3275,12 @@ Route::group(['middleware' => ['auth']], function (): void {
             '/calendar/abo/{userCalenderAbo}/update',
             [UserCalenderAboController::class, 'update']
         )->name('user.calendar.abo.update');
+
+        // user.calendar.abo.renew — Widerruf: neuer Feed-Token, alter Link wird ungültig
+        Route::delete(
+            '/calendar/abo/{userCalenderAbo}/renew',
+            [UserCalenderAboController::class, 'destroy']
+        )->name('user.calendar.abo.renew');
     });
 
     Route::resource('project-roles', ProjectRoleController::class)
@@ -3201,19 +3330,24 @@ Route::group(['middleware' => ['auth']], function (): void {
 
 
     Route::group(['prefix' => 'inventory'], function (): void {
+        // Übersicht: Recht "Inventar sehen" (Gate view-inventory). Die Artikel-Endpunkte darunter bleiben offen,
+        // weil Materialausgaben und Material-Sets sie auch ohne Übersichtsrecht nutzen.
         Route::get('/', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+            ->middleware('can:view-inventory')
             ->name('inventory.index');
 
         Route::get('/category/{inventoryCategory}', [
             \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
             'index',
         ])
+            ->middleware('can:view-inventory')
             ->name('inventory.category.show');
 
         Route::get('/category/{inventoryCategory}/sub/{inventorySubCategory}', [
             \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
             'index',
         ])
+            ->middleware('can:view-inventory')
             ->name('inventory.sub.category.show');
 
         // post inventory-management.articles.store
@@ -3702,6 +3836,12 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
         Route::post('/projects/existing', [ProjectController::class, 'filterExistingProjectIds'])
             ->name('project.filterExistingIds');
+        // Projektgruppen eines Projekts, Anzeige neben dem Projektnamen im Termin-Modal
+        Route::get('/projects/{project}/groups', [ProjectController::class, 'projectGroupNames'])
+            ->name('project.groupNames');
+        // Unterprojekte einer Gruppe, falls das Basisdaten-Modal sie nicht mitbekommt
+        Route::get('/projects/{project}/group-projects', [ProjectController::class, 'projectsOfGroupNames'])
+            ->name('project.groupProjectNames');
     });
 
     Route::group(['prefix' => 'chat'], function (): void {

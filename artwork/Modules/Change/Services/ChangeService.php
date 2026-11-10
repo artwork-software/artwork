@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Spatie\Activitylog\Contracts\Activity;
+use Artwork\Modules\User\Models\User;
 
 class ChangeService
 {
@@ -70,6 +71,22 @@ class ChangeService
     }
 
     /**
+     * Budget-Einträge (alte/neue Zellwerte) nur für Personen mit Budgetzugriff; der Verlauf selbst
+     * ist für alle mit Projekt-Sichtrecht sichtbar.
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public function withoutBudgetEntries(array $rows): array
+    {
+        return array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => !(is_array($row['changes'] ?? null)
+                && ($row['changes'][0]['type'] ?? null) === 'budget')
+        ));
+    }
+
+    /**
      * Variant for `RoomCalendarResource`: causer info is inlined into every
      * `changes` entry as `changed_by`, matching the legacy behaviour.
      *
@@ -85,6 +102,7 @@ class ChangeService
                     'first_name' => $causer->first_name ?? null,
                     'last_name' => $causer->last_name ?? null,
                     'profile_photo_url' => $causer->profile_photo_url ?? null,
+                    'deactivated_at' => User::deactivatedAtFor($causer),
                 ] : null;
 
                 $changes = array_map(function ($item) use ($changerData) {

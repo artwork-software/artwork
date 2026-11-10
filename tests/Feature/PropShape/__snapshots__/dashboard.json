@@ -15,6 +15,7 @@
             "specific_verifier_id": ".",
             "users": {
                 "[]": {
+                    "deactivated_at": ".",
                     "email": ".",
                     "first_name": ".",
                     "full_name": ".",
@@ -43,6 +44,7 @@
             "projectName": ".",
             "users": {
                 "[]": {
+                    "deactivated_at": ".",
                     "first_name": ".",
                     "full_name": ".",
                     "id": ".",

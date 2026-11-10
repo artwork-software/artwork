@@ -484,20 +484,24 @@ function onEnterKey(e) {
     }
 }
 
+// Benannt, damit er beim Unmount wieder entfernt wird (vorher blieb pro Datumsauswahl ein Listener liegen)
+const closeOnOutsideClick = (event) => {
+    if (!event.target.closest('#datePicker') && showDateRangePicker.value) {
+        showDateRangePicker.value = false;
+    }
+};
+
 // Lifecycle
 onMounted(() => {
     removeDateIcons();
     startDateString.value = getDayOfWeek(new Date(dateValue.value[0])).replace('.', '');
     endDateString.value = getDayOfWeek(new Date(dateValue.value[1])).replace('.', '');
-    document.addEventListener('click', (event) => {
-        if (!event.target.closest('#datePicker') && showDateRangePicker.value) {
-            showDateRangePicker.value = false;
-        }
-    });
+    document.addEventListener('click', closeOnOutsideClick);
     document.addEventListener('keydown', onEnterKey, true);
 });
 
 onUnmounted(() => {
+    document.removeEventListener('click', closeOnOutsideClick);
     document.removeEventListener('keydown', onEnterKey, true);
 });
 </script>

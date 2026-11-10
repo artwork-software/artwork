@@ -106,40 +106,38 @@
                 {{ $t('{name} will be able to do everything in artwork: every module, every setting, every person – including granting rights to others. Individual permissions no longer matter.', { name: fullName }) }}
             </p>
             <template #footer>
-                <div class="mt-6 flex items-center justify-end gap-3">
-                    <BaseUIButton variant="ghost" hide-icon label="Cancel" @click="confirmAdmin = false" />
-                    <BaseUIButton variant="primary" hide-icon label="Grant admin role" @click="isAdmin = true; confirmAdmin = false; persist('admin')" />
-                </div>
+                <BaseUIButton label="Cancel" is-cancel-button hide-icon @click="confirmAdmin = false" />
+                <BaseUIButton variant="primary" hide-icon label="Grant admin role" @click="isAdmin = true; confirmAdmin = false; persist('admin')" />
             </template>
         </ArtworkBaseModal>
 
-        <BaseModal v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg" @closed="deletingUser = false">
-            <div class="mx-4">
-                <div class="my-2 text-2xl font-bold text-text">{{ $t('Delete user') }}</div>
-                <div class="text-sm text-danger">
-                    {{ $t('Are you sure you want to delete {last_name}, {first_name} from the system?', { last_name: user_to_edit.last_name, first_name: user_to_edit.first_name }) }}
-                </div>
-                <div class="mt-6 flex items-center justify-between">
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-full bg-danger px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-danger focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-2"
-                        @click="deleteUser"
-                    >
-                        {{ $t('Delete') }}
-                    </button>
-                    <button type="button" class="text-sm font-medium text-text-muted underline underline-offset-2 hover:text-text" @click="deletingUser = false">
-                        {{ $t('No, not really') }}
-                    </button>
-                </div>
-            </div>
-        </BaseModal>
+        <ArtworkBaseModal v-if="deletingUser" title="Delete user" modal-size="sm:max-w-lg" @close="closeDeleteUserModal">
+            <p class="text-sm text-text">
+                {{ $t('Are you sure you want to delete {last_name}, {first_name} from the system?', { last_name: user_to_edit.last_name, first_name: user_to_edit.first_name }) }}
+            </p>
+            <template #footer>
+                <BaseUIButton
+                    label="No, not really"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="deletingUserProcessing"
+                    @click="closeDeleteUserModal"
+                />
+                <BaseUIButton
+                    label="Delete"
+                    variant="danger"
+                    icon="IconTrash"
+                    :processing="deletingUserProcessing"
+                    @click="deleteUser"
+                />
+            </template>
+        </ArtworkBaseModal>
     </div>
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
@@ -157,6 +155,7 @@ const props = defineProps({
 const permissions = ref([...(props.user_to_edit.permissions || [])])
 const isAdmin = ref((props.user_to_edit.roles || []).includes('artwork admin'))
 const deletingUser = ref(false)
+const deletingUserProcessing = ref(false)
 const confirmAdmin = ref(false)
 const historyOpen = ref(false)
 const saveState = ref('idle')
@@ -222,8 +221,18 @@ function onAdminToggle(event) {
     persist('admin')
 }
 
-function deleteUser() {
-    router.delete(`/users/${props.user_to_edit.id}`)
+function closeDeleteUserModal() {
     deletingUser.value = false
+}
+
+function deleteUser() {
+    if (deletingUserProcessing.value) {
+        return
+    }
+    deletingUserProcessing.value = true
+    router.delete(`/users/${props.user_to_edit.id}`, {
+        onSuccess: () => closeDeleteUserModal(),
+        onFinish: () => (deletingUserProcessing.value = false),
+    })
 }
 </script>

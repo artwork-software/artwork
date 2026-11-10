@@ -33,6 +33,20 @@ class ExternalUserRepository extends BaseRepository
             ->first();
     }
 
+    /**
+     * Die Identität war schon mit einem artwork-Konto verknüpft, das inzwischen gelöscht wurde.
+     */
+    public function identityBelongedToDeletedUser(int $sourceId, string $identification): bool
+    {
+        return $this->getNewModelQuery()
+            ->withTrashed()
+            ->where('source_id', $sourceId)
+            ->where('identification', $identification)
+            ->whereNotNull('user_id')
+            ->whereDoesntHave('user')
+            ->exists();
+    }
+
     public function findByUserId(int $userId): Collection
     {
         return $this->getNewModelQuery()

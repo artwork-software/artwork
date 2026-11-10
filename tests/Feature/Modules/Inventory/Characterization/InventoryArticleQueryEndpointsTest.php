@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Modules\Inventory\Characterization;
 
+use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
@@ -112,6 +113,39 @@ final class InventoryArticleQueryEndpointsTest extends FeatureTestCase
             ->assertOk()
             ->assertJsonPath('data.article.id', $article->id)
             ->assertJsonPath('data.start_date', '2026-11-09');
+    }
+
+    /**
+     * Sentry KAMPNAGEL-PROD-9G: Die Verfügbarkeits-Timeline rief effectiveReturnDate() auf den
+     * flachen Sweep-Objekten auf → 500, sobald eine externe Ausgabe im Zeitraum lag.
+     */
+    #[Test]
+    public function usage_data_counts_external_issues_in_the_range(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $article = InventoryArticle::factory()->create(['quantity' => 5, 'is_detailed_quantity' => false]);
+        $externalIssue = ExternalIssue::factory()->create([
+            'issue_date' => '2026-11-09',
+            'return_date' => '2026-11-11',
+        ]);
+        $externalIssue->articles()->attach($article->id, ['quantity' => 2]);
+
+        $this->getJson(route('inventory.articles.usage', [
+            'article_id' => $article->id,
+            'start_date' => '2026-11-09',
+            'end_date' => '2026-11-11',
+        ]))
+            ->assertOk()
+            ->assertJsonCount(1, 'data.external')
+            ->assertJsonPath('data.peak_usage', 2);
+
+        $this->getJson(route('inventory.articles.planning-cell', [
+            'article_id' => $article->id,
+            'date' => '2026-11-10',
+        ]))
+            ->assertOk()
+            ->assertJsonCount(1, 'data.external')
+            ->assertJsonPath('data.peak_usage', 2);
     }
 
     #[Test]

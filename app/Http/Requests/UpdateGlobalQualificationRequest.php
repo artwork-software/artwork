@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Artwork\Core\Validation\Rules\IconNameRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateGlobalQualificationRequest extends FormRequest
@@ -24,7 +25,7 @@ class UpdateGlobalQualificationRequest extends FormRequest
         return [
             'id' => 'required|integer|exists:global_qualifications,id',
             'name' => 'sometimes|required|string|max:255',
-            'icon' => 'sometimes|required|string|max:255',
+            'icon' => ['sometimes', 'required', 'string', 'max:255', new IconNameRule()],
         ];
     }
 }

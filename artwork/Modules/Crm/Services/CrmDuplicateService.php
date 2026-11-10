@@ -6,6 +6,7 @@ use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Models\CrmProperty;
+use Artwork\Modules\Project\Services\ProjectArtistService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -232,6 +233,9 @@ readonly class CrmDuplicateService
                 $duplicate->delete();
             }
         });
+
+        // Projektkünstler*innen hängen jetzt am Hauptkontakt (Pivot und Kontaktlisten per Query umgehängt)
+        app(ProjectArtistService::class)->refreshForContact((int) $primary->id);
     }
 
     /**
@@ -244,13 +248,22 @@ readonly class CrmDuplicateService
         $rows = DB::table('project_component_crm_contacts')->where('crm_contact_id', $duplicate->id)->get();
 
         foreach ($rows as $row) {
-            $primaryExists = DB::table('project_component_crm_contacts')
+            $primaryRow = DB::table('project_component_crm_contacts')
                 ->where('crm_contact_id', $primary->id)
                 ->where('project_id', $row->project_id)
                 ->where('component_id', $row->component_id)
-                ->exists();
+                ->first();
 
-            if ($primaryExists) {
+            if ($primaryRow !== null) {
+                // Rollen und Sonderrolle „Künstler*in“ der Duplikat-Zeile bleiben am Hauptkontakt erhalten
+                $roles = array_values(array_unique(array_merge(
+                    (array) json_decode((string) ($primaryRow->roles ?? '[]'), true),
+                    (array) json_decode((string) ($row->roles ?? '[]'), true),
+                )));
+                DB::table('project_component_crm_contacts')->where('id', $primaryRow->id)->update([
+                    'roles' => $roles === [] ? null : json_encode($roles, JSON_UNESCAPED_UNICODE),
+                    'is_artist' => (bool) $primaryRow->is_artist || (bool) $row->is_artist,
+                ]);
                 DB::table('project_component_crm_contacts')->where('id', $row->id)->delete();
                 continue;
             }

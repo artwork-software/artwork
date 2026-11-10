@@ -3,8 +3,10 @@
         <Listbox
             as="div"
             class="w-96"
-            v-model="selected"
+            :model-value="selected"
+            :multiple="isMultiple"
             :disabled="!canEditComponent"
+            @update:model-value="onListboxChange"
         >
             <ListboxLabel
                 class="componentLabel"
@@ -18,7 +20,7 @@
                     class="menu-button"
                     :class="inSidebar ? '!bg-surface-inverse !border-white/10 !text-white' : 'bg-white'"
                 >
-                    <div class="block truncate">{{ selected }}</div>
+                    <div class="block truncate">{{ displayText }}</div>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                     <IconChevronDown class="h-5 w-5" :class="inSidebar ? 'text-white/70' : 'text-text-subtle'" aria-hidden="true" />
                   </span>
@@ -41,7 +43,6 @@
                             v-slot="{ active, selected: isSelected }"
                         >
                             <li
-                                @click="updateTextData(item.value)"
                                 :class="[
                                     active
                                         ? 'bg-accent-600 text-white'
@@ -67,7 +68,7 @@
                                         @mouseleave="onClearLeave"
                                         @focusin="onClearEnter"
                                         @focusout="onClearLeave"
-                                        @click.stop.prevent="updateTextData(null)"
+                                        @click.stop.prevent="clearValue(item.value)"
                                     >
                                         <IconX class="h-5 w-5" aria-hidden="true" />
                                     </button>
@@ -85,7 +86,7 @@
                 class="pointer-events-none fixed z-[9999] -translate-y-1/2 whitespace-nowrap rounded bg-surface-inverse px-2 py-1 text-xs text-text-inverse shadow-sm"
                 :style="{ left: clearTooltip.x + 'px', top: clearTooltip.y + 'px' }"
             >
-                Auswahl aufheben
+                {{ isMultiple ? $t('Remove from selection') : $t('Clear selection') }}
             </div>
         </Teleport>
 
@@ -107,6 +108,7 @@ import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonCompo
 import {IconChevronDown , IconX} from "@tabler/icons-vue";
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
 import {createSerializedSaver} from "@/Helper/serializedSave.js";
+import { allowsMultipleSelection, selectedDisplayText, selectedValues } from "@/Helper/ComponentSelection.js";
 
 
 defineOptions({
@@ -125,13 +127,17 @@ const props = defineProps({
 const projectData = computed(() => props.data);
 
 
+// Mehrfachauswahl (Einstellung der Komponente): Wert ist eine Liste, sonst ein einzelner Text
+const isMultiple = computed(() => allowsMultipleSelection('DropDown', props.data.data));
+
 const normalizeSelected = (val) => {
-    if (val === null || val === undefined) return '';
-    return typeof val === 'object' && val !== null && 'value' in val ? val.value : val;
+    const values = selectedValues(val);
+    return isMultiple.value ? values : (values[0] ?? '');
 };
 const selected = ref(
     normalizeSelected(props.data.project_value ? props.data.project_value.data.selected : props.data.data.selected)
 );
+const displayText = computed(() => selectedDisplayText(selected.value));
 
 const clearTooltip = reactive({
     visible: false,
@@ -219,7 +225,23 @@ watch(
 function updateTextData(value) {
     // Optimistisches UI-Update (Antwort/Broadcast synchronisiert final)
     selected.value = normalizeSelected(value);
-    selectionSaver.save(value);
+    selectionSaver.save(isMultiple.value ? selected.value : (value ?? null));
+}
+
+function onListboxChange(value) {
+    // Einzelauswahl: erneutes Wählen derselben Option ändert nichts (Aufheben über das X)
+    if (!isMultiple.value && value === selected.value) {
+        return;
+    }
+    updateTextData(value);
+}
+
+function clearValue(optionValue) {
+    if (isMultiple.value) {
+        updateTextData(selected.value.filter((value) => value !== optionValue));
+        return;
+    }
+    updateTextData(null);
 }
 </script>
 

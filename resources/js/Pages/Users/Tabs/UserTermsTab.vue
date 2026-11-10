@@ -45,7 +45,6 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import {Link, useForm} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
@@ -72,7 +71,6 @@ export default {
         Switch,
         SwitchGroup,
         SwitchLabel,
-        JetDialogModal
     },
     props: [
         'user_to_edit',

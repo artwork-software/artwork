@@ -75,217 +75,77 @@
                 </div>
             </div>
 
-            <!-- Sticky Filter Toolbar -->
-            <div class="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70">
-                <!-- Desktop/Tablet: klassische Toolbar -->
-                <div class="ui-card">
-                    <div
-                        class="flex items-center justify-between cursor-pointer select-none"
-                        @click="toggleFilters"
-                    >
-                        <div :class="filtersCollapsed ? '' : 'pb-3'" class="text-xl sm:text-2xl font-semibold tracking-tight">{{
-                                $t('Filters')
-                            }}
-                        </div>
-                        <IconChevronDown
-                            class="ml-3 text-lg text-text-subtle transition-transform duration-200 h-5 w-5"
-                            :class="{ 'rotate-180': !filtersCollapsed }"
-                            aria-hidden="true"
+            <!-- Filterleiste: eine kompakte Zeile, Werte stehen direkt in den Feldern -->
+            <div class="ui-card flex flex-wrap items-center gap-2">
+                <BaseInput
+                    id="extern-issue-filter-search"
+                    v-model="filters.q"
+                    label="Search issue/external name …"
+                    :show-label="false"
+                    :placeholder="$t('Search issue/external name …')"
+                    class="w-full sm:w-60"
+                />
+                <button
+                    type="button"
+                    class="ui-button sm:hidden!"
+                    :aria-expanded="showFilterControls"
+                    @click="showFilterControls = !showFilterControls"
+                >
+                    <component :is="IconFilter" class="size-4" stroke-width="1.5"/>
+                    {{ $t('Filters') }}
+                    <span v-if="activeFilterCount" class="rounded-full bg-accent-50 px-1.5 text-[11px] text-accent-700">{{ activeFilterCount }}</span>
+                </button>
+                <div :class="showFilterControls ? 'flex' : 'hidden'" class="w-full flex-wrap items-center gap-2 sm:contents">
+                    <IssueDateRangeFilter
+                        v-model:from="filters.date_from"
+                        v-model:to="filters.date_to"
+                        id-prefix="extern-issue-filter"
+                    />
+                    <div class="w-full sm:w-52" :title="$t('Issued by')">
+                        <SearchableSelect
+                            v-model="filters.issued_by_id"
+                            :options="users"
+                            value-key="id"
+                            :label-key="userDisplay"
+                            :empty-option="{ label: 'Issued by', value: '' }"
+                            :placeholder="$t('Issued by')"
                         />
                     </div>
-                    <div v-if="!filtersCollapsed">
-                        <div class="glassy card px-4 pb-2 mb-2">
-                            <!-- Zeile 1 -->
-                            <div class="pt-2 text-sm font-medium text-text">
-                                {{ $t('Time') }}
-                            </div>
-                            <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
-                                <!-- Time filters -->
-                                <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                                    <label class="block text-xs font-medium text-text-muted mb-1">{{
-                                            $t('Shortcuts')
-                                        }}</label>
-                                    <div class="flex flex-wrap gap-1.5">
-                                        <button type="button"
-                                                class="rounded-md border border-accent-200 bg-accent-50/70 px-2.5 py-1 text-xs text-accent-700 hover:bg-accent-50 hover:border-accent-200"
-                                                @click="setRangeToday">{{ $t('Today') }}
-                                        </button>
-                                        <button type="button"
-                                                class="rounded-md border border-info-border bg-info-surface/70 px-2.5 py-1 text-xs text-info hover:bg-info-surface hover:border-info-border"
-                                                @click="setRangeThisWeek">{{ $t('This week') }}
-                                        </button>
-                                        <button type="button"
-                                                class="rounded-md border border-success-border bg-success-surface/70 px-2.5 py-1 text-xs text-success hover:bg-success-surface hover:border-success-border"
-                                                @click="setRangeThisMonth">{{ $t('This month') }}
-                                        </button>
-                                        <button type="button"
-                                                class="rounded-md border border-border-subtle bg-white px-2.5 py-1 text-xs text-text-muted hover:bg-surface-sunken"
-                                                @click="clearRange">{{ $t('All time') }}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Zeitraum -->
-                                <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                                    <label class="block text-xs font-medium text-text-muted mb-1">{{
-                                            $t('Time range')
-                                        }}</label>
-                                    <div class="flex items-center gap-2">
-                                        <input
-                                            v-model="filters.date_from"
-                                            type="date"
-                                            :max="filters.date_to || undefined"
-                                            class="w-full rounded-md border border-border px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-600"
-                                        />
-                                        <span class="text-text-subtle text-xs">–</span>
-                                        <input
-                                            v-model="filters.date_to"
-                                            type="date"
-                                            :min="filters.date_from || undefined"
-                                            class="w-full rounded-md border border-border px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-600"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="w-full sm:w-52" :title="$t('Received by')">
+                        <SearchableSelect
+                            v-model="filters.received_by_id"
+                            :options="users"
+                            value-key="id"
+                            :label-key="userDisplay"
+                            :empty-option="{ label: 'Received by', value: '' }"
+                            :placeholder="$t('Received by')"
+                        />
                     </div>
-                    <div v-if="!filtersCollapsed" class="glassy card px-4 pb-2 mb-2">
-                        <div class="pt-2 pb-1 text-sm font-medium text-text">
-                            {{ $t('Issued by') }}
-                        </div>
-                        <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
-                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                                <SearchableSelect
-                                    v-model="filters.issued_by_id"
-                                    :options="users"
-                                    value-key="id"
-                                    :label-key="userDisplay"
-                                    :empty-option="{ label: 'All', value: '' }"
-                                    :placeholder="$t('All')"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="!filtersCollapsed" class="glassy card px-4 py-3 mb-2">
-                        <label class="flex cursor-pointer items-start gap-3">
-                            <input
-                                v-model="filters.overdue_only"
-                                type="checkbox"
-                                class="mt-0.5 size-4 rounded border-border text-accent-600 focus:ring-accent-600"
-                            >
-                            <span>
-                                <span class="block text-sm font-medium text-text">{{ $t('Only overdue returns') }}</span>
-                                <span class="block text-xs text-text-subtle">{{ $t('Shows issues whose return date has passed and for which no return has been entered.') }}</span>
-                            </span>
-                        </label>
-                    </div>
-                    <div v-if="!filtersCollapsed" class="glassy card px-4 pb-2 mb-2">
-                        <div class="pt-2 pb-1 text-sm font-medium text-text">
-                            {{ $t('Received by') }}
-                        </div>
-                        <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
-                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                                <SearchableSelect
-                                    v-model="filters.received_by_id"
-                                    :options="users"
-                                    value-key="id"
-                                    :label-key="userDisplay"
-                                    :empty-option="{ label: 'All', value: '' }"
-                                    :placeholder="$t('All')"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="!filtersCollapsed" class="glassy card px-4 pb-2 mb-2">
-                        <div class="pt-2 pb-1 text-sm font-medium text-text">
-                            {{ $t('Name search') }}
-                        </div>
-                        <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
-                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                                <div class="relative">
-                                    <input
-                                        v-model="filters.q"
-                                        type="text"
-                                        :placeholder="$t('Search issue/external name …')"
-                                        class="w-full rounded-md border border-border pl-8 pr-8 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-600"
-                                    />
-                                    <span class="pointer-events-none absolute left-2 top-1.5 text-text-subtle">
-                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                          <circle cx="11" cy="11" r="7" stroke-width="1.5"></circle>
-                                          <path d="M20 20l-3.5-3.5" stroke-width="1.5"></path>
-                                        </svg>
-                                      </span>
-                                    <button
-                                        v-if="filters.q"
-                                        type="button"
-                                        class="absolute right-1.5 top-1.5 rounded p-1 text-text-subtle hover:text-text-muted"
-                                        @click="filters.q = ''"
-                                        :aria-label="$t('Clear search')"
-                                    >
-                                        &times;
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Reset button at bottom right (no Apply button) -->
-                    <div v-if="!filtersCollapsed" class="flex justify-end gap-2 mt-4">
-                        <BaseUIButton
-                            type="button"
-                            hide-icon
-                            @click="resetFilters"
-                        >
-                            {{ $t('Reset') }}
-                        </BaseUIButton>
-                    </div>
-                </div>
-                <!-- Aktive Filter Zusammenfassung (immer sichtbar) -->
-                <div v-if="hasAnyFilter" class="mt-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                    <span v-if="filtersCollapsed" class="text-sm font-medium text-text shrink-0">{{ $t('Filter') }}:</span>
-                    <span v-if="filters.date_from || filters.date_to"
-                          class="inline-flex items-center rounded-full border border-accent-200 bg-accent-50/70 px-2.5 py-0.5 text-xs text-accent-700 shrink-0">
-                      {{ $t('Range') }}:
-                      <span class="mx-1 font-medium">{{
-                              formatDate(filters.date_from) || '…'
-                          }} – {{ formatDate(filters.date_to) || '…' }}</span>
-                      <button class="ml-1 text-accent-600 hover:text-accent-700"
-                              @click="clearRange">&times;</button>
-                    </span>
-                    <span v-if="filters.issued_by_id"
-                          class="inline-flex items-center rounded-full border border-info-border bg-info-surface/70 px-2.5 py-0.5 text-xs text-info shrink-0">
-                      {{ $t('Issued by') }}: <span class="mx-1 font-medium">{{ userNameById(filters.issued_by_id) }}</span>
-                      <button class="ml-1 text-info hover:text-info"
-                              @click="filters.issued_by_id = ''">&times;</button>
-                    </span>
-                    <span v-if="filters.received_by_id"
-                          class="inline-flex items-center rounded-full border border-success-border bg-success-surface/70 px-2.5 py-0.5 text-xs text-success shrink-0">
-                      {{ $t('Received by') }}: <span class="mx-1 font-medium">{{ userNameById(filters.received_by_id) }}</span>
-                      <button class="ml-1 text-success hover:text-success"
-                              @click="filters.received_by_id = ''">&times;</button>
-                    </span>
-                    <span v-if="filters.q"
-                          class="inline-flex items-center rounded-full border border-special-violet-border bg-special-violet-surface/70 px-2.5 py-0.5 text-xs text-special-violet shrink-0">
-                      {{ $t('Search') }}: <span class="mx-1 font-medium">"{{ filters.q }}"</span>
-                      <button class="ml-1 text-special-violet hover:text-special-violet"
-                              @click="filters.q = ''">&times;</button>
-                    </span>
-                    <span v-if="filters.overdue_only"
-                          class="inline-flex items-center rounded-full border border-danger-border bg-danger-surface/70 px-2.5 py-0.5 text-xs text-danger shrink-0">
-                      {{ $t('Overdue returns') }}
-                      <button class="ml-1 text-danger hover:text-danger" @click="filters.overdue_only = false">&times;</button>
-                    </span>
                     <button
-                        v-if="hasAnyFilter"
                         type="button"
-                        class="ml-auto inline-flex items-center rounded-md border border-border-subtle bg-white px-2.5 py-1 text-xs hover:bg-surface-sunken shrink-0"
-                        @click="resetFilters"
-                    >{{ $t('Clear all') }}
+                        class="ui-button"
+                        :class="filters.overdue_only ? 'border-danger-border! bg-danger-surface! text-danger!' : ''"
+                        :aria-pressed="filters.overdue_only"
+                        :title="$t('Shows issues whose return date has passed and for which no return has been entered.')"
+                        @click="filters.overdue_only = !filters.overdue_only"
+                    >
+                        <component :is="IconClockExclamation" class="size-4" stroke-width="1.5"/>
+                        {{ $t('Only overdue returns') }}
                     </button>
                 </div>
+                <button
+                    v-if="hasAnyFilter"
+                    type="button"
+                    class="ui-button sm:ml-auto!"
+                    @click="resetFilters"
+                >
+                    <component :is="IconFilterOff" class="size-4" stroke-width="1.5"/>
+                    {{ $t('Reset filters') }}
+                </button>
             </div>
 
             <!-- Tabelle -->
-            <div class="mt-5">
+            <div class="mt-3">
                 <div class="grid grid-cols-12 gap-4 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-subtle">
                     <div class="col-span-3">{{ $t('Name') }}</div>
                     <div class="col-span-1">{{ $t('Material value') }}</div>
@@ -343,9 +203,11 @@ import SingleExternMaterialIssue from "@/Pages/IssueOfMaterial/Components/Single
 import { router, usePage } from "@inertiajs/vue3";
 import { computed, provide, ref, watch } from "vue";
 import { can, is } from "laravel-permission-to-vuejs";
-import {IconCirclePlus, IconCopyPlus, IconMenu4, IconSearch, IconX, IconChevronDown} from "@tabler/icons-vue";
+import {IconCirclePlus, IconClockExclamation, IconCopyPlus, IconFilter, IconFilterOff, IconMenu4, IconSearch, IconX} from "@tabler/icons-vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import IssueDateRangeFilter from "@/Pages/IssueOfMaterial/Components/IssueDateRangeFilter.vue";
 
 const props = defineProps({
     issues: Object,
@@ -425,53 +287,19 @@ const hasAnyFilter = computed(() =>
     !!(filters.value.date_from || filters.value.date_to || filters.value.issued_by_id || filters.value.received_by_id || filters.value.overdue_only || filters.value.q)
 );
 
-// Filter card collapse/expand
-const filtersCollapsed = ref(true);
-const toggleFilters = () => {
-    filtersCollapsed.value = !filtersCollapsed.value;
-};
+/** Anzahl gesetzter Filter für das Badge am mobilen Filter-Button */
+const activeFilterCount = computed(() =>
+    [
+        filters.value.date_from || filters.value.date_to,
+        filters.value.issued_by_id,
+        filters.value.received_by_id,
+        filters.value.overdue_only,
+    ].filter(Boolean).length
+);
 
-// Quick ranges
-const pad = (n) => String(n).padStart(2, '0');
-const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-const today = () => new Date();
-const startOfWeek = () => { const d=today(); const day=(d.getDay()+6)%7; const s=new Date(d); s.setDate(d.getDate()-day); return s; };
-const endOfWeek   = () => { const s=startOfWeek(); const e=new Date(s); e.setDate(s.getDate()+6); return e; };
-const startOfMonth= () => { const d=today(); return new Date(d.getFullYear(), d.getMonth(), 1); };
-const endOfMonth  = () => { const d=today(); return new Date(d.getFullYear(), d.getMonth()+1, 0); };
-const setRangeToday     = () => { const t=today(); filters.value.date_from = fmt(t); filters.value.date_to = fmt(t); };
-const setRangeThisWeek  = () => { filters.value.date_from = fmt(startOfWeek()); filters.value.date_to = fmt(endOfWeek()); };
-const setRangeThisMonth = () => { filters.value.date_from = fmt(startOfMonth()); filters.value.date_to = fmt(endOfMonth()); };
-const clearRange        = () => { filters.value.date_from = ""; filters.value.date_to = ""; };
+/** Mobil sind die Filterfelder hinter einem Button eingeklappt, ab sm immer sichtbar */
+const showFilterControls = ref(false);
 
 // Helpers
 const userDisplay = (u) => [u.first_name, u.last_name].filter(Boolean).join(' ') || u.name || u.email || `#${u.id}`;
-const userNameById = (id) => users.value.find(u => String(u.id) === String(id)) ? userDisplay(users.value.find(u => String(u.id) === String(id))) : id;
-const formatDate = (s) => !s ? "" : new Date(s).toLocaleDateString(page.props.locale, { year: 'numeric', month: '2-digit', day: '2-digit' });
 </script>
-
-<style scoped>
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-
-.no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* Smooth transitions for collapsible filters */
-.v-enter-active, .v-leave-active {
-    transition: all 0.3s ease;
-}
-
-.v-enter-from {
-    opacity: 0;
-    transform: translateY(-10px);
-}
-
-.v-leave-to {
-    opacity: 0;
-    transform: translateY(-10px);
-}
-</style>

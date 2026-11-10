@@ -12,6 +12,7 @@ use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
+use Artwork\Modules\Project\Support\ComponentSelection;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 
@@ -41,7 +42,9 @@ class AppProjectComponentValueController extends Controller
 
         $type = ProjectTabComponentEnum::tryFrom((string) $component->type);
         abort_unless(
-            $type?->isAppWritable() ?? false,
+            ($type?->isAppWritable() ?? false)
+                // Mehrfachauswahl kennt die App nicht (Wert kommt dort als Text, siehe AppProjectService)
+                && !ComponentSelection::allowsMultiple($component->type, $component->data),
             403,
             'This component type cannot be edited in the app.',
         );

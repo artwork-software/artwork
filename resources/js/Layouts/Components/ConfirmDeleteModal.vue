@@ -1,78 +1,92 @@
 <template>
-
-    <ArtworkBaseModal @close="closeModal(false)" :title="title" :description="description">
-        <div>
-            <div class="flex justify-between mt-5 items-center pr-4" v-if="!is_budget && !isSeriesDelete">
-                <FormButton class="bg-danger hover:bg-danger"
-                    @click="deleteElement(true)"
-                    :text="buttonText"
-                    :disabled="loading" />
-                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="closeModal(false)">
-                    {{ $t('No, not really') }}
-                </p>
-            </div>
-            <div v-if="isSeriesDelete" class="flex justify-between mt-5 items-center pr-4">
-                <FormButton
-                    @click="deleteElement(true)"
-                    :text="buttonText"
-                    :disabled="loading" />
-                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="complete_delete(true)">
-                    {{ $t('Delete series entry completely') }}
-                </p>
-            </div>
-            <div v-if="is_budget && !isSeriesDelete" class="flex justify-between mt-5 pl-4 items-center pr-4">
-                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="closeModal(false)">{{ $t('Continue without saving') }}</p>
-                <FormButton
-                    type="button"
-                    @click="deleteElement(true)"
-                    :text="buttonText"
-                    :disabled="loading" />
-
-            </div>
-        </div>
+    <ArtworkBaseModal
+        :title="title"
+        modal-size="sm:max-w-lg"
+        :z-index="String(zIndex)"
+        @close="closeModal(false)"
+    >
+        <p v-if="description" class="text-sm text-text">
+            {{ description }}
+        </p>
+        <template #footer>
+            <!-- Budget: Abbrechen heißt hier „Weiter ohne zu speichern“ -->
+            <BaseUIButton
+                v-if="is_budget && !isSeriesDelete"
+                label="Continue without saving"
+                is-cancel-button
+                hide-icon
+                :disabled="loading"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                v-else
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="loading"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                v-if="isSeriesDelete"
+                label="Delete series entry completely"
+                variant="danger"
+                icon="IconTrash"
+                :disabled="loading"
+                @click="completeDelete(true)"
+            />
+            <BaseUIButton
+                :label="buttonText"
+                :use-translation="!button"
+                :variant="is_budget || isSeriesDelete ? 'primary' : 'danger'"
+                :icon="is_budget || isSeriesDelete ? 'IconCheck' : 'IconTrash'"
+                :processing="loading"
+                @click="deleteElement(true)"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
 <script>
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "ConfirmDeleteModal",
-    mixins: [Permissions],
     components: {
         ArtworkBaseModal,
-        BaseAlertComponent,
-        BaseModal,
-        FormButton,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        DialogPanel
+        BaseUIButton,
     },
-    data(){
-        return {
-            open: true,
-            buttonText: this.button ? this.button : this.$t('Delete')
-        }
-    },
-    props: ['title', 'description', 'button', 'is_budget', 'isSeriesDelete', 'loading'],
-    emits: ['closed', 'delete', 'complete_delete'],
-    methods: {
-        closeModal(bool){
-            this.$emit('closed', bool)
+    props: {
+        title: String,
+        description: String,
+        /** Beschriftung der Bestätigung (bereits übersetzt); ohne Angabe „Löschen“ */
+        button: String,
+        is_budget: Boolean,
+        isSeriesDelete: Boolean,
+        loading: Boolean,
+        zIndex: {
+            type: [String, Number],
+            default: '100',
         },
-        deleteElement(bool){
+    },
+    // close zusätzlich zu closed: ein Teil der Aufrufer hört nur auf @close
+    emits: ['closed', 'close', 'delete', 'complete_delete'],
+    computed: {
+        buttonText() {
+            return this.button || 'Delete'
+        },
+    },
+    methods: {
+        closeModal(bool) {
+            this.$emit('closed', bool)
+            this.$emit('close')
+        },
+        deleteElement(bool) {
             this.$emit('delete', bool)
         },
-        complete_delete(bool){
+        completeDelete(bool) {
             this.$emit('complete_delete', bool)
-        }
-    }
+        },
+    },
 }
 </script>

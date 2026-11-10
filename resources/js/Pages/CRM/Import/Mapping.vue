@@ -24,6 +24,9 @@
                     <a :href="route('crm.settings.index')" target="_blank" class="font-medium underline hover:text-accent-700">{{ $t('CRM Settings') }}</a>
                     {{ $t('and then restart the import.') }}
                 </p>
+                <p v-if="hasMultiselectProperty" class="mt-2 text-sm text-accent-700">
+                    {{ $t('Multiple choice fields: separate several options with a semicolon (;). Every option must match a selection value exactly.') }}
+                </p>
             </div>
 
             <!-- Warnings -->
@@ -250,7 +253,7 @@ import {
 } from '@headlessui/vue'
 import {
     IconTableColumn, IconCheck, IconChevronDown, IconUser, IconTypography,
-    IconCalendar, IconHash, IconCheckbox, IconList, IconLink, IconAlignLeft,
+    IconCalendar, IconHash, IconCheckbox, IconList, IconListCheck, IconLink, IconAlignLeft,
 } from '@tabler/icons-vue'
 
 const props = defineProps({
@@ -351,8 +354,13 @@ const propertyTypeIcons = {
     number: IconHash,
     checkbox: IconCheckbox,
     select: IconList,
+    multiselect: IconListCheck,
     link: IconLink,
 }
+
+const hasMultiselectProperty = computed(() =>
+    (props.contactType.properties ?? []).some((prop) => prop.type === 'multiselect')
+)
 
 const getPropertyTypeIcon = (type) => propertyTypeIcons[type] ?? IconTypography
 

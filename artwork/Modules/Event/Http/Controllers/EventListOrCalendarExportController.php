@@ -3,10 +3,12 @@
 namespace Artwork\Modules\Event\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\Event\Exceptions\ExportLinkExpiredException;
 use Artwork\Modules\Event\Http\Requests\EventListOrCalendarExportFilterCacheRequest;
 use Artwork\Modules\Event\Services\EventCalendarExportService;
 use Artwork\Modules\Event\Services\EventListExportService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Redirector;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -40,10 +42,12 @@ class EventListOrCalendarExportController extends Controller
     /**
      * @throws Throwable
      */
-    public function downloadEventListXlsx(string $cacheToken): RedirectResponse|BinaryFileResponse
+    public function downloadEventListXlsx(string $cacheToken): RedirectResponse|BinaryFileResponse|Response
     {
         try {
             return $this->eventListXlsxExportService->downloadBy($cacheToken);
+        } catch (ExportLinkExpiredException) {
+            return $this->expiredExportLinkResponse();
         } catch (Throwable $t) {
             $this->logger->error(sprintf('Could not create xlsx export for reason "%s"', $t->getMessage()));
             //$this->logger->debug($t->getTraceAsString());
@@ -55,15 +59,30 @@ class EventListOrCalendarExportController extends Controller
     /**
      * @throws Throwable
      */
-    public function downloadCalendarXlsx(string $cacheToken): RedirectResponse|BinaryFileResponse
+    public function downloadCalendarXlsx(string $cacheToken): RedirectResponse|BinaryFileResponse|Response
     {
         try {
             return $this->calendarExportService->downloadBy($cacheToken);
+        } catch (ExportLinkExpiredException) {
+            return $this->expiredExportLinkResponse();
         } catch (Throwable $t) {
             $this->logger->error(sprintf('Could not create xlsx export for reason "%s"', $t->getMessage()));
             //$this->logger->debug($t->getTraceAsString());
 
             return $this->redirector->back();
         }
+    }
+
+    /**
+     * Der Download läuft in einem eigenen Tab: statt still zurückzuleiten (der Tab zeigte dann wieder den
+     * Kalender) einen verständlichen Hinweis zeigen.
+     */
+    private function expiredExportLinkResponse(): Response
+    {
+        return new Response(
+            __('The export link has expired. Please start the export again.'),
+            Response::HTTP_GONE,
+            ['Content-Type' => 'text/plain; charset=UTF-8']
+        );
     }
 }

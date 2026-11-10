@@ -430,7 +430,9 @@ const craftPosMap = computed(() => {
 })
 
 const getCraftPos = (item: any): number => {
-    const craftId = item?.payload?.craft?.id ?? item?.payload?.craft_id
+    // craftId: Broadcast-/Antwort-Form (ShiftDTO) ohne geladenes craft-Objekt — sonst rutschte die Schicht
+    // nach Entfernen einer Person in die letzte Spalte
+    const craftId = item?.payload?.craft?.id ?? item?.payload?.craft_id ?? item?.payload?.craftId
     if (craftId != null && craftPosMap.value.has(craftId)) return craftPosMap.value.get(craftId)!
     return item?.payload?.craft?.position ?? 9999
 }
@@ -1217,7 +1219,7 @@ function getShiftItemStyle(item: any, block: any) {
   const topPx = item._vTop ?? 0
   const heightPx = item._vHeight ?? 48
 
-  const craftId = item?.payload?.craft?.id || item?.props?.shift?.craft?.id
+  const craftId = item?.payload?.craft?.id || item?.props?.shift?.craft?.id || item?.payload?.craftId
   const foundCraft = craftColorMap.value.get(craftId)
   const craftHex: string | undefined = foundCraft?.color || item?.payload?.craft?.color || item?.props?.shift?.craft?.color
   const bg = craftHex ? hexToRgba(craftHex, 0.12) : 'transparent'

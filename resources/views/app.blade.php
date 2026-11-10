@@ -27,7 +27,7 @@
         <script type="text/javascript" nonce="{{ Vite::cspNonce() }}">
             window.Laravel = {
                 csrfToken: "{{ csrf_token() }}",
-                jsPermissions: {!! auth()->check()?auth()->user()->jsPermissions():0 !!}
+                jsPermissions: @json(auth()->check() ? auth()->user()->objPermissions() : 0)
             }
         </script>
 

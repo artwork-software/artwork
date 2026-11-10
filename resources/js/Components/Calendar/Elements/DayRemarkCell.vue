@@ -113,8 +113,10 @@ const remark = computed(() => remarkForDay(props.day))
 
 const hovering = ref(false)
 
+// Keine feste Höhe: die Zelle streckt sich per Flex auf die Zeilenhöhe abzüglich
+// border-t der Tageszeile — mit voller Zeilenhöhe ragte sie 1px in die nächste
+// Zeile und verdeckte deren Tagestrennlinie
 const containerStyle = computed(() => ({
-    height: calendarSettings.value.expand_days ? '' : rowHeight.value + 'px',
     width: DAY_REMARK_COLUMN_WIDTH + 'px',
     minWidth: DAY_REMARK_COLUMN_WIDTH + 'px',
 }))

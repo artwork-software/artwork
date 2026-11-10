@@ -40,7 +40,9 @@ final class ProjectTeamAndShiftSettingsTest extends FeatureTestCase
         $this->actingAs($user);
         $project = Project::factory()->create();
         $project->users()->attach($user->id, ['can_write' => true]);
+        // Projektleitung nur für Personen mit „Projekte verwalten“ (Audit 20.10.2026, M4)
         $manager = User::factory()->create();
+        $manager->givePermissionTo(PermissionEnum::PROJECT_MANAGEMENT->value);
 
         $this->patch(route('projects.update_team', $project), [
             'assigned_user_ids' => [

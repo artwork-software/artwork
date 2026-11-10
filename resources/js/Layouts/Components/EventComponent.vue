@@ -223,7 +223,7 @@
                             :aria-label="$t('Set end to {0} minutes after start', [defaultDurationMin])"
                             :title="$t('Set end to {0} minutes after start', [defaultDurationMin])"
                         >
-                            Standard: {{ defaultDurationMin }} {{ $t('min') }}
+                            {{ $t('Default') }}: {{ defaultDurationMin }} {{ $t('min') }}
                         </button>
                     </div>
 
@@ -404,6 +404,9 @@
                                         {{ selectedProject?.name }}
                                     </a>
                                     <span v-else class="truncate text-sm/5 font-semibold text-text text-text">{{ selectedProject?.name }}</span>
+                                    <span v-if="projectGroupLabel" class="ml-2 text-[12px] text-text-muted" :title="projectGroupLabel">
+                                        {{ $t('Project group') }}: {{ projectGroupLabel }}
+                                    </span>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0">
                                     <button type="button" class="ui-icon-btn" @click="removeProject" :aria-label="$t('Remove project')">
@@ -413,8 +416,8 @@
                             </div>
                         </template>
 
-                        <!-- Segment: Bestehend / Neu -->
-                        <div class="inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]" role="tablist" aria-label="Project source">
+                        <!-- Segment: Bestehend / Neu (ohne Projektanlage aus Terminen nur Bestehend) -->
+                        <div v-if="projectCreationFromEventsEnabled" class="inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]" role="tablist" aria-label="Project source">
                             <button
                                 type="button"
                                 class="inline-flex items-center justify-center h-[26px] px-3 rounded-[6px] text-[12.5px] font-semibold transition"
@@ -722,6 +725,9 @@
                                 {{ selectedProject?.name }}
                             </a>
                             <span v-else class="text-text">{{ selectedProject?.name }}</span>
+                            <span v-if="projectGroupLabel" class="ml-2 text-text-muted">
+                                {{ $t('Project group') }}: {{ projectGroupLabel }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1345,6 +1351,8 @@ function removeSelectedRoom() {
 }
 const error = ref(null)
 const creatingProject = ref(false)
+// Kalender-Einstellung: ohne Projektanlage aus Terminen nur bestehende Projekte verknüpfen
+const projectCreationFromEventsEnabled = computed(() => page.props.project_creation_from_events_enabled !== false)
 const description = ref(null)
 // Der Kalender liefert den Beschreibungs-Volltext nur mit, wenn die Anzeige-
 // einstellung ihn in der Kachel zeigt. Sonst wird er beim Oeffnen nachgeladen —
@@ -1962,6 +1970,8 @@ function payload() {
     }
 }
 async function updateOrCreateEvent(isOptionParam = false) {
+    // Läuft schon ein Speichervorgang, legt ein zweiter Klick sonst einen zweiten Termin an
+    if (isLoading.value) return
     isOption.value = isOptionParam
 
     if (allDayEvent.value) {
@@ -2042,14 +2052,19 @@ async function confirmAssignmentImpactAndSave() {
 }
 
 async function doSaveEvent() {
+    if (isLoading.value) return
+    // Vor dem ersten await sperren: solange die Beschreibung nachlädt, war der
+    // Speichern-Button sonst noch klickbar und schickte den Termin doppelt
+    isLoading.value = true
+
     // Alle Speicherwege laufen hier durch: ohne geladenen Volltext wuerde
     // payload() eine leere Beschreibung schicken und den Text loeschen.
     if (!await ensureDescriptionLoaded()) {
+        isLoading.value = false
         error.value = { description: $t('The description could not be loaded. Please reopen the event before saving.') }
         return
     }
 
-    isLoading.value = true
     const data = payload()
 
     if (!(await checkSeriesImpact())) {
@@ -2180,6 +2195,20 @@ watch([startDate, startTime, allDayEvent], () => {
     // Endzeit ggf. automatisch anpassen, wenn Start sich ändert
     if (!endTime.value || endAutoFilled.value) updateTimes()
 })
+
+// Projektgruppen des gewählten Projekts neben dem Namen anzeigen (Suche/zuletzt geöffnet liefern sie nicht mit)
+const projectGroups = ref([])
+const projectGroupLabel = computed(() => projectGroups.value.map(group => group.name).join(', '))
+watch(() => selectedProject.value?.id, async (projectId) => {
+    projectGroups.value = []
+    if (!projectId) return
+    try {
+        const { data } = await axios.get(route('project.groupNames', { project: projectId }), { skipErrorToast: true }) // Lesezugriff, best effort
+        if (selectedProject.value?.id === projectId) projectGroups.value = Array.isArray(data) ? data : []
+    } catch {
+        // ohne Gruppenangabe weiter
+    }
+}, { immediate: true })
 
 // Auswahl aus Suche
 function chooseProjectFromPicker(project) {

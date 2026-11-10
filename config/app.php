@@ -25,6 +25,8 @@ return [
     'version' => env('APP_VERSION'),
     'use_chat_module' => env('USE_CHAT_MODULE', false),
     'notion_api_token' => env('NOTION_API_TOKEN', ''),
+    // Installierte artwork-Version (Datei VERSION, beim Release hochzählen); passt zum Changelog
+    'version' => \Artwork\Core\Version\InstalledVersion::fromFile(base_path('VERSION')),
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -84,7 +86,10 @@ return [
     |
     */
 
-    'trusted_proxies' => env('TRUSTED_PROXIES', '127.0.0.1/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1'),
+    // filled(): eine leere Zeile TRUSTED_PROXIES= in der .env darf den Default nicht aushebeln.
+    'trusted_proxies' => filled(env('TRUSTED_PROXIES'))
+        ? env('TRUSTED_PROXIES')
+        : '127.0.0.1/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1',
 
     /*
     |--------------------------------------------------------------------------
@@ -245,7 +250,6 @@ return [
 
         ShiftChangeServiceProvider::class,
         TicketingServiceProvider::class,
-        Clockwork\Support\Laravel\ClockworkServiceProvider::class
     ],
 
     /*
@@ -261,7 +265,6 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         'Image' => Intervention\Image\Facades\Image::class,
-        'Clockwork' => Clockwork\Support\Laravel\Facade::class,
     ])->toArray(),
 
 ];

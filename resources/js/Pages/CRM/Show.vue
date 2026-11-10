@@ -185,6 +185,13 @@
                                     <span v-if="(project.sources ?? []).includes('team')" class="inline-flex w-fit items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-medium text-accent-700">
                                         {{ $t('Project team') }}<template v-if="project.team_roles?.length">:&nbsp;{{ project.team_roles.join(', ') }}</template>
                                     </span>
+                                    <span
+                                        v-for="(listLink, index) in project.list_links ?? []"
+                                        :key="`list-${index}`"
+                                        class="inline-flex w-fit items-center rounded-full bg-surface-sunken px-2.5 py-0.5 text-xs font-medium text-text-muted"
+                                    >
+                                        {{ listLink.component || $t('CRM contact list') }}<template v-if="listLink.is_artist || listLink.roles?.length">:&nbsp;{{ [listLink.is_artist ? $t('Artist') : null, ...(listLink.roles ?? [])].filter(Boolean).join(', ') }}</template>
+                                    </span>
                                     <span v-if="(project.sources ?? []).includes('residency')" class="inline-flex w-fit items-center rounded-full bg-success-surface px-2.5 py-0.5 text-xs font-medium text-success">
                                         {{ $t('Artist residency') }}<template v-if="project.residency_summary">:&nbsp;{{ residencySummaryText(project.residency_summary) }}</template>
                                     </span>

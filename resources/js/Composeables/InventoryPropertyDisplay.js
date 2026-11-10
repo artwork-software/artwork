@@ -1,4 +1,5 @@
 import { useTranslation } from '@/Composeables/Translation.js'
+import { isCheckboxChecked } from '@/Helper/CheckboxValue.js'
 
 /**
  * Builds a normalized display descriptor for an inventory article property.
@@ -41,7 +42,7 @@ export function useInventoryPropertyDisplay() {
             case 'datetime':
                 return pivotValue ? new Date(pivotValue).toLocaleString() : ''
             case 'checkbox':
-                return pivotValue ? $t('Yes') : $t('No')
+                return isCheckboxChecked(pivotValue) ? $t('Yes') : $t('No')
             case 'file':
                 return pivotValue ? fileName(pivotValue) : ''
             default:
@@ -53,7 +54,7 @@ export function useInventoryPropertyDisplay() {
     const groupingKey = (owner, property, pivotValue) => {
         if (property.type === 'room') return 'room:' + String(owner?.room?.id ?? '')
         if (property.type === 'manufacturer') return 'man:' + String(owner?.manufacturer?.id ?? '')
-        if (property.type === 'checkbox') return pivotValue ? '1' : '0'
+        if (property.type === 'checkbox') return isCheckboxChecked(pivotValue) ? '1' : '0'
         return pivotValue == null ? '' : String(pivotValue)
     }
 

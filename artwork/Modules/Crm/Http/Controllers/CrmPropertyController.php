@@ -10,6 +10,7 @@ use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class CrmPropertyController extends Controller
 {
@@ -28,7 +29,7 @@ class CrmPropertyController extends Controller
 
         $this->service->reorder($validated['properties']);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -40,12 +41,13 @@ class CrmPropertyController extends Controller
             'name' => 'required|string|max:255',
             'type' => ['required', 'string', Rule::enum(CrmPropertyTypeEnum::class)],
             'select_values' => 'nullable|array',
+            'multiselect_display' => ['nullable', 'string', Rule::in(['checkboxes', 'dropdown'])],
             'tooltip_text' => 'nullable|string',
         ]);
 
         $this->service->store($validated);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -54,15 +56,16 @@ class CrmPropertyController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'type' => 'sometimes|string|in:text,date,number,checkbox,select,link,textarea,upload',
+            'type' => ['sometimes', 'string', Rule::enum(CrmPropertyTypeEnum::class)],
             'select_values' => 'nullable|array',
+            'multiselect_display' => ['nullable', 'string', Rule::in(['checkboxes', 'dropdown'])],
             'tooltip_text' => 'nullable|string',
             'sort_order' => 'sometimes|integer',
         ]);
 
         $this->service->update($crmProperty, $validated);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }
@@ -71,7 +74,7 @@ class CrmPropertyController extends Controller
     {
         $this->service->destroy($crmProperty);
 
-        broadcast(new CrmSettingsChanged());
+        SafeBroadcast::send(new CrmSettingsChanged());
 
         return redirect()->back();
     }

@@ -17,9 +17,9 @@
                             <DialogPanel class="draggableModal w-full text-left bg-surface rounded-lg shadow-overlay" :class="modalSize" ref="containerRef">
                                 <div class="flex items-start justify-between gap-x-6 rounded-t-lg bg-surface-inverse px-5 py-3">
                                     <div class="min-w-0">
-                                        <h2 class="font-lexend font-bold text-[16px] text-text-inverse">{{ $t(props.title) }}</h2>
+                                        <h2 class="font-lexend font-bold text-[16px] text-text-inverse">{{ modalText(props.title) }}</h2>
                                         <p v-if="props.description" class="mt-0.5 text-[13px] text-text-inverse-muted tabular-nums">
-                                            {{ $t(props.description) }}
+                                            {{ modalText(props.description) }}
                                         </p>
                                     </div>
                                     <div class="flex shrink-0 items-center gap-x-1">
@@ -72,11 +72,14 @@
 <script setup>
 
 import axios from "axios";
-import {nextTick, ref} from "vue";
+import {nextTick, onBeforeUnmount, ref} from "vue";
+import { attachModalDrag } from "@/Helper/draggableModal.js";
 import {usePage} from "@inertiajs/vue3";
 import {Dialog, DialogPanel, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { overlayAbove } from "@/Composeables/useOverlayStack.js";
+import {useI18n} from "vue-i18n";
+import {translateIfKnown} from "@/Helper/translateIfKnown.js";
 
 //define options for the modal
 defineOptions({
@@ -117,6 +120,12 @@ const props = defineProps({
         default: ''
     }
 })
+
+const {t, locale, getLocaleMessage} = useI18n()
+
+/** Titel und Beschreibung sind Übersetzungsschlüssel oder Daten (z. B. ein Projektname): nur Schlüssel übersetzen */
+const modalText = (text) => translateIfKnown(text, getLocaleMessage(locale.value), t)
+
 const open = ref(true)
 // An explicitly disabled prop wins, otherwise the per-user preference decides.
 const showBackdrop = ref(
@@ -150,48 +159,16 @@ function onDialogClose() {
 }
 const containerRef = ref(null)
 const dragHandleRef = ref(null)
+let detachDrag = null
 function initDraggable() {
     nextTick(() => {
         const container = containerRef.value?.$el || containerRef.value
-        const dragHandle = dragHandleRef?.value.$el || dragHandleRef.value;
-
-        let isDragging = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        let animationFrameId = null;
-
-        dragHandle.addEventListener('mousedown', (event) => {
-            isDragging = true;
-            offsetX = event.clientX - container.offsetLeft;
-            offsetY = event.clientY - container.offsetTop;
-        });
-
-        document.addEventListener('mousemove', (event) => {
-            if (isDragging) {
-                if (animationFrameId !== null) {
-                    cancelAnimationFrame(animationFrameId);
-                }
-
-                animationFrameId = requestAnimationFrame(() => {
-                    container.style.position = 'absolute';
-                    container.style.left = `${event.clientX - offsetX}px`;
-                    container.style.top = `${event.clientY - offsetY}px`;
-                    // Prevent text selection while dragging
-                    document.body.classList.add('select-none');
-                });
-            }
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            if (animationFrameId !== null) {
-                cancelAnimationFrame(animationFrameId);
-            }
-            // Remove no-select class when dragging stops
-            document.body.classList.remove('select-none');
-        });
+        const dragHandle = dragHandleRef.value?.$el || dragHandleRef.value
+        detachDrag?.()
+        detachDrag = attachModalDrag(container, dragHandle)
     })
 }
+onBeforeUnmount(() => detachDrag?.())
 </script>
 
 <style scoped>

@@ -189,6 +189,29 @@ export function usePermission(pageProps) {
         return canViewForeignRoster() || canAny(['can view private user info', 'can manage external workers']);
     }
 
+    // Eigene individuelle Zeiten — Spiegel von OwnIndividualTimeAccess im Backend:
+    // Verwaltungsrechte an jedem Tag, "can enter own individual times" ab heute.
+    function canManageOwnIndividualTimesOnAnyDay() {
+        return hasAdminRole() || canAny(['can manage availability', 'can plan shifts']);
+    }
+
+    function canEnterOwnIndividualTimes() {
+        return canManageOwnIndividualTimesOnAnyDay() || can('can enter own individual times');
+    }
+
+    // dateString: Y-m-d; vergangene Tage nur mit Verwaltungsrecht
+    function canEnterOwnIndividualTimesOn(dateString) {
+        if (canManageOwnIndividualTimesOnAnyDay()) {
+            return true;
+        }
+        if (!can('can enter own individual times') || !dateString) {
+            return false;
+        }
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        return String(dateString).slice(0, 10) >= today;
+    }
+
     return {
         canSeeComponent,
         canEditComponent,
@@ -199,6 +222,9 @@ export function usePermission(pageProps) {
         hasAdminRole,
         canViewOwnRoster,
         canViewForeignRoster,
-        canViewExternalWorkerProfile
+        canViewExternalWorkerProfile,
+        canManageOwnIndividualTimesOnAnyDay,
+        canEnterOwnIndividualTimes,
+        canEnterOwnIndividualTimesOn
     };
 }

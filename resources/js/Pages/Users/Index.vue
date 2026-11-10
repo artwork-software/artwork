@@ -8,12 +8,24 @@
                 :icon="IconUsers"
                 title="Users"
                 v-model="user_query"
-                :description="users?.length ? `${users.length} ${$t('Users')}` : ''"
+                :description="visibleUsers?.length ? `${visibleUsers.length} ${$t('Users')}` : ''"
                 :search-enabled="true"
                 :search-label="$t('Search for Users')"
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
+                    <!-- Deaktivierte Accounts: eigener Reiter, nur für Personalverwaltung/Admins -->
+                    <BaseUIButton
+                        v-if="canManageDeactivation && (deactivatedUsers?.length > 0 || showDeactivated)"
+                        type="button"
+                        hide-icon
+                        on-band
+                        :class="showDeactivated ? '!bg-accent-500 !text-white' : ''"
+                        @click="showDeactivated = !showDeactivated"
+                    >
+                        {{ $t('Deactivated') }} ({{ deactivatedUsers?.length ?? 0 }})
+                    </BaseUIButton>
+
                     <BaseUIButton
                         v-if="hasActiveSsoSource"
                         type="button"
@@ -59,19 +71,19 @@
         <!-- Main list -->
         <template #default>
             <BaseTable
-                :rows="users"
+                :rows="visibleUsers"
                 :columns="cols"
                 row-key="id"
                 v-model:page="page"
                 empty-title="Keine Personen"
-                empty-message="Derzeit sind keine Einträge vorhanden."
+                empty-message="No entries available"
             >
 
                 <!-- Name (Avatar + Name + Email) -->
                 <template #cell-name="{ row }">
                     <component :is="checkLink(row) ? Link : 'div'" class="flex items-center" :href="checkLink(row) ?? undefined">
                         <div class="size-11 shrink-0">
-                            <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
+                            <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" :class="deactivatedAvatarClasses(row)" />
                         </div>
                         <div class="ml-4">
                             <div class="flex items-center gap-2">
@@ -94,6 +106,15 @@
                                 </span>
                             </div>
                             <div class="mt-1 text-text-subtle">{{ row.email }}</div>
+                            <div v-if="isUserDeactivated(row)" class="mt-1 flex items-center gap-2 text-xs text-text-subtle">
+                                <DeactivatedAccountBadge />
+                                <span v-if="row.deactivated_by_name">
+                                    {{ $t('Deactivated on {date} by {name}', { date: formatDate(row.deactivated_at), name: row.deactivated_by_name }) }}
+                                </span>
+                                <span v-else>
+                                    {{ $t('Deactivated on {date}', { date: formatDate(row.deactivated_at) }) }}
+                                </span>
+                            </div>
                         </div>
                     </component>
                 </template>
@@ -159,11 +180,13 @@
                 <!-- Actions -->
                 <template #row-actions="{ row }">
                     <!-- Right: Actions -->
-                    <BaseMenu v-if="hasAdminRole()" has-no-offset white-menu-background>
+                    <BaseMenu v-if="hasAdminRole() || canDeactivate(row) || canReactivate(row)" has-no-offset white-menu-background>
                         <BaseMenuItem :icon="IconEdit" title="Edit Profile" white-menu-background as-link :link="checkLink(row)" />
-                        <BaseMenuItem :icon="IconTrash" v-if="row.type === 'user'" title="Delete user" white-menu-background @click="openDeleteUserModal(row)" />
-                        <BaseMenuItem :icon="IconTrash" v-if="row.type === 'freelancer'" title="Delete freelancer" white-menu-background @click="openDeleteUserModal(row)" />
-                        <BaseMenuItem :icon="IconTrash" v-if="row.type === 'service_provider'" title="Delete provider" white-menu-background @click="openDeleteUserModal(row)" />
+                        <BaseMenuItem :icon="IconUserOff" v-if="canDeactivate(row)" title="Deactivate account" white-menu-background @click="openDeactivateUserModal(row)" />
+                        <BaseMenuItem :icon="IconUserCheck" v-if="canReactivate(row)" title="Reactivate account" white-menu-background @click="reactivateUser(row)" />
+                        <BaseMenuItem :icon="IconTrash" v-if="hasAdminRole() && row.type === 'user'" title="Delete user" white-menu-background @click="openDeleteUserModal(row)" />
+                        <BaseMenuItem :icon="IconTrash" v-if="hasAdminRole() && row.type === 'freelancer'" title="Delete freelancer" white-menu-background @click="openDeleteUserModal(row)" />
+                        <BaseMenuItem :icon="IconTrash" v-if="hasAdminRole() && row.type === 'service_provider'" title="Delete provider" white-menu-background @click="openDeleteUserModal(row)" />
                     </BaseMenu>
                 </template>
             </BaseTable>
@@ -185,46 +208,46 @@
     />
 
     <!-- Delete Modal -->
-    <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
-        <div class="mx-4">
-            <div class="text-2xl font-bold text-text my-2">
-        <span v-if="userToDelete?.type === 'user'">
-          {{ $t('Delete user') }}
-        </span>
-                <span v-else-if="userToDelete?.type === 'freelancer'">
-          {{ $t('Delete freelancer') }}
-        </span>
-                <span v-else-if="userToDelete?.type === 'service_provider'">
-          {{ $t('Delete service provider') }}
-        </span>
-            </div>
-
-            <div class="text-sm text-danger">
-        <span v-if="userToDelete?.type === 'user' || userToDelete?.type === 'freelancer'">
-          {{
-                $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
+    <ArtworkBaseModal
+        v-if="deletingUser"
+        :title="deleteUserModalTitle"
+        modal-size="sm:max-w-lg"
+        @close="closeDeleteUserModal"
+    >
+        <p class="text-sm text-text">
+            <template v-if="userToDelete?.type === 'user' || userToDelete?.type === 'freelancer'">
+                {{ $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
                     last_name: userToDelete?.last_name,
                     first_name: userToDelete?.first_name
-                })
-            }}
-        </span>
-                <span v-else-if="userToDelete?.type === 'service_provider'">
-          {{
-                        $t('Are you sure you want to delete { serviceProvider } from the system?', {
-                            serviceProvider: userToDelete?.provider_name
-                        })
-                    }}
-        </span>
-            </div>
+                }) }}
+            </template>
+            <template v-else-if="userToDelete?.type === 'service_provider'">
+                {{ $t('Are you sure you want to delete { serviceProvider } from the system?', {
+                    serviceProvider: userToDelete?.provider_name
+                }) }}
+            </template>
+        </p>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="deletingUserProcessing"
+                @click="closeDeleteUserModal"
+            />
+            <BaseUIButton
+                label="Delete"
+                variant="danger"
+                icon="IconTrash"
+                :processing="deletingUserProcessing"
+                :disabled="!userToDelete?.id"
+                @click="deleteUser"
+            />
+        </template>
+    </ArtworkBaseModal>
 
-            <div class="mt-6 flex items-center justify-between">
-                <BaseUIButton :label="$t('Delete')" is-delete-button @click="deleteUser" />
-                <button @click="closeDeleteUserModal" class="text-sm text-text-subtle hover:text-text">
-                    {{ $t('No, not really') }}
-                </button>
-            </div>
-        </div>
-    </BaseModal>
+    <!-- Deactivate Modal -->
+    <DeactivateAccountModal v-if="userToDeactivate" :user="userToDeactivate" @closed="closeDeactivateUserModal" />
 
     <!-- Success -->
     <SuccessModal
@@ -237,17 +260,17 @@
 </template>
 
 <script setup lang="ts">
-import {ref, nextTick, watch} from 'vue'
+import {ref, nextTick, watch, computed} from 'vue'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import {
     Menu, MenuButton, MenuItem, MenuItems,
 } from '@headlessui/vue'
-import {IconAlertTriangle, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconTrash, IconUsers} from "@tabler/icons-vue"
+import {IconAlertTriangle, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconTrash, IconUserCheck, IconUserOff, IconUsers} from "@tabler/icons-vue"
 import debounce from 'lodash.debounce'
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import UserHeader from '@/Pages/Users/UserHeader.vue'
 import { is } from 'laravel-permission-to-vuejs'
@@ -255,6 +278,10 @@ import { usePermission } from '@/Composeables/Permission.js'
 import { useSortEnumTranslation } from '@/Composeables/SortEnumTranslation.js'
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import { canChangeAccountActivation, deactivatedAvatarClasses, isUserDeactivated } from '@/Helper/UserDeactivation.js'
+import DeactivateAccountModal from '@/Pages/Users/Components/DeactivateAccountModal.vue'
+import DeactivatedAccountBadge from '@/Layouts/Components/DeactivatedAccountBadge.vue'
+import { useInstanceFormat } from '@/Composeables/InstanceFormat.js'
 
 const props = defineProps({
     users: Array,
@@ -269,6 +296,8 @@ const props = defineProps({
     userSortEnumNames: Array,
     userUserManagementSetting: Object,
     hasActiveSsoSource: Boolean,
+    deactivatedUsers: { type: Array, default: () => [] },
+    adminUserIds: { type: Array, default: () => [] },
 })
 
 const { getSortEnumTranslation } = useSortEnumTranslation()
@@ -278,6 +307,7 @@ const addingUser = ref(false)
 const deletingUser = ref(false)
 const showSuccessModal = ref(false)
 const userToDelete = ref(null)
+const deletingUserProcessing = ref(false)
 
 /* Search + Sort */
 const showSearchbar = ref(route().params.query?.length > 0)
@@ -331,6 +361,34 @@ const openSuccessModal = () => {
 }
 const closeSuccessModal = () => (showSuccessModal.value = false)
 
+/* Deactivate flow – Spiegel von UserPolicy::deactivate (Backend prüft erneut) */
+const { formatDate } = useInstanceFormat()
+const showDeactivated = ref(false)
+const visibleUsers = computed(() => showDeactivated.value ? props.deactivatedUsers : props.users)
+const canManageDeactivation = computed(() => hasAdminRole() || can('can manage workers'))
+const canChangeActivation = (user) => canChangeAccountActivation({
+    user,
+    authUserId: usePage().props.auth.user.id,
+    isAdmin: hasAdminRole(),
+    canManageWorkers: can('can manage workers'),
+    isTargetAdmin: props.adminUserIds.includes(user?.id),
+})
+const canDeactivate = (user) => canChangeActivation(user) && !isUserDeactivated(user)
+const canReactivate = (user) => canChangeActivation(user) && isUserDeactivated(user)
+
+const userToDeactivate = ref(null)
+const openDeactivateUserModal = (user) => (userToDeactivate.value = user)
+const closeDeactivateUserModal = () => (userToDeactivate.value = null)
+const reactivateUser = (user) => {
+    router.post(route('user.reactivate', { user: user.id }), {}, {
+        preserveScroll: true,
+        // Letzter deaktivierter Account reaktiviert → zurück zur Liste der aktiven
+        onSuccess: () => {
+            if (props.deactivatedUsers.length === 0) showDeactivated.value = false
+        },
+    })
+}
+
 /* Delete flow */
 const openDeleteUserModal = (user) => {
     userToDelete.value = user
@@ -340,8 +398,13 @@ const closeDeleteUserModal = () => {
     userToDelete.value = null
     deletingUser.value = false
 }
+const deleteUserModalTitle = computed(() => ({
+    user: 'Delete user',
+    freelancer: 'Delete freelancer',
+    service_provider: 'Delete service provider',
+}[userToDelete.value?.type] ?? 'Delete'))
 const deleteUser = () => {
-    if (!userToDelete.value) return
+    if (!userToDelete.value || deletingUserProcessing.value) return
     let desiredRoute = null
     const u = userToDelete.value
 
@@ -358,8 +421,10 @@ const deleteUser = () => {
     }
 
     if (desiredRoute) {
+        deletingUserProcessing.value = true
         router.delete(desiredRoute, {
             onSuccess: () => closeDeleteUserModal(),
+            onFinish: () => (deletingUserProcessing.value = false),
         })
     }
 }

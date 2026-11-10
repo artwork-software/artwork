@@ -23,8 +23,14 @@ class TicketingCustomerController extends Controller
 
     public function sync(): RedirectResponse
     {
-        if (!$this->connections->current()) {
+        $connection = $this->connections->current();
+
+        if (!$connection) {
             return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
+        }
+
+        if ($connection->isTestMode()) {
+            return back()->with('error', __('Artwork-Tickets is in test mode; buyers are synced once it goes live.'));
         }
 
         SyncTicketingCustomersJob::dispatch();

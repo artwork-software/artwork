@@ -187,7 +187,8 @@ class UserRepository extends BaseRepository
     {
         return User::search($search)
             ->query(function ($query): void {
-                $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+                // active(): falls der Suchindex einen deaktivierten Account noch führt
+                $query->excludeDeletedPlaceholder()->active();
             })
             ->get()
             ->map(fn(User $user) => [
@@ -198,6 +199,7 @@ class UserRepository extends BaseRepository
                 'email' => $user->visibleEmailFor(Auth::user()),
                 'project_manager_permission' => $user->getHasProjectManagerPermission(),
                 'profile_photo_url' => $user->getAttribute('profile_photo_url'),
+                'deactivated_at' => User::deactivatedAtFor($user),
                 'manager_type' => $user::class,
                 'use_chat' => $user->getAttribute('use_chat'),
                 'position' => $user->getAttribute('position'),
@@ -242,6 +244,8 @@ class UserRepository extends BaseRepository
     public function syncDepartments(User $user, array $departmentIds): User
     {
         $user->departments()->sync($departmentIds);
+        // Raumadmin über ein Team ändert den gecachten Anfragen-Status
+        User::forgetCachedShareDataForIds([$user->id]);
 
         return $user;
     }

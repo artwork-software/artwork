@@ -16,10 +16,12 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class IndividualTimeSeriesController extends Controller
 {
@@ -55,7 +57,10 @@ class IndividualTimeSeriesController extends Controller
         // subjects: [{type: "user"|"freelancer"|"service_provider", id: 123}, ...]
         $subjectsInput = collect($data['subjects']);
 
-        $this->authorize('createForSubjects', [IndividualTimeSeries::class, $subjectsInput->all()]);
+        $this->authorize(
+            'createForSubjects',
+            [IndividualTimeSeries::class, $subjectsInput->all(), (string) $data['start_date']]
+        );
 
         // Zeit-Subjekte aus DB laden
         $timeables = $this->resolveTimeables($subjectsInput);
@@ -66,7 +71,7 @@ class IndividualTimeSeriesController extends Controller
         $series = $this->individualTimeSeriesService->createSeriesForTimeables($data, $timeables);
 
         foreach ($subjectsInput as $subject) {
-            broadcast(new IndividualTimeChanged(
+            SafeBroadcast::send(new IndividualTimeChanged(
                 $subject['id'],
                 $this->resolveWorkerTypeFromSubjectType($subject['type']),
             ));
@@ -163,7 +168,7 @@ class IndividualTimeSeriesController extends Controller
     {
         $data = $this->validatePayload($request);
 
-        $this->authorize('update', [$series, $data['subjects']]);
+        $this->authorize('update', [$series, $data['subjects'], (string) $data['start_date']]);
 
         // Wer bearbeitet?
         $createdBy = $this->auth->id();
@@ -181,9 +186,8 @@ class IndividualTimeSeriesController extends Controller
             'created_by' => $createdBy,
         ]);
 
-        // Für die übergebenen Subjects:
-        // - alte Einträge (alte Serie) löschen
-        // - neue Einträge mit neuer Series-UUID erzeugen
+        // Für die übergebenen Subjects: vorhandene Einträge per Tag abgleichen (aktualisieren), fehlende
+        // anlegen, wegfallende löschen
         $this->regenerateIndividualTimesForSubjects(
             sourceSeries: $series,     // alte
             targetSeries: $newSeries,  // neue
@@ -191,7 +195,7 @@ class IndividualTimeSeriesController extends Controller
         );
 
         foreach ($data['subjects'] as $subject) {
-            broadcast(new IndividualTimeChanged(
+            SafeBroadcast::send(new IndividualTimeChanged(
                 $subject['id'],
                 $this->resolveWorkerTypeFromSubjectType($subject['type']),
             ));
@@ -211,8 +215,11 @@ class IndividualTimeSeriesController extends Controller
             ->distinct()
             ->get();
 
-        // Alle IndividualTimes der Serie löschen
-        $series->individualTimes()->delete();
+        // Alle IndividualTimes der Serie einzeln löschen: die Model-Events erfassen freigegebene Zeiten
+        // als Änderung nach Freigabe und schreiben den Schichtverlauf
+        // In einer Transaktion: bei langen Serien deutlich schneller und bei einem Fehler nichts halb gelöscht
+        DB::transaction(fn () => $series->individualTimes()->get()
+            ->each(fn (IndividualTime $individualTime) => $individualTime->delete()));
         // Serie selbst löschen
         $series->delete();
 
@@ -222,7 +229,7 @@ class IndividualTimeSeriesController extends Controller
                 ServiceProvider::class => 2,
                 default => 0,
             };
-            broadcast(new IndividualTimeChanged($worker->timeable_id, $workerType));
+            SafeBroadcast::send(new IndividualTimeChanged($worker->timeable_id, $workerType));
         }
     }
 
@@ -260,7 +267,12 @@ class IndividualTimeSeriesController extends Controller
         return $request->validate([
             'title'                 => ['nullable', 'string', 'max:255'],
             'start_date'            => ['required', 'date'],
-            'end_date'              => ['required', 'date', 'after_or_equal:start_date'],
+            'end_date'              => [
+                'required',
+                'date',
+                'after_or_equal:start_date',
+                StoreIndividualTimeSeriesRequest::maxSpanRule($request),
+            ],
             'full_day'              => ['sometimes', 'boolean'],
             'start_time'            => [
                 'nullable',
@@ -297,11 +309,11 @@ class IndividualTimeSeriesController extends Controller
     }
 
     /**
-     * Erzeugt alle Occurrences und ersetzt alle IndividualTimes für die
-     * übergebenen Subjects und die gegebene Series.
+     * Erzeugt alle Occurrences und gleicht die IndividualTimes der übergebenen Subjects damit ab: gleicher Tag →
+     * aktualisieren (Freigabe bleibt), neuer Tag → anlegen, weggefallener Tag → löschen.
      *
-     * Wichtig: Nur diese Subjects werden gelöscht/neu angelegt – andere
-     * Personen mit derselben series_uuid bleiben unangetastet.
+     * Wichtig: Nur diese Subjects werden angefasst – andere Personen mit derselben series_uuid bleiben
+     * unangetastet.
      */
     protected function regenerateIndividualTimesForSubjects(
         IndividualTimeSeries $sourceSeries,
@@ -326,14 +338,19 @@ class IndividualTimeSeriesController extends Controller
 
             $timeableClass = $this->resolveTimeableClassFromSubjectType($subjectType);
 
-            // 1) Alte Zeiten NUR für dieses Subject + alte Serie löschen
-            IndividualTime::query()
+            // 1) Vorhandene Zeiten NUR dieses Subjects + der alten Serie, nach Tag. Sie werden abgeglichen statt
+            //    ersetzt: so bleiben Freigabe und Anfrage-Zugehörigkeit erhalten, und nur echte Änderungen
+            //    erscheinen als Änderung nach Freigabe (Model-Events).
+            $existingByDate = IndividualTime::query()
                 ->where('series_uuid', $sourceSeries->uuid)
                 ->where('timeable_type', $timeableClass)
                 ->where('timeable_id', $subjectId)
-                ->delete();
+                ->orderBy('id')
+                ->get()
+                ->groupBy(fn (IndividualTime $individualTime) => Carbon::parse($individualTime->start_date)
+                    ->toDateString());
 
-            // 2) Neue Zeiten für dieses Subject + neue Serie erzeugen
+            // 2) Zeiten für dieses Subject + neue Serie anlegen bzw. aktualisieren
             foreach ($occurrences as $date) {
                 // Arbeitszeit wie bei Einzelzeit berechnen
                 $startTime = $fullDay ? null : Arr::get($data, 'start_time');
@@ -356,7 +373,7 @@ class IndividualTimeSeriesController extends Controller
                 } else {
                     $workingTimeInMinutes = 1440;
                 }
-                IndividualTime::create([
+                $attributes = [
                     'series_uuid'             => $targetSeries->uuid,
                     'timeable_type'           => $timeableClass,
                     'timeable_id'             => $subjectId,
@@ -368,9 +385,18 @@ class IndividualTimeSeriesController extends Controller
                     'full_day'                => $fullDay,
                     'working_time_minutes'    => $workingTimeInMinutes,
                     'break_minutes'           => $breakMinutes,
-                    'days_of_individual_time' => [$date->toDateString()],
-                ]);
+                ];
+
+                $existing = $existingByDate->get($date->toDateString())?->shift();
+                if ($existing !== null) {
+                    $existing->update($attributes);
+                } else {
+                    IndividualTime::create($attributes);
+                }
             }
+
+            // 3) Was die neue Serie nicht mehr enthält, einzeln löschen (Model-Events wie oben)
+            $existingByDate->flatten()->each(fn (IndividualTime $individualTime) => $individualTime->delete());
         }
     }
 

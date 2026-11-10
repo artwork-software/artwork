@@ -39,6 +39,7 @@ class UserWorkProfileResource extends JsonResource
             'first_name' => $this->getAttribute('first_name'),
             'last_name' => $this->getAttribute('last_name'),
             'profile_photo_url' => $this->getAttribute('profile_photo_url'),
+            'deactivated_at' => User::deactivatedAtFor($this->resource),
             'work_name' => $this->getAttribute('work_name'),
             'work_description' => $this->getAttribute('work_description'),
             'can_work_shifts' => $this->getAttribute('can_work_shifts'),

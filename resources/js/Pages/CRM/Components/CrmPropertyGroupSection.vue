@@ -62,7 +62,7 @@
                                     {{ formatDate(getPropertyValue(property.id)) }}
                                 </template>
                                 <template v-else>
-                                    {{ getPropertyValue(property.id) || '-' }}
+                                    {{ crmPropertyDisplayText(getPropertyValue(property.id), property.type) || '-' }}
                                 </template>
                             </dd>
                         </div>
@@ -74,6 +74,7 @@
 </template>
 
 <script setup>
+import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { isSafeHttpUrl } from '@/Helper/SafeUrl.js'
 import { ref } from 'vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'

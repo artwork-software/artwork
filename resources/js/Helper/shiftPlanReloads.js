@@ -10,11 +10,21 @@
  * (tests/Frontend/shiftPlanReloads.test.js).
  */
 
-export const SHIFT_PLAN_COMPONENTS = ['Shifts/ShiftPlan', 'Shifts/ShiftPlanDailyView'];
+/**
+ * Seiten, deren Schichtansicht ihre Daten selbst lädt und angelegte Schichten aus flash.shiftPlanUpdate
+ * übernimmt. Projects/Tab/TabContent: der Projekt-Schichten-Tab bettet die Tagesansicht ein; Schichten
+ * angelegt werden dort nur aus ihr heraus (andere Tabs bearbeiten Schichten per axios).
+ */
+export const SHIFT_PLAN_COMPONENTS = [
+    'Shifts/ShiftPlan',
+    'Shifts/ShiftPlanDailyView',
+    'Shifts/ShiftPlanListView',
+    'Projects/Tab/TabContent',
+];
 
 /**
  * Visit-Optionen für Inertia-Aktionen: auf den Dienstplanseiten nur `flash` nachladen, überall sonst
- * (z.B. Projekt-Tabs) unverändert den vollen Folge-Request.
+ * unverändert den vollen Folge-Request.
  *
  * @param {string|null|undefined} currentComponent usePage().component
  * @returns {{only?: string[]}}
@@ -38,4 +48,19 @@ export function createdShiftsCarryWorkers(shifts) {
     }
 
     return shifts.some((shift) => !Array.isArray(shift?.workers) || shift.workers.length > 0);
+}
+
+/**
+ * Tage ('YYYY-MM-DD'), an denen gerade Schichten angelegt wurden (flash.shiftPlanUpdate bzw.
+ * multi-shifts-created). Die Listenansicht lädt danach nur diese Tage und den sichtbaren Bereich neu.
+ *
+ * @param {{shifts?: Array<{startDate?: string|null}>}|null|undefined} savedShifts
+ * @returns {string[]}
+ */
+export function createdShiftDays(savedShifts) {
+    if (!Array.isArray(savedShifts?.shifts)) {
+        return [];
+    }
+
+    return [...new Set(savedShifts.shifts.map((shift) => shift?.startDate).filter(Boolean))];
 }

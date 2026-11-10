@@ -93,20 +93,21 @@
             word-wrap: break-word;
         }
 
+        /* Spaltenüberschriften (Räume/Tage) größer für bessere Lesbarkeit */
         thead th {
             border-bottom: 1px solid #404040;
             border-right: 1px solid #404040;
             background: #f9fafb;
             vertical-align: top;
             word-wrap: break-word;
-            font-size: {{ $s(6) }};
+            font-size: {{ $s(9) }};
             font-weight: 500;
         }
 
         /* Kopfspalten */
         .th-room-head {
             font-weight: 500;
-            font-size: {{ $s(6) }};
+            font-size: {{ $s(9) }};
             line-height: 1.3;
             text-align: left;
             padding: 4px;
@@ -121,11 +122,11 @@
             line-height: 1.3;
             padding: 4px 2px;
             font-weight: 500;
-            font-size: {{ $s(6) }};
+            font-size: {{ $s(9) }};
         }
         .th-daygroup-meta {
             font-weight: 500;
-            font-size: {{ $s(6) }};
+            font-size: {{ $s(8) }};
             line-height: 1.2;
             color: #4b5563;
         }
@@ -306,7 +307,7 @@
             // Linker Block (Name, Projekt)
             echo        '<div class="event-left">';
             if ($abbr) {
-                echo '<span class="event-abbr">'.$abbr.'</span>: ';
+                echo '<span class="event-abbr">'.e($abbr).'</span>: ';
             }
             echo        e($name);
             if ($projectNm) {

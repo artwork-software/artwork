@@ -91,7 +91,7 @@
                                             {{ formatDate(propertyValue(contact.id, property.id)) }}
                                         </template>
                                         <template v-else>
-                                            {{ propertyValue(contact.id, property.id) }}
+                                            {{ crmPropertyDisplayText(propertyValue(contact.id, property.id), property.type) }}
                                         </template>
                                     </dd>
                                 </div>
@@ -184,6 +184,25 @@
             </div>
         </div>
 
+        <!-- Sonderrolle „Künstler*in“ aus CRM-Kontaktlisten: nur Anzeige, gepflegt in der Liste -->
+        <div v-if="listArtists.length > 0" class="mt-2 space-y-1.5">
+            <div class="text-xs text-text-subtle">{{ $t('Also artists via CRM contact lists') }}</div>
+            <div
+                v-for="contact in listArtists"
+                :key="`list-${contact.id}`"
+                class="flex items-center gap-x-2 rounded-lg border border-dashed border-border-subtle bg-surface-sunken/40 px-3 py-1.5"
+            >
+                <img :src="contact.profile_photo_url" :alt="contact.display_name" class="h-6 w-6 shrink-0 rounded-full object-cover" />
+                <span class="truncate text-sm text-text">{{ contact.display_name }}</span>
+                <span v-if="contact.contact_type" class="inline-flex shrink-0 items-center rounded-full bg-white px-2 py-0.5 text-xs text-text-muted">
+                    {{ $t(contact.contact_type.name) }}
+                </span>
+                <span class="ml-auto shrink-0 truncate text-xs text-text-subtle" :title="(contact.via ?? []).join(', ')">
+                    {{ $t('via {list}', { list: (contact.via ?? []).join(', ') }) }}
+                </span>
+            </div>
+        </div>
+
         <CreateCrmArtistModal
             v-if="showCreateModal"
             @close="showCreateModal = false"
@@ -193,6 +212,7 @@
 </template>
 
 <script setup>
+import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { ref, computed, watch, onMounted, getCurrentInstance } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -232,6 +252,11 @@ const props = defineProps({
         type: Array,
         default: null,
     },
+    // Künstler*innen mit Sonderrolle aus CRM-Kontaktlisten (nur Anzeige)
+    initialListArtists: {
+        type: Array,
+        default: null,
+    },
 });
 
 const emit = defineEmits(['update:contactIds']);
@@ -244,6 +269,7 @@ const { can } = usePermission(page.props);
 const uid = Math.random().toString(36).slice(2, 8);
 
 const linkedContacts = ref(props.initialContacts ? [...props.initialContacts] : []);
+const listArtists = ref(props.initialListArtists ? [...props.initialListArtists] : []);
 const loadFailed = ref(false);
 const expandedIds = ref([]);
 const details = ref({});
@@ -270,6 +296,7 @@ async function loadLinkedContacts() {
         try {
             const response = await axios.get(route('projects.tabs.artist-name', { project: props.projectId }));
             linkedContacts.value = response.data.linked_crm_contacts ?? [];
+            listArtists.value = response.data.list_artists ?? [];
             loadFailed.value = false;
         } catch (e) {
             // Ohne geladenen Ist-Stand keine IDs emittieren — ein leeres Array

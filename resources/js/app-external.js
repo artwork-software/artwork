@@ -17,14 +17,12 @@ import '../css/global.css'
 import { createApp, h } from 'vue'
 import { createInertiaApp, router } from '@inertiajs/vue3'
 import { createI18n } from 'vue-i18n'
+import { createLocaleSwitcher, resolveInitialLocale } from '@/Helper/appLocale.js'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import Tooltip from 'primevue/tooltip'
 
-const initialLocale =
-    localStorage.getItem('locale') ||
-    document.documentElement.lang ||
-    'de'
+const initialLocale = resolveInitialLocale(document.documentElement.lang)
 
 const i18n = createI18n({
     legacy: false,
@@ -36,6 +34,11 @@ const i18n = createI18n({
     fallbackWarn: false,
     missing: (_l, key) => key,
 })
+
+async function loadLocaleMessages(locale) {
+    const messages = await import(`../../lang/${locale}.json`)
+    return messages.default || messages
+}
 
 const pages = import.meta.glob('./Pages/ExternalAccess/**/*.vue')
 
@@ -56,13 +59,7 @@ createInertiaApp({
             app.mixin({ methods: { route } })
         }
 
-        const locale =
-            localStorage.getItem('locale') ||
-            document.documentElement.lang ||
-            'de'
-
-        const messages = await import(`../../lang/${locale}.json`)
-        i18n.global.setLocaleMessage(locale, messages.default || messages)
+        i18n.global.setLocaleMessage(initialLocale, await loadLocaleMessages(initialLocale))
 
         app.use(i18n)
         app.use(PrimeVue, {
@@ -71,11 +68,7 @@ createInertiaApp({
         })
         app.directive('tooltip', Tooltip)
 
-        app.config.globalProperties.$updateLocale = (newLocale) => {
-            i18n.global.locale.value = newLocale
-            document.documentElement.lang = newLocale
-            localStorage.setItem('locale', newLocale)
-        }
+        app.config.globalProperties.$updateLocale = createLocaleSwitcher(i18n, loadLocaleMessages, document.documentElement)
 
         if (import.meta.env.DEV) app.config.performance = true
         app.mount(el)

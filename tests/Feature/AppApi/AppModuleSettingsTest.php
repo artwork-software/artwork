@@ -27,6 +27,7 @@ final class AppModuleSettingsTest extends TestCase
             'Schichtliste' => ['shift_plan', 'app.v1.shift-list'],
             'Raumbelegung' => ['room_assignment', 'app.v1.calendar'],
             'Projektliste' => ['projects', 'app.v1.projects'],
+            'Inventar' => ['inventory', 'app.v1.inventory.articles'],
         ];
     }
 
@@ -38,6 +39,8 @@ final class AppModuleSettingsTest extends TestCase
             PermissionEnum::CAN_VIEW_OWN_ROSTER->value,
             PermissionEnum::VIEW_SHIFT_PLAN->value,
             PermissionEnum::PROJECT_VIEW->value,
+            // Inventarübersicht braucht seit 04.11.2026 „Inventar sehen“
+            PermissionEnum::INVENTORY_VIEW->value,
         ]);
 
         $this->getJson(route($routeName))->assertOk();

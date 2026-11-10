@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class CraftService
 {
@@ -25,9 +26,13 @@ class CraftService
     ) {
     }
 
-    public function getAll(array $with = []): Collection
+    /**
+     * @param array<int|string, mixed> $with
+     * @param array<int, string> $without
+     */
+    public function getAll(array $with = [], array $without = []): Collection
     {
-        return $this->craftRepository->getAll($with);
+        return $this->craftRepository->getAll($with, $without);
     }
 
     /**
@@ -229,7 +234,7 @@ class CraftService
         // der Besetzung festgeschriebener Schichten, Konflikte, Projekt-Tageszuordnungen,
         // Regel-Neuprüfung, Live-Update) — sonst löschte die DB-Kaskade sie still mit.
         app(ShiftDeletionService::class)->deleteMany($craft->shifts()->get(), true, false);
-        broadcast(new \Artwork\Modules\Event\Events\OccupancyUpdated())->toOthers();
+        SafeBroadcast::send(new \Artwork\Modules\Event\Events\OccupancyUpdated(), true);
 
         DB::transaction(function () use ($craft): void {
             $this->craftRepository->detachUsers($craft);
@@ -245,9 +250,12 @@ class CraftService
         User::forgetCachedShareDataForIds($previousPlanerIds);
     }
 
-    public function getAssignableByAllCrafts(): Collection
+    /**
+     * @param array<int, string> $without
+     */
+    public function getAssignableByAllCrafts(array $without = []): Collection
     {
-        return $this->craftRepository->getAssignableByAllCrafts();
+        return $this->craftRepository->getAssignableByAllCrafts($without);
     }
 
     /**
@@ -255,19 +263,19 @@ class CraftService
      * sonst die für alle planbaren plus die eigenen (craft_users) — jeweils mit Funktionen.
      *
      * Ohne die über Craft::$with mitgeladenen Planer:innen (volle User-Modelle): der Dialog liest sie nicht,
-     * sie machten die Prop im Dienstplan um ein Vielfaches größer.
+     * sie machten die Prop im Dienstplan um ein Vielfaches größer. Sie werden gar nicht erst abgefragt.
      */
     public function getCraftsForShiftCreation(User $user): Collection
     {
+        $without = ['craftShiftPlaner'];
+
         if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            $crafts = $this->getAll(['qualifications']);
-        } else {
-            $crafts = $this->getAssignableByAllCrafts()
-                ->merge($user->crafts()->with(['qualifications'])->get())
-                ->unique('id');
+            return $this->getAll(['qualifications'], $without);
         }
 
-        return $crafts->each(static fn (Craft $craft) => $craft->unsetRelation('craftShiftPlaner'));
+        return $this->getAssignableByAllCrafts($without)
+            ->merge($user->crafts()->without($without)->with(['qualifications'])->get())
+            ->unique('id');
     }
 
     public function findById(int $id): Craft

@@ -132,6 +132,28 @@ final class InventoryPropertyFileAndSearchTest extends FeatureTestCase
     }
 
     #[Test]
+    public function directory_paths_cannot_wipe_other_property_files(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::INVENTORY_CREATE_EDIT->value);
+        Storage::disk('local')->put('uploads/inventory-properties/abc/handbuch.pdf', 'inhalt');
+        Storage::disk('local')->put('uploads/inventory-properties/def/plan.pdf', 'inhalt');
+
+        foreach ([
+            'uploads/inventory-properties/.',
+            'uploads/inventory-properties/abc',
+            'uploads/inventory-properties/abc/',
+            'uploads/inventory-properties/abc/.',
+            'uploads/inventory-properties/./abc',
+        ] as $path) {
+            $this->deleteJson(route('inventory-management.articles.property-file.delete'), ['path' => $path])
+                ->assertForbidden();
+        }
+
+        Storage::disk('local')->assertExists('uploads/inventory-properties/abc/handbuch.pdf');
+        Storage::disk('local')->assertExists('uploads/inventory-properties/def/plan.pdf');
+    }
+
+    #[Test]
     public function deleting_a_property_file_needs_the_edit_permission(): void
     {
         $this->actingAs(User::factory()->create());
@@ -163,7 +185,8 @@ final class InventoryPropertyFileAndSearchTest extends FeatureTestCase
     #[Test]
     public function the_sub_category_view_renders_the_inventory_page_for_that_sub_category(): void
     {
-        $this->actingAs(User::factory()->create());
+        // Inventarübersicht braucht seit 04.11.2026 „Inventar sehen“
+        $this->actingAsUserWith([PermissionEnum::INVENTORY_VIEW->value]);
         $category = InventoryCategory::factory()->create();
         $subCategory = InventorySubCategory::factory()->create(['inventory_category_id' => $category->id]);
         $article = InventoryArticle::factory()->create([

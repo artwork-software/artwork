@@ -11,6 +11,7 @@ use Artwork\Modules\Crm\Services\CrmContactTypeService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
@@ -155,6 +156,8 @@ class CrmController extends Controller
                     'sources' => [],
                     'team_roles' => [],
                     'residency_summary' => null,
+                    // CRM-Kontaktlisten: Komponente, Rollen, Sonderrolle „Künstler*in“
+                    'list_links' => [],
                 ];
             }
 
@@ -177,6 +180,30 @@ class CrmController extends Controller
                 ->values()
                 ->all();
             $entries[$id]['linked_at'] ??= $project->pivot?->created_at?->format('d.m.Y');
+        }
+
+        $listEntries = ProjectComponentCrmContact::query()
+            ->where('crm_contact_id', $crmContact->id)
+            ->with(['project', 'component:id,name,data'])
+            ->orderByDesc('created_at')
+            ->get();
+        foreach ($listEntries as $entry) {
+            if ($entry->project === null) {
+                continue;
+            }
+            $id = $ensureEntry($entry->project);
+            if (!in_array('crm_list', $entries[$id]['sources'], true)) {
+                $entries[$id]['sources'][] = 'crm_list';
+            }
+            if ($entry->is_artist && !in_array('artist', $entries[$id]['sources'], true)) {
+                $entries[$id]['sources'][] = 'artist';
+            }
+            $entries[$id]['list_links'][] = [
+                'component' => (string) ($entry->component?->data['title'] ?? '') ?: (string) $entry->component?->name,
+                'roles' => array_values((array) ($entry->roles ?? [])),
+                'is_artist' => (bool) $entry->is_artist,
+            ];
+            $entries[$id]['linked_at'] ??= $entry->created_at?->format('d.m.Y');
         }
 
         $residenciesByProject = ArtistResidency::query()
@@ -213,7 +240,7 @@ class CrmController extends Controller
     /**
      * Stand des Käufer-Abgleichs aus Artwork-Tickets für den Kopf des Typs "Ticketing-Kunde".
      *
-     * @return array{connected: bool, synced_at: string|null, running: bool, error: string|null}
+     * @return array{connected: bool, test_mode: bool, synced_at: string|null, running: bool, error: string|null}
      */
     private function ticketingSyncState(): array
     {
@@ -221,6 +248,7 @@ class CrmController extends Controller
 
         return [
             'connected' => $connection !== null,
+            'test_mode' => $connection?->isTestMode() ?? false,
             'synced_at' => $connection?->customers_synced_at?->toIso8601String(),
             // Ein aufgegebener Lauf behält seine Stelle für den nächsten, darf den Knopf aber nicht sperren.
             'running' => $connection?->customers_sync_started_at !== null && $connection->customers_sync_error === null,

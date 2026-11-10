@@ -22,15 +22,21 @@ class ProjectDocumentsController extends Controller
     {
         // Platzierungen in Ordnern (disclosure_components) haben eigene Ids und eine eigene
         // Tab-Auswahl; das Frontend kennzeichnet sie mit ?placement=disclosure.
+        $inFolder = $request->query('placement') === 'disclosure';
         $componentInTabModel = $this->projectComponentVisibilityService->resolvePlacement(
             $request->user(),
             $componentInTab,
-            $request->query('placement') === 'disclosure',
+            $inFolder,
             ProjectTabComponentEnum::PROJECT_DOCUMENTS->value,
         );
 
         return response()->json(
-            $this->projectTabDocumentService->buildDocumentPayload($project, $componentInTabModel, $request->user())
+            $this->projectTabDocumentService->buildDocumentPayload(
+                $project,
+                $componentInTabModel,
+                $request->user(),
+                $inFolder,
+            )
         );
     }
 

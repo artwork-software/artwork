@@ -1,83 +1,46 @@
 <template>
-    <ArtworkBaseModal @close="$emit('closed')" full-modal v-if="true" :title="checklistToEdit ? $t('Edit checklist') : $t('New checklist')" :description="checklistToEdit ? $t('Edit your checklist') : $t('Create a new checklist. To save time, you can choose a template and customize it customize it afterwards.')">
-        <form @submit.prevent="submit" class="space-y-5">
-            <div class="" v-if="!checklistToEdit">
-                <Listbox class="w-full" v-model="selectedTemplate">
-                    <div class="relative">
-                        <ListboxButton class="menu-button">
-                            <span v-if="selectedTemplate.name !== ''">{{ selectedTemplate.name }}</span>
-                            <span v-else>
-                                {{ $t('No template') }}
-                            </span>
-                            <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
-                        </ListboxButton>
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <ListboxOptions
-                                class="absolute z-10 mt-1 w-full bg-surface-inverse shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto sm:text-sm">
-                                <ListboxOption as="template" class="max-h-8"
-                                               :key="'keineVorlage'"
-                                               :value="{name:'',id:null}"
-                                               v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                {{ $t('No template') }}
-                                            </span>
-                                        <span :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center text-sm subpixel-antialiased']">
-                                                  <IconCircleCheckFilled v-if="selected"
-                                                                         class="h-5 w-5 flex text-success"
-                                                                         aria-hidden="true"
-                                                  />
-                                            </span>
-                                    </li>
-                                </ListboxOption>
-                                <ListboxOption as="template" class="max-h-8"
-                                               v-for="template in checklist_templates"
-                                               :key="template.id"
-                                               :value="template"
-                                               v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <span
-                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                {{ template.name }}
-                                            </span>
-                                        <span :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center text-sm subpixel-antialiased']">
-                                                  <IconCircleCheckFilled v-if="selected"
-                                                                         class="h-5 w-5 flex text-success"
-                                                                         aria-hidden="true"
-                                                  />
-                                            </span>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </transition>
-                    </div>
-                </Listbox>
-            </div>
-            <div class="">
-                <div class="flex">
-                    <BaseInput
-                        id="checklistName"
-                        v-if="selectedTemplate.name === ''"
-                        v-model="checklistForm.name"
-                        label="Name of the checklist*"
-                    />
-                </div>
-            </div>
+    <ArtworkBaseModal
+        :title="checklistToEdit ? 'Edit checklist' : 'New checklist'"
+        :description="checklistToEdit ? 'Edit your checklist' : 'Create a new checklist. To save time, you can choose a template and customize it customize it afterwards.'"
+        modal-size="sm:max-w-xl"
+        @close="closeModal"
+    >
+        <form id="addEditChecklistForm" class="space-y-4" @submit.prevent="submit">
+            <ArtworkBaseListbox
+                v-if="!checklistToEdit"
+                v-model="selectedTemplate"
+                :items="templateOptions"
+                by="id"
+                option-label="name"
+                label="Template"
+            />
 
-            <div class="" v-if="!project">
-                <div>
-                    <ProjectSearch @project-selected="addProjectToChecklist" />
-                </div>
+            <BaseInput
+                v-if="!selectedTemplate?.id"
+                id="checklistName"
+                v-model="checklistForm.name"
+                label="Name of the checklist"
+                required
+                :error="checklistForm.errors.name"
+            />
 
-                <TagComponent
-                    class="mt-4"
+            <div v-if="!project" class="space-y-3">
+                <ProjectSearch @project-selected="addProjectToChecklist" />
+
+                <div
                     v-if="selectedProject"
-                    :property="selectedProject"
-                    :displayed-text="selectedProject.name"
-                    :method="deleteSelectedProject"
-                />
+                    class="flex items-center justify-between gap-x-3 rounded-md border border-border-subtle bg-surface-sunken px-3 py-2"
+                >
+                    <span class="truncate text-sm font-medium text-text">{{ selectedProject.name }}</span>
+                    <button
+                        type="button"
+                        class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 hover:bg-surface-hover hover:text-danger motion-reduce:transition-none"
+                        :aria-label="$t('Remove')"
+                        @click="deleteSelectedProject"
+                    >
+                        <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                    </button>
+                </div>
 
                 <LastedProjects
                     :limit="10"
@@ -85,81 +48,76 @@
                 />
             </div>
 
-            <!-- Tab selection: required if a project is linked and no fixed tab_id is provided -->
-            <div v-if="(selectedProject || project) && !tab_id" class="mt-4">
-                <Listbox v-model="selectedTab" class="w-full">
-                    <div class="relative">
-                        <ListboxButton class="menu-button">
-                            <span v-if="selectedTab?.name">{{ selectedTab.name }}</span>
-                            <span v-else>
-                                {{ $t('Select project tab') }}
-                            </span>
-                            <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
-                        </ListboxButton>
-                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                            <ListboxOptions class="absolute z-10 mt-1 w-full bg-surface-inverse shadow-lg max-h-40 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto sm:text-sm">
-                                <ListboxOption as="template" v-for="t in tabs" :key="t.id" :value="t" v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                        <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">{{ t.name }}</span>
-                                        <span :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center text-sm subpixel-antialiased']">
-                                            <IconCircleCheckFilled v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true" />
-                                        </span>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </transition>
-                    </div>
-                </Listbox>
-            </div>
-            <!-- z. B. 422, wenn der Tab für die Person nicht (mehr) sichtbar ist -->
-            <p v-if="checklistForm.errors.tab_id" class="mt-2 text-xs text-danger">{{ checklistForm.errors.tab_id }}</p>
-
-            <div class="" v-if="selectedTemplate.name === ''">
-                <div class="flex items-center my-2" >
-                    <Switch @click="checklistForm.private = !checklistForm.private" :class="[checklistForm.private ? 'bg-success' : 'bg-border', 'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200']">
-                        <span aria-hidden="true" :class="[checklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
-                    </Switch>
-                    <span class="ml-2 text-sm" :class="checklistForm.private ? 'text-text' : 'text-text-subtle'">
-                        {{ $t('Private') }}
-                    </span>
-                </div>
-                <AlertComponent
-                    v-if="checklistForm.private"
-                    :text="$t('Only you can see this checklist. If you want to share the checklist with others, you can edit it later and make it visible to everyone.')"
-                    show-icon
-                    icon-size="h-6 w-6"
+            <!-- Tab-Auswahl: Pflicht, wenn ein Projekt verknüpft ist und kein fester Tab übergeben wurde -->
+            <div v-if="(selectedProject || project) && !tab_id">
+                <ArtworkBaseListbox
+                    v-model="selectedTab"
+                    :items="tabs"
+                    by="id"
+                    option-label="name"
+                    label="Project tab"
+                    placeholder="Select project tab"
                 />
             </div>
-            <div class="mt-4">
-                <div class="flex items-center justify-end">
-                    <BaseUIButton
-                        type="submit"
-                        :disabled="((!selectedTemplate.id) ? checklistForm.name.length === 0 : false) || (((selectedProject || project) && !tab_id) && !(selectedTab && selectedTab.id)) || checklistForm.processing"
-                        :label="checklistToEdit ? $t('Save') : $t('Create')"
-                    />
-                </div>
+            <!-- z. B. 422, wenn der Tab für die Person nicht (mehr) sichtbar ist -->
+            <p v-if="checklistForm.errors.tab_id" class="text-[11.5px] text-danger">{{ checklistForm.errors.tab_id }}</p>
+
+            <div v-if="!selectedTemplate?.id" class="space-y-3">
+                <ArtworkBaseToggle
+                    id="checklistPrivate"
+                    v-model="checklistForm.private"
+                    label="Private"
+                    use-translation
+                    is-small
+                />
+                <BaseAlertComponent
+                    v-if="checklistForm.private"
+                    type="info"
+                    message="Only you can see this checklist. If you want to share the checklist with others, you can edit it later and make it visible to everyone."
+                    use-translation
+                    class="mb-0!"
+                />
             </div>
         </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="checklistForm.processing"
+                @click="closeModal"
+            />
+            <BaseUIButton
+                type="submit"
+                form="addEditChecklistForm"
+                :label="checklistToEdit ? 'Save' : 'Create'"
+                variant="primary"
+                :icon="checklistToEdit ? 'IconDeviceFloppy' : 'IconCirclePlus'"
+                :processing="checklistForm.processing"
+                :disabled="!canSubmit"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
 <script setup>
-
+import {computed, onMounted, ref, watch} from "vue";
 import {useForm, usePage} from "@inertiajs/vue3";
-import {IconChevronDown, IconCircleCheckFilled} from "@tabler/icons-vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import {ref, watch, onMounted} from "vue";
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch} from "@headlessui/vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import {useI18n} from "vue-i18n";
+import axios from 'axios';
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import ArtworkBaseToggle from "@/Artwork/Toggles/ArtworkBaseToggle.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
-import axios from 'axios';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+
+defineOptions({name: 'AddEditChecklistModal'})
+
+const {t} = useI18n();
 
 const props = defineProps({
     project: {
@@ -187,55 +145,34 @@ const props = defineProps({
     }
 })
 
-const selectedProject = ref(null);
-const tabs = ref([]);
-const selectedTab = ref(null);
-
-const resolveTabListUrl = () => {
-    try {
-        // Prefer Ziggy route() if available
-        // @ts-ignore
-        if (typeof route === 'function') {
-            // @ts-ignore
-            return route('tab.list');
-        }
-    } catch (_) { /* ignore */ }
-    // Fallback to hardcoded path
-    return '/settings/tab/list';
-};
-
-const loadTabs = async () => {
-    try {
-        const url = resolveTabListUrl();
-        const { data } = await axios.get(url);
-        tabs.value = Array.isArray(data) ? data : [];
-    } catch (e) {
-        // Ensure tabs is an array to avoid empty options rendering issues
-        tabs.value = [];
-        // You could log to console in dev if needed
-        // console.debug('Failed to load project tabs', e);
-    }
-};
-
-onMounted(() => {
-    // tabs are global, not project-specific; load once
-    loadTabs();
-});
-
-watch(selectedTab, (val) => {
-    // keep form in sync with selection when no fixed tab_id is provided via props
-    if (!props.tab_id) {
-        checklistForm.tab_id = val?.id ?? null;
-    }
-});
-
 const emits = defineEmits([
     'closed'
 ]);
 
-const selectedTemplate = ref({
-    name: '',
-    id: null
+const noTemplateOption = {id: null, name: t('No template')};
+
+const templateOptions = computed(() => [
+    noTemplateOption,
+    ...Object.values(props.checklist_templates ?? {}),
+]);
+
+const selectedTemplate = ref(noTemplateOption);
+const selectedProject = ref(null);
+const tabs = ref([]);
+const selectedTab = ref(null);
+
+const loadTabs = async () => {
+    try {
+        const {data} = await axios.get(route('tab.list'));
+        tabs.value = Array.isArray(data) ? data : [];
+    } catch (e) {
+        tabs.value = [];
+    }
+};
+
+// Tabs sind global, nicht projektbezogen: einmal laden
+onMounted(() => {
+    loadTabs();
 });
 
 const checklistForm = useForm({
@@ -248,40 +185,40 @@ const checklistForm = useForm({
     tab_id: props.tab_id ? props.tab_id : null
 });
 
+watch(selectedTab, (val) => {
+    // Ohne festen Tab aus den Props die Auswahl ins Formular übernehmen
+    if (!props.tab_id) {
+        checklistForm.tab_id = val?.id ?? null;
+    }
+});
+
+const needsTabSelection = computed(() => Boolean(selectedProject.value || props.project) && !props.tab_id);
+
+const canSubmit = computed(() => {
+    if (checklistForm.processing) {
+        return false;
+    }
+    if (!selectedTemplate.value?.id && !checklistForm.name?.trim()) {
+        return false;
+    }
+    return !(needsTabSelection.value && !selectedTab.value?.id);
+});
+
+const closeModal = () => {
+    if (checklistForm.processing) {
+        return;
+    }
+    emits('closed');
+}
+
 const addProjectToChecklist = (project) => {
     checklistForm.project_id = project.id;
     selectedProject.value = project;
-    // reset tab selection when project changes
+    // Bei Projektwechsel die Tab-Auswahl zurücksetzen
     if (!props.tab_id) {
         selectedTab.value = null;
         checklistForm.tab_id = null;
     }
-}
-
-const submit = () => {
-    if ( selectedTemplate.value.id ) {
-        checklistForm.template_id = selectedTemplate.value.id;
-        checklistForm.name = selectedTemplate.value.name;
-    }
-
-    if (props.checklistToEdit) {
-        checklistForm.patch(route('checklists.update', {checklist: props.checklistToEdit.id}), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                emits('closed', true)
-            }
-        });
-    } else {
-        checklistForm.post(route('checklists.store'), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                emits('closed', true)
-            }
-        });
-    }
-
 }
 
 const deleteSelectedProject = () => {
@@ -293,8 +230,29 @@ const deleteSelectedProject = () => {
     }
 }
 
+const submit = () => {
+    if (!canSubmit.value) {
+        return;
+    }
+    if (selectedTemplate.value?.id) {
+        checklistForm.template_id = selectedTemplate.value.id;
+        checklistForm.name = selectedTemplate.value.name;
+    } else {
+        checklistForm.template_id = null;
+    }
+
+    const options = {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            emits('closed', true)
+        }
+    };
+
+    if (props.checklistToEdit) {
+        checklistForm.patch(route('checklists.update', {checklist: props.checklistToEdit.id}), options);
+    } else {
+        checklistForm.post(route('checklists.store'), options);
+    }
+}
 </script>
-
-<style scoped>
-
-</style>

@@ -33,6 +33,10 @@ class ApiAccessLog
      * Der eigentliche INSERT passiert in terminate(): Unter FPM läuft das nach dem Ausliefern der
      * Antwort und kostet den API-Konsumenten keine Latenz. Der Startzeitpunkt reist als
      * Request-Attribut mit, weil Laravel die Middleware für terminate() neu auflöst.
+     *
+     * Alles hier läuft nach dem Senden der Antwort. Auch Token-Auflösung und RateLimiter (Cache) liegen
+     * deshalb im try: Eine Exception würde sonst als "headers already sent"-Fatal enden, weil Laravel
+     * versucht, eine Fehlerseite hinter die bereits gesendete Antwort zu schreiben.
      */
     public function terminate(Request $request, Response $response): void
     {
@@ -40,15 +44,15 @@ class ApiAccessLog
             return;
         }
 
-        $passportTokenId = $this->resolveTokenId($request);
-
-        if ($passportTokenId === null && !$this->allowUnauthenticatedLogEntry($request)) {
-            return;
-        }
-
-        $startedAt = $request->attributes->get(self::STARTED_AT_ATTRIBUTE);
-
         try {
+            $passportTokenId = $this->resolveTokenId($request);
+
+            if ($passportTokenId === null && !$this->allowUnauthenticatedLogEntry($request)) {
+                return;
+            }
+
+            $startedAt = $request->attributes->get(self::STARTED_AT_ATTRIBUTE);
+
             ApiLog::create([
                 'passport_token_id' => $passportTokenId,
                 // Bewusst ohne Query-String: Das Log soll keine Nutzdaten aufnehmen.

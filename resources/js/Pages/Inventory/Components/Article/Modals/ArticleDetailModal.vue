@@ -1,452 +1,349 @@
 <template>
-    <BaseModal @closed="$emit('close')" modal-size="max-w-6xl">
-        <div class="">
-            <!-- Product -->
-            <div class="mb-5">
-                <div class="card flex justify-center">
-                    <Galleria
-                        v-if="displayCustom"
-                        v-model:activeIndex="activeIndex"
-                        v-model:visible="displayCustom"
-                        :value="article.images"
-                        :responsiveOptions="responsiveOptions"
-                        :numVisible="7"
-                        :pt="{ mask: { onClick: onMaskClick } }"
-                        containerStyle="max-width: 850px"
-                        :circular="true"
-                        :fullScreen="true"
-                        :showItemNavigators="true"
-                        :showThumbnails="false"
-                    >
-                        <template #item="slotProps">
-                            <img
-                                :src="'/storage/' + slotProps.item.image"
-                                :alt="slotProps.item.alt"
-                                style="width: 100%; max-height: 75vh; object-fit: contain; display: block"
-                                @error="(e) => (e.target.src = usePage().props.big_logo)"
-                            />
-                        </template>
-                        <template #thumbnail="slotProps">
-                            <img
-                                :src="'/storage/' + (slotProps.item.thumbnail || slotProps.item.image)"
-                                :alt="slotProps.item.alt"
-                                style="display: block"
-                                @error="(e) => (e.target.src = usePage().props.big_logo)"
-                                class="w-20 max-w-20"
-                            />
-                        </template>
-                    </Galleria>
+    <ArtworkBaseModal
+        :title="article.name ?? ''"
+        :description="articleSubtitle"
+        modal-size="sm:max-w-6xl"
+        z-index="150"
+        @close="$emit('close')"
+    >
+        <!-- Bearbeiten/Löschen: zusätzlich Tag-Berechtigungen -->
+        <template v-if="showButtonForEditAndDelete && (canEditArticle || canDeleteArticle)" #headerActions>
+            <button
+                v-if="canEditArticle"
+                type="button"
+                class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white/8 text-text-inverse transition-colors duration-150 motion-reduce:transition-none hover:bg-white/16"
+                :aria-label="$t('Edit article')"
+                v-tooltip.bottom="{ value: $t('Edit article'), class: 'aw-tooltip' }"
+                @click="openArticleEditModal"
+            >
+                <component :is="IconEdit" class="size-4" stroke-width="1.5" aria-hidden="true" />
+            </button>
+            <button
+                v-if="canDeleteArticle"
+                type="button"
+                class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white/8 text-danger-border transition-colors duration-150 motion-reduce:transition-none hover:bg-white/16"
+                :aria-label="$t('Delete article')"
+                v-tooltip.bottom="{ value: $t('Delete article'), class: 'aw-tooltip' }"
+                @click="openDeleteConfirmation"
+            >
+                <component :is="IconTrash" class="size-4" stroke-width="1.5" aria-hidden="true" />
+            </button>
+        </template>
 
-                    <div
-                        v-if="article.images"
-                        class="grid grid-cols-12 gap-4"
-                        style="max-width: 400px"
-                    >
-                        <div
-                            v-for="(image, index) of article.images"
-                            :key="index"
-                            class="col-span-4 border border-border rounded-lg shadow relative hover:shadow-lg transition duration-200 ease-in-out group"
-                        >
-                            <!-- lupe icon -->
-                            <div
-                                class="absolute inset-0 bg-black/50 z-10 rounded-lg group-hover:opacity-100 opacity-0 cursor-pointer transition duration-200 ease-in-out"
-                                @click="imageClick(index)"
-                            >
-                                <div class="flex items-center justify-center w-full h-full">
-                                    <component :is="IconWindowMaximize" class="w-5 h-5 text-white" />
-                                </div>
-                            </div>
-                            <img
-                                :src="'/storage/' + (image.thumbnail || image.image)"
-                                alt=""
-                                style="cursor: pointer"
-                                class="cursor-pointer rounded-lg"
-                                loading="lazy"
-                                decoding="async"
-                                @click="imageClick(index)"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Bilder -->
+        <div v-if="hasImages" class="mb-5 flex justify-center">
+            <Galleria
+                v-if="displayCustom"
+                v-model:activeIndex="activeIndex"
+                v-model:visible="displayCustom"
+                :value="article.images"
+                :responsiveOptions="responsiveOptions"
+                :numVisible="7"
+                :pt="{ mask: { onClick: onMaskClick } }"
+                containerStyle="max-width: 850px"
+                :circular="true"
+                :fullScreen="true"
+                :showItemNavigators="true"
+                :showThumbnails="false"
+            >
+                <template #item="slotProps">
+                    <img
+                        :src="'/storage/' + slotProps.item.image"
+                        :alt="slotProps.item.alt"
+                        style="width: 100%; max-height: 75vh; object-fit: contain; display: block"
+                        @error="(e) => (e.target.src = usePage().props.big_logo)"
+                    />
+                </template>
+                <template #thumbnail="slotProps">
+                    <img
+                        :src="'/storage/' + (slotProps.item.thumbnail || slotProps.item.image)"
+                        :alt="slotProps.item.alt"
+                        style="display: block"
+                        @error="(e) => (e.target.src = usePage().props.big_logo)"
+                        class="w-20 max-w-20"
+                    />
+                </template>
+            </Galleria>
 
-            <!-- Product info -->
-            <div>
-                <div class="px-4 sm:mt-16 sm:px-2 lg:mt-0 w-full">
-                    <div class="w-full flex items-center justify-between gap-4">
-                        <div class="min-w-0">
-                            <h1 class="text-3xl font-lexend font-bold tracking-tight text-text line-clamp-3">
-                                {{ article.name }}
-                            </h1>
-                            <div
-                                v-if="article.inventory_number"
-                                class="font-mono text-xs text-text-subtle mt-0.5"
-                            >
-                                {{ formatInventoryNumber(article.inventory_number) }}
-                            </div>
-                            <div
-                                v-if="article.category"
-                                class="font-lexend text-xs text-text-subtle mt-0.5 font-semibold"
-                            >
-                                {{ article.category?.name }}
-                                <span v-if="article.sub_category">
-                                    > {{ article.sub_category?.name }}
-                                </span>
-                            </div>
-
-                            <!-- 🔹 Tags unter Titel/Kategorie -->
-                            <div
-                                v-if="hasTags"
-                                class="mt-2 flex flex-wrap gap-1.5"
-                            >
-                                <span
-                                    v-for="tag in article.tags"
-                                    :key="tag.id"
-                                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border max-w-[130px] bg-surface-sunken"
-                                    :style="tagStyle(tag)"
-                                >
-                                    <span
-                                        class="inline-block h-2 w-2 rounded-full border border-white/70 shrink-0"
-                                        :style="{ backgroundColor: tag.color || '#4f46e5' }"
-                                    />
-                                    <span class="truncate">
-                                        {{ tag.name }}
-                                    </span>
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- 🔒 Edit/Delete: zusätzlich Tag-Berechtigungen -->
-                        <div
-                            class="flex gap-x-2 px-2"
-                            v-if="showButtonForEditAndDelete"
-                        >
-                            <component
-                                :is="IconEdit"
-                                class="w-5 h-5 rounded-full cursor-pointer hover:text-accent-600 duration-200 ease-in-out"
-                                @click="openArticleEditModal"
-                                v-if="canEditArticle"
-                            />
-                            <component
-                                :is="IconTrash"
-                                class="w-5 h-5 rounded-full cursor-pointer hover:text-danger duration-200 ease-in-out"
-                                @click="openDeleteConfirmation"
-                                v-if="canDeleteArticle"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="flex w-full">
-                        <div class="mt-4">
-                            <div
-                                class="space-y-6 text-sm text-text-subtle font-lexend whitespace-pre-line"
-                            >{{ article.description }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- einfache Artikel (nicht detailliert) -->
-                <section
-                    aria-labelledby="details-heading"
-                    class="mt-2 px-2"
-                    v-if="!article.is_detailed_quantity"
+            <div class="grid max-w-[400px] grid-cols-12 gap-4">
+                <button
+                    v-for="(image, index) of article.images"
+                    :key="image.id ?? index"
+                    type="button"
+                    class="group relative col-span-4 cursor-pointer rounded-lg border border-border shadow transition duration-200 ease-in-out hover:shadow-lg"
+                    :aria-label="$t('Open image')"
+                    @click="imageClick(index)"
                 >
-                    <div>
-                        <Disclosure v-slot="{ open }">
-                            <DisclosureButton class="w-full">
-                                <div class="border-b border-border-subtle">
-                                    <div class="pr-2 py-4 flex items-center justify-between">
-                                        <dt
-                                            class="text-sm font-bold text-text font-lexend flex items-center gap-x-2"
-                                        >
-                                            {{ $t('Total quantity') }}
-                                            <component
-                                                :is="IconChevronDown"
-                                                :class="[open ? 'rotate-180' : '']"
-                                                class="size-5 text-text-subtle group-hover:text-text-subtle"
-                                                aria-hidden="true"
-                                            />
-                                        </dt>
-                                        <p
-                                            class="font-lexend text-sm pl-2"
-                                            :class="(article.total_quantity || article.quantity) === 0 ? 'text-danger' : 'text-accent-600'"
-                                        >
-                                            {{ formatQuantity(article.total_quantity || article.quantity) }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </DisclosureButton>
-                            <DisclosurePanel class="relative pl-4 pb-2 pt-2 text-sm text-text-subtle">
-                                <div
-                                    v-for="status in article.status_values"
-                                    :key="status.id"
-                                    class=""
-                                >
-                                    <div
-                                        class="border-b border-border-subtle"
-                                        v-if="status.id !== 5"
-                                    >
-                                        <div class="pr-2 py-4 flex items-center justify-between">
-                                            <div class="absolute top-0 left-0 w-px h-[85%] bg-border"></div>
-                                            <div class="flex items-center">
-                                                <div class="w-5 -ml-4 h-px bg-border" />
-                                                <dt
-                                                    class="text-sm font-bold ml-2 text-text font-lexend"
-                                                >
-                                                    {{ status.name }}
-                                                </dt>
-                                            </div>
-                                            <p
-                                                class="font-lexend text-sm pl-2"
-                                                :class="status.pivot.value === 0 ? 'text-danger' : 'text-accent-600'"
-                                            >
-                                                {{ formatQuantity(status.pivot.value) }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </DisclosurePanel>
-                        </Disclosure>
-
-                        <div>
-                            <dl
-                                class="divide-y divide-border-subtle"
-                                v-if="mergedProperties.length > 0"
-                            >
-                                <div
-                                    class="pr-2 py-4 flex items-center justify-between"
-                                    v-for="property in mergedProperties"
-                                    :key="property.id"
-                                >
-                                    <dt class="text-sm font-bold text-text font-lexend">
-                                        {{ property.name }}
-                                    </dt>
-                                    <dd class="font-lexend text-sm text-accent-600">
-                                        <a
-                                            v-if="property.type === 'manufacturer' && canViewCrm && article.manufacturer?.id"
-                                            :href="route('crm.contacts.show', article.manufacturer.id)"
-                                            class="underline hover:text-accent-700 cursor-pointer"
-                                            @click.prevent="router.visit(route('crm.contacts.show', article.manufacturer.id))"
-                                        >
-                                            {{ formatProperty(article, property) }}
-                                        </a>
-                                        <a
-                                            v-else-if="property.type === 'file' && property.pivot?.value"
-                                            :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
-                                            class="underline hover:text-accent-700 cursor-pointer"
-                                        >
-                                            {{ fileName(property.pivot.value) }}
-                                        </a>
-                                        <span v-else>{{ formatProperty(article, property) }}</span>
-                                    </dd>
-                                </div>
-                            </dl>
-
-                            <div v-else>
-                                <div class="rounded-md bg-accent-50 p-4">
-                                    <div class="flex">
-                                        <div class="shrink-0">
-                                            <component
-                                                :is="IconAlertSquareRoundedFilled"
-                                                class="size-5 text-accent-500"
-                                                aria-hidden="true"
-                                            />
-                                        </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium text-accent-700">
-                                                {{ $t('No properties were specified for this article') }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- detaillierte Artikel -->
-                <div class=" -mx-4">
-                    <section
-                        aria-labelledby="details-heading"
-                        class="mt-8 mb-2 border-t-2 border-border-subtle pt-4 mx-6"
-                        v-if="article.is_detailed_quantity"
-                    >
-                        <div class="flex justify-between mb-4 py-3 border-b-2 border-dashed">
-                            <div class="font-lexend font-semibold text-text">
-                                {{ $t('Detailed Articles') }}
-                            </div>
-                            <div class="flex" v-if="article.is_detailed_quantity">
-                                <div>
-                                    <h3 class="text-sm font-bold text-text font-lexend">
-                                        {{ $t('Full Quantity') }}
-                                    </h3>
-                                </div>
-                                <p
-                                    class="font-lexend text-sm pl-2"
-                                    :class="(article.total_quantity || article.quantity) === 0 ? 'text-danger' : 'text-accent-600'"
-                                >
-                                    {{ formatQuantity(article.total_quantity || article.quantity) }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="pb-10">
-                            <Disclosure
-                                as="div"
-                                class="mb-2"
-                                v-slot="{ open }"
-                                v-for="detailedArticle in article.detailed_article_quantities"
-                                :key="detailedArticle.id"
-                                :class="[open ? 'shadow-sm rounded-lg' : 'rounded-xl shadow-lg ', '']"
-                                :style="{ backgroundColor: (detailedArticle.status?.color || '#6b7280') + '15' }"
-                            >
-                                <h3>
-                                    <DisclosureButton
-                                        class="flex items-center group justify-between w-full px-4 py-3 hover:bg-accent-600/10"
-                                        :class="open ? 'rounded-t-lg' : 'rounded-lg'"
-                                    >
-                                        <span
-                                            :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-text flex flex-col items-start']"
-                                        >
-                                            <template v-if="showInventoryNumberAsName && detailedArticle.inventory_number">
-                                                <span>{{ formatInventoryNumber(detailedArticle.inventory_number) }}</span>
-                                                <span class="text-xs font-normal text-text-subtle">
-                                                    {{ detailedArticle.name }}
-                                                </span>
-                                            </template>
-                                            <template v-else>
-                                                <span>{{ detailedArticle.name }}</span>
-                                                <span
-                                                    v-if="detailedArticle.inventory_number"
-                                                    class="font-mono text-xs font-normal text-text-subtle"
-                                                >
-                                                    {{ formatInventoryNumber(detailedArticle.inventory_number) }}
-                                                </span>
-                                            </template>
-                                        </span>
-                                        <span class="ml-6 flex items-center gap-x-3">
-                                            <span
-                                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-lexend font-medium border"
-                                                :style="{
-                                                    backgroundColor: (detailedArticle.status?.color || '#6b7280') + '33',
-                                                    borderColor: (detailedArticle.status?.color || '#6b7280') + '66',
-                                                    color: detailedArticle.status?.color || '#6b7280'
-                                                }"
-                                            >
-                                                {{ detailedArticle.status?.name || $t('Unknown Status') }}
-                                                -
-                                                {{ $t('Quantity') }}: {{ formatQuantity(detailedArticle.quantity) }}
-                                            </span>
-                                            <component
-                                                :is="IconChevronDown"
-                                                v-if="!open"
-                                                class="block size-6 text-text-subtle group-hover:text-text-subtle"
-                                                aria-hidden="true"
-                                            />
-                                            <component
-                                                :is="IconChevronUp"
-                                                v-else
-                                                class="block size-6 text-accent-600 group-hover:text-accent-700"
-                                                aria-hidden="true"
-                                            />
-                                        </span>
-                                    </DisclosureButton>
-                                </h3>
-                                <DisclosurePanel
-                                    as="div"
-                                    class="shadow-lg rounded-b-xl p-4 bg-white"
-                                >
-                                    <div class="border-b pb-2 border-border-subtle">
-                                        <div
-                                            class="space-y-6 text-sm italic text-text-subtle font-lexend font-extralight whitespace-pre-line"
-                                        >{{ detailedArticle.description }}</div>
-                                    </div>
-
-                                    <dl class="border-b border-border-subtle">
-                                        <div class="py-4 flex items-center justify-between">
-                                            <dt class="text-sm font-bold text-text font-lexend">
-                                                {{ $t('Quantity') }}
-                                            </dt>
-                                            <dd class="font-lexend text-sm text-accent-600">
-                                                <span>{{ formatQuantity(detailedArticle.quantity) }}</span>
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                    <dl
-                                        class="divide-y divide-border-subtle"
-                                        v-if="getMergedDetailedProperties(detailedArticle).length > 0"
-                                    >
-                                        <div
-                                            class="py-4 flex items-center justify-between"
-                                            v-for="property in getMergedDetailedProperties(detailedArticle)"
-                                            :key="property.id"
-                                        >
-                                            <dt class="text-sm font-bold text-text font-lexend">
-                                                {{ property.name }}
-                                            </dt>
-                                            <dd class="font-lexend text-sm text-accent-600">
-                                                <a
-                                                    v-if="property.type === 'manufacturer' && canViewCrm && detailedArticle.manufacturer?.id"
-                                                    :href="route('crm.contacts.show', detailedArticle.manufacturer.id)"
-                                                    class="underline hover:text-accent-700 cursor-pointer"
-                                                    @click.prevent="router.visit(route('crm.contacts.show', detailedArticle.manufacturer.id))"
-                                                >
-                                                    {{ formatProperty(detailedArticle, property) }}
-                                                </a>
-                                                <a
-                                                    v-else-if="property.type === 'file' && property.pivot?.value"
-                                                    :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
-                                                    class="underline hover:text-accent-700 cursor-pointer"
-                                                >
-                                                    {{ fileName(property.pivot.value) }}
-                                                </a>
-                                                <span v-else>{{ formatProperty(detailedArticle, property) }}</span>
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                    <div v-else>
-                                        <div class="rounded-md bg-accent-50 p-4">
-                                            <div class="flex">
-                                                <div class="shrink-0">
-                                                    <component
-                                                        :is="IconAlertSquareRoundedFilled"
-                                                        class="size-5 text-accent-500"
-                                                        aria-hidden="true"
-                                                    />
-                                                </div>
-                                                <div class="ml-3">
-                                                    <p class="text-sm font-medium text-accent-700">
-                                                        {{
-                                                            $t(
-                                                                'No properties were specified for this article'
-                                                            )
-                                                        }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DisclosurePanel>
-                            </Disclosure>
-                        </div>
-                    </section>
-                </div>
+                    <span class="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-surface-inverse/50 opacity-0 transition duration-200 ease-in-out group-hover:opacity-100 group-focus-visible:opacity-100">
+                        <component :is="IconWindowMaximize" class="size-5 text-text-inverse" aria-hidden="true" />
+                    </span>
+                    <img
+                        :src="'/storage/' + (image.thumbnail || image.image)"
+                        alt=""
+                        class="rounded-lg"
+                        loading="lazy"
+                        decoding="async"
+                    />
+                </button>
             </div>
         </div>
 
+        <!-- Tags und Beschreibung -->
+        <div class="w-full px-2">
+            <div v-if="hasTags" class="flex flex-wrap gap-1.5">
+                <span
+                    v-for="tag in article.tags"
+                    :key="tag.id"
+                    class="inline-flex max-w-[130px] items-center gap-1 rounded-full border bg-surface-sunken px-2 py-0.5 text-[10px] font-medium"
+                    :style="tagStyle(tag)"
+                >
+                    <span
+                        class="inline-block size-2 shrink-0 rounded-full border border-white/70"
+                        :style="{ backgroundColor: tag.color || '#4f46e5' }"
+                    />
+                    <span class="truncate">{{ tag.name }}</span>
+                </span>
+            </div>
+
+            <div
+                v-if="article.description"
+                class="mt-4 text-sm whitespace-pre-line text-text-muted font-lexend"
+            >{{ article.description }}</div>
+        </div>
+
+        <!-- einfache Artikel (nicht detailliert) -->
+        <section v-if="!article.is_detailed_quantity" class="mt-2 px-2">
+            <Disclosure v-slot="{ open }">
+                <DisclosureButton class="w-full border-b border-border-subtle">
+                    <span class="flex items-center justify-between py-4 pr-2">
+                        <span class="flex items-center gap-x-2 text-sm font-bold text-text font-lexend">
+                            {{ $t('Total quantity') }}
+                            <component
+                                :is="IconChevronDown"
+                                :class="[open ? 'rotate-180' : '']"
+                                class="size-5 text-text-subtle"
+                                aria-hidden="true"
+                            />
+                        </span>
+                        <span
+                            class="pl-2 text-sm font-lexend"
+                            :class="totalQuantity === 0 ? 'text-danger' : 'text-accent-600'"
+                        >
+                            {{ formatQuantity(totalQuantity) }}
+                        </span>
+                    </span>
+                </DisclosureButton>
+                <DisclosurePanel class="relative pt-2 pb-2 pl-4 text-sm text-text-subtle">
+                    <template v-for="status in article.status_values" :key="status.id">
+                        <div v-if="status.id !== 5" class="border-b border-border-subtle">
+                            <div class="flex items-center justify-between py-4 pr-2">
+                                <div class="absolute top-0 left-0 h-[85%] w-px bg-border"></div>
+                                <div class="flex items-center">
+                                    <div class="-ml-4 h-px w-5 bg-border" />
+                                    <span class="ml-2 text-sm font-bold text-text font-lexend">
+                                        {{ status.name }}
+                                    </span>
+                                </div>
+                                <span
+                                    class="pl-2 text-sm font-lexend"
+                                    :class="status.pivot?.value === 0 ? 'text-danger' : 'text-accent-600'"
+                                >
+                                    {{ formatQuantity(status.pivot?.value) }}
+                                </span>
+                            </div>
+                        </div>
+                    </template>
+                </DisclosurePanel>
+            </Disclosure>
+
+            <dl v-if="mergedProperties.length > 0" class="divide-y divide-border-subtle">
+                <div
+                    v-for="property in mergedProperties"
+                    :key="property.id"
+                    class="flex items-center justify-between py-4 pr-2"
+                >
+                    <dt class="text-sm font-bold text-text font-lexend">
+                        {{ property.name }}
+                    </dt>
+                    <dd class="text-sm text-accent-600 font-lexend">
+                        <a
+                            v-if="property.type === 'manufacturer' && canViewCrm && article.manufacturer?.id"
+                            :href="route('crm.contacts.show', article.manufacturer.id)"
+                            class="cursor-pointer underline hover:text-accent-700"
+                            @click.prevent="router.visit(route('crm.contacts.show', article.manufacturer.id))"
+                        >
+                            {{ formatProperty(article, property) }}
+                        </a>
+                        <a
+                            v-else-if="property.type === 'file' && property.pivot?.value"
+                            :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
+                            class="cursor-pointer underline hover:text-accent-700"
+                        >
+                            {{ fileName(property.pivot.value) }}
+                        </a>
+                        <span v-else>{{ formatProperty(article, property) }}</span>
+                    </dd>
+                </div>
+            </dl>
+            <BaseAlertComponent
+                v-else
+                class="mt-4"
+                type="info"
+                message="No properties were specified for this article"
+                use-translation
+            />
+        </section>
+
+        <!-- detaillierte Artikel -->
+        <section
+            v-if="article.is_detailed_quantity"
+            class="mx-2 mt-8 mb-2 border-t-2 border-border-subtle pt-4"
+        >
+            <div class="mb-4 flex justify-between border-b-2 border-dashed border-border py-3">
+                <div class="font-semibold text-text font-lexend">
+                    {{ $t('Detailed Articles') }}
+                </div>
+                <div class="flex">
+                    <h3 class="text-sm font-bold text-text font-lexend">
+                        {{ $t('Full Quantity') }}
+                    </h3>
+                    <p
+                        class="pl-2 text-sm font-lexend"
+                        :class="totalQuantity === 0 ? 'text-danger' : 'text-accent-600'"
+                    >
+                        {{ formatQuantity(totalQuantity) }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="pb-10">
+                <Disclosure
+                    v-for="detailedArticle in article.detailed_article_quantities"
+                    :key="detailedArticle.id"
+                    v-slot="{ open }"
+                    as="div"
+                    class="mb-2"
+                    :class="open ? 'rounded-lg shadow-sm' : 'rounded-xl shadow-lg'"
+                    :style="{ backgroundColor: (detailedArticle.status?.color || '#6b7280') + '15' }"
+                >
+                    <h3>
+                        <DisclosureButton
+                            class="group flex w-full items-center justify-between px-4 py-3 hover:bg-accent-600/10"
+                            :class="open ? 'rounded-t-lg' : 'rounded-lg'"
+                        >
+                            <span class="flex flex-col items-start text-sm font-bold text-text font-lexend">
+                                <template v-if="showInventoryNumberAsName && detailedArticle.inventory_number">
+                                    <span>{{ formatInventoryNumber(detailedArticle.inventory_number) }}</span>
+                                    <span class="text-xs font-normal text-text-subtle">
+                                        {{ detailedArticle.name }}
+                                    </span>
+                                </template>
+                                <template v-else>
+                                    <span>{{ detailedArticle.name }}</span>
+                                    <span
+                                        v-if="detailedArticle.inventory_number"
+                                        class="font-mono text-xs font-normal text-text-subtle"
+                                    >
+                                        {{ formatInventoryNumber(detailedArticle.inventory_number) }}
+                                    </span>
+                                </template>
+                            </span>
+                            <span class="ml-6 flex items-center gap-x-3">
+                                <span
+                                    class="inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium font-lexend"
+                                    :style="{
+                                        backgroundColor: (detailedArticle.status?.color || '#6b7280') + '33',
+                                        borderColor: (detailedArticle.status?.color || '#6b7280') + '66',
+                                        color: detailedArticle.status?.color || '#6b7280'
+                                    }"
+                                >
+                                    {{ detailedArticle.status?.name || $t('Unknown Status') }}
+                                    ·
+                                    {{ $t('Quantity') }}: {{ formatQuantity(detailedArticle.quantity) }}
+                                </span>
+                                <component
+                                    :is="open ? IconChevronUp : IconChevronDown"
+                                    class="block size-6"
+                                    :class="open ? 'text-accent-600 group-hover:text-accent-700' : 'text-text-subtle'"
+                                    aria-hidden="true"
+                                />
+                            </span>
+                        </DisclosureButton>
+                    </h3>
+                    <DisclosurePanel as="div" class="rounded-b-xl bg-surface p-4 shadow-lg">
+                        <div v-if="detailedArticle.description" class="border-b border-border-subtle pb-2">
+                            <div class="text-sm font-extralight whitespace-pre-line text-text-muted italic font-lexend">{{ detailedArticle.description }}</div>
+                        </div>
+
+                        <dl class="border-b border-border-subtle">
+                            <div class="flex items-center justify-between py-4">
+                                <dt class="text-sm font-bold text-text font-lexend">
+                                    {{ $t('Quantity') }}
+                                </dt>
+                                <dd class="text-sm text-accent-600 font-lexend">
+                                    {{ formatQuantity(detailedArticle.quantity) }}
+                                </dd>
+                            </div>
+                        </dl>
+                        <dl
+                            v-if="getMergedDetailedProperties(detailedArticle).length > 0"
+                            class="divide-y divide-border-subtle"
+                        >
+                            <div
+                                v-for="property in getMergedDetailedProperties(detailedArticle)"
+                                :key="property.id"
+                                class="flex items-center justify-between py-4"
+                            >
+                                <dt class="text-sm font-bold text-text font-lexend">
+                                    {{ property.name }}
+                                </dt>
+                                <dd class="text-sm text-accent-600 font-lexend">
+                                    <a
+                                        v-if="property.type === 'manufacturer' && canViewCrm && detailedArticle.manufacturer?.id"
+                                        :href="route('crm.contacts.show', detailedArticle.manufacturer.id)"
+                                        class="cursor-pointer underline hover:text-accent-700"
+                                        @click.prevent="router.visit(route('crm.contacts.show', detailedArticle.manufacturer.id))"
+                                    >
+                                        {{ formatProperty(detailedArticle, property) }}
+                                    </a>
+                                    <a
+                                        v-else-if="property.type === 'file' && property.pivot?.value"
+                                        :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
+                                        class="cursor-pointer underline hover:text-accent-700"
+                                    >
+                                        {{ fileName(property.pivot.value) }}
+                                    </a>
+                                    <span v-else>{{ formatProperty(detailedArticle, property) }}</span>
+                                </dd>
+                            </div>
+                        </dl>
+                        <BaseAlertComponent
+                            v-else
+                            class="mt-4"
+                            type="info"
+                            message="No properties were specified for this article"
+                            use-translation
+                        />
+                    </DisclosurePanel>
+                </Disclosure>
+            </div>
+        </section>
+
         <ConfirmDeleteModal
+            v-if="showConfirmDelete"
             :title="$t('Delete article')"
             :description="deleteDescription"
+            :loading="deleting"
             z-index="999999"
             @closed="showConfirmDelete = false"
-            v-if="showConfirmDelete"
             @delete="confirmDelete"
         />
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import { router, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
@@ -455,9 +352,9 @@ import { ref, computed } from 'vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import { can, is } from 'laravel-permission-to-vuejs'
 import { usePermission } from '@/Composeables/Permission.js'
+import { isCheckboxChecked } from '@/Helper/CheckboxValue.js'
 import Galleria from 'primevue/galleria'
 import {
-    IconAlertSquareRoundedFilled,
     IconChevronDown,
     IconChevronUp,
     IconEdit,
@@ -483,6 +380,20 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'openArticleEditModal'])
+
+const hasImages = computed(() => Array.isArray(props.article.images) && props.article.images.length > 0)
+
+// Unterzeile im Kopfband: Inventarnummer und Kategoriepfad
+const articleSubtitle = computed(() => {
+    const categoryPath = [props.article.category?.name, props.article.sub_category?.name]
+        .filter(Boolean)
+        .join(' > ')
+    return [formatInventoryNumber(props.article.inventory_number), categoryPath]
+        .filter(Boolean)
+        .join(' · ')
+})
+
+const totalQuantity = computed(() => props.article.total_quantity || props.article.quantity)
 
 // Ref 1.41: apply the global property order (`order`) so the display reflects the
 // drag & drop order from the properties settings, with id as a stable fallback.
@@ -560,13 +471,22 @@ const openDeleteConfirmation = async () => {
     showConfirmDelete.value = true
 }
 
+const deleting = ref(false)
+
 const confirmDelete = () => {
+    if (deleting.value) {
+        return
+    }
+    deleting.value = true
     router.delete(route('articles.destroy', props.article.id), {
         onSuccess: () => {
             emit('close')
         },
         onError: () => {
             showConfirmDelete.value = false
+        },
+        onFinish: () => {
+            deleting.value = false
         },
     })
 }
@@ -617,7 +537,7 @@ const formatProperty = (article, property) => {
         return v
     }
 
-    if (property.type === 'datetime') {
+    if (property.type === 'datetime' || property.type === 'datetime-local') {
         const v = property.pivot.value
         if (!v) return $t('No date set')
         const d = new Date(v)
@@ -630,15 +550,17 @@ const formatProperty = (article, property) => {
     }
 
     if (property.type === 'checkbox') {
-        return property.pivot.value ? $t('Yes') : $t('No')
+        return isCheckboxChecked(property.pivot.value) ? $t('Yes') : $t('No')
     }
 
-    if (property.pivot.value === null || property.pivot.value === '') return '-'
+    const value = property.pivot?.value
+    if (value === null || value === undefined || value === '') return '-'
 
-    return property.pivot.value
+    return value
 }
 
 const formatQuantity = (quantity) => {
+    if (quantity === null || quantity === undefined || quantity === '') return '-'
     if (quantity === 0) return $t('Out of stock')
     return quantity.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
@@ -650,7 +572,7 @@ const onMaskClick = (e) => {
 }
 
 /**
- * 🔹 Tag-Anzeige & -Berechtigungen
+ * Tag-Anzeige und Tag-Berechtigungen
  */
 const page = usePage()
 const { hasAdminRole, can: canPermission } = usePermission(page.props)
@@ -659,7 +581,6 @@ const canViewCrm = computed(() => canPermission('can view crm') || hasAdminRole(
 
 const currentUser = computed(() => page.props.auth?.user ?? null)
 
-// Wenn du Departments anders bekommst, hier anpassen:
 const currentDepartmentIds = computed(() =>
     (page.props.auth?.user?.department_ids || [])
 )

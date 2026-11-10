@@ -13,6 +13,8 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\CreateAdminUser;
 use Tests\Feature\FeatureTestCase;
@@ -139,6 +141,62 @@ final class BudgetExportTextColumnsTest extends FeatureTestCase
         Excel::assertDownloaded('/_budget_stand_.*\.xlsx$/', function (BudgetExport $export): bool {
             return in_array('04000 – Personalkosten', $export->getData()['cellDisplayValues'], true);
         });
+    }
+
+    #[Test]
+    public function generated_formulas_stay_formulas_while_user_text_stays_text(): void
+    {
+        $this->setAccountManagement(false);
+        [$table, $columns, $row] = $this->createBudget();
+
+        // Summenspalte (Plan + Plan) → createFormula in den Positionszeilen
+        $sumColumn = Column::factory()->create([
+            'table_id' => $table->id,
+            'name' => 'Summe',
+            'position' => 4,
+            'type' => 'sum',
+            'linked_first_column' => $columns[3]->id,
+            'linked_second_column' => $columns[3]->id,
+        ]);
+        foreach (SubPositionRow::all() as $subPositionRow) {
+            ColumnCell::factory()->create([
+                'column_id' => $sumColumn->id,
+                'sub_position_row_id' => $subPositionRow->id,
+                'value' => '0',
+            ]);
+        }
+        MainPosition::query()
+            ->whereKey(SubPosition::query()->whereKey($row->sub_position_id)->value('main_position_id'))
+            ->update(['name' => '=HYPERLINK("http://evil.test","x")']);
+
+        // Echte xlsx-Datei erzeugen: nur so greift der globale SafeValueBinder wie im Download
+        $path = sys_get_temp_dir() . '/' . uniqid('budget', true) . '.xlsx';
+        file_put_contents($path, Excel::raw(new BudgetExport($table->project), \Maatwebsite\Excel\Excel::XLSX));
+        $sheet = IOFactory::load($path)->getActiveSheet();
+        unlink($path);
+
+        $cellsByValue = [];
+        foreach ($sheet->getRowIterator() as $sheetRow) {
+            foreach ($sheetRow->getCellIterator() as $cell) {
+                $value = (string) $cell->getValue();
+                if ($value !== '') {
+                    $cellsByValue[$value][] = $cell->getDataType();
+                }
+            }
+        }
+
+        $formulaTypes = array_filter(
+            $cellsByValue,
+            fn(string $value): bool => str_starts_with($value, '=SUM(') || preg_match('/^=[A-Z]+\d+[+-]/', $value) === 1,
+            ARRAY_FILTER_USE_KEY
+        );
+        $this->assertNotEmpty($formulaTypes);
+        foreach ($formulaTypes as $value => $types) {
+            $this->assertSame([DataType::TYPE_FORMULA], array_unique($types), $value);
+        }
+
+        $this->assertSame([DataType::TYPE_STRING], $cellsByValue['=HYPERLINK("http://evil.test","x")']);
+        $this->assertSame([DataType::TYPE_STRING], $cellsByValue['04000']);
     }
 
     #[Test]

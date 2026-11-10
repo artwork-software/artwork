@@ -7,6 +7,7 @@ import {
     createRoomStaffingMemo,
     mergeStaffing,
     shiftCraftId,
+    shiftHasOpenSlot,
     staffingKey,
     staffingLevel,
     staffingOpen,
@@ -149,4 +150,22 @@ test('aggregateStaffingByRoom recomputes only the room whose version changed', (
     );
     assert.equal(memo.computeCalls, 6);
     assert.deepEqual(third.get(staffingKey(1, '07.09.2026')), { required: 9, staffed: 0 });
+});
+
+test('shiftHasOpenSlot counts the workers payload of the daily view (not only legacy groups)', () => {
+    const shift = {
+        shifts_qualifications: [{ shift_qualification_id: 1, value: 2 }, { shift_qualification_id: 2, value: 1 }],
+        workers: [worker(1), worker(1), worker(2)],
+    };
+    assert.equal(shiftHasOpenSlot(shift), false);
+    assert.equal(shiftHasOpenSlot({ ...shift, workers: [worker(1), worker(2)] }), true);
+    // Bedarf 0 bzw. ohne Funktionen: nie "offen"
+    assert.equal(shiftHasOpenSlot({ shifts_qualifications: { a: { shift_qualification_id: 1, value: 0 } }, workers: [] }), false);
+    assert.equal(shiftHasOpenSlot({ workers: [] }), false);
+});
+
+test('shiftHasOpenSlot still supports payloads with separate worker groups', () => {
+    const qualifications = [{ shift_qualification_id: 3, value: 2 }];
+    assert.equal(shiftHasOpenSlot({ shifts_qualifications: qualifications, users: [worker(3)], freelancer: [worker(3)] }), false);
+    assert.equal(shiftHasOpenSlot({ shifts_qualifications: qualifications, serviceProviders: [worker(3)] }), true);
 });

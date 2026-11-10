@@ -259,6 +259,7 @@
 </template>
 
 <script setup>
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import {computed, onBeforeUnmount, ref, watch} from 'vue'
 import {Link, usePage} from '@inertiajs/vue3'
 import {can, is} from 'laravel-permission-to-vuejs'
@@ -389,7 +390,7 @@ const workflowSteps = computed(() => {
 const setTab = (key) => {
     activeTab.value = key
     try {
-        localStorage.setItem(STORAGE_KEY, key)
+        safeSetItem(STORAGE_KEY, key)
     } catch (e) {
         // localStorage nicht verfügbar (z.B. Privatmodus) — Tab wird nicht gemerkt
     }
@@ -401,7 +402,7 @@ const onKeydown = (event) => {
 
 const openPanel = () => {
     try {
-        const remembered = localStorage.getItem(STORAGE_KEY)
+        const remembered = safeGetItem(STORAGE_KEY)
         if (remembered && tabs.some((t) => t.key === remembered)) activeTab.value = remembered
     } catch (e) {
         // ignore

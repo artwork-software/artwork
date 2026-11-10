@@ -55,6 +55,17 @@ final class SecurityAuditHeadersRegressionTest extends FeatureTestCase
     }
 
     #[Test]
+    public function csp_allows_stripe_connect_for_the_payout_account(): void
+    {
+        $csp = (string) $this->get('http://localhost/login')->headers->get('Content-Security-Policy-Report-Only');
+
+        $this->assertMatchesRegularExpression("#script-src [^;]*https://connect-js\\.stripe\\.com#", $csp);
+        $this->assertMatchesRegularExpression("#frame-src [^;]*https://connect-js\\.stripe\\.com#", $csp);
+        $this->assertMatchesRegularExpression("#connect-src [^;]*https://api\\.stripe\\.com#", $csp);
+        $this->assertMatchesRegularExpression("#img-src [^;]*https://\\*\\.stripe\\.com#", $csp);
+    }
+
+    #[Test]
     public function csp_is_enforced_when_the_switch_is_on(): void
     {
         config(['security.csp_enforce' => true]);

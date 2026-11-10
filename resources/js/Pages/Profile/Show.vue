@@ -213,72 +213,89 @@
             </div>
         </div>
         <!-- Change Profile Picture Modal -->
-
-        <BaseModal @closed="closeChangePictureModal" v-if="showChangePictureModal" modal-image="/Svgs/Overlays/illu_project_history.svg" :show-image="false">
-                <div class="mx-4">
-                    <div class="font-bold font-lexend text-text text-2xl my-2">
-                        {{ $t('Change profile picture') }}
-                    </div>
-                    <span class="text-text-subtle my-auto">{{ $t('Select your profile picture here. It should not exceed the size of 3072 KB.')}} </span>
-                    <!-- New Profile Photo Preview -->
-                    <h2 class="" v-show="photoPreview">{{$t('Preview new profile picture:')}}</h2>
-                    <div class="flex">
-                        <div class="mt-1 flex items-center">
-                            <div class="mt-2" v-show="photoPreview">
-                            <span class="block rounded-full w-20 h-20 bg-cover bg-no-repeat bg-center"
-                                :style="'background-image: url(\'' + photoPreview + '\');'">
-                            </span>
-                            </div>
-                        </div>
-                        <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
-                            <FormButton
-                                :text="$t('Select file')"
-                                @click.prevent="selectNewPhoto"
+        <ArtworkBaseModal
+            v-if="showChangePictureModal"
+            title="Change profile picture"
+            description="Select your profile picture here. It should not exceed the size of 3072 KB."
+            modal-size="sm:max-w-lg"
+            @close="closeChangePictureModal"
+        >
+            <div class="space-y-4">
+                <div class="flex items-center gap-x-4">
+                    <img
+                        :src="photoPreview ?? user.profile_photo_url"
+                        :alt="user.first_name"
+                        class="size-20 shrink-0 rounded-full object-cover"
+                    >
+                    <div class="min-w-0 space-y-2">
+                        <p v-show="photoPreview" class="text-xs text-text-muted">{{ $t('Preview new profile picture:') }}</p>
+                        <div class="flex flex-wrap gap-2">
+                            <BaseUIButton
+                                label="Select file"
+                                variant="secondary"
+                                size="sm"
+                                icon="IconUpload"
                                 :disabled="userForm.processing"
+                                @click="selectNewPhoto"
                             />
-                            <FormButton
-                                @click.prevent="deletePhoto"
-                                :text="$t('Delete current profile picture')"
+                            <BaseUIButton
                                 v-if="user.profile_photo_path"
+                                label="Delete current profile picture"
+                                variant="ghost"
+                                size="sm"
+                                icon="IconTrash"
                                 :disabled="userForm.processing"
+                                @click="deletePhoto"
                             />
                         </div>
                     </div>
-
-                    <jet-input-error :message="updateProfilePictureFeedback" class="mt-2"/>
-
-                    <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
-                    <div class="mt-6">
-                        <FormButton
-                            :text="$t('Save new profile picture')"
-                            @click="validateTypeAndChange"
-                            :disabled="userForm.processing"
-                        />
-                    </div>
                 </div>
-        </BaseModal>
+
+                <jet-input-error :message="updateProfilePictureFeedback"/>
+                <jet-input-error :message="userForm.errors.photo"/>
+            </div>
+            <template #footer>
+                <BaseUIButton
+                    label="Cancel"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="userForm.processing"
+                    @click="closeChangePictureModal"
+                />
+                <BaseUIButton
+                    label="Save new profile picture"
+                    variant="primary"
+                    icon="IconDeviceFloppy"
+                    :processing="userForm.processing"
+                    @click="validateTypeAndChange"
+                />
+            </template>
+        </ArtworkBaseModal>
         <!-- Nutzer*in löschen Modal -->
-        <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
-                <div class="mx-4">
-                    <div class="font-black font-lexend text-text text-3xl my-2">
-                        {{ $t('Delete account permanently')}}
-                    </div>
-                    <div class="text-danger subpixel-antialiased">
-                        {{ $t('Are you sure you want to permanently delete your artwork account? All settings will be lost.')}}
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm "
-                            @click="deleteUser">
-                            {{$t('Delete account')}}
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteUserModal()"
-                                class="text-text-subtle text-sm/5 font-bold text-text-subtle cursor-pointer">{{$t('No, not really')}}</span>
-                        </div>
-                    </div>
-                </div>
-        </BaseModal>
+        <ArtworkBaseModal
+            v-if="deletingUser"
+            title="Delete account permanently"
+            modal-size="sm:max-w-lg"
+            @close="closeDeleteUserModal"
+        >
+            <p class="text-sm text-text">
+                {{ $t('Are you sure you want to permanently delete your artwork account? All settings will be lost.') }}
+            </p>
+            <template #footer>
+                <BaseUIButton
+                    label="No, not really"
+                    is-cancel-button
+                    hide-icon
+                    @click="closeDeleteUserModal"
+                />
+                <BaseUIButton
+                    label="Delete account"
+                    variant="danger"
+                    icon="IconTrash"
+                    @click="deleteUser"
+                />
+            </template>
+        </ArtworkBaseModal>
     </app-layout>
 </template>
 
@@ -298,7 +315,6 @@ import TwoFactorAuthenticationForm from "@/Pages/Profile/Partials/TwoFactorAuthe
 import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm.vue";
 import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm.vue";
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
-import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import {router} from "@inertiajs/vue3";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -306,11 +322,13 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
     components: {
-        BaseModal,
+        ArtworkBaseModal,
+        BaseUIButton,
         BaseButton,
         FormButton,
         TeamTooltip,
@@ -328,7 +346,6 @@ export default defineComponent({
         UpdateProfileInformationForm,
         JetSecondaryButton,
         IconCheck,
-        JetDialogModal,
         IconX,
         TeamIconCollection,
         SvgCollection
@@ -391,11 +408,9 @@ export default defineComponent({
     },
     methods: {
         password_feedback() {
-            axios.get('/password_feedback', {
-                params: {
-                    password: this.passwordForm.password
-                }
-            }).then(response => {
+            axios.post('/password_feedback', {
+                password: this.passwordForm.password
+            }, {skipErrorToast: true}).then(response => {
                 this.pw_feedback = response.data
             })
         },

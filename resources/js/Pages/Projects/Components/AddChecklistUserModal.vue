@@ -1,115 +1,127 @@
 <template>
-    <BaseModal @closed="emitClose" v-if="true" modal-image="/Svgs/Overlays/illu_checklist_team_assign.svg">
-            <div class="mx-3">
-                <div class="font-bold font-lexend text-text text-2xl my-2">
-                    {{ $t('Assign users') }}
-                </div>
-                <div class="text-text-subtle tracking-tight leading-6 sub">
-                    {{ $t('Enter the name of the user to whom you want to assign the checklist.') }}
-                </div>
-                <div class="mt-10">
-                    <UserSearch :only-team="checklist?.private" :team-member="project?.users?.map((user) => user.id)" @user-selected="addUserToChecklist"/>
-                </div>
-                <div v-for="(user,index) in selectedUsers"
-                     class="mt-4 font-bold text-text flex"
-                     :key="index">
-                    <div class="flex items-center">
-                        <img class="h-5 w-5 mr-2 object-cover rounded-full"
-                             :src="user.profile_photo_url"
-                             alt=""/>
-                        {{ user.first_name }} {{ user.last_name }}
+    <ArtworkBaseModal
+        title="Assign users"
+        description="Enter the name of the user to whom you want to assign the checklist."
+        modal-size="sm:max-w-lg"
+        @close="emitClose"
+    >
+        <div class="space-y-4">
+            <UserSearch
+                label="Name"
+                :only-team="checklist?.private"
+                :team-member="teamMemberIds"
+                @user-selected="addUserToChecklist"
+            />
+            <ul
+                v-if="selectedUsers.length > 0"
+                class="max-h-72 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+            >
+                <li
+                    v-for="user in selectedUsers"
+                    :key="user.id"
+                    class="flex items-center justify-between gap-x-3 px-3 py-2"
+                >
+                    <div class="flex min-w-0 items-center gap-x-3">
+                        <img
+                            class="size-8 shrink-0 rounded-full object-cover"
+                            :src="user.profile_photo_url"
+                            alt=""
+                        />
+                        <span class="truncate text-sm font-medium text-text">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </span>
                     </div>
-                    <button type="button" @click="removeUser(user)">
-                        <span class="sr-only">{{ $t('Remove user from checklist') }}</span>
-                        <IconCircleX class="ml-2 mt-1 h-5 w-5 hover:text-danger text-white bg-surface-inverse rounded-full"/>
+                    <button
+                        type="button"
+                        class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 hover:bg-surface-hover hover:text-danger motion-reduce:transition-none"
+                        :aria-label="$t('Remove user from checklist')"
+                        @click="removeUser(user)"
+                    >
+                        <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
                     </button>
-                </div>
-                <FormButton
-                    @click="submitUsers"
-                    :text="$t('Assign')"
-                    class="mt-8"
-                />
-                <!-- <p v-if="error" class="text-danger text-xs">{{ error }}</p> -->
-            </div>
-    </BaseModal>
+                </li>
+            </ul>
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="emitClose"
+            />
+            <BaseUIButton
+                label="Assign"
+                variant="primary"
+                icon="IconUserPlus"
+                :processing="processing"
+                :disabled="!checklist?.id"
+                @click="submitUsers"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconCircleX, IconX} from "@tabler/icons-vue";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+<script setup>
+import {computed, ref, watch} from 'vue'
+import axios from 'axios'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import UserSearch from '@/Components/SearchBars/UserSearch.vue'
 
-export default {
-    name: 'AddChecklistUserModal',
-    mixins: [Permissions],
-    components: {
-        UserSearch,
-        BaseModal,
-        FormButton,
-        IconX,
-        IconCircleX,
-        TeamIconCollection,
-        JetDialogModal,
-    },
-    emits: ['closed'],
-    props: [
-        'checklist',
-        'users',
-        'project'
-    ],
-    data() {
-        return {
-            selectedUsers: this.users ?? [],
-            searchedUsers: [],
-            userQuery: null,
-            error: null
+defineOptions({name: 'AddChecklistUserModal'})
+
+const props = defineProps({
+    checklist: {type: Object, default: null},
+    users: {type: Array, default: () => []},
+    project: {type: Object, default: null},
+})
+
+const emit = defineEmits(['closed'])
+
+// Eigene Kopie: Abbrechen darf die Liste der Elternkomponente nicht verändern
+const selectedUsers = ref([...(props.users ?? [])])
+const processing = ref(false)
+
+watch(() => props.users, (users) => {
+    selectedUsers.value = [...(users ?? [])]
+}, {deep: true})
+
+const teamMemberIds = computed(() => props.project?.users?.map((user) => user.id) ?? [])
+
+function addUserToChecklist(user) {
+    if (!selectedUsers.value.some((selected) => selected.id === user.id)) {
+        selectedUsers.value.push(user)
+    }
+}
+
+function removeUser(user) {
+    selectedUsers.value = selectedUsers.value.filter((selected) => selected.id !== user.id)
+}
+
+function emitClose() {
+    emit('closed')
+}
+
+async function submitUsers() {
+    if (!props.checklist?.id || processing.value) {
+        return
+    }
+    processing.value = true
+    try {
+        await axios.patch(route('checklists.update', {checklist: props.checklist.id}), {
+            assigned_user_ids: selectedUsers.value.map((user) => user.id),
+        })
+        // Die Listenansicht liest checklist.users direkt; erst nach dem Speichern übernehmen
+        if (Array.isArray(props.users)) {
+            props.users.splice(0, props.users.length, ...selectedUsers.value)
         }
-    },
-    methods: {
-        addUserToChecklist(user) {
-            if (!this.selectedUsers.find((selected) => selected.id === user.id)) {
-                this.selectedUsers.push(user);
-            }
-            this.userQuery = null;
-            this.searchedUsers = [];
-        },
-        removeUser(user) {
-            this.selectedUsers.splice(this.selectedUsers.indexOf(user),1);
-        },
-        async submitUsers() {
-            await axios
-                .patch(`/checklists/${this.checklist.id}`, {
-                    assigned_user_ids: this.selectedUsers.map((user) => user.id)
-                })
-                .then(response => this.emitClose())
-                .catch(error => this.emitClose());
-        },
-        emitClose() {
-            this.$emit('closed')
-        },
-    },
-    watch: {
-        userQuery: {
-            handler() {
-                if (!this.userQuery) {
-                    return
-                }
-                axios.get('/users/search', {params: {query: this.userQuery}
-                }).then(response => {
-                    this.searchedUsers = response.data
-                })
-            },
-        },
-        users: {
-            handler() {
-                this.selectedUsers = this.users
-            },
-            deep: true
-        },
-    },
+        emitClose()
+    } catch {
+        // Fehlermeldung kommt als globaler Toast, das Modal bleibt für einen neuen Versuch offen
+    } finally {
+        processing.value = false
+    }
 }
 </script>

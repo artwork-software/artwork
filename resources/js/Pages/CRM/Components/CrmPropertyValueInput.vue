@@ -103,6 +103,45 @@
             </div>
         </template>
 
+        <!-- Mehrfachauswahl: Wert ist ein JSON-Text der Liste (CrmPropertyValue.js) -->
+        <template v-else-if="property.type === 'multiselect'">
+            <ArtworkBaseListbox
+                v-if="property.multiselect_display === 'dropdown'"
+                :model-value="multiselectSelectedOptions"
+                @update:model-value="onMultiselectListboxChange"
+                :items="selectOptions"
+                by="id"
+                option-label="name"
+                option-key="id"
+                multiple
+                :label="uniformLabel ? '' : ($t(property.name) + (required ? ' *' : ''))"
+                :use-translations="true"
+                :placeholder="$t('Select...')"
+                :disabled="disabled"
+            />
+            <fieldset v-else>
+                <legend v-if="!uniformLabel" class="block text-sm font-medium text-text-muted mb-1">
+                    {{ $t(property.name) }}<span v-if="required" class="text-danger ml-0.5">*</span>
+                </legend>
+                <div class="flex flex-wrap gap-x-4 gap-y-1.5">
+                    <label
+                        v-for="option in selectOptions"
+                        :key="option.id"
+                        class="flex items-center gap-2 cursor-pointer text-sm text-text-muted"
+                    >
+                        <input
+                            type="checkbox"
+                            :checked="multiselectValues.includes(option.id)"
+                            @change="toggleMultiselectOption(option.id, $event.target.checked)"
+                            :disabled="disabled"
+                            class="rounded border-border text-accent-600 shadow-sm focus:ring-accent-600"
+                        />
+                        <span>{{ option.name }}</span>
+                    </label>
+                </div>
+            </fieldset>
+        </template>
+
         <template v-else-if="property.type === 'upload'">
             <div>
                 <label class="block text-sm font-medium text-text-muted mb-1">{{ $t(property.name) }}<span v-if="required" class="text-danger ml-0.5">*</span></label>
@@ -163,7 +202,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { decodeMultiselect, encodeMultiselect } from '@/Helper/CrmPropertyValue.js'
+import { ref, computed, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
@@ -212,6 +252,30 @@ const selectedOption = computed(() => {
 
 const onSelectChange = (option) => {
     emit('update:value', option?.id ?? '')
+}
+
+// -- Multiselect helpers (Wert = JSON-Text der Liste, leer = '') --
+// Lokaler Stand: Eltern speichern teils verzögert (CRM-Detailseite) und reichen bis zum Neuladen den alten Wert
+// durch – sonst ginge bei schnellem Anklicken mehrerer Optionen die vorige Auswahl verloren.
+const multiselectValues = ref(decodeMultiselect(props.value))
+watch(() => props.value, (value) => {
+    multiselectValues.value = decodeMultiselect(value)
+})
+const multiselectSelectedOptions = computed(() =>
+    selectOptions.value.filter((option) => multiselectValues.value.includes(option.id))
+)
+const emitMultiselect = (values) => {
+    const encoded = encodeMultiselect(values, selectOptions.value.map((option) => option.id))
+    multiselectValues.value = decodeMultiselect(encoded)
+    emit('update:value', encoded ?? '')
+}
+const toggleMultiselectOption = (optionId, checked) => {
+    emitMultiselect(checked
+        ? [...multiselectValues.value, optionId]
+        : multiselectValues.value.filter((value) => value !== optionId))
+}
+const onMultiselectListboxChange = (options) => {
+    emitMultiselect((options ?? []).map((option) => option?.id ?? option))
 }
 
 // -- Upload type helpers --

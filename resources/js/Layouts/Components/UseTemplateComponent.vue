@@ -1,117 +1,85 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
-            <div class="mx-4">
-                <div>
-                    <h1 class="my-1 flex">
-                        <div class="flex-grow font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
-                            {{ $t('Import template') }}
-                        </div>
-                    </h1>
-                    <h2 class="text-sm/5 font-bold text-text-subtle mb-2 mt-8">
-                        {{ $t('To make your work easier, use a template.') }}
-                    </h2>
-                    <Listbox as="div" class="flex h-12 mr-2 w-full" v-model="selectedTemplate">
-                        <ListboxButton
-                            class="pl-3 h-12 border border-border w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                            <div class="flex items-center my-auto">
-                                <span class="block truncate items-center ml-3 flex" v-if="selectedTemplate">
-                                    <span>{{ selectedTemplate?.name }}</span>
-                                </span>
-                                <span class="block truncate items-center ml-3 flex" v-else>
-                                    <span>{{ $t('Select template*') }}</span>
-                                </span>
-                                <span class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                    <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
-                                </span>
-                            </div>
-                        </ListboxButton>
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100" leave-to-class="opacity-0">
-                            <ListboxOptions
-                                class="absolute w-[90%] z-10 mt-12 bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                <ListboxOption as="template" class="max-h-8"
-                                               v-for="template in this.templates"
-                                               :key="template.id"
-                                               :value="template"
-                                               v-slot="{ active, selected }">
-                                    <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                        <div class="flex">
-                                            <span
-                                                :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
-                                                {{ template.name }}
-                                            </span>
-                                        </div>
-                                        <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                            <IconCheck v-if="selected"
-                                                       class="h-5 w-5 flex text-success"
-                                                       aria-hidden="true"/>
-                                        </span>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </transition>
-                    </Listbox>
-                    <div class="flex justify-center">
-                        <FormButton @click="useTemplate()" :disabled="selectedTemplate === null"
-                                   :text="$t('Import template')"
-                        />
-                    </div>
-                </div>
-            </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        title="Import template"
+        description="To make your work easier, use a template."
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <ArtworkBaseListbox
+            v-if="templateOptions.length > 0"
+            v-model="selectedTemplate"
+            :items="templateOptions"
+            by="id"
+            option-label="name"
+            label="Template"
+        />
+        <EmptyState
+            v-else
+            icon="IconTemplate"
+            :title="$t('No templates available')"
+            :description="$t('Templates can be created in the budget settings.')"
+        />
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                label="Import template"
+                variant="primary"
+                icon="IconFileImport"
+                :processing="processing"
+                :disabled="!selectedTemplate"
+                @click="useTemplate"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconCheck, IconChevronDown, IconX} from "@tabler/icons-vue";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions
-} from "@headlessui/vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+<script setup>
+import {computed, ref} from 'vue'
+import {router} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import EmptyState from '@/Artwork/Feedback/EmptyState.vue'
 
-export default {
-    name: 'UseTemplateComponent',
-    mixins: [Permissions],
-    components: {
-        BaseModal,
-        FormButton,
-        ListboxOptions,
-        ListboxOption,
-        ListboxButton,
-        Listbox,
-        JetDialogModal,
-        IconX,
-        IconCheck,
-        IconChevronDown
-    },
-    data() {
-        return {
-            selectedTemplate: null,
+defineOptions({name: 'UseTemplateComponent'})
+
+const props = defineProps({
+    projectId: {type: Number, default: null},
+    templates: {type: [Array, Object], default: () => []},
+})
+
+const emit = defineEmits(['closed'])
+
+const selectedTemplate = ref(null)
+const processing = ref(false)
+
+const templateOptions = computed(() => Object.values(props.templates ?? {}))
+
+function closeModal(imported) {
+    emit('closed', imported)
+}
+
+function useTemplate() {
+    if (!selectedTemplate.value || processing.value) {
+        return
+    }
+    processing.value = true
+    router.post(
+        route('project.budget.template.use', selectedTemplate.value.id),
+        {project_id: props.projectId},
+        {
+            preserveScroll: true,
+            onSuccess: () => closeModal(true),
+            onFinish: () => {
+                processing.value = false
+            },
         }
-    },
-    props: [
-        'projectId',
-        'templates'
-    ],
-    emits: ['closed'],
-    methods: {
-        closeModal(bool) {
-            this.$emit('closed', bool);
-        },
-        useTemplate() {
-            this.$inertia.post(
-                route('project.budget.template.use', this.selectedTemplate.id),
-                {
-                    project_id: this.projectId
-                }
-            );
-            this.closeModal(true);
-        }
-    },
+    )
 }
 </script>

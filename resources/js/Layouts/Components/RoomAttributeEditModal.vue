@@ -1,131 +1,91 @@
 <template>
-    <BaseModal @closed="emit('close')" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
-        <div class="mx-4">
-            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                {{ $t('Room properties') }}
-            </div>
-            <Menu class="relative">
-                <div>
-                    <MenuButton @click="attributesOpened = true" class="menu-button">
-                        <div class="flex items-center justify-between w-full">
-                            <div class="flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
-                                {{ $t('Select room properties') }}
-                            </div>
-                            <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
-                        </div>
-                    </MenuButton>
+    <ArtworkBaseModal
+        v-if="show"
+        title="Room properties"
+        description="Select room properties"
+        modal-size="sm:max-w-xl"
+        @close="close"
+    >
+        <div class="space-y-4">
+            <ArtworkBaseListbox
+                v-model="currentCategories"
+                :items="categoryOptions"
+                multiple
+                by="id"
+                option-label="name"
+                label="Room categories"
+                :empty-text="$t('No room categories created yet')"
+            />
+            <ArtworkBaseListbox
+                v-model="currentAdjoiningRooms"
+                :items="adjoiningRoomOptions"
+                multiple
+                by="id"
+                option-label="name"
+                label="Adjoining rooms"
+                :empty-text="$t('No adjoining rooms created yet')"
+            />
+            <ArtworkBaseListbox
+                v-model="currentAttributes"
+                :items="attributeOptions"
+                multiple
+                by="id"
+                option-label="name"
+                label="Room properties"
+                :empty-text="$t('No room properties created yet')"
+            />
 
-                    <transition
-                        enter-active-class="transition duration-50 ease-out"
-                        enter-from-class="transform scale-100 opacity-100"
-                        enter-to-class="transform scale-100 opacity-100"
-                        leave-active-class="transition duration-75 ease-in"
-                        leave-from-class="transform scale-100 opacity-100"
-                        leave-to-class="transform scale-95 opacity-0">
-                        <MenuItems
-                            class="absolute right-0 w-full origin-top-right rounded-lg divide-y divide-border-subtle bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="p-4">
-                                <!-- Room Categories Section -->
-                                <BaseFilterDisclosure :title="$t('Room categories')">
-                                    <div v-if="availableCategories"
-                                         v-for="category in availableCategories"
-                                         :key="category.id"
-                                         class="flex w-full mb-2">
-                                        <input type="checkbox"
-                                               v-model="currentCategories"
-                                               :value="category"
-                                               class="input-checklist-dark"/>
-                                        <p :class="[toIdsArray(currentCategories).includes(category.id)
-                                                        ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
-                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                            {{ category.name }}
-                                        </p>
-                                    </div>
-                                    <div v-else class="text-text-subtle">{{ $t('No room categories created yet') }}</div>
-                                </BaseFilterDisclosure>
-
-                                <hr class="border-border-strong rounded-full mt-2 mb-2">
-
-                                <!-- Adjoining rooms Section -->
-                                <BaseFilterDisclosure :title="$t('Adjoining rooms')">
-
-                                    <div v-if="availableAdjoiningRooms"
-                                         v-for="room in availableAdjoiningRooms"
-                                         :key="room.id"
-                                         class="flex w-full mb-2">
-                                        <input type="checkbox"
-                                               v-model="currentAdjoiningRooms"
-                                               :value="room"
-                                               class="input-checklist-dark"/>
-                                        <p :class="[toIdsArray(currentAdjoiningRooms).includes(room.id)
-                                                        ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
-                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                            {{ room.name }}
-                                        </p>
-                                    </div>
-                                    <div v-else class="text-text-subtle">{{ $t('No adjoining rooms created yet') }}</div>
-                                </BaseFilterDisclosure>
-
-                                <hr class="border-border-strong rounded-full mt-2 mb-2">
-
-                                <!-- Room attributes Section -->
-                                <BaseFilterDisclosure :title="$t('Room properties')">
-
-                                    <div v-if="availableAttributes?.length > 0"
-                                         v-for="attribute in availableAttributes"
-                                         :key="attribute.id"
-                                         class="flex w-full mb-2">
-                                        <input type="checkbox"
-                                               v-model="currentAttributes"
-                                               :value="attribute"
-                                               class="input-checklist-dark"/>
-                                        <p :class="[toIdsArray(currentAttributes).includes(attribute.id)
-                                                        ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
-                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                            {{ attribute.name }}
-                                        </p>
-                                    </div>
-                                    <div v-else class="text-text-subtle">{{ $t('No room properties created yet') }}</div>
-                                </BaseFilterDisclosure>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </div>
-            </Menu>
-            <div class="flex flex-wrap">
-                <div v-for="(category, index) in currentCategories">
-                    <BaseFilterTag v-if="currentCategories.includes(category)" :filter="category"
-                                   @remove-filter="removeCategoryFromRoom(index)" class="w-fit"/>
-                </div>
-                <div v-for="(adjoining_room, index) in currentAdjoiningRooms">
-                    <BaseFilterTag v-if="currentAdjoiningRooms.includes(adjoining_room)" :filter="adjoining_room"
-                                   @remove-filter="removeAdjoiningRoom(index)" class="w-fit"/>
-                </div>
-                <div v-for="(attribute, index) in currentAttributes">
-                    <BaseFilterTag v-if="currentAttributes.includes(attribute)" :filter="attribute"
-                                   @remove-filter="removeAttributeFromRoom(index)" class="w-fit"/>
-                </div>
+            <div v-if="hasSelection" class="flex flex-wrap">
+                <BaseFilterTag
+                    v-for="(category, index) in currentCategories"
+                    :key="'category-' + category.id"
+                    :filter="category"
+                    class="w-fit"
+                    @remove-filter="removeCategoryFromRoom(index)"
+                />
+                <BaseFilterTag
+                    v-for="(adjoiningRoom, index) in currentAdjoiningRooms"
+                    :key="'room-' + adjoiningRoom.id"
+                    :filter="adjoiningRoom"
+                    class="w-fit"
+                    @remove-filter="removeAdjoiningRoom(index)"
+                />
+                <BaseFilterTag
+                    v-for="(attribute, index) in currentAttributes"
+                    :key="'attribute-' + attribute.id"
+                    :filter="attribute"
+                    class="w-fit"
+                    @remove-filter="removeAttributeFromRoom(index)"
+                />
             </div>
         </div>
-        <div class="justify-center flex w-full mt-10">
-            <FormButton
-                :text="$t('Save')"
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="close"
+            />
+            <BaseUIButton
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+                :disabled="processing"
                 @click="saveRoomData"
             />
-        </div>
-    </BaseModal>
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-import {IconChevronDown, IconX} from "@tabler/icons-vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
-import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
-import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
-import {onMounted, ref} from "vue";
+import {computed, ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 
 const props = defineProps({
     show: Boolean,
@@ -140,10 +100,22 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-const attributesOpened = ref(false)
 const currentCategories = ref(props.categories ?? [])
 const currentAdjoiningRooms = ref(props.adjoiningRooms ?? [])
 const currentAttributes = ref(props.attributes ?? [])
+const processing = ref(false)
+
+// Die Listen kommen je nach Controller als Array oder als Objekt
+const toList = (value) => Object.values(value ?? {})
+const categoryOptions = computed(() => toList(props.availableCategories))
+const adjoiningRoomOptions = computed(() => toList(props.availableAdjoiningRooms))
+const attributeOptions = computed(() => toList(props.availableAttributes))
+
+const hasSelection = computed(() =>
+    currentCategories.value.length > 0
+    || currentAdjoiningRooms.value.length > 0
+    || currentAttributes.value.length > 0
+)
 
 const editRoomForm = useForm({
     room_categories: currentCategories.value,
@@ -151,19 +123,38 @@ const editRoomForm = useForm({
     adjoining_rooms: currentAdjoiningRooms.value,
 })
 
-const saveRoomData = () => {
-    updateRoomRequest()
+const close = () => {
+    if (processing.value) {
+        return
+    }
     emit('close')
 }
 
-const updateRoomRequest = () => {
+const saveRoomData = () => {
+    if (processing.value) {
+        return
+    }
+    processing.value = true
+    updateRoomRequest({
+        onSuccess: () => emit('close'),
+        onFinish: () => {
+            processing.value = false
+        },
+    })
+}
+
+const updateRoomRequest = (options = {}) => {
     editRoomForm.room_categories = currentCategories.value.map(item => item.id)
     editRoomForm.room_attributes = currentAttributes.value.map(item => item.id)
     editRoomForm.adjoining_rooms = currentAdjoiningRooms.value.map(item => item.id)
 
-    editRoomForm.patch(route('rooms.update', {room: props.room.id}));
+    editRoomForm.patch(route('rooms.update', {room: props.room.id}), {
+        preserveScroll: true,
+        ...options,
+    });
 }
 
+// Entfernen über das Tag speichert sofort (wie bisher)
 const removeCategoryFromRoom = (index) => {
     currentCategories.value.splice(index, 1)
     updateRoomRequest()
@@ -178,21 +169,4 @@ const removeAttributeFromRoom = (index) => {
     currentAttributes.value.splice(index, 1)
     updateRoomRequest()
 }
-
-const toIdsArray = (array) => {
-    let ids = [];
-    if (Array.isArray(array)) {
-        array.forEach(item => {
-            ids.push(item.id)
-        })
-    }
-    return ids;
-
-}
-
-
 </script>
-
-<style scoped>
-
-</style>

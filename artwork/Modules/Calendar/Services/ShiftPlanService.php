@@ -254,7 +254,8 @@ class ShiftPlanService
             $showUnrelatedShifts,
             // „Termine anzeigen" gibt es nur auf user_shift_plan_settings (Wochenansicht);
             // Daily-/Projekt-Settings kennen die Spalte nicht → Termine zählen wie bisher
-            (bool) ($userCalendarSettings->show_events ?? true)
+            (bool) ($userCalendarSettings->show_events ?? true),
+            isShiftPlan: true
         );
 
         $calendarPeriod = $this->calendarDataService->createCalendarPeriodDto(

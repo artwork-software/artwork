@@ -267,13 +267,34 @@
                                     :checked="textData.contact_type_ids.includes(contactType.id)"
                                     @change="toggleContactType(contactType.id, $event.target.checked)"
                                 />
-                                {{ $t(contactType.name) }}
+                                <span class="min-w-0 flex-1 truncate">{{ $t(contactType.name) }}</span>
+                                <span
+                                    v-if="contactType.link_only"
+                                    class="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text-subtle"
+                                    :title="$t('These contacts are maintained in their own profile. They can only be linked here, not created or edited.')"
+                                >
+                                    {{ $t('Link only') }}
+                                </span>
                             </label>
                         </div>
-                        <p v-if="!textData.contact_type_ids.length" class="mt-1.5 text-xs text-warning">
-                            {{ $t('Select at least one contact type, otherwise no contacts can be added.') }}
+                        <p v-if="!textData.contact_type_ids.length" class="mt-1.5 text-xs text-text-subtle">
+                            {{ $t('Without a selection, contacts of all contact types can be added. Freelancers and service providers only if they are selected.') }}
                         </p>
                     </fieldset>
+
+                    <!-- Rollen (CRM-Kontaktliste) -->
+                    <div v-if="'roles_enabled' in textData" class="flex items-center gap-2">
+                        <label class="flex items-center gap-2">
+                            <input v-model="textData.roles_enabled" type="checkbox" class="input-checklist" />
+                            <span class="text-sm text-text-muted">{{ $t('Use roles') }}</span>
+                        </label>
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t(fieldTooltips.roles_enabled)"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
+                        />
+                    </div>
 
                     <!-- Höchstzahl Kontakte (CRM-Kontaktliste) -->
                     <div v-if="'max_contacts' in textData">
@@ -373,6 +394,25 @@
                         />
                     </div>
 
+                    <!-- Mehrfachauswahl erlauben (DropDown) -->
+                    <div v-if="'multiple' in textData">
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-2">
+                                <input v-model="textData.multiple" type="checkbox" class="input-checklist" />
+                                <span class="text-sm text-text-muted">{{ $t('Allow multiple selection') }}</span>
+                            </label>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t(fieldTooltips.multiple)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
+                        <p v-if="saveErrors['data.multiple']" class="mt-1 text-xs text-danger">
+                            {{ saveErrors['data.multiple'] }}
+                        </p>
+                    </div>
+
                     <!-- Optionen -->
                     <div v-if="Array.isArray(textData.options)">
                         <div class="mb-2 flex items-center gap-x-1.5">
@@ -384,29 +424,31 @@
                                 icon-size="h-4 w-4"
                             />
                         </div>
-                        <div class="grid grid-cols-1 gap-3">
-                            <div
-                                v-for="(opt, idx) in textData.options"
-                                :key="`opt-${idx}`"
-                                class="rounded-lg border border-border-subtle p-3 bg-white"
-                            >
+                        <BaseSortableList
+                            v-model="textData.options"
+                            labeled
+                            list-class="grid grid-cols-1 gap-3"
+                            item-class="rounded-lg border border-border-subtle p-3 bg-white"
+                        >
+                            <template #default="{ index }">
                                 <BaseInput
-                                    v-model="textData.options[idx].value"
-                                    :label="'Option (' + (idx + 1) + ')'"
-                                    :id="`option-${idx}`"
+                                    v-model="textData.options[index].value"
+                                    :label="'Option (' + (index + 1) + ')'"
+                                    :id="`option-${index}`"
                                 />
-                                <div class="mt-1 text-right">
+                            </template>
+                            <template #below="{ remove }">
+                                <div v-if="textData.options.length > 1" class="mt-1 text-right">
                                     <button
-                                        v-if="idx !== 0"
                                         type="button"
                                         class="text-xs text-accent-600 hover:text-accent-700 underline underline-offset-2"
-                                        @click="removeOption(idx)"
+                                        @click="remove"
                                     >
                                         {{ $t('Remove') }}
                                     </button>
                                 </div>
-                            </div>
-                        </div>
+                            </template>
+                        </BaseSortableList>
 
                         <div class="mt-2 flex items-center justify-end">
                             <button
@@ -422,6 +464,20 @@
                         <div v-if="textData.options[0]?.value" class="mt-3">
                             <div class="flex items-center gap-x-2">
                                 <ArtworkBaseListbox
+                                    v-if="defaultSelectionIsMultiple"
+                                    class="grow"
+                                    v-model="defaultSelectionList"
+                                    :items="textData.options"
+                                    :option-label="(o) => `${o.value}`"
+                                    option-key="value"
+                                    by="value"
+                                    multiple
+                                    :placeholder="$t('Default options')"
+                                    :enable-search="true"
+                                    :search-keys="['value']"
+                                />
+                                <ArtworkBaseListbox
+                                    v-else
                                     class="grow"
                                     v-model="textData.selected"
                                     :items="textData.options"
@@ -444,7 +500,7 @@
                                 <button
                                     class="text-xs text-accent-600 hover:text-accent-700 underline underline-offset-2"
                                     type="button"
-                                    @click="textData.selected = ''"
+                                    @click="textData.selected = defaultSelectionIsMultiple ? [] : ''"
                                 >
                                     {{ $t('Remove default option') }}
                                 </button>
@@ -696,6 +752,7 @@ import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseSortableList from '@/Artwork/Inputs/BaseSortableList.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import { useColorHelper } from '@/Composeables/UseColorHelper.js'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -703,6 +760,7 @@ import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import { useTranslation } from "@/Composeables/Translation.js";
+import { allowsMultipleSelection, selectedValues } from '@/Helper/ComponentSelection.js'
 
 const $t = useTranslation()
 
@@ -803,7 +861,8 @@ const fieldTooltips = computed(() => {
         description: 'Shown below the heading, also to invited external persons – e.g. what should be entered here.',
         subtitle: 'Optional explanatory text shown directly below the heading, e.g. an introduction to the section.',
         bar_color: 'With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections.',
-        contact_type_ids: 'Only contacts of these types can be added or linked in this list. Each type has its own button and its own form based on the CRM properties of the type.',
+        contact_type_ids: 'Only contacts of these types can be added or linked in this list. Each type has its own button and its own form based on the CRM properties of the type. Without a selection, all contact types are allowed.',
+        roles_enabled: 'Contacts are grouped by freely definable roles in the project. The special role “Artist” marks persons that appear as artists of the project everywhere (calendar, duty roster, exports).',
         max_contacts: 'Leave empty for no limit.',
         label: labelText,
         text: 'If specified, this text is pre-filled in the component when it is created (optional).',
@@ -815,8 +874,11 @@ const fieldTooltips = computed(() => {
         title_size: 'Font size of the heading in the project.',
         showLine: 'Shows a horizontal separator line within the spacing.',
         checked: 'If enabled, the checkbox is checked by default in projects until it is changed there.',
-        options: 'The options available for selection in the dropdown in the project.',
+        options: type === 'CheckboxList'
+            ? 'The options shown as checkboxes in the project. Several can be selected at the same time.'
+            : 'The options available for selection in the dropdown in the project.',
         selected: 'This option is preselected in projects until it is changed there.',
+        multiple: 'If enabled, several options can be selected in the project. It can only be turned off again as long as no project has several options selected.',
     }
 })
 
@@ -903,7 +965,26 @@ const barColorSwatches = ['#EB7A3D', '#27233C', '#FFB6E1', '#BFE3F5', '#C8EBC9',
 /* Felder, die ältere Komponenten eines Typs noch nicht in data haben (Bearbeiten zeigt sie trotzdem an) */
 const FIELD_DEFAULTS_BY_TYPE = {
     Title: { subtitle: '', bar_color: '' },
+    DropDown: { multiple: false },
+    CrmContactListComponent: { roles_enabled: false },
 }
+
+/* Vorauswahl bei Mehrfachauswahl (CheckboxList, DropDown mit "multiple"): Liste statt Einzelwert */
+const defaultSelectionIsMultiple = computed(() => allowsMultipleSelection(currentTypeName.value, textData))
+const defaultSelectionList = computed({
+    get: () => selectedValues(textData.selected).map((value) => ({ value })),
+    set: (options) => {
+        textData.selected = (options ?? []).map((option) => option?.value ?? option)
+    },
+})
+watch(defaultSelectionIsMultiple, (isMultiple) => {
+    const values = selectedValues(textData.selected)
+    // Einzelauswahl-Listbox arbeitet mit Optionsobjekten (by="value")
+    textData.selected = isMultiple ? values : (values.length ? { value: values[0] } : '')
+})
+
+/* Serverseitige Fehler beim Speichern (z. B. Mehrfachauswahl lässt sich nicht abschalten) */
+const saveErrors = ref({})
 
 /* CRM-Kontaktliste: erlaubte Kontakttypen */
 const crmContactTypeOptions = ref([])
@@ -929,9 +1010,6 @@ function toggleContactType(id, checked) {
 function addMoreOneOption() {
     if (!Array.isArray(textData.options)) textData.options = []
     textData.options.push({ value: '' })
-}
-function removeOption(index) {
-    if (Array.isArray(textData.options)) textData.options.splice(index, 1)
 }
 
 /* Watch: Typwechsel -> Fields neu setzen */
@@ -974,10 +1052,14 @@ function updateOrSaveComponent() {
         }
     }
 
+    saveErrors.value = {}
     const options = {
         preserveState: true,
         preserveScroll: true,
-        onSuccess: () => closeModal()
+        onSuccess: () => closeModal(),
+        onError: (errors) => {
+            saveErrors.value = errors ?? {}
+        },
     }
 
     if (isCreateMode.value) {

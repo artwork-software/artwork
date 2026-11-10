@@ -14,6 +14,25 @@ use Tests\Feature\FeatureTestCase;
 final class MoneySourceControllerTest extends FeatureTestCase
 {
     #[Test]
+    public function money_sources_index_ships_history_without_raw_activities_and_slim_causers(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $source = MoneySource::factory()->create();
+        activity()->performedOn($source)->causedBy($admin)->withProperties([
+            ['translationKey' => 'Money source created', 'type' => 'public_changes'],
+        ])->log('created');
+
+        $sources = collect($this->get(route('money_sources.index'))->assertOk()->viewData('page')['props']['moneySources']);
+        $row = (array) $sources->firstWhere('id', $source->id);
+
+        $this->assertArrayNotHasKey('activities', $row);
+        $this->assertNotEmpty($row['history']);
+        $changeBy = (array) $row['history'][0]['change_by'];
+        $this->assertSame($admin->id, $changeBy['id']);
+        $this->assertArrayNotHasKey('email', $changeBy);
+    }
+
+    #[Test]
     public function guest_cannot_view_money_sources_index(): void
     {
         $this->get(route('money_sources.index'))

@@ -5,6 +5,7 @@
             <div class="grid grid-cols-4 gap-x-2">
                 <div class="col-span-1 shrink-0 flex">
                     <img class="mx-auto shrink-0 flex  h-14 w-14 mt-2 object-cover rounded-full"
+                         :class="deactivatedAvatarClasses(user)"
                          :src="user.profile_photo_url"
                          alt=""/>
                 </div>
@@ -15,7 +16,10 @@
                     <div class="-mt-1">
                         {{ user.business }}, {{ user.position }}
                     </div>
-                    <div class="mt-2">
+                    <div v-if="isUserDeactivated(user)" class="mt-2">
+                        <DeactivatedAccountBadge on-dark/>
+                    </div>
+                    <div v-else class="mt-2">
                         {{ user.email }}
                     </div>
                     <div>
@@ -32,15 +36,17 @@
 </template>
 
 <script>
+import {deactivatedAvatarClasses, isUserDeactivated} from "@/Helper/UserDeactivation.js";
+import DeactivatedAccountBadge from "@/Layouts/Components/DeactivatedAccountBadge.vue";
 
 export default {
     name: "UserTooltip",
-    components: {},
+    components: {DeactivatedAccountBadge},
     props: ['user'],
     data() {
         return {}
     },
-    methods: {}
+    methods: {deactivatedAvatarClasses, isUserDeactivated}
 }
 </script>
 

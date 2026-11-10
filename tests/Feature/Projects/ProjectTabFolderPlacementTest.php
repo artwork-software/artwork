@@ -88,4 +88,11 @@ final class ProjectTabFolderPlacementTest extends FeatureTestCase
 
         $this->assertTrue(DisclosureComponents::query()->where('component_id', $comments->id)->exists());
     }
+
+    #[Test]
+    public function removing_an_already_removed_folder_entry_is_a_noop(): void
+    {
+        // Doppelklick auf „Entfernen“: der zweite Request fand den Eintrag nicht mehr und endete mit 500
+        $this->deleteJson(route('tab.remove.component.in.disclosure'), ['id' => 999999999])->assertSuccessful();
+    }
 }

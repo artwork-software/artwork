@@ -31,6 +31,19 @@ export function manualUrl(pagePath = '', locale = null) {
 }
 
 /**
+ * Changelog page for an installed version such as "1.8.1" (slug "changelog/v1.8.1").
+ * Versions with a suffix ("1.9.0-dev") or none at all have no own page and lead to
+ * the changelog overview.
+ *
+ * @param {string|null|undefined} version
+ * @returns {string}
+ */
+export function changelogManualPath(version) {
+    const cleaned = String(version ?? '').trim().replace(/^v/i, '');
+    return /^\d+\.\d+(\.\d+)?$/.test(cleaned) ? `changelog/v${cleaned}` : 'changelog';
+}
+
+/**
  * Manual page for a view of the display settings modal
  * (view ids from CalendarSettingsCatalog.js).
  *

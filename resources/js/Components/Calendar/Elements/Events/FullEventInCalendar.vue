@@ -207,7 +207,7 @@
 
                             <!-- Artists -->
                             <div v-if="calSettings.project_artists && event.project?.artistNames" :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 font-bold']">
-                                {{ event.project?.artistNames }}
+                                <ProjectArtistNames :text="event.project?.artistNames" :linked-artists="event.project?.linkedArtists ?? []" />
                             </div>
 
                             <!-- Eventname -->
@@ -484,9 +484,9 @@
                 <!-- Kontext-Menü -->
                 <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150 @max-[10rem]/event:absolute @max-[10rem]/event:top-2 @max-[10rem]/event:right-0.5 @max-[10rem]/tile:absolute @max-[10rem]/tile:top-2 @max-[10rem]/tile:right-0.5">
                     <BaseMenu has-no-offset :dots-color="calSettings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification && canManageVerification" @click="SendEventToVerification" :icon="IconLock" :title="directBookingOnly ? 'Confirm as fixed event' : 'Request verification'" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification && canManageVerification && !requestOnlyApproves" @click="SendEventToVerification" :icon="IconLock" :title="directBookingOnly ? 'Confirm as fixed event' : 'Request verification'" />
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification && canManageVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
-                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType?.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
+                        <BaseMenuItem white-menu-background v-if="canApprove" @click="approveRequest" :icon="IconChecks" :title="event.hasVerification ? 'Approve verification' : 'Approve'" />
                         <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType?.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
 
                         <BaseMenuItem white-menu-background v-if="event.occupancy_option && !event.isPlanning && (isRoomAdmin || hasAdminRole)" @click="$emit('acceptRoomRequest', event)" :icon="IconChecks" title="Accept room request" />
@@ -660,7 +660,7 @@
                                         <div class="relative space-y-0.5">
                                             <!-- Artists -->
                                             <div v-if="calSettings.project_artists && event.project?.artistNames" class="truncate text-xs/5 font-bold">
-                                                {{ event.project?.artistNames }}
+                                                <ProjectArtistNames :text="event.project?.artistNames" :linked-artists="event.project?.linkedArtists ?? []" />
                                             </div>
                                             <!-- Eventname -->
                                             <div v-if="calSettings.event_name && event.eventName" class="truncate text-xs/4 font-semibold">
@@ -976,15 +976,18 @@
         <TicketingSalesModal
             v-if="showTicketDetails"
             :event-id="event.id"
-            :description="eventNameLabel"
+            :description="ticketDetailsLabel"
             @close="showTicketDetails = false"
         />
     </div>
 </template>
 
 <script setup>
+import { isRoomAdminOf } from '@/Helper/roomAdminRights.js';
+import ProjectArtistNames from '@/Components/Crm/ProjectArtistNames.vue'
 import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
+import { canApproveEvent, isApprovedOnRequest } from "@/Helper/verificationRights.js";
 import axios from "axios";
 import {
     IconCalendarPlus,
@@ -1170,6 +1173,11 @@ const eventNameLabel = computed(() => {
     const abbreviation = props.event.eventType?.abbreviation;
     return abbreviation ? `${abbreviation}: ${effectiveEventName.value}` : effectiveEventName.value;
 });
+
+// Projekt und Termin, auch wenn der Termin keinen eigenen Namen hat (dann die Terminart).
+const ticketDetailsLabel = computed(() =>
+    [...new Set([props.event.title, effectiveEventName.value ?? props.event.eventType?.name].filter(Boolean))].join(' · ')
+);
 
 const isSameDay = computed(() => {
     if (!props.event.start || !props.event.end) return false;
@@ -1415,7 +1423,8 @@ const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, even
 };
 
 const isRoomAdmin = computed(() => {
-    return props.rooms?.find((room) => room.id === props.event.roomId)?.admins.some((admin) => admin.id === currentUserId.value) || false;
+    // admins kommt als ID-Liste (RoomDTO) – admin.id war dort immer undefined
+    return isRoomAdminOf(props.rooms, props.event.roomId, currentUserId.value);
 });
 
 const checkIfMultiEditIsEnabled = computed(() => {
@@ -1436,6 +1445,22 @@ const isCreator = computed(() => props.event.created_by?.id === currentUserId.va
 
 // Prüfung anfragen/zurückziehen: dieselbe Schranke wie EventVerificationController (sonst 403 nach dem Klick)
 const canManageVerification = computed(() => props.hasAdminRole || isCreator.value || can('can edit planning calendar'));
+
+// Genehmigen: eigene offene Prüfung, Admins jeden geplanten Termin, alleinige Prüfende auch ohne Anfrage
+const canApprove = computed(() => !directBookingOnly.value && canApproveEvent({
+    isAdmin: !!props.hasAdminRole,
+    canEditPlanning: can('can edit planning calendar'),
+    userId: currentUserId.value,
+    verifierForEventTypIds: props.verifierForEventTypIds,
+    approvedOnRequestEventTypeIds: usePage().props.approvedOnRequestEventTypeIds ?? [],
+    event: props.event,
+}));
+
+// "Prüfung anfragen" würde den Termin nur sofort genehmigen → im Menü steht stattdessen "Genehmigen"
+const requestOnlyApproves = computed(() => !directBookingOnly.value && isApprovedOnRequest({
+    event: props.event,
+    approvedOnRequestEventTypeIds: usePage().props.approvedOnRequestEventTypeIds ?? [],
+}));
 
 const roomCanBeBookedByEveryone = computed(() => {
     return props.rooms?.find((room) => room.id === props.event.roomId)?.everyone_can_book;

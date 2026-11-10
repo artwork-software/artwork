@@ -1,6 +1,6 @@
 <template>
     <div>
-        <label v-if="property.type !== 'checkbox'" :for="inputId" class="block text-sm font-medium text-text-muted">
+        <label v-if="property.type !== 'checkbox' && property.type !== 'multiselect'" :for="inputId" class="block text-sm font-medium text-text-muted">
             {{ property.name }}<span v-if="property.is_required" class="ml-0.5 text-danger">*</span>
         </label>
         <p v-if="property.tooltip_text && property.type !== 'checkbox'" class="text-xs text-text-subtle">{{ property.tooltip_text }}</p>
@@ -33,6 +33,23 @@
             <option value="">{{ $t('Please select') }}</option>
             <option v-for="option in selectOptions" :key="option" :value="option">{{ option }}</option>
         </select>
+        <!-- Mehrfachauswahl: Wert als JSON-Liste wie intern (CrmPropertyValueInput) -->
+        <fieldset v-else-if="property.type === 'multiselect'" class="mt-1">
+            <legend class="block text-sm font-medium text-text-muted">
+                {{ property.name }}<span v-if="property.is_required" class="ml-0.5 text-danger">*</span>
+            </legend>
+            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1.5">
+                <label v-for="option in selectOptions" :key="option" class="inline-flex items-center gap-2 text-sm text-text-muted">
+                    <input
+                        type="checkbox"
+                        class="size-5 shrink-0 rounded border-border sm:size-4"
+                        :checked="decodeMultiselect(modelValue).includes(option)"
+                        @change="$emit('update:modelValue', toggledMultiselect(modelValue, option, $event.target.checked, selectOptions))"
+                    />
+                    {{ option }}
+                </label>
+            </div>
+        </fieldset>
         <input
             v-else
             :id="inputId"
@@ -49,6 +66,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { decodeMultiselect, toggledMultiselect } from '@/Helper/CrmPropertyValue.js'
 
 const props = defineProps({
     property: { type: Object, required: true },

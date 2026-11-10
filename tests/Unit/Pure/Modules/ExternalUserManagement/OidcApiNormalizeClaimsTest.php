@@ -69,6 +69,26 @@ final class OidcApiNormalizeClaimsTest extends TestCase
     }
 
     #[Test]
+    public function it_treats_string_false_as_unverified(): void
+    {
+        foreach (['false', 'False', '0', '', 'no', 1, 'yes'] as $claim) {
+            $result = $this->api()->normalizeClaims(['sub' => 's', 'email_verified' => $claim], 's', 'a@b.com', null);
+
+            $this->assertFalse($result['email_verified'], 'Claim ' . var_export($claim, true) . ' darf nicht als verifiziert gelten');
+        }
+    }
+
+    #[Test]
+    public function it_accepts_string_true_as_verified(): void
+    {
+        foreach (['true', 'TRUE', ' true '] as $claim) {
+            $result = $this->api()->normalizeClaims(['sub' => 's', 'email_verified' => $claim], 's', 'a@b.com', null);
+
+            $this->assertTrue($result['email_verified']);
+        }
+    }
+
+    #[Test]
     public function it_falls_back_to_the_provider_id_when_identifier_claim_absent(): void
     {
         $result = $this->api()->normalizeClaims(['email' => 'a@b.com'], 'fallback-id', 'a@b.com', null);

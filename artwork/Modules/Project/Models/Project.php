@@ -23,6 +23,8 @@ use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Project\Policies\ProjectPolicy;
+use Artwork\Modules\Project\Services\ProjectArtistService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Shift\Models\Shift;
@@ -129,6 +131,8 @@ class Project extends Model
         'gema' => 'boolean',
         'is_group' => 'boolean',
         'marked_as_done' => 'boolean',
+        // verknüpfte CRM-Künstler*innen [{id, name}] – gepflegt von ProjectArtistService (nicht fillable)
+        'linked_artists' => 'array',
     ];
 
     protected $appends = [
@@ -170,6 +174,14 @@ class Project extends Model
     public function artistResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'project_id', 'id');
+    }
+
+    /**
+     * Künstler*innen für die Anzeige: Freitext plus verknüpfte CRM-Künstler*innen (ProjectArtistService).
+     */
+    public function artistDisplayText(): string
+    {
+        return ProjectArtistService::displayText($this->artists, $this->linked_artists);
     }
 
     /**
@@ -658,5 +670,26 @@ class Project extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Projekte, die die Person öffnen darf: Query-Gegenstück zu ProjectPolicy::view (globales Projektrecht,
+     * Mitglied im Projektteam oder in einer Abteilung des Projekts). Beide Regeln müssen gleich bleiben.
+     */
+    public function scopeEnterableBy(Builder $builder, User $user): Builder
+    {
+        foreach (ProjectPolicy::GLOBAL_ENTER_PERMISSIONS as $permission) {
+            if ($user->can($permission)) {
+                return $builder;
+            }
+        }
+
+        return $builder->where(function (Builder $query) use ($user): void {
+            $query->whereHas('users', fn (Builder $users) => $users->whereKey($user->id))
+                ->orWhereHas(
+                    'departments.users',
+                    fn (Builder $users) => $users->whereKey($user->id)
+                );
+        });
     }
 }

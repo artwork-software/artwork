@@ -251,7 +251,7 @@
                             <IconCirclePlus class="w-6 h-6 min-w-6 min-h-6 text-text-muted" stroke-width="2" />
                             <BaseInput
                                 type="number"
-                                label="Anzahl"
+                                label="Count"
                                 v-model="event.copyCount"
                                 min="1"
                                 minlength="1"

@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class UpdateUserOnLogout
 {
@@ -25,6 +26,6 @@ class UpdateUserOnLogout
         app(\Artwork\Modules\User\Services\UserStatusService::class)->markOffline($event->user->id);
 
         // Broadcast the status update event
-        broadcast(new \App\Events\UserStatusUpdated($event->user->id, 'offline'));
+        SafeBroadcast::send(new \App\Events\UserStatusUpdated($event->user->id, 'offline'));
     }
 }

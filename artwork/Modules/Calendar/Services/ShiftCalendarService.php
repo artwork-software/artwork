@@ -59,7 +59,7 @@ class ShiftCalendarService
             'eventStatus:id,color',
             'event_type:id,name,abbreviation,hex_code',
             'room:id,name',
-            'creator:id,first_name,last_name,profile_photo_path',
+            'creator:id,first_name,last_name,profile_photo_path,deactivated_at',
             'eventProperties:id,name,icon',
         ];
 
@@ -107,6 +107,8 @@ class ShiftCalendarService
                 $q->whereHas('eventProperties', fn ($p) => $p->whereIn('event_properties.id', $ids));
                 // Achtung: Table-Name event_properties ist Standard. Falls bei euch anders: anpassen.
             })
+            // Projektstatus-Filter wie im Kalender – vorher galt er nur für „Räume ohne Belegung ausblenden"
+            ->when(!empty($filter->project_state_ids), fn ($q) => $q->byProjectStateIds($filter->project_state_ids))
             ->where(fn ($q) => $overlap($q, 'start_time', 'end_time'))
             ->orderBy('start_time')
             ->get();
@@ -124,7 +126,7 @@ class ShiftCalendarService
             ? [
                 'room:id,name',
                 'craft:id,name,abbreviation,color',
-                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path',
+                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path,deactivated_at',
                 'shiftsQualifications',
                 'globalQualifications',
                 'users:id,first_name,last_name',
@@ -138,10 +140,10 @@ class ShiftCalendarService
             : [
                 'room:id,name',
                 'craft:id,name,abbreviation,color',
-                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path',
+                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path,deactivated_at',
                 'shiftsQualifications',
                 'globalQualifications',
-                'users:id,first_name,last_name,pronouns,position,profile_photo_path',
+                'users:id,first_name,last_name,pronouns,position,profile_photo_path,deactivated_at',
                 'users.globalQualifications:id',
                 'users.vacations' => $vacationsScope,
                 'freelancer:id,first_name,last_name,position,profile_image',
@@ -198,6 +200,7 @@ class ShiftCalendarService
         $projectSelect = ['id','name','state','is_group','icon','color'];
         if ($withArtists) {
             $projectSelect[] = 'artists';
+            $projectSelect[] = 'linked_artists';
         }
 
         $projectWith = [
@@ -217,6 +220,7 @@ class ShiftCalendarService
                 'users.position',
                 'users.email',
                 'users.profile_photo_path',
+                'users.deactivated_at',
             ]);
         }
 
@@ -385,7 +389,9 @@ class ShiftCalendarService
                 'name' => $statusModel->name,
                 'color' => $statusModel->color,
             ] : null,
-            'artistNames' => $project->artists ?? null,
+            // Freitext plus verknüpfte CRM-Künstler*innen; linkedArtists für die Infokarte
+            'artistNames' => ($artistText = $project->artistDisplayText()) !== '' ? $artistText : null,
+            'linkedArtists' => $project->linked_artists,
             // Bewusst ohne E-Mail: Kontaktdaten (inkl. Privacy-Flags) lädt das
             // UserPopoverTooltip lazy über user.tooltip.info nach.
             'leaders' => $project->relationLoaded('managerUsers')
@@ -396,6 +402,7 @@ class ShiftCalendarService
                     'position' => $user->position ?? null,
                     // Accessor liefert bei fehlendem Foto den Buchstaben-Avatar (SVG-Data-URI)
                     'profile_photo_url' => $user->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($user),
                 ])->values()->all()
                 : null,
         ];
@@ -422,6 +429,7 @@ class ShiftCalendarService
                     'position' => $user->position ?? null,
                     'business' => $user->business ?? null,
                     'profile_photo_url' => $user->profile_photo_url,
+                    'deactivated_at' => User::deactivatedAtFor($user),
                 ])->values()->all()
                 : [],
         ];

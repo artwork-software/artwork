@@ -146,117 +146,108 @@
             </div>
         </div>
         <!-- Raum Bearbeiten-->
-        <ArtworkBaseModal @close="closeEditRoomModal" v-if="showEditRoomModal" :title="$t('Edit room')" description="">
-                <div class="mx-3">
-                    <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
-                        <div>
-                            <BaseInput
-                                id="roomNameEdit"
-                                v-model="editRoomForm.name"
-                                label="Room name"/>
-                            <jet-input-error :message="editRoomForm.errors.name" class="mt-2"/>
-                        </div>
-                        <div>
-                            <BaseTextarea
-                                label="Short description"
-                                v-model="editRoomForm.description"
-                                :rows="4"
-                                id="descriptionEdit"
-                            />
-                        </div>
-                        <div class="rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
-                            <div class="text-sm text-text mb-1">{{ $t('Color') }}</div>
-                            <div class="flex items-center mb-3">
-                                <input v-model="editRoomInheritColor" id="inheritRoomColor" type="checkbox" class="input-checklist"/>
-                                <label for="inheritRoomColor"
-                                       :class="[editRoomInheritColor ? 'text-text font-black' : 'text-text-subtle']"
-                                       class="ml-4 my-auto text-sm cursor-pointer">
-                                    {{ $t('Inherit color from area') }}
-                                </label>
-                            </div>
-                            <div v-if="!editRoomInheritColor">
-                                <ColorPickerComponent @updateColor="(color) => editRoomForm.color = color" :color="editRoomForm.color ?? editRoomAreaColor"/>
-                            </div>
-                            <jet-input-error :message="editRoomForm.errors.color" class="mt-2"/>
-                        </div>
-                        <div class="flex items-center">
-                            <input v-model="editRoomForm.temporary"
-                                   type="checkbox"
-                                   class="input-checklist"/>
-                            <p :class="[editRoomForm.temporary ? 'text-text font-black' : 'text-text-subtle']"
-                               class="ml-4 my-auto text-sm">{{$t('Temporary room')}}</p>
-                            <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
-                                <span
-                                    class="ml-1 my-auto ">{{$t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')}}</span>
-                            </div>
-                        </div>
-                        <div v-if="editRoomForm.temporary">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <BaseInput type="date"
-                                    v-model="editRoomForm.start_date_dt_local"
-                                    id="startDate"
-                                    label="Start date"/>
-                                <BaseInput type="date"
-                                    v-model="editRoomForm.end_date_dt_local"
-                                    id="endDate"
-                                    label="End date"
-                                />
-                            </div>
-                            <jet-input-error :message="editRoomForm.errors.start_date || editRoomForm.errors.end_date" class="mt-2"/>
-                        </div>
-
-                        <!-- "Termine immer direkt buchbar": Anfrage-Einstellungen des Raums sind ohne Wirkung -->
-                        <div v-if="$page.props.event_direct_booking_only" class="rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
-                            {{ $t('The setting "Events always bookable directly" is active. "Can be booked by anyone" and "Authorized to request" currently have no effect – everyone who may create events books this room directly. Room admins can still edit and delete other people\'s events in this room.') }}
-                        </div>
-                        <div class="flex items-center">
-                            <input v-model="editRoomForm.everyone_can_book"
-                                   type="checkbox"
-                                   class="input-checklist"/>
-                            <p :class="[editRoomForm.everyone_can_book ? 'text-text font-black' : 'text-text-subtle']"
-                               class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone')}}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-subtle">({{ $t('no effect') }})</span></p>
-                            <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
-                                <span
-                                    class="ml-1 my-auto ">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-x-4">
-                            <input v-model="editRoomForm.relevant_for_disposition"
-                                   type="checkbox"
-                                   class="input-checklist"/>
-                            <div>
-                                <p :class="[editRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']"
-                                   class="my-auto text-sm">{{ $t('Relevant for disposition')}}</p>
-                                <span class="text-xs" :class="[editRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <BaseInput
-                                type="number"
-                                id="room_capacity"
-                                v-model.number="editRoomForm.capacity"
-                                :label="$t('Capacity')"
-                                :min="0"
-                                :step="1"
-                                :error="editRoomForm.errors.capacity"
-                            />
-                            <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
-                        </div>
-
-                        <div class="flex justify-center pt-8">
-                            <BaseUIButton
-                                :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
-                                type="submit"
-                                is-add-button
-                                :label="$t('Save')"
-                            />
-                        </div>
-
-                    </form>
+        <ArtworkBaseModal v-if="showEditRoomModal" title="Edit room" @close="closeEditRoomModal">
+            <form id="editRoomForm" class="grid grid-cols-1 gap-4" @submit.prevent="editRoom">
+                <BaseInput
+                    id="roomNameEdit"
+                    v-model="editRoomForm.name"
+                    label="Room name"
+                    required
+                    :error="editRoomForm.errors.name"
+                />
+                <BaseTextarea
+                    id="descriptionEdit"
+                    v-model="editRoomForm.description"
+                    label="Short description"
+                    :rows="4"
+                />
+                <div class="space-y-3 rounded-lg border border-border-subtle bg-surface-sunken p-4">
+                    <div class="font-lexend text-xs font-medium text-text-muted">{{ $t('Color') }}</div>
+                    <BaseCheckbox
+                        id="inheritRoomColor"
+                        v-model="editRoomInheritColor"
+                        :label="$t('Inherit color from area')"
+                    />
+                    <div v-if="!editRoomInheritColor">
+                        <ColorPickerComponent @updateColor="(color) => editRoomForm.color = color" :color="editRoomForm.color ?? editRoomAreaColor"/>
+                    </div>
+                    <jet-input-error :message="editRoomForm.errors.color"/>
                 </div>
+                <BaseCheckbox
+                    id="temporaryRoomEdit"
+                    v-model="editRoomForm.temporary"
+                    :label="$t('Temporary room')"
+                    :description="$page.props.show_hints ? $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.') : undefined"
+                />
+                <div v-if="editRoomForm.temporary">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <BaseInput
+                            id="startDate"
+                            v-model="editRoomForm.start_date_dt_local"
+                            type="date"
+                            label="Start date"
+                        />
+                        <BaseInput
+                            id="endDate"
+                            v-model="editRoomForm.end_date_dt_local"
+                            type="date"
+                            label="End date"
+                        />
+                    </div>
+                    <jet-input-error :message="editRoomForm.errors.start_date || editRoomForm.errors.end_date" class="mt-2"/>
+                </div>
+
+                <!-- "Termine immer direkt buchbar": Anfrage-Einstellungen des Raums sind ohne Wirkung -->
+                <div v-if="$page.props.event_direct_booking_only" class="rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
+                    {{ $t('The setting "Events always bookable directly" is active. "Can be booked by anyone" and "Authorized to request" currently have no effect – everyone who may create events books this room directly. Room admins can still edit and delete other people\'s events in this room.') }}
+                </div>
+                <BaseCheckbox
+                    id="everyoneCanBookEdit"
+                    v-model="editRoomForm.everyone_can_book"
+                    :description="$page.props.show_hints ? $t('Decides whether this room can be booked by everyone or only by the room admins.') : undefined"
+                >
+                    <template #label>
+                        {{ $t('Can be booked by anyone') }}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-subtle">({{ $t('no effect') }})</span>
+                    </template>
+                </BaseCheckbox>
+                <BaseCheckbox
+                    id="relevantForDispositionEdit"
+                    v-model="editRoomForm.relevant_for_disposition"
+                    :label="$t('Relevant for disposition')"
+                    :description="$t('Activate this field if the room is to be included in the calendars.')"
+                />
+
+                <div>
+                    <BaseInput
+                        type="number"
+                        id="room_capacity"
+                        v-model.number="editRoomForm.capacity"
+                        label="Capacity"
+                        :min="0"
+                        :step="1"
+                        :error="editRoomForm.errors.capacity"
+                    />
+                    <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
+                </div>
+            </form>
+            <template #footer>
+                <BaseUIButton
+                    label="Cancel"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="editRoomForm.processing"
+                    @click="closeEditRoomModal"
+                />
+                <BaseUIButton
+                    type="submit"
+                    form="editRoomForm"
+                    label="Save"
+                    variant="primary"
+                    icon="IconDeviceFloppy"
+                    :processing="editRoomForm.processing"
+                    :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
+                />
+            </template>
         </ArtworkBaseModal>
         <!-- Success Modal -->
         <SuccessModal
@@ -329,7 +320,6 @@ import {
 } from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetButton from "@/Jetstream/Button.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
@@ -346,15 +336,13 @@ import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -382,13 +370,11 @@ export default {
         ArtworkBaseModal,
         BaseUIButton,
         BaseTextarea,
+        BaseCheckbox,
         DateInputComponent,
         TextareaComponent,
         TextInputComponent,
-        ModalHeader,
-        BaseModal,
         BaseMenu,
-        FormButton,
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,
@@ -417,7 +403,6 @@ export default {
         SvgCollection,
         IconCircleX,
         JetButton,
-        JetDialogModal,
         JetInput,
         JetInputError,
         IconCheck,

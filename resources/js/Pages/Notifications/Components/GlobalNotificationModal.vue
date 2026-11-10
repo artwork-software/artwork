@@ -1,278 +1,257 @@
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
-                             leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity"/>
-            </TransitionChild>
-            <div class="fixed inset-0 z-50 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300"
-                                     enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                                     enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
-                                     leave-from="opacity-100 translate-y-0 sm:scale-100"
-                                     leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel
-                            class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" alt="edit appointment" class="-ml-6 -mt-8 mb-4"/>
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle"
-                                        @click="closeModal">
-                                    <span class="sr-only">Close</span>
-                                    <IconX class="h-6 w-6" aria-hidden="true"/>
-                                </button>
-                            </div>
-                            <div class="relative z-40">
-                                <div v-if="hasAdminRole() || $canAny(['change system notification'])">
-                                    <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mt-12 mb-6">
-                                        {{ $t('Notification to all') }}
-                                    </div>
-                                    <div class="text-sm/5 font-bold text-text-subtle">
-                                        {{ $t('Share something important with all users - e.g. changes or new functions in the artwork or important messages that affect the whole house. All users can view the message in the notifications (including external users!).') }}
-                                    </div>
-                                    <div>
-                                        <label class="block mt-12 mb-2 text-sm/5 font-bold text-text-subtle">
-                                            {{ $t('Image') }}
-                                        </label>
-                                        <div class="items-center">
-                                            <div
-                                                class="flex w-full justify-center border-2 bg-surface-sunken border-border cursor-pointer border-dashed rounded-md p-2"
-                                                @click="selectNewNotificationImage"
-                                                @dragover.prevent
-                                                @drop.stop.prevent="uploadDraggedImage($event)">
-                                                <div v-show="!notificationImagePreview" class="space-y-1 text-center">
-                                                    <div class="text-sm/5 font-bold text-text-subtle flex my-auto h-40 items-center"
-                                                         v-if="this.globalNotificationForm.notificationImage === null && notificationImagePreview === null">
-                                                        {{ $t('Drag your image here for the notification') }}
-                                                        <input id="notificationImage-upload"
-                                                               ref="notificationImage"
-                                                               @change="updateNotificationImagePreview()"
-                                                               name="file-upload" type="file" class="sr-only"/>
-                                                    </div>
-                                                    <div class="cursor-pointer" v-else>
-                                                        <img :src="this.globalNotificationForm.notificationImage"
-                                                             :alt="$t('Current picture')"
-                                                             class="rounded-md h-40 w-40">
-                                                    </div>
-                                                </div>
-                                                <div class="cursor-pointer">
-                                                    <img v-show="notificationImagePreview"
-                                                         :src="notificationImagePreview"
-                                                         :alt="$t('Current banner')"
-                                                         class="rounded-md h-40 w-40">
-                                                    <input type="file" class="hidden"
-                                                           ref="notificationImage"
-                                                           @change="updateNotificationImagePreview">
-                                                </div>
-                                            </div>
-                                            <p v-if="uploadDocumentFeedback.length > 0"
-                                               class="text-xs text-danger mt-2">
-                                                {{ uploadDocumentFeedback }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 mt-4">
-                                        <div class="">
-                                            <label for="deadlineDate" class="flex items-center text-sm/5 font-bold text-text-subtle">
-                                                {{ $t('Title') }}:
-                                            </label>
-                                            <input type="text"
-                                                   v-model="this.globalNotificationForm.notificationName"
-                                                   id="eventTitle"
-                                                   :placeholder="$t('Title')+ '*'"
-                                                   class="text-base/5 font-semibold text-text border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 w-full border-border"/>
-
-                                        </div>
-                                        <div>
-                                            <label for="deadlineDate" class="flex items-center text-sm/5 font-bold text-text-subtle">
-                                                {{ $t('Expiration date') }}:
-                                            </label>
-                                            <div class="flex items-center w-full">
-                                                <input v-model="this.globalNotificationForm.notificationDeadlineDate"
-                                                       id="deadlineDate"
-                                                       type="date"
-                                                       required
-                                                       class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle disabled:border-none flex-grow"/>
-                                                <input v-model="this.globalNotificationForm.notificationDeadlineTime"
-                                                       id="deadlineTime"
-                                                       type="time"
-                                                       required
-                                                       class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle  disabled:border-none"/>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="py-2">
-                                        <textarea :placeholder="$t('Notification') + '*'"
-                                                  id="description"
-                                                  v-model="this.globalNotificationForm.notificationDescription"
-                                                  rows="4"
-                                                  class="border border-border resize-none w-full text-sm/5 font-semibold text-text placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 border-border"/>
-                                    </div>
-                                    <div class="w-full flex justify-center">
-                                        <FormButton
-                                            @click="createGlobalNotification()"
-                                            v-if="!globalNotification.title"
-                                            :text="$t('Share notification')"
-                                        />
-                                        <div class="flex flex-row space-x-2" v-else>
-                                            <FormButton
-                                                :text="$t('Edit notification')"
-                                                classes="w-1/2"
-                                                @click="editGlobalNotification()"
-                                            />
-                                            <FormButton
-                                                :text="$t('Delete notification')"
-                                                classes="w-1/2"
-                                                @click="deleteGlobalNotification()"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
+    <ArtworkBaseModal
+        title="Notification to all"
+        description="Share something important with all users - e.g. changes or new functions in the artwork or important messages that affect the whole house. All users can view the message in the notifications (including external users!)."
+        modal-size="sm:max-w-2xl"
+        @close="closeModal(false)"
+    >
+        <form
+            v-if="canChangeNotification"
+            id="globalNotificationForm"
+            class="space-y-4"
+            @submit.prevent="saveGlobalNotification"
+        >
+            <div>
+                <span class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">{{ $t('Image') }}</span>
+                <input
+                    id="globalNotificationImageInput"
+                    ref="notificationImageInput"
+                    type="file"
+                    accept="image/jpeg,image/svg+xml,image/png,image/gif"
+                    class="sr-only"
+                    @change="updateNotificationImagePreview"
+                />
+                <div
+                    role="button"
+                    tabindex="0"
+                    class="flex min-h-40 w-full cursor-pointer flex-col items-center justify-center gap-y-2 rounded-lg border-2 border-dashed p-4 text-center transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                    :class="isDragging ? 'border-accent-600 bg-accent-50' : 'border-border'"
+                    @click="selectNewNotificationImage"
+                    @keydown.enter.prevent="selectNewNotificationImage"
+                    @keydown.space.prevent="selectNewNotificationImage"
+                    @dragenter.prevent="isDragging = true"
+                    @dragover.prevent="isDragging = true"
+                    @dragleave="isDragging = $event.currentTarget.contains($event.relatedTarget)"
+                    @drop.stop.prevent="uploadDraggedImage"
+                >
+                    <img
+                        v-if="shownImage"
+                        :src="shownImage"
+                        :alt="$t('Current picture')"
+                        class="max-h-40 rounded-md object-contain"
+                    />
+                    <template v-else>
+                        <PropertyIcon name="IconPhoto" class="size-6 text-text-subtle" stroke-width="1.5" aria-hidden="true"/>
+                        <p class="text-sm text-text-muted">
+                            <template v-if="isDragging">{{ $t('Drop here') }}</template>
+                            <template v-else>
+                                <span class="font-semibold text-accent-600">{{ $t('Choose file') }}</span>
+                                {{ $t('or drag and drop') }}
+                            </template>
+                        </p>
+                    </template>
                 </div>
+                <p v-if="uploadDocumentFeedback || form.errors.notificationImage" class="mt-1 text-[11.5px] text-danger">
+                    {{ uploadDocumentFeedback || form.errors.notificationImage }}
+                </p>
             </div>
-        </Dialog>
-    </TransitionRoot>
+
+            <BaseInput
+                id="globalNotificationTitle"
+                v-model="form.notificationName"
+                label="Title"
+                required
+                :error="form.errors.notificationName"
+            />
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <BaseInput
+                    id="globalNotificationDeadlineDate"
+                    v-model="form.notificationDeadlineDate"
+                    type="date"
+                    label="Expiration date"
+                    required
+                    :error="form.errors.notificationDeadlineDate"
+                />
+                <BaseInput
+                    id="globalNotificationDeadlineTime"
+                    v-model="form.notificationDeadlineTime"
+                    type="time"
+                    label="Time"
+                    required
+                    :error="form.errors.notificationDeadlineTime"
+                />
+            </div>
+
+            <BaseTextarea
+                id="globalNotificationDescription"
+                v-model="form.notificationDescription"
+                label="Notification"
+                :rows="4"
+                :error="form.errors.notificationDescription"
+            />
+        </form>
+
+        <template v-if="canChangeNotification" #footer>
+            <BaseUIButton
+                v-if="isEdit"
+                class="mr-auto"
+                label="Delete notification"
+                variant="danger"
+                icon="IconTrash"
+                :processing="deleting"
+                :disabled="form.processing"
+                @click="deleteGlobalNotification"
+            />
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="form.processing || deleting"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                type="submit"
+                form="globalNotificationForm"
+                :label="isEdit ? 'Edit notification' : 'Share notification'"
+                variant="primary"
+                :icon="isEdit ? 'IconDeviceFloppy' : 'IconSend'"
+                :processing="form.processing"
+                :disabled="!canSubmit"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconX} from "@tabler/icons-vue";
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {useForm} from "@inertiajs/vue3";
+<script setup>
+import {computed, ref} from 'vue'
+import {router, useForm, usePage} from '@inertiajs/vue3'
+import {useI18n} from 'vue-i18n'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import {usePermission} from '@/Composeables/Permission.js'
 
-export default {
-    name: "GlobalNotificationModal",
-    mixins: [Permissions],
-    components: {
-        FormButton,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        IconX, DialogPanel
-    },
-    props: ['globalNotification'],
-    data() {
-        return {
-            open: true,
-            notificationImagePreview: null,
-            buttonText: this.button ? this.button : this.$t('Delete'),
-            globalNotificationForm: useForm({
-                _method: 'PUT',
-                notificationImage: this.globalNotification?.image_url,
-                notificationName: this.globalNotification?.title,
-                notificationDeadlineDate: this.globalNotification.expiration_date ? this.getDateOfDate(this.globalNotification.expiration_date) : null,
-                notificationDeadlineTime: this.globalNotification.expiration_date ? this.getTimeOfDate(this.globalNotification.expiration_date) : null,
-                notificationDescription: this.globalNotification?.description,
-            }),
-            uploadDocumentFeedback: "",
-        }
-    },
-    emits: ['closed'],
-    methods: {
-        closeModal(bool) {
-            this.$emit('closed', bool)
-        },
-        validateTypeAndUpload(file) {
-            this.uploadDocumentFeedback = "";
+defineOptions({name: 'GlobalNotificationModal'})
 
-            const allowedTypes = [
-                "image/jpeg",
-                "image/svg+xml",
-                "image/png",
-                "image/gif"
-            ];
+const props = defineProps({
+    // Ohne vorhandene Meldung liefert das Backend {image_url: null}
+    globalNotification: {type: Object, default: null},
+})
 
-            if (allowedTypes.includes(file?.type)) {
-                const reader = new FileReader();
+const emit = defineEmits(['closed'])
 
-                reader.onload = (e) => {
-                    this.notificationImagePreview = e.target.result;
-                }
+const {t} = useI18n()
+const permission = usePermission(usePage().props)
 
-                reader.readAsDataURL(file);
+const canChangeNotification = computed(() =>
+    permission.hasAdminRole() || permission.canAny(['change system notification'])
+)
 
-                this.globalNotificationForm.notificationImage = file;
+const isEdit = computed(() => !!props.globalNotification?.id)
 
-                // ohne vorhandene Meldung liefert das Backend {image_url: null} – das Objekt ist dann
-                // trotzdem „wahr“, editGlobalNotification lief mit id undefined und route() warf
-                if (this.globalNotification?.id) {
-                    this.editGlobalNotification();
-                } else {
-                    this.createGlobalNotification();
-                }
-            } else {
-                this.uploadDocumentFeedback = this.$t('Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.')
-            }
+function getDateOfDate(isoDate) {
+    return isoDate?.split(' ')[0] || null
+}
 
-        },
-        getDateOfDate(isoDate) {
-            if (isoDate.split(' ')[0]) {
-                return isoDate.split(' ')[0];
-            }
-        },
-        getTimeOfDate(isoDate) {
-            if (isoDate.split(' ')[1]) {
-                return isoDate.split(' ')[1].substring(0, 5);
-            }
-        },
-        uploadDraggedImage(event) {
-            this.validateTypeAndUpload(event.dataTransfer.files[0])
-        },
-        selectNewNotificationImage() {
-            this.$refs.notificationImage.click();
-        },
-        updateNotificationImagePreview() {
-            this.validateTypeAndUpload(this.$refs.notificationImage.files[0])
-        },
-        createGlobalNotification() {
-            this.globalNotificationForm.post(
-                route('global_notification.store'),
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.closeModal(true)
-                    },
-                }
-            );
-        },
-        editGlobalNotification() {
-            this.globalNotificationForm.post(
-                route(
-                    'global_notification.update',
-                    {
-                        globalNotification: this.globalNotification.id
-                    }
-                ),
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.closeModal(true)
-                    },
-                }
-            );
-        },
-        deleteGlobalNotification() {
-            this.$inertia.delete(
-                route(
-                    'global_notification.destroy',
-                    {
-                        globalNotification: this.globalNotification.id
-                    }
-                )
-            );
-            this.globalNotificationForm.reset();
-            this.notificationImagePreview = null;
-            this.closeModal(true)
-        }
+function getTimeOfDate(isoDate) {
+    return isoDate?.split(' ')[1]?.substring(0, 5) || null
+}
+
+const form = useForm({
+    _method: 'PUT',
+    notificationImage: props.globalNotification?.image_url ?? null,
+    notificationName: props.globalNotification?.title ?? '',
+    notificationDeadlineDate: getDateOfDate(props.globalNotification?.expiration_date),
+    notificationDeadlineTime: getTimeOfDate(props.globalNotification?.expiration_date),
+    notificationDescription: props.globalNotification?.description ?? '',
+})
+
+const notificationImageInput = ref(null)
+const notificationImagePreview = ref(null)
+const uploadDocumentFeedback = ref('')
+const isDragging = ref(false)
+const deleting = ref(false)
+
+const shownImage = computed(() =>
+    notificationImagePreview.value
+    || (typeof form.notificationImage === 'string' ? form.notificationImage : null)
+)
+
+// Ohne Ablaufdatum und -zeit legt das Backend die Meldung als sofort abgelaufen an
+const canSubmit = computed(() =>
+    String(form.notificationName ?? '').trim() !== ''
+    && !!form.notificationDeadlineDate
+    && !!form.notificationDeadlineTime
+    && !form.processing
+    && !deleting.value
+)
+
+function closeModal(saved) {
+    emit('closed', saved)
+}
+
+function validateTypeAndSetImage(file) {
+    uploadDocumentFeedback.value = ''
+    if (!file) {
+        return
+    }
+    const allowedTypes = ['image/jpeg', 'image/svg+xml', 'image/png', 'image/gif']
+    if (!allowedTypes.includes(file.type)) {
+        uploadDocumentFeedback.value = t('Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.')
+        return
+    }
+    const reader = new FileReader()
+    reader.onload = (event) => {
+        notificationImagePreview.value = event.target.result
+    }
+    reader.readAsDataURL(file)
+    form.notificationImage = file
+}
+
+function uploadDraggedImage(event) {
+    isDragging.value = false
+    validateTypeAndSetImage(event.dataTransfer?.files?.[0])
+}
+
+function selectNewNotificationImage() {
+    notificationImageInput.value?.click()
+}
+
+function updateNotificationImagePreview() {
+    validateTypeAndSetImage(notificationImageInput.value?.files?.[0])
+    // gleiche Datei erneut wählen können
+    if (notificationImageInput.value) {
+        notificationImageInput.value.value = ''
     }
 }
+
+function saveGlobalNotification() {
+    if (!canSubmit.value) {
+        return
+    }
+    const url = isEdit.value
+        ? route('global_notification.update', {globalNotification: props.globalNotification.id})
+        : route('global_notification.store')
+    form.post(url, {
+        preserveScroll: true,
+        onSuccess: () => closeModal(true),
+    })
+}
+
+function deleteGlobalNotification() {
+    if (!isEdit.value || deleting.value) {
+        return
+    }
+    deleting.value = true
+    router.delete(route('global_notification.destroy', {globalNotification: props.globalNotification.id}), {
+        preserveScroll: true,
+        onSuccess: () => closeModal(true),
+        onFinish: () => {
+            deleting.value = false
+        },
+    })
+}
 </script>
-
-<style scoped>
-
-</style>

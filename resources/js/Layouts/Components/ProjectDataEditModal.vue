@@ -1,220 +1,206 @@
 <template>
-    <BaseModal @closed="closeModal(false)" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
-            <div class="mx-4">
-                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                    {{ $t('Edit basic data') }}
-                </div>
-                <input :placeholder="name"
-                       id="title"
-                       v-model="name"
-                       class="mt-4 p-4 border border-border resize-none w-full text-sm/5 font-semibold text-text placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 border-border"/>
-                <div class="flex mt-2 w-full">
-                    <Listbox as="div" class="flex w-full" v-model="selectedState">
-                        <ListboxButton class="w-full text-left">
-                            <button class="w-full h-12 flex justify-between text-sm/5 font-semibold text-text items-center text-left border border-2 border-border bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                    @click="openColor = !openColor">
-                                <span class="w-full" v-if="!selectedState">
-                                    {{ $t('Select project status') }}{{ isStateRequired ? '*' : '' }}
-                                </span>
-                                <span v-else  class="items-center font-medium px-2 py-1.5 inline-flex border rounded-full"
-                                      :style="{
-                                            backgroundColor: backgroundColorWithOpacity(states.find(state => state.id === selectedState)?.color),
-                                            color: TextColorWithDarken(states.find(state => state.id === selectedState)?.color),
-                                            borderColor: TextColorWithDarken(states.find(state => state.id === selectedState)?.color)
-                                        }">
-                                    {{ this.states.find(state => state.id === selectedState)?.name}}
-                                </span>
-                                <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
-                            </button>
-                        </ListboxButton>
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <ListboxOptions
-                                class="absolute w-[88%] z-10 mt-12 bg-white shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                <ListboxOption as="template" class=""
-                                               v-for="state in states"
-                                               :key="state.id"
-                                               :value="state.id" v-slot="{ active, selected }">
-                                    <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']"
-                                        @click="updateProjectState(state)">
-                                        <div class="flex">
-                                             <span class=" items-center font-medium px-2 py-1.5 inline-flex border rounded-full" :style="{backgroundColor: backgroundColorWithOpacity(state.color), color: TextColorWithDarken(state.color), borderColor: TextColorWithDarken(state.color)}">
-                                                 {{ state.name }}
-                                             </span>
-                                        </div>
-                                        <span
-                                            :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                            <IconCheck v-if="selected"
-                                                       class="h-5 w-5 flex text-success"
-                                                       aria-hidden="true"/>
-                                        </span>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </transition>
-                    </Listbox>
-                </div>
-                <div v-if="showStateRequiredError" class="text-danger text-xs mt-1">
-                    {{ $t('Project status is a required field.') }}
-                </div>
-                <div class="py-2" v-if="createSettings.managers">
-                    <div class="font-semibold text-sm -mb-1">{{ $t('Project management')}}</div>
-                    <UserSearch @user-selected="addUserToProject" class="mb-2" />
+    <ArtworkBaseModal
+        v-if="show"
+        title="Edit basic data"
+        modal-size="sm:max-w-xl"
+        @close="closeModal(false)"
+    >
+        <form id="projectDataEditForm" class="space-y-4" @submit.prevent="updateProjectData">
+            <BaseInput
+                id="projectDataEditName"
+                v-model="name"
+                label="Project name"
+                required
+            />
 
-                    <div v-if="assignedUsers.length > 0">
-                        <div v-for="(user, index) in assignedUsers">
-                            <div class="flex items-center justify-between mb-3 group">
-                                <div class="flex items-center gap-x-2">
-                                    <img :src="user.profile_photo_url" alt="" class="h-12 w-12 object-cover rounded-full">
-                                    <div>
-                                        {{ user.full_name}}
-                                    </div>
-                                </div>
-                                <div class="hidden group-hover:block">
-                                    <PropertyIcon name="IconCircleX" class="h-6 w-6 text-text-muted hover:text-danger cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
-                                </div>
-                            </div>
+            <div>
+                <ArtworkBaseListbox
+                    v-model="selectedStateOption"
+                    :items="states ?? []"
+                    by="id"
+                    option-label="name"
+                    label="Project status"
+                    placeholder="Select project status"
+                    show-color-indicator
+                    color-property="color"
+                >
+                    <template #label>
+                        {{ $t('Project status') }}<span v-if="isStateRequired" class="text-danger"> *</span>
+                    </template>
+                </ArtworkBaseListbox>
+                <p v-if="showStateRequiredError" class="mt-1 text-[11.5px] text-danger">
+                    {{ $t('Project status is a required field.') }}
+                </p>
+            </div>
+
+            <div v-if="createSettings?.managers">
+                <UserSearch label="Project management" @user-selected="addUserToProject"/>
+                <ul v-if="assignedUsers.length > 0" class="mt-2 divide-y divide-border-subtle rounded-lg border border-border-subtle">
+                    <li
+                        v-for="(user, index) in assignedUsers"
+                        :key="user.id"
+                        class="flex items-center justify-between gap-x-3 px-3 py-2"
+                    >
+                        <div class="flex min-w-0 items-center gap-x-2 text-sm text-text">
+                            <img :src="user.profile_photo_url" alt="" class="size-8 shrink-0 rounded-full object-cover">
+                            <span class="truncate">{{ user.full_name }}</span>
                         </div>
-                    </div>
+                        <button
+                            type="button"
+                            class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover hover:text-danger"
+                            :aria-label="$t('Remove user')"
+                            @click="removeUserFromProject(index)"
+                        >
+                            <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <BaseInput
+                v-if="createSettings?.cost_center"
+                id="projectDataEditCostCenter"
+                v-model="cost_center"
+                label="Name of the cost unit"
+            />
+
+            <div v-if="!project.is_group || hasGroup" class="space-y-2">
+                <BaseCheckbox
+                    v-if="!project.is_group"
+                    id="projectDataEditHasGroup"
+                    v-model="hasGroup"
+                    :label="$t('Belongs to project group')"
+                    @change="removeSelectedGroup"
+                />
+                <ArtworkBaseListbox
+                    v-if="hasGroup"
+                    v-model="selectedGroup"
+                    :items="groupProjects ?? []"
+                    by="id"
+                    option-label="name"
+                    label="Project group"
+                    placeholder="Search project group"
+                    :empty-text="$t('No project group has been created yet')"
+                />
+            </div>
+
+            <div>
+                <div class="mb-1 flex items-center gap-1.5 font-lexend text-xs font-medium text-text-muted">
+                    <label for="projectDataEditBudgetDeadline">{{ $t('Budget deadline') }}</label>
+                    <ToolTipComponent
+                        :tooltip-text="$t('This date is currently only relevant for the budget export by deadline in the project overview, to determine the point in time for which the budget is relevant.')"
+                        direction="right"
+                        icon="IconInfoCircle"
+                        icon-size="h-4 w-4"
+                    />
                 </div>
-                <div class="py-3" v-if="createSettings.cost_center">
-                    <TextInputComponent
-                        v-model="cost_center"
-                        :label="$t('Name of the cost unit')"
-                     id="cost_center"/>
+                <BaseInput
+                    id="projectDataEditBudgetDeadline"
+                    v-model="budgetDeadline"
+                    type="date"
+                    label="Budget deadline"
+                    :show-label="false"
+                />
+            </div>
+
+            <div>
+                <div class="mb-1 font-lexend text-xs font-medium text-text-muted">{{ $t('Key Visual') }}</div>
+                <input
+                    id="projectDataEditKeyVisual"
+                    ref="keyVisual"
+                    name="file-upload"
+                    type="file"
+                    class="sr-only"
+                    accept="image/jpeg,image/svg+xml,image/png,image/gif"
+                    @change="updateKeyVisual"
+                />
+                <div
+                    v-if="project.key_visual_path === null"
+                    role="button"
+                    tabindex="0"
+                    class="flex min-h-28 w-full cursor-pointer flex-col items-center justify-center gap-y-2 rounded-lg border-2 border-dashed p-4 text-center transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                    :class="isDraggingKeyVisual ? 'border-accent-600 bg-accent-50' : 'border-border'"
+                    @click="selectNewKeyVisual"
+                    @keydown.enter.prevent="selectNewKeyVisual"
+                    @keydown.space.prevent="selectNewKeyVisual"
+                    @dragenter.prevent="isDraggingKeyVisual = true"
+                    @dragover.prevent="isDraggingKeyVisual = true"
+                    @dragleave="isDraggingKeyVisual = $event.currentTarget.contains($event.relatedTarget)"
+                    @drop.stop.prevent="uploadDraggedKeyVisual($event)"
+                >
+                    <PropertyIcon name="IconPhotoPlus" class="size-6 text-text-subtle" stroke-width="1.5" aria-hidden="true"/>
+                    <p class="text-sm text-text-muted">
+                        <template v-if="isDraggingKeyVisual">{{ $t('Drop here') }}</template>
+                        <template v-else>
+                            <span class="font-semibold text-accent-600">{{ $t('Choose file') }}</span>
+                            {{ $t('or drag and drop') }}
+                        </template>
+                    </p>
                 </div>
-                <div class="mt-4">
-                    <div class="flex items-center mb-2" v-if="!project.is_group">
-                        <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
-                               @change="removeSelectedGroup"
-                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                        <label for="hasGroup" :class="this.hasGroup ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'"
-                               class="ml-2">
-                            {{ $t('Belongs to project group') }}
-                        </label>
-                    </div>
-                    <div v-if="this.hasGroup" class="mb-2">
-                        <Listbox as="div" v-model="this.selectedGroup" id="room">
-                            <ListboxButton class="border border-border w-full h-10 cursor-pointer truncate flex p-2">
-                                <div class="flex-grow flex text-left text-sm/5 font-semibold text-text">
-                                    {{
-                                        this.selectedGroup?.name ? this.selectedGroup.name : $t('Search project group')
-                                    }}
-                                </div>
-                                <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
-                            </ListboxButton>
-                            <ListboxOptions class="w-[88%] bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute">
-                                <ListboxOption v-if="this.groupProjects.length === 0"
-                                               class="w-full text-text-subtle cursor-pointer p-2 flex justify-between"
-                                               :value="null">
-                                    {{ $t('No project group has been created yet') }}
-                                </ListboxOption>
-                                <ListboxOption v-for="projectGroup in groupProjects"
-                                               class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between "
-                                               :key="projectGroup.id"
-                                               :value="projectGroup"
-                                               v-slot="{ active, selected }">
-                                    <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
-                                        {{ projectGroup.name }}
-                                    </div>
-                                    <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </Listbox>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <div class="text-sm/5 font-semibold text-text flex items-center gap-1.5">
-                        <span>{{ $t('Budget deadline') }}</span>
-                        <ToolTipComponent
-                            :tooltip-text="$t('This date is currently only relevant for the budget export by deadline in the project overview, to determine the point in time for which the budget is relevant.')"
-                            direction="right"
-                            icon="IconInfoCircle"
-                            icon-size="h-4 w-4"
+                <div v-else class="space-y-2">
+                    <img
+                        :src="'/storage/keyVisual/' + project.key_visual_path"
+                        :alt="$t('Key Visual')"
+                        class="max-h-96 w-full rounded-lg border border-border-subtle bg-surface-sunken object-contain"
+                    >
+                    <div class="flex flex-wrap items-center justify-end gap-2">
+                        <BaseUIButton
+                            label="Download"
+                            variant="ghost"
+                            size="sm"
+                            icon="IconDownload"
+                            @click="downloadKeyVisual"
+                        />
+                        <BaseUIButton
+                            label="Replace"
+                            variant="secondary"
+                            size="sm"
+                            icon="IconEdit"
+                            @click="selectNewKeyVisual"
+                        />
+                        <BaseUIButton
+                            label="Delete"
+                            variant="danger"
+                            size="sm"
+                            icon="IconTrash"
+                            @click="deleteKeyVisual"
                         />
                     </div>
-                    <div class="flex mt-1">
-                        <input v-model="this.budgetDeadline"
-                               id="budgetDeadline"
-                               type="date"
-                               required
-                               class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle disabled:border-none flex-grow"/>
-                    </div>
                 </div>
-                <div class="mt-4 group">
-                    <div class="text-sm/5 font-semibold text-text mb-1">{{ $t('Key Visual') }}</div>
-                    <div
-                        class="flex w-full justify-center border-2 bg-surface-sunken border-border cursor-pointer border-dashed rounded-md p-2"
-                        @dragover.prevent
-                        @drop.stop.prevent="uploadDraggedKeyVisual($event)"
-                        @click="selectNewKeyVisual"
-                        v-if="this.project.key_visual_path === null">
-                        <div class="text-sm/5 font-bold text-text-subtle flex h-12 items-center text-center">
-                            <span v-html="$t('Drag your key visual here')"></span>
-                            <input id="keyVisual-upload" ref="keyVisual"
-                                   name="file-upload" type="file" class="sr-only"
-                                   @change="updateKeyVisual"/>
-                        </div>
-                    </div>
-                    <div v-else class="flex items-center justify-center relative w-full">
-                        <div
-                            class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
-                            <button @click="downloadKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
-                                <PropertyIcon name="IconDownload" class="h-5 w-5" aria-hidden="true"/>
-                            </button>
-                            <button @click="selectNewKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
-                                <PropertyIcon name="IconEdit"
-                                    class="h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                    aria-hidden="true"/>
-                            </button>
-                            <button @click="deleteKeyVisual" type="button"
-                                    class="inline-flex rounded-full bg-danger p-1 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
-                                <PropertyIcon name="IconX" class="h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                       aria-hidden="true"/>
-                            </button>
-                        </div>
-                        <div class="w-full">
-                            <div class="cursor-pointer">
-                                <img :src="'/storage/keyVisual/' + this.project.key_visual_path"
-                                     alt="Aktuelles Key-Visual"
-                                     class="rounded-md w-full max-h-96 object-contain bg-surface-sunken">
-                                <input id="keyVisual-upload" ref="keyVisual"
-                                       name="file-upload" type="file" class="sr-only"
-                                       @change="updateKeyVisual"/>
-                            </div>
-                        </div>
-                    </div>
-                    <jet-input-error :message="this.uploadKeyVisualFeedback"/>
-                </div>
+                <p v-if="uploadKeyVisualFeedback" class="mt-1 text-[11.5px] text-danger">
+                    {{ uploadKeyVisualFeedback }}
+                </p>
             </div>
-            <div class="justify-center flex w-full my-6">
-                <FormButton :text="$t('Save')" :disabled="name.length < 1"
-                            @click="updateProjectData"/>
-            </div>
-    </BaseModal>
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                type="submit"
+                form="projectDataEditForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+                :disabled="!canSubmit"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script>
-import {IconCheck, IconChevronDown, IconDownload, IconX} from "@tabler/icons-vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import JetInputError from '@/Jetstream/InputError.vue'
-import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions
-} from "@headlessui/vue";
+import {router, useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {useForm} from "@inertiajs/vue3";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import Input from "@/Jetstream/Input.vue";
-import {useColorHelper} from "@/Composeables/UseColorHelper.js";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -223,10 +209,6 @@ export default {
     mixins: [
         Permissions
     ],
-    setup() {
-        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken} = useColorHelper();
-        return {backgroundColorWithOpacity, TextColorWithDarken};
-    },
     name: "ProjectDataEditModal",
     props: {
         show: Boolean,
@@ -236,25 +218,16 @@ export default {
         states: Array,
         createSettings: Object
     },
+    emits: ['closed'],
     components: {
-        ToolTipComponent,
-        PropertyIcon,
+        ArtworkBaseModal,
+        ArtworkBaseListbox,
+        BaseUIButton,
+        BaseInput,
+        BaseCheckbox,
         UserSearch,
-        TextInputComponent,
-        BaseModal,
-        FormButton,
-        Input,
-        ListboxOption,
-        ListboxOptions,
-        ListboxButton,
-        Listbox,
-        BaseFilterTag,
-        JetDialogModal,
-        JetInputError,
-        IconX,
-        IconDownload,
-        IconChevronDown,
-        IconCheck
+        PropertyIcon,
+        ToolTipComponent,
     },
     watch: {
         selectedState(state) {
@@ -262,26 +235,14 @@ export default {
                 this.showStateRequiredError = false;
             }
         },
-        groupName: {
-            deep: true,
-            handler() {
-                if (!this.groupName) {
-                    this.groupSearchResults = [];
-                    return;
-                }
-                axios.get('/projects/search', {params: {query: this.groupName}})
-                    .then(response => this.groupSearchResults = response.data)
-            },
-        },
     },
     data() {
         return {
-            name: this.project?.name,
+            name: this.project?.name ?? '',
             description: this.project?.description,
             hasGroup: !!this.currentGroup,
             selectedGroup: this.currentGroup,
             selectedState: this.project?.state?.id,
-            openColor: false,
             budgetDeadline: this.project.budget_deadline,
             keyVisualForm: useForm({
                 keyVisual: null,
@@ -290,20 +251,45 @@ export default {
             assignedUsers: this.project.users.filter(user => user.pivot.is_manager),
             cost_center: this.project.cost_center ? this.project.cost_center.name : "",
             showStateRequiredError: false,
+            processing: false,
+            isDraggingKeyVisual: false,
         }
     },
     computed: {
         isStateRequired() {
             return !!(this.createSettings?.state && this.createSettings?.state_required);
         },
+        canSubmit() {
+            return !this.processing && !!this.name && this.name.length > 0;
+        },
+        /**
+         * Die Listbox arbeitet mit Objekten, gespeichert wird die Status-ID. Eine Auswahl
+         * schreibt den Status wie bisher sofort fest.
+         */
+        selectedStateOption: {
+            get() {
+                return this.states?.find(state => state.id === this.selectedState) ?? null;
+            },
+            set(state) {
+                const previousStateId = this.selectedState;
+                this.selectedState = state?.id ?? null;
+                if (state && state.id !== previousStateId) {
+                    this.updateProjectState(state);
+                }
+            },
+        },
     },
     methods: {
         updateProjectData() {
+            if (!this.canSubmit) {
+                return;
+            }
             if (this.isStateRequired && !this.selectedState) {
                 this.showStateRequiredError = true;
                 return;
             }
-            this.$inertia.patch(route('projects.update', {project: this.project.id}), {
+            this.processing = true;
+            router.patch(route('projects.update', {project: this.project.id}), {
                 name: this.name,
                 selectedGroup: this.selectedGroup,
                 budget_deadline: this.budgetDeadline,
@@ -315,14 +301,20 @@ export default {
                 preserveScroll: true,
                 onSuccess: () => {
                     this.closeModal(true);
-                }
+                },
+                onFinish: () => {
+                    this.processing = false;
+                },
             })
         },
         closeModal(bool) {
+            if (this.processing && !bool) {
+                return;
+            }
             this.$emit('closed', bool);
         },
         addUserToProject(user) {
-            if (!this.assignedUsers.includes(user)) {
+            if (!this.assignedUsers.some(assignedUser => assignedUser.id === user.id)) {
                 this.assignedUsers.push(user);
             }
         },
@@ -335,24 +327,30 @@ export default {
             }
         },
         updateProjectState(state) {
-            this.$inertia.patch(route('update.project.state', this.project.id), {
+            router.patch(route('update.project.state', this.project.id), {
                 state: state.id
             }, {
                 preserveState: true,
                 preserveScroll: true
             })
         },
-        close() {
-            this.$emit('closed');
-        },
         selectNewKeyVisual() {
             this.$refs.keyVisual.click();
         },
-        updateKeyVisual() {
-            this.validateTypeAndUploadKeyVisual(this.$refs.keyVisual.files[0]);
+        updateKeyVisual(event) {
+            const file = this.$refs.keyVisual.files[0];
+            if (file) {
+                this.validateTypeAndUploadKeyVisual(file);
+            }
+            // Gleiche Datei erneut wählbar machen
+            event.target.value = '';
         },
         uploadDraggedKeyVisual(event) {
-            this.validateTypeAndUploadKeyVisual(event.dataTransfer.files[0]);
+            this.isDraggingKeyVisual = false;
+            const file = event.dataTransfer.files[0];
+            if (file) {
+                this.validateTypeAndUploadKeyVisual(file);
+            }
         },
         validateTypeAndUploadKeyVisual(file) {
             this.uploadKeyVisualFeedback = "";
@@ -386,7 +384,7 @@ export default {
             link.click();
         },
         deleteKeyVisual() {
-            this.$inertia.delete(route('project.delete.keyVisual', this.project.id))
+            router.delete(route('project.delete.keyVisual', this.project.id))
         },
     }
 }

@@ -1,66 +1,67 @@
 <template>
-    <BaseModal @closed="closeRoomHistoryModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_project_history.svg">
-            <div class="mx-4">
-                <div class="font-bold font-lexend text-text tracking-wide text-2xl my-2">
-                    {{$t('Room history')}}
+    <ArtworkBaseModal
+        title="Room history"
+        description="Here you can see what was changed by whom and when."
+        modal-size="sm:max-w-2xl"
+        @close="closeModal(false)"
+    >
+        <EmptyState
+            v-if="historyItems.length === 0"
+            icon="IconHistory"
+            :title="$t('No entries found')"
+        />
+        <ol
+            v-else
+            class="max-h-96 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border-subtle"
+        >
+            <li
+                v-for="(historyItem, index) in historyItems"
+                :key="historyItem.id ?? index"
+                class="flex items-start gap-x-3 px-3 py-2"
+            >
+                <UserPopoverTooltip
+                    :user="historyItem.changes[0].changed_by"
+                    :id="`room-history-${index}`"
+                    height="7"
+                    width="7"
+                />
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm text-text">
+                        {{ $t(historyItem.changes[0].translationKey, historyItem.changes[0].translationKeyPlaceholderValues) }}
+                    </p>
+                    <p class="mt-0.5 text-xs text-text-muted tabular-nums">
+                        {{ historyItem.created_at }}<template v-if="!(historyItem.changes[0].changed_by)"> · {{ $t('deleted User') }}</template>
+                    </p>
                 </div>
-                <div class="text-text-subtle subpixel-antialiased relative z-5">
-                    {{ $t('Here you can see what was changed by whom and when.')}}
-                </div>
-                <div class="flex w-full flex-wrap mt-4 max-h-96 overflow-x-scroll">
-                    <div class="flex items-center w-full my-1" v-for="(historyItem,index) in this.room_history">
-                            <span class="w-40 text-text-subtle my-auto text-sm subpixel-antialiased">
-                                {{ historyItem.created_at }}:
-                            </span>
-                        <div class="flex items-center w-full relative z-20">
-                            <UserPopoverTooltip :height="7"
-                                                :width="7"
-                                                :user="historyItem.changes[0].changed_by"
-                                                :id="index"/>
-                            <div class="text-text-subtle subpixel-antialiased ml-2 text-sm my-auto">
-                                {{
-                                    $t(
-                                        historyItem.changes[0].translationKey,
-                                        historyItem.changes[0].translationKeyPlaceholderValues
-                                    )
-                                }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-    </BaseModal>
+            </li>
+        </ol>
+    </ArtworkBaseModal>
 </template>
 
 <script>
-import {IconCheck, IconX} from "@tabler/icons-vue";
-
-import 'vue-cal/dist/vuecal.css'
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import Permissions from "@/Mixins/Permissions.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import EmptyState from "@/Artwork/Feedback/EmptyState.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'RoomHistoryComponent',
-    mixins: [Permissions],
     components: {
-        BaseModal,
+        ArtworkBaseModal,
+        EmptyState,
         UserPopoverTooltip,
-        NewUserToolTip,
-        JetDialogModal,
-        IconX,
-        IconCheck,
     },
     props: ['room_history'],
     emits: ['closed'],
+    computed: {
+        /** Einträge ohne Änderungsdetails ließen das Template an changes[0] scheitern */
+        historyItems() {
+            return (this.room_history ?? []).filter((historyItem) => historyItem?.changes?.[0])
+        },
+    },
     methods: {
-        closeRoomHistoryModal(bool) {
+        closeModal(bool) {
             this.$emit('closed', bool);
         },
     },
 }
 </script>
-
-<style scoped></style>

@@ -1,52 +1,53 @@
 <template>
-    <ArtworkBaseModal @close="closeModal(false)" v-if="true" :title="titel" description="" :z-index="zIndex">
-        <div class="mt-5">
-            <BaseAlertComponent :message="description" :type="destructive ? 'error' : 'warning'"/>
-        </div>
-        <div class="">
-            <div class="flex justify-between mt-6">
-                <BaseUIButton
-                    :label="confirm || 'Delete'"
-                    :use-translation="!confirm"
-                    :is-delete-button="destructive"
-                    :icon="destructive ? undefined : 'IconCheck'"
-                    @click="closeModal(true)"
-                />
-
-                <BaseUIButton label="No, not really" use-translation @click="closeModal(false)" icon="IconCancel"/>
-            </div>
-        </div>
+    <ArtworkBaseModal
+        :title="titel"
+        modal-size="sm:max-w-lg"
+        :z-index="String(zIndex)"
+        @close="closeModal(false)"
+    >
+        <BaseAlertComponent
+            v-if="description"
+            class="mb-0!"
+            :message="description"
+            :type="destructive ? 'error' : 'warning'"
+        />
+        <template #footer>
+            <BaseUIButton
+                :label="cancel || 'No, not really'"
+                :use-translation="!cancel"
+                is-cancel-button
+                hide-icon
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                :label="confirm || 'Delete'"
+                :use-translation="!confirm"
+                :variant="destructive ? 'danger' : 'primary'"
+                :icon="destructive ? 'IconTrash' : 'IconCheck'"
+                @click="closeModal(true)"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
 <script>
-import {IconCheck, IconX} from "@tabler/icons-vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 export default {
     name: 'ConfirmationComponent',
-    mixins: [Permissions],
     components: {
         BaseAlertComponent,
         BaseUIButton,
         ArtworkBaseModal,
-        BaseModal,
-        FormButton,
-        JetDialogModal,
-        IconX,
-        IconCheck
     },
     props: {
         titel: String,
         description: String,
         /** Beschriftung der Bestätigung (bereits übersetzt); ohne Angabe „Löschen“ */
         confirm: String,
+        /** Beschriftung des Abbrechens (bereits übersetzt); ohne Angabe „Nein, doch nicht“ */
         cancel: String,
         /** Rot/Mülleimer für zerstörende Aktionen; false für neutrale Bestätigungen (z. B. Neu buchen) */
         destructive: {
@@ -54,7 +55,7 @@ export default {
             default: true
         },
         zIndex: {
-            type: String,
+            type: [String, Number],
             default: '100'
         }
     },
@@ -66,5 +67,3 @@ export default {
     },
 }
 </script>
-
-<style scoped></style>

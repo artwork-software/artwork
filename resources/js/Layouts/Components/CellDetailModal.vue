@@ -386,7 +386,6 @@
             :title="$t('Delete comment')"
             :description="$t('Are you sure you want to delete this comment?')"
             :button="$t('Delete')"
-            :is_budget="true"
             @closed="commentToDelete = null"
             @delete="performDeleteComment"
         />

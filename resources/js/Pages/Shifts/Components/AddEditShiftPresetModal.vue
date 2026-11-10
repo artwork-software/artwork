@@ -1,221 +1,147 @@
 <template>
-<BaseModal @closed="$emit('closed')">
-    <div>
-        <ModalHeader
-            :title="$t('Organize shift')"
-            :description="$t('Determine how long your shift lasts and how many people should work in your shift.')"
-        />
-    </div>
-    <form @submit.prevent="saveShift">
-        <div class="mt-10">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                <div class="flex flex-row">
-                    <TimeInputComponent v-model="shiftForm.start"
-                                        :label="$t('Start-Time')"
-                                        @change="validateShiftDates()" id=""/>
-                </div>
-                <div class="flex flex-row">
-                    <TimeInputComponent v-model="shiftForm.end"
-                                        :label="$t('End-Time')"
-                                        @change="validateShiftDates()"
-                                        id=""/>
-                </div>
-                <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
-                                                    this.validationMessages.errors.shift_start.length > 0 ||
-                                                    this.validationMessages.warnings.shift_end.length > 0 ||
-                                                    this.validationMessages.errors.shift_end.length > 0">
-                    <div v-if="this.validationMessages.warnings.shift_start.length > 0"
-                         class="flex flex-col">
-                                                <span v-for="warning in this.validationMessages.warnings.shift_start"
-                                                      class="text-xs text-special-orange">
-                                                    {{ warning }}
-                                                </span>
-                    </div>
-                    <div v-if="this.validationMessages.errors.shift_start.length > 0"
-                         class="flex flex-col">
-                                                <span v-for="error in this.validationMessages.errors.shift_start"
-                                                      class="text-xs text-sm/5 text-danger">
-                                                    {{ error }}
-                                                </span>
-                    </div>
-                </div>
-                <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
-                                                    this.validationMessages.errors.shift_start.length > 0 ||
-                                                    this.validationMessages.warnings.shift_end.length > 0 ||
-                                                    this.validationMessages.errors.shift_end.length > 0">
-                    <div v-if="this.validationMessages.warnings.shift_end.length > 0"
-                         class="flex flex-col">
-                                                <span v-for="warning in this.validationMessages.warnings.shift_end"
-                                                      class="text-xs text-special-orange">
-                                                    {{ warning }}
-                                                </span>
-                    </div>
-                    <div v-if="this.validationMessages.errors.shift_end.length > 0"
-                         class="flex flex-col">
-                                                <span v-for="error in this.validationMessages.errors.shift_end"
-                                                      class="text-xs text-sm/5 text-danger">
-                                                    {{ error }}
-                                                </span>
-                    </div>
-                </div>
-                <div>
-                    <BaseInput id="shift-break-minutes-input"
-                               type="number"
-                               :label="$t('Length of break in minutes*')"
-                               v-model="shiftForm.break_minutes"
-                               :min="0"
-                               :max="1000"
-                               @input="autoBreak.markManual()"
-                               @change="validateShiftBreak()"
-                    />
-                    <LegalBreakHint
-                        :break-minutes="shiftForm.break_minutes"
-                        :legal-minutes="autoBreak.legalMinutes.value"
-                        :has-times="autoBreak.hasTimes.value"
-                        @reset="autoBreak.resetToLegal(); validateShiftBreak()"
-                    />
-                </div>
-                <div>
-                    <SelectComponent id="addShiftCraftSelectComponent"
-                                     :label="$t('Craft') + '*'"
-                                     v-model="this.selectedCraft"
-                                     :options="this.sortedCrafts"
-                                     selected-property-to-display="name"
-                                     :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
-                    />
-                </div>
-                <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
-                                                    this.validationMessages.errors.break_length.length > 0 ||
-                                                    this.validationMessages.warnings.craft.length > 0 ||
-                                                    this.validationMessages.errors.craft.length > 0">
-                    <div v-if="this.validationMessages.warnings.break_length.length > 0"
-                         class="flex flex-col">
-                                                <span v-for="warning in this.validationMessages.warnings.break_length"
-                                                      class="text-xs text-special-orange">
-                                                    {{ warning }}
-                                                </span>
-                    </div>
-                    <div v-if="this.validationMessages.errors.break_length.length > 0"
-                         class="flex flex-col">
-                                                <span v-for="error in this.validationMessages.errors.break_length"
-                                                      class="text-xs text-sm/5 text-danger">
-                                                    {{ error }}
-                                                </span>
-                    </div>
-                </div>
-                <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
-                                                    this.validationMessages.errors.break_length.length > 0 ||
-                                                    this.validationMessages.warnings.craft.length > 0 ||
-                                                    this.validationMessages.errors.craft.length > 0">
-                    <div v-if="this.validationMessages.warnings.craft.length > 0"
-                         class="flex flex-col">
-                                                <span v-for="warning in this.validationMessages.warnings.craft"
-                                                      class="text-xs text-special-orange">
-                                                    {{ warning }}
-                                                </span>
-                    </div>
-                    <div v-if="this.validationMessages.errors.craft.length > 0"
-                         class="flex flex-col">
-                                                <span v-for="error in this.validationMessages.errors.craft"
-                                                      class="text-xs text-sm/5 text-danger">
-                                                    {{ error }}
-                                                </span>
-                    </div>
-                </div>
-                <div v-for="(computedShiftQualification, index) in this.computedShiftQualifications"
-                     v-show="this.canComputedShiftQualificationBeShown(computedShiftQualification)">
-                    <NumberComponent v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
-                                     v-model="computedShiftQualification.value"
-                                     :id="'shift-qualification-' + index"
-                                     :label="$t('Amount {0}', [computedShiftQualification.name])"
-                                     @change="this.validateShiftsQualification(computedShiftQualification)"/>
-                    <div v-if="computedShiftQualification.warning || computedShiftQualification.error"
-                         class="mt-2 space-y-2"
-                    >
-                        <div v-if="computedShiftQualification.warning" class="flex flex-col">
-                                                    <span class="text-xs text-sm/5 text-danger">
-                                                        {{ computedShiftQualification.warning }}
-                                                    </span>
-                        </div>
-                        <div v-if="computedShiftQualification.error" class="flex flex-col">
-                                                    <span class="text-xs text-sm/5 text-danger">
-                                                        {{ computedShiftQualification.error }}
-                                                    </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-2">
-                    <TextareaComponent v-model="shiftForm.description" :label="$t('Is there any important information about this shift?')" rows="4" name="comment" id="comment" />
-                </div>
+    <ArtworkBaseModal
+        title="Organize shift"
+        description="Determine how long your shift lasts and how many people should work in your shift."
+        modal-size="sm:max-w-2xl"
+        z-index="150"
+        @close="closeModal(false)"
+    >
+        <form id="addEditShiftPresetForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2" @submit.prevent="saveShift">
+            <div>
+                <BaseInput
+                    id="shiftPresetStart"
+                    v-model="shiftForm.start"
+                    type="time"
+                    label="Start-Time"
+                    required
+                    :error="validationMessages.errors.shift_start.join(' ')"
+                    @change="validateShiftDates()"
+                />
+                <p v-for="warning in validationMessages.warnings.shift_start" :key="warning" class="mt-1 text-[11.5px] text-warning">
+                    {{ warning }}
+                </p>
             </div>
-        </div>
-        <div class="flex justify-center">
-            <BaseUIButton :label="$t('Save')" is-add-button type="submit" :disabled="shiftForm.processing" />
-        </div>
-    </form>
-
-</BaseModal>
+            <div>
+                <BaseInput
+                    id="shiftPresetEnd"
+                    v-model="shiftForm.end"
+                    type="time"
+                    label="End-Time"
+                    required
+                    :error="validationMessages.errors.shift_end.join(' ')"
+                    @change="validateShiftDates()"
+                />
+                <p v-for="warning in validationMessages.warnings.shift_end" :key="warning" class="mt-1 text-[11.5px] text-warning">
+                    {{ warning }}
+                </p>
+            </div>
+            <div>
+                <BaseInput
+                    id="shiftPresetBreakMinutes"
+                    v-model="shiftForm.break_minutes"
+                    type="number"
+                    label="Length of break in minutes"
+                    required
+                    :min="0"
+                    :max="1000"
+                    :error="validationMessages.errors.break_length.join(' ')"
+                    @input="autoBreak.markManual()"
+                    @change="validateShiftBreak()"
+                />
+                <p v-for="warning in validationMessages.warnings.break_length" :key="warning" class="mt-1 text-[11.5px] text-warning">
+                    {{ warning }}
+                </p>
+                <LegalBreakHint
+                    :break-minutes="shiftForm.break_minutes"
+                    :legal-minutes="autoBreak.legalMinutes.value"
+                    :has-times="autoBreak.hasTimes.value"
+                    @reset="autoBreak.resetToLegal(); validateShiftBreak()"
+                />
+            </div>
+            <div>
+                <ArtworkBaseListbox
+                    v-model="selectedCraft"
+                    :items="sortedCrafts"
+                    by="id"
+                    :option-label="craftLabel"
+                    label="Craft"
+                    placeholder="Select craft"
+                    @change="validateShiftCraft()"
+                >
+                    <template #label>
+                        {{ $t('Craft') }} <span class="text-danger">*</span>
+                    </template>
+                </ArtworkBaseListbox>
+                <p v-for="error in validationMessages.errors.craft" :key="error" class="mt-1 text-[11.5px] text-danger">
+                    {{ error }}
+                </p>
+            </div>
+            <template v-for="(computedShiftQualification, index) in computedShiftQualifications" :key="computedShiftQualification.id">
+                <div v-if="canComputedShiftQualificationBeShown(computedShiftQualification)">
+                    <BaseInput
+                        :id="'shift-qualification-' + index"
+                        v-model="computedShiftQualification.value"
+                        type="number"
+                        :min="0"
+                        :label="$t('Amount {0}', [computedShiftQualification.name])"
+                        without-translation
+                        :error="computedShiftQualification.error ?? ''"
+                        @change="validateShiftsQualification(computedShiftQualification)"
+                    />
+                    <p v-if="computedShiftQualification.warning" class="mt-1 text-[11.5px] text-warning">
+                        {{ computedShiftQualification.warning }}
+                    </p>
+                </div>
+            </template>
+            <BaseTextarea
+                id="shiftPresetDescription"
+                v-model="shiftForm.description"
+                label="Is there any important information about this shift?"
+                rows="4"
+                class="sm:col-span-2"
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="shiftForm.processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                type="submit"
+                form="addEditShiftPresetForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="shiftForm.processing"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 <script>
-import {IconCheck, IconChevronDown, IconCirclePlus, IconX} from "@tabler/icons-vue";
 import {defineComponent, reactive, toRef} from 'vue'
+import {useForm} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import LegalBreakHint from "@/Components/Inputs/LegalBreakHint.vue";
 import {useAutoBreak} from "@/Composeables/useAutoBreak";
 import Permissions from "@/Mixins/Permissions.vue";
-import {
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-    TransitionChild,
-    TransitionRoot
-} from "@headlessui/vue";
-import Input from "@/Jetstream/Input.vue";
-import {useForm} from "@inertiajs/vue3";
-import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
-import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
-import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
     name: "AddEditShiftPresetModal",
     mixins: [Permissions],
     components: {
+        ArtworkBaseModal,
+        ArtworkBaseListbox,
         BaseInput,
+        BaseTextarea,
         LegalBreakHint,
         BaseUIButton,
-        TextareaComponent,
-        ModalHeader,
-        BaseModal,
-        SelectComponent,
-        NumberComponent,
-        DateInputComponent, TimeInputComponent,
-        FormButton,
-        ConfirmationModal,
-        IconCheck,
-        IconChevronDown,
-        Input,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        IconX,
-        DialogPanel,
-        IconCirclePlus,
-        ListboxButton,
-        ListboxOption,
-        ListboxOptions,
-        Listbox
     },
     props: ['crafts', 'presetShift', 'edit', 'presetId', 'shiftQualifications'],
     setup(props) {
@@ -226,7 +152,7 @@ export default defineComponent({
             start: props.presetShift ? props.presetShift.start : null,
             end: props.presetShift ? props.presetShift.end : null,
             break_minutes: props.presetShift ? props.presetShift.break_minutes : null,
-            craft_id: props.presetShift ? props.presetShift.craft.id : null,
+            craft_id: props.presetShift?.craft?.id ?? null,
             description: props.presetShift ? props.presetShift.description : '',
             presetShiftsQualifications: []
         });
@@ -241,8 +167,7 @@ export default defineComponent({
     },
     data(){
         return {
-            open: true,
-            selectedCraft: this.presetShift ? this.presetShift.craft : null,
+            selectedCraft: this.presetShift?.craft ?? null,
             validationMessages: {
                 warnings: {
                     shift_start: [],
@@ -257,7 +182,6 @@ export default defineComponent({
                     craft: [],
                 }
             },
-            showChangeAllModal: false
         }
     },
     emits: ['closed'],
@@ -268,10 +192,10 @@ export default defineComponent({
         computedShiftQualifications() {
             let computedShiftQualifications = [];
 
-            this.shiftQualifications.forEach((shiftQualification) => {
+            (this.shiftQualifications ?? []).forEach((shiftQualification) => {
                 //on edit lookup qualifications already assigned to shift for their values
                 let foundShiftsQualification = this.edit ?
-                    this.presetShift.shifts_qualifications.find(
+                    this.presetShift?.shifts_qualifications?.find(
                         (shiftsQualification) => shiftsQualification.shift_qualification_id === shiftQualification.id
                     ) :
                     undefined;
@@ -288,6 +212,9 @@ export default defineComponent({
         },
     },
     methods: {
+        craftLabel(craft) {
+            return craft ? `${craft.name} ${craft.abbreviation ?? ''}`.trim() : '';
+        },
         canComputedShiftQualificationBeShown(computedShiftQualification) {
             //computedShiftQualification is shown if its either available or the modal is opened for edit and the
             //given shift contains the shift_qualification_id already, even if it's not available for new shifts anymore
@@ -297,11 +224,13 @@ export default defineComponent({
         shiftContainsComputedShiftQualification(computedShiftQualification) {
             //if shift contains shift qualficiation id return true to show it even if it's not available anymore
             //it also gets appended to patch request then but not to create requests
-            return typeof this.presetShift.shifts_qualifications.find(
+            return typeof this.presetShift?.shifts_qualifications?.find(
                 (shiftsQualification) => shiftsQualification.shift_qualification_id === computedShiftQualification.id
             ) !== 'undefined'
         },
         appendComputedShiftQualificationsToShiftForm() {
+            // Neu aufbauen, sonst doppeln sich die Einträge bei erneutem Absenden nach einem Fehler
+            this.shiftForm.presetShiftsQualifications = [];
             this.computedShiftQualifications.forEach(
                 (computedShiftQualification) => {
                     //only append if they also can be shown
@@ -315,6 +244,9 @@ export default defineComponent({
             );
         },
         closeModal(bool){
+            if (this.shiftForm.processing) {
+                return;
+            }
             this.$emit('closed', bool);
         },
         validateShiftDates() {
@@ -404,7 +336,7 @@ export default defineComponent({
             return hasShiftDateError || hasShiftBreakError || hasShiftCraftError || hasShiftsQualificationsError;
         },
         saveShift(){
-            if (this.validate()) {
+            if (this.shiftForm.processing || this.validate()) {
                 return;
             }
 
@@ -418,8 +350,8 @@ export default defineComponent({
                 this.shiftForm.break_minutes = null;
                 this.shiftForm.craft_id = null;
                 this.shiftForm.description = '';
-                this.shiftForm.shiftsQualifications = [];
-                this.closeModal(true);
+                this.shiftForm.presetShiftsQualifications = [];
+                this.$emit('closed', true);
             };
 
             if (this.shiftForm.id !== null && this.shiftForm.id !== undefined) {

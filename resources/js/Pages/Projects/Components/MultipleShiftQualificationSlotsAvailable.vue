@@ -1,44 +1,46 @@
 <template>
-    <ArtworkBaseModal @close="close(null, null, null, true)" v-if="show"  :title="$t('Select qualification')"
-                      :description="$t('In which qualification should the user be added?')"  is-in-shift-plan>
-            <div class="mx-4">
-                <div class="grid grid-cols-2 w-full gap-4">
-                    <BaseUIButton
-                        v-for="availableShiftQualificationSlot in this.availableShiftQualificationSlots"
-                        :label="$t('Use as {0}', [availableShiftQualificationSlot.name]) + (shouldShowAbbreviation(availableShiftQualificationSlot) && availableShiftQualificationSlot.pivot?.craft_id ? ' [' + getCraftAbbreviation(availableShiftQualificationSlot.pivot.craft_id) + ']' : '') + (availableShiftQualificationSlot.isOverbooked ? ' (' + $t('Overbook') + ')' : '')"
-                        @click="this.close(null, this.droppedUser, availableShiftQualificationSlot.id, false, !!availableShiftQualificationSlot.isOverbooked)"
-                        :icon="availableShiftQualificationSlot.icon"
-                        is-add-button
-                        :class="{ '!border-warning !border-dashed': availableShiftQualificationSlot.isOverbooked }"
-                    />
-                </div>
-            </div>
+    <ArtworkBaseModal
+        v-if="show"
+        title="Select qualification"
+        description="In which qualification should the user be added?"
+        modal-size="sm:max-w-xl"
+        is-in-shift-plan
+        @close="close(null, null, null, true)"
+    >
+        <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+            <BaseUIButton
+                v-for="(availableShiftQualificationSlot, index) in availableShiftQualificationSlots"
+                :key="`${availableShiftQualificationSlot.id}-${availableShiftQualificationSlot.pivot?.craft_id ?? index}`"
+                :label="slotLabel(availableShiftQualificationSlot)"
+                :use-translation="false"
+                :icon="availableShiftQualificationSlot.icon"
+                variant="secondary"
+                class="w-full"
+                :class="{ 'border-warning-border! border-dashed!': availableShiftQualificationSlot.isOverbooked }"
+                @click="close(null, droppedUser, availableShiftQualificationSlot.id, false, !!availableShiftQualificationSlot.isOverbooked)"
+            />
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                @click="close(null, null, null, true)"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
 <script>
-import {IconX} from "@tabler/icons-vue";
 import {defineComponent} from 'vue';
-import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
+    name: 'MultipleShiftQualificationSlotsAvailable',
     components: {
         BaseUIButton,
         ArtworkBaseModal,
-        ModalHeader,
-        AddButtonSmall,
-        FormButton,
-        BaseModal,
-        IconX,
-        JetDialogModal,
-        ShiftQualificationIconCollection
     },
     props: [
         'show',
@@ -60,6 +62,20 @@ export default defineComponent({
         }
     },
     methods: {
+        /**
+         * Fertig übersetzte Beschriftung; der Button übersetzt sie nicht noch einmal,
+         * weil Namen sonst als i18n-Syntax ausgewertet würden.
+         */
+        slotLabel(slot) {
+            let label = this.$t('Use as {0}', [slot.name]);
+            if (this.shouldShowAbbreviation(slot) && slot.pivot?.craft_id) {
+                label += ' [' + this.getCraftAbbreviation(slot.pivot.craft_id) + ']';
+            }
+            if (slot.isOverbooked) {
+                label += ' (' + this.$t('Overbook') + ')';
+            }
+            return label;
+        },
         shouldShowAbbreviation(slot) {
             if (!this.hasDuplicateQualifications) return false;
 

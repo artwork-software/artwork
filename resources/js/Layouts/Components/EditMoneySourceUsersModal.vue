@@ -1,182 +1,143 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
-            <div class="mx-3">
-                <ModalHeader
-                    :title="$t('Manage release')"
-                    :description="$t('Type the name of the users you want to give access to the source. You can only select users who are authorized to edit a funding source. Authorized users automatically have access to the source.')"
-                />
-                <div class="mb-2">
-                    <div class="relative w-full">
-                        <UserSearch v-model="user_query" @userSelected="addUserToMoneySourceUserArray" />
+    <ArtworkBaseModal
+        title="Manage release"
+        description="Type the name of the users you want to give access to the source. You can only select users who are authorized to edit a funding source. Authorized users automatically have access to the source."
+        modal-size="sm:max-w-2xl"
+        @close="closeModal(false)"
+    >
+        <div class="space-y-4">
+            <UserSearch label="Search for users" @user-selected="addUserToMoneySourceUserArray"/>
+            <ul
+                v-if="assignedUsers.length > 0"
+                class="max-h-96 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+            >
+                <li
+                    v-for="user in assignedUsers"
+                    :key="user.id"
+                    class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-2"
+                >
+                    <div class="flex min-w-0 items-center gap-x-3">
+                        <img class="size-8 shrink-0 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
+                        <span class="truncate text-sm font-medium text-text">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </span>
                     </div>
-                </div>
-                <div class="mt-4 divide-y divide-border-subtle divide-dashed mb-5">
-                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full py-3 " v-for="user in assignedUsers">
-                        <div class="flex col-span-2">
-                            <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                                <span class="flex ml-4">
-                                        {{ user.first_name }} {{ user.last_name }}
-                                    </span>
-                            </div>
-                            <button type="button" @click="deleteUserFromMoneySourceUserArray(user)">
-                                <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                                <IconCircleX stroke-width="1.5" class="ml-3 text-accent-600 h-5 w-5 hover:text-danger "/>
-                            </button>
-                        </div>
-                        <div class="col-span-3 flex">
-                            <div class="flex items-center justify-between" v-if="user.pivot">
-                                <div class="flex">
-                                    <input v-model="user.pivot.competent"
-                                           type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                                    <p :class="[user.pivot.competent ? 'text-text font-black' : 'text-text-subtle']"
-                                       class="ml-4 my-auto text-sm">{{ $t('Responsible')}}</p>
-                                </div>
-                                <div class="flex ml-8">
-                                    <input v-model="user.pivot.write_access"
-                                           type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                                    <p :class="[user.pivot.write_access ? 'text-text font-black' : 'text-text-subtle']"
-                                       class="ml-4 my-auto text-sm">{{ $t('Write and delete permission')}}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between" v-else>
-                                <div class="flex">
-                                    <input v-model="user.competent"
-                                           type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                                    <p :class="[user.competent ? 'text-text font-black' : 'text-text-subtle']"
-                                       class="ml-4 my-auto text-sm">{{ $t('Responsible')}}</p>
-                                </div>
-                                <div class="flex ml-8">
-                                    <input v-model="user.write_access"
-                                           type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                                    <p :class="[user.write_access ? 'text-text font-black' : 'text-text-subtle']"
-                                       class="ml-4 my-auto text-sm">{{ $t('Write and delete permission')}}</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="flex items-center gap-x-4">
+                        <BaseCheckbox
+                            :id="'moneySourceUserCompetent-' + user.id"
+                            v-model="user.competent"
+                            :label="$t('Responsible')"
+                        />
+                        <BaseCheckbox
+                            :id="'moneySourceUserWriteAccess-' + user.id"
+                            v-model="user.write_access"
+                            :label="$t('Write and delete permission')"
+                        />
+                        <button
+                            type="button"
+                            class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover hover:text-danger"
+                            :aria-label="$t('Remove user')"
+                            @click="deleteUserFromMoneySourceUserArray(user)"
+                        >
+                            <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                        </button>
                     </div>
-                </div>
-                <div class="w-full items-center flex justify-center text-center">
-                    <FormButton @click="editMoneySourceUsers" :text="$t('Save')"
-                    />
-                </div>
-            </div>
-    </BaseModal>
-
+                </li>
+            </ul>
+            <p v-else class="text-xs text-text-muted">
+                {{ $t('No users added yet') }}
+            </p>
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+                :disabled="processing"
+                @click="editMoneySourceUsers"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconCheck, IconChevronDown, IconCircleX, IconX} from "@tabler/icons-vue";
+<script setup>
+import {ref} from 'vue'
+import {router} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import UserSearch from '@/Components/SearchBars/UserSearch.vue'
 
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
+defineOptions({name: 'EditMoneySourceUsersModal'})
 
+const props = defineProps({
+    moneySource: {type: Object, required: true},
+})
 
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import Dropdown from "@/Jetstream/Dropdown.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import UserSearch from "@/Components/SearchBars/UserSearch.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+const emit = defineEmits(['closed'])
 
-export default {
-    name: 'AddBudgetTemplateComponent',
-    mixins: [Permissions],
-    components: {
-        ModalHeader,
-        UserSearch,
-        BaseModal,
-        FormButton,
-        Dropdown,
-        JetDialogModal,
-        IconX,
-        IconCheck,
-        IconChevronDown,
-        InputComponent,
-        IconCircleX
-    },
+/**
+ * Arbeitskopie: früher wurden das Nutzer*innen-Array und die Pivot-Werte der Quelle direkt verändert,
+ * Abbrechen hätte die Änderungen dann trotzdem in der Anzeige stehen lassen.
+ */
+function toAssignedUser(user) {
+    return {
+        ...user,
+        competent: Boolean(user.pivot?.competent ?? user.competent ?? false),
+        write_access: Boolean(user.pivot?.write_access ?? user.write_access ?? false),
+    }
+}
 
-    data() {
-        return {
-            user_search_results: [],
-            user_query: '',
-            assignedUsers: this.moneySource.users ? this.moneySource.users : [],
+const assignedUsers = ref((props.moneySource?.users ?? []).map(toAssignedUser))
+const processing = ref(false)
+
+function closeModal(saved) {
+    emit('closed', saved)
+}
+
+function addUserToMoneySourceUserArray(userToAdd) {
+    if (assignedUsers.value.some((assignedUser) => assignedUser.id === userToAdd.id)) {
+        return
+    }
+    assignedUsers.value.push(toAssignedUser(userToAdd))
+}
+
+function deleteUserFromMoneySourceUserArray(userToRemove) {
+    assignedUsers.value = assignedUsers.value.filter((user) => user.id !== userToRemove.id)
+}
+
+function editMoneySourceUsers() {
+    if (processing.value) {
+        return
+    }
+    const users = {}
+    assignedUsers.value.forEach((user) => {
+        users[user.id] = {
+            user_id: user.id,
+            competent: user.competent,
+            write_access: user.write_access,
         }
-    },
-    watch: {
-        user_query: {
-            handler() {
-                if (this.user_query.length > 0) {
-                    axios.get('/users/money_source_search', {
-                        params: {query: this.user_query}
-                    }).then(response => {
-                        this.user_search_results = response.data
-                    })
-                }
+    })
+    processing.value = true
+    router.patch(
+        route('money_sources.update_users', {moneySource: props.moneySource.id}),
+        {users},
+        {
+            preserveScroll: true,
+            onSuccess: () => closeModal(true),
+            onFinish: () => {
+                processing.value = false
             },
-            deep: true
-        },
-    },
-
-
-    props: ['moneySource'],
-
-    emits: ['closed'],
-
-    methods: {
-        openModal() {
-        },
-
-        closeModal(bool) {
-            this.$emit('closed', bool);
-        },
-        editMoneySourceUsers() {
-            let users = {};
-            this.assignedUsers.forEach(user => {
-                if(user.pivot){
-                    users[user.id] = {
-                        user_id: user.id,
-                        competent: user.pivot.competent,
-                        write_access: user.pivot.write_access
-                    };
-                }else{
-                    users[user.id] = {
-                        user_id: user.id,
-                        competent: user.competent,
-                        write_access: user.write_access
-                    };
-                }
-
-            })
-            this.$inertia.patch(route('money_sources.update_users',{moneySource: this.moneySource.id}),{
-                users: users,
-            });
-            this.closeModal(true);
-        },
-        deleteUserFromMoneySourceUserArray(user) {
-            if (this.assignedUsers.includes(user)) {
-                this.assignedUsers.splice(this.assignedUsers.indexOf(user), 1);
-            }
-        },
-        addUserToMoneySourceUserArray(userToAdd) {
-            for (let assignedUser of this.assignedUsers) {
-                if (userToAdd.id === assignedUser.id) {
-                    this.user_query = ""
-                    return;
-                }
-            }
-            this.assignedUsers.push(userToAdd);
-            this.user_query = ""
-        },
-    },
+        }
+    )
 }
 </script>
-
-<style scoped></style>

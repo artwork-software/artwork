@@ -570,335 +570,332 @@
                     </div>
     </RoomSettingsHeader>
     <!-- Areal Hinzufügen-->
-
-    <ArtworkBaseModal @close="closeAddAreaModal" v-if="showAddAreaModal" :title="$t('New area')" description="">
-        <div class="mx-3">
-            <form @submit.prevent="addArea" class="">
-                <div>
-                    <BaseInput
-                        id="roomNameEdit"
-                        v-model="newAreaForm.name"
-                        label="Name of the area"
-                        required
-                    />
-                    <jet-input-error :message="newAreaForm.error" class="mt-2"/>
-                </div>
-
-                <div class="w-full items-center flex justify-center text-center mt-4">
-                    <BaseUIButton
-                        is-add-button
-                        :disabled="newAreaForm.processing || newAreaForm.name === ''"
-                        :label="$t('Create')"
-                        class="mt-8"
-                        type="submit"
-                    />
-                </div>
-            </form>
-        </div>
+    <ArtworkBaseModal
+        v-if="showAddAreaModal"
+        title="New area"
+        modal-size="sm:max-w-lg"
+        @close="closeAddAreaModal"
+    >
+        <form id="addAreaForm" @submit.prevent="addArea">
+            <BaseInput
+                id="newAreaName"
+                v-model="newAreaForm.name"
+                label="Name of the area"
+                required
+                autofocus
+                :error="newAreaForm.errors.name"
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="newAreaForm.processing"
+                @click="closeAddAreaModal"
+            />
+            <BaseUIButton
+                type="submit"
+                form="addAreaForm"
+                label="Create"
+                variant="primary"
+                :processing="newAreaForm.processing"
+                :disabled="newAreaForm.processing || newAreaForm.name.trim() === ''"
+            />
+        </template>
     </ArtworkBaseModal>
     <!-- Areal Bearbeiten-->
-    <ArtworkBaseModal @close="closeEditAreaModal" v-if="showEditAreaModal" :title="$t('Edit area')" description="">
-        <div class="mx-3">
-            <form @submit.prevent="editArea" class="">
-                <div>
-                    <BaseInput
-                        id="areaEditName"
-                        v-model="editAreaForm.name"
-                        label="Name of the area"
-                    />
-                    <jet-input-error :message="editAreaForm.error" class="mt-2"/>
-                </div>
-
-                <div class="mt-4">
-                    <div class="text-sm text-text mb-1">{{ $t('Color') }}</div>
-                    <div class="text-xs text-text-subtle mb-2">{{ $t('The color visually separates the rooms of this area in the calendar. Rooms inherit this color unless they have their own.') }}</div>
-                    <ColorPickerComponent @updateColor="(color) => editAreaForm.color = color" :color="editAreaForm.color"/>
-                </div>
-
-                <div class="w-full items-center flex justify-center text-center">
-                    <BaseUIButton
-                        :disabled="editAreaForm.processing || editAreaForm.name === ''"
-                        :label="$t('Save')"
-                        type="submit"
-                        is-add-button
-                    />
-                </div>
-            </form>
-        </div>
+    <ArtworkBaseModal
+        v-if="showEditAreaModal"
+        title="Edit area"
+        modal-size="sm:max-w-lg"
+        @close="closeEditAreaModal"
+    >
+        <form id="editAreaForm" class="space-y-4" @submit.prevent="editArea">
+            <BaseInput
+                id="areaEditName"
+                v-model="editAreaForm.name"
+                label="Name of the area"
+                required
+                :error="editAreaForm.errors.name"
+            />
+            <div>
+                <div class="mb-1 font-lexend text-xs font-medium text-text">{{ $t('Color') }}</div>
+                <p class="mb-2 text-xs text-text-muted">{{ $t('The color visually separates the rooms of this area in the calendar. Rooms inherit this color unless they have their own.') }}</p>
+                <ColorPickerComponent @updateColor="(color) => editAreaForm.color = color" :color="editAreaForm.color"/>
+            </div>
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="editAreaForm.processing"
+                @click="closeEditAreaModal"
+            />
+            <BaseUIButton
+                type="submit"
+                form="editAreaForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="editAreaForm.processing"
+                :disabled="editAreaForm.processing || editAreaForm.name.trim() === ''"
+            />
+        </template>
     </ArtworkBaseModal>
     <!-- Raum Hinzufügen-->
-    <ArtworkBaseModal @close="closeAddRoomModal" v-if="showAddRoomModal"  :title="$t('New room')" :description="$t('Create a new room.')">
-        <div class="mx-3">
-            <form @submit.prevent="addRoom" class="grid grid-cols-1 gap-4">
-                <div class="">
-                    <BaseInput
-                        id="roomName"
-                        v-model="newRoomForm.name"
-                        label="Room name*"
-                        required
-                    />
-                    <jet-input-error :message="newRoomForm.errors.name" class="mt-2"/>
-                </div>
-                <div class="">
-                    <BaseTextarea
-                        label="Short description"
-                        v-model="newRoomForm.description"
-                        :rows="4"
-                        id="description"
-                    />
-                </div>
-                <div class="space-y-6 rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
-                    <RoomPropertyCheckboxGroup
-                        :label="$t('Room categories')"
-                        :items="room_categories"
-                        v-model="newRoomForm.room_categories"
-                        :empty-text="$t('No room categories created yet')"
-                    />
-                    <RoomPropertyCheckboxGroup
-                        :label="$t('Room properties')"
-                        :items="room_attributes"
-                        v-model="newRoomForm.room_attributes"
-                        :empty-text="$t('No room properties created yet')"
-                    />
-                    <RoomPropertyCheckboxGroup
-                        :label="$t('Adjoining rooms')"
-                        :items="adjoiningRoomItems"
-                        v-model="newRoomForm.adjoining_rooms"
-                        :empty-text="$t('No rooms created yet')"
-                    />
-                </div>
-                <SettingsGuideBanner
-                    variant="static"
-                    title="What do these switches do?"
-                    :paragraphs="[
-                        'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
-                        'Temporary rooms appear in the calendar only during the set period.',
-                        'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
-                        'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',
-                    ]"
+    <ArtworkBaseModal
+        v-if="showAddRoomModal"
+        title="New room"
+        description="Create a new room."
+        modal-size="sm:max-w-2xl"
+        @close="closeAddRoomModal"
+    >
+        <form id="addRoomForm" class="grid grid-cols-1 gap-4" @submit.prevent="addRoom">
+            <BaseInput
+                id="newRoomName"
+                v-model="newRoomForm.name"
+                label="Room name"
+                required
+                autofocus
+                :error="newRoomForm.errors.name"
+            />
+            <BaseTextarea
+                id="newRoomDescription"
+                v-model="newRoomForm.description"
+                label="Short description"
+                :rows="4"
+            />
+            <div class="space-y-6 rounded-lg border border-border-subtle bg-surface-sunken p-4">
+                <RoomPropertyCheckboxGroup
+                    :label="$t('Room categories')"
+                    :items="room_categories"
+                    v-model="newRoomForm.room_categories"
+                    :empty-text="$t('No room categories created yet')"
                 />
-                <div class="flex items-center">
-                    <input v-model="newRoomForm.temporary" type="checkbox" class="input-checklist"/>
-                    <p :class="[newRoomForm.temporary ? 'text-text font-black' : 'text-text-subtle']"
-                       class="ml-4 text-sm">{{ $t('Temporary room') }}</p>
-                    <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                        <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
-                        <span
-                            class="ml-1 my-auto ">{{
-                                $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')
-                            }}</span>
-                    </div>
-                </div>
-                <div class="" v-if="newRoomForm.temporary">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <BaseInput
-                            type="date"
-                            v-model="newRoomForm.start_date"
-                            id="startDate"
-                            label="Start date"
-                            :error="newRoomForm.errors.start_date"/>
-                        <BaseInput
-                            type="date"
-                            v-model="newRoomForm.end_date"
-                            id="endDate"
-                            label="End date"
-                            :error="newRoomForm.errors.end_date"
-                        />
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <input v-model="newRoomForm.everyone_can_book" type="checkbox" class="input-checklist"/>
-                    <p :class="[newRoomForm.everyone_can_book ? 'text-text font-black' : 'text-text-subtle']"
-                       class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone') }}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-subtle">({{ $t('no effect') }})</span></p>
-                    <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                        <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
-                        <span
-                            class="ml-1 my-auto ">{{
-                                $t('Decides whether this room can be booked by everyone or only by the room admins.')
-                            }}</span>
-                    </div>
-                </div>
-
-                <div class="flex items-start gap-x-4">
-                    <input v-model="newRoomForm.relevant_for_disposition"
-                           type="checkbox"
-                           class="input-checklist"/>
-                    <div>
-                        <p :class="[newRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']"
-                           class="my-auto text-sm">{{ $t('Relevant for disposition') }}</p>
-                        <span class="text-xs"
-                              :class="[newRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']">{{
-                                $t('Activate this field if the room is to be included in the calendars.')
-                            }}</span>
-                    </div>
-                </div>
+                <RoomPropertyCheckboxGroup
+                    :label="$t('Room properties')"
+                    :items="room_attributes"
+                    v-model="newRoomForm.room_attributes"
+                    :empty-text="$t('No room properties created yet')"
+                />
+                <RoomPropertyCheckboxGroup
+                    :label="$t('Adjoining rooms')"
+                    :items="adjoiningRoomItems"
+                    v-model="newRoomForm.adjoining_rooms"
+                    :empty-text="$t('No rooms created yet')"
+                />
+            </div>
+            <SettingsGuideBanner
+                variant="static"
+                title="What do these switches do?"
+                :paragraphs="[
+                    'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
+                    'Temporary rooms appear in the calendar only during the set period.',
+                    'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
+                    'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',
+                ]"
+            />
+            <BaseCheckbox
+                id="newRoomTemporary"
+                v-model="newRoomForm.temporary"
+                :label="$t('Temporary room')"
+                :description="$page.props.show_hints ? $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.') : undefined"
+            />
+            <div v-if="newRoomForm.temporary" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <BaseInput
+                    id="newRoomStartDate"
+                    type="date"
+                    v-model="newRoomForm.start_date"
+                    label="Start date"
+                    :error="newRoomForm.errors.start_date"
+                />
+                <BaseInput
+                    id="newRoomEndDate"
+                    type="date"
+                    v-model="newRoomForm.end_date"
+                    label="End date"
+                    :error="newRoomForm.errors.end_date"
+                />
+            </div>
+            <BaseCheckbox
+                id="newRoomEveryoneCanBook"
+                v-model="newRoomForm.everyone_can_book"
+                :description="$page.props.show_hints ? $t('Decides whether this room can be booked by everyone or only by the room admins.') : undefined"
+            >
+                <template #label>
+                    {{ $t('Can be booked by anyone') }}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-muted">({{ $t('no effect') }})</span>
+                </template>
+            </BaseCheckbox>
+            <BaseCheckbox
+                id="newRoomRelevantForDisposition"
+                v-model="newRoomForm.relevant_for_disposition"
+                :label="$t('Relevant for disposition')"
+                :description="$t('Activate this field if the room is to be included in the calendars.')"
+            />
+            <div>
                 <BaseInput
                     type="number"
-                    id="new_room_capacity"
+                    id="newRoomCapacity"
                     v-model.number="newRoomForm.capacity"
-                    :label="$t('Capacity')"
+                    label="Capacity"
                     :min="0"
                     :step="1"
                     :error="newRoomForm.errors.capacity"
                 />
-                <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
-                <div class="w-full items-center text-center">
-                    <BaseUIButton
-                        type="submit"
-                        :disabled="newRoomForm.processing || newRoomForm.name === ''"
-                        :label="$t('Create')"
-                        is-add-button
-                    />
-                </div>
-            </form>
-        </div>
+                <p class="mt-1 text-xs text-text-muted">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
+            </div>
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="newRoomForm.processing"
+                @click="closeAddRoomModal"
+            />
+            <BaseUIButton
+                type="submit"
+                form="addRoomForm"
+                label="Create"
+                variant="primary"
+                :processing="newRoomForm.processing"
+                :disabled="newRoomForm.processing || newRoomForm.name.trim() === ''"
+            />
+        </template>
     </ArtworkBaseModal>
 
     <!-- Raum Bearbeiten-->
-    <ArtworkBaseModal @close="closeEditRoomModal" v-if="showEditRoomModal" :title="$t('Edit room')" description="">
-        <div class="mx-3">
-            <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
-                <div class="">
-                    <BaseInput
-                        id="roomNameEdit"
-                        v-model="editRoomForm.name"
-                        label="Room name*"
-                    />
-                    <jet-input-error :message="editRoomForm.errors.name" class="mt-2"/>
-                </div>
-                <div class="">
-                    <BaseTextarea
-                        v-model="editRoomForm.description"
-                        id="description"
-                        label="Short description"
-                        :rows="4"
-                    />
-                </div>
-                <div class="rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
-                    <div class="text-sm text-text mb-1">{{ $t('Color') }}</div>
-                    <div class="flex items-center mb-3">
-                        <input v-model="editRoomInheritColor" id="inheritRoomColor" type="checkbox" class="input-checklist"/>
-                        <label for="inheritRoomColor"
-                               :class="[editRoomInheritColor ? 'text-text font-black' : 'text-text-subtle']"
-                               class="ml-4 my-auto text-sm cursor-pointer">
-                            {{ $t('Inherit color from area') }}
-                        </label>
-                    </div>
-                    <div v-if="!editRoomInheritColor">
-                        <ColorPickerComponent @updateColor="(color) => editRoomForm.color = color" :color="editRoomForm.color ?? editRoomAreaColor"/>
-                    </div>
-                </div>
-                <div class="space-y-6 rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
-                    <RoomPropertyCheckboxGroup
-                        :label="$t('Room categories')"
-                        :items="room_categories"
-                        v-model="editRoomForm.room_categories"
-                        :empty-text="$t('No room categories created yet')"
-                    />
-                    <RoomPropertyCheckboxGroup
-                        :label="$t('Room properties')"
-                        :items="room_attributes"
-                        v-model="editRoomForm.room_attributes"
-                        :empty-text="$t('No room properties created yet')"
-                    />
-                    <RoomPropertyCheckboxGroup
-                        :label="$t('Adjoining rooms')"
-                        :items="editAdjoiningRoomItems"
-                        v-model="editRoomForm.adjoining_rooms"
-                        :empty-text="$t('No rooms created yet')"
-                    />
-                </div>
-                <SettingsGuideBanner
-                    variant="static"
-                    title="What do these switches do?"
-                    :paragraphs="[
-                        'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
-                        'Temporary rooms appear in the calendar only during the set period.',
-                        'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
-                        'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',
-                    ]"
+    <ArtworkBaseModal
+        v-if="showEditRoomModal"
+        title="Edit room"
+        modal-size="sm:max-w-2xl"
+        @close="closeEditRoomModal"
+    >
+        <form id="editRoomForm" class="grid grid-cols-1 gap-4" @submit.prevent="editRoom">
+            <BaseInput
+                id="editRoomName"
+                v-model="editRoomForm.name"
+                label="Room name"
+                required
+                :error="editRoomForm.errors.name"
+            />
+            <BaseTextarea
+                id="editRoomDescription"
+                v-model="editRoomForm.description"
+                label="Short description"
+                :rows="4"
+            />
+            <div class="space-y-3 rounded-lg border border-border-subtle bg-surface-sunken p-4">
+                <div class="font-lexend text-xs font-medium text-text">{{ $t('Color') }}</div>
+                <BaseCheckbox
+                    id="editRoomInheritColor"
+                    v-model="editRoomInheritColor"
+                    :label="$t('Inherit color from area')"
                 />
-                <div class="flex items-center">
-                    <input v-model="editRoomForm.temporary"
-                           type="checkbox"
-                           class="input-checklist"/>
-                    <p :class="[editRoomForm.temporary ? 'text-text font-black' : 'text-text-subtle']"
-                       class="ml-4 my-auto text-sm">{{ $t('Temporary room') }}</p>
-                    <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                        <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
-                        <span
-                            class="ml-1 my-auto ">{{
-                                $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')
-                            }}</span>
-                    </div>
+                <div v-if="!editRoomInheritColor">
+                    <ColorPickerComponent @updateColor="(color) => editRoomForm.color = color" :color="editRoomForm.color ?? editRoomAreaColor"/>
                 </div>
-                <div v-if="editRoomForm.temporary">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <BaseInput
-                            type="date"
-                            v-model="editRoomForm.start_date_dt_local"
-                            id="startDate"
-                            label="Start date"
-                            :error="editRoomForm.errors.start_date"/>
-                        <BaseInput
-                            type="date"
-                            v-model="editRoomForm.end_date_dt_local"
-                            id="endDate"
-                            label="End date"
-                            :error="editRoomForm.errors.end_date"
-                        />
-                    </div>
-                </div>
-
-                <div class="flex items-center">
-                    <input v-model="editRoomForm.everyone_can_book"
-                           type="checkbox"
-                           class="input-checklist"/>
-                    <p :class="[editRoomForm.everyone_can_book ? 'text-text font-black' : 'text-text-subtle']"
-                       class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone') }}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-subtle">({{ $t('no effect') }})</span></p>
-                    <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                        <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
-                        <span
-                            class="ml-1 my-auto ">{{
-                                $t('Decides whether this room can be booked by everyone or only by the room admins.')
-                            }}</span>
-                    </div>
-                </div>
-                <div class="flex items-start gap-x-4">
-                    <input v-model="editRoomForm.relevant_for_disposition"
-                           type="checkbox"
-                           class="input-checklist"/>
-                    <div>
-                        <p :class="[editRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']"
-                           class="my-auto text-sm">{{ $t('Relevant for disposition') }}</p>
-                        <span class="text-xs"
-                              :class="[editRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']">{{
-                                $t('Activate this field if the room is to be included in the calendars.')
-                            }}</span>
-                    </div>
-                </div>
+            </div>
+            <div class="space-y-6 rounded-lg border border-border-subtle bg-surface-sunken p-4">
+                <RoomPropertyCheckboxGroup
+                    :label="$t('Room categories')"
+                    :items="room_categories"
+                    v-model="editRoomForm.room_categories"
+                    :empty-text="$t('No room categories created yet')"
+                />
+                <RoomPropertyCheckboxGroup
+                    :label="$t('Room properties')"
+                    :items="room_attributes"
+                    v-model="editRoomForm.room_attributes"
+                    :empty-text="$t('No room properties created yet')"
+                />
+                <RoomPropertyCheckboxGroup
+                    :label="$t('Adjoining rooms')"
+                    :items="editAdjoiningRoomItems"
+                    v-model="editRoomForm.adjoining_rooms"
+                    :empty-text="$t('No rooms created yet')"
+                />
+            </div>
+            <SettingsGuideBanner
+                variant="static"
+                title="What do these switches do?"
+                :paragraphs="[
+                    'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
+                    'Temporary rooms appear in the calendar only during the set period.',
+                    'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
+                    'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',
+                ]"
+            />
+            <BaseCheckbox
+                id="editRoomTemporary"
+                v-model="editRoomForm.temporary"
+                :label="$t('Temporary room')"
+                :description="$page.props.show_hints ? $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.') : undefined"
+            />
+            <div v-if="editRoomForm.temporary" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <BaseInput
+                    id="editRoomStartDate"
+                    type="date"
+                    v-model="editRoomForm.start_date_dt_local"
+                    label="Start date"
+                    :error="editRoomForm.errors.start_date"
+                />
+                <BaseInput
+                    id="editRoomEndDate"
+                    type="date"
+                    v-model="editRoomForm.end_date_dt_local"
+                    label="End date"
+                    :error="editRoomForm.errors.end_date"
+                />
+            </div>
+            <BaseCheckbox
+                id="editRoomEveryoneCanBook"
+                v-model="editRoomForm.everyone_can_book"
+                :description="$page.props.show_hints ? $t('Decides whether this room can be booked by everyone or only by the room admins.') : undefined"
+            >
+                <template #label>
+                    {{ $t('Can be booked by anyone') }}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-muted">({{ $t('no effect') }})</span>
+                </template>
+            </BaseCheckbox>
+            <BaseCheckbox
+                id="editRoomRelevantForDisposition"
+                v-model="editRoomForm.relevant_for_disposition"
+                :label="$t('Relevant for disposition')"
+                :description="$t('Activate this field if the room is to be included in the calendars.')"
+            />
+            <div>
                 <BaseInput
                     type="number"
-                    id="edit_room_capacity"
+                    id="editRoomCapacity"
                     v-model.number="editRoomForm.capacity"
-                    :label="$t('Capacity')"
+                    label="Capacity"
                     :min="0"
                     :step="1"
                     :error="editRoomForm.errors.capacity"
                 />
-                <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
-
-                <div class="w-full items-center text-center">
-                    <BaseUIButton
-                        type="submit"
-                        :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
-                        :label="$t('Save')"
-                        is-add-button
-                    />
-                </div>
-
-            </form>
-        </div>
+                <p class="mt-1 text-xs text-text-muted">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
+            </div>
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="editRoomForm.processing"
+                @click="closeEditRoomModal"
+            />
+            <BaseUIButton
+                type="submit"
+                form="editRoomForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="editRoomForm.processing"
+                :disabled="editRoomForm.processing || editRoomForm.name.trim() === ''"
+            />
+        </template>
     </ArtworkBaseModal>
     <!-- Success Modal -->
     <SuccessModal
@@ -943,31 +940,18 @@
 
 import RoomSettingsHeader from '@/Pages/Areas/Components/RoomSettingsHeader.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import Button from "@/Jetstream/Button.vue";
-import JetButton from "@/Jetstream/Button.vue";
 import {defineComponent} from 'vue'
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import JetInput from "@/Jetstream/Input.vue";
-import JetInputError from "@/Jetstream/InputError.vue";
-import JetSecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import {Link, router, useForm} from "@inertiajs/vue3";
-import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import {IconCheck, IconCircleX, IconClock, IconCopy, IconDotsVertical, IconEdit, IconFileText, IconInfoCircle, IconLayoutGrid, IconPlus, IconRecycle, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconClock, IconCopy, IconEdit, IconLayoutGrid, IconRecycle, IconTrash} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -988,39 +972,15 @@ export default defineComponent({
         BaseUIButton,
         BaseMenuItem,
         BaseTextarea,
+        BaseCheckbox,
         BaseInput,
-        DateInputComponent,
-        TextareaComponent,
-        ModalHeader,
-        TextInputComponent,
-        BaseModal,
         BaseMenu,
-        FormButton,
-        AddButtonBig,
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,
-        UserTooltip,
         SvgCollection,
-        Button,
         RoomSettingsHeader,
-        IconDotsVertical,
-        IconPlus,
-        IconSearch,
-        IconCheck,
-        JetButton,
-        JetDialogModal,
-        JetInput,
-        JetInputError,
-        JetSecondaryButton,
-        IconInfoCircle,
-        IconX,
-        IconEdit,
-        IconTrash,
-        IconCircleX,
         Link,
-        IconCopy,
-        IconFileText
     },
     name: 'Area Management',
     props: ['areas', 'opened_areas', 'room_categories', 'room_attributes'],
@@ -1099,10 +1059,10 @@ export default defineComponent({
     },
     computed: {
         roomDeleteDescriptionText() {
-            return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete.name]);
+            return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete?.name ?? '']);
         },
         areaDeleteDescriptionText() {
-            return this.$t('Are you sure you want to put the area {0} with all rooms in the recycle bin?', [this.areaToSoftDelete.name]);
+            return this.$t('Are you sure you want to put the area {0} with all rooms in the recycle bin?', [this.areaToSoftDelete?.name ?? '']);
         },
         computedAreasAndRooms() {
             if (this.showEditRoomModal) {
@@ -1254,10 +1214,14 @@ export default defineComponent({
         closeAddAreaModal() {
             this.showAddAreaModal = false;
             this.newAreaForm.name = "";
+            this.newAreaForm.clearErrors();
         },
         addArea() {
-            this.newAreaForm.post(route('areas.store'), {});
-            this.closeAddAreaModal();
+            // erst nach erfolgreichem Speichern schließen, damit Validierungsfehler sichtbar bleiben
+            this.newAreaForm.post(route('areas.store'), {
+                preserveScroll: true,
+                onSuccess: () => this.closeAddAreaModal(),
+            });
         },
         roomMatchesFilter(room) {
             const matchesCategories = this.roomFilterCategoryIds.length === 0
@@ -1287,6 +1251,7 @@ export default defineComponent({
         closeAddRoomModal() {
             this.showAddRoomModal = false;
             this.newRoomForm.reset();
+            this.newRoomForm.clearErrors();
         },
         openEditAreaModal(area) {
             this.editAreaForm.id = area.id;
@@ -1301,10 +1266,13 @@ export default defineComponent({
             this.editAreaForm.name = "";
             this.editAreaForm.color = '#000000';
             this.editAreaForm.rooms = [];
+            this.editAreaForm.clearErrors();
         },
         editArea() {
-            this.editAreaForm.patch(route('areas.update', {area: this.editAreaForm.id}));
-            this.closeEditAreaModal();
+            this.editAreaForm.patch(route('areas.update', {area: this.editAreaForm.id}), {
+                preserveScroll: true,
+                onSuccess: () => this.closeEditAreaModal(),
+            });
         },
         duplicateArea(area) {
             router.post(`/areas/${area.id}/duplicate`);
@@ -1343,14 +1311,24 @@ export default defineComponent({
             this.successDescription = "";
         },
         softDeleteAllRooms() {
-            this.areaToDeleteRoomsFrom.rooms.forEach((room) => {
-                router.delete(`/rooms/${room.id}`);
-            })
+            // Nacheinander löschen: parallele Inertia-Besuche brechen sich gegenseitig ab
+            const roomIds = (this.areaToDeleteRoomsFrom?.rooms ?? []).map((room) => room.id);
             this.closeDeleteAllRoomsModal();
-            this.successHeading = this.$t('Room in the recycle bin')
-            this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
-            this.showSuccessModal = true;
-            setTimeout(() => this.closeSuccessModal(), 2000)
+            const deleteNext = () => {
+                const roomId = roomIds.shift();
+                if (roomId === undefined) {
+                    this.successHeading = this.$t('Room in the recycle bin')
+                    this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
+                    this.showSuccessModal = true;
+                    setTimeout(() => this.closeSuccessModal(), 2000)
+                    return;
+                }
+                router.delete(`/rooms/${roomId}`, {
+                    preserveScroll: true,
+                    onFinish: deleteNext,
+                });
+            };
+            deleteNext();
         },
         openEditRoomModal(room, area = null) {
             this.editRoomForm.id = room.id;

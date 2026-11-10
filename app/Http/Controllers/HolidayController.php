@@ -11,6 +11,7 @@ use Artwork\Modules\Holidays\Services\HolidayFrontendService;
 use Artwork\Modules\Holidays\Services\HolidayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
 
@@ -131,7 +132,6 @@ class HolidayController extends Controller
         $settings->school_holidays = $schoolHolidays;
         $settings->save();
 
-        $this->holidayService->deleteAllFromApi();
         $responses = $this->holidayService->getHolidaysFromAPI(
             selectedSubdivisions: $selectedSubdivisions,
             publicHolidays: $publicHolidays,
@@ -144,23 +144,28 @@ class HolidayController extends Controller
         );
 
 
-        foreach ($mergedHolidays as $holiday) {
-            $this->holidayService->create(
-                $holiday['name'],
-                collect($holiday['subdivisions'])->pluck('id')->toArray(),
-                Carbon::parse($holiday['startDate']),
-                Carbon::parse($holiday['endDate']),
-                $holiday['country'] ?? config('app.country'),
-                false,
-                0,
-                $holiday['id'],
-                true,
-                $color,
-                // DP-04: Nur gesetzliche Feiertage (OpenHolidays type "Public") sind Sondertage;
-                // Schulferien ("School") senken das Tagessoll nie.
-                HolidayService::isSpecialDayType($holiday['type'] ?? null),
-                HolidayService::typeFromApi($holiday['type'] ?? null)
-            );
-        }
+        // Erst nach erfolgreichem Abruf ersetzen: fällt die Schnittstelle aus, bleiben die bisherigen Feiertage
+        DB::transaction(function () use ($mergedHolidays, $color): void {
+            $this->holidayService->deleteAllFromApi();
+
+            foreach ($mergedHolidays as $holiday) {
+                $this->holidayService->create(
+                    $holiday['name'],
+                    collect($holiday['subdivisions'])->pluck('id')->toArray(),
+                    Carbon::parse($holiday['startDate']),
+                    Carbon::parse($holiday['endDate']),
+                    $holiday['country'] ?? config('app.country'),
+                    false,
+                    0,
+                    $holiday['id'],
+                    true,
+                    $color,
+                    // DP-04: Nur gesetzliche Feiertage (OpenHolidays type "Public") sind Sondertage;
+                    // Schulferien ("School") senken das Tagessoll nie.
+                    HolidayService::isSpecialDayType($holiday['type'] ?? null),
+                    HolidayService::typeFromApi($holiday['type'] ?? null)
+                );
+            }
+        });
     }
 }

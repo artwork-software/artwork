@@ -593,8 +593,13 @@ class ShiftRuleService
             ->get();
 
         foreach ($users as $user) {
-            $userViolations = $this->validateRulesForUser($user, $startDate, $endDate);
-            $violations = $violations->concat($userViolations);
+            // Ein fehlerhafter Datensatz darf die Prüfung der übrigen Personen nicht abbrechen
+            try {
+                $userViolations = $this->validateRulesForUser($user, $startDate, $endDate);
+                $violations = $violations->concat($userViolations);
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
         }
 
         return $violations;

@@ -916,7 +916,9 @@ class ProjectController extends Controller
             }
         } elseif (!empty($request->selectedGroup)) {
             $group = $this->resolveSelectedProjectGroup($request->selectedGroup['id'] ?? null);
-            $group?->projectsOfGroup()->syncWithoutDetaching($project->id);
+            if ($group !== null && !$group->is($project)) {
+                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+            }
         }
 
         $this->projectService->syncCategories(
@@ -3671,7 +3673,9 @@ class ProjectController extends Controller
             : null;
         DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         if ($request->get('selectedGroup') !== null) {
-            $group?->projectsOfGroup()->syncWithoutDetaching($project->id);
+            if ($group !== null && !$group->is($project)) {
+                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+            }
 
             // Ensure the project has exactly one budget-relevant column
             $table = $project->table()->first();
@@ -3996,7 +4000,10 @@ class ProjectController extends Controller
 
     public function addProjectsToGroup(Request $request, Project $projectGroup): void
     {
-        $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id');
+        // Eine Gruppe enthält nie sich selbst (sonst Endlosrekursion beim Aufbau der Kalenderdaten)
+        $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id')
+            ->reject(fn ($id): bool => (int) $id === (int) $projectGroup->id)
+            ->values();
         $this->authorize('update', $projectGroup);
         Project::query()->whereIn('id', $projectIdsToAdd)->get()
             ->each(fn (Project $project) => $this->authorize('view', $project));

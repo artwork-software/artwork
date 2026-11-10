@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Projects;
 
+use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
@@ -66,6 +67,41 @@ final class ProjectGroupMembershipTest extends FeatureTestCase
         ])->assertSessionHasNoErrors();
 
         $this->assertSame([], $this->childIds($group));
+    }
+
+    #[Test]
+    public function group_cannot_select_or_add_itself_as_group(): void
+    {
+        $this->actingAsAdmin();
+        [$group] = $this->groupWithChildren(0);
+        $child = Project::factory()->create();
+
+        $this->patch(route('projects.update', $group), [
+            'name' => 'Festival',
+            'selectedGroup' => ['id' => $group->id],
+        ])->assertSessionHasNoErrors();
+        $this->assertSame([], $this->childIds($group));
+
+        $this->post(route('project-group.add-projects', $group), [
+            'projectIdsToAdd' => [['id' => $group->id], ['id' => $child->id]],
+        ]);
+        $this->assertSame([$child->id], $this->childIds($group));
+    }
+
+    #[Test]
+    public function calendar_project_data_survives_groups_that_contain_themselves(): void
+    {
+        [$group] = $this->groupWithChildren(0);
+        [$other] = $this->groupWithChildren(0);
+        // Altbestand: direkter Selbstbezug und Kreis über eine zweite Gruppe
+        $group->projectsOfGroup()->attach([$group->id, $other->id]);
+        $other->projectsOfGroup()->attach($group->id);
+
+        $dto = ProjectDTO::fromModel($group->fresh());
+
+        $this->assertTrue($dto->isInGroup);
+        $this->assertSame([$other->id], array_map(fn (ProjectDTO $nested): int => $nested->id, $dto->group));
+        $this->assertNull($dto->group[0]->group);
     }
 
     #[Test]

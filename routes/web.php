@@ -179,6 +179,7 @@ use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\Project\Http\Controllers\ProjectContentExportController;
+use Artwork\Modules\Project\Http\Controllers\ProjectPlanExportController;
 use Artwork\Modules\Project\Http\Controllers\ProjectContentExportTemplateController;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
@@ -874,6 +875,18 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])
         ->middleware(CanViewProject::class)
         ->name('projects.show.basic');
+    // Veranstaltungsplan und Künstlerplan als Word (Export-Dialog im Projektkopf)
+    Route::group([
+        'prefix' => '/projects/{project}/plans',
+        'middleware' => CanViewProject::class,
+    ], function (): void {
+        Route::get('/options', [ProjectPlanExportController::class, 'options'])
+            ->name('projects.plans.options');
+        Route::get('/event-plan', [ProjectPlanExportController::class, 'eventPlan'])
+            ->name('projects.plans.event-plan');
+        Route::get('/artist-plan', [ProjectPlanExportController::class, 'artistPlan'])
+            ->name('projects.plans.artist-plan');
+    });
     Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
         ->middleware(CanViewProject::class)
         ->name('projects.rooms-with-event-periods');

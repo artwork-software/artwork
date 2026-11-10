@@ -746,6 +746,7 @@
                 />
                 <p class="mt-1 text-xs text-text-muted">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
             </div>
+            <RoomAddressFields :form="newRoomForm" id-prefix="newRoom" />
         </form>
         <template #footer>
             <BaseUIButton
@@ -877,6 +878,7 @@
                 />
                 <p class="mt-1 text-xs text-text-muted">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
             </div>
+            <RoomAddressFields :form="editRoomForm" id-prefix="editRoom" />
         </form>
         <template #footer>
             <BaseUIButton
@@ -948,6 +950,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import RoomAddressFields from "@/Pages/Rooms/Components/RoomAddressFields.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
@@ -963,6 +966,7 @@ import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        RoomAddressFields,
         SettingsGuideBanner,
         PropertyIcon,
         ColorPickerComponent,
@@ -1019,6 +1023,9 @@ export default defineComponent({
                 relevant_for_disposition: false,
                 everyone_can_book: false,
                 capacity: null,
+                street: '',
+                zip_code: '',
+                city: '',
                 room_categories: [],
                 room_attributes: [],
                 adjoining_rooms: []
@@ -1040,6 +1047,9 @@ export default defineComponent({
                 everyone_can_book: false,
                 relevant_for_disposition: false,
                 capacity: null,
+                street: '',
+                zip_code: '',
+                city: '',
                 room_categories: [],
                 room_attributes: [],
                 adjoining_rooms: []
@@ -1348,6 +1358,9 @@ export default defineComponent({
             this.editRoomForm.everyone_can_book = room.everyone_can_book === true;
             this.editRoomForm.relevant_for_disposition = room.relevant_for_disposition === true;
             this.editRoomForm.capacity = room.capacity ?? null;
+            this.editRoomForm.street = room.street ?? '';
+            this.editRoomForm.zip_code = room.zip_code ?? '';
+            this.editRoomForm.city = room.city ?? '';
             this.showEditRoomModal = true;
         },
         closeEditRoomModal() {

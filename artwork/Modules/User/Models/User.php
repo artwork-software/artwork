@@ -353,6 +353,8 @@ class User extends Model implements
         'shift_plan_daily_view' => 'boolean',
         'share_calendar_date' => 'boolean',
         'bulk_column_size' => 'array',
+        // zuletzt im Künstlerplan gewählte Terminarten (Vorauswahl beim nächsten Export)
+        'artist_plan_event_type_ids' => 'array',
         'show_description_in_bulk' => 'boolean',
         'shift_period_on_start_date_change' => 'boolean',
         'show_project_team_names' => 'boolean',
@@ -369,6 +371,8 @@ class User extends Model implements
      */
     protected $hidden = [
         'password',
+        // reine Vorauswahl des Künstlerplans, gehört in keinen Payload
+        'artist_plan_event_type_ids',
         'pending_email',
         'remember_token',
         'two_factor_recovery_codes',

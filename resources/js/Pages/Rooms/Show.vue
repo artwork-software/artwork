@@ -55,6 +55,10 @@
                             <PropertyIcon name="IconArmchair" class="h-4 w-4" stroke-width="1.5" />
                             {{ $t('Capacity') }}: {{ room.capacity }}
                         </span>
+                        <span v-if="roomAddress" class="inline-flex items-center gap-x-1.5 rounded-full border border-border-subtle bg-white px-3 py-1 text-xs font-medium text-text">
+                            <PropertyIcon name="IconMapPin" class="h-4 w-4" stroke-width="1.5" />
+                            {{ roomAddress }}
+                        </span>
                     </div>
                     <div v-if="room.room_history[0]?.changes?.[0]"
                          class="mt-3 subpixel-antialiased text-text-subtle text-xs flex items-center">
@@ -229,6 +233,7 @@
                     />
                     <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
                 </div>
+                <RoomAddressFields :form="editRoomForm" id-prefix="room" />
             </form>
             <template #footer>
                 <BaseUIButton
@@ -341,6 +346,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import RoomAddressFields from "@/Pages/Rooms/Components/RoomAddressFields.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -365,6 +371,7 @@ export default {
         'adjoiningRooms',
     ],
     components: {
+        RoomAddressFields,
         ColorPickerComponent,
         PropertyIcon,
         ArtworkBaseModal,
@@ -431,6 +438,10 @@ export default {
         effectiveRoomColor() {
             return this.room.color ?? this.room.area?.color ?? '#000000';
         },
+        roomAddress() {
+            const cityLine = [this.room.zip_code, this.room.city].filter(Boolean).join(' ');
+            return [this.room.street, cityLine].filter(Boolean).join(', ');
+        },
         adminDepartments() {
             return (this.room.departments ?? []).filter((department) => department.is_admin);
         },
@@ -486,6 +497,9 @@ export default {
                 everyone_can_book: false,
                 relevant_for_disposition: false,
                 capacity: null,
+                street: '',
+                zip_code: '',
+                city: '',
             }),
         }
     },
@@ -532,6 +546,9 @@ export default {
             this.editRoomForm.everyone_can_book = room.everyone_can_book === true;
             this.editRoomForm.relevant_for_disposition = room.relevant_for_disposition === true;
             this.editRoomForm.capacity = room.capacity ?? null;
+            this.editRoomForm.street = room.street ?? '';
+            this.editRoomForm.zip_code = room.zip_code ?? '';
+            this.editRoomForm.city = room.city ?? '';
             this.editRoomForm.clearErrors();
             this.showEditRoomModal = true;
         },

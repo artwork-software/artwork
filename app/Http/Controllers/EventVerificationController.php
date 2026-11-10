@@ -114,17 +114,9 @@ class EventVerificationController extends Controller
 
         $verificationRequests = collect();
         if ($canSeeVerifications) {
-            $query = EventVerification::where('status', 'pending')
-                ->with(['event.room', 'event.event_type', 'event.project', 'verifier', 'requester'])
-                ->whereHas('event');
-
-            if (!$isAdmin) {
-                $query->where('verifier_id', $user->id);
-            }
-
-            $verificationRequests = $query->orderBy('created_at')
-                ->get()
-                ->groupBy(fn ($v) => $v->event->event_type_id ?? 0);
+            $verificationRequests = $this->eventVerificationService
+                ->openRequestsForInbox($user, $isAdmin)
+                ->groupBy(fn (EventVerification $verification) => $verification->event->event_type_id ?? 0);
         }
 
         return Inertia::render('EventVerification/Index', [
@@ -258,10 +250,9 @@ class EventVerificationController extends Controller
 
         /** @var User $user */
         $user = $this->authManager->user();
-        $isOwnVerification = $eventVerification->verifier_type === User::class
-            && (int) $eventVerification->verifier_id === $user->id;
-        // Admins genehmigen fremde Prüfungen direkt: der Termin wird fest, auch im Modus "alle"
-        if (!$isOwnVerification && $eventVerification->event->is_planning) {
+        // Admins entscheiden die Anfrage direkt, auch mit eigener Prüfung im Modus "alle" (die Eingangsliste zeigt
+        // ihnen die Anfrage nur einmal; vorher blieb sie nach der eigenen Zustimmung mit der nächsten Person stehen)
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value) && $eventVerification->event->is_planning) {
             $this->eventVerificationService->approveAsAdmin($eventVerification->event, $user);
         } else {
             $this->eventVerificationService->approveVerification($eventVerification);
@@ -277,7 +268,14 @@ class EventVerificationController extends Controller
             return;
         }
 
-        $this->eventVerificationService->rejectVerification($eventVerification, $rejectionReason);
+        /** @var User $user */
+        $user = $this->authManager->user();
+        // Admins: die Ablehnung läuft auf sie selbst und entscheidet die Runde (siehe rejectAsAdmin)
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            $this->eventVerificationService->rejectAsAdmin($eventVerification->event, $user, $rejectionReason);
+        } else {
+            $this->eventVerificationService->rejectVerification($eventVerification, $rejectionReason);
+        }
         $event = $eventVerification->event->fresh();
         SafeBroadcast::send(new EventCreated($event, $event->room_id));
     }
@@ -393,8 +391,23 @@ class EventVerificationController extends Controller
         /** @var User $user */
         $user = $this->authManager->user();
         $rejectionReason = $this->validatedRejectionReason($request);
-        $this->eventVerificationService->rejectVerificationByEvent($event, $user, $rejectionReason);
+        $this->rejectFor($event, $user, $rejectionReason);
         SafeBroadcast::send(new EventCreated($event->fresh(), $event->room_id));
+    }
+
+    /**
+     * "Ablehnen" im Planungskalender: Admins entscheiden eine offene Prüfrunde allein (Gegenstück zu approveFor),
+     * Prüfende lehnen ihre eigene offene Prüfung ab.
+     *
+     * @return bool false, wenn es für die Person nichts abzulehnen gibt
+     */
+    private function rejectFor(Event $event, User $user, string $rejectionReason): bool
+    {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return $this->eventVerificationService->rejectAsAdmin($event, $user, $rejectionReason);
+        }
+
+        return $this->eventVerificationService->rejectVerificationByEvent($event, $user, $rejectionReason);
     }
 
     // Mehrfachauswahl: gelöschte Termine (findEventById → null, vorher TypeError) werden übersprungen
@@ -406,8 +419,7 @@ class EventVerificationController extends Controller
 
         $this->answerVerificationsInBulk(
             $this->validatedEvents($request),
-            fn (Event $event): bool => $this->eventVerificationService
-                ->rejectVerificationByEvent($event, $user, $rejectionReason),
+            fn (Event $event): bool => $this->rejectFor($event, $user, $rejectionReason),
         );
     }
 

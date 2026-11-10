@@ -38,6 +38,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property Carbon|null $start_date
  * @property Carbon|null $end_date
  * @property int|null $capacity
+ * @property string|null $street
+ * @property string|null $zip_code
+ * @property string|null $city
  * @property int $area_id
  * @property int $user_id
  * @property \Illuminate\Support\Carbon $created_at
@@ -88,6 +91,9 @@ class Room extends Model
         'created_at',
         'relevant_for_disposition',
         'capacity',
+        'street',
+        'zip_code',
+        'city',
     ];
 
     protected $with = [
@@ -120,6 +126,20 @@ class Room extends Model
     public function getEffectiveColor(): string
     {
         return $this->color ?? $this->area?->color ?? '#000000';
+    }
+
+    /**
+     * Adresse in einer Zeile („Straße, PLZ Ort“); null, wenn nichts gepflegt ist.
+     */
+    public function formattedAddress(): ?string
+    {
+        $cityLine = trim(($this->zip_code ?? '') . ' ' . ($this->city ?? ''));
+        $parts = array_filter(
+            [trim($this->street ?? ''), $cityLine],
+            static fn (string $part): bool => $part !== ''
+        );
+
+        return $parts === [] ? null : implode(', ', $parts);
     }
 
     /**

@@ -32,6 +32,9 @@ class RoomIndexResource extends JsonResource
             'everyone_can_book' => $this->everyone_can_book,
             'relevant_for_disposition' => $this->relevant_for_disposition,
             'capacity' => $this->capacity,
+            'street' => $this->street,
+            'zip_code' => $this->zip_code,
+            'city' => $this->city,
             // ohne Datum null statt "heute" (Carbon::parse(null)) — sonst schrieb das Bearbeiten-Modal
             // jedem Raum das aktuelle Datum als Zeitraum zurück
             'start_date' => $this->start_date?->format('d.m.Y'),

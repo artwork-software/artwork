@@ -145,17 +145,19 @@ class InventoryCategoryController extends Controller
             [$categories, $articles, $inventoryCategory, $inventorySubCategory]
         );
 
+        // Stammdaten als Closures: Teil-Reloads (Warenkorb, Suche, Filter) berechnen nur die angefragten Props
         return Inertia::render('Inventory/Index', [
             'categories' => $categories,
             'hasActiveFilter' => $hasActiveFilter,
             'currentCategory' => $inventoryCategory,
             'currentSubCategory' => $inventorySubCategory,
             'articles' => $articles,
-            'articlesCount' => $this->articleService->count(),
+            'articlesCount' => fn () => $this->articleService->count(),
             'filterableProperties' => $filterableProperties->values(), // Reset keys
-            'properties' => $this->propertyRepository->all(),
-            'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
-            'manufacturers' => CrmContact::query()
+            'properties' => fn () => $this->propertyRepository->all(),
+            // Ohne die Standard-Relationen des Raums (Raum-Admins, Ersteller): gebraucht werden nur id und name
+            'rooms' => fn () => Room::without(['admins', 'creator'])->select('id', 'name')->orderBy('name')->get(),
+            'manufacturers' => fn () => CrmContact::query()
                     ->whereHas(
                         'contactType',
                         fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value)
@@ -165,9 +167,9 @@ class InventoryCategoryController extends Controller
                     ->get(),
             // order + default mitliefern: Clients sortieren nach `order` (einheitliche
             // Status-Reihenfolge, Abnahme Ref. 1.29) und defaultStatus() braucht `default`
-            'statuses' => InventoryArticleStatus::select('id', 'name', 'color', 'order', 'default')
+            'statuses' => fn () => InventoryArticleStatus::select('id', 'name', 'color', 'order', 'default')
                 ->orderBy('order')->get(),
-            'countsByStatus' => $this->articleService->getCountsByStatusAggregated(
+            'countsByStatus' => fn () => $this->articleService->getCountsByStatusAggregated(
                 $inventoryCategory,
                 $inventorySubCategory,
                 request('search'),
@@ -176,19 +178,19 @@ class InventoryCategoryController extends Controller
                 $searchPropertyId,
             ),
             'activeStatusId' => $statusId,
-            'productBaskets' => $this->productBasketService->getUserBasket(),
-            'tagGroups' => InventoryTagGroup::with([
+            'productBaskets' => fn () => $this->productBasketService->getUserBasket(),
+            'tagGroups' => fn () => InventoryTagGroup::with([
                 'tags' => function ($query): void {
                     $query->with(['allowedUsers', 'allowedDepartments'])
                         ->orderBy('position');
                 }
             ])->orderBy('position')->get(),
-            'tags' => InventoryTag::with(['allowedUsers', 'allowedDepartments'])
+            'tags' => fn () => InventoryTag::with(['allowedUsers', 'allowedDepartments'])
                 ->orderBy('position')
                 ->get(),
             'inventoryGridLayout' => auth()->user()->inventory_grid_layout ?? true,
             'inventoryHideImages' => auth()->user()->inventory_hide_images ?? false,
-            'filterPresets' => InventoryArticleFilterPreset::query()
+            'filterPresets' => fn () => InventoryArticleFilterPreset::query()
                 ->where('user_id', auth()->id())
                 ->orderByDesc('is_default')
                 ->orderBy('name')

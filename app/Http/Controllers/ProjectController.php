@@ -802,6 +802,7 @@ class ProjectController extends Controller
         $this->authorize('viewAny', Project::class);
 
         $projects = $projectService->searchProjectsByNameOrArtists($request->get('query'));
+        Project::loadFirstAndLastEventDates($projects);
 
         return $projects->map(fn(Project $project) => ProjectSearchDTO::fromModel($project));
         //return ProjectIndexResource::collection($projects)->resolve();
@@ -816,9 +817,12 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
 
-        return $projectService->searchProjectsByNameOrArtists((string) $request->get('query'))
+        $projects = $projectService->searchProjectsByNameOrArtists((string) $request->get('query'))
             ->reject(static fn (Project $project): bool => (bool) $project->is_group)
-            ->values()
+            ->values();
+        Project::loadFirstAndLastEventDates($projects);
+
+        return $projects
             ->map(static fn (Project $project): ProjectSearchDTO => ProjectSearchDTO::fromModel($project));
     }
 

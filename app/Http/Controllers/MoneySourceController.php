@@ -478,7 +478,6 @@ class MoneySourceController extends Controller
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySourceCategories' => MoneySourceCategory::all(),
             'moneySources' => MoneySource::where('is_group', false)->get(),
-            'projects' => Project::select(['id', 'name'])->get(),
             'linkedProjects' => $moneySource->projects()->get(),
             'first_project_budget_tab_id' => $projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET)

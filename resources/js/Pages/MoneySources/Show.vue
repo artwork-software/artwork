@@ -368,7 +368,6 @@ const props = defineProps<{
     moneySourceGroups: any[],
     moneySources: any[],
     moneySourceCategories: any[],
-    projects: any[],
     linkedProjects: any[],
     first_project_budget_tab_id: number | string
 }>()

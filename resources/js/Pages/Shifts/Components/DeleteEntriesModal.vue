@@ -80,10 +80,12 @@ const handleSubmit = (preserveState) => {
     }
     processing.value = true;
     pendingPreserveState.value = preserveState;
+    let succeeded = false;
     multiEditCellForm.post(route("multi-edit.cell.delete"), {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
+            succeeded = true;
             router.reload({
                 only: ['shiftPlan'],
                 onSuccess: () => {
@@ -92,7 +94,13 @@ const handleSubmit = (preserveState) => {
                 onFinish: resetProcessing,
             })
         },
-        onError: resetProcessing,
+        // Auch bei Serverfehler oder abgebrochener Anfrage (nicht nur bei Validierungsfehlern) wieder freigeben,
+        // sonst lässt sich das Fenster nicht mehr schließen
+        onFinish: () => {
+            if (!succeeded) {
+                resetProcessing();
+            }
+        },
     });
 };
 </script>

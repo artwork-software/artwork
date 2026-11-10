@@ -95,7 +95,11 @@ async function reload() {
         sales.value = data
         error.value = ''
     } catch (requestError) {
-        error.value = requestError?.response?.data?.message || t('The ticketing data could not be loaded.')
+        // Schon geladene Daten bleiben stehen: ein gescheitertes Nachladen darf z. B. die Einlass-Bestätigung
+        // nicht durch die Fehlermeldung ersetzen
+        if (!sales.value) {
+            error.value = requestError?.response?.data?.message || t('The ticketing data could not be loaded.')
+        }
     } finally {
         loading.value = false
     }

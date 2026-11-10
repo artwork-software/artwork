@@ -40,9 +40,21 @@ class ContractController extends Controller
     {
         $user = Auth::user();
 
+        // Relationen der Übersicht gesammelt laden statt je Vertrag einzeln
+        $overviewRelations = [
+            'creator',
+            'project',
+            'contract_type',
+            'company_type',
+            'currency',
+            'accessingUsers.departments',
+            'accessingDepartments',
+            'comments',
+        ];
+
         // Admins can see all contracts
         if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            $contracts = Contract::all();
+            $contracts = Contract::with($overviewRelations)->get();
         } else {
             // get all contracts where i am creator or i am accessing user or in accessing department
             $userDepartmentIds = $user->departments->pluck('id')->toArray();
@@ -54,6 +66,7 @@ class ContractController extends Controller
                 ->orWhereHas('accessingDepartments', function ($query) use ($userDepartmentIds): void {
                     $query->whereIn('department_id', $userDepartmentIds);
                 })
+                ->with($overviewRelations)
                 ->get();
         }
 

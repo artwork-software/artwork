@@ -75,7 +75,7 @@ class ProjectPlanService
      */
     public function options(Project $project, User $user): array
     {
-        $events = $this->projectEvents($project);
+        $events = $this->projectEvents($project, $user);
         $roomEventCounts = $events->whereNotNull('room_id')->countBy('room_id');
 
         $rooms = Room::query()
@@ -137,7 +137,7 @@ class ProjectPlanService
             'venue' => $this->venue($venue),
             'artists' => $this->artists($project),
             'team' => $this->canSeeTeam($user) ? $this->team($project, $user) : [],
-            'days' => $this->days($this->projectEvents($project), withAddress: false),
+            'days' => $this->days($this->projectEvents($project, $user), withAddress: false),
         ];
     }
 
@@ -153,7 +153,7 @@ class ProjectPlanService
         ?ArtistResidency $residency,
         array $eventIds
     ): array {
-        $events = $this->projectEvents($project)->whereIn('id', $eventIds)->values();
+        $events = $this->projectEvents($project, $user)->whereIn('id', $eventIds)->values();
 
         return [
             'project_name' => (string) $project->name,
@@ -176,12 +176,15 @@ class ProjectPlanService
     }
 
     /**
+     * Termine des Projekts; Planungstermine nur für Personen, die den Planungskalender sehen dürfen.
+     *
      * @return EloquentCollection<int, Event>
      */
-    private function projectEvents(Project $project): EloquentCollection
+    private function projectEvents(Project $project, User $user): EloquentCollection
     {
         return Event::query()
             ->where('project_id', $project->id)
+            ->visiblePlanningFor($user)
             ->whereNotNull('start_time')
             ->whereNotNull('end_time')
             ->with([

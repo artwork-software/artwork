@@ -13,6 +13,7 @@ use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Activitylog\Facades\CauserResolver;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -81,6 +82,31 @@ final class ProjectDeletionLifecycleTest extends FeatureTestCase
         $this->assertSoftDeleted('events', ['id' => $event->id]);
         $this->assertSoftDeleted('shifts', ['id' => $shift->id]);
         $this->assertSoftDeleted('shift_workers', ['shift_id' => $shift->id]);
+    }
+
+    #[Test]
+    public function cascade_job_leaves_a_project_alone_that_was_restored_in_the_meantime(): void
+    {
+        ['project' => $project, 'event' => $event, 'shift' => $shift] = $this->makeProjectWithAssignedShift();
+        $causer = User::factory()->create();
+
+        (new SoftDeleteProjectJob($project->id, $causer->id))->handle(app(ProjectService::class));
+
+        $this->assertFalse($project->fresh()->trashed());
+        $this->assertNotNull(Event::query()->find($event->id));
+        $this->assertNotNull(Shift::query()->find($shift->id));
+    }
+
+    #[Test]
+    public function cascade_job_does_not_leave_its_causer_for_later_jobs(): void
+    {
+        ['project' => $project] = $this->makeProjectWithAssignedShift();
+        $causer = User::factory()->create();
+        $project->delete();
+
+        (new SoftDeleteProjectJob($project->id, $causer->id))->handle(app(ProjectService::class));
+
+        $this->assertNull(CauserResolver::resolve());
     }
 
     #[Test]

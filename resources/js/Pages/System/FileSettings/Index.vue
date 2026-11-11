@@ -45,7 +45,7 @@
 
             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
               <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                <ListboxOption as="template" v-for="fileType in imageFileTypes" :key="fileType" :value="fileType" v-slot="{ active, selected }">
+                <ListboxOption as="template" v-for="fileType in selectableFileTypes(area)" :key="fileType" :value="fileType" v-slot="{ active, selected }">
                   <li @click="addFileTypeToArea(area, fileType)" :class="[active ? 'bg-accent-600 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                     <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ fileType }}</span>
                     <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
@@ -144,6 +144,17 @@ const areas = ref(props.areas);
 
 // Effektives PHP-Upload-Limit des Servers (shared Inertia-Prop; nginx kann zusätzlich begrenzen)
 const serverUploadLimitMb = computed(() => usePage().props.server_upload_limit_mb ?? null);
+
+// Branding nimmt nur Bilder an; alle anderen Bereiche bekommen zusätzlich die übrigen Dateitypen
+// (PDF, Office, ZIP, …), damit sich ein entfernter Typ einzeln wieder hinzufügen lässt.
+const selectableFileTypes = (area) => {
+  const imageFileTypes = Object.values(props.imageFileTypes ?? {});
+  if (area.name === 'branding') {
+    return imageFileTypes;
+  }
+
+  return [...imageFileTypes, ...Object.values(props.otherFileTypes ?? {})];
+}
 
 const addFileTypeToArea = (area, fileType) => {
   const targetArea = areas.value.find(a => a.name === area.name);

@@ -63,7 +63,9 @@ class MoneySourceController extends Controller
         return inertia('MoneySources/MoneySourceManagement', [
             'moneySourceCategories' => MoneySourceCategory::all(),
             'moneySources' => $moneySources,
-            'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
+            'moneySourceGroups' => MoneySource::with(['categories', 'moneySourceTasks'])
+                ->where('is_group', true)
+                ->get(),
             //is set if index is called due to redirect response of store method
             'recentlyCreatedMoneySourceId' => session('recentlyCreatedMoneySourceId')
         ]);

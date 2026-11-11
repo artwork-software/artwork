@@ -7,6 +7,7 @@ use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySource\Models\MoneySourceTask;
 use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -94,6 +95,23 @@ final class MoneySourceControllerTest extends FeatureTestCase
         ])->assertRedirect();
 
         $this->assertDatabaseHas('money_sources', ['name' => 'Source In Group', 'group_id' => $group->id]);
+    }
+
+    #[Test]
+    public function index_ships_tasks_and_categories_for_groups_so_the_filters_can_match(): void
+    {
+        $this->actingAsAdmin();
+        $group = MoneySource::factory()->create(['is_group' => true]);
+        MoneySourceTask::factory()->create(['money_source_id' => $group->id, 'done' => false]);
+
+        $props = $this->get(route('money_sources.index'))->assertOk()->viewData('page')['props'];
+        $groupRow = (array) collect($props['moneySourceGroups'])->firstWhere('id', $group->id);
+        $sourceRow = (array) collect($props['moneySources'])->firstWhere('id', $group->id);
+
+        $this->assertArrayHasKey('categories', $groupRow);
+        $this->assertCount(1, $groupRow['money_source_tasks']);
+        $this->assertFalse(((array) $groupRow['money_source_tasks'][0])['done']);
+        $this->assertFalse(((array) $sourceRow['money_source_tasks'][0])['done']);
     }
 
     #[Test]

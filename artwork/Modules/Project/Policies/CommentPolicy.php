@@ -22,14 +22,18 @@ class CommentPolicy
     }
 
     /**
-     * Kommentieren in einem Projekt: Projektteam (inkl. Projektleitung); Admins via Gate::before.
-     * Gemeinsame Regel für Web (CommentController) und App-API — globales Leserecht allein genügt nicht.
+     * Kommentieren in einem Projekt: Projektteam (inkl. Projektleitung) und alle, die das Projekt bearbeiten
+     * dürfen (ProjectPolicy::update: globales Schreibrecht, Ersteller:in, zugewiesene Abteilung) – ihnen zeigt
+     * die Oberfläche das Eingabefeld. Admins via Gate::before. Gemeinsame Regel für Web (CommentController)
+     * und App-API — globales Leserecht allein genügt nicht.
      */
     public function createInProject(User $user, Project $project): bool
     {
-        return $project->relationLoaded('users')
+        $isInTeam = $project->relationLoaded('users')
             ? $project->users->contains($user->id)
             : $project->users()->whereKey($user->id)->exists();
+
+        return $isInTeam || $user->can('update', $project);
     }
 
     public function update(User $user, Comment $comment): bool

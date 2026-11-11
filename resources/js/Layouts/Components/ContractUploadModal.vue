@@ -609,7 +609,6 @@ export default {
             tasks: [],
             uploadDocumentFeedback: "",
             file: null,
-            description: this.documentRequest?.comment || "",
             contractPartner: this.documentRequest?.contract_partner || '',
             selectedLegalForm: this.documentRequest?.company_type_id ? this.companyTypes?.find(ct => ct.id === this.documentRequest.company_type_id) : null,
             selectedContractType: this.documentRequest?.contract_type_id ? this.contractTypes?.find(ct => ct.id === this.documentRequest.contract_type_id) : null,
@@ -769,7 +768,6 @@ export default {
             this.selectedContractType = null;
             this.selectedCurrency = {id: 1, name: '€'};
             this.file = null;
-            this.description = "";
             this.user_query = '';
             this.usersWithAccess = [];
             this.department_query = '';

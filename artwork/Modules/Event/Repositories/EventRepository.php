@@ -259,9 +259,15 @@ class EventRepository extends BaseRepository
                     $periodEnd = $this->carbonService->create($conditional['dateEnd'])->endOfDay();
 
                     // Überschneidung statt "Beginn oder Ende im Zeitraum": sonst fehlten Termine, die den
-                    // ganzen Zeitraum überspannen
+                    // ganzen Zeitraum überspannen. Termine ohne Endzeit zählen, wenn ihr Beginn im Zeitraum liegt.
                     $query->where('start_time', '<=', $periodEnd)
-                        ->where('end_time', '>=', $periodStart);
+                        ->where(function (Builder $overlap) use ($periodStart): void {
+                            $overlap->where('end_time', '>=', $periodStart)
+                                ->orWhere(function (Builder $withoutEnd) use ($periodStart): void {
+                                    $withoutEnd->whereNull('end_time')
+                                        ->where('start_time', '>=', $periodStart);
+                                });
+                        });
                 }
             )
             ->when(

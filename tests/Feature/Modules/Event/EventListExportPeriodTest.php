@@ -42,6 +42,23 @@ final class EventListExportPeriodTest extends FeatureTestCase
     }
 
     #[Test]
+    public function the_period_export_contains_events_without_end_time_that_start_in_the_period(): void
+    {
+        $this->actingAsAdmin();
+        $startingInside = $this->eventWithoutEndTime('2026-09-11 09:00:00');
+        $startingBefore = $this->eventWithoutEndTime('2026-09-09 09:00:00');
+        $startingAfter = $this->eventWithoutEndTime('2026-09-13 09:00:00');
+
+        $ids = app(EventRepository::class)
+            ->getEventsForExport($this->periodConfiguration('2026-09-10', '2026-09-12'))
+            ->pluck('id');
+
+        $this->assertContains($startingInside->id, $ids);
+        $this->assertNotContains($startingBefore->id, $ids);
+        $this->assertNotContains($startingAfter->id, $ids);
+    }
+
+    #[Test]
     public function planned_events_are_marked_in_the_event_status_column(): void
     {
         $this->setStatusEnabled(true);
@@ -66,6 +83,17 @@ final class EventListExportPeriodTest extends FeatureTestCase
     private function event(string $start, string $end): Event
     {
         return Event::factory()->create(['start_time' => $start, 'end_time' => $end, 'is_planning' => false]);
+    }
+
+    /**
+     * Ältere Termine haben teils keine Endzeit; das Model selbst speichert so keinen Termin mehr.
+     */
+    private function eventWithoutEndTime(string $start): Event
+    {
+        $event = $this->event($start, $start);
+        Event::query()->whereKey($event->id)->update(['end_time' => null]);
+
+        return $event;
     }
 
     /**

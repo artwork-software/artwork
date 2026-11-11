@@ -5,6 +5,7 @@ namespace Tests\Feature\Modules\Event;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Craft\Models\Craft;
@@ -517,6 +518,25 @@ final class SeriesEventsTest extends FeatureTestCase
 
         $this->assertCount(5, $this->seriesDates($series->id));
         $this->assertSame(0, Event::onlyTrashed()->where('series_id', $series->id)->count());
+    }
+
+    #[Test]
+    public function restoring_a_series_requires_the_right_to_delete_its_events(): void
+    {
+        [$first, $series] = $this->createWeeklySeries();
+        $this->deleteJson(route('events.series.delete', $first), ['scope' => 'all'])->assertSuccessful();
+
+        $this->actingAsUserWith([PermissionEnum::TRASH_ACCESS->value]);
+        $this->patchJson(route('events.series.restore', $series))->assertForbidden();
+        $this->assertSame(5, Event::onlyTrashed()->where('series_id', $series->id)->count());
+
+        $this->actingAsUserWith([
+            PermissionEnum::TRASH_ACCESS->value,
+            PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value,
+        ]);
+        $this->patchJson(route('events.series.restore', $series))
+            ->assertSuccessful()
+            ->assertJsonPath('restored', 5);
     }
 
     #[Test]

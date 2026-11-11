@@ -125,10 +125,17 @@ class EventSeriesController extends Controller
     }
 
     /**
-     * Alle Termine einer Serie aus dem Papierkorb wiederherstellen.
+     * Alle Termine einer Serie aus dem Papierkorb wiederherstellen. Wie beim einzelnen Termin
+     * (EventController::restore) setzt das neben dem Papierkorb-Zugriff das Löschrecht an jedem Termin voraus.
+     *
+     * @throws AuthorizationException
      */
     public function restore(SeriesEvents $series): JsonResponse
     {
+        foreach (Event::onlyTrashed()->where('series_id', $series->id)->get() as $event) {
+            $this->authorize('delete', $event);
+        }
+
         return response()->json(['restored' => $this->seriesEventsService->restoreSeries($series)]);
     }
 

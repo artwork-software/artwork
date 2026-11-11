@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\Crm\Services;
 
+use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Repositories\CrmContactRepository;
@@ -58,6 +60,8 @@ readonly class CrmContactService
             'is_active' => $data['is_active'] ?? true,
         ]);
 
+        $this->ensureAccommodationEntity($contact);
+
         $this->savePropertyValues($contact, $propertyValues);
 
         return $contact;
@@ -72,6 +76,13 @@ readonly class CrmContactService
         ], fn ($v) => $v !== null));
 
         $this->savePropertyValues($contact, $propertyValues);
+
+        // Unterkünfte werden im CRM gepflegt: der neue Name gilt auch für den Unterkunfts-Datensatz,
+        // sonst setzte der Abgleich unten den Kontakt auf den alten Namen zurück.
+        $entity = $contact->getSourceEntity();
+        if ($entity instanceof Accommodation && !empty($data['display_name'])) {
+            $entity->update(['name' => $data['display_name']]);
+        }
 
         // Sync display_name from source entity if available
         $this->syncDisplayName($contact);
@@ -98,7 +109,34 @@ readonly class CrmContactService
                 ->delete();
 
             $this->contactRepository->update($contact, ['crm_contact_type_id' => $newType->id]);
+            $contact->setRelation('contactType', $newType);
+
+            $this->ensureAccommodationEntity($contact);
         });
+    }
+
+    /**
+     * Künstler*innenaufenthalte und Zimmertypen hängen am Unterkunfts-Datensatz. Ein Kontakt der
+     * Systemart Unterkunft bekommt ihn deshalb gleich beim Anlegen (Dialog, Import, Typwechsel),
+     * verknüpft wie bei den aus dem Altbestand übernommenen Unterkünften.
+     */
+    private function ensureAccommodationEntity(CrmContact $contact): void
+    {
+        if (
+            $contact->entity_id !== null
+            || $contact->contactType?->slug !== CrmSystemContactTypeEnum::ACCOMMODATION->value
+        ) {
+            return;
+        }
+
+        $accommodation = Accommodation::create(['name' => $contact->display_name]);
+        $accommodation->forceFill(['crm_contact_id' => $contact->id])->saveQuietly();
+
+        $this->contactRepository->update($contact, [
+            'entity_type' => $accommodation->getMorphClass(),
+            'entity_id' => $accommodation->getKey(),
+        ]);
+        $contact->setRelation('entity', $accommodation);
     }
 
     public function updateProfileImage(CrmContact $contact, ?string $path): void

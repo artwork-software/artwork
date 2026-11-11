@@ -4049,6 +4049,8 @@
     "No reason provided": "No reason provided",
     "Confirm rejection": "Confirm rejection",
     "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency": "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency",
+    "Open accommodations in the CRM": "Open accommodations in the CRM",
+    "First create at least one accommodation in the CRM under the contact type “Accommodation” before you can maintain an artist residency.": "First create at least one accommodation in the CRM under the contact type “Accommodation” before you can maintain an artist residency.",
     "Select a room type": "Select a room type",
     "Enter room type name": "Enter room type name",
     "Days per page": "Days per page",

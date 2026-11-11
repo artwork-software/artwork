@@ -55,7 +55,8 @@ class AccommodationController extends Controller
         $syncData = [];
         foreach ($roomTypes as $roomTypeId) {
             $syncData[$roomTypeId] = [
-                'cost_per_night' => $roomTypeCosts[$roomTypeId] ?? 0.00
+                'cost_per_night' => $roomTypeCosts[$roomTypeId] ?? 0.00,
+                'crm_contact_id' => $accommodation->crm_contact_id,
             ];
         }
 
@@ -103,7 +104,8 @@ class AccommodationController extends Controller
         $syncData = [];
         foreach ($roomTypes as $roomTypeId) {
             $syncData[$roomTypeId] = [
-                'cost_per_night' => $roomTypeCosts[$roomTypeId] ?? 0.00
+                'cost_per_night' => $roomTypeCosts[$roomTypeId] ?? 0.00,
+                'crm_contact_id' => $accommodation->crm_contact_id,
             ];
         }
 

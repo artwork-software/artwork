@@ -100,9 +100,12 @@ class ShiftKpiTrackingService
     }
 
     /**
-     * Liefert alle Kennzahlen für die angegebene Spielzeit.
+     * Liefert alle Kennzahlen für die angegebene Spielzeit. $targets: bereits berechnete Zielwerte derselben
+     * Spielzeit (seasonTargets()), damit Aufrufer wie die Regelprüfung sie nicht doppelt rechnen.
+     *
+     * @param array<string, array<string, mixed>>|null $targets
      */
-    public function computeForUser(User $user, Carbon $seasonStart, Carbon $seasonEnd): array
+    public function computeForUser(User $user, Carbon $seasonStart, Carbon $seasonEnd, ?array $targets = null): array
     {
         $seasonStart = $seasonStart->copy()->startOfDay();
         $seasonEnd = $seasonEnd->copy()->endOfDay();
@@ -176,13 +179,29 @@ class ShiftKpiTrackingService
             'granted_vacation_days_year' => $grantedVacation,
             // Zielwerte ("X") + Aktiv-Flags: Zuweisung vor Vorlage, je Auswertungszeitraum aus den dort gültigen
             // Verträgen (für die Anzeige im Modal)
-            'targets' => $this->extractTargets($user, $halves, [
-                'season' => [$seasonStart, $seasonEnd],
-                'year' => [$yearStart, $yearEnd],
-                'first_26_weeks' => [$window26From, $window26To],
-            ]),
+            'targets' => $targets ?? $this->seasonTargets($user, $seasonStart, $seasonEnd),
             'counted_until' => Carbon::yesterday()->toDateString(),
         ];
+    }
+
+    /**
+     * Zielwerte einer Spielzeit, wie computeForUser() sie liefert: Hälften, Spielzeit, laufendes Kalenderjahr und
+     * das 26-Wochen-Fenster ab Spielzeitbeginn.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function seasonTargets(User $user, Carbon $seasonStart, Carbon $seasonEnd): array
+    {
+        $seasonStart = $seasonStart->copy()->startOfDay();
+        $seasonEnd = $seasonEnd->copy()->endOfDay();
+        $year = Carbon::now()->year;
+        [$window26From, $window26To] = $this->getDaysOffFirst26WeeksWindow($seasonStart);
+
+        return $this->extractTargets($user, $this->seasonHalves($seasonStart, $seasonEnd), [
+            'season' => [$seasonStart, $seasonEnd],
+            'year' => [Carbon::create($year, 1, 1)->startOfDay(), Carbon::create($year, 12, 31)->endOfDay()],
+            'first_26_weeks' => [$window26From, $window26To],
+        ]);
     }
 
     /**
@@ -337,29 +356,20 @@ class ShiftKpiTrackingService
     }
 
     /**
-     * Vertragsabschnitte eines Zeitraums: aufeinanderfolgende Tage mit demselben gültigen Vertragszeitraum
-     * (User::contractAssignFor, Historie einmal geladen). date = erster Tag des Abschnitts als Stichtag für den
-     * Resolver, null = an diesen Tagen kein Vertrag.
+     * Vertragsabschnitte eines Zeitraums (User::contractSegmentsBetween, aus den Grenzen der geladenen Historie).
+     * date = erster Tag des Abschnitts als Stichtag für den Resolver, null = an diesen Tagen kein Vertrag.
      *
      * @return list<array{date: Carbon|null, days: int}>
      */
     private function contractSegments(User $user, Carbon $from, Carbon $to): array
     {
-        $user->loadMissing('contractAssigns.userContract');
-
-        $segments = [];
-        $currentAssignId = null;
-        $end = $to->copy()->startOfDay();
-        for ($day = $from->copy()->startOfDay(); $day->lte($end); $day->addDay()) {
-            $assignId = $user->contractAssignFor($day)?->id;
-            if ($segments === [] || $assignId !== $currentAssignId) {
-                $segments[] = ['date' => $assignId === null ? null : $day->copy(), 'days' => 0];
-                $currentAssignId = $assignId;
-            }
-            $segments[array_key_last($segments)]['days']++;
-        }
-
-        return $segments;
+        return array_map(
+            static fn (array $segment): array => [
+                'date' => $segment['assign'] === null ? null : $segment['from'],
+                'days' => $segment['days'],
+            ],
+            $user->contractSegmentsBetween($from, $to)
+        );
     }
 
     /**

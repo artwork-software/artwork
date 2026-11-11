@@ -92,6 +92,50 @@ final class ContractSettingsResolverDateTest extends TestCase
         $this->assertSame(77, $resolver->compensationPeriod($user, Carbon::today()->addDays(10)));
     }
 
+    /**
+     * Abschnitte aus den Grenzen der Historie entsprechen der Auflösung Tag für Tag, auch mit Lücke,
+     * Überlappung (jüngster Beginn gewinnt) und Grenzen außerhalb des Zeitraums.
+     */
+    #[Test]
+    public function contract_segments_match_the_day_by_day_resolution(): void
+    {
+        $user = User::factory()->create();
+        $this->assign($user, $this->template('A'), ['valid_from' => null, 'valid_until' => '2026-03-10']);
+        $this->assign($user, $this->template('B'), ['valid_from' => '2026-03-20', 'valid_until' => '2026-08-31']);
+        $this->assign($user, $this->template('C'), ['valid_from' => '2026-06-01', 'valid_until' => '2026-06-30']);
+        $this->assign($user, $this->template('D'), ['valid_from' => '2026-12-01', 'valid_until' => null]);
+        $user = $user->fresh();
+
+        $from = Carbon::parse('2026-01-01');
+        $to = Carbon::parse('2027-02-28');
+        $expected = [];
+        for ($day = $from->copy(); $day->lte($to); $day->addDay()) {
+            $assignId = $user->contractAssignFor($day)?->id;
+            $last = array_key_last($expected);
+            if ($last !== null && $expected[$last]['id'] === $assignId) {
+                $expected[$last]['until'] = $day->toDateString();
+                $expected[$last]['days']++;
+                continue;
+            }
+            $expected[] = [
+                'id' => $assignId,
+                'from' => $day->toDateString(),
+                'until' => $day->toDateString(),
+                'days' => 1,
+            ];
+        }
+
+        $actual = array_map(static fn (array $segment): array => [
+            'id' => $segment['assign']?->id,
+            'from' => $segment['from']->toDateString(),
+            'until' => $segment['until']->toDateString(),
+            'days' => $segment['days'],
+        ], $user->contractSegmentsBetween($from, $to));
+
+        $this->assertCount(7, $actual);
+        $this->assertSame($expected, $actual);
+    }
+
     #[Test]
     public function a_gap_without_contract_returns_the_defaults(): void
     {

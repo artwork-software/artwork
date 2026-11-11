@@ -33,12 +33,15 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
         // Immer gesetzt: konfigurierte Spielzeit oder Kalenderjahr-Fallback
         [$seasonStart, $seasonEnd] = $kpiService->getSeasonBounds();
 
-        $targets = $this->targetsFor($rule, $user, $kpiService, $seasonStart, $seasonEnd);
+        $ruleValue = (int) round((float) $rule->individual_number_value);
+        $contractTargets = $ruleValue > 0 ? null : $kpiService->seasonTargets($user, $seasonStart, $seasonEnd);
+        $targets = $this->targetsFor($ruleValue, $contractTargets);
         if (max($targets) <= 0) {
             return $violations;
         }
 
-        $kpis = $kpiService->computeForUser($user, $seasonStart, $seasonEnd);
+        // Zielwerte aus targetsFor() wiederverwenden statt sie in computeForUser() erneut zu rechnen
+        $kpis = $kpiService->computeForUser($user, $seasonStart, $seasonEnd, $contractTargets);
         $midpoint = $kpiService->getSeasonMidpoint($seasonStart, $seasonEnd);
         $today = now()->startOfDay();
 
@@ -121,25 +124,16 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
     }
 
     /**
+     * @param array<string, array<string, mixed>>|null $contractTargets seasonTargets(), null bei Regelwert
      * @return array{1: int, 2: int} Ziel je Hälfte
      */
-    private function targetsFor(
-        ShiftRule $rule,
-        User $user,
-        ShiftKpiTrackingService $kpiService,
-        Carbon $seasonStart,
-        Carbon $seasonEnd
-    ): array {
-        $ruleValue = (int) round((float) $rule->individual_number_value);
+    private function targetsFor(int $ruleValue, ?array $contractTargets): array
+    {
         if ($ruleValue > 0) {
             return [1 => $ruleValue, 2 => $ruleValue];
         }
 
-        $target = $kpiService->extractTargets(
-            $user,
-            $kpiService->seasonHalves($seasonStart, $seasonEnd),
-            ['season' => [$seasonStart, $seasonEnd]]
-        )['free_sundays_sat_mon_per_half'] ?? [];
+        $target = $contractTargets['free_sundays_sat_mon_per_half'] ?? [];
 
         return [
             1 => (int) ($target['target_half1'] ?? 0),

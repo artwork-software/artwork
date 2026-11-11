@@ -161,13 +161,13 @@ const page = usePage()
 const compactMode = computed(() => !!page.props.auth?.user?.compact_mode)
 
 /**
- * Vacation types: Typ-Label-Mapping
+ * Vacation types: Typ → Übersetzungsschlüssel (gleiche Schlüssel wie ShowUserShiftsModal)
  */
 const vacationTypeMap = {
-    AVAILABLE: 'Verfügbar',
-    OFF_WORK: 'Arbeitsfreier Tag',
-    NOT_AVAILABLE: 'Nicht Verfügbar',
-    FREE_WORK: 'Frei',
+    AVAILABLE: 'Available',
+    OFF_WORK: 'Work-free day',
+    NOT_AVAILABLE: 'Not available',
+    FREE_WORK: 'Free',
 }
 
 /** Abwesenheit am Tag (Vacation-Einträge) */
@@ -181,7 +181,7 @@ const isOnVacation = computed(() => !!vacationToday.value)
 const vacationLabel = computed(() => {
     const v = vacationToday.value
     if (!v) return t('not available')
-    const label = vacationTypeMap[v.type] || t('not available')
+    const label = vacationTypeMap[v.type] ? t(vacationTypeMap[v.type]) : t('not available')
     if (!v.full_day && v.start_time && v.end_time) {
         return `${v.start_time} - ${v.end_time} ${label}`
     }

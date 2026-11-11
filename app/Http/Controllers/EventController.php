@@ -956,9 +956,9 @@ class EventController extends Controller
             }
         }
 
-        if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
-            $endDate = $startDate->copy()->addDays(7);
-            $calendarWarningText = __('calendar.daily_view_info');
+        if ($isDailyView && self::calendarDaysBetween($startDate, $endDate) > 7) {
+            $endDate = $startDate->copy()->addDays(7)->endOfDay();
+            $calendarWarningText = __('calendar.shift_plan_daily_view_info');
             if ($periodFromQuery === null) {
                 $user->userFilters()->updateOrCreate([
                     'filter_type' => $shiftFilterType
@@ -1102,7 +1102,7 @@ class EventController extends Controller
         if ($end->lessThan($start)) {
             [$start, $end] = [$end, $start];
         }
-        // Tagesansicht zeigt maximal sieben Tage (siehe Begrenzung unten)
+        // Tagesansicht zeigt maximal acht Kalendertage: Start plus sieben Tage (siehe Begrenzung unten)
         if ($isDailyView && $start->diffInDays($end) > 7) {
             $end = $start->copy()->addDays(7);
         }

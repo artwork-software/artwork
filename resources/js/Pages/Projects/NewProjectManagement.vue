@@ -672,7 +672,8 @@ const exportTabs = computed(() => {
         exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
         exportTabEnums.EXCEL_CALENDAR_EXPORT,
     ];
-    if (props.createSettings.budget_deadline) {
+    // Der Download liest Budgets aller Projekte und verlangt den globalen Budgetzugriff
+    if (props.createSettings.budget_deadline && (can('can manage global project budgets') || role('artwork admin'))) {
         tabs.push(exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT);
     }
     if (can('view projects') || role('artwork admin')) {

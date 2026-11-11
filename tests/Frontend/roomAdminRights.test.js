@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { bulkBookingModeIn, findRoom, isRoomAdminOf, mayAnswerRoomRequestIn, roomAdminIds } from '../../resources/js/Helper/roomAdminRights.js';
+import { bulkBookingModeIn, findRoom, isRoomAdminOf, mayAnswerRoomRequestIn, mayCreateEventIn, roomAdminIds } from '../../resources/js/Helper/roomAdminRights.js';
 
 test('room admins count as id list and as user objects', () => {
     assert.deepEqual(roomAdminIds({ admins: [3, 5] }), [3, 5]);
@@ -60,4 +60,27 @@ test('bulkBookingModeIn mirrors the multi-edit booking check (direct, room reque
     // Geplante Termine kennen keine Raumanfrage
     assert.equal(bulkBookingModeIn({ ...base, isPlanning: true, canRequestRooms: true }), 'none');
     assert.equal(bulkBookingModeIn({ ...base, isPlanning: true, canEditPlanning: true }), 'direct');
+});
+
+test('mayCreateEventIn mirrors EventPolicy::create: "bookable by anyone" alone is no right to create', () => {
+    const openRoom = { id: 1, admins: [7], everyone_can_book: true, requestable_by: [9] };
+    const base = {
+        room: openRoom,
+        userId: 8,
+        isAdmin: false,
+        canRequestRooms: false,
+        canBookWithoutRequest: false,
+        canEditPlanning: false,
+        canPlanFixed: false,
+    };
+
+    assert.equal(mayCreateEventIn(base), false);
+    assert.equal(mayCreateEventIn({ ...base, room: null }), false);
+    assert.equal(mayCreateEventIn({ ...base, userId: 7 }), true);
+    assert.equal(mayCreateEventIn({ ...base, userId: 9 }), true);
+    assert.equal(mayCreateEventIn({ ...base, isAdmin: true }), true);
+    assert.equal(mayCreateEventIn({ ...base, canRequestRooms: true }), true);
+    assert.equal(mayCreateEventIn({ ...base, canBookWithoutRequest: true }), true);
+    assert.equal(mayCreateEventIn({ ...base, canEditPlanning: true }), true);
+    assert.equal(mayCreateEventIn({ ...base, canPlanFixed: true, room: null }), true);
 });

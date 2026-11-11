@@ -59,6 +59,36 @@ export function mayAnswerRoomRequestIn({rooms, roomId, userId, isAdmin, canBookW
 }
 
 /**
+ * Darf die Person überhaupt einen Termin anlegen? Spiegel von EventPolicy::create: eines der Kalenderrechte
+ * oder eine Rolle im gewählten Raum (Raumadmin, anfrageberechtigt). "Kann von jedem fest gebucht werden" gibt
+ * KEIN Anlegerecht, es entscheidet nur, ob wer anlegen darf, fest bucht statt anzufragen (EventPolicy::book).
+ *
+ * @param {{room: object|null|undefined, userId: number|null|undefined, isAdmin: boolean,
+ *          canRequestRooms: boolean, canBookWithoutRequest: boolean, canEditPlanning: boolean,
+ *          canPlanFixed: boolean}} context
+ * @returns {boolean}
+ */
+export function mayCreateEventIn({
+    room,
+    userId,
+    isAdmin,
+    canRequestRooms,
+    canBookWithoutRequest,
+    canEditPlanning,
+    canPlanFixed,
+}) {
+    if (isAdmin || canRequestRooms || canBookWithoutRequest || canEditPlanning || canPlanFixed) {
+        return true;
+    }
+    if (!room || userId === null || userId === undefined) {
+        return false;
+    }
+
+    return roomAdminIds(room).includes(Number(userId))
+        || (room.requestable_by ?? []).map(Number).includes(Number(userId));
+}
+
+/**
  * Wie legen Mehrfach-Aktionen des Kalenders (Anlegen in Zellen, Duplizieren) Termine in diesem Raum an?
  * Spiegel von EventController::authorizeBulkEventCreationOrRoomRequest: 'direct' = fest gebucht,
  * 'request' = als Raumanfrage (wie im Termin-Dialog), 'none' = nicht erlaubt (Server antwortet 403).

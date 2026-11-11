@@ -208,7 +208,7 @@
                 <BaseCheckbox
                     id="everyoneCanBookEdit"
                     v-model="editRoomForm.everyone_can_book"
-                    :description="$page.props.show_hints ? $t('Decides whether this room can be booked by everyone or only by the room admins.') : undefined"
+                    :description="$page.props.show_hints ? $t('Decides whether everyone who may create events books this room directly or only the room admins. If it is off, the others can only request the room.') : undefined"
                 >
                     <template #label>
                         {{ $t('Can be booked by anyone') }}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-subtle">({{ $t('no effect') }})</span>

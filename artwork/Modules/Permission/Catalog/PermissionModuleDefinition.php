@@ -9,7 +9,7 @@ namespace Artwork\Modules\Permission\Catalog;
  * - extras:    Zusatzrechte quer zur Leiter, in Anzeige-Reihenfolge
  * - advanced:  Feinrechte / Altbestand, standardmäßig eingeklappt
  * - adminOnly: Bereiche, die nur artwork-Admins sehen (reine Anzeige, damit klar ist, warum kein Recht existiert)
- * - hint:      Modul-Hinweis (z. B. "Ohne Rechte kann eine Person nur in Räumen buchen, die für alle buchbar sind")
+ * - hint:      Modul-Hinweis (z. B. "Termine anlegen kann nur, wer ein Kalenderrecht oder eine Rolle im Raum hat")
  */
 final readonly class PermissionModuleDefinition
 {

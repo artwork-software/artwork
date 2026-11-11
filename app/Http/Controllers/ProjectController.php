@@ -4236,9 +4236,9 @@ class ProjectController extends Controller
     {
         $newProject = Project::create([
             'name' => __('(Copy)') . ' ' . $project->name,
-            'description' => $project->description,
             'number_of_participants' => $project->number_of_participants,
-            'cost_center' => $project->cost_center,
+            'cost_center_id' => $project->cost_center_id,
+            'cost_center_description' => $project->cost_center_description,
             'state' => $project->state,
             'is_group' => $project->is_group,
         ]);

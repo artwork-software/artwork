@@ -165,7 +165,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Project\\Models\\Project\:\:\$cost_center\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: app/Http/Controllers/ProjectController.php
 
 		-

@@ -1515,9 +1515,7 @@ class UserController extends Controller
 
     public function updateUserPhoto(User $user, Request $request): void
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
-            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
-        }
+        $this->authorizeProfileEdit($user);
 
         // Inhalt geprüft, nicht Endung: sonst landet HTML/SVG unter /storage/profile-photos.
         $request->validate([
@@ -1529,14 +1527,31 @@ class UserController extends Controller
 
     public function deleteUserPhoto(User $user): void
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
-            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
-        }
+        $this->authorizeProfileEdit($user);
 
         // Ersetzt Jetstreams current-user-photo.destroy: die liegt hinter dem
         // Passport-'api'-Guard (Web-Session → Redirect /login → Browser wiederholt
         // DELETE → 405) und würde zudem immer das Foto des EINGELOGGTEN Users löschen.
         $user->deleteProfilePhoto();
+    }
+
+    /**
+     * Das eigene Profil darf jede Person bearbeiten, fremde Profile nur die Personalverwaltung und Profile
+     * von Admins nur Admins.
+     */
+    private function authorizeProfileEdit(User $user): void
+    {
+        /** @var User $actor */
+        $actor = Auth::user();
+        if ($user->id === $actor->id) {
+            return;
+        }
+
+        abort_unless($actor->can(PermissionEnum::MA_MANAGER->value), \Illuminate\Http\Response::HTTP_FORBIDDEN);
+        abort_if(
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value) && !$actor->hasRole(RoleEnum::ARTWORK_ADMIN->value),
+            \Illuminate\Http\Response::HTTP_FORBIDDEN
+        );
     }
 
     /**
@@ -1607,16 +1622,10 @@ class UserController extends Controller
         $isSelf = $user->id === $actor->id;
         $actorIsAdmin = $actor->hasRole(RoleEnum::ARTWORK_ADMIN->value);
 
-        if (!$isSelf && !$actor->can(PermissionEnum::MA_MANAGER->value)) {
-            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
-        }
+        $this->authorizeProfileEdit($user);
 
-        // Nicht-Admins dürfen keine Admin-Konten bearbeiten und fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
+        // Nicht-Admins dürfen fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
         if (!$isSelf && !$actorIsAdmin) {
-            abort_if(
-                $user->hasRole(RoleEnum::ARTWORK_ADMIN->value),
-                \Illuminate\Http\Response::HTTP_FORBIDDEN
-            );
             abort_if(
                 $request->filled('email')
                 && strcasecmp((string) $request->input('email'), (string) $user->email) !== 0,

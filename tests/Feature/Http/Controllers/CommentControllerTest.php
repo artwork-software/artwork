@@ -130,4 +130,20 @@ final class CommentControllerTest extends FeatureTestCase
         $this->delete('/comments/' . $comment->id)->assertSuccessful();
         $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
     }
+
+    #[Test]
+    public function a_comment_of_a_deleted_author_is_forbidden_instead_of_failing(): void
+    {
+        $project = Project::factory()->create();
+        $comment = Comment::query()->forceCreate([
+            'text' => 'Verwaist',
+            'user_id' => null,
+            'project_id' => $project->id,
+        ]);
+
+        $this->actingAsUserWith([PermissionEnum::WRITE_PROJECTS->value]);
+        $this->patch('/comments/' . $comment->id, ['text' => 'Fremd'])->assertForbidden();
+        $this->delete('/comments/' . $comment->id)->assertForbidden();
+        $this->assertSame('Verwaist', $comment->fresh()->text);
+    }
 }

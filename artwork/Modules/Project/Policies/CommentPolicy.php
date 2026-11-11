@@ -36,13 +36,19 @@ class CommentPolicy
         return $isInTeam || $user->can('update', $project);
     }
 
+    /**
+     * Nur die Verfasser*in; über user_id, damit ein Kommentar einer gelöschten Person kein 500 auslöst.
+     */
     public function update(User $user, Comment $comment): bool
     {
-        return $comment->user->id === $user->id;
+        return (int) $comment->user_id === $user->id;
     }
 
+    /**
+     * Nur die Verfasser*in; über user_id, damit ein Kommentar einer gelöschten Person kein 500 auslöst.
+     */
     public function delete(User $user, Comment $comment): bool
     {
-        return $comment->user->id === $user->id;
+        return (int) $comment->user_id === $user->id;
     }
 }

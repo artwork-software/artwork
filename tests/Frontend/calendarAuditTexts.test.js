@@ -84,3 +84,20 @@ test('event delete dialogs point to the trash instead of calling the deletion ir
         dailyFile,
     );
 });
+
+test('copy intervals in the project event list are translated', () => {
+    const file = 'resources/js/Pages/Projects/Components/BulkComponents/BulkBody.vue';
+    const source = read(file);
+
+    assert.doesNotMatch(source, /name: '(Täglich|Wöchentlich|Monatlich|am gleichen Tag)'/, 'hardcoded German interval');
+    for (const [key, german] of [
+        ['Daily', 'Täglich'],
+        ['Weekly', 'Wöchentlich'],
+        ['Monthly', 'Monatlich'],
+        ['on the same day', 'am gleichen Tag'],
+    ]) {
+        assert.ok(source.includes(`name: $t('${key}')`), `${file} misses: ${key}`);
+        assert.equal(de[key], german, `de.json: ${key}`);
+        assert.equal(en[key], key, `en.json: ${key}`);
+    }
+});

@@ -2010,6 +2010,8 @@
     "Also delete already assigned records": "Bereits zugeordnete Datensätze auch löschen",
     "Are you sure you want to delete the booking data in this date range?": "Möchtest du die Buchungsdaten in diesem Zeitraum wirklich löschen?",
     "Are you sure you want to delete the selected booking data?": "Möchtest du die ausgewählten Buchungsdaten wirklich löschen?",
+    "Delete all Sage data": "Alle Sage-Daten löschen",
+    "Are you sure you want to delete all imported Sage data? All bookings, including those already assigned to budgets and their comments, will be permanently deleted. This cannot be undone.": "Möchtest du wirklich alle importierten Sage-Daten löschen? Alle Buchungen, auch die bereits Budgets zugeordneten samt ihrer Kommentare, werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.",
     "SeparatorComponent": "Trenn-Komponente",
     "Please enter a name.": "Bitte gib einen Namen ein.",
     "Component Layout": "Komponenten-Layout",

@@ -329,7 +329,7 @@
                         <BaseTextarea
                             :label="$t('Comment / Note')"
                             id="description"
-                            v-model="description"
+                            v-model="contractForm.description"
                             rows="5"
                         />
                     </div>

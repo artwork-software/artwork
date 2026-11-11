@@ -13,6 +13,7 @@ use Illuminate\Auth\Access\HandlesAuthorization;
  * (can edit checklist) und "Checklisten-Vorlagen verwalten" gelten für fremde Listen.
  * Projekt-/Abteilungs-Zugehörigkeit und Task-Zuweisung geben zusätzlich Sicht bzw. Schreibrecht.
  * Sicht über das Projekt setzt bei Listen aus einem Tab zusätzlich Sicht auf diesen Tab voraus.
+ * Private Listen bleiben auch im Projekt privat: Projektteam und Projektrechte öffnen sie nicht.
  */
 class ChecklistPolicy
 {
@@ -29,7 +30,7 @@ class ChecklistPolicy
             return true;
         }
 
-        if ($this->isInTabHiddenFrom($user, $checklist)) {
+        if ($checklist->private || $this->isInTabHiddenFrom($user, $checklist)) {
             return false;
         }
 
@@ -48,7 +49,7 @@ class ChecklistPolicy
             return true;
         }
 
-        if ($this->isInTabHiddenFrom($user, $checklist)) {
+        if ($checklist->private || $this->isInTabHiddenFrom($user, $checklist)) {
             return false;
         }
 
@@ -68,7 +69,7 @@ class ChecklistPolicy
             return true;
         }
 
-        if ($this->isInTabHiddenFrom($user, $checklist)) {
+        if ($checklist->private || $this->isInTabHiddenFrom($user, $checklist)) {
             return false;
         }
 

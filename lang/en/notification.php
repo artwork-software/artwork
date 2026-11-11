@@ -123,6 +123,12 @@ return [
         'room_request_declined' => 'Room request declined',
         'deleted' => 'Event cancelled'
     ],
+    'ai_assistant' => [
+        'created' => '{1} Event created (via assistant)|[2,*] :count events created (via assistant)',
+        'updated' => '{1} Event changed (via assistant)|[2,*] :count events changed (via assistant)',
+        'deleted' => '{1} Event deleted (via assistant)|[2,*] :count events deleted (via assistant)',
+        'reverted' => '{1} Event undone (via assistant)|[2,*] :count events undone (via assistant)',
+    ],
     'moneySource' => [
         'add_permission' => 'You have been granted access to :moneySource',
         'remove_permission' => 'Your access to :moneySource has been revoked',

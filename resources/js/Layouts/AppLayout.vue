@@ -76,6 +76,10 @@
         </main>
 
         <PopupChat v-if="$page.props.auth.user.use_chat"/>
+
+        <!-- KI-Bar: einmal global gemountet, seitenuebergreifend; ohne Freischaltung existiert weder
+             die Komponente noch der Ctrl/Cmd+K-Listener (core-ki-bar-ui, Konzept C4 §1). -->
+        <AiAssistantBar v-if="$page.props.ai?.enabled"/>
         <TicketingMoveDialog v-if="$page.props.ticketing?.active" />
     </div>
 </template>
@@ -96,6 +100,7 @@ import {defineAsyncComponent, getCurrentInstance, onBeforeMount, onMounted, onUn
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
 import PopupChat from "@/Components/Chat/PopupChat.vue";
+import AiAssistantBar from "@/Components/AiAssistant/AiAssistantBar.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import SubMenu from "@/Layouts/SubMenu.vue";
 import TicketingMoveDialog from "@/Layouts/Components/TicketingMoveDialog.vue";

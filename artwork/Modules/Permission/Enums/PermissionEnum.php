@@ -119,4 +119,6 @@ enum PermissionEnum : string
 
     // Steuert alle Exporte der Projektübersicht, inkl. Projektinhalte als Excel/Word (11/2026)
     case PROJECT_OVERVIEW_EXPORT = 'can export from project overview';
+
+    case AI_ASSISTANT_SETTINGS_UPDATE = 'change ai assistant settings';
 }

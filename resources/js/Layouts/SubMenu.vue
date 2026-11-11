@@ -256,6 +256,31 @@
                     <!-- Footer-Navigation -->
                     <li class="mt-auto">
                         <ul role="list" class="space-y-1">
+                            <!-- KI-Assistent: globale Aktion, kein Seitenwechsel. Sichtbar nur, wenn der
+                                 Assistent fuer diese Person frei ist (Shared-Prop ai.enabled, C4 §1). -->
+                            <li v-if="usePage().props.ai?.enabled">
+                                <button
+                                    type="button"
+                                    data-ai-open
+                                    :class="[
+                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors border-l-2 border-transparent text-white hover:bg-white/10',
+                                      isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0'
+                                    ]"
+                                    :title="$t('AI assistant')"
+                                    @click="openAiAssistant"
+                                >
+                                    <PropertyIcon
+                                        name="IconSparkles"
+                                        :stroke-width="1.5"
+                                        class="size-6 min-w-6 min-h-6 text-white"
+                                        aria-hidden="true"
+                                    />
+                                    <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">
+                                        {{ $t('AI assistant') }}
+                                    </span>
+                                </button>
+                            </li>
+
                             <li v-for="item in subNavigation" :key="item.name">
                                 <!-- Externer Link (Handbuch) im neuen Browser-Tab -->
                                 <a
@@ -498,6 +523,7 @@ import {
     TransitionRoot
 } from "@headlessui/vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import {useAiAssistant} from "@/Composeables/useAiAssistant";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { is, can } from 'laravel-permission-to-vuejs'
 import { canOpenPlanningCalendar } from '@/Helper/planningRights.js'
@@ -1003,6 +1029,13 @@ const showToolTipForItem = (item) => {
 
 const hideToolTipForItem = (item) => {
     item.showToolTipForItem = false
+}
+
+// KI-Bar oeffnen (core-ki-bar-ui). Der Zustand liegt im Composable auf Modulebene, die Bar selbst
+// haengt im persistenten Layout — hier wird nur umgeschaltet.
+const openAiAssistant = () => {
+    useAiAssistant().open()
+    sidebarOpen.value = false
 }
 
 

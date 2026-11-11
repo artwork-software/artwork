@@ -552,6 +552,19 @@ class ShiftRuleService
         return $ruleCheck->check($rule, $user, $startDate, $endDate);
     }
 
+    /**
+     * Aktive Regeln des heute gültigen Vertrags der Person (leer ohne Vertrag) — dieselbe Menge,
+     * die validateRulesForUser() prüft.
+     *
+     * @return Collection<int, ShiftRule>
+     */
+    public function getActiveRulesForUser(User $user): Collection
+    {
+        $activeContract = $user->activeWorkContract();
+
+        return $activeContract ? $this->getRulesForContract($activeContract) : collect();
+    }
+
     private function getRulesForContract(UserContract $contract): Collection
     {
         return ShiftRule::whereHas('contracts', function ($query) use ($contract): void {

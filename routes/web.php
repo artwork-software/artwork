@@ -121,6 +121,13 @@ use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsFormatsController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiAssistantSettingsController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiActionBatchController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiActionController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiConversationController;
+use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiAssistantIsEnabled;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiSessionController;
+use Artwork\Modules\AiAssistant\Http\Controllers\HelpRedirectController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
@@ -251,7 +258,42 @@ Route::middleware(['guest', 'throttle:20,1'])->group(function (): void {
 
 // Ohne 'verified'-Middleware: Konten entstehen nur per Einladung, LDAP oder OIDC; das User-Model
 // implementiert MustVerifyEmail nicht.
-Route::group(['middleware' => ['auth:sanctum']], function (): void {
+Route::group(['middleware' => ['auth']], function (): void {
+
+    // KI-Session-Token. throttle:ai-session steht nach der Auth-Gruppe, weil das Limit auf die
+    // User-ID gekeyed ist — vorher waere der User noch nicht aufgeloest.
+    Route::post('/ai/session', [AiSessionController::class, 'store'])
+        ->middleware('throttle:ai-session')
+        ->name('ai.session.store');
+
+    // Gespraechsliste und Loeschen fuer die KI-Bar. Die Freischaltung haengt am Service, nicht an
+    // einem Gate — Gate::before wuerde Admins sonst auch bei abgeschaltetem Haus durchlassen.
+    Route::middleware(EnsureAiAssistantIsEnabled::class)->group(function (): void {
+        Route::get('/ai/conversations', [AiConversationController::class, 'index'])
+            ->name('ai.conversations.index');
+        Route::delete('/ai/conversations/{conversation}', [AiConversationController::class, 'destroy'])
+            ->name('ai.conversations.destroy');
+
+        // Zustand einer Aktion fuer die Bar (core-ki-bar-confirm): Batch und Undo-Frist kommen
+        // nicht ueber SSE — `done` traegt laut Contract nur `reason`.
+        Route::get('/ai/actions/{action}', [AiActionController::class, 'show'])
+            ->name('ai.actions.show');
+
+        // Ablehnung einer bestaetigungspflichtigen Aktion (core-confirm-actions; Konzept W2 §6).
+        Route::post('/ai/actions/{action}/cancel', [AiActionController::class, 'cancel'])
+            ->name('ai.actions.cancel');
+
+        // Ruecknahme einer ausgefuehrten Aktion (core-undo; Konzept W3 §2).
+        Route::post('/ai/actions/batches/{batch}/revert', [AiActionBatchController::class, 'revert'])
+            ->name('ai.actions.batches.revert');
+    });
+
+    // Weiterleitung ins Wiki (core-help-redirect). Innerhalb der auth-Gruppe, damit daraus kein
+    // anonymer Redirect-Dienst wird. Der Punkt fehlt in der Zeichenklasse — `..` trifft die Route
+    // damit nicht.
+    Route::get('/help/{path?}', HelpRedirectController::class)
+        ->where('path', '[A-Za-z0-9_\-\/#]*')
+        ->name('help.redirect');
 
     // Workflow routes - only accessible via direct URL
     Route::group(['prefix' => 'workflow', 'middleware' => 'role:artwork admin'], function (): void {
@@ -599,6 +641,14 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('tool.mail.update');
         Route::post('/mail/test', [MailSettingsController::class, 'test'])
             ->name('tool.mail.test');
+
+        // KI-ASSISTENT — eigene Permission, nicht "change tool settings"
+        Route::group(['middleware' => 'can:change ai assistant settings'], function (): void {
+            Route::get('/ai-assistant', [AiAssistantSettingsController::class, 'edit'])
+                ->name('tool.ai-assistant');
+            Route::patch('/ai-assistant', [AiAssistantSettingsController::class, 'update'])
+                ->name('tool.ai-assistant.update');
+        });
         Route::group([
             'namespace' => 'System',
             'prefix' => 'system',
@@ -4467,7 +4517,7 @@ Route::get(
 
 
 // /shift/check-collisions — liefert Zuweisungs-/Zeitdaten beliebiger Worker, daher zwingend hinter Auth
-Route::middleware(['auth:sanctum'])
+Route::middleware(['auth'])
     ->post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->can('can plan shifts')
     ->name('shift.check-collisions');

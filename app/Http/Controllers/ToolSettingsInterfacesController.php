@@ -7,6 +7,7 @@ use App\Http\Requests\DeleteSageBookingDaysRequest;
 use App\Http\Requests\InitializeSageSpecificDayRequest;
 use Artwork\Core\Api\Models\ApiLog;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
+use Artwork\Modules\AiAssistant\Support\AiScopes;
 use Artwork\Modules\Budget\Models\SageBookingLog;
 use Artwork\Modules\Budget\Services\SageBookingDataDeleteService;
 use Artwork\Modules\Budget\Services\TableColumnOrderService;
@@ -77,8 +78,12 @@ class ToolSettingsInterfacesController extends Controller
                 'tableColumnOrder' => $this->tableColumnOrderService->getAllOrderedByPosition(),
                 'canManageTokens' => $canManageTokens,
                 'tokens' => $tokens,
+                // ai:*-Scopes werden nicht angeboten — sie gehören zum Session-Token des
+                // KI-Assistenten, nicht zu langlebigen Kunden-Keys (Konzept C2 §3).
+                // StoreTokenRequest lehnt sie zusätzlich serverseitig ab.
                 'availableScopes' => $canManageTokens
                     ? MachineScopes::all()
+                        ->reject(fn (Scope $scope): bool => AiScopes::isAiScope($scope->id))
                         ->map(fn (Scope $scope): array => [
                             'id' => $scope->id,
                             'description' => $scope->description,

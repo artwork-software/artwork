@@ -8,6 +8,8 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -612,6 +614,21 @@ class InventoryArticle extends Model
             'inventory_article_id',
             'inventory_tag_id'
         )->withTimestamps();
+    }
+
+    /**
+     * Inventarartikel, die diese Person sehen darf (core-visibility-scopes, Konzept B1 §2).
+     *
+     * Aus der Oberflaeche extrahiert, nicht erfunden: Die Inventarliste
+     * (`routes/web.php:2700-2708`) traegt keine `can:`-Middleware; nur Anlegen, Aendern, Loeschen
+     * und Einstellungen haengen an `inventory.*`-Rechten.
+     * Deshalb liefert der Scope fuer jede angemeldete Person alles und ohne Benutzer nichts.
+     * Er existiert trotzdem als eigene Methode, damit die Aggregations-Endpunkte (B1) genau eine
+     * Stelle haben, an der sich die Regel aendern laesst, wenn die Oberflaeche sie bekommt.
+     */
+    public function scopeVisibleFor(Builder $builder, ?User $user): Builder
+    {
+        return $user instanceof User ? $builder : $builder->whereRaw('1 = 0');
     }
 
     /**

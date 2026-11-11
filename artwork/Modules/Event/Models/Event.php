@@ -647,4 +647,20 @@ class Event extends Model
     {
         return $this->timelines()->exists();
     }
+
+    /**
+     * Termine, die diese Person sehen darf (core-visibility-scopes, Konzept B1 §2).
+     *
+     * Aus der Oberflaeche extrahiert, nicht erfunden: Der Kalender (`routes/web.php:975`,
+     * `/calendar/view`) haengt an keinem Recht, und
+     * `CalendarService::filterEvents():252` filtert ausschliesslich nach den Kalendereinstellungen
+     * der Person (Raeume, Bereiche, Termintypen, Publikum, laut/leise) — nie nach Rechten.
+     * Deshalb liefert der Scope fuer jede angemeldete Person alles und ohne Benutzer nichts.
+     * Er existiert trotzdem als eigene Methode, damit die Aggregations-Endpunkte (B1) genau eine
+     * Stelle haben, an der sich die Regel aendern laesst, wenn die Oberflaeche sie bekommt.
+     */
+    public function scopeVisibleFor(Builder $builder, ?User $user): Builder
+    {
+        return $user instanceof User ? $builder : $builder->whereRaw('1 = 0');
+    }
 }

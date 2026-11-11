@@ -126,6 +126,19 @@ return new PermissionModuleDefinition(
             note: 'Previously reserved for artwork admins. The tab "Budget templates" additionally requires the budget template permissions of the module "Budget & funding".',
         ),
         new PermissionDefinition(
+            name: PermissionEnum::AI_ASSISTANT_SETTINGS_UPDATE,
+            title: 'AI assistant settings',
+            effect: 'Can switch the AI assistant on or off for this house and control its stages',
+            unlocks: ['Tab "AI assistant" in the tool settings'],
+            allows: [
+                'Switch the assistant on and off for the whole house',
+                'Release the stages "data analysis" and "actions"',
+                'Set the retention period of the chat transcripts',
+            ],
+            personas: [Persona::SYSADMIN],
+            note: 'Whether the assistant is available at all is additionally decided by the instance configuration of the operator; this permission cannot override it.',
+        ),
+        new PermissionDefinition(
             name: PermissionEnum::TRASH_ACCESS,
             title: 'Open trash',
             effect: 'Can open the recycle bin',

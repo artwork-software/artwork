@@ -201,12 +201,18 @@ class AuthServiceProvider extends ServiceProvider
         // Wichtig: Scopes stehen im signierten JWT, nicht in der Datenbank. Tokens, die vor der
         // Einführung dieser Liste ausgegeben wurden, tragen dauerhaft eine leere Scope-Menge und
         // können nachträglich keine Rechte erhalten — sie müssen neu erstellt werden.
+        // Die ai:*-Scopes stehen hier, weil tokensCan() die Liste statisch setzt — ein zweiter
+        // Aufruf aus einem Modul-Provider würde sie je nach Boot-Reihenfolge überschreiben.
+        // Sie sind bewusst nicht für Kunden-API-Keys wählbar (Artwork\Modules\AiAssistant\Support\AiScopes).
         Passport::tokensCan([
             'app' => 'Access the artwork app API',
             'inventory:read' => 'Read inventory categories and articles',
             'calendar:read' => 'Read rooms, areas and events (room occupancy)',
             'ticketing:read' => 'Read released events, price categories and branding',
             'ticketing:write' => 'Report sales, bookings and check-ins back to artwork',
+            'ai:transcript' => 'KI-Assistent: Chatverlauf lesen und schreiben',
+            'ai:read' => 'KI-Assistent: Hausdaten im Rahmen der Rechte der fragenden Person lesen',
+            'ai:write' => 'KI-Assistent: bestätigte Änderungen ausführen',
         ]);
 
         // Passport ≥12 registriert keine Default-View mehr – ohne dieses Binding

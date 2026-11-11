@@ -56,6 +56,7 @@
         "dedoc/scramble": "^0.13",
         "fakerphp/faker": "^v1.20.0",
         "fruitcake/laravel-debugbar": "^4.0",
+        "justinrainbow/json-schema": "^6.12",
         "hotmeteor/spectator": "^3.0",
         "larastan/larastan": "^3.4",
         "laravel/boost": "^2.4",
@@ -119,11 +120,15 @@
         "test:pure": [
             "@php vendor/bin/phpunit --testsuite=Pure --no-coverage"
         ],
+        "test:browser": [
+            "@php vendor/bin/phpunit -c phpunit.dusk.xml"
+        ],
         "test:coverage": [
             "@php vendor/bin/phpunit --coverage-html=coverage --coverage-clover=coverage.xml"
         ]
     },
     "scripts-descriptions": {
+        "test:browser": "Browser-Tests (Dusk). Setzt einen laufenden Testserver und einen lokalen chromium voraus; ohne beides ueberspringen sich die Tests. Siehe specs/logs/IMPLEMENTATION_LOG_core-ki-bar-stub-test.md.",
         "phpstan": "Run PHPStan static analysis against your application.",
         "phpcs": "Detect violations of the defined coding standard.",
         "phpcbf": "Automatically correct coding standard violations."

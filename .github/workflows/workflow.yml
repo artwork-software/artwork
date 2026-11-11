@@ -37,6 +37,34 @@ jobs:
           phpcs_path: php vendor/bin/phpcs
           standard: phpcs.xml
 
+  openapi-contract:
+    name: OpenAPI-Contract ohne Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PHP and Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gd zip bcmath pcntl
+      # scramble liegt in require-dev — der Export braucht die dev-Abhaengigkeiten.
+      - name: Install Dependencies
+        run: composer install --no-progress --no-interaction
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+      - name: Export OpenAPI
+        run: php artisan artwork:export-openapi
+      # Der Export ist deterministisch; jede Abweichung heisst, dass eine Routen- oder
+      # Schemaaenderung ohne Re-Export committet wurde.
+      - name: Fail on contract drift
+        run: |
+          if ! git diff --exit-code --stat -- openapi.json; then
+            echo "::error::openapi.json ist nicht aktuell. Bitte 'php artisan artwork:export-openapi' laufen lassen und die Datei committen."
+            exit 1
+          fi
+
   phpstan:
     runs-on: ubuntu-latest
     steps:
@@ -152,3 +180,35 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  contract-release-assets:
+    name: Contract-Artefakte als Release-Assets
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [openapi-contract]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      # openapi.json ist committet und von openapi-contract als aktuell nachgewiesen.
+      # routes-web.json wird hier erzeugt: Es haengt an den Routen, nicht an einem Review, und
+      # gehoert deshalb nicht ins Repo — artwork-ai holt es pro Version als Asset (Konzept C5 §2).
+      - name: Install PHP and Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gd zip bcmath pcntl
+      - name: Install Dependencies
+        run: composer install --no-progress --no-interaction --no-dev
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+      - name: Export routes-web.json
+        run: php artisan ai:export-routes
+      - name: Attach contract artefacts to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            openapi.json
+            routes-web.json

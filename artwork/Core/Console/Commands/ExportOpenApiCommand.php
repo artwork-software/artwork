@@ -6,8 +6,13 @@ use Illuminate\Console\Command;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * Erzeugt openapi.yaml on demand im Projekt-Root. Die Datei ist nicht versioniert — wer die
- * Spezifikation braucht (Partner, Postman, Client-Generator), erzeugt sie mit diesem Command.
+ * Erzeugt die OpenAPI-Spezifikation im Projekt-Root.
+ *
+ * openapi.json ist das versionierte Contract-Artefakt (Konzept 0.4 §1): Es liegt im Repo, die CI
+ * exportiert frisch und vergleicht — Abweichung heisst Contract-Drift und macht den Build rot.
+ * artwork-ai friert pro unterstuetzter artwork-Version eine Kopie davon ein.
+ *
+ * openapi.yaml entsteht daneben als lesbare Fassung und bleibt unversioniert.
  */
 class ExportOpenApiCommand extends Command
 {
@@ -31,9 +36,15 @@ class ExportOpenApiCommand extends Command
         $document = json_decode((string) file_get_contents($jsonPath), true, 512, JSON_THROW_ON_ERROR);
 
         file_put_contents($yamlPath, Yaml::dump($document, 20, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE));
-        unlink($jsonPath);
 
-        $this->info('openapi.yaml updated.');
+        // Deterministisch schreiben: Ohne feste Formatierung erzeugt jeder Lauf einen Diff und der
+        // CI-Vergleich waere dauerhaft rot.
+        file_put_contents(
+            $jsonPath,
+            json_encode($document, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL
+        );
+
+        $this->info('openapi.json and openapi.yaml updated.');
 
         return self::SUCCESS;
     }

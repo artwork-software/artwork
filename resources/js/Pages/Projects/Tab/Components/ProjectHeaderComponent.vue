@@ -113,10 +113,10 @@
                                 stroke="2"
                             />
 
-                            <BaseMenu menu-width="!w-fit" white-menu-background v-if="canWriteProject">
-                                <BaseMenuItem white-menu-background @click="openEditProjectModal" title="Edit basic data" :icon="IconEdit" />
+                            <BaseMenu menu-width="!w-fit" white-menu-background v-if="canWriteProject || canDeleteProject">
+                                <BaseMenuItem v-if="canWriteProject" white-menu-background @click="openEditProjectModal" title="Edit basic data" :icon="IconEdit" />
 
-                                <template v-if="project?.is_group">
+                                <template v-if="canWriteProject && project?.is_group">
                                     <BaseMenuItem
                                         white-menu-background
                                         @click="showAddProjectToGroup = true"
@@ -131,7 +131,7 @@
                                     />
                                 </template>
 
-                                <BaseMenuItem white-menu-background @click="duplicateProject(project)" :icon="IconCopy" title="Duplicate" />
+                                <BaseMenuItem v-if="canWriteProject" white-menu-background @click="duplicateProject(project)" :icon="IconCopy" title="Duplicate" />
 
                                 <BaseMenuItem
                                     white-menu-background
@@ -527,7 +527,7 @@ const canWriteProject = computed(() => {
 
 const canDeleteProject = computed(() => {
     const userId = page?.props?.auth?.user?.id;
-    return is("artwork admin") || props.headerObject?.projectDeleteIds?.includes(userId);
+    return is("artwork admin") || can("delete projects") || props.headerObject?.projectDeleteIds?.includes(userId);
 });
 
 // Tabs

@@ -40,4 +40,30 @@ final class SendDeadlineNotificationsCommandTest extends FeatureTestCase
         $this->assertSame(['showInTasks'], $data['buttons']);
         $this->assertSame($task->id, $data['taskId']);
     }
+    #[Test]
+    public function a_newly_created_task_is_reminded_once_its_deadline_has_passed(): void
+    {
+        Notification::swap(new ChannelManager($this->app));
+        $owner = User::factory()->create();
+        app(NotificationSettingService::class)->ensureDefaultsForUser($owner);
+        $checklist = Checklist::factory()->create(['user_id' => $owner->id, 'private' => false]);
+        $task = Task::query()->create([
+            'name' => 'Programmheft freigeben',
+            'checklist_id' => $checklist->id,
+            'deadline' => now()->subHour(),
+            'done' => false,
+            'order' => 1,
+        ]);
+        $task->task_users()->attach($owner->id);
+
+        $this->assertFalse($task->fresh()->sent_deadline_notification);
+
+        $this->artisan('artwork:send-deadline-notifications')->assertSuccessful();
+
+        $this->assertSame(
+            NotificationEnum::NOTIFICATION_TASK_REMINDER->value,
+            $owner->notifications()->sole()->data['type']
+        );
+        $this->assertTrue($task->fresh()->sent_deadline_notification);
+    }
 }

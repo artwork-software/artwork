@@ -753,22 +753,26 @@ export default {
         openRelevantBudgetDataSumModalForCell(cell) {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
             if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
-            const relevantData = data[this.mainPosition.type].filter(item => item?.groupRowId === cell?.sub_position_row_id);
+            const relevantData = data[this.mainPosition.type].filter(item => Number(item?.groupRowId) === Number(cell?.sub_position_row_id));
 
             if (!relevantData.length) return false;
             this.dataToDisplayInRelevantDataModal = relevantData;
             this.showRelevantBudgetDataSumModal = true;
         },
+        // Spalte "Unterprojekte": nur die Summe der passenden Unterprojekt-Zeilen, ohne Treffer 0 (wie
+        // BudgetService::enrichProjectGroupSubprojectsColumnValues). Vorher fiel die Anzeige ohne Treffer auf den
+        // Zellwert zurück, der Eigenwert und Sage-Buchungen der Gruppenzeile enthielt.
         calculateRelevantBudgetDataSumFormProjectsInGroup(cell) {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
-            // Fallback: wenn keine DTO-Daten vorhanden/filtrierbar sind, den bereits vom Backend
-            // angereicherten Zellwert nutzen.
-            const fallback = parseFloat(String(cell?.value ?? '0').replace(',', '.'));
 
-            if (!data || !Array.isArray(data[this.mainPosition?.type])) return isNaN(fallback) ? 0 : fallback;
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) {
+                // Ohne DTO-Daten bleibt der vom Backend gesetzte Zellwert (dieselbe Summe)
+                const backendSum = parseFloat(String(cell?.value ?? '0').replace(',', '.'));
+                return isNaN(backendSum) ? 0 : backendSum;
+            }
 
-            const relevantData = data[this.mainPosition.type].filter(item => item?.groupRowId === cell?.sub_position_row_id);
-            if (!relevantData.length) return isNaN(fallback) ? 0 : fallback;
+            const relevantData = data[this.mainPosition.type].filter(item => Number(item?.groupRowId) === Number(cell?.sub_position_row_id));
+            if (!relevantData.length) return 0;
             const sum = relevantData.reduce((acc, item) => {
                 const value = parseFloat(item.value?.replace(',', '.') || '0');
                 return acc + (isNaN(value) ? 0 : value);

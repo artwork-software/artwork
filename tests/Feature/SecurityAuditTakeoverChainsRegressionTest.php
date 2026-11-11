@@ -238,6 +238,9 @@ final class SecurityAuditTakeoverChainsRegressionTest extends FeatureTestCase
         $this->actingAs(User::factory()->create());
         $this->get($validUrl)->assertForbidden();
 
+        // Eigene Sitzung für die zweite Person: Sonst meldet AuthenticateSession sie wegen des
+        // Passwort-Hashes der ersten Person ab, und die Signaturprüfung käme gar nicht mehr dran.
+        $this->flushSession();
         $this->actingAs($user);
         // Ungültige oder abgelaufene Signatur: InvalidSignatureException (vom Handler als 4xx beantwortet)
         $this->get($validUrl . 'x')->assertClientError();

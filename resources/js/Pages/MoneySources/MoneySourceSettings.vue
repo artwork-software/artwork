@@ -14,9 +14,6 @@
             <div v-if="$page.props.errors?.name" class="text-danger text-sm mt-4">
                 {{ $page.props.errors.name }}
             </div>
-            <div v-if="$page.props.errors?.name" class="text-danger text-sm mt-4">
-                {{ $page.props.errors.name }}
-            </div>
             <div class=" w-full grid grid-cols-2 grid-flow-col grid-rows-2">
                 <!-- Finanzierungsquellenkategorien -->
                 <div class="mt-8 mr-10 flex items-center gap-4">
@@ -130,9 +127,6 @@ export default defineComponent({
             if (!this.moneySourceCategoryInput) {
                 return;
             }
-            if (!this.moneySourceCategoryInput) {
-                return;
-            }
             if (regex.test(this.moneySourceCategoryInput)) {
                 this.showInvalidCategoryNameErrorText = false;
                 router.post(
@@ -141,7 +135,6 @@ export default defineComponent({
                         name: this.moneySourceCategoryInput
                     },
                     {
-                        preserveScroll: true,
                         preserveScroll: true,
                         onSuccess: () => this.moneySourceCategoryInput = ''
                     }

@@ -8,7 +8,6 @@ use Artwork\Modules\User\Repositories\UserCalendarAboRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
-use Spatie\IcalendarGenerator\Components\Event as IcalEvent;
 use Spatie\IcalendarGenerator\Enums\EventStatus;
 
 readonly class UserCalendarAboService
@@ -34,7 +33,8 @@ readonly class UserCalendarAboService
     ];
 
     public function __construct(
-        private UserCalendarAboRepository $userCalendarAboRepository
+        private UserCalendarAboRepository $userCalendarAboRepository,
+        private CalendarAboAlertService $calendarAboAlertService
     ) {
     }
 
@@ -152,36 +152,6 @@ readonly class UserCalendarAboService
         return ($description !== '' ? $description . ' ' : '') . 'Organisation: ' . $creatorName;
     }
 
-    /**
-     * Erinnerung vor Terminbeginn, wenn sie im Abo eingeschaltet ist (wie im Schicht-Abo). Vorher wurde die
-     * Option gespeichert, der Feed enthielt aber nie eine Erinnerung.
-     */
-    private function addStartAlertToEvent(
-        IcalEvent $calendarEvent,
-        UserCalendarAbo $calendarAbo,
-        Carbon $eventStart,
-        string $title
-    ): void {
-        if (!$calendarAbo->enable_notification) {
-            return;
-        }
-
-        $notificationTime = (int) $calendarAbo->notification_time;
-        $alertTime = $eventStart->copy();
-
-        match ($calendarAbo->notification_time_unit) {
-            'minutes' => $alertTime->subMinutes($notificationTime),
-            'hours' => $alertTime->subHours($notificationTime),
-            'days' => $alertTime->subDays($notificationTime),
-            default => null,
-        };
-
-        $calendarEvent->alertAt(
-            $alertTime,
-            $title . ' beginnt in ' . $notificationTime . ' ' . $calendarAbo->notification_time_unit
-        );
-    }
-
     public function addEventToCalendar($calendar, $event, ?UserCalendarAbo $calendarAbo = null): void
     {
         try {
@@ -223,7 +193,7 @@ readonly class UserCalendarAboService
                 }
 
                 if ($calendarAbo !== null) {
-                    $this->addStartAlertToEvent(
+                    $this->calendarAboAlertService->addStartAlert(
                         $calendarEvent,
                         $calendarAbo,
                         Carbon::parse($event->start_time),

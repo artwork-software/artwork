@@ -136,6 +136,57 @@ final class UserShiftCalendarAboServiceTest extends TestCase
     }
 
     #[Test]
+    public function shift_reminder_text_is_translated_with_unit_and_shift_times(): void
+    {
+        $shift = Shift::factory()->create([
+            'event_id' => null,
+            'craft_id' => Craft::factory()->create(['name' => 'Licht', 'abbreviation' => 'LX']),
+            'project_id' => null,
+            'start_date' => '2024-05-10',
+            'end_date' => '2024-05-10',
+            'start' => '08:00',
+            'end' => '16:00',
+            'is_committed' => true,
+        ]);
+
+        $abo = new UserShiftCalendarAbo();
+        $abo->user_id = User::factory()->create(['language' => 'de'])->id;
+        $abo->enable_notification = true;
+        $abo->notification_time = 2;
+        $abo->notification_time_unit = 'days';
+
+        $calendar = Calendar::create('Test');
+        $this->service->addShiftToCalendar($calendar, $abo, $shift->fresh());
+        $ics = str_replace("\r\n ", '', $calendar->get());
+
+        $this->assertMatchesRegularExpression('/TRIGGER[^\r\n]*20240508T080000/', $ics);
+        $this->assertStringContainsString('Schicht: LX (08:00 - 16:00) beginnt in 2 Tagen.', $ics);
+    }
+
+    #[Test]
+    public function individual_time_gets_no_reminder_for_an_unknown_unit(): void
+    {
+        $abo = new UserShiftCalendarAbo();
+        $abo->enable_notification = true;
+        $abo->notification_time = 15;
+        $abo->notification_time_unit = 'weeks';
+        $individualTime = User::factory()->create()->individualTimes()->create([
+            'title' => 'Probe',
+            'start_date' => '2024-05-10',
+            'end_date' => '2024-05-10',
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+            'full_day' => false,
+        ]);
+
+        $calendar = Calendar::create('Test');
+        $this->service->addIndividualTimeToCalendar($calendar, $abo, $individualTime->fresh());
+
+        $this->assertStringContainsString('Individuelle Zeit: Probe', $calendar->get());
+        $this->assertStringNotContainsString('VALARM', $calendar->get());
+    }
+
+    #[Test]
     public function add_shift_to_calendar_titles_with_craft_abbreviation_and_project_name(): void
     {
         $craft = Craft::factory()->create(['name' => 'Beleuchtung', 'abbreviation' => 'LX']);

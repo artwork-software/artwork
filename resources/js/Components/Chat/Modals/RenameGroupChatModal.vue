@@ -6,6 +6,7 @@
                 id="newGroupName"
                 v-model="groupName"
                 label="Group Name"
+                maxlength="55"
                 :placeholder="$t('Enter group name')"
             />
         </div>

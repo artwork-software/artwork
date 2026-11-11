@@ -56,6 +56,7 @@
                 <BaseInput
                     id="chatName"
                     v-model="chatName"
+                    maxlength="55"
                     :label="$t('Name')"
                     :placeholder="$t('e.g. Project Alpha / Sales Team')"
                 />

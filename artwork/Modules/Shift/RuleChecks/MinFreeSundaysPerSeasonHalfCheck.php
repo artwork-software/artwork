@@ -11,8 +11,9 @@ use Illuminate\Support\Collection;
 /**
  * Mindestens X freie Sonntage mit freiem Samstag oder Montag je Spielzeithälfte.
  *
- * X = $rule->individual_number_value; ist der Wert 0/leer, gilt der Zielwert aus dem Vertrag
- * (ShiftKpiTrackingService::extractTargets() → free_sundays_sat_mon_per_half). Ist-Werte je Hälfte
+ * X = $rule->individual_number_value; ist der Wert 0/leer, gilt der Zielwert aus dem Vertrag je Hälfte
+ * (ShiftKpiTrackingService::extractTargets() → free_sundays_sat_mon_per_half, target_half1/target_half2:
+ * aus den in der Hälfte gültigen Verträgen, bei einem Wechsel anteilig). Ist-Werte je Hälfte
  * liefert ShiftKpiTrackingService::computeForUser() (abgeschlossene Tage < heute). Dazu kommen die
  * "noch möglichen" Sonntage der laufenden Hälfte: Sonntage ab heute bis Hälftenende, an denen die
  * Person weder Schicht (effektive Zeiten) noch individuelle Zeit hat.
@@ -32,8 +33,8 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
         // Immer gesetzt: konfigurierte Spielzeit oder Kalenderjahr-Fallback
         [$seasonStart, $seasonEnd] = $kpiService->getSeasonBounds();
 
-        $target = $this->targetFor($rule, $user, $kpiService);
-        if ($target <= 0) {
+        $targets = $this->targetsFor($rule, $user, $kpiService, $seasonStart, $seasonEnd);
+        if (max($targets) <= 0) {
             return $violations;
         }
 
@@ -55,7 +56,8 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
         ];
 
         foreach ($halves as $half => $window) {
-            if ($window['end']->lt($window['start'])) {
+            $target = $targets[$half];
+            if ($target <= 0 || $window['end']->lt($window['start'])) {
                 continue;
             }
 
@@ -118,16 +120,31 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
         return null;
     }
 
-    private function targetFor(ShiftRule $rule, User $user, ShiftKpiTrackingService $kpiService): int
-    {
+    /**
+     * @return array{1: int, 2: int} Ziel je Hälfte
+     */
+    private function targetsFor(
+        ShiftRule $rule,
+        User $user,
+        ShiftKpiTrackingService $kpiService,
+        Carbon $seasonStart,
+        Carbon $seasonEnd
+    ): array {
         $ruleValue = (int) round((float) $rule->individual_number_value);
         if ($ruleValue > 0) {
-            return $ruleValue;
+            return [1 => $ruleValue, 2 => $ruleValue];
         }
 
-        $targets = $kpiService->extractTargets($user);
+        $target = $kpiService->extractTargets(
+            $user,
+            $kpiService->seasonHalves($seasonStart, $seasonEnd),
+            ['season' => [$seasonStart, $seasonEnd]]
+        )['free_sundays_sat_mon_per_half'] ?? [];
 
-        return (int) ($targets['free_sundays_sat_mon_per_half']['value'] ?? 0);
+        return [
+            1 => (int) ($target['target_half1'] ?? 0),
+            2 => (int) ($target['target_half2'] ?? 0),
+        ];
     }
 
     /**

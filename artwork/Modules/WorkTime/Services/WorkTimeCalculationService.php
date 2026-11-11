@@ -209,7 +209,11 @@ class WorkTimeCalculationService
                 $context['special_day_rule'][$key]
                 ?? $this->specialDayService->specialDayRuleActiveFor($entity, $day)
             );
-        $threeMonthMode = (bool) ($context['three_month_mode'] ?? false);
+        // Vertragshistorie: auch der Dreimonatsmodus gilt je Tag (Vertrag des Tages), aufgelöst erst bei Bedarf
+        $threeMonthMode = fn (): bool => $entity instanceof User && (
+            $context['three_month_mode'][$key]
+            ?? $this->threeMonthAverageTargetService->usesThreeMonthAverage($entity, $day)
+        );
 
         $reduction = 0;
         $reason = null;
@@ -224,7 +228,7 @@ class WorkTimeCalculationService
                 $workStartsToday = $fullDayIndividual || !empty($context['work_starts'][$key] ?? null)
                     || (!array_key_exists('work_starts', $context) && $workMinutes > 0);
                 if (!$workStartsToday) {
-                    if ($threeMonthMode) {
+                    if ($threeMonthMode()) {
                         $referenceAverage = $this->threeMonthAverageTargetService
                             ->averageMinutesFor($entity, $day, $baseTarget);
                         $referencePeriod = $this->threeMonthAverageTargetService->referencePeriodFor($day);
@@ -237,14 +241,15 @@ class WorkTimeCalculationService
             } else {
                 $compValue = (float) ($context['holiday_comp'][$key] ?? 0.0);
                 if ($compValue > 0) {
+                    $threeMonthModeToday = $threeMonthMode();
                     $reduction = $this->threeMonthAverageTargetService->reductionMinutesFor(
                         $entity,
                         $day,
                         min(1.0, $compValue),
                         $baseTarget,
-                        $threeMonthMode
+                        $threeMonthModeToday
                     );
-                    if ($threeMonthMode) {
+                    if ($threeMonthModeToday) {
                         $referenceAverage = $this->threeMonthAverageTargetService
                             ->averageMinutesFor($entity, $day, $baseTarget);
                         $referencePeriod = $this->threeMonthAverageTargetService->referencePeriodFor($day);
@@ -391,6 +396,10 @@ class WorkTimeCalculationService
             ? ($options['special_days'] ?? $this->specialDayService->specialDaysBetween($start, $end))
             : [];
 
+        $holidayComp = $isUser
+            ? $this->holidayCompensationPerDay($entity, $start, $end, $options['holiday_comp_days'] ?? null)
+            : [];
+
         $context = [
             'start' => $start->toDateString(),
             'end' => $end->toDateString(),
@@ -408,11 +417,12 @@ class WorkTimeCalculationService
             // Sondertag-Schalter je Sondertag aus der EINMAL geladenen Vertragshistorie (kein Query je Tag,
             // kein prozessweiter Resolver-Cache nötig → unkritisch unter Octane/Swoole)
             'special_day_rule' => $isUser ? $this->specialDayRulePerDay($entity, array_keys($specialDays)) : [],
-            'three_month_mode' => $isUser && $this->threeMonthAverageTargetService->usesThreeMonthAverage($entity),
-            'patterns' => $isUser ? $this->patternsPerDay($entity, $start, $end) : [],
-            'holiday_comp' => $isUser
-                ? $this->holidayCompensationPerDay($entity, $start, $end, $options['holiday_comp_days'] ?? null)
+            // Dreimonatsmodus je Tag aus dem an diesem Tag gültigen Vertrag; nur Tage, die mindern können
+            'three_month_mode' => $isUser
+                ? $this->threeMonthModePerDay($entity, array_keys($specialDays + $holidayComp))
                 : [],
+            'patterns' => $isUser ? $this->patternsPerDay($entity, $start, $end) : [],
+            'holiday_comp' => $holidayComp,
         ];
         if ($isUser && $useBookings && !empty($options['with_account_start'])) {
             // Beginn des Zeitkontos (erste Tagesbuchung): davor kein „nicht gebucht“-Hinweis
@@ -700,6 +710,31 @@ class WorkTimeCalculationService
         $result = [];
         foreach ($dayKeys as $dayKey) {
             $result[$dayKey] = $this->specialDayService->specialDayRuleActiveFor($user, Carbon::parse($dayKey));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Dreimonatsmodus (use_three_month_average_for_target_reduction, Zuweisung vor Vorlage des am Tag gültigen
+     * Zeitraums) je Tag, 'Y-m-d' => bool. Ohne Vertrag an dem Tag: false. Die Historie wird einmal mitgeladen,
+     * die Auflösung je Tag läuft danach im Speicher.
+     *
+     * @param list<string> $dayKeys
+     * @return array<string, bool>
+     */
+    private function threeMonthModePerDay(User $user, array $dayKeys): array
+    {
+        if ($dayKeys === []) {
+            return [];
+        }
+
+        $user->loadMissing('contractAssigns.userContract');
+
+        $result = [];
+        foreach ($dayKeys as $dayKey) {
+            $result[$dayKey] = $this->threeMonthAverageTargetService
+                ->usesThreeMonthAverage($user, Carbon::parse($dayKey));
         }
 
         return $result;

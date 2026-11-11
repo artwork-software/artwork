@@ -174,8 +174,13 @@ class ShiftKpiTrackingService
                 'end' => $window26To->toDateString(),
             ],
             'granted_vacation_days_year' => $grantedVacation,
-            // Zielwerte ("X") + Aktiv-Flags: Zuweisung vor Vorlage (für die Anzeige im Modal)
-            'targets' => $this->extractTargets($user, $halves),
+            // Zielwerte ("X") + Aktiv-Flags: Zuweisung vor Vorlage, je Auswertungszeitraum aus den dort gültigen
+            // Verträgen (für die Anzeige im Modal)
+            'targets' => $this->extractTargets($user, $halves, [
+                'season' => [$seasonStart, $seasonEnd],
+                'year' => [$yearStart, $yearEnd],
+                'first_26_weeks' => [$window26From, $window26To],
+            ]),
             'counted_until' => Carbon::yesterday()->toDateString(),
         ];
     }
@@ -183,67 +188,231 @@ class ShiftKpiTrackingService
     /**
      * Zielwerte "Ist / X": Feld auf der Zuweisung gesetzt (nicht null) -> Zuweisung, sonst Vorlage.
      *
+     * Mit $periods (Spielzeit, Kalenderjahr, 26-Wochen-Fenster; die Hälften kommen aus $halves) gilt je
+     * Auswertungszeitraum der Vertrag, der in diesem Zeitraum galt. Wechselt der Vertrag innerhalb eines
+     * Zeitraums, wird der Zielwert anteilig nach Kalendertagen gewichtet (Wert × Tage des Vertrags / Tage des
+     * Zeitraums, Tage ohne Vertrag zählen 0); bleibt der Vertrag gleich, ist das genau der Vertragswert.
+     * Ganze Zielwerte werden kaufmännisch gerundet, die freien Tage der ersten 26 Wochen auf halbe Tage.
+     * Ein Ziel ist aktiv, wenn es an mindestens einem Tag des Zeitraums aktiv war; Tage, an denen es
+     * abgeschaltet war, zählen im anteiligen Wert 0. Ohne $periods gilt der heute gültige Vertrag;
+     * fehlt nur ein einzelner Zeitraum in $periods, gilt das für die Ziele dieses Zeitraums.
+     *
+     * Zeiträume je Ziel: Wochenwerte und Ziele je Hälfte je Spielzeithälfte (target_half1/target_half2,
+     * value über die ganze Spielzeit), Ziele je Spielzeit über die Spielzeit, Ziele je Kalenderjahr und der
+     * Urlaubsanspruch über das Kalenderjahr, die freien Tage der ersten 26 Wochen über dieses Fenster.
+     *
      * Die Wochenwerte free_full_days_per_week / free_half_days_per_week werden mit den Wochen der
      * Spielzeithälften (seasonHalves()) zu Zielen je Hälfte hochgerechnet (target_half1/target_half2);
      * ohne Vertragswert (0) sind sie inaktiv -> Zeile im Modal eingeklappt.
      *
-     * @param array{half1: array{weeks: float}, half2: array{weeks: float}}|null $halves
+     * @param array{half1: array{start: string, end: string, weeks: float},
+     *              half2: array{start: string, end: string, weeks: float}}|null $halves
+     * @param array{season?: array{0: Carbon, 1: Carbon}, year?: array{0: Carbon, 1: Carbon},
+     *              first_26_weeks?: array{0: Carbon, 1: Carbon}}|null $periods
      * @return array<string, array<string, mixed>>
      */
-    public function extractTargets(User $user, ?array $halves = null): array
+    public function extractTargets(User $user, ?array $halves = null, ?array $periods = null): array
     {
-        if ($this->contractSettings->assignFor($user) === null) {
+        $segments = null;
+        if ($periods !== null) {
+            if ($halves !== null) {
+                $periods['half1'] = [Carbon::parse($halves['half1']['start']), Carbon::parse($halves['half1']['end'])];
+                $periods['half2'] = [Carbon::parse($halves['half2']['start']), Carbon::parse($halves['half2']['end'])];
+            }
+            $segments = array_map(
+                fn (array $period): array => $this->contractSegments($user, $period[0], $period[1]),
+                $periods
+            );
+            $hasContract = false;
+            foreach ($segments as $periodSegments) {
+                foreach ($periodSegments as $segment) {
+                    $hasContract = $hasContract || $segment['date'] !== null;
+                }
+            }
+            if (!$hasContract) {
+                return [];
+            }
+        } elseif ($this->contractSettings->assignFor($user) === null) {
             return [];
         }
 
-        $c = $this->contractSettings;
-        $weeklyTarget = static function (int $perWeek) use ($halves): array {
-            $target = ['active' => $perWeek > 0, 'value' => $perWeek];
+        $value = fn (string $key, string $period, ?string $activeKey = null): float => $this->periodValue(
+            $user,
+            $key,
+            $segments[$period] ?? null,
+            $activeKey
+        );
+        $active = fn (string $key, string $period): bool => $this->periodActive(
+            $user,
+            $key,
+            $segments[$period] ?? null
+        );
+        $countTarget = function (
+            string $key,
+            string $period,
+            bool $perHalf = false
+        ) use (
+            $value,
+            $active,
+            $segments
+        ): array {
+            $isActive = $active($key . '_active', $period);
+            $activeKey = $isActive ? $key . '_active' : null;
+            $target = [
+                'active' => $isActive,
+                'value' => (int) round($value($key, $period, $activeKey)),
+            ];
+            if ($perHalf && isset($segments['half1'], $segments['half2'])) {
+                $target['target_half1'] = (int) round($value($key, 'half1', $activeKey));
+                $target['target_half2'] = (int) round($value($key, 'half2', $activeKey));
+            }
+
+            return $target;
+        };
+        $weeklyTarget = function (string $key) use ($value, $halves, $segments): array {
+            $perWeek = $value($key, 'season');
+            $target = ['active' => $perWeek > 0, 'value' => (int) round($perWeek)];
             if ($halves !== null) {
-                $target['target_half1'] = (int) round($perWeek * (float) ($halves['half1']['weeks'] ?? 0));
-                $target['target_half2'] = (int) round($perWeek * (float) ($halves['half2']['weeks'] ?? 0));
+                $perWeekHalf1 = isset($segments['half1']) ? $value($key, 'half1') : $perWeek;
+                $perWeekHalf2 = isset($segments['half2']) ? $value($key, 'half2') : $perWeek;
+                $target['target_half1'] = (int) round($perWeekHalf1 * (float) ($halves['half1']['weeks'] ?? 0));
+                $target['target_half2'] = (int) round($perWeekHalf2 * (float) ($halves['half2']['weeks'] ?? 0));
             }
 
             return $target;
         };
 
         return [
-            'free_full_days_per_week' => $weeklyTarget($c->int($user, 'free_full_days_per_week')),
-            'free_half_days_per_week' => $weeklyTarget($c->int($user, 'free_half_days_per_week')),
-            'free_sundays_per_season' => [
-                'active' => $c->bool($user, 'free_sundays_per_season_active'),
-                'value' => $c->int($user, 'free_sundays_per_season'),
-            ],
-            'days_off_first_26_weeks' => [
-                'active' => $c->bool($user, 'days_off_first_26_weeks_active'),
-                'value' => $c->float($user, 'days_off_first_26_weeks'),
-            ],
-            'free_sundays_sat_mon_per_half' => [
-                'active' => $c->bool($user, 'free_sundays_sat_mon_per_half_active'),
-                'value' => $c->int($user, 'free_sundays_sat_mon_per_half'),
-            ],
-            'free_sundays_and_saturdays_per_season' => [
-                'active' => $c->bool($user, 'free_sundays_and_saturdays_per_season_active'),
-                'value' => $c->int($user, 'free_sundays_and_saturdays_per_season'),
-            ],
-            'free_sundays_per_calendar_year' => [
-                'active' => $c->bool($user, 'free_sundays_per_calendar_year_active'),
-                'value' => $c->int($user, 'free_sundays_per_calendar_year'),
-            ],
-            'one_and_half_day_combinations' => [
-                'active' => $c->bool($user, 'one_and_half_day_combinations_active'),
-                'value' => $c->int($user, 'one_and_half_day_combinations'),
-            ],
+            'free_full_days_per_week' => $weeklyTarget('free_full_days_per_week'),
+            'free_half_days_per_week' => $weeklyTarget('free_half_days_per_week'),
+            'free_sundays_per_season' => $countTarget('free_sundays_per_season', 'season'),
+            'days_off_first_26_weeks' => $this->halfDayTarget(
+                $active('days_off_first_26_weeks_active', 'first_26_weeks'),
+                $value,
+                $segments !== null
+            ),
+            'free_sundays_sat_mon_per_half' => $countTarget('free_sundays_sat_mon_per_half', 'season', true),
+            'free_sundays_and_saturdays_per_season' => $countTarget('free_sundays_and_saturdays_per_season', 'season'),
+            'free_sundays_per_calendar_year' => $countTarget('free_sundays_per_calendar_year', 'year'),
+            'one_and_half_day_combinations' => $countTarget('one_and_half_day_combinations', 'season', true),
             'annual_vacation_days' => [
                 'active' => true,
-                'value' => $this->annualVacationEntitlement($user),
+                'value' => $segments === null
+                    ? $this->contractSettings->int($user, 'annual_vacation_days')
+                    : (int) round($value('annual_vacation_days', 'year')),
             ],
         ];
     }
 
-    public function annualVacationEntitlement(User $user): int
+    /**
+     * Ziel "freie Tage in den ersten 26 Wochen" (halbe Tage zählen 0,5): anteilig auf halbe Tage gerundet.
+     *
+     * @param callable(string, string, string|null): float $value
+     * @return array{active: bool, value: float}
+     */
+    private function halfDayTarget(bool $isActive, callable $value, bool $proRated): array
     {
-        return $this->contractSettings->int($user, 'annual_vacation_days');
+        $raw = $value('days_off_first_26_weeks', 'first_26_weeks', $isActive ? 'days_off_first_26_weeks_active' : null);
+
+        return [
+            'active' => $isActive,
+            'value' => $proRated ? round($raw * 2) / 2 : $raw,
+        ];
+    }
+
+    /**
+     * Urlaubsanspruch im Kalenderjahr (Default: laufendes Jahr) aus den in diesem Jahr gültigen Verträgen,
+     * bei einem Vertragswechsel anteilig nach Kalendertagen (siehe extractTargets()), gerundet auf ganze Tage.
+     */
+    public function annualVacationEntitlement(User $user, ?int $year = null): int
+    {
+        $year ??= Carbon::now()->year;
+        $segments = $this->contractSegments(
+            $user,
+            Carbon::create($year, 1, 1)->startOfDay(),
+            Carbon::create($year, 12, 31)->startOfDay()
+        );
+
+        return (int) round($this->periodValue($user, 'annual_vacation_days', $segments));
+    }
+
+    /**
+     * Vertragsabschnitte eines Zeitraums: aufeinanderfolgende Tage mit demselben gültigen Vertragszeitraum
+     * (User::contractAssignFor, Historie einmal geladen). date = erster Tag des Abschnitts als Stichtag für den
+     * Resolver, null = an diesen Tagen kein Vertrag.
+     *
+     * @return list<array{date: Carbon|null, days: int}>
+     */
+    private function contractSegments(User $user, Carbon $from, Carbon $to): array
+    {
+        $user->loadMissing('contractAssigns.userContract');
+
+        $segments = [];
+        $currentAssignId = null;
+        $end = $to->copy()->startOfDay();
+        for ($day = $from->copy()->startOfDay(); $day->lte($end); $day->addDay()) {
+            $assignId = $user->contractAssignFor($day)?->id;
+            if ($segments === [] || $assignId !== $currentAssignId) {
+                $segments[] = ['date' => $assignId === null ? null : $day->copy(), 'days' => 0];
+                $currentAssignId = $assignId;
+            }
+            $segments[array_key_last($segments)]['days']++;
+        }
+
+        return $segments;
+    }
+
+    /**
+     * Vertragswert über einen Zeitraum, nach Kalendertagen gewichtet (Tage ohne Vertrag = 0, mit $activeKey
+     * auch Abschnitte, in denen das Ziel abgeschaltet war); ohne Abschnitte (null) der Wert des heute gültigen
+     * Vertrags.
+     *
+     * @param list<array{date: Carbon|null, days: int}>|null $segments
+     */
+    private function periodValue(User $user, string $key, ?array $segments, ?string $activeKey = null): float
+    {
+        if ($segments === null) {
+            return $this->contractSettings->float($user, $key);
+        }
+
+        $totalDays = array_sum(array_column($segments, 'days'));
+        if ($totalDays === 0) {
+            return 0.0;
+        }
+
+        $weighted = 0.0;
+        foreach ($segments as $segment) {
+            if ($segment['date'] === null) {
+                continue;
+            }
+            if ($activeKey !== null && !$this->contractSettings->bool($user, $activeKey, false, $segment['date'])) {
+                continue;
+            }
+            $weighted += $this->contractSettings->float($user, $key, 0.0, $segment['date']) * $segment['days'];
+        }
+
+        return $weighted / $totalDays;
+    }
+
+    /**
+     * Schalter über einen Zeitraum: an mindestens einem Vertragsabschnitt aktiv; ohne Abschnitte (null)
+     * der Schalter des heute gültigen Vertrags.
+     *
+     * @param list<array{date: Carbon|null, days: int}>|null $segments
+     */
+    private function periodActive(User $user, string $key, ?array $segments): bool
+    {
+        if ($segments === null) {
+            return $this->contractSettings->bool($user, $key);
+        }
+
+        foreach ($segments as $segment) {
+            if ($segment['date'] !== null && $this->contractSettings->bool($user, $key, false, $segment['date'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

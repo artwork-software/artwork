@@ -32,6 +32,22 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
 
     private ?SpecialDayService $specialDayServiceInstance = null;
 
+    /**
+     * Vom ShiftRuleService je Regel gesetzt: entscheidet je Verstoßdatum, ob die Regel an diesem Tag gilt
+     * (Regel gehört zum an diesem Tag gültigen Vertrag). Liefert sie false, wird kein Verstoß angelegt.
+     *
+     * @var (\Closure(Carbon): bool)|null
+     */
+    private ?\Closure $violationDateFilter = null;
+
+    /**
+     * @param (\Closure(Carbon): bool)|null $filter
+     */
+    public function setViolationDateFilter(?\Closure $filter): void
+    {
+        $this->violationDateFilter = $filter;
+    }
+
     public function setContext(?ShiftRuleCheckContext $context): void
     {
         $this->context = $context;
@@ -562,6 +578,9 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     // Verstöße anlegen
     // ------------------------------------------------------------------
 
+    /**
+     * null = die Regel gilt am Verstoßdatum nicht (Vertrag dieses Tages, siehe setViolationDateFilter()).
+     */
     protected function createViolation(
         ShiftRule $rule,
         Shift $shift,
@@ -569,7 +588,11 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         Carbon $date,
         array $violationData,
         string $severity = 'warning'
-    ): ShiftRuleViolation {
+    ): ?ShiftRuleViolation {
+        if (!$this->appliesOn($date)) {
+            return null;
+        }
+
         // Check if violation already exists for this combination
         $existingViolation = ShiftRuleViolation::where([
             'shift_rule_id' => $rule->id,
@@ -601,18 +624,30 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         ]);
     }
 
+    private function appliesOn(Carbon $date): bool
+    {
+        return $this->violationDateFilter === null || ($this->violationDateFilter)($date->copy()->startOfDay());
+    }
+
     protected function isSpecialDay(Carbon $date): bool
     {
         return $this->specialDayService()->isSpecialDay($date);
     }
 
+    /**
+     * null = die Regel gilt am Verstoßdatum nicht (Vertrag dieses Tages, siehe setViolationDateFilter()).
+     */
     protected function createViolationWithoutShift(
         ShiftRule $rule,
         User $user,
         Carbon $date,
         array $violationData,
         string $severity = 'warning'
-    ): ShiftRuleViolation {
+    ): ?ShiftRuleViolation {
+        if (!$this->appliesOn($date)) {
+            return null;
+        }
+
         // Dedupe on (rule, user, date) for shift-less violations.
         $existingViolation = ShiftRuleViolation::where([
             'shift_rule_id' => $rule->id,

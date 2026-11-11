@@ -131,7 +131,7 @@ class ThreeMonthAverageTargetService
         int $contractualDailyTargetMinutes,
         ?bool $useThreeMonthAverage = null
     ): int {
-        $useThreeMonthAverage ??= $this->usesThreeMonthAverage($user);
+        $useThreeMonthAverage ??= $this->usesThreeMonthAverage($user, $targetDate);
         $referenceMinutes = $useThreeMonthAverage
             ? $this->averageMinutesFor($user, $targetDate, $contractualDailyTargetMinutes)
             : $contractualDailyTargetMinutes;
@@ -142,9 +142,13 @@ class ThreeMonthAverageTargetService
         );
     }
 
-    public function usesThreeMonthAverage(User $user): bool
+    /**
+     * Gilt der Dreimonatsmodus am Stichtag? Entscheidend ist der an diesem Tag gültige Vertrag
+     * (Default heute); ohne Vertrag an dem Tag gilt der Modus nicht.
+     */
+    public function usesThreeMonthAverage(User $user, ?Carbon $date = null): bool
     {
-        return $this->contractSettings->bool($user, 'use_three_month_average_for_target_reduction', false);
+        return $this->contractSettings->bool($user, 'use_three_month_average_for_target_reduction', false, $date);
     }
 
     /**

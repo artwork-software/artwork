@@ -559,6 +559,12 @@ const fmtIstHalf = (ist, target, halfKey) => {
     return `${ist ?? 0}`
 }
 
+// Ziele je Hälfte: bei einem Vertragswechsel in der Spielzeit liefert das Backend je Hälfte einen eigenen Wert
+const fmtIstHalfOrX = (ist, target, halfKey) => {
+    if (target && target[halfKey] !== undefined && target[halfKey] !== null) return fmtIstHalf(ist, target, halfKey)
+    return fmtIstX(ist, target)
+}
+
 // "26,1 / 26,0 Wochen" für den Tooltip der Wochenziele
 const halfWeeksLabel = (halves) => {
     if (!halves || !halves.half1 || !halves.half2) return '–'
@@ -625,16 +631,16 @@ const seasonRows = computed(() => {
         {
             label: 'Free Sundays connected with Saturday/Monday',
             rule: 'Counts a Sunday that is a full free day and whose Saturday or Monday is also a full free day. Full free day = free-day entry, granted substitute day off, both half days free, or a working day (per pattern) without shift or entry.',
-            h1: fmtIstX(k.free_sundays_sat_mon_half1, tSatMon),
-            h2: fmtIstX(k.free_sundays_sat_mon_half2, tSatMon),
+            h1: fmtIstHalfOrX(k.free_sundays_sat_mon_half1, tSatMon, 'target_half1'),
+            h2: fmtIstHalfOrX(k.free_sundays_sat_mon_half2, tSatMon, 'target_half2'),
             total: null,
             targetActive: targetActive(tSatMon),
         },
         {
             label: '1.5-day combinations',
             rule: 'A run of n consecutive full free days counts n−1 combinations; a single full free day with a free afternoon before or a free morning after counts 1. Assigned to the half by the first day.',
-            h1: fmtIstX(k.one_and_half_combos_half1, tCombos),
-            h2: fmtIstX(k.one_and_half_combos_half2, tCombos),
+            h1: fmtIstHalfOrX(k.one_and_half_combos_half1, tCombos, 'target_half1'),
+            h2: fmtIstHalfOrX(k.one_and_half_combos_half2, tCombos, 'target_half2'),
             total: null,
             targetActive: targetActive(tCombos),
         },

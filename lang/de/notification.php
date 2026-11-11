@@ -33,6 +33,9 @@ return [
     'contract' => [
         'add' => 'Ein Vertrag wurde für dich freigegeben',
         'delete' => 'Ein Vertrag wurde gelöscht',
+        'task_assigned' => 'Neue Aufgabe an einem Vertrag für dich: :task',
+        'task_contract' => 'Vertrag: :contract',
+        'task_deadline' => 'Deadline: :date',
     ],
     'project_assignment' => [
         'dissolved_by_free_day' =>

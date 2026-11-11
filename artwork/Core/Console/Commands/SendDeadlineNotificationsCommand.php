@@ -4,6 +4,7 @@ namespace Artwork\Core\Console\Commands;
 
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Contract\Services\ContractService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Task\Models\Task;
@@ -21,6 +22,7 @@ class SendDeadlineNotificationsCommand extends Command
     public function __construct(
         private readonly NotificationService $notificationService,
         private readonly CarbonService $carbonService,
+        private readonly ContractService $contractService,
     ) {
         parent::__construct();
     }
@@ -154,7 +156,73 @@ class SendDeadlineNotificationsCommand extends Command
             }
         }
 
+        $this->sendContractTaskDeadlineNotifications();
+
         return CommandAlias::SUCCESS;
+    }
+
+    /**
+     * Folgeaufgaben an Verträgen haben keine Checkliste: erinnert werden ihre Zuständigen zu denselben
+     * Zeitpunkten wie bei To-dos, jede Erinnerung nur einmal und nur, solange die Aufgabe offen ist.
+     */
+    private function sendContractTaskDeadlineNotifications(): void
+    {
+        $now = $this->carbonService->getNow();
+        $tasks = Task::query()
+            ->whereNotNull('contract_id')
+            ->where('done', false)
+            ->whereNotNull('deadline')
+            ->where('deadline', '<=', $now->copy()->addDay())
+            ->with(['task_users', 'contract.project'])
+            ->get();
+
+        foreach ($tasks as $task) {
+            $isOverdue = $task->getAttribute('deadline') <= $now;
+            $sentFlag = $isOverdue ? 'sent_deadline_notification' : 'sent_deadline_tomorrow_notification';
+            if ($task->getAttribute($sentFlag)) {
+                continue;
+            }
+            $translationKey = $isOverdue
+                ? 'notification.scheduling.deadline_over'
+                : 'notification.scheduling.deadline_tomorrow';
+
+            foreach ($task->getRelation('task_users')->unique('id') as $taskUser) {
+                $this->sendContractTaskDeadlineNotification(
+                    __(
+                        $translationKey,
+                        ['checklist' => $task->getAttribute('name')],
+                        $taskUser->getAttribute('language')
+                    ),
+                    $taskUser,
+                    $task
+                );
+            }
+            $task->update([$sentFlag => true]);
+        }
+    }
+
+    /**
+     * Wie die To-do-Erinnerung, aber ohne „In Aufgaben ansehen“ (Vertragsaufgaben stehen nicht in der
+     * Aufgabenübersicht); der Link in der Beschreibung führt zum Vertrag oder zum Dashboard.
+     */
+    private function sendContractTaskDeadlineNotification(string $notificationTitle, User $user, Task $task): void
+    {
+        $this->notificationService->clearNotificationData();
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setPriority(2);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_TASK_REMINDER);
+        $this->notificationService->setBroadcastMessage([
+            'id' => Str::uuid()->toString(),
+            'type' => 'error',
+            'message' => $notificationTitle,
+        ]);
+        $this->notificationService->setTaskId($task->getAttribute('id'));
+        $this->notificationService->setDescription(
+            $this->contractService->contractTaskNotificationDescription($task, $user)
+        );
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
     }
 
     private function sendDeadlineNotification(string $notificationTitle, User $user, Task $task): void

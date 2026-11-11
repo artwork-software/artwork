@@ -26,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -239,7 +240,9 @@ class ContractService
                         'deadline' => $taskObj->deadline,
                         'done' => false,
                         'contract_id' => $contract->id,
-                        'order' => 1
+                        'order' => 1,
+                        'sent_deadline_notification' => false,
+                        'sent_deadline_tomorrow_notification' => false,
                     ]);
 
                     $this->assignUsersToTask($task, $taskObj->assigned_users ?? []);
@@ -359,22 +362,109 @@ class ContractService
     }
 
     /**
-     * Jede neu angelegte Folgeaufgabe bekommt ihre eigenen Zuständigen.
+     * Beschreibung für Meldungen zu Folgeaufgaben: Vertrag, Frist und ein Link, den die Person öffnen darf.
+     * Zuständige brauchen keinen Zugriff auf den Vertrag; ohne Zugriff auf Vertrag und Projekt führt der
+     * Link zum Dashboard, wo die Aufgabe unter „Nächste Aufgaben“ steht.
+     *
+     * @return array<int, array{type: string, title: string, href: ?string}>
+     */
+    public function contractTaskNotificationDescription(Task $task, User $recipient): array
+    {
+        $language = $recipient->language;
+        $contract = $task->contract;
+        $project = $contract?->project;
+        $description = [];
+
+        if ($contract) {
+            $description[] = [
+                'type' => 'string',
+                'title' => __('notification.contract.task_contract', ['contract' => $contract->name], $language),
+                'href' => null,
+            ];
+        }
+
+        if ($task->deadline) {
+            $description[] = [
+                'type' => 'string',
+                'title' => __(
+                    'notification.contract.task_deadline',
+                    ['date' => $task->deadline->format('d.m.Y H:i')],
+                    $language
+                ),
+                'href' => null,
+            ];
+        }
+
+        $canOpenContract = $contract
+            && $project
+            && Gate::forUser($recipient)->allows('view', $contract)
+            && Gate::forUser($recipient)->allows('view', $project);
+
+        $description[] = $canOpenContract
+            ? [
+                'type' => 'link',
+                'title' => $project->name,
+                'href' => route('projects.tab', [
+                    $project->id,
+                    $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                        ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS
+                    ),
+                ]),
+            ]
+            : [
+                'type' => 'link',
+                'title' => __('Dashboard', [], $language),
+                'href' => route('dashboard'),
+            ];
+
+        return array_combine(range(1, count($description)), $description);
+    }
+
+    /**
+     * Jede neu angelegte Folgeaufgabe bekommt ihre eigenen Zuständigen; sie werden über die Zuweisung
+     * benachrichtigt, außer die zuweisende Person selbst.
      *
      * @param iterable<int, array{id: int}|object> $assignedUsers
      */
     private function assignUsersToTask(Task $task, iterable $assignedUsers): void
     {
+        $assignedUserIds = [];
         foreach ($assignedUsers as $assignedUser) {
             $userObj = (object)$assignedUser;
             $user = User::where('id', $userObj->id)->first();
-            if (!$user) {
+            if (!$user || in_array($user->id, $assignedUserIds, true)) {
                 continue;
             }
+            $assignedUserIds[] = $user->id;
 
             $task->task_users()->save($user);
             $user->tasks()->save($task);
+
+            $this->sendContractTaskAssignedNotification($task, $user);
         }
+    }
+
+    private function sendContractTaskAssignedNotification(Task $task, User $user): void
+    {
+        if ((int) $user->id === (int) Auth::id()) {
+            return;
+        }
+
+        $notificationTitle = __('notification.contract.task_assigned', ['task' => $task->name], $user->language);
+
+        $this->notificationService->clearNotificationData();
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setPriority(3);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_NEW_TASK);
+        $this->notificationService->setBroadcastMessage([
+            'id' => Str::uuid()->toString(),
+            'type' => 'success',
+            'message' => $notificationTitle,
+        ]);
+        $this->notificationService->setDescription($this->contractTaskNotificationDescription($task, $user));
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
     }
 
     private function sendContractAddedNotifications(Contract $contract, Project $project, string $originalName): void

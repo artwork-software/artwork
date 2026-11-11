@@ -78,6 +78,28 @@ final class OwnTasksChecklistsTest extends FeatureTestCase
         );
     }
 
+    #[Test]
+    public function sort_position_keeps_the_project_order_across_public_and_private_lists(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $early = Project::factory()->create();
+        $this->event($early, '2026-10-01');
+        $late = Project::factory()->create();
+        $this->event($late, '2026-12-01');
+        $publicLate = $this->checklist($late, 'A öffentlich, spät');
+        $publicLate->users()->attach($user->id);
+        $privateEarly = $this->checklist($early, 'Z privat, früh', ['private' => true, 'user_id' => $user->id]);
+
+        $props = $this->get(route('tasks.own', ['filter' => 1]))->assertOk()->viewData('page')['props'];
+
+        $positions = collect([...$props['public_checklists'], ...$props['private_checklists']])
+            ->sortBy('sort_position')
+            ->pluck('id')
+            ->all();
+        $this->assertSame([$privateEarly->id, $publicLate->id], $positions);
+    }
+
     private function event(Project $project, string $day): void
     {
         Event::factory()->create([

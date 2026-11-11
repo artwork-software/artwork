@@ -133,6 +133,14 @@ readonly class ChecklistService
         $publicChecklists = $checklists->where('private', false)->values();
         $privateChecklists = $checklists->where('private', true)->values();
 
+        // Die Oberfläche zeigt öffentliche und private Listen in einer Liste: die Position hält die
+        // Sortierung über beide Gruppen hinweg fest.
+        $positions = $checklists->values()->pluck('id')->flip();
+        $withSortPosition = static fn (array $resolvedChecklists): array => array_map(
+            static fn (array $checklist): array => $checklist + ['sort_position' => $positions[$checklist['id']]],
+            $resolvedChecklists
+        );
+
         $openedChecklists = User::where('id', $userId)->first()?->opened_checklists ?? [];
 
         return [
@@ -140,8 +148,12 @@ readonly class ChecklistService
             'checklist_templates' => ChecklistTemplateIndexResource::collection(
                 ChecklistTemplate::with(['task_templates', 'user', 'users'])->get()
             )->resolve(),
-            'public_checklists' => ChecklistIndexResource::collection($publicChecklists)->resolve(),
-            'private_checklists' => ChecklistIndexResource::collection($privateChecklists)->resolve(),
+            'public_checklists' => $withSortPosition(
+                ChecklistIndexResource::collection($publicChecklists)->resolve()
+            ),
+            'private_checklists' => $withSortPosition(
+                ChecklistIndexResource::collection($privateChecklists)->resolve()
+            ),
         ];
     }
 

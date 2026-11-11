@@ -18,6 +18,7 @@ use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use stdClass;
@@ -202,12 +203,27 @@ readonly class ChecklistService
         }
     }
 
-    public function restoreAll(Collection|array $checklists, TaskService $taskService): void
-    {
+    /**
+     * Stellt Checklisten samt ihren Aufgaben wieder her. Mit $deletedSince kommen nur die Aufgaben zurück,
+     * die ab diesem Zeitpunkt (also zusammen mit der Checkliste) in den Papierkorb gingen.
+     */
+    public function restoreAll(
+        Collection|array $checklists,
+        TaskService $taskService,
+        ?CarbonInterface $deletedSince = null
+    ): void {
         /** @var Checklist $checklist */
         foreach ($checklists as $checklist) {
             $checklist->restore();
-            $taskService->restoreAll($checklist->tasks);
+            $taskService->restoreAll(
+                $checklist->tasks()
+                    ->onlyTrashed()
+                    ->when(
+                        $deletedSince !== null,
+                        static fn ($query) => $query->where('tasks.deleted_at', '>=', $deletedSince)
+                    )
+                    ->get()
+            );
         }
     }
 
@@ -224,7 +240,7 @@ readonly class ChecklistService
     public function restore(Checklist $checklist, TaskService $taskService): void
     {
         $checklist->restore();
-        $taskService->restoreAll($checklist->tasks);
+        $taskService->restoreAll($checklist->tasks()->onlyTrashed()->get());
     }
 
     public function getProjectChecklists(

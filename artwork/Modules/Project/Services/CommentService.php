@@ -66,13 +66,17 @@ readonly class CommentService
 
     public function delete(Comment $comment, ChangeService $changeService): void
     {
-        $changeService->saveFromBuilder(
-            $changeService
-                ->createBuilder()
-                ->setModelClass(Project::class)
-                ->setModelId($comment->project->id)
-                ->setTranslationKey('Comment deleted')
-        );
+        // project_id statt Relation: beim Löschen eines Projekts liegt das Projekt schon im Papierkorb
+        // (SoftDeleteProjectJob), $comment->project wäre null und die Kaskade bräche hier ab.
+        if ($comment->project_id !== null) {
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($comment->project_id)
+                    ->setTranslationKey('Comment deleted')
+            );
+        }
 
         $comment->delete();
     }

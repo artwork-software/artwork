@@ -688,21 +688,13 @@
         type="success"
         :duration="2500"
     />
-    <ArtworkBaseModal @close="closeSuccessModal" v-if="showSuccessModal" :title="successHeading" :description="successDescription">
-        <div class="mx-4">
-            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                {{ successHeading }}
-            </div>
-            <div class="text-sm/5 text-success">
-                {{ successDescription }}
-            </div>
-            <div class="mt-6 flex justify-center">
-                <BaseUIButton variant="primary" hide-icon @click="closeSuccessModal">
-                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5"/>
-                </BaseUIButton>
-            </div>
-        </div>
-    </ArtworkBaseModal>
+    <NotificationToast
+        v-model:show="showSuccessModal"
+        :title="successHeading"
+        :description="successDescription !== successHeading ? successDescription : ''"
+        type="success"
+        :duration="2500"
+    />
     <VerifiedRequestModal
         :show="showVerifiedModal"
         :verified-texts="verifiedTexts"
@@ -711,14 +703,14 @@
         @close="closeVerifiedModal"
         @submit="handleVerifiedUserSubmit"
     />
-    <ArtworkBaseModal @close="closeBudgetAccessModal" v-if="showBudgetAccessModal" :title="$t('Grant budget access')" :description="$t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?')">
-        <div class="mx-4">
-            <div class="mt-6 flex justify-center">
-                <BaseUIButton variant="primary" hide-icon @click="submitVerifiedModalWithBudgetAccess">
-                    {{ $t('Issue requests & budget access') }}
-                </BaseUIButton>
-            </div>
-        </div>
+    <ArtworkBaseModal @close="closeBudgetAccessModal" v-if="showBudgetAccessModal" title="Grant budget access" modal-size="sm:max-w-lg">
+        <p class="text-sm text-text">
+            {{ $t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?') }}
+        </p>
+        <template #footer>
+            <BaseUIButton label="Cancel" is-cancel-button hide-icon @click="closeBudgetAccessModal"/>
+            <BaseUIButton label="Issue requests & budget access" variant="primary" icon="IconLockOpen" @click="submitVerifiedModalWithBudgetAccess"/>
+        </template>
     </ArtworkBaseModal>
     <add-column-component
         v-if="showAddColumnModal"

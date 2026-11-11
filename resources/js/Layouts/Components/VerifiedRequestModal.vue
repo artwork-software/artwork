@@ -61,7 +61,6 @@
 
 <script>
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import axios from "axios";
@@ -70,7 +69,6 @@ export default {
     name: 'VerifiedRequestModal',
     components: {
         ArtworkBaseModal,
-        ModalHeader,
         BaseInput,
         PropertyIcon,
     },

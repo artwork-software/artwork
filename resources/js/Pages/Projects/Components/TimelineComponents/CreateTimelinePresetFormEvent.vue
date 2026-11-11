@@ -1,36 +1,48 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader
-                :title="$t('Create timeline preset form Event')"
-                :description="$t('Create a new timeline preset for the event')"
-            />
-        </div>
-
-        <div>
+    <ArtworkBaseModal
+        title="Create timeline preset form Event"
+        description="Create a new timeline preset for the event"
+        modal-size="sm:max-w-lg"
+        @close="emit('close')"
+    >
+        <form id="createTimelinePresetFromEventForm" @submit.prevent="createTimelinePreset">
             <BaseInput
+                id="timeline_preset_name"
                 v-model="timelineForm.name"
                 label="Enter the name of the timeline preset"
-                id="name"
+                required
+                :error="timelineForm.errors.name"
+                autofocus
             />
-        </div>
-
-        <div class="flex items-center justify-center mt-5">
-            <FormButton
-                :text="$t('Create timeline preset')"
-                @click="createTimelinePreset" />
-        </div>
-    </BaseModal>
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="timelineForm.processing"
+                @click="emit('close')"
+            />
+            <BaseUIButton
+                type="submit"
+                form="createTimelinePresetFromEventForm"
+                label="Create timeline preset"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="timelineForm.processing"
+                :disabled="!timelineForm.name.trim()"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {useForm} from "@inertiajs/vue3";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+
+defineOptions({name: 'CreateTimelinePresetFormEvent'})
 
 const props = defineProps({
     event: {
@@ -48,6 +60,9 @@ const timelineForm = useForm({
 })
 
 const createTimelinePreset = () => {
+    if (timelineForm.processing || !timelineForm.name.trim()) {
+        return
+    }
     timelineForm.post(route('timeline-preset.store.form.event', {event: props.event.id}), {
         preserveScroll: true,
         preserveState: true,
@@ -57,7 +72,3 @@ const createTimelinePreset = () => {
     })
 }
 </script>
-
-<style scoped>
-
-</style>

@@ -1,65 +1,65 @@
 <template>
-    <BaseModal @closed="$emit('close', false)">
-        <ModalHeader
-            :title="tag ? $t('Edit BI tag') : $t('New BI tag')"
-        />
-        <form @submit.prevent="save">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div class="col-span-1">
-                    <div class="-mt-1">
-                        <div class="text-sm/5 font-bold text-text-subtle flex items-center justify-start">
-                            {{ $t('Color') }}
-                        </div>
-                        <div class="mt-1 flex items-center justify-center">
-                            <ColorPickerComponent @updateColor="updateColor" :color="tagForm.color" />
-                        </div>
-                    </div>
+    <ArtworkBaseModal
+        :title="tag ? 'Edit BI tag' : 'New BI tag'"
+        modal-size="sm:max-w-lg"
+        @close="$emit('close', false)"
+    >
+        <form id="biTagForm" class="space-y-4" @submit.prevent="save">
+            <div class="flex items-end gap-x-4">
+                <div class="shrink-0">
+                    <span class="mb-1 block font-lexend text-xs font-medium text-text-muted">{{ $t('Color') }}</span>
+                    <ColorPickerComponent :color="tagForm.color" @update-color="updateColor" />
                 </div>
-                <div class="col-span-4">
-                    <BaseInput id="bi_tag_name_de" v-model="tagForm.name_de" type="text" :label="$t('Display name (DE)') + '*'" required />
-                </div>
-                <div class="col-span-full">
-                    <BaseInput id="bi_tag_name" v-model="tagForm.name" type="text" :label="$t('Internal name') + '*'" required />
-                </div>
-                <div class="col-span-full">
-                    <ArtworkBaseListbox
-                        :model-value="selectedRole"
-                        @update:model-value="value => tagForm.kpi_role = value?.id ?? null"
-                        :items="roleOptions"
-                        by="id"
-                        option-label="name"
-                        :label="$t('Controls key figure')"
-                    />
-                    <p class="mt-1.5 text-xs text-text-subtle">
-                        {{ $t('Exactly one tag can control “Performances” (also the capacity basis of the occupancy rate) and one can control “Event days”. Without an assigned tag these key figures stay empty.') }}
-                    </p>
-                </div>
-                <div v-if="errorMessage" class="col-span-full text-sm/5 text-danger">
-                    {{ errorMessage }}
+                <div class="w-full">
+                    <BaseInput id="bi_tag_name_de" v-model="tagForm.name_de" label="Display name (DE)" required autofocus />
                 </div>
             </div>
-            <div class="flex items-center justify-center mt-6">
-                <BaseUIButton
-                    type="submit"
-                    :label="tag ? $t('Save') : $t('Add')"
-                    is-add-button
-                    :processing="saving"
-                    :disabled="saving || !tagForm.name || !tagForm.name_de"
+            <BaseInput id="bi_tag_name" v-model="tagForm.name" label="Internal name" required />
+            <div>
+                <ArtworkBaseListbox
+                    :model-value="selectedRole"
+                    :items="roleOptions"
+                    by="id"
+                    option-label="name"
+                    label="Controls key figure"
+                    :enable-search="false"
+                    @update:model-value="value => tagForm.kpi_role = value?.id ?? null"
                 />
+                <p class="mt-1.5 text-xs text-text-muted">
+                    {{ $t('Exactly one tag can control “Performances” (also the capacity basis of the occupancy rate) and one can control “Event days”. Without an assigned tag these key figures stay empty.') }}
+                </p>
             </div>
+            <BaseAlertComponent v-if="errorMessage" type="error" :message="errorMessage" />
         </form>
-    </BaseModal>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="saving"
+                @click="$emit('close', false)"
+            />
+            <BaseUIButton
+                type="submit"
+                form="biTagForm"
+                :label="tag ? 'Save' : 'Add'"
+                variant="primary"
+                :icon="tag ? 'IconDeviceFloppy' : 'IconCirclePlus'"
+                :processing="saving"
+                :disabled="saving || !tagForm.name.trim() || !tagForm.name_de.trim()"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import BaseModal from '@/Components/Modals/BaseModal.vue';
-import ModalHeader from '@/Components/Modals/ModalHeader.vue';
+import { computed, ref } from 'vue';
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ColorPickerComponent from '@/Components/Globale/ColorPickerComponent.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
-import { computed } from 'vue';
 import { useTranslation } from '@/Composeables/Translation.js';
 import { BI_REQUEST_CONFIG, extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
 
@@ -93,7 +93,9 @@ const updateColor = (color) => {
 };
 
 const save = async () => {
-    if (!tagForm.value.name || !tagForm.value.name_de) return;
+    if (saving.value || !tagForm.value.name.trim() || !tagForm.value.name_de.trim()) {
+        return;
+    }
     saving.value = true;
     errorMessage.value = '';
     try {

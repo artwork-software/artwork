@@ -60,6 +60,10 @@ class ChangeService
                 'changes' => $this->frontendChanges($activity),
                 'change_by' => $activity->causer,
                 'created_at' => $this->formatTimestamp($activity),
+                // Herkunft des Eintrags (core-via-activity-log): ui | api | ai_assistant | system.
+                // Der Causer ist immer der echte Mensch; `via` sagt, auf welchem Weg er gehandelt hat.
+                'via' => $activity->properties['via'] ?? null,
+                'via_detail' => $activity->properties['via_detail'] ?? null,
             ])
             ->filter(fn (array $row): bool => $row['changes'] !== [])
             ->values()

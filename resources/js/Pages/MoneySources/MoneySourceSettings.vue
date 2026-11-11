@@ -63,7 +63,6 @@ import Button from "@/Jetstream/Button.vue";
 import {defineComponent} from 'vue'
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
@@ -80,7 +79,6 @@ export default defineComponent({
         BaseInput,
         TextInputComponent,
         ConfirmationComponent,
-        JetDialogModal,
         Button,
         AppLayout,
         IconCheck,

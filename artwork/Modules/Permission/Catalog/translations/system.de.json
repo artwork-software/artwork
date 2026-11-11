@@ -66,5 +66,12 @@
     "Can manage the categories of the sources of funding": "Kann die Kategorien der Finanzierungsquellen verwalten",
     "Can manage general budget settings, accounts and cost units": "Kann allgemeine Budget-Einstellungen, Konten und Kostenstellen verwalten",
     "Can open the recycle bin": "Kann den Papierkorb öffnen",
-    "Can maintain the message to all people": "Kann die Nachricht an alle Personen pflegen"
+    "Can maintain the message to all people": "Kann die Nachricht an alle Personen pflegen",
+    "AI assistant settings": "KI-Assistent",
+    "Can switch the AI assistant on or off for this house and control its stages": "Kann den KI-Assistenten für dieses Haus ein- und ausschalten und seine Stufen steuern",
+    "Tab \"AI assistant\" in the tool settings": "Reiter „KI-Assistent“ in den Tooleinstellungen",
+    "Switch the assistant on and off for the whole house": "Den Assistenten für das ganze Haus ein- und ausschalten",
+    "Release the stages \"data analysis\" and \"actions\"": "Die Stufen „Datenauswertung“ und „Aktionen“ freischalten",
+    "Set the retention period of the chat transcripts": "Die Aufbewahrungsdauer der Chatverläufe festlegen",
+    "Whether the assistant is available at all is additionally decided by the instance configuration of the operator; this permission cannot override it.": "Ob der Assistent überhaupt zur Verfügung steht, entscheidet zusätzlich die Instanz-Konfiguration des Betreibers; dieses Recht kann das nicht übergehen."
 }

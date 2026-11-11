@@ -1,26 +1,36 @@
 <template>
-    <BaseModal @closed="emit('closed')" modal-image="/Svgs/Overlays/illu_warning.svg">
-        <div class="mx-4">
-            <div class="text-2xl font-bold text-text my-2">
-                {{ $t('Deactivate account') }}
-            </div>
-            <div class="text-sm text-text-muted">
-                {{ $t('{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.', { name: `${user.first_name} ${user.last_name}` }) }}
-            </div>
-            <div class="mt-6 flex items-center justify-between">
-                <BaseUIButton :label="$t('Deactivate')" variant="primary" hide-icon :disabled="processing" @click="deactivate" />
-                <button @click="emit('closed')" class="text-sm text-text-subtle hover:text-text">
-                    {{ $t('No, not really') }}
-                </button>
-            </div>
-        </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        title="Deactivate account"
+        modal-size="sm:max-w-lg"
+        @close="close"
+    >
+        <p class="text-sm text-text">
+            {{ $t('{name} can no longer sign in. Rights, settings and assignments to projects and shifts are kept, and the account can be reactivated at any time.', { name: fullName }) }}
+        </p>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="close"
+            />
+            <BaseUIButton
+                label="Deactivate"
+                variant="primary"
+                icon="IconUserOff"
+                :processing="processing"
+                :disabled="processing"
+                @click="deactivate"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
 // Bestätigung vor dem Deaktivieren (Nutzer*innenliste und Reiter „Persönliche Daten“)
@@ -31,7 +41,14 @@ const emit = defineEmits(['closed'])
 
 const processing = ref(false)
 
+const fullName = computed(() => `${props.user.first_name} ${props.user.last_name}`)
+
+const close = () => emit('closed')
+
 const deactivate = () => {
+    if (processing.value) {
+        return
+    }
     processing.value = true
     router.post(route('user.deactivate', { user: props.user.id }), {}, {
         preserveScroll: true,

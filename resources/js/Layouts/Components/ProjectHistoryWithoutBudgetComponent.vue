@@ -52,6 +52,9 @@
                                     lazy-load
                                 />
 
+                                <!-- Herkunft: "via Assistent" / "via API (Name)"; bei ui und system leer -->
+                                <ActivityOriginHint :via="historyItem.via" :via-detail="historyItem.via_detail"/>
+
                                 <!-- Beschreibung -->
                                 <div class="min-w-0 grow text-xs text-text-muted subpixel-antialiased">
                                     {{
@@ -74,6 +77,7 @@
 import { computed } from 'vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
+import ActivityOriginHint from '@/Components/Activity/ActivityOriginHint.vue'
 
 defineOptions({ name: 'ProjectHistoryWithoutBudgetComponent' })
 

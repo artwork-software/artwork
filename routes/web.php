@@ -121,6 +121,13 @@ use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsFormatsController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiAssistantSettingsController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiActionBatchController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiActionController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiConversationController;
+use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiAssistantIsEnabled;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiSessionController;
+use Artwork\Modules\AiAssistant\Http\Controllers\HelpRedirectController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
@@ -178,6 +185,9 @@ use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
+use Artwork\Modules\Project\Http\Controllers\ProjectContentExportController;
+use Artwork\Modules\Project\Http\Controllers\ProjectPlanExportController;
+use Artwork\Modules\Project\Http\Controllers\ProjectContentExportTemplateController;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
@@ -248,7 +258,42 @@ Route::middleware(['guest', 'throttle:20,1'])->group(function (): void {
 
 // Ohne 'verified'-Middleware: Konten entstehen nur per Einladung, LDAP oder OIDC; das User-Model
 // implementiert MustVerifyEmail nicht.
-Route::group(['middleware' => ['auth:sanctum']], function (): void {
+Route::group(['middleware' => ['auth']], function (): void {
+
+    // KI-Session-Token. throttle:ai-session steht nach der Auth-Gruppe, weil das Limit auf die
+    // User-ID gekeyed ist — vorher waere der User noch nicht aufgeloest.
+    Route::post('/ai/session', [AiSessionController::class, 'store'])
+        ->middleware('throttle:ai-session')
+        ->name('ai.session.store');
+
+    // Gespraechsliste und Loeschen fuer die KI-Bar. Die Freischaltung haengt am Service, nicht an
+    // einem Gate — Gate::before wuerde Admins sonst auch bei abgeschaltetem Haus durchlassen.
+    Route::middleware(EnsureAiAssistantIsEnabled::class)->group(function (): void {
+        Route::get('/ai/conversations', [AiConversationController::class, 'index'])
+            ->name('ai.conversations.index');
+        Route::delete('/ai/conversations/{conversation}', [AiConversationController::class, 'destroy'])
+            ->name('ai.conversations.destroy');
+
+        // Zustand einer Aktion fuer die Bar (core-ki-bar-confirm): Batch und Undo-Frist kommen
+        // nicht ueber SSE — `done` traegt laut Contract nur `reason`.
+        Route::get('/ai/actions/{action}', [AiActionController::class, 'show'])
+            ->name('ai.actions.show');
+
+        // Ablehnung einer bestaetigungspflichtigen Aktion (core-confirm-actions; Konzept W2 §6).
+        Route::post('/ai/actions/{action}/cancel', [AiActionController::class, 'cancel'])
+            ->name('ai.actions.cancel');
+
+        // Ruecknahme einer ausgefuehrten Aktion (core-undo; Konzept W3 §2).
+        Route::post('/ai/actions/batches/{batch}/revert', [AiActionBatchController::class, 'revert'])
+            ->name('ai.actions.batches.revert');
+    });
+
+    // Weiterleitung ins Wiki (core-help-redirect). Innerhalb der auth-Gruppe, damit daraus kein
+    // anonymer Redirect-Dienst wird. Der Punkt fehlt in der Zeichenklasse — `..` trifft die Route
+    // damit nicht.
+    Route::get('/help/{path?}', HelpRedirectController::class)
+        ->where('path', '[A-Za-z0-9_\-\/#]*')
+        ->name('help.redirect');
 
     // Workflow routes - only accessible via direct URL
     Route::group(['prefix' => 'workflow', 'middleware' => 'role:artwork admin'], function (): void {
@@ -596,6 +641,14 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('tool.mail.update');
         Route::post('/mail/test', [MailSettingsController::class, 'test'])
             ->name('tool.mail.test');
+
+        // KI-ASSISTENT — eigene Permission, nicht "change tool settings"
+        Route::group(['middleware' => 'can:change ai assistant settings'], function (): void {
+            Route::get('/ai-assistant', [AiAssistantSettingsController::class, 'edit'])
+                ->name('tool.ai-assistant');
+            Route::patch('/ai-assistant', [AiAssistantSettingsController::class, 'update'])
+                ->name('tool.ai-assistant.update');
+        });
         Route::group([
             'namespace' => 'System',
             'prefix' => 'system',
@@ -840,10 +893,50 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     // Team-Mitgliedschaft in einzelnen Projekten reicht nicht (Route vor {project}!)
     Route::get('/projects/export/project-role-matrix', ProjectRoleMatrixExportController::class)
         ->name('projects.export.project-role-matrix')
-        ->can('view projects');
+        ->middleware(['can:view projects', 'can:can export from project overview']);
+
+    // Projektinhalte als Excel/Word (Export-Modal der Projektübersicht). Ausgegeben werden nur Projekte, die
+    // die Person öffnen darf, und Komponenten, die sie sehen darf (Route vor {project}!)
+    Route::group([
+        'prefix' => '/projects/content-export',
+        'middleware' => 'can:can export from project overview',
+    ], function (): void {
+        Route::get('/options', [ProjectContentExportController::class, 'options'])
+            ->name('projects.content-export.options');
+        Route::post('/preview', [ProjectContentExportController::class, 'preview'])
+            ->name('projects.content-export.preview');
+        Route::post('/cache', [ProjectContentExportController::class, 'cache'])
+            ->name('projects.content-export.cache');
+        Route::get('/download/{cacheToken}', [ProjectContentExportController::class, 'download'])
+            ->name('projects.content-export.download');
+        Route::get('/templates', [ProjectContentExportTemplateController::class, 'index'])
+            ->name('projects.content-export.templates.index');
+        Route::post('/templates', [ProjectContentExportTemplateController::class, 'store'])
+            ->name('projects.content-export.templates.store');
+        Route::patch(
+            '/templates/{projectContentExportTemplate}',
+            [ProjectContentExportTemplateController::class, 'update']
+        )->name('projects.content-export.templates.update');
+        Route::delete(
+            '/templates/{projectContentExportTemplate}',
+            [ProjectContentExportTemplateController::class, 'destroy']
+        )->name('projects.content-export.templates.destroy');
+    });
     Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])
         ->middleware(CanViewProject::class)
         ->name('projects.show.basic');
+    // Veranstaltungsplan und Künstlerplan als Word (Export-Dialog im Projektkopf)
+    Route::group([
+        'prefix' => '/projects/{project}/plans',
+        'middleware' => CanViewProject::class,
+    ], function (): void {
+        Route::get('/options', [ProjectPlanExportController::class, 'options'])
+            ->name('projects.plans.options');
+        Route::get('/event-plan', [ProjectPlanExportController::class, 'eventPlan'])
+            ->name('projects.plans.event-plan');
+        Route::get('/artist-plan', [ProjectPlanExportController::class, 'artistPlan'])
+            ->name('projects.plans.artist-plan');
+    });
     Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
         ->middleware(CanViewProject::class)
         ->name('projects.rooms-with-event-periods');
@@ -4424,7 +4517,7 @@ Route::get(
 
 
 // /shift/check-collisions — liefert Zuweisungs-/Zeitdaten beliebiger Worker, daher zwingend hinter Auth
-Route::middleware(['auth:sanctum'])
+Route::middleware(['auth'])
     ->post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->can('can plan shifts')
     ->name('shift.check-collisions');

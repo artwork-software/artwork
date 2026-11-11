@@ -125,6 +125,13 @@ return [
         'room_request_declined' => 'Raumanfrage abgesagt',
         'deleted' => 'Termin abgesagt'
     ],
+    'ai_assistant' => [
+        'created' => '{1} Termin angelegt (via Assistent)|[2,*] :count Termine angelegt (via Assistent)',
+        'updated' => '{1} Termin geändert (via Assistent)|[2,*] :count Termine geändert (via Assistent)',
+        'deleted' => '{1} Termin gelöscht (via Assistent)|[2,*] :count Termine gelöscht (via Assistent)',
+        'reverted' => '{1} Termin rückgängig gemacht (via Assistent)|' .
+            '[2,*] :count Termine rückgängig gemacht (via Assistent)',
+    ],
     'moneySource' => [
         'add_permission' => 'Du hast Zugriff auf :moneySource erhalten',
         'remove_permission' => 'Dein Zugriff auf :moneySource wurde gelöscht',
@@ -165,6 +172,7 @@ return [
         'new' => 'Neue Anfrage für geplanten Termin',
         'open-index' => 'Planungsterminanfragen öffnen',
         'approved-finished' => 'Planungsterminanfrage genehmigt und abgeschlossen',
+        'approved-finished-by' => 'Planungsterminanfrage von :name genehmigt und abgeschlossen',
         'user-approved' => 'Planungsterminanfrage von :name genehmigt',
         'event-verification-description' => 'Der geplante Termin ":event" wurde genehmigt',
         'user-rejected' => 'Planungsterminanfrage von :name abgelehnt',

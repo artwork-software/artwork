@@ -125,7 +125,7 @@
                     </BaseMenu>
                 </div>
                     <!-- Export -->
-                    <button type="button" @click="openExportModal">
+                    <button type="button" @click="openExportModal" v-if="canUseOverviewExports">
                         <ToolTipComponent :icon="IconFileExport" icon-size="size-6" white-icon :tooltip-text="$t('Export project list')" direction="bottom" :classes-button="bandIconButtonClasses" />
                     </button>
 
@@ -302,7 +302,7 @@
         />
 
         <export-modal
-            v-if="showExportModal"
+            v-if="showExportModal && canUseOverviewExports"
             @close="showExportModal = false"
             :enums="exportTabs"
             :configuration="getExportModalConfiguration()"
@@ -338,31 +338,33 @@
         </div>
 
         <!-- Bulk delete confirmation -->
-        <BaseModal @closed="closeBulkDeleteModal" v-if="bulkDeleting">
-            <div class="mx-4">
-                <div class="text-2xl sm:text-3xl font-black text-text my-2">
-                    {{ $t('Delete selected projects') }}
-                </div>
-                <div class="text-sm text-danger">
-                    {{ $t('Are you sure you want to move the {0} selected projects to the trash?', [selectedProjectIds.length]) }}
-                </div>
-                <div class="flex flex-col sm:flex-row gap-4 justify-between mt-6">
-                    <button
-                        class="bg-success hover:bg-success text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
-                        @click="bulkDeleteProjects"
-                    >
-                        {{ $t('Delete') }}
-                    </button>
-                    <button
-                        type="button"
-                        @click="closeBulkDeleteModal()"
-                        class="text-sm text-text-muted hover:underline underline-offset-4"
-                    >
-                        {{ $t('No, not really') }}
-                    </button>
-                </div>
-            </div>
-        </BaseModal>
+        <ArtworkBaseModal
+            v-if="bulkDeleting"
+            title="Delete selected projects"
+            modal-size="sm:max-w-lg"
+            @close="closeBulkDeleteModal"
+        >
+            <p class="text-sm text-text">
+                {{ $t('Are you sure you want to move the {0} selected projects to the trash?', [selectedProjectIds.length]) }}
+            </p>
+            <template #footer>
+                <BaseUIButton
+                    label="No, not really"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="bulkDeleteProcessing"
+                    @click="closeBulkDeleteModal"
+                />
+                <BaseUIButton
+                    label="Delete"
+                    variant="danger"
+                    icon="IconTrash"
+                    :processing="bulkDeleteProcessing"
+                    :disabled="selectedProjectIds.length === 0"
+                    @click="bulkDeleteProjects"
+                />
+            </template>
+        </ArtworkBaseModal>
     </AppLayout>
 </template>
 
@@ -382,7 +384,7 @@ import {
     IconTrash,
     IconX
 } from "@tabler/icons-vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import { usePermission } from "@/Composeables/Permission.js";
 import { MenuItem, Switch, SwitchGroup } from "@headlessui/vue";
@@ -467,6 +469,7 @@ onBeforeUnmount(() => clearTimeout(dropFeedbackTimer));
 const selectionMode = ref(false);
 const selectedProjectIds = ref([]);
 const bulkDeleting = ref(false);
+const bulkDeleteProcessing = ref(false);
 const pageProjectIds = computed(() => (props.projects?.data ?? []).map((p) => p.id));
 const allOnPageSelected = computed(
     () => pageProjectIds.value.length > 0 && pageProjectIds.value.every((id) => selectedProjectIds.value.includes(id))
@@ -492,6 +495,8 @@ const openBulkDeleteModal = () => {
 };
 const closeBulkDeleteModal = () => (bulkDeleting.value = false);
 const bulkDeleteProjects = () => {
+    if (bulkDeleteProcessing.value || selectedProjectIds.value.length === 0) return;
+    bulkDeleteProcessing.value = true;
     router.delete(route("projects.bulk-destroy"), {
         data: {
             project_ids: selectedProjectIds.value,
@@ -504,6 +509,7 @@ const bulkDeleteProjects = () => {
             bulkDeleting.value = false;
             selectionMode.value = false;
         },
+        onFinish: () => (bulkDeleteProcessing.value = false),
     });
 };
 
@@ -667,15 +673,23 @@ const reloadProjectsDebounced = debounce(reloadProjects, 800);
 watch(project_search, () => reloadProjectsDebounced());
 
 // Export-Konfig
+// Recht "Exporte aus der Projektübersicht" steuert den ganzen Export-Button; Budget und Rollenmatrix
+// lesen alle Projekte und brauchen zusätzlich das globale Leserecht (Budget auch den globalen Budgetzugriff)
+const canUseOverviewExports = computed(() => role('artwork admin') || can('can export from project overview'));
+const canReadAllProjects = computed(() => role('artwork admin') || can('view projects'));
+
 const exportTabs = computed(() => {
     const tabs = [
         exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
         exportTabEnums.EXCEL_CALENDAR_EXPORT,
+        exportTabEnums.PROJECT_CONTENT_EXCEL_EXPORT,
+        exportTabEnums.PROJECT_CONTENT_WORD_EXPORT,
     ];
-    if (props.createSettings.budget_deadline) {
+    if (props.createSettings.budget_deadline && canReadAllProjects.value &&
+        (role('artwork admin') || can('can manage global project budgets'))) {
         tabs.push(exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT);
     }
-    if (can('view projects') || role('artwork admin')) {
+    if (canReadAllProjects.value) {
         tabs.push(exportTabEnums.EXCEL_PROJECT_ROLE_MATRIX_EXPORT);
     }
     return tabs;

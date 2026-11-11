@@ -11,6 +11,8 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Shift\Services\LegalBreakCalculator;
 use Carbon\Carbon;
@@ -657,5 +659,35 @@ class Shift extends Model
             'shift_id',
             'shift_plan_request_id'
         )->withPivot(['snapshot'])->withTimestamps();
+    }
+
+    /**
+     * Schichten, die diese Person sehen darf (core-visibility-scopes, Konzept B1 §2).
+     *
+     * Aus der Oberflaeche extrahiert, nicht erfunden — zwei Fundstellen:
+     * - Dienstplan `routes/web.php:1050-1056` mit `->can('can view shift plan')`: wer das Recht
+     *   hat, sieht den ganzen Plan. Gewerke (`craft_ids`) sind eine Filtereinstellung, kein Recht.
+     * - Dashboard `EventController::showDashboardPage():1278` zeigt ohne jedes Recht
+     *   `$user->shifts()` — die eigenen Einsaetze sieht also jede Person.
+     *
+     * Daraus folgt die Vereinigung: mit Recht alles, ohne Recht die eigenen Schichten.
+     */
+    public function scopeVisibleFor(Builder $builder, ?User $user): Builder
+    {
+        if (!$user instanceof User) {
+            return $builder->whereRaw('1 = 0');
+        }
+
+        // Guard ausdruecklich `web`: der Rechtekatalog existiert nur dort, unter `auth:api` wuerde
+        // can() stillschweigend false liefern (Begruendung in Project::mayEnterEveryProject()).
+        // Die Admin-Abkuerzung entspricht Gate::before.
+        if (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->checkPermissionTo(PermissionEnum::VIEW_SHIFT_PLAN->value, 'web')
+        ) {
+            return $builder;
+        }
+
+        return $builder->whereHas('users', fn (Builder $query) => $query->where('users.id', $user->id));
     }
 }

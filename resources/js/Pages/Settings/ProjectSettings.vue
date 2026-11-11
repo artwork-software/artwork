@@ -311,7 +311,6 @@ import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconDotsVertica
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
 import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
 import ProjectStateModal from "@/Layouts/Components/ProjectStateModal.vue";
@@ -343,7 +342,6 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,
-        JetDialogModal,
         IconChevronDown,
         IconDotsVertical,
         IconTrash,

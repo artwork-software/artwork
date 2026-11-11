@@ -244,7 +244,6 @@
 import {IconAlertTriangle, IconCalendar, IconCheck, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconFileText, IconFilter, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {
     Disclosure,
     DisclosureButton,
@@ -299,7 +298,6 @@ export default {
         DisclosureButton,
         DisclosurePanel,
         VueCal,
-        JetDialogModal,
         IconX,
         IconFileText,
         IconCircleX,

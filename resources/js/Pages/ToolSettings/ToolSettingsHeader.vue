@@ -119,6 +119,13 @@ export default defineComponent({
                     current: route().current('tool.mail'),
                     permission: this.$can('change tool settings') || this.hasAdminRole()
                 },
+                {
+                    name: this.$t('AI assistant'),
+                    href: route('tool.ai-assistant'),
+                    current: route().current('tool.ai-assistant'),
+                    // Eigene Permission, bewusst nicht an "change tool settings" gekoppelt
+                    permission: this.$can('change ai assistant settings') || this.hasAdminRole()
+                },
             ]
         }
     }

@@ -57,6 +57,11 @@ class RouteServiceProvider extends ServiceProvider
             Route::group([], base_path('routes/external-guest.php'));
             Route::group([], base_path('routes/external.php'));
 
+            // Entwicklungs-Stub der KI-Bar: nur lokal, nie in testing/production (core-ki-bar-ui).
+            if ($this->app->environment('local')) {
+                Route::group([], base_path('routes/ai-dev-stub.php'));
+            }
+
             Route::prefix('api/app/v1')
                 ->middleware('api.app')
                 ->name('app.v1.')

@@ -1,163 +1,97 @@
-<script>
-import {IconChevronDown, IconCircleCheck, IconX} from "@tabler/icons-vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-    Switch,
-    SwitchGroup,
-    SwitchLabel,
-    TransitionChild,
-    TransitionRoot
-} from "@headlessui/vue";
-import {useForm} from "@inertiajs/vue3";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOptions,
-    ListboxOption,
-    ListboxLabel
-} from '@headlessui/vue'
-export default {
-    name: "SelectTabsModal",
-    components: {
-        SwitchLabel,
-        Switch,
-        SwitchGroup,
-        FormButton,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        IconX, DialogPanel,
-        IconChevronDown,
-        IconCircleCheck,
-        Listbox,
-        ListboxButton,
-        ListboxOptions,
-        ListboxOption,
-        ListboxLabel
-    },
-    emits: ['close', 'openTab'],
-    props: ['tabs', 'currentTab', 'componentData', 'position'],
-    data(){
-        return {
-            open: true,
-            selected: [],
-            enabled: false
-        }
-    },
-    mounted() {
-        this.selected = [this.currentTab]
-    },
-    methods: {
-        closeModal(bool){
-            this.$emit('close', bool)
-        },
-        addComponentWithScope() {
-            if(!this.enabled){
-                this.selected = [this.currentTab]
-            }
-            this.$inertia.post(route('tab.add.component.with.scopes', {projectTab: this.currentTab.id}), {
-                component_id: this.componentData.id,
-                order: this.position,
-                scope: this.selected.map((tab) => tab.id)
-            }, {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.closeModal(false);
-                    this.$emit('openTab', this.currentTab.id)
-                }
-            });
-        }
-    }
-}
-</script>
-
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
-            </TransitionChild>
-            <div class="fixed inset-0 z-50 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
-                                    <span class="sr-only">Close</span>
-                                    <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <div class="relative z-40 px-4">
-                                <div class="mt-8 font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
-                                   {{ $t('Select tabs') }}
-                                </div>
-                                <p class="text-sm/5 font-bold text-text-subtle my-6">
-                                    {{ $t('Which tabs should be included in this component?') }}
-                                </p>
-
-                                <div class="mb-3">
-                                    <SwitchGroup as="div" class="flex items-center gap-x-4">
-                                        <SwitchLabel as="span" class="text-sm">
-                                            <span class="font-medium text-text">{{ $t('Only include current tab') }}</span>
-                                        </SwitchLabel>
-                                        <Switch v-model="enabled" :class="[enabled ? 'bg-accent-700' : 'bg-border-subtle', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-700 focus:ring-offset-2']">
-                                            <span aria-hidden="true" :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-                                        </Switch>
-                                        <SwitchLabel as="span" class="text-sm">
-                                            <span class="font-medium text-text">{{ $t('Select tabs') }}</span>
-                                        </SwitchLabel>
-                                    </SwitchGroup>
-                                </div>
-                                <div v-if="enabled">
-                                    <Listbox as="div" v-model="selected" multiple>
-                                        <ListboxLabel class="block text-sm font-medium leading-6 text-text">{{ $t('Selected tabs') }}</ListboxLabel>
-                                        <div class="relative mt-2">
-                                            <ListboxButton class="relative w-full cursor-default bg-white h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-accent-700 sm:text-sm sm:leading-6">
-                                                <span class="block truncate"> {{ selected.map((tab) => tab.name).join(', ') }}</span>
-                                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                  <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
-                                                </span>
-                                            </ListboxButton>
-
-                                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                                    <ListboxOption as="template" v-for="tab in tabs" :key="tab.id" :value="tab" v-slot="{ active, selected }">
-                                                        <li :class="[active ? 'bg-accent-700 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ tab.name }}</span>
-
-                                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-700', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                                <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
-                                                              </span>
-                                                        </li>
-                                                    </ListboxOption>
-                                                </ListboxOptions>
-                                            </transition>
-                                        </div>
-                                    </Listbox>
-                                </div>
-                                <div class="flex justify-between mt-5 items-center pr-4">
-                                    <FormButton
-                                        @click="addComponentWithScope(true)" :text="$t('Save')" />
-                                    <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="closeModal">
-                                        {{ $t('No, not really') }}
-                                    </p>
-                                </div>
-                            </div>
-
-                        </DialogPanel>
-                    </TransitionChild>
-                </div>
-            </div>
-        </Dialog>
-    </TransitionRoot>
+    <ArtworkBaseModal
+        title="Select tabs"
+        description="Which tabs should be included in this component?"
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <div class="space-y-4">
+            <SwitchDualLabel
+                v-model="enabled"
+                :left-label="$t('Only include current tab')"
+                :right-label="$t('Select tabs')"
+            />
+            <ArtworkBaseListbox
+                v-if="enabled"
+                v-model="selected"
+                :items="tabOptions"
+                by="id"
+                option-label="name"
+                label="Selected tabs"
+                multiple
+            />
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+                :disabled="!canSubmit"
+                @click="addComponentWithScope"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<style scoped>
+<script setup>
+import {computed, ref} from 'vue'
+import {router} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import SwitchDualLabel from '@/Artwork/Toggles/SwitchDualLabel.vue'
 
-</style>
+defineOptions({name: 'SelectTabsModal'})
+
+const props = defineProps({
+    tabs: {type: [Array, Object], default: () => []},
+    currentTab: {type: Object, required: true},
+    componentData: {type: Object, required: true},
+    position: {type: [Number, String], default: null},
+})
+
+const emit = defineEmits(['close', 'openTab'])
+
+// enabled = false: nur aktueller Tab; true: Tabs frei wählen
+const enabled = ref(false)
+const selected = ref(props.currentTab ? [props.currentTab] : [])
+const processing = ref(false)
+
+const tabOptions = computed(() => Object.values(props.tabs ?? {}))
+const canSubmit = computed(() => !processing.value && (!enabled.value || selected.value.length > 0))
+
+function closeModal(saved) {
+    emit('close', saved)
+}
+
+function addComponentWithScope() {
+    if (!canSubmit.value) {
+        return
+    }
+    const scope = enabled.value ? selected.value : [props.currentTab]
+    processing.value = true
+    router.post(route('tab.add.component.with.scopes', {projectTab: props.currentTab.id}), {
+        component_id: props.componentData.id,
+        order: props.position,
+        scope: scope.map((tab) => tab.id),
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            closeModal(false)
+            emit('openTab', props.currentTab.id)
+        },
+        onFinish: () => {
+            processing.value = false
+        },
+    })
+}
+</script>

@@ -10,7 +10,7 @@
                 <div class="flex items-end gap-5">
                     <!-- Avatar -->
                     <button
-                        v-if="isSignedInUser() || hasAdminRole()"
+                        v-if="canEditNameAndPhoto"
                         @click="openChangePictureModal"
                         class="group relative"
                         type="button"
@@ -46,8 +46,8 @@
             </div>
         </header>
 
-        <!-- NAME CARD (nur eigener Account oder Admin) -->
-        <section v-if="isSignedInUser() || hasAdminRole()" class="mt-8">
+        <!-- NAME CARD (eigener Account, Admin oder Personalverwaltung bei Nicht-Admin-Profilen) -->
+        <section v-if="canEditNameAndPhoto" class="mt-8">
             <div class="rounded-3xl border border-border-subtle bg-white p-6 shadow-sm sm:p-8">
                 <h2 class="mb-5 text-base font-semibold text-text">
                     {{ $t('Basic information') }}
@@ -179,7 +179,7 @@
                         {{ $t('Preferences') }}
                     </h3>
 
-                    <div v-if="isSignedInUser() || hasAdminRole()" class="mb-5">
+                    <div v-if="canEditNameAndPhoto" class="mb-5">
                         <Listbox as="div" v-model="selectedLanguage" @update:modelValue="editUser">
                             <ListboxLabel class="block text-sm font-medium text-text">
                                 {{ $t('Application language') }}
@@ -557,6 +557,12 @@ const page = usePage()
 const hasAdminRole = () => (is('artwork admin'))
 const isSignedInUser = () => props.user_to_edit?.id === page.props?.auth?.user?.id
 const canEditPreferences = computed(() => isSignedInUser() || can('can manage workers') || hasAdminRole())
+
+// Name, Foto und Anwendungssprache: Spiegel von UserController::updateUserDetails()/updateUserPhoto().
+// Das eigene Profil, Admins überall, die Personalverwaltung bei allen Profilen außer denen von Admins.
+const isTargetAdmin = computed(() => (props.user_to_edit.roles ?? []).includes('artwork admin'))
+const canEditNameAndPhoto = computed(() => isSignedInUser() || hasAdminRole()
+    || (can('can manage workers') && !isTargetAdmin.value))
 
 // Teams tragen Rechte (Projekt-Schreibrecht, Raumadmin, Verträge) – die eigene Zugehörigkeit
 // ändert deshalb nur eine andere Person (Admins ausgenommen), wie im Backend (updateUserDetails).

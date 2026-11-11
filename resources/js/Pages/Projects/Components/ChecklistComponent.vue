@@ -165,14 +165,14 @@
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 1"
                              :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                            {{ $t('ToDo-List name descending') }}
+                            {{ $t('ToDo-List name ascending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 2"
                              :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                            {{ $t('ToDo-List name ascending') }}
+                            {{ $t('ToDo-List name descending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
                         </div>
                     </MenuItem>

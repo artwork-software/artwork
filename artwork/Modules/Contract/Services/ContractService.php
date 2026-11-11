@@ -15,10 +15,12 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContractFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -257,9 +259,40 @@ class ContractService
         }
     }
 
-    public function exportContracts(array $filters, int $userId, string $language): BinaryFileResponse
+    /**
+     * Sichtbarkeitsregel der Vertragsliste, die auch der Export nutzt: Admins sehen alle Verträge,
+     * alle anderen ihre selbst angelegten sowie persönlich oder über ein Team freigegebene.
+     *
+     * @return Builder<Contract>
+     */
+    public function visibleContractsQuery(User $user): Builder
     {
-        $query = Contract::query()
+        $query = Contract::query();
+
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return $query;
+        }
+
+        $userDepartmentIds = $user->departments->pluck('id')->toArray();
+
+        return $query->where(function (Builder $visible) use ($user, $userDepartmentIds): void {
+            $visible->where('creator_id', $user->id)
+                ->orWhereHas('accessingUsers', function ($subQuery) use ($user): void {
+                    $subQuery->where('user_id', $user->id);
+                })
+                ->orWhereHas('accessingDepartments', function ($subQuery) use ($userDepartmentIds): void {
+                    $subQuery->whereIn('department_id', $userDepartmentIds);
+                });
+        });
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return Collection<int, Contract>
+     */
+    public function contractsForExport(array $filters, User $user): Collection
+    {
+        $query = $this->visibleContractsQuery($user)
             ->with(['project', 'contract_type', 'company_type', 'currency', 'creator']);
 
         if (!empty($filters['kskLiable'])) {
@@ -294,14 +327,15 @@ class ContractService
             $query->whereIn('contract_type_id', $filters['contractTypeIds']);
         }
 
-        $query->where(function ($q) use ($userId): void {
-            $q->where('creator_id', $userId)
-                ->orWhereHas('accessingUsers', function ($subQuery) use ($userId): void {
-                    $subQuery->where('user_id', $userId);
-                });
-        });
+        return $query->get();
+    }
 
-        $contracts = $query->get();
+    /**
+     * @param array<string, mixed> $filters
+     */
+    public function exportContracts(array $filters, User $user, string $language): BinaryFileResponse
+    {
+        $contracts = $this->contractsForExport($filters, $user);
 
         $export = new ContractExcelExport($contracts, $language);
         $filename = 'contracts_export_' . now()->format('Y-m-d_H-i-s') . '.xlsx';

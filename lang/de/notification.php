@@ -112,8 +112,6 @@ return [
             'Die Schichten der Anfrage wurden auf den Stand vor der Anfrage zurückgesetzt.',
     ],
     'event' => [
-        'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',
-        'adjoining_is_loud' => 'Lauter Termin im Nebenraum',
         'conflict' => 'Terminkonflikt',
         'conflict_text' => 'Konflikttermin belegt: :date_time',
         'new_room_request' => 'Neue Raumanfrage',

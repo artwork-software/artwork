@@ -258,10 +258,6 @@ final class EventStoreTest extends FeatureTestCase
             ->once()
             ->with(Mockery::type(Event::class));
         $this->mock(EventCollisionService::class)
-            ->shouldReceive('adjoiningCollision')
-            ->once()
-            ->andReturn([])
-            ->getMock()
             ->shouldReceive('getCollision')
             ->once()
             ->andReturn(Event::query()->whereKey(-1));

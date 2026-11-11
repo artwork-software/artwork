@@ -110,8 +110,6 @@ return [
         'confirmation_by_proxy' => 'Recorded by :userName',
     ],
     'event' => [
-        'with_adjoining_audience' => 'Event with audience in adjoining room',
-        'adjoining_is_loud' => 'Loud event in adjoining room',
         'conflict' => 'Event conflict',
         'conflict_text' => 'Conflict event booked: :date_time',
         'new_room_request' => 'New room request',

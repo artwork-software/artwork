@@ -1495,7 +1495,7 @@ class EventController extends Controller
         /** @var Event $firstEvent */
         $firstEvent = Event::create($request->data());
         $firstEvent->eventProperties()->sync($request->input('event_properties', []));
-        $this->adjoiningRoomsCheck($request, $firstEvent);
+        $this->conflictCheck($request, $firstEvent);
         if ($request->get('projectName')) {
             $this->associateProject($request, $firstEvent, $this->budgetService);
         }
@@ -1681,24 +1681,12 @@ class EventController extends Controller
     }
 
 
-    private function adjoiningRoomsCheck(EventStoreRequest $request, $event): void
+    /**
+     * Benachrichtigt über Termine, die mit dem neuen Termin im selben Raum kollidieren. Die frühere Meldung
+     * "Laute Termine im Nebenraum" (audience/isLoud) entfällt: kein Formular sendet diese Felder mehr.
+     */
+    private function conflictCheck(EventStoreRequest $request, Event $event): void
     {
-        $joiningEvents = $this->collisionService->adjoiningCollision($request);
-        foreach ($joiningEvents as $joiningEvent) {
-            foreach ($joiningEvent as $conflict) {
-                $user = User::find($conflict->user_id);
-                if ($user === null || $user->id === Auth::id()) {
-                    continue;
-                }
-                if ($request->audience) {
-                    $this->createAdjoiningAudienceNotification($conflict, $user, $event);
-                }
-                if ($request->isLoud) {
-                    $this->createAdjoiningLoudNotification($conflict, $user, $event);
-                }
-            }
-        }
-
         $collisionsCount = $this->collisionService->getCollision($request, $event)->count();
         if ($collisionsCount > 0) {
             $collisions = $this->collisionService->getConflictEvents($request);
@@ -1708,113 +1696,6 @@ class EventController extends Controller
                 }
             }
         }
-    }
-
-    private function createAdjoiningAudienceNotification($conflict, User $user, Event $event): void
-    {
-        // notification.event.with_adjoining_audience
-        $notificationTitle = __('notification.event.with_adjoining_audience', [], $user->language);
-        $broadcastMessage = [
-            'id' => Str::uuid()->toString(),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
-        $room = $event->room;
-        $project = $event->project;
-        $notificationDescription = [
-            1 => [
-                'type' => 'link',
-                'title' => $room?->name,
-                'href' => $room ? route('rooms.show', $room->id) : null
-            ],
-            2 => [
-                'type' => 'string',
-                'title' =>  ($event->event_type?->name ?? '') . ', ' . $event->eventName,
-                'href' => null
-            ],
-            // Termin ohne Projekt (bzw. Projekt erst danach angelegt): vorher 500 nach dem Speichern
-            3 => [
-                'type' => 'link',
-                'title' => $project?->name ?? '',
-                'href' => $project === null ? null : route(
-                    'projects.tab',
-                    [
-                        $project->id,
-                        $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
-                            ProjectTabComponentEnum::CALENDAR
-                        )
-                    ]
-                )
-            ],
-            4 => [
-                'type' => 'string',
-                'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' .
-                    Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
-                'href' => null
-            ]
-        ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('red');
-        $this->notificationService->setPriority(2);
-        $this->notificationService->setEventId($conflict->id);
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setNotificationTo($user);
-        $this->notificationService->createNotification();
-    }
-
-    private function createAdjoiningLoudNotification($conflict, User $user, Event $event): void
-    {
-        $notificationTitle = __('notification.event.adjoining_is_loud', [], $user->language);
-        $broadcastMessage = [
-            'id' => Str::uuid()->toString(),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
-        $room = $event->room;
-        $project = $event->project;
-        $notificationDescription = [
-            1 => [
-                'type' => 'link',
-                'title' => $room?->name,
-                'href' => $room ? route('rooms.show', $room->id) : null
-            ],
-            2 => [
-                'type' => 'string',
-                'title' =>  ($event->event_type?->name ?? '') . ', ' . $event->eventName,
-                'href' => null
-            ],
-            // Termin ohne Projekt (bzw. Projekt erst danach angelegt): vorher 500 nach dem Speichern
-            3 => [
-                'type' => 'link',
-                'title' => $project?->name ?? '',
-                'href' => $project === null ? null : route(
-                    'projects.tab',
-                    [
-                        $project->id,
-                        $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
-                            ProjectTabComponentEnum::CALENDAR
-                        )
-                    ]
-                )
-            ],
-            4 => [
-                'type' => 'string',
-                'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' .
-                    Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
-                'href' => null
-            ]
-        ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('red');
-        $this->notificationService->setPriority(2);
-        $this->notificationService->setEventId($conflict->id);
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setNotificationTo($user);
-        $this->notificationService->createNotification();
     }
 
     private function createConflictNotification($collision, Event $event): void

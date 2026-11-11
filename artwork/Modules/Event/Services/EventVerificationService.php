@@ -604,6 +604,8 @@ class EventVerificationService
             ->notificationService
             ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
 
+        $hasPendingVerification = false;
+
         /** @var User $verifier */
         foreach ($verifiers as $verifier) {
             $status = 'pending';
@@ -622,6 +624,7 @@ class EventVerificationService
             ]);
 
             if ($status === 'pending') {
+                $hasPendingVerification = true;
                 $notificationTitle = __('notification.request-verification.new', [], $verifier->language);
                 $broadcastMessage = [
                     'id' => Str::uuid()->toString(),
@@ -644,6 +647,12 @@ class EventVerificationService
             }
 
             $this->broadcastReload($verifier);
+        }
+
+        // Modus "alle" mit der anfragenden Person als einziger Prüferin: ihre Prüfung ist schon genehmigt und
+        // niemand sonst muss zustimmen. Ohne Übernahme blieb der Termin geplant, ohne offene Anfrage.
+        if ($verifiers->isNotEmpty() && !$hasPendingVerification) {
+            $this->confirmEvent($event);
         }
     }
 

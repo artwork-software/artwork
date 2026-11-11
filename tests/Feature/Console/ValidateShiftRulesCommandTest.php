@@ -86,6 +86,54 @@ final class ValidateShiftRulesCommandTest extends FeatureTestCase
     }
 
     #[Test]
+    public function ignored_follow_up_violation_is_not_created_again(): void
+    {
+        $violation = $this->resolvedViolationWithOverdueDayOff();
+        $this->runCommand();
+        ShiftRuleViolation::where('parent_violation_id', $violation->id)->firstOrFail()->ignore(null, 'Geklärt');
+
+        $this->runCommand();
+
+        $this->assertSame(1, ShiftRuleViolation::where('parent_violation_id', $violation->id)->count());
+        $this->assertSame(
+            0,
+            ShiftRuleViolation::where('parent_violation_id', $violation->id)->where('status', 'active')->count()
+        );
+    }
+
+    #[Test]
+    public function resolved_follow_up_violation_is_not_created_again(): void
+    {
+        $violation = $this->resolvedViolationWithOverdueDayOff();
+        $this->runCommand();
+        ShiftRuleViolation::where('parent_violation_id', $violation->id)->firstOrFail()->resolve();
+
+        $this->runCommand();
+
+        $this->assertSame(1, ShiftRuleViolation::where('parent_violation_id', $violation->id)->count());
+    }
+
+    #[Test]
+    public function a_new_deadline_that_expires_after_an_ignored_follow_up_creates_a_new_one(): void
+    {
+        $violation = $this->resolvedViolationWithOverdueDayOff();
+        $this->runCommand();
+        ShiftRuleViolation::where('parent_violation_id', $violation->id)->firstOrFail()->ignore();
+
+        $this->travel(10)->days();
+        CompensationDayOff::where('violation_id', $violation->id)->update([
+            'deadline' => Carbon::now()->subDays(2)->toDateString(),
+        ]);
+        $this->runCommand();
+
+        $this->assertSame(2, ShiftRuleViolation::where('parent_violation_id', $violation->id)->count());
+        $this->assertSame(
+            1,
+            ShiftRuleViolation::where('parent_violation_id', $violation->id)->where('status', 'active')->count()
+        );
+    }
+
+    #[Test]
     public function follow_up_violation_survives_the_automatic_cleanup_of_a_later_run(): void
     {
         $violation = $this->resolvedViolationWithOverdueDayOff();

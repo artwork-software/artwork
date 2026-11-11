@@ -581,7 +581,10 @@
                     </SwitchLabel>
                     <Switch v-model="shiftSettings.use_first_name_for_sort"
                             @update:model-value="this.updateShiftSettingUseFirstNameSort"
+                            :disabled="!canEditGeneralSettings"
+                            :title="canEditGeneralSettings ? undefined : $t('You have read access only')"
                             :class="[
+                                canEditGeneralSettings ? '' : 'opacity-50',
                                 shiftSettings.use_first_name_for_sort ?
                                     'bg-accent-600' :
                                     'bg-border-subtle',
@@ -621,7 +624,10 @@
                     </SwitchLabel>
                     <Switch v-model="shiftSettings.calendar_abo_show_all_shifts"
                             @update:model-value="updateCalendarAboShowAllShifts"
+                            :disabled="!canEditGeneralSettings"
+                            :title="canEditGeneralSettings ? undefined : $t('You have read access only')"
                             :class="[
+                                canEditGeneralSettings ? '' : 'opacity-50',
                                 shiftSettings.calendar_abo_show_all_shifts ?
                                     'bg-accent-600' :
                                     'bg-border-subtle',
@@ -650,7 +656,10 @@
                     </SwitchLabel>
                     <Switch v-model="shiftSettings.allow_shift_overbooking"
                             @update:model-value="updateAllowShiftOverbooking"
+                            :disabled="!canEditGeneralSettings"
+                            :title="canEditGeneralSettings ? undefined : $t('You have read access only')"
                             :class="[
+                                canEditGeneralSettings ? '' : 'opacity-50',
                                 shiftSettings.allow_shift_overbooking ?
                                     'bg-accent-600' :
                                     'bg-border-subtle',
@@ -679,7 +688,10 @@
                     </SwitchLabel>
                     <Switch v-model="shiftSettings.project_assignments_enabled"
                             @update:model-value="updateProjectAssignmentsEnabled"
+                            :disabled="!canEditGeneralSettings"
+                            :title="canEditGeneralSettings ? undefined : $t('You have read access only')"
                             :class="[
+                                canEditGeneralSettings ? '' : 'opacity-50',
                                 shiftSettings.project_assignments_enabled ?
                                     'bg-accent-600' :
                                     'bg-border-subtle',
@@ -708,7 +720,10 @@
                     </SwitchLabel>
                     <Switch v-model="shiftSettings.work_time_accounting_enabled"
                             @update:model-value="updateWorkTimeAccountingEnabled"
+                            :disabled="!canEditGeneralSettings"
+                            :title="canEditGeneralSettings ? undefined : $t('You have read access only')"
                             :class="[
+                                canEditGeneralSettings ? '' : 'opacity-50',
                                 shiftSettings.work_time_accounting_enabled ?
                                     'bg-accent-600' :
                                     'bg-border-subtle',

@@ -3339,7 +3339,7 @@
     "Create User Contract": "Nutzervertrag erstellen",
     "Edit the user contract details.": "Bearbeite die Details des Nutzervertrags.",
     "Create a new user contract.": "Erstelle einen neuen Nutzervertrag.",
-    "This is an existing user contract. Editing it will update the contract for all users associated with it.": "Dies ist ein bestehender Nutzervertrag. Das Bearbeiten aktualisiert den Vertrag für alle damit verbundenen Nutzer*innen.",
+    "This is an existing contract template. Its values were copied into the contracts of the people who use it. For them, changes here only affect the three-month average and numeric values that are 0 in their own contract. Change all other values and switches in the contract of each person.": "Dies ist eine bestehende Vertragsvorlage. Ihre Werte wurden in die Verträge der Personen kopiert, die sie verwenden. Änderungen hier wirken bei diesen Personen nur auf den Dreimonatsdurchschnitt und auf Zahlenwerte, die in ihrem eigenen Vertrag auf 0 stehen. Alle anderen Werte und Schalter änderst du im Vertrag der jeweiligen Person.",
     "Free Full Days Per Week": "Freie volle Tage pro Woche",
     "Free Half Days Per Week": "Freie halbe Tage pro Woche",
     "Special Day Rule Active": "Sondertag-Regel aktiv",

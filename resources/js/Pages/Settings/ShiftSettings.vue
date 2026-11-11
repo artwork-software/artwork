@@ -65,7 +65,7 @@
                 <div class="flex items-start justify-between gap-5">
                     <BasePageTitle
                         :title="$t('Shift confirmation by employees')"
-                        :description="$t('Scheduled users with the permission “Accept or decline shifts” can accept or decline their committed shifts in their own operational plan. Planners can record the response on behalf of these users. Freelancers and service providers do not take part.')"
+                        :description="$t('Scheduled users with the permission “Accept or decline shifts” can accept or decline their shifts in their own operational plan, including provisional shifts that are not committed yet. Planners can record the response on behalf of these users. Freelancers and service providers do not take part.')"
                     />
                     <SwitchIconTooltip
                         v-model="shiftSettings.shift_confirmation_enabled"

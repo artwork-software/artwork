@@ -1549,6 +1549,8 @@
     "All funding groups": "Alle Finanzierungsgruppen",
     "Define categories. These can then be filtered in the overview.": "Lege Kategorien fest. Nach diesen kann anschließend in der Übersicht gefiltert werden.",
     "Delete source category": "Quellenkategorie löschen",
+    "A source category with this name already exists.": "Eine Quellenkategorie mit diesem Namen gibt es bereits.",
+    "Please enter a name for the source category.": "Bitte gib einen Namen für die Quellenkategorie ein.",
     "Are you sure you want to delete the source category? This irrevocably deletes all assignments of funding sources to this category.": "Bist du sicher, dass du die Quellenkategorie löschen möchtest? Damit sind alle Zuordnungen der Finanzierungsquellen zu dieser Kategorie unwiderruflich gelöscht.",
     "Edit the basic data": "Bearbeite die Basisdaten",
     "Runtime": "Laufzeit",

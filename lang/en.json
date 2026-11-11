@@ -1546,6 +1546,8 @@
     "All funding groups": "All funding groups",
     "Define categories. These can then be filtered in the overview.": "Define categories. These can then be filtered in the overview.",
     "Delete source category": "Delete source category",
+    "A source category with this name already exists.": "A source category with this name already exists.",
+    "Please enter a name for the source category.": "Please enter a name for the source category.",
     "Are you sure you want to delete the source category? This irrevocably deletes all assignments of funding sources to this category.": "Are you sure you want to delete the source category? This irrevocably deletes all assignments of funding sources to this category.",
     "Edit the basic data": "Edit the basic data",
     "Runtime": "Runtime",

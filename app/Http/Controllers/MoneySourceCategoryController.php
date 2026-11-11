@@ -12,8 +12,18 @@ class MoneySourceCategoryController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        $validated = $request->validate(
+            [
+                'name' => ['required', 'string', 'max:255', 'unique:money_source_categories,name'],
+            ],
+            [
+                'name.required' => __('Please enter a name for the source category.'),
+                'name.unique' => __('A source category with this name already exists.'),
+            ]
+        );
+
         MoneySourceCategory::create([
-            'name' => $request->get('name')
+            'name' => $validated['name']
         ]);
         return Redirect::back();
     }

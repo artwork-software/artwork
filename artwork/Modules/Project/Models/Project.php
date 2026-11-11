@@ -23,7 +23,6 @@ use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Role\Enums\RoleEnum;
-use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Project\Services\ProjectArtistService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sector\Models\Sector;

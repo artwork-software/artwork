@@ -32,7 +32,6 @@ use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Str;
-use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ShiftWorkerService
 {

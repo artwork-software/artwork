@@ -67,3 +67,20 @@ test('monthly overview export marks the preselected paper size as the default', 
     assert.ok(!source.includes("'A4 (Standard)'"), 'A4 is still marked as default');
     assert.match(source, /selectedPaperSize = ref<[^>]+>\(\{ id: 'a3', name: 'A3 \(Standard\)' \}\)/);
 });
+
+test('event delete dialogs point to the trash instead of calling the deletion irreversible', () => {
+    // Termine werden weich gelöscht (SoftDeletes) und lassen sich aus dem Papierkorb wiederherstellen
+    const bulkFile = 'resources/js/Pages/Projects/Components/BulkComponents/BulkBody.vue';
+    const bulk = read(bulkFile);
+    assert.ok(!bulk.includes("$t('This action cannot be undone.')"), `${bulkFile} still calls the deletion irreversible`);
+    assertKeyUsed(bulk, 'The events are moved to the trash and can be restored from there within 30 days.', bulkFile);
+
+    const dailyFile = 'resources/js/Pages/Shifts/DailyViewComponents/SingleEventInDailyShiftView.vue';
+    const daily = read(dailyFile);
+    assertKeyRemoved(daily, 'Do you really want to delete this event? This action cannot be undone.', dailyFile);
+    assertKeyUsed(
+        daily,
+        'Do you really want to delete this event? It is moved to the trash and can be restored from there within 30 days.',
+        dailyFile,
+    );
+});

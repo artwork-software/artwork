@@ -193,7 +193,7 @@
     <ConfirmationComponent
         v-if="showConfirmDeleteModal"
         :titel="$t('Delete event')"
-        :description="$t('Do you really want to delete this event? This action cannot be undone.')"
+        :description="$t('Do you really want to delete this event? It is moved to the trash and can be restored from there within 30 days.')"
         @closed="handleConfirmDelete"
     />
 </template>

@@ -120,50 +120,71 @@ class BudgetTemplateController extends Controller
             'is_template' => $isTemplate,
             'project_id' => $projectId
         ]);
-        $oldTable->columns->map(function (Column $column) use ($newTable): void {
+        $replicatedColumns = [];
+        $oldTable->columns->each(function (Column $column) use ($newTable, &$replicatedColumns): void {
             if ($column->type === 'sage') {
                 return;
             }
             $replicated_column = $column->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_column->save();
             $this->columns[$column->id] = $replicated_column->id;
-            $replicated_column->update([
-                'linked_first_column' => $column->linked_first_column !== null ?
-                    $this->columns[$column->linked_first_column] :
-                    null,
-                'linked_second_column' => $column->linked_second_column !== null ?
-                    $this->columns[$column->linked_second_column] :
-                    null
-            ]);
+            $replicatedColumns[$column->id] = $replicated_column;
         });
 
-        $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable): void {
+        // Verknüpfungen erst setzen, wenn alle Spalten kopiert sind: eine Summen- oder Differenzspalte
+        // kann vor ihren Quellspalten stehen. Die Sage-Spalte wird nicht kopiert, ihr Bezug entfällt.
+        $oldTable->columns->each(function (Column $column) use ($replicatedColumns): void {
+            if (!isset($replicatedColumns[$column->id])) {
+                return;
+            }
+            $replicatedColumns[$column->id]->update([
+                'linked_first_column' => $this->columns[$column->linked_first_column] ?? null,
+                'linked_second_column' => $this->columns[$column->linked_second_column] ?? null,
+            ]);
+        });
+        $sageColumnIds = $oldTable->columns->where('type', 'sage')->pluck('id')->map(fn ($id): int => (int) $id)->all();
+
+        $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable, $sageColumnIds): void {
             // Verifizierungen hängen an der Ursprungsposition und werden nicht mitkopiert.
             $replicated_mainPosition = $mainPosition->replicate()->fill([
                 'table_id' => $newTable->id,
                 'is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED,
             ]);
             $replicated_mainPosition->save();
-            $mainPosition->subPositions->map(function (SubPosition $subPosition) use ($replicated_mainPosition): void {
+            $mainPosition->subPositions->map(function (SubPosition $subPosition) use (
+                $replicated_mainPosition,
+                $sageColumnIds
+            ): void {
                 $replicated_subPosition = $subPosition->replicate()->fill([
                     'main_position_id' => $replicated_mainPosition->id,
                     'is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED,
                 ]);
                 $replicated_subPosition->save();
                 $subPosition->subPositionRows->map(
-                    function (SubPositionRow $subPositionRow) use ($replicated_subPosition): void {
+                    function (SubPositionRow $subPositionRow) use ($replicated_subPosition, $sageColumnIds): void {
                         $replicated_subPositionRow = $subPositionRow->replicate()->fill(
                             ['sub_position_id' => $replicated_subPosition->id]
                         );
                         $replicated_subPositionRow->save();
                         $subPositionRow->cells->map(
-                            function (ColumnCell $columnCell) use ($replicated_subPositionRow): void {
+                            function (ColumnCell $columnCell) use (
+                                $replicated_subPositionRow,
+                                $subPositionRow,
+                                $sageColumnIds
+                            ): void {
                                 if ($columnCell->column->type === 'sage') {
                                     return;
                                 }
                                 $replicated_columnCell = $columnCell->replicate()->fill(
                                     ['sub_position_row_id' => $replicated_subPositionRow->id]
                                 );
+                                if ($this->linksSageColumn($columnCell->column, $sageColumnIds)) {
+                                    $replicated_columnCell->value = $this->automaticValueWithoutSage(
+                                        $columnCell->column,
+                                        $subPositionRow,
+                                        $sageColumnIds
+                                    );
+                                }
                                 $replicated_columnCell->verified_value = null;
                                 $replicated_columnCell->linked_money_source_id = null;
                                 $replicated_columnCell->linked_type = null;
@@ -199,6 +220,42 @@ class BudgetTemplateController extends Controller
                 );
             });
         });
+    }
+
+    /**
+     * @param array<int, int> $sageColumnIds
+     */
+    private function linksSageColumn(Column $column, array $sageColumnIds): bool
+    {
+        return in_array($column->type, ['sum', 'difference'], true)
+            && (
+                in_array((int) $column->linked_first_column, $sageColumnIds, true)
+                || in_array((int) $column->linked_second_column, $sageColumnIds, true)
+            );
+    }
+
+    /**
+     * Wert einer Summen- oder Differenzzelle ohne den Anteil der Sage-Spalte, die eine Vorlage nicht
+     * übernimmt: der entfallene Bezug zählt wie eine leere Zelle als 0.
+     *
+     * @param array<int, int> $sageColumnIds
+     */
+    private function automaticValueWithoutSage(Column $column, SubPositionRow $row, array $sageColumnIds): string
+    {
+        $linkedValue = static function (mixed $linkedColumnId) use ($row, $sageColumnIds): string {
+            if ($linkedColumnId === null || in_array((int) $linkedColumnId, $sageColumnIds, true)) {
+                return '0';
+            }
+            $linkedCell = $row->cells->firstWhere('column_id', $linkedColumnId);
+            $value = str_replace(',', '.', (string) $linkedCell?->getAttribute('value'));
+
+            return is_numeric($value) ? $value : '0';
+        };
+
+        $first = $linkedValue($column->linked_first_column);
+        $second = $linkedValue($column->linked_second_column);
+
+        return $column->type === 'sum' ? bcadd($first, $second, 2) : bcsub($first, $second, 2);
     }
 
     public function useTemplate(

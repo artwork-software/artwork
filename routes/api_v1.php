@@ -1,6 +1,5 @@
 <?php
 
-use Artwork\Core\Api\Middleware\EnsureTokenNotExpired;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiActionApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiContextApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiConversationApiController;
@@ -51,7 +50,7 @@ Route::middleware('throttle:60,1')
     ->get('/ai/jwks', JwksController::class)
     ->name('api.v1.ai.jwks');
 
-Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:api-token'])->group(function (): void {
+Route::middleware(['auth:api', 'throttle:api-token'])->group(function (): void {
     // Chat-Historie fuer artwork-ai. Der Token traegt immer den echten User; jede Abfrage ist auf
     // dessen Gespraeche eingeschraenkt, eine fremde ID liefert 404 statt 403.
     Route::middleware(CheckToken::using('ai:transcript'))->group(function (): void {

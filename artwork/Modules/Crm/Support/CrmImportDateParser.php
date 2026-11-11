@@ -9,20 +9,22 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
  *
  * Gültig sind TT.MM.JJJJ, TT.MM.JJ, JJJJ-MM-TT, TT/MM/JJJJ (europäisch, Tag vor Monat) und
  * Excel-Seriennummern, jeweils mit oder ohne Uhrzeit; die Uhrzeit wird verworfen. Zweistellige Jahre
- * von 00 bis 69 gelten als 2000 bis 2069, 70 bis 99 als 1970 bis 1999. Alles andere ist ein
- * ungültiger Wert und wird nie zu einem geratenen Datum.
+ * von 00 bis 69 gelten als 2000 bis 2069, 70 bis 99 als 1970 bis 1999. Als Seriennummer zählt nur
+ * eine Zahl ohne führende Null, die ein Datum ab dem 01.01.1930 ergibt; Nachkommastellen sind dabei
+ * der Uhrzeitanteil. Kleinere Zahlen ("5", "12.5", "12.05", "1899", "2101", "010124") sind fast
+ * immer etwas anderes (Tag, Tag und Monat ohne Jahr, Jahreszahl, Datum ohne Trennzeichen). Alles
+ * andere ist ein ungültiger Wert und wird nie zu einem geratenen Datum.
  */
 final class CrmImportDateParser
 {
     private const TIME = '(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?';
 
-    private const MAX_EXCEL_SERIAL = 2958465;
-
     /**
-     * Ganze Zahlen in diesem Bereich sind fast immer eine Jahreszahl und keine Seriennummer
-     * (als Seriennummer lägen sie im Jahr 1905).
+     * Seriennummer des 01.01.1930. Alles darunter wird nicht als Seriennummer gelesen.
      */
-    private const YEAR_LIKE = [1900, 2100];
+    private const MIN_EXCEL_SERIAL = 10959;
+
+    private const MAX_EXCEL_SERIAL = 2958465;
 
     public static function parse(string $value): string|false
     {
@@ -40,7 +42,7 @@ final class CrmImportDateParser
             return self::fromParts((int) $match[3], (int) $match[2], (int) $match[1]);
         }
 
-        if (preg_match('/^\d+(?:\.\d+)?$/', $value) === 1) {
+        if (preg_match('/^[1-9]\d*(?:\.\d+)?$/', $value) === 1) {
             return self::fromExcelSerial($value);
         }
 
@@ -68,13 +70,8 @@ final class CrmImportDateParser
     private static function fromExcelSerial(string $value): string|false
     {
         $serial = (float) $value;
-        $isWholeNumber = !str_contains($value, '.');
 
-        if ($serial < 1 || $serial > self::MAX_EXCEL_SERIAL) {
-            return false;
-        }
-
-        if ($isWholeNumber && $serial >= self::YEAR_LIKE[0] && $serial <= self::YEAR_LIKE[1]) {
+        if ($serial < self::MIN_EXCEL_SERIAL || $serial >= self::MAX_EXCEL_SERIAL + 1) {
             return false;
         }
 

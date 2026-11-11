@@ -25,6 +25,8 @@ final class CrmImportDateParserTest extends UnitTestCase
             'european with slashes is day first' => ['03/04/2026', '2026-04-03'],
             'excel serial number' => ['46096', '2026-03-15'],
             'excel serial number with time' => ['46096.604166666664', '2026-03-15'],
+            'first accepted excel serial number' => ['10959', '1930-01-01'],
+            'last excel serial number with time' => ['2958465.5', '9999-12-31'],
             'surrounding whitespace' => [' 15.03.2026 ', '2026-03-15'],
         ];
     }
@@ -45,6 +47,16 @@ final class CrmImportDateParserTest extends UnitTestCase
             'bare year' => ['2026'],
             'zero' => ['0'],
             'number beyond the excel range' => ['20260315'],
+            'day and month without year' => ['12.5'],
+            'day and month without year, two digit month' => ['12.05'],
+            'single day number' => ['5'],
+            'date without separators' => ['010124'],
+            'year before the year-like range' => ['1899'],
+            'year after the year-like range' => ['2101'],
+            'serial number just before 1930' => ['10958'],
+            'serial number just before 1930 with time' => ['10958.75'],
+            'serial number with leading zero' => ['046096'],
+            'number just beyond the excel range' => ['2958466'],
             'negative number' => ['-5'],
             'empty' => [''],
         ];

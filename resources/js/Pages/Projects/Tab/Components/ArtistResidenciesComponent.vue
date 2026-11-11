@@ -83,6 +83,7 @@
         :default-breakfast-deduction="defaultBreakfastDeduction"
         :default-do-not-save-artist="defaultDoNotSaveArtist"
         :default-daily-allowance="defaultDailyAllowance"
+        :can-view-accommodations="canViewAccommodations"
     />
 
     <ExportArtistResidenciesModal
@@ -146,6 +147,7 @@ const localArtistContactTypeProperties = ref([]);
 const defaultBreakfastDeduction = ref(5.60);
 const defaultDoNotSaveArtist = ref(false);
 const defaultDailyAllowance = ref(0.00);
+const canViewAccommodations = ref(false);
 const nameColumns = ref([
     { key: 'name', enabled: true },
     { key: 'first_name', enabled: false },
@@ -193,6 +195,7 @@ async function fetchArtistResidencies() {
         defaultBreakfastDeduction.value = data?.default_breakfast_deduction ?? 5.60;
         defaultDoNotSaveArtist.value = data?.default_do_not_save_artist ?? false;
         defaultDailyAllowance.value = data?.default_daily_allowance ?? 0.00;
+        canViewAccommodations.value = data?.can_view_accommodations === true;
         if (Array.isArray(data?.name_columns) && data.name_columns.length > 0) {
             nameColumns.value = data.name_columns;
         }

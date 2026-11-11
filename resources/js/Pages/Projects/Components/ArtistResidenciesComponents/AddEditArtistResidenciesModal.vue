@@ -166,6 +166,16 @@
                                     <div v-if="showValidationErrors && validationErrors.accommodation" class="mt-1 text-sm text-danger">
                                         {{ $t(validationErrors.accommodation) }}
                                     </div>
+                                    <!-- Neuer Tab: der Dialog behält seine Eingaben -->
+                                    <a
+                                        v-if="props.canViewAccommodations && selectedAccommodation?.id"
+                                        :href="route('accommodation.show', selectedAccommodation.id)"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="mt-1 inline-block text-xs font-medium text-accent-700 underline hover:text-accent-700/80"
+                                    >
+                                        {{ $t('Edit daily allowance and breakfast deduction of this accommodation') }}
+                                    </a>
                                 </div>
 
                                 <div>
@@ -603,6 +613,11 @@ const props = defineProps({
         type: Number,
         required: false,
         default: 0.00
+    },
+    canViewAccommodations: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 

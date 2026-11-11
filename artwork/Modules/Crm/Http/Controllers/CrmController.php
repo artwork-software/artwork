@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
@@ -126,6 +127,7 @@ class CrmController extends Controller
                 ? $projectTabService->getDefaultOrFirstProjectTab()->getAttribute('id')
                 : null,
             'sourceProfileUrl' => $this->resolveSourceProfileUrl($crmContact),
+            'accommodationUrl' => $this->resolveAccommodationUrl($crmContact),
             // Für den Typ-Wechsel: alle aktiven Typen inkl. zugewiesener Property-IDs
             'contactTypes' => $canChangeType ? $this->contactTypeService->getAllWithProperties() : [],
             'canChangeType' => $canChangeType,
@@ -271,6 +273,24 @@ class CrmController extends Controller
             'service_provider' => route('service_provider.show', $crmContact->entity_id),
             default => null,
         };
+    }
+
+    /**
+     * Link zur Unterkunftsseite eines Kontakts der Systemart Unterkunft: nur dort werden die Vorgaben Tagegeld
+     * und Abzug pro Frühstück gepflegt. Nur, wenn die Person die Seite öffnen darf (AccommodationPolicy::view).
+     */
+    private function resolveAccommodationUrl(CrmContact $crmContact): ?string
+    {
+        if ($crmContact->contactType?->slug !== CrmSystemContactTypeEnum::ACCOMMODATION->value) {
+            return null;
+        }
+
+        $accommodation = $crmContact->entity;
+        if (!$accommodation instanceof Accommodation || !auth()->user()?->can('view', $accommodation)) {
+            return null;
+        }
+
+        return route('accommodation.show', $accommodation->id);
     }
 
     /**

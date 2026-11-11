@@ -14,6 +14,13 @@ use Artwork\Modules\User\Models\User;
 
 class ChangeService
 {
+    /**
+     * Origin of an entry, attached to every activity by the AI module's AttachActivityOrigin.
+     *
+     * @var list<string>
+     */
+    private const ORIGIN_KEYS = ['via', 'via_detail'];
+
     public function __construct(
         private ChangeRepository $changeRepository
     ) {
@@ -127,12 +134,14 @@ class ChangeService
      * list produced by `ChangeBuilder` (`changes[0].translationKey`, …).
      * Spatie's automatic dirty-attribute logs store a keyed
      * `{attributes, old}` object instead — those entries are dropped here.
+     * The origin keys (`via`, `via_detail`) that are attached to every entry
+     * are read separately and removed before the list check.
      *
      * @return array<int, mixed>
      */
     private function frontendChanges(Activity $activity): array
     {
-        $properties = $this->propertiesAsArray($activity);
+        $properties = array_diff_key($this->propertiesAsArray($activity), array_flip(self::ORIGIN_KEYS));
 
         return array_is_list($properties) ? $properties : [];
     }

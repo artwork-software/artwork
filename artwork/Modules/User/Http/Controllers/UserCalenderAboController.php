@@ -64,7 +64,7 @@ class UserCalenderAboController extends Controller
 
         // Process each event and add events to the calendar
         foreach ($events as $event) {
-            $this->userCalendarAboService->addEventToCalendar($calendar, $event);
+            $this->userCalendarAboService->addEventToCalendar($calendar, $event, $calendarAbo);
         }
 
         return response($calendar->get(), 200)

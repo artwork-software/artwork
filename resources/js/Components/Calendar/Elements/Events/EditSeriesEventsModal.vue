@@ -1,189 +1,144 @@
 <template>
-    <BaseModal @closed="closeModal" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
-        <div class="mx-4">
-            <!--   Heading   -->
-            <ModalHeader
-                :title="$t('Edit all series events')"
-                :description="$t('Would you like to move all events of this series to another room or by a certain period of time?')"
+    <ArtworkBaseModal
+        title="Edit all series events"
+        description="Would you like to move all events of this series to another room or by a certain period of time?"
+        modal-size="sm:max-w-xl"
+        z-index="150"
+        @close="closeModal"
+    >
+        <form id="editSeriesEventsForm" class="space-y-4" @submit.prevent="saveSeriesEdit">
+            <ArtworkBaseListbox
+                v-model="selectedRoom"
+                :items="roomOptions"
+                by="id"
+                option-label="name"
+                label="Room"
             />
-            <div class="w-full">
-                <div class="mb-2">
-                    <Listbox as="div" class="sm:col-span-3" v-model="selectedRoom">
-                        <div class="relative">
-                            <ListboxButton class="menu-button">
-                                <span v-if="selectedRoom === null">{{ $t('No room displacement')}}</span>
-                                <div v-else> {{ selectedRoom?.name }}</div>
-                                <div class="mr-3">
-                                    <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
-                                </div>
-                            </ListboxButton>
-                            <ListboxOptions class="absolute w-full bg-surface-inverse shadow-lg max-h-32 overflow-y-scroll rounded-md z-10">
-                                <ListboxOption as="template" class="p-2 text-sm"
-                                               :value="null"
-                                               v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'rounded-md cursor-pointer flex justify-between']">
-                                        <div :class="[selected ? 'text-sm/5 font-bold text-white' : '', 'truncate']">
-                                            {{ $t('No room displacement')}}
-                                        </div>
-                                        <div v-if="selected">
-                                            <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                        </div>
-                                    </li>
-                                </ListboxOption>
-                                <ListboxOption as="template" class="p-2 text-sm"
-                                               v-for="room in rooms"
-                                               :key="room.id"
-                                               :value="room"
-                                               v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'rounded-md cursor-pointer flex justify-between']">
-                                        <div :class="[selected ? 'text-sm/5 font-bold text-white' : '', 'truncate']">
-                                            {{ room.name }}
-                                        </div>
-                                        <div v-if="selected">
-                                            <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                        </div>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </div>
-                    </Listbox>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-8 mb-2 gap-x-2">
-                    <div class="mb-2 col-span-1">
-                        <Listbox as="div" class="" v-model="selectedCalculationType">
-                            <div class="relative">
-                                <ListboxButton class="menu-button">
-                                    <div> {{ selectedCalculationType.type }}</div>
-                                    <div class="mr-3">
-                                        <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
-                                    </div>
-                                </ListboxButton>
-                                <ListboxOptions class="absolute w-full bg-surface-inverse shadow-lg max-h-32 overflow-y-scroll rounded-md z-10">
-                                    <ListboxOption as="template" class="p-2 text-sm"
-                                                   v-for="calculation in calculationTypes"
-                                                   :key="calculation.id"
-                                                   :value="calculation"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'rounded-md cursor-pointer flex justify-between']">
-                                            <div :class="[selected ? 'text-sm/5 font-bold text-white' : '', 'truncate']">
-                                                {{ calculation.type }}
-                                            </div>
-                                            <div v-if="selected">
-                                                <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                            </div>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </div>
-                        </Listbox>
-                    </div>
-                    <div class="mb-2 col-span-3">
-                        <input type="number"
-                               v-model="editValue"
-                               id="seriesEditValue"
-                               min="0" max="999"
-                               class="input h-12"/>
-                    </div>
-                    <div class="mb-2 col-span-4">
-                        <Listbox as="div" v-model="selectedTimeType">
-                            <div class="relative">
-                                <ListboxButton class="menu-button">
-                                    <div> {{ selectedTimeType.value }}</div>
-                                    <div class="mr-3">
-                                        <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
-                                    </div>
-                                </ListboxButton>
-                                <ListboxOptions class="absolute bg-surface-inverse shadow-lg max-h-32 overflow-y-scroll rounded-md z-10">
-                                    <ListboxOption as="template" class="p-2 text-sm"
-                                                   v-for="time in timeTypes"
-                                                   :key="time.id"
-                                                   :value="time"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'rounded-md cursor-pointer flex justify-between']">
-                                            <div :class="[selected ? 'text-sm/5 font-bold text-white' : '', 'truncate']">
-                                                {{ time.value }}
-                                            </div>
-                                            <div v-if="selected">
-                                                <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                            </div>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </div>
-                        </Listbox>
-                    </div>
-                </div>
-                <div class="w-full flex justify-center">
-                    <FormButton :text="$t('Edit all series events')" @click="saveSeriesEdit"/>
-                </div>
+            <div class="grid grid-cols-1 items-end gap-2 sm:grid-cols-8">
+                <ArtworkBaseListbox
+                    v-model="selectedCalculationType"
+                    :items="calculationTypes"
+                    by="id"
+                    option-label="type"
+                    :enable-search="false"
+                    class="sm:col-span-2"
+                />
+                <BaseInput
+                    id="seriesEditValue"
+                    v-model="editValue"
+                    type="number"
+                    min="0"
+                    max="999"
+                    class="sm:col-span-3"
+                />
+                <ArtworkBaseListbox
+                    v-model="selectedTimeType"
+                    :items="timeTypes"
+                    by="id"
+                    option-label="value"
+                    :enable-search="false"
+                    class="sm:col-span-3"
+                />
             </div>
-        </div>
-    </BaseModal>
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal"
+            />
+            <BaseUIButton
+                type="submit"
+                form="editSeriesEventsForm"
+                label="Edit all series events"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-} from "@headlessui/vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import {computed, ref} from "vue";
+import {useI18n} from "vue-i18n";
 import axios from "axios";
-import { ticketingMoveHeaders } from "@/Composeables/useTicketingMove.js";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {ticketingMoveHeaders} from "@/Composeables/useTicketingMove.js";
 
-const { t } = useI18n();
+defineOptions({name: 'EditSeriesEventsModal'})
+
+const {t} = useI18n();
 
 const props = defineProps({
-    event: { type: Object, required: true },
-    rooms: { type: [Object, Array], required: true },
+    event: {type: Object, required: true},
+    rooms: {type: [Object, Array], required: true},
 });
 
 const emits = defineEmits(["close"]);
 
+const noRoomDisplacement = {id: null, name: t("No room displacement")};
+
+const roomOptions = computed(() => [
+    noRoomDisplacement,
+    ...Object.values(props.rooms ?? {}),
+]);
+
 const calculationTypes = [
-    { id: 1, type: "+" },
-    { id: 2, type: "-" },
+    {id: 1, type: "+"},
+    {id: 2, type: "-"},
 ];
 
 const timeTypes = [
-    { id: 1, value: t("Hour(s)") },
-    { id: 2, value: t("Day(s)") },
-    { id: 3, value: t("Week(s)") },
-    { id: 4, value: t("Month(s)") },
-    { id: 5, value: t("Year(s)") },
+    {id: 1, value: t("Hour(s)")},
+    {id: 2, value: t("Day(s)")},
+    {id: 3, value: t("Week(s)")},
+    {id: 4, value: t("Month(s)")},
+    {id: 5, value: t("Year(s)")},
 ];
 
-const selectedCalculationType = ref({ id: 1, type: "+" });
-const selectedTimeType = ref({ id: 1, value: t("Hour(s)") });
-const selectedRoom = ref(null);
+const selectedCalculationType = ref(calculationTypes[0]);
+const selectedTimeType = ref(timeTypes[0]);
+const selectedRoom = ref(noRoomDisplacement);
 const editValue = ref(0);
+const processing = ref(false);
 
 const closeModal = () => {
+    if (processing.value) {
+        return;
+    }
     emits("close");
 };
 
 const saveSeriesEdit = async () => {
-    const headers = await ticketingMoveHeaders([props.event.id], { withSeries: true });
-    if (!headers) return;
+    if (processing.value) {
+        return;
+    }
+    processing.value = true;
+    const headers = await ticketingMoveHeaders([props.event.id], {withSeries: true});
+    if (!headers) {
+        processing.value = false;
+        return;
+    }
 
     axios
         .patch(route("events.series.update", props.event.id), {
             newRoomId: selectedRoom.value?.id ?? null,
-            calculationType: selectedCalculationType.value.id,
+            calculationType: selectedCalculationType.value?.id ?? calculationTypes[0].id,
             value: editValue.value,
-            type: selectedTimeType.value.id,
-        }, { headers })
+            type: selectedTimeType.value?.id ?? timeTypes[0].id,
+        }, {headers})
         .then(() => {
-            closeModal();
+            emits("close");
             location.reload();
         })
         .catch((error) => {
+            processing.value = false;
             console.error("Series edit save failed:", error);
         });
 };

@@ -1,66 +1,97 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_new_contract_module.svg">
-            <div class="mx-4">
-                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                    {{ $t('Upload contract module')}}
-                </div>
-                <div class="text-text-subtle text-sm my-6">
-                    {{ $t('Upload contract modules. Any user with authorization to view contracts can then download and use them for contract design.')}}
-                </div>
-                <div class="mb-3">
-                    <MultiAlertComponent :errors="contractModuleForm.errors" v-show="Object.keys(contractModuleForm.errors).length > 0"  :error-count="Object.keys(contractModuleForm.errors).length" />
-                </div>
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <input
-                            @change="upload"
-                            class="hidden"
-                            ref="module_files"
-                            id="file"
-                            type="file"
-                            multiple
-                        />
-                        <div @click="selectNewFiles" @dragover.prevent
-                             @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
-                        border-accent-600 border-dotted border-2 h-32  p-2 cursor-pointer">
-                            <p class="text-accent-600 font-bold text-center">
-                                {{ $t('Drag document here to upload or click in the field') }}
-                            </p>
-                        </div>
-                        <jet-input-error :message="uploadDocumentFeedback"/>
-                    </div>
-                </div>
-                <div class="mb-6">
-                    <div v-for="file of files">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                {{ file.name }}
-                            </div>
-                            <div>
-                                <PropertyIcon name="IconCircleX" class="size-5 text-danger cursor-pointer hover:text-accent-700 transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="justify-center flex w-full my-6">
-                    <FormButton
-                        :text="$t('Upload document')"
-                        :disabled="files.length < 1 || isUploading"
-                        @click="storeFiles"
-                    />
+    <ArtworkBaseModal
+        v-if="show"
+        title="Upload contract module"
+        description="Upload contract modules. Any user with authorization to view contracts can then download and use them for contract design."
+        modal-size="sm:max-w-xl"
+        @close="cancel"
+    >
+        <form id="contractModuleUploadForm" class="space-y-4" @submit.prevent="storeFiles">
+            <div>
+                <input
+                    id="contractModuleUploadInput"
+                    ref="module_files"
+                    type="file"
+                    class="sr-only"
+                    multiple
+                    @change="upload"
+                />
+                <div
+                    role="button"
+                    tabindex="0"
+                    class="flex min-h-28 w-full cursor-pointer flex-col items-center justify-center gap-y-2 rounded-lg border-2 border-dashed p-4 text-center transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                    :class="isDragging ? 'border-accent-600 bg-accent-50' : 'border-border'"
+                    @click="selectNewFiles"
+                    @keydown.enter.prevent="selectNewFiles"
+                    @keydown.space.prevent="selectNewFiles"
+                    @dragenter.prevent="isDragging = true"
+                    @dragover.prevent="isDragging = true"
+                    @dragleave="isDragging = $event.currentTarget.contains($event.relatedTarget)"
+                    @drop.stop.prevent="uploadDraggedDocuments($event)"
+                >
+                    <PropertyIcon name="IconUpload" class="size-6 text-text-subtle" stroke-width="1.5" aria-hidden="true"/>
+                    <p class="text-sm text-text-muted">
+                        <template v-if="isDragging">{{ $t('Drop here') }}</template>
+                        <template v-else>
+                            <span class="font-semibold text-accent-600">{{ $t('Choose file') }}</span>
+                            {{ $t('or drag and drop') }}
+                        </template>
+                    </p>
                 </div>
             </div>
-    </BaseModal>
+
+            <ul v-if="files.length > 0" class="divide-y divide-border-subtle rounded-lg border border-border-subtle">
+                <li
+                    v-for="(file, index) in files"
+                    :key="file.name + '-' + index"
+                    class="flex items-center justify-between gap-x-3 px-3 py-2 text-sm text-text"
+                >
+                    <div class="flex min-w-0 items-center gap-x-2">
+                        <PropertyIcon name="IconFile" class="size-4 shrink-0 text-text-subtle" stroke-width="1.5" aria-hidden="true"/>
+                        <span class="truncate">{{ file.name }}</span>
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover hover:text-danger disabled:cursor-default disabled:text-text-subtle"
+                        :aria-label="$t('Remove file')"
+                        :disabled="isUploading"
+                        @click="removeFile(index)"
+                    >
+                        <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                    </button>
+                </li>
+            </ul>
+
+            <BaseAlertComponent
+                v-if="uploadDocumentFeedback"
+                type="error"
+                class="mb-0!"
+                :message="uploadDocumentFeedback"
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="isUploading"
+                @click="cancel"
+            />
+            <BaseUIButton
+                type="submit"
+                form="contractModuleUploadForm"
+                label="Upload document"
+                variant="primary"
+                icon="IconUpload"
+                :processing="isUploading"
+                :disabled="files.length < 1 || isUploading"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script>
-import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import JetInputError from '@/Jetstream/InputError.vue'
 import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 import {router, useForm} from "@inertiajs/vue3";
 import {
     inertiaUploadErrorMessage,
@@ -68,7 +99,9 @@ import {
     submitInertiaForm,
     uploadSequentially,
 } from "@/Helper/sequentialUpload.js";
-import {IconCircleX, IconX} from "@tabler/icons-vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
@@ -79,37 +112,39 @@ export default {
         closeModal: Function
     },
     components: {
+        ArtworkBaseModal,
+        BaseUIButton,
+        BaseAlertComponent,
         PropertyIcon,
-        MultiAlertComponent,
-        TextareaComponent,
-        BaseModal,
-        FormButton,
-        JetDialogModal,
-        JetInputError,
-        IconX
     },
     data() {
         return {
             uploadDocumentFeedback: "",
             files: [],
             contractModuleForm: useForm({
-                file: null,
+                file: null
             }),
             errorsAtUpload: [],
             closeModalIfUploaded: false,
             isUploading: false,
+            isDragging: false,
         }
     },
     methods: {
-        IconCircleX,
         selectNewFiles() {
             this.$refs.module_files.click();
         },
         uploadDraggedDocuments(event) {
+            this.isDragging = false;
             this.validateType([...event.dataTransfer.files])
         },
         upload(event) {
             this.validateType([...event.target.files])
+            // Gleiche Datei erneut wählbar machen
+            event.target.value = '';
+        },
+        removeFile(index) {
+            this.files.splice(index, 1);
         },
         storeFile(file) {
             this.contractModuleForm.file = file;
@@ -124,6 +159,12 @@ export default {
             for (let file of files) {
               this.files.push(file)
             }
+        },
+        cancel() {
+            if (this.isUploading) {
+                return;
+            }
+            this.closeModal();
         },
         /**
          * Nacheinander hochladen: mehrere .post() derselben useForm brachen sich gegenseitig ab. Hochgeladene
@@ -163,7 +204,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

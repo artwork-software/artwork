@@ -1,160 +1,178 @@
 <template>
-    <ArtworkBaseModal @close="$emit('closeModal')" v-if="show" :title="$t('Contact persons')" :description="$t('Define contact persons for this shift planning')">
+    <ArtworkBaseModal
+        v-if="show"
+        title="Contact persons"
+        description="Define contact persons for this shift planning"
+        modal-size="sm:max-w-xl"
+        @close="closeModal"
+    >
+        <div class="space-y-4">
+            <ul v-if="projectManagers?.length > 0" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <li v-for="user in projectManagers" :key="user.id" class="flex min-w-0 items-center gap-x-3">
+                    <img
+                        :src="user?.profile_photo_url"
+                        :alt="user?.name ?? ''"
+                        class="size-9 shrink-0 rounded-full object-cover"
+                    />
+                    <div class="min-w-0">
+                        <div class="truncate text-sm font-medium text-text">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </div>
+                        <div class="text-xs text-text-muted">
+                            {{ $t('Project management') }}
+                        </div>
+                    </div>
+                </li>
+            </ul>
 
-            <div class="w-full grid grid-cols-2">
-                <div class="flex flex-wrap mt-4 mr-4 col-span-1" v-for="user in this.projectManagers">
-                    <div class="flex">
-                        <div class="mr-4">
-                            <img :data-tooltip-target="user?.id"
-                                 :src="user?.profile_photo_url"
-                                 :alt="user?.name"
-                                 class="ring-white ring-2 rounded-full h-11 w-11 object-cover"
-                            />
-                        </div>
-                        <div>
-                            <div>
-                                <div class="text-sm/5 font-semibold text-text">
-                                    {{ user.first_name }} {{ user.last_name }}
-                                </div>
-                                <div class="text-xs/[18px] text-text-subtle tracking-wider uppercase">
-                                    {{ $t('Project management') }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div>
+                <BaseInput
+                    id="shiftContactUserSearch"
+                    v-model="userQuery"
+                    label="Employee"
+                    :placeholder="$t('Search for users')"
+                    autocomplete="off"
+                />
+                <ul
+                    v-if="userSearchResults.length > 0 && userQuery.length > 0"
+                    class="mt-2 max-h-60 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+                >
+                    <li v-for="user in userSearchResults" :key="user.id">
+                        <button
+                            type="button"
+                            class="block w-full cursor-pointer truncate px-3 py-2 text-left text-sm font-medium text-text transition-colors duration-150 hover:bg-surface-hover focus-visible:bg-surface-hover motion-reduce:transition-none"
+                            @click="addUserToContactArray(user)"
+                        >
+                            {{ user.first_name }} {{ user.last_name }}
+                        </button>
+                    </li>
+                </ul>
             </div>
-            <div class="w-full relative mt-5">
-                <div class="">
-                    <BaseInput id="userSearch" v-model="user_query" :label="$t('Employee')" />
-                </div>
-                <transition leave-active-class="transition ease-in duration-100"
-                            leave-from-class="opacity-100"
-                            leave-to-class="opacity-0">
-                    <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                         class="absolute z-10 mt-1 w-full max-h-60 bg-surface-inverse shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto focus:outline-none sm:text-sm">
-                        <div class="border-border-subtle">
-                            <div v-for="(user, index) in user_search_results" :key="index"
-                                 class="flex items-center cursor-pointer">
-                                <div class="flex-1 text-sm py-4">
-                                    <p @click="addUserToContactArray(user)"
-                                       class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                        {{ user.first_name }} {{ user.last_name }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-            </div>
-            <div class="mt-4 w-full">
-                <span v-for="(user,index) in this.shift_contacts"
-                      class="flex mt-4 mr-1 rounded-full items-center font-bold text-text">
-                    <div class="flex items-center">
-                        <img class="flex h-11 w-11 rounded-full object-cover"
-                             :src="user.profile_photo_url"
-                             alt=""/>
-                        <span class="flex ml-4 text-base/5 font-semibold text-text">
+
+            <ul
+                v-if="shiftContacts.length > 0"
+                class="max-h-72 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+            >
+                <li
+                    v-for="user in shiftContacts"
+                    :key="user.id"
+                    class="flex items-center justify-between gap-x-3 px-3 py-2"
+                >
+                    <div class="flex min-w-0 items-center gap-x-3">
+                        <img
+                            :src="user.profile_photo_url"
+                            alt=""
+                            class="size-8 shrink-0 rounded-full object-cover"
+                        />
+                        <span class="truncate text-sm font-medium text-text">
                             {{ user.first_name }} {{ user.last_name }}
                         </span>
                     </div>
-                    <button type="button" @click="deleteUserFromContactArray(user)">
-                        <span class="sr-only">{{ $t('Remove user as contact person') }}</span>
-                        <IconCircleX class="ml-2 mt-1 h-5 w-5 hover:text-danger "/>
+                    <button
+                        type="button"
+                        class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 hover:bg-surface-hover hover:text-danger motion-reduce:transition-none"
+                        :aria-label="$t('Remove user as contact person')"
+                        @click="deleteUserFromContactArray(user)"
+                    >
+                        <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
                     </button>
-                </span>
-            </div>
-            <div class="flex justify-end mt-2">
-                <BaseUIButton :label="$t('Save')" is-add-button @click="changeShiftContacts"/>
-            </div>
+                </li>
+            </ul>
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal"
+            />
+            <BaseUIButton
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+                @click="changeShiftContacts"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconCircleX, IconDownload, IconX} from "@tabler/icons-vue";
-import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import JetInputError from '@/Jetstream/InputError.vue'
-import Permissions from "@/Mixins/Permissions.vue";
-import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+<script setup>
+import {ref, watch} from 'vue'
+import axios from 'axios'
+import {router} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 
-export default {
-    mixins: [Permissions],
-    name: "ShiftContactModal",
-    props: [
-        'show',
-        'assignedShiftContacts',
-        'projectId',
-        'projectManagers'
-    ],
-    components: {
-        BaseInput,
-        BaseUIButton,
-        ArtworkBaseModal,
-        BaseModal,
-        FormButton,
-        IconCircleX,
-        UserTooltip,
-        JetDialogModal,
-        JetInputError,
-        IconX,
-        IconDownload
-    },
-    emits: ['closeModal'],
-    data() {
-        return {
-            user_search_results: [],
-            user_query: '',
-            //remove reference to original object by destructuring to new array
-            shift_contacts: [...this.assignedShiftContacts]
-        }
-    },
-    watch: {
-        user_query: {
-            handler() {
-                if (this.user_query.length > 0) {
-                    axios.get('/users/search', {
-                        params: {query: this.user_query}
-                    }).then(response => {
-                        this.user_search_results = response.data
-                    })
-                }
-            },
-            deep: true
-        },
-    },
-    methods: {
-        changeShiftContacts() {
-            let contactIds = [];
-            this.shift_contacts.forEach((contact) => {
-                contactIds.push(contact.id);
-            })
-            this.$inertia.patch(route('projects.update.shift_contacts', {project: this.projectId}), {
-                contactIds: contactIds,
-            });
-            this.$emit('closeModal')
-        },
-        addUserToContactArray(user) {
-            let contactIds = [];
-            this.shift_contacts.forEach((contact) => {
-                contactIds.push(contact.id)
-            })
-            if (!contactIds.includes(user.id)) {
-                this.shift_contacts.push(user);
-            }
-            this.user_query = '';
-        },
-        deleteUserFromContactArray(user) {
-            if (this.shift_contacts.includes(user)) {
-                this.shift_contacts.splice(this.shift_contacts.indexOf(user), 1);
-            }
-        },
+defineOptions({name: 'ShiftContactModal'})
+
+const props = defineProps({
+    show: {type: Boolean, default: false},
+    assignedShiftContacts: {type: Array, default: () => []},
+    projectId: {type: [Number, String], default: null},
+    projectManagers: {type: Array, default: () => []},
+})
+
+const emit = defineEmits(['closeModal'])
+
+const userSearchResults = ref([])
+const userQuery = ref('')
+const shiftContacts = ref([])
+const processing = ref(false)
+
+// Das Modal bleibt eingehängt: beim Öffnen frisch aus den Props kopieren
+watch(() => props.show, (isOpen) => {
+    if (isOpen) {
+        shiftContacts.value = [...(props.assignedShiftContacts ?? [])]
+        userQuery.value = ''
+        userSearchResults.value = []
     }
+}, {immediate: true})
+
+watch(userQuery, (query) => {
+    if (query.length === 0) {
+        userSearchResults.value = []
+        return
+    }
+    axios.get('/users/search', {params: {query}}).then((response) => {
+        // Veraltete Antworten verwerfen, wenn inzwischen weitergetippt wurde
+        if (userQuery.value === query) {
+            userSearchResults.value = response.data
+        }
+    })
+})
+
+function closeModal() {
+    emit('closeModal')
+}
+
+function changeShiftContacts() {
+    if (processing.value) {
+        return
+    }
+    processing.value = true
+    router.patch(route('projects.update.shift_contacts', {project: props.projectId}), {
+        contactIds: shiftContacts.value.map((contact) => contact.id),
+    }, {
+        preserveScroll: true,
+        onSuccess: () => closeModal(),
+        onFinish: () => {
+            processing.value = false
+        },
+    })
+}
+
+function addUserToContactArray(user) {
+    if (!shiftContacts.value.some((contact) => contact.id === user.id)) {
+        shiftContacts.value.push(user)
+    }
+    userQuery.value = ''
+}
+
+function deleteUserFromContactArray(user) {
+    shiftContacts.value = shiftContacts.value.filter((contact) => contact.id !== user.id)
 }
 </script>

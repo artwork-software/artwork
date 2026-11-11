@@ -38,6 +38,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property Carbon|null $start_date
  * @property Carbon|null $end_date
  * @property int|null $capacity
+ * @property string|null $street
+ * @property string|null $zip_code
+ * @property string|null $city
  * @property int $area_id
  * @property int $user_id
  * @property \Illuminate\Support\Carbon $created_at
@@ -88,6 +91,9 @@ class Room extends Model
         'created_at',
         'relevant_for_disposition',
         'capacity',
+        'street',
+        'zip_code',
+        'city',
     ];
 
     protected $with = [
@@ -120,6 +126,20 @@ class Room extends Model
     public function getEffectiveColor(): string
     {
         return $this->color ?? $this->area?->color ?? '#000000';
+    }
+
+    /**
+     * Adresse in einer Zeile („Straße, PLZ Ort“); null, wenn nichts gepflegt ist.
+     */
+    public function formattedAddress(): ?string
+    {
+        $cityLine = trim(($this->zip_code ?? '') . ' ' . ($this->city ?? ''));
+        $parts = array_filter(
+            [trim($this->street ?? ''), $cityLine],
+            static fn (string $part): bool => $part !== ''
+        );
+
+        return $parts === [] ? null : implode(', ', $parts);
     }
 
     /**
@@ -527,5 +547,20 @@ class Room extends Model
     public function scopeNotIdIn(Builder $builder, array $ids): Builder
     {
         return $builder->whereNotIn('id', $ids);
+    }
+
+    /**
+     * Raeume, die diese Person sehen darf (core-visibility-scopes, Konzept B1 §2).
+     *
+     * Aus der Oberflaeche extrahiert, nicht erfunden: Im Kalender sind alle Raeume sichtbar;
+     * `RoomPolicy::view():23` (`room update` oder
+     * Raum-Admin) regelt nur das **Verwalten** eines Raums, nicht das Sehen.
+     * Deshalb liefert der Scope fuer jede angemeldete Person alles und ohne Benutzer nichts.
+     * Er existiert trotzdem als eigene Methode, damit die Aggregations-Endpunkte (B1) genau eine
+     * Stelle haben, an der sich die Regel aendern laesst, wenn die Oberflaeche sie bekommt.
+     */
+    public function scopeVisibleFor(Builder $builder, ?User $user): Builder
+    {
+        return $user instanceof User ? $builder : $builder->whereRaw('1 = 0');
     }
 }

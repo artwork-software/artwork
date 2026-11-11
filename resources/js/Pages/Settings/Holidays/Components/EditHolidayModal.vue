@@ -1,74 +1,38 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <div class="mb-5">
-                <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-2">{{ holidayToEdit.name }} {{ $t('edit')}}</h2>
-                <p class="text-sm/5 font-bold text-text-subtle max-w-3xl">
-                    {{ $t('Edit the holiday by filling in the fields. You can rename the holiday, change the date and adjust the federal states and color.') }}
-                </p>
-            </div>
-            <div class="my-5">
-                <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t('Select states & color') }}</h3>
-                <p class="text-sm/5 font-bold text-text-subtle w-full my-2">
-                    <!-- text für selbst angelegte Feiertage und deren bundesländer -->
-                    {{ $t('Select the federal states that should apply to this public holiday. You can select as many federal states as you like. You can then specify a color in which the public holiday should be displayed in your calendar. You do not have to select a federal state if the public holiday applies throughout Germany.') }}
-                </p>
-                <div class="flex items-center gap-4 w-full">
-                    <Listbox as="div" class="relative w-full" v-model="customHolidayForm.selectedSubdivisions" multiple>
-                        <ListboxButton class="menu-button">
-                            <div class="flex items-center justify-between w-full">
-                                <div class="text-sm/5 font-bold text-text-subtle">
-                                    {{ $t('Select federal states') }}
-                                </div>
-                                <div>
-                                    <component :is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
-                                </div>
-                            </div>
-                        </ListboxButton>
-                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                            <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                <ListboxOption as="template" v-for="subdivision in subDivisions" :key="subdivision.id" :value="subdivision" v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-accent-600 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                        <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ subdivision.name }}</span>
-
-                                        <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                            <component :is="IconCheck" class="h-5 w-5" aria-hidden="true" />
-                                        </span>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </transition>
-                    </Listbox>
-
-                    <ColorPickerComponent @update-color="updateColorCustomHoliday" :color="customHolidayForm.color" />
+    <ArtworkBaseModal
+        title="Edit holiday"
+        description="Edit the holiday by filling in the fields. You can rename the holiday, change the date and adjust the federal states and color."
+        modal-size="sm:max-w-2xl"
+        @close="closeModal(false)"
+    >
+        <form id="editHolidayForm" class="space-y-5" @submit.prevent="storeCustomHoliday">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="md:col-span-2">
+                    <BaseInput
+                        id="editHolidayName"
+                        v-model="customHolidayForm.name"
+                        label="Name"
+                        required
+                        :error="customHolidayForm.errors.name"
+                    />
                 </div>
-                <div class="w-full">
-                    <div class="flex items-center flex-wrap gap-2 mt-4 w-full">
-                        <div v-for="selectedSubdivision in customHolidayForm.selectedSubdivisions" :key="selectedSubdivision.id" class="break-keep">
-                            <div class="px-2 py-1  rounded-full min-w-fit  text-xs cursor-pointer hover:bg-danger/20 hover:border-danger/40 hover:text-danger transition-colors duration-300 ease-in-out border "
-                                 @click="removeSubDivisionFormCustomHoliday(selectedSubdivision.id)">
-                                {{ selectedSubdivision.name }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="col-span-2">
-                    <BaseInput id="title" v-model="customHolidayForm.name" label="Name" />
-
-                </div>
-                <div>
-                    <BaseInput type="date" id="start" v-model="customHolidayForm.date" label="Start-Time*" />
-                    <div class="text-danger text-xs mt-1" v-show="showErrorMessageDate">
-                        {{ $t('Please select a date') }}
-                    </div>
-                </div>
-                <div>
-                    <BaseInput type="date" id="end" v-model="customHolidayForm.end_date" label="End-Time" />
-                </div>
+                <BaseInput
+                    id="editHolidayStart"
+                    v-model="customHolidayForm.date"
+                    type="date"
+                    label="Start date"
+                    required
+                    :error="dateError"
+                />
+                <BaseInput
+                    id="editHolidayEnd"
+                    v-model="customHolidayForm.end_date"
+                    type="date"
+                    label="End date"
+                    :error="customHolidayForm.errors.end_date"
+                />
                 <!-- Typ: gesetzlich / Schulferien / eigener Eintrag; Typwechsel setzt den Sondertag-Default -->
-                <div class="col-span-2">
+                <div class="md:col-span-2">
                     <ArtworkBaseListbox
                         v-model="holidayType"
                         :items="holidayTypeOptions"
@@ -76,127 +40,201 @@
                         option-key="id"
                         option-label="name"
                         use-translations
-                        :label="$t('Holiday type')"
-                        :placeholder="$t('Please select')"
+                        label="Holiday type"
+                        placeholder="Please select"
                         :enable-search="false"
                     />
-                    <p class="mt-1 text-xs text-text-subtle">
+                    <p class="mt-1 text-xs text-text-muted">
                         {{ $t('School holidays are not special days by default; statutory public holidays are.') }}
                     </p>
                 </div>
-                <div class="col-span-2">
-                    <SwitchGroup as="div" class="flex items-center cursor-pointer">
-                        <SwitchLabel as="span" class="mr-3 text-sm" :class="customHolidayForm.yearly ? 'font-bold' : 'text-text-subtle'">
-                            {{ $t('Repeat the holiday annually') }}
-                        </SwitchLabel>
-                        <Switch v-model="customHolidayForm.yearly" :class="[customHolidayForm.yearly ? 'bg-accent-600' : 'bg-accent-600', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
-                            <span aria-hidden="true" :class="[!customHolidayForm.yearly ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-                        </Switch>
-                        <SwitchLabel as="span" class="ml-3 text-sm" :class="!customHolidayForm.yearly? 'font-bold' : 'text-text-subtle'">
-                            {{ $t('One-off public holiday') }}
-                        </SwitchLabel>
-                    </SwitchGroup>
+            </div>
+
+            <div class="space-y-3 border-t border-border-subtle pt-5">
+                <div>
+                    <h3 class="font-lexend text-sm font-semibold text-text">{{ $t('Select states & color') }}</h3>
+                    <p class="mt-1 text-sm text-text-muted">
+                        {{ $t('Select the federal states that should apply to this public holiday. You can select as many federal states as you like. You can then specify a color in which the public holiday should be displayed in your calendar. You do not have to select a federal state if the public holiday applies throughout Germany.') }}
+                    </p>
                 </div>
-                <div class="col-span-2">
-                    <div class="mt-4">
-                        <BaseCheckbox
-                            id="treatAsSpecialDay"
-                            v-model="customHolidayForm.treatAsSpecialDay"
-                            :label="$t('Treat as special day')"
+                <div class="flex items-end gap-4">
+                    <div class="min-w-0 flex-1">
+                        <ArtworkBaseListbox
+                            v-model="customHolidayForm.selectedSubdivisions"
+                            :items="subdivisionOptions"
+                            by="id"
+                            option-label="name"
+                            label="Federal states"
+                            placeholder="Select federal states"
+                            multiple
                         />
                     </div>
+                    <div class="shrink-0">
+                        <ColorPickerComponent :color="customHolidayForm.color" @update-color="updateColorCustomHoliday" />
+                    </div>
                 </div>
-                <div class="col-span-2 flex items-center justify-end">
-                    <AddButtonBig :text="$t('Save')" class="w-fit" @click="storeCustomHoliday" />
+                <div v-if="customHolidayForm.selectedSubdivisions.length > 0" class="flex flex-wrap items-center gap-2">
+                    <BaseChip
+                        v-for="selectedSubdivision in customHolidayForm.selectedSubdivisions"
+                        :key="selectedSubdivision.id"
+                    >
+                        {{ selectedSubdivision.name }}
+                        <button
+                            type="button"
+                            class="-mr-1 inline-flex size-4 cursor-pointer items-center justify-center rounded-full text-text-subtle transition-colors duration-150 hover:text-danger motion-reduce:transition-none"
+                            :aria-label="$t('Remove')"
+                            @click="removeSubDivisionFormCustomHoliday(selectedSubdivision.id)"
+                        >
+                            <PropertyIcon name="IconX" class="size-3" stroke-width="2" aria-hidden="true" />
+                        </button>
+                    </BaseChip>
                 </div>
             </div>
-        </div>
-    </BaseModal>
+
+            <div class="space-y-4 border-t border-border-subtle pt-5">
+                <SwitchDualLabel
+                    v-model="isOneOff"
+                    :left-label="$t('Repeat the holiday annually')"
+                    :right-label="$t('One-off public holiday')"
+                    :icon="IconRepeat"
+                />
+                <BaseCheckbox
+                    id="treatAsSpecialDay"
+                    v-model="customHolidayForm.treatAsSpecialDay"
+                    :label="$t('Treat as special day')"
+                />
+            </div>
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="customHolidayForm.processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                type="submit"
+                form="editHolidayForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="customHolidayForm.processing"
+                :disabled="customHolidayForm.processing"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
+import {computed, ref, watch} from 'vue'
+import {useForm} from '@inertiajs/vue3'
+import {IconRepeat} from '@tabler/icons-vue'
+import {useTranslation} from '@/Composeables/Translation.js'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseChip from '@/Artwork/Chips/BaseChip.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import SwitchDualLabel from '@/Artwork/Toggles/SwitchDualLabel.vue'
+import ColorPickerComponent from '@/Components/Globale/ColorPickerComponent.vue'
 
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
-import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
-import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
-import {useForm} from "@inertiajs/vue3";
-import {computed, ref, watch} from "vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
-import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
-import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
+defineOptions({name: 'EditHolidayModal'})
 
 const props = defineProps({
     holidayToEdit: {
         type: Object,
-        required: true
+        required: true,
     },
     subDivisions: {
-        type: Object,
-        required: true
+        type: [Array, Object],
+        required: true,
     },
     // [{id: 'public'|'school'|'custom', name: Übersetzungsschlüssel}]
     holidayTypeOptions: {
         type: Array,
         required: false,
         default: () => [
-            { id: 'public', name: 'Statutory public holiday' },
-            { id: 'school', name: 'School vacations' },
-            { id: 'custom', name: 'Custom entry' },
-        ]
-    }
+            {id: 'public', name: 'Statutory public holiday'},
+            {id: 'school', name: 'School vacations'},
+            {id: 'custom', name: 'Custom entry'},
+        ],
+    },
 })
 
-const emits = defineEmits(['close'])
-const showErrorMessageDate = ref(false);
+// close(true) nach erfolgreichem Speichern
+const emit = defineEmits(['close'])
+
+const t = useTranslation()
+const showErrorMessageDate = ref(false)
 
 const customHolidayForm = useForm({
     name: props.holidayToEdit.name,
     date: props.holidayToEdit.date,
     end_date: props.holidayToEdit.end_date,
     color: props.holidayToEdit.color,
-    yearly: props.holidayToEdit.yearly,
+    yearly: Boolean(props.holidayToEdit.yearly),
     treatAsSpecialDay: props.holidayToEdit.treatAsSpecialDay || false,
-    selectedSubdivisions: props.holidayToEdit.subdivisions,
+    selectedSubdivisions: [...(props.holidayToEdit.subdivisions ?? [])],
     type: props.holidayToEdit.type || 'custom',
 })
 
+const subdivisionOptions = computed(() => Object.values(props.subDivisions ?? {}))
+
+// Schalter rechts = einmalig, links = jährlich
+const isOneOff = computed({
+    get: () => !customHolidayForm.yearly,
+    set: (value) => {
+        customHolidayForm.yearly = !value
+    },
+})
+
+const dateError = computed(() => {
+    if (showErrorMessageDate.value) {
+        return t('Please select a date')
+    }
+    return customHolidayForm.errors.date ?? ''
+})
+
 const holidayType = ref(
-    props.holidayTypeOptions.find((o) => o.id === (props.holidayToEdit.type || 'custom')) ?? props.holidayTypeOptions[0] ?? null
+    props.holidayTypeOptions.find((option) => option.id === (props.holidayToEdit.type || 'custom')) ?? props.holidayTypeOptions[0] ?? null
 )
 watch(holidayType, (option, previous) => {
     const type = option?.id ?? 'custom'
-    if (type === (previous?.id ?? customHolidayForm.type)) return
+    if (type === (previous?.id ?? customHolidayForm.type)) {
+        return
+    }
     customHolidayForm.type = type
     // Typwechsel: Sondertag-Default = gesetzlicher Feiertag (kann danach manuell überschrieben werden)
     customHolidayForm.treatAsSpecialDay = type === 'public'
 })
 
-const storeCustomHoliday = () => {
+function closeModal(saved) {
+    if (saved) {
+        emit('close', true)
+        return
+    }
+    emit('close')
+}
+
+function storeCustomHoliday() {
+    showErrorMessageDate.value = !customHolidayForm.date
+    if (showErrorMessageDate.value || customHolidayForm.processing) {
+        return
+    }
     customHolidayForm.patch(route('holidays.update', props.holidayToEdit.id), {
         preserveScroll: true,
-        onSuccess: () => {
-            emits('close', true);
-        }
-    });
+        onSuccess: () => closeModal(true),
+    })
 }
 
-const updateColorCustomHoliday = (color) => {
-    customHolidayForm.color = color;
+function updateColorCustomHoliday(color) {
+    customHolidayForm.color = color
 }
 
-const removeSubDivisionFormCustomHoliday = (id) => {
-    customHolidayForm.selectedSubdivisions = customHolidayForm.selectedSubdivisions.filter(subdivision => subdivision.id !== id);
+function removeSubDivisionFormCustomHoliday(id) {
+    customHolidayForm.selectedSubdivisions = customHolidayForm.selectedSubdivisions.filter((subdivision) => subdivision.id !== id)
 }
-
-// computed filter for subDivisions to remove already selected subdivisions
-const subDivisions = computed(() => {
-    return props.subDivisions.filter(subdivision => !customHolidayForm.selectedSubdivisions.some(selectedSubdivision => selectedSubdivision.id === subdivision.id));
-})
-
 </script>
-
-<style scoped>
-
-</style>

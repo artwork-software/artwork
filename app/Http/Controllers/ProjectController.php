@@ -418,20 +418,14 @@ class ProjectController extends Controller
         // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
         // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
         // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
-        // Rechteliste kommt aus der Policy (eine Quelle); Admins passieren via Gate::before.
+        // Die Regel steht seit core-visibility-scopes in Project::scopeVisibleFor (eine Quelle
+        // für Übersicht und Aggregations-Endpunkte); Admins passieren via Gate::before.
         $authUser = Auth::user();
         $canEnterAll = $authUser->canAny(ProjectPolicy::GLOBAL_ENTER_PERMISSIONS);
         $canWriteAll = $authUser->can(PermissionEnum::WRITE_PROJECTS->value);
         $enterableProjectIds = $canEnterAll ? collect() : Project::query()
+            ->visibleFor($authUser)
             ->whereIn('id', $projects->pluck('id'))
-            ->where(function (Builder $query) use ($authUser): void {
-                $query
-                    ->whereHas('users', fn(Builder $userQuery) => $userQuery->where('users.id', $authUser->id))
-                    ->orWhereHas(
-                        'departments.users',
-                        fn(Builder $departmentQuery) => $departmentQuery->where('users.id', $authUser->id)
-                    );
-            })
             ->pluck('id')
             ->flip();
 
@@ -3058,7 +3052,11 @@ class ProjectController extends Controller
 
         $headerObject->project->project_managers = $project->managerUsers;
 
-        $latestActivity = $project->activities()->latest()->first();
+        // Exporte (Projektinhalte-Export) stehen im Verlauf, sind aber keine Änderung am Projekt
+        $latestActivity = $project->activities()
+            ->where(fn ($query) => $query->whereNull('event')->orWhere('event', '!=', 'exported'))
+            ->latest()
+            ->first();
         $latestChange  = [];
         if ($latestActivity !== null) {
             $properties = $latestActivity->properties;

@@ -1,110 +1,190 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
-            <div class="mx-4">
-                <!--   Heading   -->
-                <div>
-                    <h1 class="my-1 flex">
-                        <div class="flex-grow font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
-                            {{ $t('Read from project') }}
-                        </div>
-                    </h1>
-                    <h2 class="text-sm/5 font-bold text-text-subtle mb-2 mt-8">
-                        {{ $t('To make your work easier, use an existing calculation from another project.') }}
-                    </h2>
-                    <div v-if="selectedProject !== null" class="flex items-center my-3 text-sm/5 font-semibold text-text">
-                        {{ $t('Currently selected project template') }}: {{ this.selectedProject?.name }}
-                        <div v-if="this.selectedProject" class="flex items-center my-auto">
-                            <button type="button"
-                                    @click="selectedProject = null">
-                                <IconCircleX class="pl-2 h-6 w-6 hover:text-danger text-text"/>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex items-center w-full mr-2">
-                        <div class="w-full">
-                            <inputComponent v-model="this.project_query" :placeholder="$t('From which project?*')"/>
-                            <div
-                                v-if="project_search_results.length > 0"
-                                class="bg-surface-inverse truncate sm:text-sm">
-                                <div v-for="(project, index) in project_search_results"
-                                     :key="index"
-                                     @click="this.selectedProject = project;"
-                                     class="p-4 text-white border-l-4 hover:border-l-success border-l-surface-inverse cursor-pointer">
-                                    {{ project.name }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-center">
-                        <FormButton @click="useProjectBudgetAsTemplate()"
-                                   :disabled="selectedProject === null"
-                                   :text="$t('Import calculation')"
-                        />
+    <ArtworkBaseModal
+        title="Read from project"
+        description="To make your work easier, use an existing calculation from another project."
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <div v-if="selectedProject" class="space-y-1">
+            <span class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">{{ $t('Selected project') }}</span>
+            <div class="flex items-center justify-between gap-x-3 rounded-lg border border-border bg-surface-sunken px-3 py-2.5">
+                <div class="min-w-0">
+                    <div class="truncate text-sm font-semibold text-text">{{ selectedProject.name }}</div>
+                    <div v-if="projectMeta(selectedProject)" class="truncate text-xs text-text-muted">
+                        {{ projectMeta(selectedProject) }}
                     </div>
                 </div>
+                <BaseUIButton
+                    label="Change"
+                    variant="ghost"
+                    size="sm"
+                    hide-icon
+                    :disabled="processing"
+                    @click="resetSelection"
+                />
             </div>
-    </BaseModal>
+        </div>
+
+        <div v-else>
+            <BaseInput
+                id="budgetTemplateProjectSearch"
+                v-model="projectQuery"
+                label="Search project"
+                :placeholder="$t('Search projects...')"
+                :show-loading="searching"
+                autocomplete="off"
+                autofocus
+            />
+            <ul
+                v-if="searchResults.length > 0"
+                class="mt-2 max-h-60 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+            >
+                <li v-for="project in searchResults" :key="project.id">
+                    <button
+                        type="button"
+                        class="block w-full cursor-pointer px-3 py-2 text-left transition-colors duration-150 hover:bg-surface-hover focus-visible:bg-surface-hover motion-reduce:transition-none"
+                        @click="selectProject(project)"
+                    >
+                        <span class="block truncate text-sm font-medium text-text">{{ project.name }}</span>
+                        <span v-if="projectMeta(project)" class="block truncate text-xs text-text-muted">
+                            {{ projectMeta(project) }}
+                        </span>
+                    </button>
+                </li>
+            </ul>
+            <p
+                v-else-if="hasSearched && !searching"
+                class="mt-2 rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-text-muted"
+            >
+                {{ $t('No projects found') }}
+            </p>
+        </div>
+
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                label="Import calculation"
+                variant="primary"
+                icon="IconFileImport"
+                :processing="processing"
+                :disabled="!selectedProject"
+                @click="useProjectBudgetAsTemplate"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconCheck, IconChevronDown, IconCircleX, IconX} from "@tabler/icons-vue";
+<script setup>
+import {onBeforeUnmount, ref, watch} from 'vue'
+import axios from 'axios'
+import debounce from 'lodash.debounce'
+import {router} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+defineOptions({name: 'UseTemplateFromProjectBudgetComponent'})
 
-export default {
-    name: 'UseTemplateFromProjectBudgetComponent',
-    mixins: [Permissions],
-    components: {
-        BaseModal,
-        FormButton,
-        JetDialogModal,
-        IconX,
-        IconCheck,
-        IconChevronDown,
-        InputComponent,
-        IconCircleX
-    },
-    data() {
-        return {
-            selectedProject: null,
-            project_query: '',
-            project_search_results: [],
+const props = defineProps({
+    projectId: {type: Number, default: null},
+})
+
+const emit = defineEmits(['closed'])
+
+const projectQuery = ref('')
+const searchResults = ref([])
+const selectedProject = ref(null)
+const searching = ref(false)
+const hasSearched = ref(false)
+const processing = ref(false)
+
+let latestSearchId = 0
+
+const searchProjects = debounce(async (query) => {
+    const searchId = ++latestSearchId
+    try {
+        const {data} = await axios.get(route('projects.search'), {params: {query}})
+        if (searchId !== latestSearchId) {
+            return
         }
-    },
-    props: [
-        'projectId',
-        'templates'
-    ],
-    emits: ['closed'],
-    watch: {
-        project_query: {
-            handler() {
-                if (this.project_query.length > 0) {
-                    axios.get('/projects/search', {
-                        params: {query: this.project_query}
-                    }).then(response => {
-                        this.project_search_results = response.data
-                    })
-                }
+        // Das eigene Projekt kann nicht als Quelle dienen.
+        searchResults.value = (data ?? []).filter((project) => project.id !== props.projectId)
+    } catch {
+        if (searchId === latestSearchId) {
+            searchResults.value = []
+        }
+    } finally {
+        if (searchId === latestSearchId) {
+            searching.value = false
+            hasSearched.value = true
+        }
+    }
+}, 300)
+
+watch(projectQuery, (query) => {
+    const trimmedQuery = query.trim()
+    if (trimmedQuery === '') {
+        latestSearchId++
+        searchProjects.cancel()
+        searchResults.value = []
+        searching.value = false
+        hasSearched.value = false
+        return
+    }
+    searching.value = true
+    searchProjects(trimmedQuery)
+})
+
+onBeforeUnmount(() => searchProjects.cancel())
+
+/** Der Server liefert „d.m.Y H:i“; für die Trefferliste reicht das Datum. */
+function formatDate(value) {
+    return value ? String(value).split(' ')[0] : ''
+}
+
+function projectMeta(project) {
+    const period = [formatDate(project.first_event_date), formatDate(project.last_event_date)]
+        .filter(Boolean)
+        .join(' - ')
+    return [project.artists, period].filter(Boolean).join(' · ')
+}
+
+function selectProject(project) {
+    selectedProject.value = project
+}
+
+function resetSelection() {
+    selectedProject.value = null
+}
+
+function closeModal(imported) {
+    emit('closed', imported)
+}
+
+function useProjectBudgetAsTemplate() {
+    if (!selectedProject.value || processing.value) {
+        return
+    }
+    processing.value = true
+    router.post(
+        route('project.budget.template.project'),
+        {
+            template_project_id: selectedProject.value.id,
+            project_id: props.projectId,
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => closeModal(true),
+            onFinish: () => {
+                processing.value = false
             },
-            deep: true
-        },
-    },
-    methods: {
-        closeModal(bool) {
-            this.$emit('closed', bool);
-        },
-        useProjectBudgetAsTemplate() {
-            this.$inertia.post(route('project.budget.template.project'), {
-                template_project_id: this.selectedProject.id,
-                project_id: this.projectId
-            });
-            this.closeModal(true);
         }
-    },
+    )
 }
 </script>

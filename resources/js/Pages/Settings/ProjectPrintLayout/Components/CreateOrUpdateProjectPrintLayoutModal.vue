@@ -1,108 +1,93 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader
-                :title="projectPrintLayout ? $t('Edit Print Layout') : $t('Create Print Layout')"
-                :description="projectPrintLayout ? $t('Edit the print layout') : $t('Create a new print layout')"
+    <ArtworkBaseModal
+        :title="projectPrintLayout ? 'Edit Print Layout' : 'Create Print Layout'"
+        :description="projectPrintLayout ? 'Edit the print layout' : 'Create a new print layout'"
+        modal-size="sm:max-w-2xl"
+        @close="emits('close')"
+    >
+        <form id="createOrUpdateProjectPrintLayoutForm" class="space-y-4" @submit.prevent="createOrUpdate">
+            <BaseInput
+                id="print_layout_name"
+                v-model="createOrUpdateForm.name"
+                label="Name"
+                required
+                :error="createOrUpdateForm.errors.name"
             />
-        </div>
-
-        <form @submit.prevent="createOrUpdate">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="col-span-full">
-                    <BaseInput
-                        id="name"
-                        v-model="createOrUpdateForm.name"
-                        :label="$t('Name')"
+            <BaseInput
+                id="print_layout_description"
+                v-model="createOrUpdateForm.description"
+                label="Description"
+                :error="createOrUpdateForm.errors.description"
+            />
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div v-for="column in columnSettings" :key="column.key">
+                    <label
+                        :for="`print_layout_${column.key}`"
+                        class="mb-2 flex items-center justify-between font-lexend text-xs font-medium text-text"
+                    >
+                        <span>{{ $t(column.label) }}</span>
+                        <span class="inline-flex min-w-6 items-center justify-center rounded-md border border-border-subtle bg-surface-sunken px-1.5 py-0.5 text-xs font-medium tabular-nums text-text-muted">
+                            {{ createOrUpdateForm[column.key] }}
+                        </span>
+                    </label>
+                    <input
+                        :id="`print_layout_${column.key}`"
+                        v-model="createOrUpdateForm[column.key]"
+                        type="range"
+                        min="1"
+                        :max="column.max"
+                        step="1"
+                        :disabled="isEditing"
+                        class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-border-subtle accent-accent-600 disabled:cursor-not-allowed"
                     />
-                </div>
-                <div class="col-span-full">
-                    <BaseInput
-                        id="description"
-                        v-model="createOrUpdateForm.description"
-                        :label="$t('Description')"
-                    />
-                </div>
-                <div>
-                    <label for="columns_header" class="mb-2 text-sm font-medium text-text dark:text-white flex items-center justify-between">
-                        <span>
-                            {{ $t('Header columns') }}
-                        </span>
-                        <span class="inline-flex items-center rounded-md bg-surface-sunken px-2 py-1 text-xs font-medium text-text-muted ring-1 ring-inset border-border-subtle">
-                            {{ createOrUpdateForm.columns_header }}
-                        </span>
-                    </label>
-                    <input id="columns_header" :disabled="projectPrintLayout" type="range" min="1" max="5" v-model="createOrUpdateForm.columns_header" step="1" class="w-full h-2 bg-border-subtle rounded-lg appearance-none cursor-pointer text-accent-600">
-                </div>
-                <div>
-                    <label for="columns_footer" class="mb-2 text-sm font-medium text-text dark:text-white flex items-center justify-between">
-                        <span>
-                            {{ $t('Footer columns') }}
-                        </span>
-                        <span class="inline-flex items-center rounded-md bg-surface-sunken px-2 py-1 text-xs font-medium text-text-muted ring-1 ring-inset border-border-subtle">
-                            {{ createOrUpdateForm.columns_footer }}
-                        </span>
-                    </label>
-                    <input id="columns_footer" :disabled="projectPrintLayout" type="range" min="1" max="5" v-model="createOrUpdateForm.columns_footer" step="1" class="w-full h-2 bg-border-subtle rounded-lg appearance-none cursor-pointer ">
-                </div>
-                <div>
-                    <label for="columns_body" class="mb-2 text-sm font-medium text-text dark:text-white flex items-center justify-between">
-                        <span>
-                            {{ $t('Body columns') }}
-                        </span>
-                        <span class="inline-flex items-center rounded-md bg-surface-sunken px-2 py-1 text-xs font-medium text-text-muted ring-1 ring-inset border-border-subtle">
-                            {{ createOrUpdateForm.columns_body }}
-                        </span>
-                    </label>
-                    <input id="columns_body" :disabled="projectPrintLayout" type="range" min="1" max="3" v-model="createOrUpdateForm.columns_body" step="1" class="w-full h-2 bg-border-subtle rounded-lg appearance-none cursor-pointer ">
-                </div>
-                <div class="col-span-full my-3">
-                    <div v-if="parseInt(createOrUpdateForm.columns_body) > 1" class="mb-2">
-                        <AlertComponent type="error" :text="$t('The columns of the main part are set to more than 1, which makes the print layout less legible and it is no longer possible to add the components marked as “special components”.')" />
-                    </div>
-                    <hr class="border-border-subtle ">
-                </div>
-                <div class="col-span-full">
-                    <SwitchGroup as="div" class="flex items-center">
-                        <Switch v-model="createOrUpdateForm.is_active" :class="[createOrUpdateForm.is_active ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2']">
-                            <span class="sr-only">{{ $t('Should this print layout be available?') }}</span>
-                            <span :class="[createOrUpdateForm.is_active ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                              <span :class="[createOrUpdateForm.is_active ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                <svg class="size-3 text-text-subtle" fill="none" viewBox="0 0 12 12">
-                                  <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                              </span>
-                              <span :class="[createOrUpdateForm.is_active ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                <svg class="size-3 text-accent-600" fill="currentColor" viewBox="0 0 12 12">
-                                  <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
-                                </svg>
-                              </span>
-                            </span>
-                        </Switch>
-                        <SwitchLabel as="span" class="ml-3 text-sm">
-                            <span class="font-medium text-text">{{ $t('Should this print layout be available?') }}</span>
-                        </SwitchLabel>
-                    </SwitchGroup>
                 </div>
             </div>
-
-            <div class="flex items-center justify-center mt-10">
-                <FormButton type="submit" :text="projectPrintLayout ? $t('Update') : $t('Create')"  />
+            <BaseAlertComponent
+                v-if="parseInt(createOrUpdateForm.columns_body) > 1"
+                type="warning"
+                message="The columns of the main part are set to more than 1, which makes the print layout less legible and it is no longer possible to add the components marked as “special components”."
+                use-translation
+                class="!mb-0"
+            />
+            <div class="border-t border-border-subtle pt-4">
+                <ArtworkBaseToggle
+                    id="print_layout_is_active"
+                    v-model="createOrUpdateForm.is_active"
+                    label="Should this print layout be available?"
+                    use-translation
+                />
             </div>
         </form>
-    </BaseModal>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="createOrUpdateForm.processing"
+                @click="emits('close')"
+            />
+            <BaseUIButton
+                type="submit"
+                form="createOrUpdateProjectPrintLayoutForm"
+                :label="isEditing ? 'Update' : 'Create'"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="createOrUpdateForm.processing"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import {computed} from "vue";
 import {useForm} from "@inertiajs/vue3";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseToggle from "@/Artwork/Toggles/ArtworkBaseToggle.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+
+defineOptions({name: 'CreateOrUpdateProjectPrintLayoutModal'})
 
 const props = defineProps({
     projectPrintLayout: {
@@ -116,6 +101,15 @@ const emits = defineEmits([
     'close',
 ])
 
+// Spaltenzahlen sind nach dem Anlegen fest (bestehende Komponenten hängen daran)
+const isEditing = computed(() => Boolean(props.projectPrintLayout))
+
+const columnSettings = [
+    {key: 'columns_header', label: 'Header columns', max: 5},
+    {key: 'columns_footer', label: 'Footer columns', max: 5},
+    {key: 'columns_body', label: 'Body columns', max: 3},
+]
+
 /**
  * Form for creating or updating a project print layout
  * @type {InertiaForm<{name: (*|string), description: (*|string), columns_header: (number), columns_footer: (number), columns_body: (number), is_active: (boolean)}>}
@@ -127,29 +121,23 @@ const createOrUpdateForm = useForm({
     columns_header: props.projectPrintLayout ? props.projectPrintLayout.columns_header : 1,
     columns_footer: props.projectPrintLayout ? props.projectPrintLayout.columns_footer : 1,
     columns_body: props.projectPrintLayout ? props.projectPrintLayout.columns_body : 1,
-    is_active: props.projectPrintLayout ? props.projectPrintLayout.is_active : true,
+    is_active: props.projectPrintLayout ? Boolean(props.projectPrintLayout.is_active) : true,
 })
 
 const createOrUpdate = () => {
+    if (createOrUpdateForm.processing) {
+        return
+    }
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            emits('close')
+        }
+    }
     if (props.projectPrintLayout) {
-        createOrUpdateForm.patch(route('project-print-layout.update', props.projectPrintLayout.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                emits('close')
-            }
-        })
+        createOrUpdateForm.patch(route('project-print-layout.update', props.projectPrintLayout.id), options)
     } else {
-        createOrUpdateForm.post(route('project-print-layout.store'), {
-            preserveScroll: true,
-            onSuccess: () => {
-                emits('close')
-            }
-        })
+        createOrUpdateForm.post(route('project-print-layout.store'), options)
     }
 }
-
 </script>
-
-<style scoped>
-
-</style>

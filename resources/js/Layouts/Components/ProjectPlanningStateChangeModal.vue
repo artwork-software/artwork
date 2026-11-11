@@ -1,30 +1,38 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div class="space-y-6">
-            <div class="font-black font-lexend text-text text-2xl mb-4">
-                {{ $t('Project status change') }}
-            </div>
-
-            <div class="text-text-muted">
-                {{ $t('The new project status is marked as planned. Do you want to convert all events of the project to planning events?') }}
-            </div>
-
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" @click="$emit('close')" class="inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:text-sm">
-                    {{ $t('No') }}
-                </button>
-                <button type="button" @click="convertToPlanning" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-600 text-base font-medium text-white hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:text-sm">
-                    {{ $t('Convert to planning events') }}
-                </button>
-            </div>
-        </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        title="Project status change"
+        modal-size="sm:max-w-lg"
+        @close="closeModal"
+    >
+        <p class="text-sm text-text">
+            {{ $t('The new project status is marked as planned. Do you want to convert all events of the project to planning events?') }}
+        </p>
+        <template #footer>
+            <BaseUIButton
+                label="No"
+                is-cancel-button
+                hide-icon
+                :disabled="converting"
+                @click="closeModal"
+            />
+            <BaseUIButton
+                label="Convert to planning events"
+                variant="primary"
+                icon="IconCheck"
+                :processing="converting"
+                @click="convertToPlanning"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import { router } from '@inertiajs/vue3';
+import {ref} from 'vue';
+import {router} from '@inertiajs/vue3';
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+
+defineOptions({name: 'ProjectPlanningStateChangeModal'})
 
 const props = defineProps({
     projectId: {
@@ -35,13 +43,31 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
-const convertToPlanning = () => {
+// Doppelklick schickte sonst zwei Umwandlungen los
+const converting = ref(false);
+
+function closeModal() {
+    if (converting.value) {
+        return;
+    }
+    emit('close');
+}
+
+function convertToPlanning() {
+    if (converting.value) {
+        return;
+    }
+    converting.value = true;
     router.post(route('projects.convert-to-planning', props.projectId), {}, {
         preserveScroll: true,
         preserveState: false,
         onSuccess: () => {
+            converting.value = false;
             emit('close');
-        }
+        },
+        onFinish: () => {
+            converting.value = false;
+        },
     });
-};
+}
 </script>

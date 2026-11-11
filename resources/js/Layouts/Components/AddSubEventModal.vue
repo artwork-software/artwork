@@ -1,303 +1,169 @@
 <template>
-    <BaseModal @closed="closeModal(false)" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
-        <div class="mx-4">
-            <ModalHeader
-                :title="subEventToEdit ? $t('Edit sub-event') : $t('New sub-event')"
-                :description="$t('Please note that the appointment must take place within the appointment group period.')"
-                :sub-title="$t('Belongs to Blocker in {0}', [event?.roomName ?? event?.room?.name])"
-            />
+    <ArtworkBaseModal
+        :title="subEventToEdit ? 'Edit sub-event' : 'New sub-event'"
+        description="Please note that the appointment must take place within the appointment group period."
+        modal-size="sm:max-w-2xl"
+        z-index="150"
+        @close="closeModal(false)"
+    >
+        <form id="addSubEventForm" class="space-y-4" @submit.prevent="updateOrCreateEvent">
+            <p class="text-xs text-text-muted">
+                {{ $t('Belongs to Blocker in {0}', [event?.roomName ?? event?.room?.name ?? '']) }}
+            </p>
 
-            <div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 mb-4">
-                    <div>
-                        <Listbox as="div" class="flex mt-5 relative" v-model="subEvent.selectedEventType" id="eventType">
-                            <ListboxButton class="menu-button">
-                                <div class="flex items-center">
-                                    <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : subEvent.selectedEventType?.hex_code }">
-                                    </div>
-                                    <span class="flex truncate items-center ml-3">
-                                            <span>{{ subEvent.selectedEventType?.name }}</span>
-                                    </span>
-                                    <span class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
-                                    </span>
-                                </div>
-                            </ListboxButton>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <ArtworkBaseListbox
+                    v-model="subEvent.selectedEventType"
+                    :items="filteredEventTypes"
+                    by="id"
+                    option-label="name"
+                    show-color-indicator
+                    color-property="hex_code"
+                    label="Event type"
+                />
+                <BaseInput
+                    id="subEventTitle"
+                    v-model="subEvent.eventName"
+                    label="Event name"
+                    :required="Boolean(subEvent.selectedEventType?.individual_name)"
+                />
+            </div>
 
-                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute w-full z-10 mt-12 bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8"
-                                                   v-for="eventType in filteredEventTypes"
-                                                   :key="eventType.name"
-                                                   :value="eventType"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <div class="flex">
-                                                <div>
-                                                    <div class="block w-3 h-3 rounded-full"
-                                                         :style="{'backgroundColor' : eventType?.hex_code }"/>
-                                                </div>
-                                                <span
-                                                    :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">{{
-                                                        eventType.name
-                                                    }}
-                                                    </span>
-                                            </div>
-                                            <span
-                                                :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <IconCheck stroke-width="1.5" v-if="selected"
-                                                                 class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
-                        </Listbox>
-                    </div>
-
-                    <div class="">
-                        <TextInputComponent
-                            v-model="subEvent.eventName"
-                            @keyup="subEvent.eventName.length > 0 ? submit = true : subEvent.selectedEventType?.individual_name ? submit = false : submit = true"
-                            id="eventTitle"
-                            :label="subEvent.selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
-                        />
-
-                    </div>
-                </div>
-                <!-- Attribute Menu -->
-                <Menu as="div" class="inline-block text-left w-full relative">
-                    <div>
-                        <MenuButton class="menu-button">
-                            <span class="float-left flex text-sm/5 font-bold text-text-subtle subpixel-antialiased">
-                                <img src="/Svgs/IconSvgs/icon_adjustments.svg" class="mr-2" alt="attributeIcon"/>
-                                {{ $t('Select appointment properties') }}
-                            </span>
-                            <IconChevronDown stroke-width="1.5" class="ml-2 -mr-1 h-5 w-5 text-text float-right" aria-hidden="true"/>
-                        </MenuButton>
-                    </div>
-                    <transition
-                        enter-active-class="transition duration-50 ease-out"
-                        enter-from-class="transform scale-100 opacity-100"
-                        enter-to-class="transform scale-100 opacity-100"
-                        leave-active-class="transition duration-75 ease-in"
-                        leave-from-class="transform scale-100 opacity-100"
-                        leave-to-class="transform scale-95 opacity-0"
+            <div v-if="(event_properties?.length || 0) > 0">
+                <p class="mb-1 font-lexend text-xs font-medium text-text-muted">{{ $t('Properties') }}</p>
+                <div class="flex flex-wrap gap-2">
+                    <label
+                        v-for="eventProperty in event_properties"
+                        :key="eventProperty.id"
+                        class="inline-flex h-[26px] cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent-600 motion-reduce:transition-none"
+                        :class="eventProperty.checked ? 'border-accent-200 bg-accent-50 text-accent-700' : 'border-border bg-surface text-text-muted hover:bg-surface-hover'"
                     >
-                        <MenuItems
-                            class="absolute overflow-y-auto h-44 w-full rounded-lg origin-top-left divide-y divide-border-subtle bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="mx-auto w-full rounded-2xl bg-surface-inverse border-none mt-2">
-                                <div class="w-full rounded-2xl bg-surface-inverse border-none mt-2 flex flex-col gap-y-2">
-                                    <div v-for="eventProperty in this.event_properties" class="flex flex-row gap-x-1 w-full items-center">
-                                        <input v-model="eventProperty.checked"
-                                               type="checkbox"
-                                               class="input-checklist-dark"/>
-                                        <component :is="eventProperty.icon" class="w-5 h-5 text-white" stroke-width="2"/>
-                                        <div :class="[eventProperty.checked ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto']">
-                                            {{ eventProperty.name }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
-
-                <div v-if="subEvent?.eventProperties.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
-                    <div v-for="(eventProperty, index) in subEvent?.eventProperties" class="group block shrink-0 bg-surface-sunken w-fit pr-3 rounded-full border border-border">
-                        <div class="flex items-center">
-                            <div class="rounded-full p-1 size-8 flex items-center justify-center">
-                                <component :is="eventProperty.icon" class="inline-block size-4"  />
-                            </div>
-                            <div class="mx-1">
-                                <p class="text-xs/[15px] text-text group-hover:text-text">{{ eventProperty.name}}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!--    Properties    -->
-                <div class="flex py-2">
-                    <div v-if="subEvent.audience">
-                        <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true" property=""/>
-                    </div>
-                    <div v-if="subEvent.is_loud">
-                        <TagComponent :displayed-text="$t('It gets loud')" hideX="true" property=""/>
-                    </div>
-                </div>
-                <div class="w-full">
-                    <SwitchGroup as="div" class="flex items-center">
-                        <Switch v-model="this.allDayEvent"
-                                :class="[this.allDayEvent ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-accent-600 focus:ring-offset-2']">
-                            <span aria-hidden="true"
-                                  :class="[this.allDayEvent ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
-                        </Switch>
-                        <SwitchLabel as="span" class="ml-3 text-sm">
-                            <span :class="[this.allDayEvent ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle', 'text-sm']">
-                                {{ $t('Full day') }}
-                            </span>
-                        </SwitchLabel>
-                    </SwitchGroup>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 pt-3">
-                    <div>
-                        <div class="w-full flex">
-                            <DateInputComponent
-                                id="startDate"
-                                @change="checkTimes()"
-                                v-model="startDate"
-                                label="Start"
-                                disabled
-                                :classes="!allDayEvent ? '!rounded-l-lg !rounded-r-none border-r-0' : '!rounded-lg'"
-                            />
-
-                            <TimeInputComponent
-                                v-model="startTime"
-                                id="changeStartTime"
-                                v-if="!allDayEvent"
-                                @change="checkTimes()"
-                                label="Startzeit"
-                                classes="!rounded-r-lg !rounded-l-none"
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <div class="w-full flex">
-                            <DateInputComponent
-                                v-model="endDate"
-                                id="endDate"
-                                @change="checkTimes()"
-                                label="End"
-                                disabled
-                                :classes="!allDayEvent ? '!rounded-l-lg !rounded-r-none border-r-0' : '!rounded-lg'"
-                            />
-                            <TimeInputComponent
-                                v-model="endTime"
-                                v-if="!allDayEvent"
-                                id="changeEndTime"
-                                @change="checkTimes()"
-                                label="Endzeit"
-                                classes="!rounded-r-lg !rounded-l-none"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                </div>
-                <div>
-                    <div class="text-danger text-xs" v-show="helpText.length > 0">{{ helpText }}</div>
-                    <div class="text-danger text-xs" v-show="helpTextStart.length > 0">{{
-                            helpTextStart
-                        }}
-                    </div>
-                    <div class="text-danger text-xs" v-show="helpTextEnd.length > 0">{{
-                            helpTextEnd
-                        }}
-                    </div>
-                    <div class="text-danger text-xs" v-show="helpTextLength.length > 0">{{
-                            helpTextLength
-                        }}
-                    </div>
-                </div>
-
-
-                <div class="pt-4">
-                    <TextareaComponent
-                        :label="$t('What do I need to bear in mind for the event?')"
-                        id="description"
-                        v-model="subEvent.description"
-                        rows="4"
-                    />
+                        <input v-model="eventProperty.checked" type="checkbox" class="sr-only" />
+                        <PropertyIcon v-if="eventProperty.checked" name="IconCheck" class="size-3.5" aria-hidden="true" />
+                        <PropertyIcon :name="eventProperty.icon" class="size-3.5" aria-hidden="true" />
+                        <span>{{ eventProperty.name }}</span>
+                    </label>
                 </div>
             </div>
-        </div>
-        <div class="flex justify-center w-full py-4">
-            <FormButton
-                :disabled="!submit"
-                @click="updateOrCreateEvent()"
-                :text="$t('Vouchers')"
+
+            <ArtworkBaseToggle
+                id="subEventAllDay"
+                v-model="allDayEvent"
+                label="Full day"
+                use-translation
+                is-small
             />
-        </div>
-    </BaseModal>
+
+            <div class="grid grid-cols-2 gap-4">
+                <BaseInput
+                    id="subEventStartDate"
+                    v-model="startDate"
+                    type="date"
+                    label="Start date"
+                    disabled
+                    :class="allDayEvent ? 'col-span-2 md:col-span-1' : ''"
+                />
+                <BaseInput
+                    v-if="!allDayEvent"
+                    id="subEventStartTime"
+                    v-model="startTime"
+                    type="time"
+                    label="Start time"
+                    required
+                    @change="checkTimes()"
+                />
+                <BaseInput
+                    id="subEventEndDate"
+                    v-model="endDate"
+                    type="date"
+                    label="End date"
+                    disabled
+                    :class="allDayEvent ? 'col-span-2 md:col-span-1' : ''"
+                />
+                <BaseInput
+                    v-if="!allDayEvent"
+                    id="subEventEndTime"
+                    v-model="endTime"
+                    type="time"
+                    label="End time"
+                    required
+                    @change="checkTimes()"
+                />
+            </div>
+            <div v-if="helpText || helpTextLength || requestError" class="space-y-1">
+                <p v-if="helpText" class="text-[11.5px] text-danger">{{ helpText }}</p>
+                <p v-if="helpTextLength" class="text-[11.5px] text-danger">{{ helpTextLength }}</p>
+                <p v-if="requestError" class="text-[11.5px] text-danger">{{ requestError }}</p>
+            </div>
+
+            <BaseTextarea
+                id="subEventDescription"
+                v-model="subEvent.description"
+                label="What do I need to bear in mind for the event?"
+                rows="4"
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                type="submit"
+                form="addSubEventForm"
+                label="Vouchers"
+                variant="primary"
+                icon="IconCalendarPlus"
+                :processing="processing"
+                :disabled="!canSubmit"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script>
-import {IconCheck, IconChevronDown, IconX} from "@tabler/icons-vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
-} from "@headlessui/vue";
-import {useForm} from "@inertiajs/vue3";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import {inject} from "vue";
+import axios from "axios";
 import dayjs from "dayjs";
+import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import Input from "@/Jetstream/Input.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {useEvent} from "@/Composeables/Event.js";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
-import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import {inject, nextTick} from "vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import ArtworkBaseToggle from "@/Artwork/Toggles/ArtworkBaseToggle.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
 export default {
     name: "AddSubEventModal",
     mixins: [Permissions],
-    computed: {
-        dayjs() {
-            const utc = require('dayjs/plugin/utc');
-            dayjs.extend(utc)
-            return dayjs
-        },
-        filteredEventTypes() {
-            return this.eventTypes.filter(eventType => eventType.id !== 1)
-        },
-
+    components: {
+        ArtworkBaseModal,
+        ArtworkBaseListbox,
+        ArtworkBaseToggle,
+        BaseInput,
+        BaseTextarea,
+        BaseUIButton,
+        PropertyIcon,
     },
     setup() {
-        const event_properties = inject('event_properties');
+        const event_properties = inject('event_properties', []);
         return {event_properties}
     },
-    components: {
-        TextareaComponent,
-        TimeInputComponent, DateInputComponent,
-        ModalHeader,
-        TextInputComponent,
-        BaseModal,
-        FormButton,
-        SwitchLabel,
-        Switch,
-        SwitchGroup,
-        Input,
-        TagComponent,
-        JetDialogModal,
-        IconX,
-        IconChevronDown,
-        Listbox, ListboxLabel, ListboxButton, ListboxOption, ListboxOptions,
-        Menu, MenuItem, MenuItems, MenuButton, IconCheck
-    },
+    props: ['event', 'eventTypes', 'subEventToEdit'],
+    emits: ['close'],
     data() {
         return {
             subEvent: useForm({
                 event_id: this.event?.id,
                 eventName: this.subEventToEdit?.eventName ? this.subEventToEdit?.eventName : '',
-                selectedEventType: this.subEventToEdit?.type ? this.subEventToEdit?.type : this.eventTypes[1],
+                selectedEventType: this.subEventToEdit?.type ? this.subEventToEdit?.type : (this.eventTypes?.[1] ?? null),
                 start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : dayjs(this.event?.start).format('YYYY-MM-DD HH:mm'),
                 end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : dayjs(this.event?.end).format('YYYY-MM-DD HH:mm'),
                 description: this.subEventToEdit?.description ? this.subEventToEdit?.description : '',
@@ -308,28 +174,49 @@ export default {
             }),
             edit: !!this.subEventToEdit?.id,
             helpText: '',
-            helpTextStart: '',
-            helpTextEnd: '',
             helpTextLength: '',
+            requestError: '',
+            processing: false,
             allDayEvent: this.subEventToEdit?.allDay ? this.subEventToEdit.allDay : false,
             startTime: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('HH:mm') : dayjs(this.event?.start).format('HH:mm'),
             endTime: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('HH:mm') : dayjs(this.event?.end).format('HH:mm'),
             startDate: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('YYYY-MM-DD') : dayjs(this.event?.start).format('YYYY-MM-DD'),
             endDate: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('YYYY-MM-DD') : dayjs(this.event?.end).format('YYYY-MM-DD'),
-            show: true,
-            submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ? this.subEventToEdit?.title?.length > 0 : true : true,
-            //event_properties: event_properties
         }
     },
-    props: ['event', 'eventTypes', 'subEventToEdit'],
-    emits: ['close'],
-    mounted() {
-       nextTick(() => {
-
-       })
+    computed: {
+        filteredEventTypes() {
+            return (this.eventTypes ?? []).filter(eventType => eventType.id !== 1)
+        },
+        canSubmit() {
+            if (this.processing || this.helpText || this.helpTextLength) {
+                return false;
+            }
+            if (this.subEvent.selectedEventType?.individual_name) {
+                return Boolean(this.subEvent.eventName?.trim());
+            }
+            return true;
+        },
+    },
+    created() {
+        // Eigenschaften einmalig aus dem bearbeiteten Untertermin übernehmen. Vorher lief das
+        // in einem tiefen Watcher auf das Formular und setzte die Auswahl bei jeder Eingabe zurück.
+        (this.event_properties ?? []).forEach((eventProperty) => {
+            eventProperty.checked = (this.subEventToEdit?.event_properties ?? []).some(
+                (subEventProperty) => subEventProperty.id === eventProperty.id
+            );
+        });
+    },
+    watch: {
+        allDayEvent() {
+            this.checkTimes()
+        },
     },
     methods: {
         closeModal(bool, desiredRoomIds, desiredDays) {
+            if (this.processing && !bool) {
+                return;
+            }
             this.$emit('close', bool, desiredRoomIds, desiredDays);
         },
         formatDate(date, time) {
@@ -337,7 +224,6 @@ export default {
             return (new Date(date + ' ' + time)).toISOString()
         },
         checkTimes() {
-            this.submit = true;
             this.subEvent.allDay = this.allDayEvent;
             if (this.allDayEvent) {
                 this.handleAllDayEventChange()
@@ -346,12 +232,11 @@ export default {
             this.subEvent.end_time = dayjs(this.formatDate(this.endDate, this.endTime)).format('YYYY-MM-DD HH:mm');
             if (this.subEvent.start_time > this.subEvent.end_time && this.subEvent.end_time && this.subEvent.start_time) {
                 this.helpText = this.$t('The end time cannot be before the start time!');
-                this.submit = false;
             } else {
                 this.helpText = '';
             }
 
-            // check if event min 30min
+            // Termin muss mindestens 30 Minuten dauern
             if (this.subEvent.start_time && this.subEvent.end_time) {
                 const date = new Date(this.subEvent.start_time);
                 const minimumEnd = this.addMinutes(date, 30);
@@ -359,38 +244,30 @@ export default {
                     this.helpTextLength = '';
                 } else {
                     this.helpTextLength = this.$t('The event must not be shorter than 30 minutes');
-                    this.submit = false;
                 }
             }
-
         },
         addMinutes(date, minutes) {
             date.setMinutes(date.getMinutes() + minutes);
             return date;
         },
-        checkSubmitStatus() {
-            if (this.subEvent.selectedEventType?.individual_name) {
-                this.submit = this.subEvent.eventName?.length > 0;
-            } else {
-                this.submit = true;
-            }
-        },
         handleAllDayEventChange() {
             if (this.allDayEvent) {
-                // Set startTime to "00:00" and endTime to "23:59" for all-day event
+                // Ganztägig: 00:00 bis 23:59
                 this.startTime = "00:00";
                 this.endTime = "23:59";
-            } else {
-                // Handle other logic if needed when allDayEvent is false
             }
         },
         updateOrCreateEvent() {
+            if (!this.canSubmit) {
+                return;
+            }
             const onSuccess = () => {
                 this.closeModal(
                     true,
                     [this.event.roomId],
                     getDaysOfEvent(
-                        //use main event date for reload, sub event can only be on same day
+                        // Hauptermin für das Nachladen nutzen, Untertermine liegen am selben Tag
                         formatEventDateByDayJs(this.event.start),
                         formatEventDateByDayJs(this.event.end)
                     )
@@ -405,50 +282,32 @@ export default {
                 selectedEventType: this.subEvent.selectedEventType,
                 start_time: this.subEvent.start_time,
                 end_time: this.subEvent.end_time,
-                description:  this.subEvent.description,
+                description: this.subEvent.description,
                 user_id: this.subEvent.user_id,
                 event_type_id: this.subEvent.event_type_id,
                 allDay: this.subEvent.allDay,
-                eventProperties: this.event_properties
+                eventProperties: (this.event_properties ?? [])
                     .filter((eventProperty) => eventProperty.checked)
                     .map((eventProperty) => eventProperty.id),
             };
 
-            if (this.edit) {
-                axios.patch(route('subEvent.update', this.subEventToEdit.id), payload).finally(() => onSuccess());
-            } else {
-                axios.post(route('subEvent.add'), payload).finally(() => onSuccess());
-            }
+            this.processing = true;
+            this.requestError = '';
+            const request = this.edit
+                ? axios.patch(route('subEvent.update', this.subEventToEdit.id), payload)
+                : axios.post(route('subEvent.add'), payload);
 
-        }
-    },
-    watch: {
-        'subEvent.selectedEventType': {
-            handler(newVal, oldVal) {
-                this.checkSubmitStatus();
-            },
-            deep: true,
-        },
-        allDayEvent: {
-            handler() {
-                this.checkTimes()
-            }
-        },
-        subEvent: {
-            immediate: true,
-            deep: true,
-            handler(){
-                this.event_properties?.forEach((event_property) => {
-                    event_property.checked = this.subEventToEdit?.event_properties.some(
-                        (event_event_properties) => event_event_properties.id === event_property.id
-                    );
+            // Erst nach Erfolg schließen; bei Fehlern bleibt das Modal mit Hinweis offen
+            request
+                .then(() => onSuccess())
+                .catch((error) => {
+                    this.requestError = error?.response?.data?.message
+                        ?? this.$t('Something went wrong while saving. Please try again.');
+                })
+                .finally(() => {
+                    this.processing = false;
                 });
-            }
         }
     },
 }
 </script>
-
-<style scoped>
-
-</style>

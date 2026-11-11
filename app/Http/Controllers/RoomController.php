@@ -62,6 +62,9 @@ class RoomController extends Controller
             'everyone_can_book' => $request->boolean('everyone_can_book'),
             'relevant_for_disposition' => $request->boolean('relevant_for_disposition', true),
             'capacity' => $request->capacity,
+            'street' => $request->street,
+            'zip_code' => $request->zip_code,
+            'city' => $request->city,
             'order' => Room::max('order') + 1,
         ]);
 
@@ -213,7 +216,10 @@ class RoomController extends Controller
             'end_date',
             'everyone_can_book',
             'relevant_for_disposition',
-            'capacity'
+            'capacity',
+            'street',
+            'zip_code',
+            'city'
         );
         // Zeitraum gehört nur zu temporären Räumen; beim Abwählen nicht als Altlast stehen lassen
         if ($request->has('temporary') && !$request->boolean('temporary')) {
@@ -449,6 +455,9 @@ class RoomController extends Controller
             'everyone_can_book' => ['sometimes', 'boolean'],
             'relevant_for_disposition' => ['sometimes', 'boolean'],
             'capacity' => ['nullable', 'integer', 'min:0'],
+            'street' => ['nullable', 'string', 'max:255'],
+            'zip_code' => ['nullable', 'string', 'max:20'],
+            'city' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

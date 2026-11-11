@@ -1,73 +1,88 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
-            <div class="mx-4">
-                <div>
-                    <h1 class="my-1 flex">
-                        <div class="flex-grow font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
-                            {{ $t('Rename table') }}
-                        </div>
-                    </h1>
-                    <h2 class="text-sm/5 font-bold text-text-subtle mb-2 mt-8">
-                        {{ $t('Choose a meaningful name for your template. This will make it easy for all users to find.') }}
-                    </h2>
-                    <div class="flex items-center w-full mr-2">
-                        <div class="w-full">
-                            <inputComponent v-model="this.tableName" :placeholder="$t('Name of the template*')"/>
-                        </div>
-                    </div>
-                    <div class="flex justify-center">
-                        <FormButton @click="updateBudgetTemplateName()"
-                                   :disabled="tableName === ''"
-                                   :text="$t('Rename')"
-                        />
-                    </div>
-                </div>
-            </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        title="Rename table"
+        description="Choose a meaningful name for your template. This will make it easy for all users to find."
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <form id="renameBudgetTableForm" @submit.prevent="updateBudgetTemplateName">
+            <BaseInput
+                id="budgetTableName"
+                v-model="tableName"
+                label="Template name"
+                required
+                :error="errorMessage"
+                autofocus
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                type="submit"
+                form="renameBudgetTableForm"
+                label="Rename"
+                variant="primary"
+                icon="IconPencil"
+                :processing="processing"
+                :disabled="!canSubmit"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconCheck, IconChevronDown, IconCircleX, IconX} from "@tabler/icons-vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+<script setup>
+import {computed, ref} from 'vue'
+import {router} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
-export default {
-    name: 'RenameTableComponent',
-    mixins: [Permissions],
-    components: {
-        BaseModal,
-        FormButton,
-        JetDialogModal,
-        IconX,
-        IconCheck,
-        IconChevronDown,
-        InputComponent,
-        IconCircleX
-    },
-    data() {
-        return {
-            tableName: this.table?.name,
-        }
-    },
-    props: ['table'],
-    emits: ['closed'],
-    methods: {
-        closeModal(bool) {
-            this.$emit('closed', bool);
+defineOptions({name: 'RenameTableComponent'})
+
+const props = defineProps({
+    table: {type: Object, required: true},
+})
+
+const emit = defineEmits(['closed'])
+
+const tableName = ref(props.table?.name ?? '')
+const processing = ref(false)
+const errorMessage = ref('')
+
+const canSubmit = computed(() => tableName.value.trim() !== '' && !processing.value)
+
+function closeModal(renamed) {
+    emit('closed', renamed)
+}
+
+function updateBudgetTemplateName() {
+    if (!canSubmit.value) {
+        return
+    }
+    processing.value = true
+    errorMessage.value = ''
+    router.patch(
+        route('project.budget.table.update-name'),
+        {
+            table_id: props.table.id,
+            table_name: tableName.value.trim(),
         },
-        updateBudgetTemplateName() {
-            this.$inertia.patch(
-                route('project.budget.table.update-name'),
-                {
-                    table_id: this.table.id,
-                    table_name: this.tableName
-                }
-            );
-            this.closeModal(true);
+        {
+            preserveScroll: true,
+            onSuccess: () => closeModal(true),
+            onError: (errors) => {
+                errorMessage.value = errors.table_name ?? Object.values(errors)[0] ?? ''
+            },
+            onFinish: () => {
+                processing.value = false
+            },
         }
-    },
+    )
 }
 </script>

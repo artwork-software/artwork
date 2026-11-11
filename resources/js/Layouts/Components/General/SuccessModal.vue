@@ -1,71 +1,53 @@
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
-            </TransitionChild>
-            <div class="fixed inset-0 z-50 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
-                                    <span class="sr-only">{{ $t('Close') }}</span>
-                                    <PropertyIcon name="IconX" stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <div class="relative z-40 pl-4">
-                                <div class="font-black font-lexend text-text text-3xl my-2 mb-6">
-                                    {{ title }}
-                                </div>
-                                <p class="text-success subpixel-antialiased">{{ description }}</p>
-                            </div>
-                            <div class="flex justify-between mt-5 items-center pr-4">
-                                <FormButton @click="closeModal(true)"
-                                           :text="$t(buttonText)"/>
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
-                </div>
-            </div>
-        </Dialog>
-    </TransitionRoot>
+    <ArtworkBaseModal
+        v-if="isVisible"
+        :title="title || 'Success'"
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <div class="flex items-start gap-3">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-md bg-success-surface text-success">
+                <PropertyIcon name="IconCircleCheck" class="size-5" stroke-width="1.75" aria-hidden="true" />
+            </span>
+            <!-- Beschreibung kommt fertig übersetzt oder als Flash-Text, daher kein $t -->
+            <p class="min-w-0 flex-1 pt-1.5 text-sm text-text">{{ description }}</p>
+        </div>
+        <template #footer>
+            <BaseUIButton
+                :label="buttonLabel"
+                variant="primary"
+                hide-icon
+                @click="closeModal(true)"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+<script setup>
+import {computed} from 'vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 
-export default {
-    name: "SuccessModal",
-    mixins: [Permissions],
-    components: {
-        PropertyIcon,
-        FormButton,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        DialogPanel,
-    },
-    data(){
-        return {
-            open: true,
-            buttonText: this.button ? this.button : 'Delete'
-        }
-    },
-    props: ['title', 'description', 'button', 'is_budget'],
-    emits: ['closed', 'delete'],
-    methods: {
-        closeModal(bool){
-            this.$emit('closed', bool)
-        },
-        deleteElement(bool){
-            this.$emit('delete', bool)
-        }
-    }
+defineOptions({name: 'SuccessModal'})
+
+const props = defineProps({
+    title: {type: String, default: null},
+    description: {type: String, default: ''},
+    button: {type: String, default: null},
+    is_budget: {type: Boolean, default: false},
+    // Einige Aufrufer steuern die Sichtbarkeit über :show bzw. :open statt v-if
+    show: {type: Boolean, default: null},
+    open: {type: Boolean, default: null},
+})
+
+const emit = defineEmits(['closed', 'delete'])
+
+const isVisible = computed(() => props.show !== false && props.open !== false)
+
+const buttonLabel = computed(() => props.button || 'Close')
+
+function closeModal(confirmed) {
+    emit('closed', confirmed)
 }
 </script>

@@ -1,172 +1,153 @@
 <template>
-    <ArtworkBaseModal @close="closeModal" v-if="true" :title="$t('Link projects')" :description="$t('Assign projects to this funding source. Only these projects can later be linked to this source of funding.')">
-            <div class="mx-4">
-                <!--   Heading   -->
-                <div>
-                    <div class="flex w-full mt-6">
-                        <div class="flex w-full relative">
-                            <div class="w-full">
-                                <BaseInput id="projectSearch" v-model="project_query" label="Suche nach Projekten"/>
-                            </div>
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100"
-                                        leave-to-class="opacity-0">
-                                <div v-if="project_search_results.length > 0 && project_query.length > 0"
-                                     class="absolute w-full top-16 z-10 max-h-60 bg-surface-inverse shadow-lg rounded-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                    <div class="border-border-subtle">
-                                        <div v-for="(project, index) in project_search_results" :key="index"
-                                             class="flex items-center cursor-pointer">
-                                            <div class="flex-1 text-sm py-4">
-                                                <p @click="addProjectToArray(project)"
-                                                   class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                    {{ project.name }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </transition>
-                        </div>
-                    </div>
-
-                    <LastedProjects
-                        :limit="10"
-                        @select="addProjectToArray"
-                    />
-
-                    <div class="text-base/5 font-semibold text-text mt-4" v-if="this.linkedProjectsArray.length > 0">
-                        {{$t('Linked projects')}}:
-                    </div>
-                    <div class="mb-4 divide-border-subtle divide-y divide-dashed mt-2">
-                        <div v-for="project in linkedProjectsArray" class="text-sm/5 font-semibold text-text py-3">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <span class="flex">
-                                        {{ project.name }}
-                                    </span>
-                                </div>
-                                <button type="button" @click="deleteProjectFromArray(project)">
-                                    <span class="sr-only">{{$t('Remove user from team')}}</span>
-                                    <IconCircleX stroke-width="1.5" class="ml-3 text-accent-600 h-5 w-5 hover:text-danger "/>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-center mt-8">
-                        <FormButton @click="updateLinkedProjects()"
-                                    :text="$t('Save')"
-                        ></FormButton>
-                    </div>
-                </div>
+    <ArtworkBaseModal
+        title="Link projects"
+        description="Assign projects to this funding source. Only these projects can later be linked to this source of funding."
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <div class="space-y-4">
+            <div>
+                <BaseInput
+                    id="linkProjectsSearch"
+                    v-model="projectQuery"
+                    label="Search for projects"
+                    autocomplete="off"
+                    autofocus
+                />
+                <ul
+                    v-if="projectSearchResults.length > 0 && projectQuery.length > 0"
+                    class="mt-2 max-h-60 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+                >
+                    <li v-for="project in projectSearchResults" :key="project.id">
+                        <button
+                            type="button"
+                            class="block w-full cursor-pointer truncate px-3 py-2 text-left text-sm font-medium text-text transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover focus-visible:bg-surface-hover"
+                            @click="addProjectToArray(project)"
+                        >
+                            {{ project.name }}
+                        </button>
+                    </li>
+                </ul>
             </div>
+
+            <LastedProjects
+                :limit="10"
+                @select="addProjectToArray"
+            />
+
+            <div v-if="linkedProjectsArray.length > 0">
+                <p class="mb-2 font-lexend text-xs font-medium text-text-muted">{{ $t('Linked projects') }}</p>
+                <ul class="max-h-72 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface">
+                    <li
+                        v-for="project in linkedProjectsArray"
+                        :key="project.id"
+                        class="flex items-center justify-between gap-x-3 px-3 py-2"
+                    >
+                        <span class="truncate text-sm font-medium text-text">{{ project.name }}</span>
+                        <button
+                            type="button"
+                            class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover hover:text-danger"
+                            :aria-label="$t('Remove project')"
+                            @click="deleteProjectFromArray(project)"
+                        >
+                            <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+                :disabled="processing"
+                @click="updateLinkedProjects"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconX} from "@tabler/icons-vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import LastedProjects from "@/Artwork/LastedProjects.vue";
-import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+<script setup>
+import {ref, watch} from 'vue'
+import axios from 'axios'
+import {router} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import LastedProjects from '@/Artwork/LastedProjects.vue'
 
+defineOptions({name: 'LinkProjectsToMoneySourcesComponent'})
 
-export default {
-    name: 'LinkProjectsToMoneySourcesComponent',
-    mixins: [Permissions],
-    components: {
-        ArtworkBaseModal,
-        LastedProjects,
-        BaseInput,
-        TextInputComponent,
-        ModalHeader,
-        BaseModal,
-        FormButton,
-        JetDialogModal,
-        IconX,
-        IconCheck,
-        IconChevronDown,
-        IconCirclePlus,
-        IconCircleX
-    },
+const props = defineProps({
+    moneySource: {type: Object, required: true},
+    linkedProjects: {type: Array, default: () => []},
+})
 
-    data() {
-        return {
-            project_query: '',
-            project_search_results: [],
-            linkedProjectsArray: this.linkedProjects ? this.linkedProjects : [],
+const emit = defineEmits(['closed'])
+
+const projectQuery = ref('')
+const projectSearchResults = ref([])
+// Kopie: früher wurde das übergebene Array direkt verändert, auch beim Abbrechen
+const linkedProjectsArray = ref([...(props.linkedProjects ?? [])])
+const processing = ref(false)
+
+// Spät eintreffende Antworten einer älteren Eingabe nicht über neuere schreiben
+let latestSearchRequest = 0
+watch(projectQuery, (query) => {
+    if (query.length === 0) {
+        projectSearchResults.value = []
+        return
+    }
+    const requestNumber = ++latestSearchRequest
+    axios.get('/projects/search', {params: {query}}).then((response) => {
+        if (requestNumber === latestSearchRequest) {
+            projectSearchResults.value = response.data
         }
-    },
+    })
+})
 
-    props: ['moneySource','linkedProjects'],
+function closeModal(saved) {
+    emit('closed', saved)
+}
 
-    emits: ['closed'],
+function addProjectToArray(projectToAdd) {
+    projectQuery.value = ''
+    if (!projectToAdd?.id || linkedProjectsArray.value.some((project) => project.id === projectToAdd.id)) {
+        return
+    }
+    linkedProjectsArray.value.push(projectToAdd)
+}
 
-    watch: {
-        project_query: {
-            handler() {
-                if (this.project_query.length > 0) {
-                    axios.get('/projects/search', {
-                        params: {query: this.project_query}
-                    }).then(response => {
-                        this.project_search_results = response.data;
-                    })
-                }
+function deleteProjectFromArray(projectToRemove) {
+    linkedProjectsArray.value = linkedProjectsArray.value.filter((project) => project.id !== projectToRemove.id)
+}
+
+function updateLinkedProjects() {
+    if (processing.value) {
+        return
+    }
+    processing.value = true
+    router.patch(
+        route('money_sources.update_projects', props.moneySource.id),
+        {linkedProjectIds: linkedProjectsArray.value.map((project) => project.id)},
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => closeModal(true),
+            onFinish: () => {
+                processing.value = false
             },
-            deep: true
-        },
-    },
-    computed: {
-
-    },
-
-    methods: {
-        openModal() {
-        },
-        addProjectToArray(projectToAdd){
-            if(this.linkedProjectsArray !== [])
-            for (let linkedProject of this.linkedProjectsArray) {
-                if (projectToAdd.id === linkedProject.id) {
-                    this.project_query = ""
-                    return;
-                }
-            }else{
-                this.linkedProjectsArray = [projectToAdd]
-            }
-            this.project_query = "";
-            this.linkedProjectsArray.push(projectToAdd);
-        },
-        deleteProjectFromArray(project) {
-            if (this.linkedProjectsArray.includes(project)) {
-                this.linkedProjectsArray.splice(this.linkedProjectsArray.indexOf(project), 1);
-            }
-        },
-        updateLinkedProjects(){
-            let linkedProjectIds = [];
-            if(this.linkedProjectsArray?.length > 0){
-                this.linkedProjectsArray.forEach((linkedProject) => {
-                    linkedProjectIds.push(linkedProject.id);
-                })
-            }
-            this.$inertia.patch(route('money_sources.update_projects', this.moneySource.id), {
-                linkedProjectIds: linkedProjectIds
-            }, {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    this.closeModal(true);
-                }
-            });
-        },
-        closeModal(bool) {
-            this.$emit('closed', bool);
-        },
-    },
+        }
+    )
 }
 </script>
-
-<style scoped></style>

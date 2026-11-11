@@ -1,102 +1,51 @@
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closed">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
-            </TransitionChild>
-
-            <div class="fixed inset-0 z-50 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closed">
-                                    <span class="sr-only">Close</span>
-                                    <IconX class="h-6 w-6" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <div class="relative z-40">
-                                <div class="font-black font-lexend text-text text-3xl my-2">
-                                    {{ $t('Delete shift staffing') }}
-                                </div>
-                                <p class="text-sm/5 font-bold text-text-subtle">
-                                    {{ $t('You want to delete the occupation of a repeat shift. Specify whether this only applies to one or all further shifts.') }}
-                                </p>
-                                <SwitchGroup as="div" class="flex items-center mt-4">
-                                    <SwitchLabel as="span" class="mr-3 text-sm" :class="this.removeFromSingleShift ? 'text-text-subtle' : 'font-bold'">
-                                        {{ $t('For this and all subsequent shifts') }}
-                                    </SwitchLabel>
-                                    <Switch v-model="this.removeFromSingleShift" :class="[this.removeFromSingleShift ? 'bg-accent-600' : 'bg-accent-600', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
-                                        <span aria-hidden="true" :class="[this.removeFromSingleShift  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-                                    </Switch>
-                                    <SwitchLabel as="span" class="ml-3 text-sm" :class="this.removeFromSingleShift ? 'font-bold' : 'text-text-subtle'">
-                                        {{ $t('Only for this shift') }}
-                                    </SwitchLabel>
-                                </SwitchGroup>
-                                <div class="flex items-center justify-center">
-                                    <BaseUIButton :label="$t('Save')" @click="returnBuffer" class="mt-4" is-add-button :disabled="removeFromSingleShift.processing"/>
-                                </div>
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
-                </div>
-            </div>
-        </Dialog>
-    </TransitionRoot>
+    <ArtworkBaseModal
+        title="Delete shift staffing"
+        description="You want to delete the occupation of a repeat shift. Specify whether this only applies to one or all further shifts."
+        modal-size="sm:max-w-lg"
+        @close="closed"
+    >
+        <SwitchDualLabel
+            v-model="removeFromSingleShift"
+            :left-label="$t('For this and all subsequent shifts')"
+            :right-label="$t('Only for this shift')"
+            :icon="IconRepeat"
+        />
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                @click="closed"
+            />
+            <BaseUIButton
+                label="Delete"
+                variant="danger"
+                icon="IconTrash"
+                @click="returnBuffer"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconX} from "@tabler/icons-vue";
-import {
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-    TransitionChild,
-    TransitionRoot,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
-} from '@headlessui/vue'
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+<script setup>
+import {ref} from 'vue'
+import {IconRepeat} from '@tabler/icons-vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import SwitchDualLabel from '@/Artwork/Toggles/SwitchDualLabel.vue'
 
-export default {
-    name: "ChooseDeleteUserShiftModal",
-    mixins: [Permissions],
-    components: {
-        BaseUIButton,
-        FormButton,
-        DialogPanel,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        IconX,
-        Switch,
-        SwitchGroup,
-        SwitchLabel
-    },
-    data(){
-        return {
-            open: true,
-            clickedAll: false,
-            clickedSingle: false,
-            removeFromSingleShift: false,
-        }
-    },
-    emits: [
-        'close-modal',
-        'returnBuffer'
-    ],
-    methods: {
-        closed(){
-            this.$emit('close-modal')
-        },
-        returnBuffer(){
-            this.$emit('returnBuffer', this.removeFromSingleShift)
-        }
-    }
+defineOptions({name: 'ChooseDeleteUserShiftModal'})
+
+const emit = defineEmits(['close-modal', 'returnBuffer'])
+
+const removeFromSingleShift = ref(false)
+
+function closed() {
+    emit('close-modal')
+}
+
+function returnBuffer() {
+    emit('returnBuffer', removeFromSingleShift.value)
 }
 </script>

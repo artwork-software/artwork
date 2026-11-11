@@ -88,6 +88,15 @@ class Kernel extends ConsoleKernel
         // DP-18 Stufe 2: überfällige Überstunden als auszuzahlend markieren
         $schedule->command(MarkPayableOvertimeCommand::class)->dailyAt('00:45')->runInBackground();
         $schedule->command(ImportHolidaysCommand::class)->yearly()->runInBackground();
+        // KI-Session-Tokens leben 15 Minuten und erzeugen bei aktiver Nutzung viele Zeilen in
+        // oauth_access_tokens; ohne Purge bleiben abgelaufene und widerrufene Tokens dort liegen.
+        $schedule->command('passport:purge')->dailyAt('02:30')->runInBackground();
+        // KI-Chatverläufe nach der Aufbewahrungsfrist des Hauses (0 = unbegrenzt)
+        $schedule->command('ai:purge-transcripts')->dailyAt('02:45')->runInBackground();
+
+        // Bestaetigungsfrist einer KI-Aktion sind 10 Minuten (config ai.action_ttl_minutes);
+        // stuendlich reicht, weil abgelaufene Aktionen ohnehin bei jeder Pruefung durchfallen.
+        $schedule->command('ai:expire-actions')->hourly()->runInBackground();
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
@@ -150,6 +159,7 @@ class Kernel extends ConsoleKernel
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalUserManagement/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Inventory/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Webhook/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/AiAssistant/Console/Commands', true);
 
         require base_path('routes/console.php');
     }

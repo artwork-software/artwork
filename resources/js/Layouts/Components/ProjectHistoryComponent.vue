@@ -1,121 +1,62 @@
 <template>
-    <ArtworkBaseModal @close="closeModal" :title="$t('Project process')" :description="$t('Here you can see what was changed by whom and when.')">
-        <div class="mx-4">
-            <!-- Header -->
+    <ArtworkBaseModal
+        title="Project process"
+        description="Here you can see what was changed by whom and when."
+        modal-size="sm:max-w-2xl"
+        @close="closeModal(false)"
+    >
+        <BaseTabs
+            v-if="historyTabs.length > 1"
+            :tabs="historyTabs"
+            navigation-mode="buttons"
+            class="mt-0!"
+            @tab-click="(tab) => changeHistoryTabs(tab.id)"
+        />
 
-            <!-- Tabs (Pill/Segmented) -->
-            <div class="mb-4 pt-3">
-                <nav class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken/70 p-1 shadow-sm ring-1 ring-white/40"
-                     aria-label="Tabs" role="tablist">
-                    <button
-                        v-for="tab in historyTabs"
-                        :key="tab.id"
-                        role="tab"
-                        type="button"
-                        @click="changeHistoryTabs(tab.id)"
-                        :aria-selected="currentTab === tab.id"
-                        :class="[ 'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase transition',
-              currentTab === tab.id
-                ? 'bg-white text-accent-700 shadow-sm'
-                : 'text-text-muted hover:text-text'
-            ]"
-                    >
-                        <span>{{ $t(tab.name) }}</span>
-                        <span
-                            class="inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] tabular-nums"
-                            :class="currentTab === tab.id ? 'border-text-inverse/30 text-accent-700 bg-text-inverse/10'
-                : 'border-border text-text-muted bg-white/70'"
-                        >
-              {{ tab.id === 'project' ? (projectItems?.length || 0) : (budgetItems?.length || 0) }}
-            </span>
-                    </button>
-                </nav>
-            </div>
-
-            <div class="mb-5 pb-5">
-                <!-- Loading State -->
-                <div v-if="loading" class="mt-2 flex items-center justify-center py-12">
-                    <div class="text-center">
-                        <svg class="mx-auto h-8 w-8 animate-spin text-accent-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <p class="mt-2 text-sm text-text-muted">{{ $t('Loading...') }}</p>
-                    </div>
-                </div>
-
-                <!-- Timeline: Project -->
-                <div v-else-if="currentTab === 'project'" class="mt-2 max-h-96 overflow-y-auto pr-1.5" role="region" :aria-label="$t('Project')">
-                    <div v-if="projectItems.length === 0" class="rounded-xl border border-border-subtle bg-surface-sunken/70 p-4 text-sm text-text-muted">
-                        {{ $t('No entries found') }}
-                    </div>
-
-                    <ol
-                        v-else
-                        role="list"
-                        class="relative pl-8 space-y-2 before:content-[''] before:absolute before:left-3 before:top-0 before:bottom-0 before:w-px
-           before:bg-accent-700/60 before:z-0"
-                    >
-                        <li v-for="(historyItem, index) in projectItems" :key="index" class="relative">
-                            <!-- Dot exakt auf der Linie (Linie bei 12px = left-3, Dot-Radius 5px => 12-5 = 7px) -->
-                            <span
-                                class="absolute -left-6 top-5 block h-2.5 w-2.5 rounded-full bg-accent-700 ring-2 ring-white z-10"
-                                aria-hidden="true"
-                            ></span>
-
-                            <!-- Card rechts der Linie (weggerückt) -->
-                            <div class="rounded-xl border border-border-subtle bg-white/85 p-3">
-                                <div class="flex flex-wrap items-center gap-2">
-                                      <span class="inline-flex h-6 items-center rounded-full border border-text-inverse/25 bg-text-inverse/10 px-2 text-[11px] font-medium text-accent-700 tabular-nums">
-                                        {{ historyItem.created_at }}
-                                      </span>
-
-                                    <UserPopoverTooltip :user="historyItem.changer" :id="`project-${index}`" height="6" width="6" lazy-load />
-
-                                    <div class="min-w-0 grow text-xs text-text-muted subpixel-antialiased">
-                                        {{ $t(historyItem.changes[0].translationKey, historyItem.changes[0].translationKeyPlaceholderValues) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                    </ol>
-                </div>
-
-                <!-- Timeline: Budget -->
-                <div v-else-if="currentTab === 'budget'" class="mt-2 max-h-96 overflow-y-auto" role="region" :aria-label="$t('Budget')">
-                    <div v-if="budgetItems.length === 0" class="rounded-xl border border-border-subtle bg-surface-sunken/70 p-4 text-sm text-text-muted">
-                        {{ $t('No entries found') }}
-                    </div>
-
-                    <div
-                        v-else
-                        class="relative pl-8 before:content-[''] before:absolute before:left-3 before:top-0 before:bottom-0 before:w-px
-                       before:bg-warning"
-                    >
-                        <ol role="list" class="space-y-2">
-                            <li v-for="(historyItem, index) in budgetItems" :key="index" class="relative">
-                                <span
-                                    class="absolute -left-6 top-1/2 -translate-y-1/2 block h-2.5 w-2.5 rounded-full bg-warning ring-2 ring-white"
-                                    aria-hidden="true"
-                                ></span>
-
-                                <div class="rounded-xl border border-warning-border/70 bg-warning-surface/70 p-3">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="inline-flex h-6 items-center rounded-full border border-warning-border/70 bg-warning-surface/70 px-2 text-[11px] font-medium text-warning tabular-nums">
-                                          {{ historyItem.created_at }}
-                                        </span>
-                                        <UserPopoverTooltip :user="historyItem.changer" :id="`budget-${index}`" height="6" width="6" lazy-load />
-                                        <div class="min-w-0 grow text-xs text-warning subpixel-antialiased">
-                                            {{ $t(historyItem.changes[0].translationKey, historyItem.changes[0].translationKeyPlaceholderValues) }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
+        <div v-if="loading" class="space-y-2" aria-busy="true">
+            <div v-for="placeholder in 4" :key="placeholder" class="h-12 animate-pulse rounded-lg bg-surface-sunken motion-reduce:animate-none"/>
         </div>
+
+        <BaseAlertComponent
+            v-else-if="loadError"
+            type="error"
+            class="mb-0!"
+            message="History could not be loaded."
+            use-translation
+        />
+
+        <template v-else>
+            <EmptyState
+                v-if="visibleItems.length === 0"
+                icon="IconHistory"
+                :title="$t('No entries found')"
+            />
+            <ol
+                v-else
+                class="max-h-96 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border-subtle"
+                :aria-label="$t(currentTab === 'budget' ? 'Budget' : 'Project')"
+            >
+                <li
+                    v-for="(historyItem, index) in visibleItems"
+                    :key="historyItem.id ?? index"
+                    class="flex items-start gap-x-3 px-3 py-2"
+                >
+                    <UserPopoverTooltip
+                        :user="historyItem.changer"
+                        :id="`${currentTab}-history-${index}`"
+                        height="7"
+                        width="7"
+                        lazy-load
+                    />
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm text-text">
+                            {{ $t(historyItem.changes[0].translationKey, historyItem.changes[0].translationKeyPlaceholderValues) }}
+                        </p>
+                        <p class="mt-0.5 text-xs text-text-muted tabular-nums">{{ historyItem.created_at }}</p>
+                    </div>
+                </li>
+            </ol>
+        </template>
     </ArtworkBaseModal>
 </template>
 
@@ -124,9 +65,11 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
-import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseTabs from '@/Artwork/Tabs/BaseTabs.vue'
+import EmptyState from '@/Artwork/Feedback/EmptyState.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
 
 defineOptions({ name: 'ProjectHistoryComponent' })
 
@@ -151,7 +94,7 @@ async function loadHistory() {
     loading.value = true
     loadError.value = null
     try {
-        const url = route ? route('projects.history', { project: props.project_id }) : `/projects/${props.project_id}/history`
+        const url = route('projects.history', { project: props.project_id })
         const { data } = await axios.get(url)
         if (data && Array.isArray(data.history)) {
             history.value = data.history
@@ -205,10 +148,12 @@ const canSeeBudgetTab = computed(() => {
 
 const currentTab = ref('project')
 
-// Tabs (i18n labels in template)
+// Reiter für BaseTabs (Namen werden dort übersetzt)
 const historyTabs = computed(() => {
-    const tabs = [{ id: 'project', name: 'Project' }]
-    if (canSeeBudgetTab.value) tabs.push({ id: 'budget', name: 'Budget' })
+    const tabs = [{ id: 'project', name: 'Project', count: projectItems.value.length, current: currentTab.value === 'project', permission: true }]
+    if (canSeeBudgetTab.value) {
+        tabs.push({ id: 'budget', name: 'Budget', count: budgetItems.value.length, current: currentTab.value === 'budget', permission: true })
+    }
     return tabs
 })
 
@@ -231,8 +176,10 @@ const projectItems = computed(() =>
 const budgetItems = computed(() =>
     (history.value ?? []).filter(h => h?.changes?.[0]?.type === 'budget')
 )
+
+// Ohne Budgetrecht nie Budget-Einträge zeigen, auch wenn der Reiter noch auf „budget“ steht
+const visibleItems = computed(() =>
+    currentTab.value === 'budget' && canSeeBudgetTab.value ? budgetItems.value : projectItems.value
+)
 </script>
 
-<style scoped>
-.tabular-nums { font-variant-numeric: tabular-nums; }
-</style>

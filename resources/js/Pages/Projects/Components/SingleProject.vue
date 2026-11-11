@@ -15,7 +15,7 @@
                     <img :src="'/storage/keyVisual/' + project.key_visual_path" alt="" class="rounded-full h-12 w-12 object-cover" v-if="project.key_visual_path">
                     <img src="/Svgs/IconSvgs/placeholder.svg" alt="" class="rounded-full h-5 w-5" v-else>
                     <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">
-                        <img src="Svgs/IconSvgs/icon_project_group.svg" alt="">
+                        <img src="/Svgs/IconSvgs/icon_project_group.svg" alt="">
                     </div>
                 </div>
             </div>
@@ -116,29 +116,32 @@
         </div>
     </div>
 
-    <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject" modal-image="/Svgs/Overlays/illu_warning.svg">
-        <div class="mx-4">
-            <div class="font-black font-lexend text-text text-3xl my-2">
-                {{ $t('Delete project') }}
-            </div>
-            <div class="text-danger subpixel-antialiased">
-                {{ $t('Are you sure you want to delete the project?', [project.name]) }}
-            </div>
-            <div class="flex justify-between mt-6">
-                <button class="bg-accent-600 hover:bg-accent-700 rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-white"
-                        @click="deleteProject">
-                    {{ $t('Delete') }}
-                </button>
-                <div class="flex my-auto">
-                            <span @click="closeDeleteProjectModal()"
-                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">
-                                {{ $t('No, not really') }}
-                            </span>
-                </div>
-            </div>
-        </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        v-if="deletingProject"
+        title="Delete project"
+        modal-size="sm:max-w-lg"
+        @close="closeDeleteProjectModal"
+    >
+        <p class="text-sm text-text">
+            {{ $t('Are you sure you want to delete the project?', [project.name]) }}
+        </p>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="deleteProcessing"
+                @click="closeDeleteProjectModal"
+            />
+            <BaseUIButton
+                label="Delete"
+                variant="danger"
+                icon="IconTrash"
+                :processing="deleteProcessing"
+                @click="deleteProject"
+            />
+        </template>
+    </ArtworkBaseModal>
 
     <project-create-modal
         v-if="editingProject"
@@ -152,17 +155,6 @@
         :create-settings="createSettings"
         :project="project"
     />
-
-    <!--<project-data-edit-modal
-        v-if="editingProject"
-        :show="editingProject"
-        :project="project"
-        :group-projects="this.projectGroups"
-        :current-group="this.groupPerProject[project?.id]"
-        :states="states"
-        :create-settings="createSettings"
-        @closed="closeEditProjectModal"
-    />-->
 </template>
 
 <script>
@@ -170,9 +162,9 @@ import Permissions from "@/Mixins/Permissions.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {Link, router} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
-import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import {IconCalendarMonth, IconPinned} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -184,8 +176,7 @@ export default {
         IconCalendarMonth,
         IconPinned,
         ProjectCreateModal,
-        ProjectDataEditModal,
-        BaseModal, Link, BaseMenu, Menu,
+        ArtworkBaseModal, BaseUIButton, Link, BaseMenu, Menu,
         MenuButton,
         MenuItem,
         MenuItems,},
@@ -242,6 +233,7 @@ export default {
     data(){
         return {
             deletingProject: false,
+            deleteProcessing: false,
             editingProject: false,
         }
     },
@@ -279,13 +271,18 @@ export default {
         },
         closeDeleteProjectModal() {
             this.deletingProject = false;
-            this.projectToDelete = null;
         },
         deleteProject() {
-            this.nameOfDeletedProject = this.project.name;
-            router.delete(`/projects/${this.project.id}`);
-            this.closeDeleteProjectModal();
-            this.openSuccessModal();
+            if (this.deleteProcessing) {
+                return;
+            }
+            this.deleteProcessing = true;
+            router.delete(`/projects/${this.project.id}`, {
+                onSuccess: () => this.closeDeleteProjectModal(),
+                onFinish: () => {
+                    this.deleteProcessing = false;
+                },
+            });
         },
         getEditHref() {
             return route('projects.tab', {project: this.project?.id, projectTab: this.first_project_tab_id});
@@ -319,7 +316,7 @@ export default {
             if (writeAuth.includes(this.$page.props.auth.user.id) && type === 'edit') {
                 return true;
             }
-            if (managerAuth.includes(this.$page.props.auth.user.id) || deleteAuth.includes(this.$page.props.auth.user.id) && type === 'delete') {
+            if ((managerAuth.includes(this.$page.props.auth.user.id) || deleteAuth.includes(this.$page.props.auth.user.id)) && type === 'delete') {
                 return true;
             }
             return false;

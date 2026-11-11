@@ -1,55 +1,73 @@
+<template>
+    <ArtworkBaseModal
+        :title="title || 'Edit'"
+        :description="description || ''"
+        modal-size="sm:max-w-lg"
+        @close="$emit('close')"
+    >
+        <form id="editProjectSettingsForm" class="flex items-end gap-x-3" @submit.prevent="update">
+            <div class="shrink-0">
+                <span class="mb-1 block font-lexend text-xs font-medium text-text-muted">{{ $t('Color') }}</span>
+                <ColorPickerComponent :color="itemCopy.color" @update-color="updateColor"/>
+            </div>
+            <BaseInput
+                id="editProjectSettingsName"
+                v-model="itemCopy.name"
+                label="Name"
+                required
+                class="flex-1"
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                @click="$emit('close')"
+            />
+            <BaseUIButton
+                type="submit"
+                form="editProjectSettingsForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :disabled="!itemCopy.name?.trim()"
+            />
+        </template>
+    </ArtworkBaseModal>
+</template>
+
 <script>
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "EditProjectSettingsModal",
-    components: {FormButton, Input, ColorPickerComponent, BaseModal},
+    components: {ArtworkBaseModal, BaseInput, BaseUIButton, ColorPickerComponent},
     props: {
         item: Object,
         title: String,
         description: String,
     },
-    data(){
+    emits: ['close', 'update'],
+    data() {
         return {
             itemCopy: {...this.item},
         }
     },
-    emits: ['close', 'update'],
     methods: {
-        UpdateColor(color){
+        updateColor(color) {
             this.itemCopy.color = color
         },
-        update(){
+        update() {
+            if (!this.itemCopy.name?.trim()) {
+                return
+            }
             this.$emit('update', this.itemCopy);
             this.$emit('close')
         },
     }
 }
 </script>
-
-<template>
-    <BaseModal @closed="$emit('close')">
-        <div class="font-black font-lexend text-text text-3xl my-2 mb-6">
-            {{ title }}
-        </div>
-        <p class="text-text-muted subpixel-antialiased">{{ description }}</p>
-
-        <div class="my-5 flex items-center w-full">
-            <ColorPickerComponent class="w-fit" @update-color="UpdateColor" :color="itemCopy.color"  />
-            <input type="text" v-model="itemCopy.name" class="h-12 border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 w-full border-border" />
-        </div>
-        <div class="flex justify-between mt-6">
-            <FormButton :text="$t('Save')" @click="update" />
-            <div class="flex my-auto">
-                <span @click="$emit('close')" class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really') }}</span>
-            </div>
-        </div>
-    </BaseModal>
-</template>
-
-<style scoped>
-
-</style>

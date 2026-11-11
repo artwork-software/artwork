@@ -116,4 +116,9 @@ enum PermissionEnum : string
     case CALENDAR_SETTINGS_UPDATE = 'change calendar settings';
     case MONEY_SOURCE_SETTINGS_UPDATE = 'change money source settings';
     case BUDGET_SETTINGS_UPDATE = 'change budget settings';
+
+    // Steuert alle Exporte der Projektübersicht, inkl. Projektinhalte als Excel/Word (11/2026)
+    case PROJECT_OVERVIEW_EXPORT = 'can export from project overview';
+
+    case AI_ASSISTANT_SETTINGS_UPDATE = 'change ai assistant settings';
 }

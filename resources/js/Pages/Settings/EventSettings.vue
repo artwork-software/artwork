@@ -58,7 +58,7 @@
                                <div v-else class="text-text-subtle font-lexend font-extralight text-xs">
                                    {{ $t('Verification mode')}}: {{ $t(eventType.verification_mode) }}<span v-if="eventType.users?.length > 0">: </span>
                                    <span>
-                                        {{ eventType.users.map((user) => { return user.name }).join(', ') }}
+                                        {{ (eventType.users ?? []).map((user) => user.name).join(', ') }}
                                     </span>
                                </div>
                            </div>
@@ -95,94 +95,27 @@
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
-import {ColorPicker} from "vue3-colorpicker";
 import AddEditEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/AddEditEventTypModal.vue";
 import DeleteEventTypeConfirmationModal from "@/Pages/Settings/EventType/Components/Modals/DeleteEventTypeConfirmationModal.vue";
 import DeleteStandardEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/DeleteStandardEventTypeModal.vue";
-import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconPlus, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconCirclePlus, IconEdit, IconTrash} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 export default {
     mixins: [Permissions],
-    computed: {
-        iconMenuItems() {
-            return [
-                {
-                    iconName: 'eventType1',
-                },
-                {
-                    iconName: 'eventType2',
-                },
-                {
-                    iconName: 'eventType3',
-                },
-                {
-                    iconName: 'eventType4',
-                },
-                {
-                    iconName: 'eventType5',
-                },
-                {
-                    iconName: 'eventType6',
-                },
-                {
-                    iconName: 'eventType7',
-                },
-                {
-                    iconName: 'eventType8',
-                },
-                {
-                    iconName: 'eventType9',
-                },
-                {
-                    iconName: 'eventType10',
-                },
-            ]
-        }
-    },
     components: {
         BaseUIButton,
         SettingsGuideBanner,
         BasePageTitle,
         BaseMenuItem,
-        ColorPicker,
         EventSettingHeader,
-        TextInputComponent,
-        ModalHeader,
-        BaseModal,
         BaseMenu,
-        ColorPickerComponent,
-        FormButton,
-        AddButtonBig,
         AppLayout,
-        IconCircleX,
-        IconPlus,
-        SvgCollection,
-        IconCheck,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        JetDialogModal,
-        IconChevronDown,
-        IconDotsVertical,
-        IconTrash,
-        IconEdit,
-        IconX,
         AddEditEventTypeModal,
         DeleteEventTypeConfirmationModal,
         DeleteStandardEventTypeModal
@@ -191,30 +124,9 @@ export default {
     data() {
         return {
             addingEventType: false,
-            editingEventType: false,
             deletingEventType: false,
             deletingUndefined: false,
             eventTypeToDelete: null,
-            takenEventTypeColors: [],
-            eventTypeForm: this.$inertia.form({
-                _method: 'POST',
-                name: '',
-                project_mandatory: false,
-                individual_name: false,
-                abbreviation: '',
-                hex_code: '#EC7A3D',
-                relevant_for_project_period: false
-            }),
-            editEventTypeForm: this.$inertia.form({
-                _method: 'PATCH',
-                hex_code: '',
-                name: '',
-                project_mandatory: false,
-                individual_name: false,
-                abbreviation: '',
-                relevant_for_project_period: false,
-                id: null
-            }),
             eventTypeToEdit: null,
         }
     },
@@ -222,56 +134,39 @@ export default {
         IconTrash,
         IconEdit,
         IconCirclePlus,
-        addColor(color) {
-            this.eventTypeForm.hex_code = color;
-        },
-        updateColor(color) {
-            this.editEventTypeForm.hex_code = color;
-        },
         openAddEventTypeModal() {
+            this.eventTypeToEdit = null;
             this.addingEventType = true;
         },
         openEditEventTypeModal(eventType) {
             this.eventTypeToEdit = eventType;
             this.addingEventType = true
         },
-        closeEditEventTypeModal() {
-            this.editEventTypeForm.hex_code = "";
-            this.editEventTypeForm.name = "";
-            this.editEventTypeForm.id = null;
-            this.editEventTypeForm.project_mandatory = false;
-            this.editEventTypeForm.individual_name = false;
-            this.editEventTypeForm.relevant_for_project_period = false;
-            this.editingEventType = false;
-        },
         closeAddEventTypeModal() {
             this.addingEventType = false;
             this.eventTypeToEdit = null;
         },
-        addEventType() {
-            this.eventTypeForm.post(route('event_types.store'));
-            this.closeAddEventTypeModal();
-        },
-        editEventType() {
-            this.editEventTypeForm.patch(route('event_types.update', {event_type: this.editEventTypeForm.id}));
-            this.closeEditEventTypeModal();
-        },
         openDeleteEventTypeModal(eventType) {
             this.eventTypeToDelete = eventType;
+            // Standard-Termintyp: nur Hinweis, kein zweiter Lösch-Dialog darüber
             if (this.eventTypeToDelete.id === 1) {
                 this.deletingUndefined = true;
+                return;
             }
             this.deletingEventType = true;
         },
         closeDeletingUndefined() {
             this.deletingUndefined = false;
-                this.eventTypeToDelete = null
+            this.eventTypeToDelete = null
         },
         closeDeleteEventTypeModal() {
             this.deletingEventType = false;
             this.eventTypeToDelete = null;
         },
         deleteEventType() {
+            if (!this.eventTypeToDelete) {
+                return;
+            }
             this.$inertia.delete(`../event_types/${this.eventTypeToDelete.id}`, {
                 onSuccess: () => {
                     this.closeDeleteEventTypeModal();
@@ -279,9 +174,6 @@ export default {
             });
         }
     },
-    setup() {
-        return {}
-    }
 }
 </script>
 

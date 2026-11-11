@@ -1,37 +1,52 @@
 <template>
-    <ArtworkBaseModal @close="$emit('close')" :title="$t('Edit Event description')" :description="$t('Edit the event description below.')">
-
+    <ArtworkBaseModal
+        title="Edit Event description"
+        description="Edit the event description below."
+        modal-size="sm:max-w-xl"
+        @close="emit('close')"
+    >
         <BaseAlertComponent
             type="info"
-            :message="$t('The event description can be displayed in the calendar and can be viewed by all users after clicking on the event.')"
-            class="mb-5"   />
+            message="The event description can be displayed in the calendar and can be viewed by all users after clicking on the event."
+            use-translation
+        />
 
-        <form @submit.prevent>
-           <BaseTextarea
-               id="description" v-model="eventNoteForm.description" label="Description"/>
-
-            <div class="mt-5 flex items-center justify-between">
-                <BaseUIButton @click="$emit('close')" label="No, not really" use-translation icon="IconCancel" />
-                <BaseUIButton @click="addEditNote" type="submit" :label="event.description ? $t('Update') : $t('Save')" is-add-button />
-            </div>
+        <form id="addEditEventNoteForm" @submit.prevent="addEditNote">
+            <BaseTextarea
+                id="description"
+                v-model="description"
+                label="Description"
+            />
         </form>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="emit('close')"
+            />
+            <BaseUIButton
+                type="submit"
+                form="addEditEventNoteForm"
+                :label="event.description ? 'Update' : 'Save'"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+            />
+        </template>
     </ArtworkBaseModal>
-
 </template>
 
 <script setup>
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import {useForm} from "@inertiajs/vue3";
-import {inject} from "vue";
+import {inject, ref} from "vue";
 import axios from "axios";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+
+defineOptions({name: 'AddEditEventNoteModal'})
 
 const props = defineProps({
     event: {
@@ -42,10 +57,8 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
-const eventNoteForm = useForm({
-    description: props.event.description
-})
-
+const description = ref(props.event.description ?? '')
+const processing = ref(false)
 
 // Wie der Inline-Beschreibungs-Editor in BulkSingleEvent: per axios patchen (der
 // Endpunkt liefert JSON, keine Inertia-Response), Zeile lokal aktualisieren und die
@@ -53,20 +66,22 @@ const eventNoteForm = useForm({
 const markRowEdited = inject('bulkMarkRowEdited', () => {});
 
 const addEditNote = async () => {
+    if (processing.value) {
+        return
+    }
+    processing.value = true
     try {
         const {data} = await axios.patch(route('event.update.description', props.event.id), {
-            description: eventNoteForm.description,
+            description: description.value,
         });
-        props.event.description = eventNoteForm.description;
+        props.event.description = description.value;
         markRowEdited(props.event.id, data?.event?.updated_at);
         emit('close');
     } catch (e) {
+        // Fehler meldet der globale Toast, das Modal bleibt offen
         console.error('bulk:description-patch-failed', props.event.id, e);
+    } finally {
+        processing.value = false
     }
 }
-
 </script>
-
-<style scoped>
-
-</style>

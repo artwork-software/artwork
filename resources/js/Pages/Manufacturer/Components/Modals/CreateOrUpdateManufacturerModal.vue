@@ -1,130 +1,129 @@
 <template>
-    <ArtworkBaseModal @close="$emit('close')" :title="manufacturer ? $t('Edit Manufacturer') : $t('Create Manufacturer')"
-                      :description="manufacturer ? $t('Edit manufacturer details') : $t('Create a new manufacturer')">
-
-        <form @submit.prevent>
-            <div class="grid gird-cols-1 gap-4">
-                <div>
-                    <BaseInput
-                        id="name"
-                        v-model="manufacturerForm.name"
-                        :label="$t('Name*')"
-                        required
-                    />
-                </div>
-                <div>
-                    <BaseInput
-                        id="address"
-                        v-model="manufacturerForm.address"
-                        :label="$t('Address')"
-                    />
-                    <div class="text-xs text-accent-500 mt-1 px-1">
-                        <p>
-                            {{ $t('Please enter the address of the manufacturer, e.g: Maxmustermann Str. 1234, 12345 Musterdorf') }}
-                        </p>
-                    </div>
-                </div>
-                <div>
-                    <BaseInput
-                        id="contact_person"
-                        v-model="manufacturerForm.contact_person"
-                        :label="$t('Contact Person')"
-                    />
-                </div>
-                <div>
-                    <BaseInput
-                        id="phone"
-                        v-model="manufacturerForm.phone"
-                        :label="$t('Phone')"
-                    />
-                </div>
-                <div>
-                    <BaseInput
-                        id="email"
-                        v-model="manufacturerForm.email"
-                        :label="$t('Email')"
-                    />
-                </div>
-                <div>
-                    <BaseInput
-                        id="website"
-                        v-model="manufacturerForm.website"
-                        :label="$t('Website')"
-                    />
-                </div>
-                <div>
-                    <BaseInput
-                        id="customer_number"
-                        v-model="manufacturerForm.customer_number"
-                        :label="$t('Customer Number')"
-                    />
-                </div>
-            </div>
-
+    <ArtworkBaseModal
+        :title="manufacturer ? 'Edit Manufacturer' : 'Create Manufacturer'"
+        :description="manufacturer ? 'Edit manufacturer details' : 'Create a new manufacturer'"
+        modal-size="sm:max-w-lg"
+        @close="$emit('close')"
+    >
+        <form id="manufacturerForm" class="grid grid-cols-1 gap-4" @submit.prevent="submit">
+            <BaseInput
+                id="manufacturer-name"
+                v-model="manufacturerForm.name"
+                label="Name"
+                required
+                :error="manufacturerForm.errors.name"
+                autofocus
+            />
             <div>
-                <div class="flex justify-center mt-5">
-                    <FormButton
-                        type="submit"
-                        :text="manufacturer ? $t('Update Manufacturer') : $t('Create Manufacturer')"
-                        @click="submit"
-                    />
-                </div>
+                <BaseInput
+                    id="manufacturer-address"
+                    v-model="manufacturerForm.address"
+                    label="Address"
+                    :error="manufacturerForm.errors.address"
+                />
+                <p class="mt-1 px-1 text-xs text-text-muted">
+                    {{ $t('Please enter the address of the manufacturer, e.g: Maxmustermann Str. 1234, 12345 Musterdorf') }}
+                </p>
             </div>
+            <BaseInput
+                id="manufacturer-contact-person"
+                v-model="manufacturerForm.contact_person"
+                label="Contact Person"
+                :error="manufacturerForm.errors.contact_person"
+            />
+            <BaseInput
+                id="manufacturer-phone"
+                v-model="manufacturerForm.phone"
+                type="tel"
+                label="Phone"
+                :error="manufacturerForm.errors.phone"
+            />
+            <BaseInput
+                id="manufacturer-email"
+                v-model="manufacturerForm.email"
+                type="email"
+                label="Email"
+                :error="manufacturerForm.errors.email"
+            />
+            <BaseInput
+                id="manufacturer-website"
+                v-model="manufacturerForm.website"
+                label="Website"
+                :error="manufacturerForm.errors.website"
+            />
+            <BaseInput
+                id="manufacturer-customer-number"
+                v-model="manufacturerForm.customer_number"
+                label="Customer Number"
+                :error="manufacturerForm.errors.customer_number"
+            />
         </form>
+
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="manufacturerForm.processing"
+                @click="$emit('close')"
+            />
+            <BaseUIButton
+                type="submit"
+                form="manufacturerForm"
+                :label="manufacturer ? 'Update Manufacturer' : 'Create Manufacturer'"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="manufacturerForm.processing"
+                :disabled="!canSubmit"
+            />
+        </template>
     </ArtworkBaseModal>
 </template>
 
 <script setup>
+import {computed} from 'vue'
+import {useForm} from '@inertiajs/vue3'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import {router, useForm} from "@inertiajs/vue3";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+defineOptions({name: 'CreateOrUpdateManufacturerModal'})
 
 const props = defineProps({
     manufacturer: {
         type: Object,
         required: false,
-        default: null
-    }
+        default: null,
+    },
 })
 
-const emits = defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 const manufacturerForm = useForm({
-    id: props.manufacturer ? props.manufacturer.id : null,
-    name: props.manufacturer ? props.manufacturer.name : '',
-    address: props.manufacturer ? props.manufacturer.address : '',
-    contact_person: props.manufacturer ? props.manufacturer.contact_person : '',
-    phone: props.manufacturer ? props.manufacturer.phone : '',
-    email: props.manufacturer ? props.manufacturer.email : '',
-    website: props.manufacturer ? props.manufacturer.website : '',
-    customer_number: props.manufacturer ? props.manufacturer.customer_number : '',
+    id: props.manufacturer?.id ?? null,
+    name: props.manufacturer?.name ?? '',
+    address: props.manufacturer?.address ?? '',
+    contact_person: props.manufacturer?.contact_person ?? '',
+    phone: props.manufacturer?.phone ?? '',
+    email: props.manufacturer?.email ?? '',
+    website: props.manufacturer?.website ?? '',
+    customer_number: props.manufacturer?.customer_number ?? '',
 })
 
-const submit = () => {
+const canSubmit = computed(() => String(manufacturerForm.name ?? '').trim() !== '' && !manufacturerForm.processing)
+
+function submit() {
+    if (!canSubmit.value) {
+        return
+    }
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => emit('close'),
+    }
     if (props.manufacturer) {
-        manufacturerForm.patch(route('manufacturers.update', {manufacturer: props.manufacturer.id}), {
-            preserveScroll: true,
-            onSuccess: () => {
-                emits('close')
-            }
-        })
+        manufacturerForm.patch(route('manufacturers.update', {manufacturer: props.manufacturer.id}), options)
     } else {
-        manufacturerForm.post(route('manufacturers.store'), {
-            preserveScroll: true,
-            onSuccess: () => {
-                emits('close')
-            }
-        })
+        manufacturerForm.post(route('manufacturers.store'), options)
     }
 }
-
 </script>
-
-<style scoped>
-
-</style>

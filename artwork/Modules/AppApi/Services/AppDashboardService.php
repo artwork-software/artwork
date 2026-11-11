@@ -128,11 +128,7 @@ class AppDashboardService
      */
     private function getEventsOfToday(User $user, Carbon $today): array
     {
-        return Event::query()
-            ->whereBetween('start_time', [$today->copy()->startOfDay(), $today->copy()->endOfDay()])
-            ->whereHas('project.users', function (Builder $query) use ($user): void {
-                $query->where('user_id', $user->id);
-            })
+        return $this->eventsOfDayQuery($user, $today)
             ->with(['project', 'room', 'event_type'])
             ->get()
             ->map(static fn (Event $event): array => [
@@ -159,6 +155,46 @@ class AppDashboardService
     }
 
     /**
+     * Events of a day in projects whose team the user belongs to (web dashboard `eventsOfDay`).
+     * With `$includeOwnShifts`, also events in which the user holds a shift (KI-Tagesuebersicht).
+     *
+     * @return Builder<Event>
+     */
+    public function eventsOfDayQuery(User $user, Carbon $day, bool $includeOwnShifts = false): Builder
+    {
+        return Event::query()
+            ->whereBetween('start_time', [$day->copy()->startOfDay(), $day->copy()->endOfDay()])
+            ->where(function (Builder $query) use ($user, $includeOwnShifts): void {
+                $query->whereHas('project.users', function (Builder $members) use ($user): void {
+                    $members->where('user_id', $user->id);
+                });
+
+                if ($includeOwnShifts) {
+                    $query->orWhereHas('shifts.users', function (Builder $workers) use ($user): void {
+                        $workers->where('users.id', $user->id);
+                    });
+                }
+            });
+    }
+
+    /**
+     * The user's tasks — own checklist or assigned (web dashboard `tasks`), any done state.
+     *
+     * @return Builder<Task>
+     */
+    public function ownTasksQuery(User $user): Builder
+    {
+        return Task::query()
+            ->where(function (Builder $query) use ($user): void {
+                $query->whereHas('checklist', function (Builder $checklistBuilder) use ($user): void {
+                    $checklistBuilder->where('user_id', $user->id);
+                })->orWhereHas('task_users', function (Builder $userBuilder) use ($user): void {
+                    $userBuilder->where('user_id', $user->id);
+                });
+            });
+    }
+
+    /**
      * The user's five most urgent open tasks — same query as the web
      * dashboard's `tasks`.
      *
@@ -166,15 +202,8 @@ class AppDashboardService
      */
     private function getOpenTasks(User $user): array
     {
-        return Task::query()
+        return $this->ownTasksQuery($user)
             ->where('done', false)
-            ->where(function (Builder $query) use ($user): void {
-                $query->whereHas('checklist', function (Builder $checklistBuilder) use ($user): void {
-                    $checklistBuilder->where('user_id', $user->id);
-                })->orWhereHas('task_users', function (Builder $userBuilder) use ($user): void {
-                    $userBuilder->where('user_id', $user->id);
-                });
-            })
             ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END, deadline ASC')
             ->limit(5)
             ->with(['checklist.project'])

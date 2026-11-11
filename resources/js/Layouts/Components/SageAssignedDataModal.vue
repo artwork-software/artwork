@@ -1,149 +1,163 @@
 <template>
-    <BaseModal @closed="close" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
-        <div class="mx-4">
-            <div class="mt-8 font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text flex items-center justify-between">
-                <div>
-                    {{ $t('Booking details') }}
-                    <span v-if="currentSageAssignedData.is_collective_booking">
-          - {{ $t('Collective Booking') }}
-        </span>
-                </div>
-                <PropertyIcon
-                    name="IconTrash"
-                    v-if="!readOnly && currentSageAssignedData && this.$canAny(['can view project sage data', 'can view global sage data'])"
-                    class="w-6 h-6 hover:text-danger cursor-pointer"
-                    @click="showDeleteConfirmation"
+    <ArtworkBaseModal
+        v-if="show"
+        title="Booking details"
+        :description="currentSageAssignedData?.is_collective_booking ? 'Collective Booking' : ''"
+        modal-size="sm:max-w-2xl"
+        @close="close"
+    >
+        <div v-if="!cell.sage_assigned_data?.length" class="text-sm text-text-muted">
+            {{ $t('No booking has been linked yet.') }}
+        </div>
+        <div v-else class="flex w-full flex-col">
+            <!-- Blättern zwischen mehreren Buchungen der Zelle -->
+            <nav v-if="maxIndex > 1" class="mb-5 flex items-center justify-between gap-x-2 border-b border-border-subtle pb-3">
+                <BaseUIButton
+                    label="Previous"
+                    variant="ghost"
+                    size="sm"
+                    icon="IconChevronLeft"
+                    :class="currentIndex > 0 ? '' : 'invisible'"
+                    @click="currentIndex--"
                 />
-            </div>
-            <div class="flex mt-4">
-                <div v-if="!cell.sage_assigned_data">
-                    {{ $t('No booking has been linked yet.') }}
+                <div v-if="maxIndex <= 9" class="flex items-center gap-x-1">
+                    <button
+                        v-for="index in maxIndex"
+                        :key="index"
+                        type="button"
+                        class="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-sm tabular-nums transition-colors duration-150 motion-reduce:transition-none"
+                        :class="currentIndex === (index - 1)
+                            ? 'bg-surface-inverse font-semibold text-text-inverse'
+                            : 'text-text-muted hover:bg-surface-hover hover:text-text'"
+                        :aria-current="currentIndex === (index - 1) ? 'page' : undefined"
+                        @click="currentIndex = (index - 1)"
+                    >
+                        {{ index }}
+                    </button>
                 </div>
-                <div v-else class="flex flex-col w-full">
-                    <!-- index change -->
-                    <nav class="w-full h-10 flex items-center border-t border-border-subtle mb-5">
-                        <div class="w-1/6 h-10 flex">
-                            <div v-show="currentIndex > 0"
-                                 @click="currentIndex--"
-                                 class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-text-subtle hover:border-border hover:text-text-muted cursor-pointer">
-                                <PropertyIcon name="IconChevronLeft" class="h-4 w-4 text-text-subtle" aria-hidden="true" />
-                                <span>{{ $t('Previous') }}</span>
-                            </div>
-                        </div>
-                        <div v-if="this.cell.sage_assigned_data.length <= 9" class="w-4/6 h-10 flex justify-center">
-                                <span v-for="(index) in maxIndex"
-                                      @click="currentIndex = (index - 1)"
-                                      class="cursor-pointer inline-flex items-center justify-center border-t-2 px-4 text-sm  text-text-subtle hover:border-border hover:text-text-muted"
-                                      :class="currentIndex === (index - 1) ? 'border-border text-text-muted font-bold' : 'border-transparent text-text-subtle font-medium'">
-                                    {{ index }}
-                                </span>
-                        </div>
-                        <div v-else class="w-4/6 h-10 flex justify-center">
-                            <select v-model="currentIndex" class="h-10">
-                                <option v-for="(index) in maxIndex" :key="index" :value="(index - 1)">
-                                    {{ index }}
-                                </option>
-                            </select>
-                        </div>
-                        <div class="w-1/6 h-10 flex">
-                            <div v-show="currentIndex < (maxIndex - 1)"
-                                 @click="currentIndex++"
-                                 class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-text-subtle hover:border-border hover:text-text-muted cursor-pointer">
-                                <span>{{ $t('Next')}}</span>
-                                <PropertyIcon name="IconChevronRight" class="h-4 w-4 text-text-subtle" aria-hidden="true"/>
-                            </div>
-                        </div>
-                    </nav>
-                    <div v-if="currentSageAssignedData">
-                        <BookingModalContents :booking="currentSageAssignedData"/>
-                        <div
-                            v-if="currentSageAssignedData.find_children.length"
-                            class="mt-6 space-y-4"
+                <select
+                    v-else
+                    v-model="currentIndex"
+                    class="h-8 rounded-md border border-border bg-surface px-2 text-sm text-text tabular-nums focus:border-accent-600"
+                >
+                    <option v-for="index in maxIndex" :key="index" :value="(index - 1)">
+                        {{ index }}
+                    </option>
+                </select>
+                <BaseUIButton
+                    label="Next"
+                    variant="ghost"
+                    size="sm"
+                    icon="IconChevronRight"
+                    :class="currentIndex < (maxIndex - 1) ? '' : 'invisible'"
+                    @click="currentIndex++"
+                />
+            </nav>
+
+            <div v-if="currentSageAssignedData">
+                <BookingModalContents :booking="currentSageAssignedData"/>
+                <div
+                    v-if="currentSageAssignedData.find_children?.length"
+                    class="mt-6 space-y-3"
+                >
+                    <div
+                        v-for="(childBooking, index) in currentSageAssignedData.find_children"
+                        :key="childBooking.id"
+                        class="ml-6 border-l-2 border-border-subtle pl-4"
+                    >
+                        <button
+                            type="button"
+                            class="flex w-full cursor-pointer items-center justify-between rounded-md bg-surface-sunken px-3 py-2 text-left text-sm font-medium text-text transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover"
+                            :aria-expanded="isOpen(childBooking.id)"
+                            @click="toggleChild(childBooking.id)"
                         >
-                            <div
-                                v-for="(childBooking, index) in currentSageAssignedData.find_children"
-                                :key="childBooking.id"
-                                class="ml-6 border-l-2 border-border-subtle pl-4 rounded"
-                            >
-                                <div
-                                    class="flex items-center justify-between cursor-pointer p-2 bg-surface-sunken hover:bg-surface-sunken rounded"
-                                    @click="toggleChild(childBooking.id)"
-                                >
-                                  <span class="font-medium">
-                                    {{ $t('single booking') }} {{ index + 1 }}
-                                  </span>
-                                    <PropertyIcon
-                                        name="IconChevronUp"
-                                        v-if="isOpen(childBooking.id)"
-                                        class="w-5 h-5 text-text-subtle"
-                                    />
-                                    <PropertyIcon
-                                        name="IconChevronDown"
-                                        v-else
-                                        class="w-5 h-5 text-text-subtle"
-                                    />
-                                </div>
-                                <transition name="fade">
-                                    <div v-show="isOpen(childBooking.id)" class="mt-2">
-                                        <BookingModalContents :booking="childBooking" :is-child="true"/>
-                                    </div>
-                                </transition>
+                            <span>{{ $t('single booking') }} {{ index + 1 }}</span>
+                            <PropertyIcon
+                                :name="isOpen(childBooking.id) ? 'IconChevronUp' : 'IconChevronDown'"
+                                class="size-4 text-text-subtle"
+                                stroke-width="1.5"
+                                aria-hidden="true"
+                            />
+                        </button>
+                        <transition name="fade">
+                            <div v-show="isOpen(childBooking.id)" class="mt-2">
+                                <BookingModalContents :booking="childBooking" :is-child="true"/>
                             </div>
-                        </div>
-
-                        <!-- Nur lesend (z. B. nicht zugeordnete Buchungen in der Sage-Rechnungsübersicht):
-                             keine Kommentare, kein Löschen -->
-                        <template v-if="!readOnly">
-                        <hr class="mt-6 mb-6"/>
-
-                        <div class="flex flex-col">
-              <textarea
-                  v-model="bookingDataCommentForm.comment"
-                  rows="5"
-                  :placeholder="$t('Enter comment')"
-                  class="resize-none border-2 border-border text-md p-4"
-              />
-                            <div class="flex justify-center mt-6">
-                                <FormButton
-                                    :disabled="!bookingDataCommentForm.comment"
-                                    @click="saveComment(currentSageAssignedData)"
-                                    :text="$t('Save')"
-                                />
-                            </div>
-                        </div>
-
-                        <!-- Existing comments unchanged -->
-                        <div class="flex flex-col mt-6">
-                            <div
-                                v-for="comment in currentSageAssignedData.comments"
-                                :key="comment.id"
-                                class="my-2"
-                            >
-                                <div class="flex items-center mb-2 text-xs text-text-subtle justify-between">
-                                    <div class="flex items-center">
-                                        <UserPopoverTooltip
-                                            class="mr-1"
-                                            :user="comment.user"
-                                            :height="5"
-                                            :width="5"
-                                        />
-                                        {{ formatDateTime(comment.created_at) }}
-                                    </div>
-                                    <PropertyIcon
-                                        name="IconTrash"
-                                        v-if="$page.props.auth.user.id === comment.user.id"
-                                        class="w-6 h-6 hover:text-danger cursor-pointer"
-                                        @click="removeComment(comment.id)"
-                                    />
-                                </div>
-                                <div class="text-sm">{{ comment.comment }}</div>
-                            </div>
-                        </div>
-                        </template>
+                        </transition>
                     </div>
                 </div>
+
+                <!-- Nur lesend (z. B. nicht zugeordnete Buchungen in der Sage-Rechnungsübersicht):
+                     keine Kommentare, kein Löschen -->
+                <template v-if="!readOnly">
+                    <div class="mt-6 border-t border-border-subtle pt-5">
+                        <BaseTextarea
+                            id="sageAssignedDataComment"
+                            v-model="bookingDataCommentForm.comment"
+                            label="Comment"
+                            :placeholder="$t('Enter comment')"
+                            :rows="4"
+                        />
+                        <div class="mt-3 flex justify-end">
+                            <BaseUIButton
+                                label="Save comment"
+                                variant="primary"
+                                size="sm"
+                                icon="IconDeviceFloppy"
+                                :processing="bookingDataCommentForm.processing"
+                                :disabled="!bookingDataCommentForm.comment || bookingDataCommentForm.processing"
+                                @click="saveComment(currentSageAssignedData)"
+                            />
+                        </div>
+                    </div>
+
+                    <ul v-if="currentSageAssignedData.comments?.length" class="mt-4 space-y-3">
+                        <li
+                            v-for="comment in currentSageAssignedData.comments"
+                            :key="comment.id"
+                            class="rounded-lg border border-border-subtle px-3 py-2"
+                        >
+                            <div class="flex items-center justify-between gap-x-2 text-xs text-text-subtle">
+                                <div class="flex items-center gap-x-1.5">
+                                    <UserPopoverTooltip
+                                        :user="comment.user"
+                                        :height="5"
+                                        :width="5"
+                                    />
+                                    {{ formatDateTime(comment.created_at) }}
+                                </div>
+                                <button
+                                    v-if="$page.props.auth.user.id === comment.user.id"
+                                    type="button"
+                                    class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover hover:text-danger"
+                                    :aria-label="$t('Delete comment')"
+                                    v-tooltip.left="{ value: $t('Delete comment'), class: 'aw-tooltip' }"
+                                    @click="removeComment(comment.id)"
+                                >
+                                    <PropertyIcon name="IconTrash" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                                </button>
+                            </div>
+                            <div class="mt-1 text-sm text-text">{{ comment.comment }}</div>
+                        </li>
+                    </ul>
+                </template>
             </div>
         </div>
+        <template #footer>
+            <BaseUIButton
+                label="Close"
+                is-cancel-button
+                hide-icon
+                @click="close"
+            />
+            <BaseUIButton
+                v-if="canDelete"
+                label="Move to the trash"
+                variant="danger"
+                icon="IconTrash"
+                @click="showDeleteConfirmation"
+            />
+        </template>
         <ConfirmationComponent
             v-if="showDeleteConfirmationModal"
             @closed="handleDeleteConfirmation"
@@ -151,7 +165,7 @@
             :titel="$t('Move to the trash')"
             :z-index="200"
         />
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -160,20 +174,22 @@ import {formatBookingDataDate, formatDateTime} from '@/Layouts/Components/Budget
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import {router, useForm} from '@inertiajs/vue3';
 import Permissions from '@/Mixins/Permissions.vue';
-import BaseModal from '@/Components/Modals/BaseModal.vue';
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
+import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 import BookingModalContents from '@/Layouts/Components/Budget/BookingModalContents.vue';
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue';
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue';
 import CurrencyFloatToStringFormatter from '@/Mixins/CurrencyFloatToStringFormatter.vue';
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue';
 
 export default defineComponent({
     components: {
         PropertyIcon,
-        BaseModal,
+        ArtworkBaseModal,
+        BaseUIButton,
+        BaseTextarea,
         BookingModalContents,
         UserPopoverTooltip,
-        FormButton,
         ConfirmationComponent
     },
     mixins: [Permissions, CurrencyFloatToStringFormatter],
@@ -204,7 +220,12 @@ export default defineComponent({
     },
     computed: {
         currentSageAssignedData() {
-            return this.cell.sage_assigned_data[this.currentIndex];
+            return this.cell.sage_assigned_data?.[this.currentIndex];
+        },
+        canDelete() {
+            return !this.readOnly
+                && !!this.currentSageAssignedData
+                && this.$canAny(['can view project sage data', 'can view global sage data']);
         }
     },
     watch: {

@@ -33,8 +33,10 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     private ?SpecialDayService $specialDayServiceInstance = null;
 
     /**
-     * Vom ShiftRuleService je Regel gesetzt: entscheidet je Verstoßdatum, ob die Regel an diesem Tag gilt
+     * Vom ShiftRuleService je Regel gesetzt: entscheidet je Stichtag, ob die Regel an diesem Tag gilt
      * (Regel gehört zum an diesem Tag gültigen Vertrag). Liefert sie false, wird kein Verstoß angelegt.
+     * Stichtag ist das Verstoßdatum; Regeln über einen Zeitraum übergeben einen eigenen ($ruleDate, siehe
+     * createViolationWithoutShift() und lastContractDayIn()).
      *
      * @var (\Closure(Carbon): bool)|null
      */
@@ -624,6 +626,22 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         ]);
     }
 
+    /**
+     * Letzter Tag in [$from, $to], an dem für die Person ein Vertrag gilt (null = an keinem Tag). Stichtag für
+     * Regeln, die über einen Zeitraum zählen: Es gilt der Vertrag dieses Tages, auch wenn der Vertrag vor dem
+     * Buchungstag des Verstoßes endet (befristeter Vertrag, Austritt).
+     */
+    protected function lastContractDayIn(User $user, Carbon $from, Carbon $to): ?Carbon
+    {
+        foreach (array_reverse($user->contractSegmentsBetween($from, $to)) as $segment) {
+            if ($segment['assign'] !== null) {
+                return $segment['until']->copy();
+            }
+        }
+
+        return null;
+    }
+
     private function appliesOn(Carbon $date): bool
     {
         return $this->violationDateFilter === null || ($this->violationDateFilter)($date->copy()->startOfDay());
@@ -635,16 +653,19 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     }
 
     /**
-     * null = die Regel gilt am Verstoßdatum nicht (Vertrag dieses Tages, siehe setViolationDateFilter()).
+     * null = die Regel gilt am Stichtag nicht (siehe setViolationDateFilter()). Stichtag ist $ruleDate, sonst
+     * das Verstoßdatum: Regeln über einen Zeitraum buchen oft auf ein künftiges Datum (Fristende, letzter
+     * Sonntag) und übergeben hier den Tag, dessen Vertrag entscheidet.
      */
     protected function createViolationWithoutShift(
         ShiftRule $rule,
         User $user,
         Carbon $date,
         array $violationData,
-        string $severity = 'warning'
+        string $severity = 'warning',
+        ?Carbon $ruleDate = null
     ): ?ShiftRuleViolation {
-        if (!$this->appliesOn($date)) {
+        if (!$this->appliesOn($ruleDate ?? $date)) {
             return null;
         }
 

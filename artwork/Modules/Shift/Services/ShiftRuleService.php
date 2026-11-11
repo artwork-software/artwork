@@ -363,13 +363,21 @@ class ShiftRuleService
      * Folge", Wochenfenster, Vortag für Ruhezeiten) und an alle Checks gereicht — die Zahl der Abfragen
      * je Person ist damit unabhängig von der Tagesanzahl.
      *
-     * Vertragshistorie: Geprüft werden die Regeln aller Verträge, die an einem Tag des Zeitraums gelten.
-     * Ob eine Regel greift, entscheidet der Vertrag des Tages, auf den der Verstoß gebucht wird
-     * (violation_date): Bei Regeln über mehrere Tage (Wochenmaximum, Tage in Folge, freie Sonntage,
-     * Spielzeithälfte, Wochendurchschnitt) zählen alle Tage des Zeitraums als Tatsachen, Regel und
-     * Grenzwert kommen aus dem Vertrag des Buchungstags. Gilt die Regel dort nicht, entsteht kein Verstoß,
-     * ein bestehender automatischer Verstoß dieses Tages gilt als veraltet. An Tagen ohne Vertrag gelten
-     * keine Regeln. Die Vertragshistorie wird je Person einmal geladen, Regeln je Vertrag einmal je Lauf.
+     * Vertragshistorie: Geprüft werden die Regeln aller Verträge der Historie der Person; ob eine Regel greift,
+     * entscheidet je Verstoß der Vertrag eines Stichtags (siehe AbstractRuleCheck::setViolationDateFilter()):
+     *  - Tagesregeln und Regeln, die auf einen Arbeitstag buchen (Tageshöchstzeit, Ruhezeiten, Wochenmaximum,
+     *    Tage in Folge, Wochendurchschnitt, Nachtarbeit, Sonn-/Feiertagsarbeit): der Vertrag des Tages, auf den
+     *    der Verstoß gebucht wird (violation_date). Die Tage davor zählen als Tatsachen mit.
+     *  - Regeln, die über einen Zeitraum zählen und auf dessen Ende buchen (freie Tage je Woche, freie Sonntage
+     *    je Spielzeithälfte und je Kalenderjahr): der Vertrag des letzten Tages im gezählten Zeitraum, an dem
+     *    ein Vertrag gilt, auch wenn er vor dem Buchungstag endet. Grenzwerte aus dem Vertrag (freie Tage je
+     *    Woche) kommen aus demselben Vertrag; nur das Vertragsziel der freien Sonntage je Hälfte wird wie im
+     *    Info-Fenster anteilig über die Hälfte gerechnet, damit Regel und Kennzahl denselben Wert zeigen.
+     *  - Überstundenfrist: der Vertrag, aus dem die Überstunden stammen (gültig am Buchungstag des Eintrags).
+     * Gilt die Regel am Stichtag nicht, entsteht kein Verstoß, ein bestehender automatischer Verstoß gilt als
+     * veraltet. An Tagen ohne Vertrag gelten keine Regeln. Die Historie wird je Person einmal geladen, die
+     * Regeln je Vertrag einmal je Lauf. Alle Verträge der Historie (nicht nur die im Prüfzeitraum), weil
+     * Zeitraum-Regeln auf Verträge außerhalb des Zeitraums zurückgreifen (z. B. Frist nach Austritt).
      */
     public function validateRulesForUser(
         User $user,
@@ -381,7 +389,7 @@ class ShiftRuleService
         $user->loadMissing('contractAssigns.userContract');
         /** @var array<int, list<int>> $ruleIdsByContract Vertrags-ID => IDs seiner aktiven Regeln */
         $ruleIdsByContract = [];
-        $rules = $this->rulesForRange($user, $startDate, $endDate, $ruleIdsByContract);
+        $rules = $this->rulesForHistory($user, $ruleIdsByContract);
 
         [$daysBefore, $daysAfter] = $this->contextWindowFor($rules, $startDate, $endDate);
         $context = ShiftRuleCheckContext::forRange($user, $startDate, $endDate, $daysBefore, $daysAfter);
@@ -444,22 +452,17 @@ class ShiftRuleService
     }
 
     /**
-     * Aktive Regeln aller Verträge, die an mindestens einem Tag des Zeitraums gelten (ohne Duplikate).
-     * Füllt $ruleIdsByContract (Vertrags-ID => Regel-IDs) für die Prüfung je Verstoßdatum.
+     * Aktive Regeln aller Verträge der (geladenen) Vertragshistorie der Person, ohne Duplikate.
+     * Füllt $ruleIdsByContract (Vertrags-ID => Regel-IDs) für die Prüfung je Stichtag.
      *
      * @param array<int, list<int>> $ruleIdsByContract
      * @return Collection<int, ShiftRule>
      */
-    private function rulesForRange(
-        User $user,
-        Carbon $startDate,
-        Carbon $endDate,
-        array &$ruleIdsByContract
-    ): Collection {
+    private function rulesForHistory(User $user, array &$ruleIdsByContract): Collection
+    {
         $rules = collect();
-        $end = $endDate->copy()->startOfDay();
-        for ($day = $startDate->copy()->startOfDay(); $day->lte($end); $day->addDay()) {
-            $contract = $user->activeWorkContract($day);
+        foreach ($user->contractAssigns as $assign) {
+            $contract = $assign->userContract;
             if ($contract === null || array_key_exists($contract->id, $ruleIdsByContract)) {
                 continue;
             }

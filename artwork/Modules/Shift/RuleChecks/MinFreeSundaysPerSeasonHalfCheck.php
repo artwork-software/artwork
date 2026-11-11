@@ -18,6 +18,10 @@ use Illuminate\Support\Collection;
  * "noch möglichen" Sonntage der laufenden Hälfte: Sonntage ab heute bis Hälftenende, an denen die
  * Person weder Schicht (effektive Zeiten) noch individuelle Zeit hat.
  *
+ * Ob die Regel greift, entscheidet der Vertrag des letzten Tages der Hälfte, an dem ein Vertrag gilt (auch
+ * wenn er vor dem letzten Sonntag endet). Das Vertragsziel ist wie im Info-Fenster anteilig über die Hälfte
+ * gerechnet (Tage ohne Vertrag zählen 0), damit Regel und Kennzahl denselben Wert zeigen.
+ *
  * Verstoß OHNE Schicht auf den letzten Sonntag der Hälfte, wenn ist + möglich < X (Ziel nicht mehr
  * erreichbar) oder wenn die Hälfte abgeschlossen ist und ist < X. Ohne Spielzeit-Einstellung
  * (Toolsettings) gilt das laufende Kalenderjahr als Spielzeit (SeasonWindowResolver).
@@ -93,7 +97,11 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
                 'half_start' => $window['start']->toDateString(),
                 'half_end' => $window['end']->toDateString(),
                 'completed' => $completed,
-            ], $completed ? 'error' : 'warning'));
+            ], $completed ? 'error' : 'warning', $this->lastContractDayIn(
+                $user,
+                $window['start'],
+                $window['end']
+            ) ?? $lastSunday));
         }
 
         return $violations;

@@ -59,7 +59,7 @@
                         <p class="truncate text-xs font-medium text-text">{{ c.name }}</p>
                         <p class="text-[11px] text-text-subtle">{{ $t('Requested') }}: {{ c.wanted }} • {{ $t('Available') }}: {{ c.available }}</p>
                     </div>
-                    <button type="button" class="text-xs font-medium text-accent-700 underline shrink-0" @click="openLightbox(0, externMaterialIssueForm.articles[c.index]?.images || [])">{{ $t('details') }}</button>
+                    <button v-if="externMaterialIssueForm.articles[c.index]?.images?.length > 0" type="button" class="text-xs font-medium text-accent-700 underline shrink-0" @click="openLightbox(0, externMaterialIssueForm.articles[c.index]?.images || [])">{{ $t('Show images') }}</button>
                 </div>
             </div>
         </section>
@@ -450,7 +450,7 @@
                     <div class="text-xs text-text-muted">
                         {{ $t('Selected') }}: <span class="font-medium">{{ externMaterialIssueForm.articles?.length || 0 }}</span> {{ $t('articles') }} • {{ $t('Files') }}: <span class="font-medium">{{ externMaterialIssueForm.files?.length || 0 }}</span>
                     </div>
-                    <FormButton :text="externMaterialIssue?.id ? $t('Update') : $t('Save')" :disabled="externMaterialIssueForm.processing || !externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date || !externMaterialIssueForm.material_value || isReturnDateBeforeIssueDate" type="submit" />
+                    <FormButton :text="externMaterialIssue?.id ? $t('Update') : $t('Save')" :disabled="externMaterialIssueForm.processing || !externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date || isMaterialValueInvalid || isReturnDateBeforeIssueDate" type="submit" />
                 </div>
             </div>
         </div>
@@ -777,6 +777,14 @@ const conflicts = computed(() => {
 })
 
 const hasConflicts = computed(() => conflicts.value.length > 0)
+
+// Wie StoreExternalIssueRequest: Pflichtfeld, 0 ist erlaubt, negative Werte nicht.
+const isMaterialValueInvalid = computed(() => {
+    const value = externMaterialIssueForm.material_value
+    if (value === null || value === undefined || value === '') return true
+    const numericValue = Number(value)
+    return !Number.isFinite(numericValue) || numericValue < 0
+})
 
 // Server-side search: filtering happens in the API (name, category, subcategory),
 // so the found list always mirrors what the server returns for the current term.

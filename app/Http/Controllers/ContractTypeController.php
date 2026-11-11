@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Contract\Models\ContractType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -45,9 +46,16 @@ class ContractTypeController extends Controller
         return Redirect::back();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(int $id): \Illuminate\Http\RedirectResponse
     {
         $contractType = ContractType::onlyTrashed()->findOrFail($id);
+
+        if (Contract::withTrashed()->where('contract_type_id', $contractType->id)->exists()) {
+            return Redirect::back()->with(
+                'error',
+                __('This contract type is still used by contracts and cannot be deleted permanently.')
+            );
+        }
 
         $contractType->forceDelete();
 

@@ -255,15 +255,13 @@ class EventRepository extends BaseRepository
             ->when(
                 $desiresTimespanExport,
                 function (Builder $query) use ($conditional): void {
-                    $startAndEndTime = [
-                        $this->carbonService->create($conditional['dateStart'])->startOfDay(),
-                        $this->carbonService->create($conditional['dateEnd'])->endOfDay(),
-                    ];
+                    $periodStart = $this->carbonService->create($conditional['dateStart'])->startOfDay();
+                    $periodEnd = $this->carbonService->create($conditional['dateEnd'])->endOfDay();
 
-                    $query->where(function (Builder $inner) use ($startAndEndTime): void {
-                        $inner->whereBetween('start_time', $startAndEndTime)
-                              ->orWhereBetween('end_time', $startAndEndTime);
-                    });
+                    // Überschneidung statt "Beginn oder Ende im Zeitraum": sonst fehlten Termine, die den
+                    // ganzen Zeitraum überspannen
+                    $query->where('start_time', '<=', $periodEnd)
+                        ->where('end_time', '>=', $periodStart);
                 }
             )
             ->when(

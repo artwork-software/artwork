@@ -54,7 +54,8 @@ return [
             'room' => 'Raum',
             'project_team' => 'Projekttean',
             'project_properties' => 'Projekteigenschaften'
-        ]
+        ],
+        'planned' => 'geplant',
     ],
     'excel-event-calendar-export' => [
         'created-by' => 'Erstellt von :0 am :1'

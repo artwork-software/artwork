@@ -93,9 +93,11 @@ export function mayCreateEventIn({
  * Spiegel von EventController::authorizeBulkEventCreationOrRoomRequest: 'direct' = fest gebucht,
  * 'request' = als Raumanfrage (wie im Termin-Dialog), 'none' = nicht erlaubt (Server antwortet 403).
  *
+ * "Kann von jedem fest gebucht werden" bucht nur fest, wer überhaupt anlegen darf (mayCreateEventIn).
+ *
  * @param {{room: object|null|undefined, userId: number|null|undefined, isAdmin: boolean, isPlanning: boolean,
  *          directBookingOnly: boolean, canBookWithoutRequest: boolean, canEditPlanning: boolean,
- *          canRequestRooms: boolean}} context
+ *          canRequestRooms: boolean, canPlanFixed?: boolean}} context
  * @returns {'direct'|'request'|'none'}
  */
 export function bulkBookingModeIn({
@@ -107,6 +109,7 @@ export function bulkBookingModeIn({
     canBookWithoutRequest,
     canEditPlanning,
     canRequestRooms,
+    canPlanFixed = false,
 }) {
     if (isAdmin) {
         return 'direct';
@@ -116,6 +119,12 @@ export function bulkBookingModeIn({
     }
 
     const isRoomAdmin = userId !== null && userId !== undefined && roomAdminIds(room).includes(Number(userId));
+    const mayCreate = mayCreateEventIn({
+        room, userId, isAdmin, canRequestRooms, canBookWithoutRequest, canEditPlanning, canPlanFixed,
+    });
+    if (!mayCreate) {
+        return 'none';
+    }
     if (canBookWithoutRequest || (directBookingOnly && canRequestRooms) || room?.everyone_can_book || isRoomAdmin) {
         return 'direct';
     }

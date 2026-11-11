@@ -4187,10 +4187,12 @@ class EventController extends Controller
 
         // "Termine immer direkt buchbar": "Raumbelegungen anfragen" bedeutet dann "Termine anlegen"
         // und schließt Bulk-Anlage und Serien ein (Entscheidung 18.09.2026).
+        // "Kann von jedem fest gebucht werden" gibt kein Anlegerecht: nur wer laut EventPolicy::create anlegen
+        // darf, bucht dort fest (vorher genügte der Schalter allein).
         return $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
             || ($this->eventSettingsService->alwaysDirectBooking()
                 && $user->can(PermissionEnum::EVENT_REQUEST->value))
-            || $room->everyone_can_book
+            || ($room->everyone_can_book && $user->can('create', [Event::class, $room]))
             || $room->isAdministeredBy($user);
     }
 
@@ -4207,9 +4209,12 @@ class EventController extends Controller
             return false;
         }
 
+        // Ohne Anlegerecht auch keine Anfrage (EventPolicy::book allein ließe sie über everyone_can_book zu)
+        $user = $this->authManager->user();
         $mayRequestRoom = !$isPlanning
             && !$this->eventSettingsService->alwaysDirectBooking()
-            && $this->authManager->user()->can('book', [Event::class, $room, true, false]);
+            && $user->can('create', [Event::class, $room])
+            && $user->can('book', [Event::class, $room, true, false]);
         abort_unless($mayRequestRoom, 403);
 
         return true;

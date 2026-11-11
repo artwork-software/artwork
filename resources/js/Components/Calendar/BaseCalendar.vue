@@ -1473,6 +1473,7 @@ const bulkBookingModeForRoom = (roomId) => bulkBookingModeIn({
     canBookWithoutRequest: can('create events without request'),
     canEditPlanning: can('can edit planning calendar'),
     canRequestRooms: can('request room occupancy'),
+    canPlanFixed: can('can plan fixed in planning calendar'),
 });
 const selectedCellBookingModes = computed(() => selectedCellsList.value.map((cell) => bulkBookingModeForRoom(cell.room_id)));
 const canCreateInSelectedCells = computed(() => selectedCellBookingModes.value.length > 0

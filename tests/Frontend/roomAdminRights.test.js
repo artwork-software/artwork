@@ -51,7 +51,10 @@ test('bulkBookingModeIn mirrors the multi-edit booking check (direct, room reque
     assert.equal(bulkBookingModeIn({ ...base, userId: 7 }), 'direct');
     assert.equal(bulkBookingModeIn({ ...base, canBookWithoutRequest: true }), 'direct');
     assert.equal(bulkBookingModeIn({ ...base, isAdmin: true }), 'direct');
-    assert.equal(bulkBookingModeIn({ ...base, room: { ...closedRoom, everyone_can_book: true } }), 'direct');
+    // "Kann von jedem fest gebucht werden" gibt kein Anlegerecht: ohne Recht keine Anlage, mit Anfragerecht fest
+    assert.equal(bulkBookingModeIn({ ...base, room: { ...closedRoom, everyone_can_book: true } }), 'none');
+    assert.equal(bulkBookingModeIn({ ...base, canRequestRooms: true, room: { ...closedRoom, everyone_can_book: true } }), 'direct');
+    assert.equal(bulkBookingModeIn({ ...base, userId: 9, room: { ...closedRoom, everyone_can_book: true } }), 'direct');
 
     // "Termine immer direkt buchbar": Anfragerecht bucht direkt, sonst gibt es keine Anfrage
     assert.equal(bulkBookingModeIn({ ...base, directBookingOnly: true, canRequestRooms: true }), 'direct');

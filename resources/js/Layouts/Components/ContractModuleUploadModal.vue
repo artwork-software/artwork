@@ -29,14 +29,6 @@
                         </div>
                         <jet-input-error :message="uploadDocumentFeedback"/>
                     </div>
-                    <div>
-                        <BaseTextarea
-                            :label="$t('Comment / Note')"
-                            id="description"
-                            v-model="contractModuleForm.description"
-                            rows="4"
-                        />
-                    </div>
                 </div>
                 <div class="mb-6">
                     <div v-for="file of files">
@@ -76,7 +68,6 @@ import {
     submitInertiaForm,
     uploadSequentially,
 } from "@/Helper/sequentialUpload.js";
-import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {IconCircleX, IconX} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
@@ -89,7 +80,6 @@ export default {
     },
     components: {
         PropertyIcon,
-        BaseTextarea,
         MultiAlertComponent,
         TextareaComponent,
         BaseModal,
@@ -102,10 +92,8 @@ export default {
         return {
             uploadDocumentFeedback: "",
             files: [],
-            description: "",
             contractModuleForm: useForm({
                 file: null,
-                description: ""
             }),
             errorsAtUpload: [],
             closeModalIfUploaded: false,

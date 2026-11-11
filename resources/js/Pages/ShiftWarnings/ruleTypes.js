@@ -65,7 +65,7 @@ export const RULE_TYPES = {
     halfDayOffOnSpecialDay: {
         label: 'No half day off on special days',
         valueKind: 'none',
-        hint: 'Checks that no half day off is planned on a special day. Requires the special-day rule to be active in the assigned contract.',
+        hint: 'Checks that no half day off is planned on a special day (holiday marked as special day). Applies regardless of the special-day rule in the person\'s contract.',
     },
     minDaysBeforeCommit: {
         label: 'Minimum days before binding commitment',
@@ -94,7 +94,7 @@ export const RULE_TYPES = {
         valueKind: 'count',
         optional: true,
         placeholder: '3',
-        hint: 'Checks per season half whether the person can still reach the minimum number of free Sundays with a free Saturday or Monday. Value = minimum number; leave empty to use the target from the contract. A violation is created on the last Sunday of the half when the target is no longer reachable. Requires the season (playing time window) in the tool settings.',
+        hint: 'Checks per season half whether the person can still reach the minimum number of free Sundays with a free Saturday or Monday. Value = minimum number; leave empty to use the target from the contract. A violation is created on the last Sunday of the half when the target is no longer reachable. Without a season in the tool settings, the current calendar year counts as the season.',
     },
     minFreeSundaysPerYear: {
         label: 'Minimum free Sundays per calendar year',

@@ -4000,6 +4000,7 @@
     "shift_added_to_request": "Schicht zur Anfrage hinzugefügt",
     "Reject shift plan request": "Freigabe-Anfrage ablehnen",
     "The rejection could not be saved.": "Die Ablehnung konnte nicht gespeichert werden.",
+    "Please provide at least one reason for the rejection.": "Bitte gib mindestens eine Begründung für die Ablehnung an.",
     "Select days and/or shifts to reject and provide reasons. If none selected, provide a global reason to reject the entire request.": "Wähle Tage und/oder Schichten zum Ablehnen aus und gib Gründe an. Wenn keine ausgewählt sind, gib einen globalen Grund an, um die gesamte Anfrage abzulehnen.",
     "Enter a global rejection reason (optional if per-item reasons set).": "Gib einen globalen Ablehnungsgrund ein (optional, wenn pro Artikel Gründe festgelegt sind).",
     "No selections yet: global reason will be used to reject entire request.": "Noch keine Auswahl: globaler Grund wird verwendet, um die gesamte Anfrage abzulehnen.",

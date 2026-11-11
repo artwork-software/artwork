@@ -910,6 +910,12 @@ class ShiftPlanRequestController extends Controller
             'shifts.*.reason' => ['nullable', 'string'],
         ]);
 
+        if (!$this->hasRejectionReason($payload)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'global_reason' => __('Please provide at least one reason for the rejection.'),
+            ]);
+        }
+
         // Status-Flip UND Rollback-Loop in EINER Transaktion: schlägt ein Save mitten
         // im Loop fehl, wird auch der Status zurückgerollt (kein 'rejected'-Request
         // mit halb zurückgerollten Schichten).
@@ -1336,6 +1342,22 @@ class ShiftPlanRequestController extends Controller
             'service_provider' => \Artwork\Modules\ServiceProvider\Models\ServiceProvider::class,
             default => null,
         };
+    }
+
+    /**
+     * Dieselbe Regel wie im Ablehnen-Dialog: mindestens eine Begründung (global, an einem Tag oder
+     * an einer Schicht). Leerzeichen allein zählen nicht.
+     *
+     * @param array{global_reason?: string|null, days?: array<int, array{reason?: string|null}>,
+     *     shifts?: array<int, array{reason?: string|null}>} $payload
+     */
+    private function hasRejectionReason(array $payload): bool
+    {
+        $reasons = collect([$payload['global_reason'] ?? null])
+            ->merge(collect($payload['days'] ?? [])->pluck('reason'))
+            ->merge(collect($payload['shifts'] ?? [])->pluck('reason'));
+
+        return $reasons->contains(fn (?string $reason): bool => $this->cleanReason($reason) !== null);
     }
 
     private function cleanReason(?string $reason): ?string

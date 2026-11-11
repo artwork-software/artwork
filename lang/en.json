@@ -3975,6 +3975,7 @@
     "Changed": "Changed",
     "Reject shift plan request": "Reject shift plan request",
     "The rejection could not be saved.": "The rejection could not be saved.",
+    "Please provide at least one reason for the rejection.": "Please provide at least one reason for the rejection.",
     "Select days and/or shifts to reject and provide reasons. If none selected, provide a global reason to reject the entire request.": "Select days and/or shifts to reject and provide reasons. If none selected, provide a global reason to reject the entire request.",
     "Enter a global rejection reason (optional if per-item reasons set).": "Enter a global rejection reason (optional if per-item reasons set).",
     "No selections yet: global reason will be used to reject entire request.": "No selections yet: global reason will be used to reject entire request.",

@@ -49,12 +49,6 @@ use Illuminate\Support\Facades\DB;
 
 class ProjectService
 {
-    /**
-     * Längste Laufzeit der Löschkaskade (Timeout des SoftDeleteProjectJob). Inhalte, die in diesem Fenster
-     * vor dem Löschzeitpunkt des Projekts in den Papierkorb gingen, gehören zur Kaskade.
-     */
-    private const DELETE_CASCADE_WINDOW_SECONDS = 3600;
-
     public function __construct(
         private readonly ProjectRepository $projectRepository,
         private readonly EventService $eventService,
@@ -397,6 +391,11 @@ class ProjectService
         return $project;
     }
 
+    /**
+     * Legt das Projekt samt Inhalten in den Papierkorb. Das Projekt geht zuerst in den Papierkorb (im Normalfall
+     * schon durch den Controller) und behält diesen Zeitpunkt: Er markiert den Beginn der Kaskade, alles danach
+     * Gelöschte gehört dazu und kommt beim Wiederherstellen zurück.
+     */
     public function softDelete(
         Project $project,
         ShiftsQualificationsService $shiftsQualificationsService,
@@ -416,6 +415,10 @@ class ProjectService
         ProjectTabService $projectTabService,
         TaskService $taskService
     ): bool {
+        if (!$project->trashed()) {
+            $project->delete();
+        }
+
         $projectFileService->deleteAll($project->project_files);
         $eventService->deleteAll(
             $project->events,
@@ -485,7 +488,7 @@ class ProjectService
 
         $this->updateMoneySources($project, now());
 
-        return $project->delete();
+        return $project->trashed();
     }
 
     public function forceDelete(
@@ -561,12 +564,10 @@ class ProjectService
         TaskService $taskService
     ): bool {
         // Nur zurückholen, was ZUSAMMEN mit dem Projekt in den Papierkorb ging: vorher einzeln gelöschte Dateien,
-        // Kommentare, Checklisten und Aufgaben bleiben gelöscht. Die Kaskade läuft vor dem endgültigen
-        // Löschzeitpunkt des Projekts (siehe SoftDeleteProjectJob), daher zählt alles ab Beginn des Fensters.
+        // Kommentare, Checklisten und Aufgaben bleiben gelöscht. Die Kaskade beginnt mit dem Löschzeitpunkt des
+        // Projekts und läuft danach (siehe softDelete und SoftDeleteProjectJob).
         $deletedAt = $project->getAttribute($project->getDeletedAtColumn());
-        $cascadeStartedAt = $deletedAt instanceof CarbonInterface
-            ? $deletedAt->copy()->subSeconds(self::DELETE_CASCADE_WINDOW_SECONDS)
-            : null;
+        $cascadeStartedAt = $deletedAt instanceof CarbonInterface ? $deletedAt->copy() : null;
         $trashedWithProject = static fn (Builder $query): Builder => $query
             ->where('project_id', $project->id)
             ->when(

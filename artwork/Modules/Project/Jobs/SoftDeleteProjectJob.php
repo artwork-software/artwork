@@ -46,6 +46,11 @@ class SoftDeleteProjectJob implements ShouldQueue
             return;
         }
 
+        // Vor dem Abarbeiten wiederhergestellt: Das Projekt bleibt samt Inhalten erhalten.
+        if (!$project->trashed()) {
+            return;
+        }
+
         // Queue-Jobs haben keinen auth()-User; ohne expliziten Causer würden alle
         // kaskadierten Lösch-Activities (Schichten etc.) als "System" geloggt. Den
         // auslösenden User setzen, damit der Schichtverlauf zeigt, wer gelöscht hat.

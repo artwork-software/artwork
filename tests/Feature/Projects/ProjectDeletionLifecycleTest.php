@@ -188,6 +188,44 @@ final class ProjectDeletionLifecycleTest extends FeatureTestCase
     }
 
     #[Test]
+    public function restore_leaves_contents_in_the_trash_that_were_deleted_shortly_before_the_project(): void
+    {
+        $project = Project::factory()->create();
+        $user = User::factory()->create();
+        $keptComment = Comment::factory()->create(['project_id' => $project->id, 'user_id' => $user->id]);
+        $deletedComment = Comment::factory()->create(['project_id' => $project->id, 'user_id' => $user->id]);
+
+        $deletedComment->delete();
+        $this->travel(5)->minutes();
+        $project->delete();
+        $this->travel(20)->minutes();
+        app()->call([new SoftDeleteProjectJob($project->id), 'handle']);
+
+        $trashed = Project::onlyTrashed()->findOrFail($project->id);
+        app()->call([app(ProjectService::class), 'restore'], ['project' => $trashed]);
+
+        $this->assertNotSoftDeleted('comments', ['id' => $keptComment->id]);
+        $this->assertSoftDeleted('comments', ['id' => $deletedComment->id]);
+    }
+
+    #[Test]
+    public function queued_cascade_skips_a_project_restored_before_the_job_ran(): void
+    {
+        ['project' => $project, 'event' => $event, 'shift' => $shift] =
+            $this->makeProjectWithAssignedShift();
+
+        $project->delete();
+        $trashed = Project::onlyTrashed()->findOrFail($project->id);
+        app()->call([app(ProjectService::class), 'restore'], ['project' => $trashed]);
+
+        app()->call([new SoftDeleteProjectJob($project->id), 'handle']);
+
+        $this->assertNotSoftDeleted('projects', ['id' => $project->id]);
+        $this->assertNotSoftDeleted('events', ['id' => $event->id]);
+        $this->assertNotSoftDeleted('shifts', ['id' => $shift->id]);
+    }
+
+    #[Test]
     public function force_delete_removes_everything_permanently(): void
     {
         ['project' => $project, 'event' => $event, 'shift' => $shift] =

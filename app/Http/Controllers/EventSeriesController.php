@@ -132,11 +132,17 @@ class EventSeriesController extends Controller
      */
     public function restore(SeriesEvents $series): JsonResponse
     {
-        foreach (Event::onlyTrashed()->where('series_id', $series->id)->get() as $event) {
+        // Relationen, die EventPolicy::delete je Termin prüft, einmal für alle Termine laden.
+        $trashed = Event::onlyTrashed()
+            ->where('series_id', $series->id)
+            ->with(['project', 'creator', 'room.admins:id', 'room.adminDepartments.users:id'])
+            ->get();
+
+        foreach ($trashed as $event) {
             $this->authorize('delete', $event);
         }
 
-        return response()->json(['restored' => $this->seriesEventsService->restoreSeries($series)]);
+        return response()->json(['restored' => $this->seriesEventsService->restoreSeries($series, $trashed)]);
     }
 
     /**

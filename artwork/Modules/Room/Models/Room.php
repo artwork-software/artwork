@@ -412,10 +412,14 @@ class Room extends Model
         );
     }
 
+    /**
+     * Räume, in denen das Projekt selbst mindestens einen Termin mit Publikum hat.
+     */
     public function scopeWithAudience(Builder $query, int $projectId): Builder
     {
-        return $query->whereRelation('events', 'audience', '=', true)
-            ->whereRelation('events', 'project_id', '=', $projectId);
+        return $query->whereHas('events', function (Builder $eventQuery) use ($projectId): void {
+            $eventQuery->where('audience', true)->where('project_id', $projectId);
+        });
     }
 
     public function scopeUnlessRoomIds(

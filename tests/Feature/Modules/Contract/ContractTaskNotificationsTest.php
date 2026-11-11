@@ -50,6 +50,11 @@ final class ContractTaskNotificationsTest extends FeatureTestCase
         $this->assertStringContainsString('Gegenzeichnung einholen', $data['title']);
         $link = collect($data['description'])->firstWhere('type', 'link');
         $this->assertSame(route('dashboard'), $link['href'], 'ohne Vertragszugriff führt der Link zum Dashboard');
+        $this->assertStringNotContainsString(
+            $contract->name,
+            json_encode([$data['title'], $data['description']], JSON_UNESCAPED_UNICODE),
+            'ohne Vertragszugriff erscheint der Vertragsname nicht'
+        );
         $this->assertSame(0, $creator->notifications()->count());
     }
 

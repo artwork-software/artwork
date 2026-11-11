@@ -362,9 +362,10 @@ class ContractService
     }
 
     /**
-     * Beschreibung für Meldungen zu Folgeaufgaben: Vertrag, Frist und ein Link, den die Person öffnen darf.
-     * Zuständige brauchen keinen Zugriff auf den Vertrag; ohne Zugriff auf Vertrag und Projekt führt der
-     * Link zum Dashboard, wo die Aufgabe unter „Nächste Aufgaben“ steht.
+     * Beschreibung für Meldungen zu Folgeaufgaben: Frist und ein Link, den die Person öffnen darf.
+     * Zuständige brauchen keinen Zugriff auf den Vertrag. Den Vertragsnamen (oft der Dateiname des Uploads)
+     * und den Link zum Projekt sehen nur Personen, die Vertrag und Projekt öffnen dürfen; alle anderen
+     * bekommen einen Link zum Dashboard, wo die Aufgabe unter „Nächste Aufgaben“ steht.
      *
      * @return array<int, array{type: string, title: string, href: ?string}>
      */
@@ -374,8 +375,12 @@ class ContractService
         $contract = $task->contract;
         $project = $contract?->project;
         $description = [];
+        $canOpenContract = $contract
+            && $project
+            && Gate::forUser($recipient)->allows('view', $contract)
+            && Gate::forUser($recipient)->allows('view', $project);
 
-        if ($contract) {
+        if ($canOpenContract) {
             $description[] = [
                 'type' => 'string',
                 'title' => __('notification.contract.task_contract', ['contract' => $contract->name], $language),
@@ -394,11 +399,6 @@ class ContractService
                 'href' => null,
             ];
         }
-
-        $canOpenContract = $contract
-            && $project
-            && Gate::forUser($recipient)->allows('view', $contract)
-            && Gate::forUser($recipient)->allows('view', $project);
 
         $description[] = $canOpenContract
             ? [

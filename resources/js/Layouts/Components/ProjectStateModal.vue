@@ -33,7 +33,7 @@
                             <div class="relative ml-2 group">
                                 <IconInfoCircle class="h-5 w-5 text-text-subtle" />
                                 <div class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-surface-inverse text-text-inverse text-xs rounded p-2 w-64">
-                                    {{ $t('When a project counts as "in planning", all appointments assigned to this project during creation are initially planned appointments instead of firmly scheduled ones.') }}
+                                    {{ $t('If a project has a status where “Project counts as in planning” is enabled, the switch for planned events is preselected when events are entered in the project. Events are only created as planned while that switch is on.') }}
                                 </div>
                             </div>
                         </div>

@@ -4,7 +4,7 @@
         <BaseMenuItem
             as-link
             :link="route('projects.tab', { project: project.id, projectTab: project.firstTabId })"
-            title="Open"
+            title="Open this project"
             :icon="IconFolderOpen"
         />
         <BaseMenuItem title="Edit" :icon="IconEdit" />

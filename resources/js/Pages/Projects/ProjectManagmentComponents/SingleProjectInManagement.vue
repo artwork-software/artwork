@@ -69,7 +69,7 @@
                             white-menu-background
                             classes="invisible group-hover:visible group-focus-within:visible"
                         >
-                            <BaseMenuItem v-if="canEnterProject" white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" :icon="IconFolderOpen" />
+                            <BaseMenuItem v-if="canEnterProject" white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open this project" :icon="IconFolderOpen" />
                             <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')" />
                             <BaseMenuItem white-menu-background title="Undo pinning" :icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()" />
                             <BaseMenuItem white-menu-background title="Pin" :icon="IconPin" v-else @click="pinProject()" />
@@ -86,7 +86,7 @@
                     class="absolute z-50"
                 >
                     <BaseMenu white-menu-background has-no-offset :button-id="'project-invisible-menu-' + project.id" :show-icon="false" v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
-                        <BaseMenuItem v-if="canEnterProject" white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" :icon="IconFolderOpen" />
+                        <BaseMenuItem v-if="canEnterProject" white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open this project" :icon="IconFolderOpen" />
                         <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')" />
                         <BaseMenuItem white-menu-background title="Undo pinning" :icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()" />
                         <BaseMenuItem white-menu-background title="Pin" :icon="IconPin" v-else @click="pinProject()" />

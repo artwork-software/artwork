@@ -53,7 +53,7 @@
                         storage-key="settings-guide.project.general.states"
                         title="Statuses that count as “in planning”"
                         :paragraphs="[
-                            'If a project is created with a status where “Project counts as in planning” is enabled, its events are automatically created as planned events instead of fixed ones — visible in the calendar and the planning calendar.',
+                            'If a project has a status where “Project counts as in planning” is enabled, the switch for planned events is preselected when events are entered in the project. Events are only created as planned while that switch is on.',
                         ]"
                     />
                     <div class="flex flex-wrap w-full max-w-xl my-4">

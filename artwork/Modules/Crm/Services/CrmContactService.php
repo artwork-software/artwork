@@ -118,7 +118,9 @@ readonly class CrmContactService
     /**
      * Künstler*innenaufenthalte und Zimmertypen hängen am Unterkunfts-Datensatz. Ein Kontakt der
      * Systemart Unterkunft bekommt ihn deshalb gleich beim Anlegen (Dialog, Import, Typwechsel),
-     * verknüpft wie bei den aus dem Altbestand übernommenen Unterkünften.
+     * verknüpft wie bei den aus dem Altbestand übernommenen Unterkünften. Bereits vorhandene
+     * Eigenschaftswerte (Typwechsel) gehen in den Datensatz ein, sonst leerte dessen nächstes
+     * Speichern sie im CRM.
      */
     private function ensureAccommodationEntity(CrmContact $contact): void
     {
@@ -129,7 +131,10 @@ readonly class CrmContactService
             return;
         }
 
-        $accommodation = Accommodation::create(['name' => $contact->display_name]);
+        $accommodation = Accommodation::create(array_merge(
+            $this->accommodationFieldsFromPropertyValues($contact),
+            ['name' => $contact->display_name]
+        ));
         $accommodation->forceFill(['crm_contact_id' => $contact->id])->saveQuietly();
 
         $this->contactRepository->update($contact, [
@@ -137,6 +142,33 @@ readonly class CrmContactService
             'entity_id' => $accommodation->getKey(),
         ]);
         $contact->setRelation('entity', $accommodation);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function accommodationFieldsFromPropertyValues(CrmContact $contact): array
+    {
+        $columns = (new Accommodation())->getCrmFields();
+        $fields = [];
+
+        foreach ($contact->propertyValues()->with('property')->get() as $propertyValue) {
+            $property = $propertyValue->property;
+            $column = $property ? ($columns[$property->name] ?? null) : null;
+
+            if (
+                !is_string($column)
+                || $propertyValue->value === null
+                || $propertyValue->value === ''
+                || CrmPropertyValueFormat::isMultiple($property)
+            ) {
+                continue;
+            }
+
+            $fields[$column] = $propertyValue->value;
+        }
+
+        return $fields;
     }
 
     public function updateProfileImage(CrmContact $contact, ?string $path): void

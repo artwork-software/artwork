@@ -176,6 +176,48 @@ final class CrmAccommodationLinkTest extends FeatureTestCase
     }
 
     #[Test]
+    public function changing_the_type_carries_existing_values_into_the_accommodation(): void
+    {
+        $this->actingAsAdmin();
+        $type = $this->accommodationType();
+        $email = $this->property($type, 'Email');
+        $phone = $this->property($type, 'Telefon');
+        $contact = CrmContact::factory()->create(['display_name' => 'Wird Unterkunft mit Werten']);
+        $contact->contactType->properties()->syncWithoutDetaching([
+            $email->id => ['sort_order' => 0],
+            $phone->id => ['sort_order' => 1],
+        ]);
+        CrmPropertyValue::query()->create([
+            'crm_contact_id' => $contact->id,
+            'crm_property_id' => $email->id,
+            'value' => 'alt@unterkunft.test',
+        ]);
+        CrmPropertyValue::query()->create([
+            'crm_contact_id' => $contact->id,
+            'crm_property_id' => $phone->id,
+            'value' => '030 123456',
+        ]);
+
+        $this->patch(route('crm.contacts.change-type', $contact), ['crm_contact_type_id' => $type->id])
+            ->assertRedirect();
+
+        $accommodation = $this->accommodationOf($contact);
+        $this->assertSame('alt@unterkunft.test', $accommodation?->email);
+        $this->assertSame('030 123456', $accommodation->phone_number);
+
+        $accommodation->syncToCrm();
+
+        $this->assertSame('alt@unterkunft.test', CrmPropertyValue::query()
+            ->where('crm_contact_id', $contact->id)
+            ->where('crm_property_id', $email->id)
+            ->value('value'));
+        $this->assertSame('030 123456', CrmPropertyValue::query()
+            ->where('crm_contact_id', $contact->id)
+            ->where('crm_property_id', $phone->id)
+            ->value('value'));
+    }
+
+    #[Test]
     public function an_accommodation_created_on_the_accommodation_page_gets_its_crm_contact(): void
     {
         $this->actingAsAdmin();
@@ -288,5 +330,142 @@ final class CrmAccommodationLinkTest extends FeatureTestCase
         $this->assertNull(CrmContact::withTrashed()->find($trashedContact->id)->entity_id);
         $this->assertSame(0, Accommodation::query()->where('name', 'Im Papierkorb')->count());
         $this->assertNull($otherTypeContact->fresh()->entity_id);
+    }
+
+    #[Test]
+    public function migration_fills_empty_fields_on_both_sides_of_a_pair_linked_by_name(): void
+    {
+        $type = $this->accommodationType();
+        $email = $this->property($type, 'Email');
+        $phone = $this->property($type, 'Telefon');
+        $city = $this->property($type, 'Stadt');
+
+        $contact = CrmContact::factory()->create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => ' Paar mit Werten ',
+        ]);
+        CrmPropertyValue::query()->create([
+            'crm_contact_id' => $contact->id,
+            'crm_property_id' => $email->id,
+            'value' => 'crm@paar.test',
+        ]);
+        CrmPropertyValue::query()->create([
+            'crm_contact_id' => $contact->id,
+            'crm_property_id' => $city->id,
+            'value' => 'Köln',
+        ]);
+        $accommodation = Accommodation::factory()->create([
+            'name' => 'Paar mit Werten',
+            'email' => null,
+            'phone_number' => '0221 99',
+            'location' => 'Bonn',
+        ]);
+
+        $migration = require database_path(self::MIGRATION);
+        $migration->up();
+        $migration->up();
+
+        $accommodation->refresh();
+        $this->assertSame($contact->id, (int) $accommodation->crm_contact_id);
+        $this->assertSame('crm@paar.test', $accommodation->email);
+        $this->assertSame('0221 99', $accommodation->phone_number);
+        $this->assertSame('Bonn', $accommodation->location);
+
+        $values = CrmPropertyValue::query()->where('crm_contact_id', $contact->id)->pluck('value', 'crm_property_id');
+        $this->assertSame('crm@paar.test', $values[$email->id]);
+        $this->assertSame('0221 99', $values[$phone->id]);
+        $this->assertSame('Köln', $values[$city->id]);
+        $this->assertCount(3, $values);
+    }
+
+    #[Test]
+    public function migration_links_by_name_only_when_the_name_is_exactly_equal_and_unambiguous(): void
+    {
+        $type = $this->accommodationType();
+
+        $accentContact = CrmContact::factory()->create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => 'Hotel Bär',
+        ]);
+        $accentAccommodation = Accommodation::factory()->create(['name' => 'Hotel Bar']);
+
+        $caseContact = CrmContact::factory()->create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => 'pension linde',
+        ]);
+        $caseAccommodation = Accommodation::factory()->create(['name' => 'Pension Linde']);
+
+        $twinContact = CrmContact::factory()->create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => 'Zwilling',
+        ]);
+        $firstTwin = Accommodation::factory()->create(['name' => 'Zwilling']);
+        $secondTwin = Accommodation::factory()->create(['name' => 'Zwilling']);
+
+        $firstNamesake = CrmContact::factory()->create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => 'Namensvetter',
+        ]);
+        $secondNamesake = CrmContact::factory()->create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => 'Namensvetter',
+        ]);
+        $namesakeAccommodation = Accommodation::factory()->create(['name' => 'Namensvetter']);
+
+        $migration = require database_path(self::MIGRATION);
+        $migration->up();
+        $migration->up();
+
+        $this->assertSame('Hotel Bär', $this->accommodationOf($accentContact)?->name);
+        $this->assertNotSame($accentContact->id, (int) $accentAccommodation->fresh()->crm_contact_id);
+        $this->assertSame('pension linde', $this->accommodationOf($caseContact)?->name);
+        $this->assertNotSame($caseContact->id, (int) $caseAccommodation->fresh()->crm_contact_id);
+
+        $ownTwin = $this->accommodationOf($twinContact);
+        $this->assertNotNull($ownTwin);
+        $this->assertNotContains($ownTwin->id, [$firstTwin->id, $secondTwin->id]);
+        $this->assertSame(3, Accommodation::query()->where('name', 'Zwilling')->count());
+
+        $namesakeAccommodationIds = [
+            $this->accommodationOf($firstNamesake)?->id,
+            $this->accommodationOf($secondNamesake)?->id,
+        ];
+        $this->assertNotContains(null, $namesakeAccommodationIds);
+        $this->assertNotContains($namesakeAccommodation->id, $namesakeAccommodationIds);
+
+        foreach ([$accentAccommodation, $caseAccommodation, $firstTwin, $secondTwin, $namesakeAccommodation] as $left) {
+            $ownContact = CrmContact::query()->find($left->fresh()->crm_contact_id);
+            $this->assertSame($left->id, (int) $ownContact?->entity_id);
+        }
+    }
+
+    #[Test]
+    public function migration_gives_a_contact_pointing_to_a_deleted_accommodation_a_new_one(): void
+    {
+        $type = $this->accommodationType();
+        $email = $this->property($type, 'Email');
+        $deleted = Accommodation::factory()->create(['name' => 'Gelöschte Unterkunft']);
+        $contact = CrmContact::factory()->create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => 'Verwaister Kontakt',
+            'entity_type' => $deleted->getMorphClass(),
+            'entity_id' => $deleted->id,
+        ]);
+        CrmPropertyValue::query()->create([
+            'crm_contact_id' => $contact->id,
+            'crm_property_id' => $email->id,
+            'value' => 'verwaist@unterkunft.test',
+        ]);
+        DB::table('accommodations')->where('id', $deleted->id)->delete();
+
+        $migration = require database_path(self::MIGRATION);
+        $migration->up();
+        $migration->up();
+
+        $accommodation = $this->accommodationOf($contact);
+        $this->assertSame('Verwaister Kontakt', $accommodation?->name);
+        $this->assertSame('verwaist@unterkunft.test', $accommodation->email);
+        $this->assertSame($accommodation->id, (int) $contact->fresh()->entity_id);
+        $this->assertSame(1, Accommodation::query()->where('name', 'Verwaister Kontakt')->count());
     }
 }

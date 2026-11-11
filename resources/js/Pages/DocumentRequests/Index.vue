@@ -133,7 +133,7 @@
                     <template #row-actions="{ row }">
                         <BaseMenu has-no-offset white-menu-background>
                             <BaseMenuItem :icon="IconUpload" :title="$t('Upload document')" white-menu-background @click="openUploadModal(row)" />
-                            <BaseMenuItem :icon="IconEdit" :title="$t('Edit')" white-menu-background @click="openEditModal(row)" />
+                            <BaseMenuItem v-if="can('can edit document requests') || hasAdminRole()" :icon="IconEdit" :title="$t('Edit')" white-menu-background @click="openEditModal(row)" />
                             <BaseMenuItem :icon="IconEye" :title="$t('View details')" white-menu-background @click="openDetailModal(row)" />
                         </BaseMenu>
                     </template>

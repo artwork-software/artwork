@@ -10,6 +10,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ComponentSelectionModeService;
+use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
@@ -283,8 +284,6 @@ class BiComponentSettingsController extends Controller
         Cache::forget('settings_components_not_special_tab_palette');
         Cache::forget('settings_components_not_special_component_settings');
         Cache::forget('settings_components_special');
-        Cache::forget('print_layout_components_not_special');
-        Cache::forget('print_layout_components_special');
-        Cache::forget('print_layout_all_components');
+        ProjectPrintLayoutService::clearComponentCaches();
     }
 }

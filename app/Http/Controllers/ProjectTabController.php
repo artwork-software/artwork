@@ -15,6 +15,7 @@ use Artwork\Modules\Project\TabTemplates\ProjectTabTemplateService;
 use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Artwork\Modules\Project\Services\ComponentUsageService;
+use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
 use Artwork\Modules\Project\Services\ProjectDocumentPlacementService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
@@ -187,8 +188,7 @@ class ProjectTabController extends Controller
         $this->clearTabSettingsCache();
         Cache::forget(self::CACHE_KEY_COMPONENTS);
         Cache::forget('settings_components_not_special_component_settings');
-        Cache::forget('print_layout_components_not_special');
-        Cache::forget('print_layout_all_components');
+        ProjectPrintLayoutService::clearComponentCaches();
 
         return redirect()->back()->with(
             'success',

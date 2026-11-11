@@ -57,6 +57,8 @@ final class AiInventoryApiTest extends TestCase
     private function readyStatus(InventoryArticle $article, int $value): void
     {
         $status = InventoryArticleStatus::create(['name' => 'Einsatzbereit', 'color' => '#00ff00', 'order' => 1]);
+        $status->default = true;
+        $status->save();
         $article->statusValues()->attach($status->id, ['value' => $value]);
     }
 

@@ -321,7 +321,7 @@
                                     <ListboxOptions
                                         class="absolute z-10 mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white py-2 text-sm shadow-lg ring-1 ring-black/10 focus:outline-none">
                                         <ListboxOption
-                                            v-for="paperSize in paperSizes"
+                                            v-for="paperSize in availablePaperSizes"
                                             :key="paperSize.id"
                                             :value="paperSize"
                                             v-slot="{ active, selected }"
@@ -377,7 +377,7 @@
                         <BaseInput
                             id="shiftPlanDpi"
                             v-model="pdf.dpi"
-                            :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
+                            :label="$t('Resolution (DPI) (Standard: 96) (Maximum: 300)')"
                         />
                     </div>
                 </div>
@@ -655,6 +655,12 @@ const exportDisabled = computed(() =>
     (pdf.exportMode === 'worker_matrix' && crafts.length > 0 && selectedCraftIds.value.length === 0) ||
     (pdf.exportMode === 'worker_matrix' && pdf.worker_types.length === 0) ||
     pdf.processing
+)
+
+// Die Personalübersicht gibt es nur in A3 und A4 (WorkerShiftPlanPdfExportRequest).
+const availablePaperSizes = computed(() => pdf.exportMode === 'worker_matrix'
+    ? paperSizes.filter((paperSize) => paperSize.id !== 'a5')
+    : paperSizes
 )
 
 const selectExportMode = (mode: string) => {

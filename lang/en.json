@@ -1407,6 +1407,7 @@
     "Paper orientation": "Paper orientation",
     "The A6 format is only possible in landscape format.": "The A6 format is only possible in landscape format.",
     "Resolution (DPI) (Standard: 72) (Maximum: 300)": "Resolution (DPI) (Standard: 72) (Maximum: 300)",
+    "Resolution (DPI) (Standard: 96) (Maximum: 300)": "Resolution (DPI) (Standard: 96) (Maximum: 300)",
     "Export PDF": "Export PDF",
     "Portrait format": "Portrait format",
     "Landscape format": "Landscape format",

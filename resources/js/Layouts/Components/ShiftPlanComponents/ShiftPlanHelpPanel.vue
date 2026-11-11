@@ -341,7 +341,7 @@ const operationBlocks = [
     {
         icon: 'IconZoomIn',
         title: 'Zoom',
-        text: 'Below 100% zoom, shift cards become compact pills showing time, craft and staffing. Click a pill to open the shift; for drag & drop, zoom back to 100%.',
+        text: 'Below 100% zoom, shift cards become compact pills showing time, craft and staffing. Click a pill to open the shift; assigning people by drag & drop also works on the pill.',
     },
 ]
 

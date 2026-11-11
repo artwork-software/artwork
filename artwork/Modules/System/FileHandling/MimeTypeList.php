@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\System\FileHandling;
 
+use Artwork\Core\FileHandling\Upload\UploadDenyList;
+
 /**
  * Auswahlliste für die Dateityp-Einstellungen. Skript-/markup-fähige Typen (html, svg, xml, php, …) fehlen:
  * sie wären auf der public-Disk als Stored XSS ausnutzbar und werden in HandlesFileUpload zusätzlich abgelehnt.
@@ -64,4 +66,35 @@ class MimeTypeList
         'webp' => 'image/webp',
         'avif' => 'image/avif',
     ];
+
+    /**
+     * Ausführbare bzw. aktive Formate: bleiben für bestehende Einstellungen gültig, werden aber nicht mehr
+     * zur Auswahl angeboten.
+     *
+     * @var list<string>
+     */
+    public const NOT_SELECTABLE_FILE_TYPES = ['msi', 'cab', 'js', 'css', 'swf'];
+
+    /**
+     * Was der Branding-Upload annimmt (UploadBrandingGraphicRequest: mimes:jpg,jpeg,png,webp).
+     *
+     * @var list<string>
+     */
+    public const BRANDING_FILE_TYPES = ['png', 'jpeg', 'jpg', 'webp'];
+
+    /**
+     * Nicht-Bild-Typen, die die Datei-Einstellungen zur Auswahl anbieten: ohne Typen der Upload-Denylist und
+     * ohne ausführbare bzw. aktive Formate.
+     *
+     * @return list<string>
+     */
+    public static function selectableOtherFileTypes(): array
+    {
+        return array_values(array_filter(
+            array_keys(self::MIME_TYPES),
+            static fn (string $fileType): bool => !UploadDenyList::deniesExtension($fileType)
+                && !UploadDenyList::deniesMimeType(self::MIME_TYPES[$fileType])
+                && !in_array($fileType, self::NOT_SELECTABLE_FILE_TYPES, true)
+        ));
+    }
 }

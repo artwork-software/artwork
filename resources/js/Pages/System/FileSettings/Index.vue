@@ -138,6 +138,10 @@ const $t = useTranslation(),
         type: Object,
         required: true
       },
+      brandingFileTypes: {
+        type: Object,
+        required: true
+      },
     });
 
 const areas = ref(props.areas);
@@ -145,13 +149,15 @@ const areas = ref(props.areas);
 // Effektives PHP-Upload-Limit des Servers (shared Inertia-Prop; nginx kann zusätzlich begrenzen)
 const serverUploadLimitMb = computed(() => usePage().props.server_upload_limit_mb ?? null);
 
-// Branding nimmt nur Bilder an; alle anderen Bereiche bekommen zusätzlich die übrigen Dateitypen
-// (PDF, Office, ZIP, …), damit sich ein entfernter Typ einzeln wieder hinzufügen lässt.
+// Branding bietet nur die Bildformate an, die der Branding-Upload annimmt; alle anderen Bereiche bekommen
+// zusätzlich die übrigen Dateitypen (PDF, Office, ZIP, …), damit sich ein entfernter Typ einzeln wieder
+// hinzufügen lässt.
 const selectableFileTypes = (area) => {
-  const imageFileTypes = Object.values(props.imageFileTypes ?? {});
   if (area.name === 'branding') {
-    return imageFileTypes;
+    return Object.values(props.brandingFileTypes ?? {});
   }
+
+  const imageFileTypes = Object.values(props.imageFileTypes ?? {});
 
   return [...imageFileTypes, ...Object.values(props.otherFileTypes ?? {})];
 }

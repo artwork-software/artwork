@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers\System;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
+use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -29,6 +30,37 @@ final class FileSettingsControllerTest extends FeatureTestCase
         $settings = app(GeneralSettings::class)->refresh();
         $this->assertSame(250, $settings->allowed_project_file_size);
         $this->assertSame(['png'], $settings->allowed_project_file_mimetypes);
+    }
+
+    #[Test]
+    public function selection_offers_neither_denied_nor_active_file_types(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->get(route('tool.file-settings.index'))
+            ->assertOk()
+            ->assertInertia(function (AssertableInertia $page): void {
+                $otherFileTypes = $page->toArray()['props']['otherFileTypes'];
+                foreach (['exe', 'msi', 'cab', 'js', 'css', 'swf'] as $fileType) {
+                    $this->assertNotContains($fileType, $otherFileTypes);
+                }
+                $this->assertContains('pdf', $otherFileTypes);
+                $this->assertContains('zip', $otherFileTypes);
+                $this->assertSame(['png', 'jpeg', 'jpg', 'webp'], $page->toArray()['props']['brandingFileTypes']);
+            });
+    }
+
+    #[Test]
+    public function already_saved_file_type_that_is_no_longer_offered_stays_valid(): void
+    {
+        $this->actingAsAdmin();
+        $payload = $this->payload();
+        $payload['data']['fileTypes'][] = ['name' => 'css'];
+
+        $this->put(route('tool.file-settings.store'), $payload)
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(['png', 'css'], app(GeneralSettings::class)->refresh()->allowed_project_file_mimetypes);
     }
 
     /**

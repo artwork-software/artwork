@@ -175,7 +175,8 @@ class MoneySourceController extends Controller
             'source_name' => $request->source_name,
             'description' => $request->description,
             'is_group' => $request->boolean('is_group'),
-            'icon' => $request->boolean('is_group') ? $request->icon : null
+            'icon' => $request->boolean('is_group') ? $request->icon : null,
+            'group_id' => $request->group_id,
         ]);
 
         $moneySource->users()->sync(collect($request->users));

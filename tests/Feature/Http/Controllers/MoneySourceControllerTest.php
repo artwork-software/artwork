@@ -80,6 +80,23 @@ final class MoneySourceControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function store_saves_the_group_chosen_in_the_create_dialog(): void
+    {
+        $this->actingAsAdmin();
+        $group = MoneySource::factory()->create(['is_group' => true]);
+
+        $this->post(route('money_sources.store'), [
+            'name' => 'Source In Group',
+            'amount' => '100',
+            'is_group' => false,
+            'group_id' => $group->id,
+            'users' => [],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('money_sources', ['name' => 'Source In Group', 'group_id' => $group->id]);
+    }
+
+    #[Test]
     public function admin_can_destroy_money_source(): void
     {
         $this->actingAsAdmin();

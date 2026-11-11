@@ -440,7 +440,7 @@
         <ConfirmDeleteModal
             v-if="subCategoryToDelete"
             :title="$t('Delete sub-category')"
-            :description="$t('Are you sure you want to delete this sub-category? Articles in this sub-category will be deleted as well.')"
+            :description="$t('Are you sure you want to delete this sub-category? Its articles are kept and remain in the category without a sub-category.')"
             @delete="confirmRemoveSubCategory"
             @closed="subCategoryToDelete = null"
         />

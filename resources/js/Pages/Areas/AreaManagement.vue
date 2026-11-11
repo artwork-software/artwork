@@ -671,7 +671,7 @@
                     variant="static"
                     title="What do these switches do?"
                     :paragraphs="[
-                        'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
+                        'Adjoining rooms record which rooms are next to each other. This is information about the room only: the conflict check still looks at the room itself, and events in an adjoining room neither block it nor trigger a warning.',
                         'Temporary rooms appear in the calendar only during the set period.',
                         'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
                         'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',
@@ -812,7 +812,7 @@
                     variant="static"
                     title="What do these switches do?"
                     :paragraphs="[
-                        'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
+                        'Adjoining rooms record which rooms are next to each other. This is information about the room only: the conflict check still looks at the room itself, and events in an adjoining room neither block it nor trigger a warning.',
                         'Temporary rooms appear in the calendar only during the set period.',
                         'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
                         'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',

@@ -42,3 +42,20 @@ test('calendar settings describe start and end time as the hidden range of the d
     assert.ok(!source.includes("$t('Start-Time')"), 'start field still labelled as start time');
     assert.ok(!source.includes("$t('End-Time')"), 'end field still labelled as end time');
 });
+
+test('adjoining rooms are described as information, not as part of the conflict check', () => {
+    const file = 'resources/js/Pages/Areas/AreaManagement.vue';
+    const source = read(file);
+
+    // EventCollisionService prüft nur denselben Raum; die Meldung zu Nebenräumen löst kein Formular mehr aus
+    assertKeyRemoved(
+        source,
+        'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
+        file,
+    );
+    assertKeyUsed(
+        source,
+        'Adjoining rooms record which rooms are next to each other. This is information about the room only: the conflict check still looks at the room itself, and events in an adjoining room neither block it nor trigger a warning.',
+        file,
+    );
+});

@@ -227,9 +227,6 @@ class ContractService
 
     public function storeTasksAndComments(Model $contract, ?array $tasks = null, ?string $comment = null): void
     {
-        $task = null;
-        $taskObj = null;
-
         if ($tasks) {
             foreach ($tasks as $taskFromReq) {
                 $taskObj = (object)$taskFromReq;
@@ -242,18 +239,11 @@ class ContractService
                         'contract_id' => $contract->id,
                         'order' => 1
                     ]);
+
+                    $this->assignUsersToTask($task, $taskObj->assigned_users ?? []);
                 } else {
                     Task::where('id', $taskObj->id)->update(['done' => $taskObj->done]);
                 }
-            }
-        }
-
-        if ($task && $taskObj && isset($taskObj->assigned_users)) {
-            foreach ($taskObj->assigned_users as $assignedUser) {
-                $userObj = (object)$assignedUser;
-                $user = User::where('id', $userObj->id)->first();
-                $task->task_users()->save($user);
-                $user->tasks()->save($task);
             }
         }
 
@@ -332,6 +322,25 @@ class ContractService
                 'contract_type_ids' => $filters['contractTypeIds'] ?? [],
             ]
         );
+    }
+
+    /**
+     * Jede neu angelegte Folgeaufgabe bekommt ihre eigenen Zuständigen.
+     *
+     * @param iterable<int, array{id: int}|object> $assignedUsers
+     */
+    private function assignUsersToTask(Task $task, iterable $assignedUsers): void
+    {
+        foreach ($assignedUsers as $assignedUser) {
+            $userObj = (object)$assignedUser;
+            $user = User::where('id', $userObj->id)->first();
+            if (!$user) {
+                continue;
+            }
+
+            $task->task_users()->save($user);
+            $user->tasks()->save($task);
+        }
     }
 
     private function sendContractAddedNotifications(Contract $contract, Project $project, string $originalName): void

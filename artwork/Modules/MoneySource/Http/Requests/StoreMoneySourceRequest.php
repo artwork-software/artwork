@@ -4,6 +4,8 @@ namespace Artwork\Modules\MoneySource\Http\Requests;
 
 use Artwork\Core\Validation\Rules\IconNameRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 
 class StoreMoneySourceRequest extends FormRequest
 {
@@ -16,7 +18,9 @@ class StoreMoneySourceRequest extends FormRequest
     }
 
     /**
-     * @return array<string, array<int, string>>
+     * Eine Quelle kann nur einer Gruppe zugeordnet werden, nicht einer einzelnen Quelle.
+     *
+     * @return array<string, array<int, string|Exists|IconNameRule>>
      */
     public function rules(): array
     {
@@ -31,7 +35,11 @@ class StoreMoneySourceRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:65535'],
             'is_group' => ['nullable', 'boolean'],
             'icon' => ['nullable', 'string', 'max:255', new IconNameRule()],
-            'group_id' => ['nullable', 'integer', 'exists:money_sources,id'],
+            'group_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('money_sources', 'id')->where('is_group', true),
+            ],
             'sub_money_source_ids' => ['nullable', 'array'],
             'sub_money_source_ids.*' => ['integer', 'exists:money_sources,id'],
             'users' => ['nullable', 'array'],

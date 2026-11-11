@@ -98,6 +98,58 @@ final class MoneySourceControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function store_rejects_a_single_source_as_group(): void
+    {
+        $this->actingAsAdmin();
+        $singleSource = MoneySource::factory()->create(['is_group' => false]);
+
+        $this->post(route('money_sources.store'), [
+            'name' => 'Source In Single Source',
+            'amount' => '100',
+            'is_group' => false,
+            'group_id' => $singleSource->id,
+            'users' => [],
+        ])->assertSessionHasErrors('group_id');
+
+        $this->assertDatabaseMissing('money_sources', ['name' => 'Source In Single Source']);
+    }
+
+    #[Test]
+    public function a_new_group_does_not_belong_to_another_group(): void
+    {
+        $this->actingAsAdmin();
+        $group = MoneySource::factory()->create(['is_group' => true]);
+
+        $this->post(route('money_sources.store'), [
+            'name' => 'New Group',
+            'amount' => '100',
+            'is_group' => true,
+            'group_id' => $group->id,
+            'users' => [],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('money_sources', ['name' => 'New Group', 'is_group' => true, 'group_id' => null]);
+    }
+
+    #[Test]
+    public function update_keeps_a_group_out_of_other_groups(): void
+    {
+        $this->actingAsAdmin();
+        $group = MoneySource::factory()->create(['is_group' => true]);
+        $otherGroup = MoneySource::factory()->create(['is_group' => true]);
+
+        $this->patch(route('money_sources.update', $otherGroup), [
+            'name' => 'Other Group',
+            'amount' => '100',
+            'is_group' => true,
+            'group_id' => $group->id,
+            'users' => [],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('money_sources', ['id' => $otherGroup->id, 'group_id' => null]);
+    }
+
+    #[Test]
     public function index_ships_tasks_and_categories_for_groups_so_the_filters_can_match(): void
     {
         $this->actingAsAdmin();

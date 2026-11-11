@@ -178,7 +178,7 @@ class MoneySourceController extends Controller
             'description' => $request->description,
             'is_group' => $request->boolean('is_group'),
             'icon' => $request->boolean('is_group') ? $request->icon : null,
-            'group_id' => $request->group_id,
+            'group_id' => $request->boolean('is_group') ? null : $request->group_id,
         ]);
 
         $moneySource->users()->sync(collect($request->users));
@@ -525,7 +525,7 @@ class MoneySourceController extends Controller
             'description' => $request->description,
             'is_group' => $request->boolean('is_group'),
             'icon' => $request->boolean('is_group') ? $request->icon : null,
-            'group_id' => $request->group_id,
+            'group_id' => $request->boolean('is_group') ? null : $request->group_id,
             'funding_start_date' => $request->funding_start_date,
             'funding_end_date' => $request->funding_end_date,
         ]);

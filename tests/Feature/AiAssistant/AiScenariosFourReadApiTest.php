@@ -134,6 +134,8 @@ final class AiScenariosFourReadApiTest extends TestCase
     #[Test]
     public function common_free_slots_skip_shifts_absences_and_room_bookings(): void
     {
+        // Vergangene Fenster fallen weg; ohne feste Uhr waere der Test ab dem Stichtag rot.
+        $this->travelTo(CarbonImmutable::parse(self::DAY)->subDay()->setTime(8, 0));
         $ada = $this->worker('Eins');
         $bob = $this->worker('Zwei');
         $this->assignShift($ada, '08:00', '12:00');

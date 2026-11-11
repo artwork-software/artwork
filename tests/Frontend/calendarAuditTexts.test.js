@@ -18,7 +18,7 @@ const assertKeyRemoved = (source, key, file) => {
     assert.equal(en[key], undefined, `en.json still has: ${key}`);
 };
 
-test('calendar settings describe start and end time as the hidden range of the day view', () => {
+test('calendar settings describe the hidden range of the day view with the field names', () => {
     const file = 'resources/js/Pages/Settings/Calendar/Index.vue';
     const source = read(file);
 
@@ -26,12 +26,13 @@ test('calendar settings describe start and end time as the hidden range of the d
     for (const key of [
         'Start and end time define which hours the day view of the calendar and the shift plan displays. The range may span midnight — for example 22:00 to 08:00.',
         'Defines which hours the day view of the calendar and the shift plan displays. The range may span midnight (e.g. 22:00–08:00).',
+        'Start and end time define a range of hours that the day view of the calendar and the shift plan hides, as long as nothing is scheduled in it on that day. The range may span midnight: to keep 08:00 to 23:00 visible, enter 23:00 as the start and 08:00 as the end.',
     ]) {
         assertKeyRemoved(source, key, file);
     }
 
     for (const key of [
-        'Start and end time define a range of hours that the day view of the calendar and the shift plan hides, as long as nothing is scheduled in it on that day. The range may span midnight: to keep 08:00 to 23:00 visible, enter 23:00 as the start and 08:00 as the end.',
+        '“Hidden from” and “Hidden until” define a range of hours that the day view of the calendar and the shift plan hides, as long as nothing is scheduled in it on that day. The range may span midnight: to keep 08:00 to 23:00 visible, enter 23:00 under “Hidden from” and 08:00 under “Hidden until”.',
         'Defines which hours the day view of the calendar and the shift plan hides. Hours with events or shifts stay visible. The range may span midnight (e.g. hidden from 22:00 until 08:00).',
         'Hidden from',
         'Hidden until',
@@ -41,6 +42,7 @@ test('calendar settings describe start and end time as the hidden range of the d
 
     assert.ok(!source.includes("$t('Start-Time')"), 'start field still labelled as start time');
     assert.ok(!source.includes("$t('End-Time')"), 'end field still labelled as end time');
+    assert.match(de['“Hidden from” and “Hidden until” define a range of hours that the day view of the calendar and the shift plan hides, as long as nothing is scheduled in it on that day. The range may span midnight: to keep 08:00 to 23:00 visible, enter 23:00 under “Hidden from” and 08:00 under “Hidden until”.'], /„Ausgeblendet ab“.*„Ausgeblendet bis“/);
 });
 
 test('adjoining rooms are described as information, not as part of the conflict check', () => {

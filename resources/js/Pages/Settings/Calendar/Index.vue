@@ -5,7 +5,7 @@
             storage-key="settings-guide.calendar.general"
             title="How does this area work?"
             :paragraphs="[
-                'Start and end time define a range of hours that the day view of the calendar and the shift plan hides, as long as nothing is scheduled in it on that day. The range may span midnight: to keep 08:00 to 23:00 visible, enter 23:00 as the start and 08:00 as the end.',
+                '“Hidden from” and “Hidden until” define a range of hours that the day view of the calendar and the shift plan hides, as long as nothing is scheduled in it on that day. The range may span midnight: to keep 08:00 to 23:00 visible, enter 23:00 under “Hidden from” and 08:00 under “Hidden until”.',
                 'Day remarks add one shared remark per day as a separate column in the calendar, the planning calendar and the shift plan.',
                 'If project creation from events is deactivated, events can only be linked to existing projects.',
             ]"

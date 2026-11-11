@@ -97,6 +97,64 @@ final class BudgetTemplateControllerTest extends FeatureTestCase
         $this->assertSame('-100.00', $templateCells[$templateDifference->id]);
     }
 
+    /**
+     * B = A + Sage und C = B + D: Ohne Sage-Anteil rechnet auch C in der Vorlage neu, selbst wenn C vor B steht.
+     */
+    #[Test]
+    public function template_recalculates_sum_columns_that_build_on_a_sum_with_the_sage_column(): void
+    {
+        $this->actingAsAdmin();
+
+        $project = Project::factory()->create();
+        $table = Table::factory()->create(['project_id' => $project->id, 'is_template' => false]);
+        $chainedSumColumn = Column::factory()->create(['table_id' => $table->id, 'type' => 'sum', 'position' => 0]);
+        $valueColumn = Column::factory()->create(['table_id' => $table->id, 'position' => 1]);
+        $sageColumn = Column::factory()->create(['table_id' => $table->id, 'type' => 'sage', 'position' => 2]);
+        $otherValueColumn = Column::factory()->create(['table_id' => $table->id, 'position' => 3]);
+        $sumColumn = Column::factory()->create([
+            'table_id' => $table->id,
+            'type' => 'sum',
+            'position' => 4,
+            'linked_first_column' => $valueColumn->id,
+            'linked_second_column' => $sageColumn->id,
+        ]);
+        $chainedSumColumn->update([
+            'linked_first_column' => $sumColumn->id,
+            'linked_second_column' => $otherValueColumn->id,
+        ]);
+
+        $mainPosition = MainPosition::factory()->create(['table_id' => $table->id]);
+        $subPosition = SubPosition::factory()->create(['main_position_id' => $mainPosition->id]);
+        $row = SubPositionRow::factory()->create(['sub_position_id' => $subPosition->id]);
+        $cellValues = [
+            $chainedSumColumn->id => '160.00',
+            $valueColumn->id => '100,00',
+            $sageColumn->id => '0,00',
+            $otherValueColumn->id => '10,00',
+            $sumColumn->id => '150.00',
+        ];
+        foreach ($cellValues as $columnId => $value) {
+            ColumnCell::factory()->create([
+                'column_id' => $columnId,
+                'sub_position_row_id' => $row->id,
+                'value' => $value,
+            ]);
+        }
+
+        $this->post(route('project.budget.template.create', $table->id), ['template_name' => 'Kette'])
+            ->assertRedirect();
+
+        $template = Table::query()->where('name', 'Kette')->where('is_template', true)->firstOrFail();
+        $templateColumns = $template->columns()->orderBy('position')->get();
+        [$templateChainedSum, , , $templateSum] = $templateColumns->all();
+
+        $templateCells = ColumnCell::query()
+            ->whereIn('column_id', $templateColumns->pluck('id'))
+            ->pluck('value', 'column_id');
+        $this->assertSame('100.00', $templateCells[$templateSum->id]);
+        $this->assertSame('110.00', $templateCells[$templateChainedSum->id]);
+    }
+
     #[Test]
     public function template_keeps_the_link_of_a_sum_column_that_stands_before_its_source_columns(): void
     {

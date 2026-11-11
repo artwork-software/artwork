@@ -59,3 +59,11 @@ test('adjoining rooms are described as information, not as part of the conflict 
         file,
     );
 });
+
+test('monthly overview export marks the preselected paper size as the default', () => {
+    const source = read('resources/js/Layouts/Components/Export/Tabs/PdfMonthlyCalendarExport.vue');
+
+    assert.ok(source.includes("{ id: 'a3', name: 'A3 (Standard)' }"), 'A3 is not marked as default');
+    assert.ok(!source.includes("'A4 (Standard)'"), 'A4 is still marked as default');
+    assert.match(source, /selectedPaperSize = ref<[^>]+>\(\{ id: 'a3', name: 'A3 \(Standard\)' \}\)/);
+});

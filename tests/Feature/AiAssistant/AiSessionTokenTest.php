@@ -14,10 +14,13 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Http\Middleware\CheckToken;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Concerns\GrantsAiAccess;
 use Tests\TestCase;
 
 final class AiSessionTokenTest extends TestCase
 {
+    use GrantsAiAccess;
+
     private Client $aiClient;
 
     protected function setUp(): void
@@ -64,7 +67,7 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function a_disabled_house_yields_403(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withAiAccess()->create());
         $this->house(enabled: false);
 
         $this->postJson(route('ai.session.store'))->assertForbidden();
@@ -74,8 +77,27 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function a_disabled_house_yields_403_even_for_an_admin(): void
     {
-        $this->actingAs($this->adminUser());
+        $this->actingAs($this->grantAiAccess($this->adminUser()));
         $this->house(enabled: false);
+
+        $this->postJson(route('ai.session.store'))->assertForbidden();
+    }
+
+    /** Nur ausgewählte Personen: ohne Konsolen-Recht "ai access" kein Token, auch nicht für Admins. */
+    #[Test]
+    public function a_user_without_the_console_permission_yields_403(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $this->house(enabled: true);
+
+        $this->postJson(route('ai.session.store'))->assertForbidden();
+    }
+
+    #[Test]
+    public function an_admin_without_the_console_permission_yields_403(): void
+    {
+        $this->actingAs($this->adminUser());
+        $this->house(enabled: true);
 
         $this->postJson(route('ai.session.store'))->assertForbidden();
     }
@@ -83,7 +105,7 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function the_instance_kill_switch_yields_403(): void
     {
-        $this->actingAs($this->adminUser());
+        $this->actingAs($this->grantAiAccess($this->adminUser()));
         $this->house(enabled: true);
         config(['ai.enabled' => false]);
 
@@ -99,7 +121,7 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function the_public_token_endpoint_does_not_know_the_ai_session_grant(): void
     {
-        $victim = User::factory()->create();
+        $victim = User::factory()->withAiAccess()->create();
 
         $response = $this->postJson('/oauth/token', [
             'grant_type' => 'ai_session',
@@ -134,7 +156,7 @@ final class AiSessionTokenTest extends TestCase
     #[\PHPUnit\Framework\Attributes\DataProvider('stageCombinations')]
     public function the_scope_set_follows_the_house_settings(bool $levelB, bool $levelC, array $expected): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withAiAccess()->create());
         $this->house(enabled: true, levelB: $levelB, levelC: $levelC);
 
         $response = $this->postJson(route('ai.session.store'))->assertOk();
@@ -146,7 +168,7 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function a_requested_scope_can_only_narrow_the_set(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withAiAccess()->create());
         $this->house(enabled: true, levelB: true);
 
         $response = $this->postJson(route('ai.session.store'), [
@@ -163,7 +185,7 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function requesting_the_write_scope_without_an_action_is_rejected(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withAiAccess()->create());
         $this->house(enabled: true, levelB: true, levelC: true);
 
         $this->postJson(route('ai.session.store'), ['scopes' => [AiScopes::WRITE]])
@@ -176,7 +198,7 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function the_token_carries_the_expected_claims(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withAiAccess()->create();
         $this->actingAs($user);
         $this->house(enabled: true, levelB: true);
 
@@ -200,7 +222,7 @@ final class AiSessionTokenTest extends TestCase
         Route::middleware(['auth:api', CheckToken::using('inventory:read')])
             ->get('/test-only/inventory', fn (): array => ['ok' => true]);
 
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withAiAccess()->create());
         $this->house(enabled: true);
 
         $token = $this->postJson(route('ai.session.store'))->assertOk()->json('access_token');
@@ -219,7 +241,7 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function logout_revokes_open_session_tokens_but_leaves_personal_access_tokens_alone(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withAiAccess()->create();
         $this->actingAs($user);
         $this->house(enabled: true);
 
@@ -239,7 +261,7 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function a_password_reset_revokes_open_session_tokens(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withAiAccess()->create();
         $this->actingAs($user);
         $this->house(enabled: true);
 
@@ -265,7 +287,7 @@ final class AiSessionTokenTest extends TestCase
     #[Test]
     public function the_eleventh_request_per_minute_is_throttled(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withAiAccess()->create());
         $this->house(enabled: true);
 
         for ($i = 0; $i < 10; $i++) {

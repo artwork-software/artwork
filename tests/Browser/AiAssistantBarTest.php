@@ -51,7 +51,7 @@ final class AiAssistantBarTest extends DuskTestCase
         $this->artisan('ai:install')->assertSuccessful();
 
         // Die Oberflaeche wird auf Deutsch geprueft; die Sprache haengt am Benutzer.
-        $this->user = User::factory()->create(['language' => 'de']);
+        $this->user = User::factory()->withAiAccess()->create(['language' => 'de']);
         UserCalendarSettings::factory()->create(['user_id' => $this->user->id]);
     }
 

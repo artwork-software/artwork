@@ -12,6 +12,9 @@ use Artwork\Modules\User\Models\User;
  * Artwork-Admins jede Gate-Abfrage als true zurueck. Ein Gate `ai-assistant.use` waere damit auch
  * fuer Admins true, waehrend das Haus den Assistenten abgeschaltet hat. Alle Konsumenten
  * (Shared-Props, Session-Endpunkt, Bar) rufen diesen Service direkt.
+ *
+ * Neben Instanz- und Hausschalter muss die Person das Konsolen-Recht "ai access" direkt halten
+ * (User::hasAiAccess). Admin-Rolle allein reicht nicht.
  */
 class AiAssistantAccess
 {
@@ -25,7 +28,7 @@ class AiAssistantAccess
             return false;
         }
 
-        return (bool) config('ai.enabled') && $this->settings->enabled;
+        return (bool) config('ai.enabled') && $this->settings->enabled && $user->hasAiAccess();
     }
 
     /** Stufe B — Datenauswertung. Nur sinnvoll, wenn der Assistent ueberhaupt frei ist. */

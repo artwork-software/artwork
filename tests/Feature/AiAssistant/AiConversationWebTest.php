@@ -8,12 +8,15 @@ use Artwork\Modules\AiAssistant\Settings\AiAssistantSettings;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Concerns\GrantsAiAccess;
 use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 /** core-chat-historie, Web-Endpunkte fuer die Bar (Konzept C3 §5, §7). */
 final class AiConversationWebTest extends TestCase
 {
+    use GrantsAiAccess;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -46,13 +49,13 @@ final class AiConversationWebTest extends TestCase
     #[Test]
     public function it_lists_only_the_own_conversations_newest_first(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withAiAccess()->create();
         $this->actingAs($user);
 
         $older = $this->conversationFor($user, 'Aelter');
         $older->forceFill(['last_turn_at' => now()->subDay()])->save();
         $newer = $this->conversationFor($user, 'Neuer');
-        $this->conversationFor(User::factory()->create(), 'Fremd');
+        $this->conversationFor(User::factory()->withAiAccess()->create(), 'Fremd');
 
         $response = $this->getJson(route('ai.conversations.index'))->assertOk();
 
@@ -65,7 +68,7 @@ final class AiConversationWebTest extends TestCase
     #[Test]
     public function a_disabled_assistant_blocks_the_endpoints(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withAiAccess()->create();
         $this->actingAs($user);
         $conversation = $this->conversationFor($user);
         $this->enableAssistant(false);
@@ -77,7 +80,7 @@ final class AiConversationWebTest extends TestCase
     #[Test]
     public function a_disabled_assistant_blocks_an_admin_too(): void
     {
-        $this->actingAs($this->adminUser());
+        $this->actingAs($this->grantAiAccess($this->adminUser()));
         $this->enableAssistant(false);
 
         $this->getJson(route('ai.conversations.index'))->assertForbidden();
@@ -86,7 +89,7 @@ final class AiConversationWebTest extends TestCase
     #[Test]
     public function it_deletes_an_own_conversation_with_its_turns(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withAiAccess()->create();
         $this->actingAs($user);
         $conversation = $this->conversationFor($user, 'Zu loeschen');
 
@@ -106,7 +109,7 @@ final class AiConversationWebTest extends TestCase
     #[Test]
     public function deleting_writes_an_activity_entry_without_message_content(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withAiAccess()->create();
         $this->actingAs($user);
         $conversation = $this->conversationFor($user, 'Mein Titel');
 
@@ -129,10 +132,10 @@ final class AiConversationWebTest extends TestCase
     #[Test]
     public function a_foreign_conversation_can_not_be_deleted(): void
     {
-        $owner = User::factory()->create();
+        $owner = User::factory()->withAiAccess()->create();
         $conversation = $this->conversationFor($owner);
 
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withAiAccess()->create());
 
         $this->deleteJson(route('ai.conversations.destroy', $conversation->id))->assertNotFound();
         $this->assertDatabaseHas('ai_conversations', ['id' => $conversation->id]);
@@ -142,10 +145,10 @@ final class AiConversationWebTest extends TestCase
     #[Test]
     public function an_admin_can_not_delete_a_foreign_conversation(): void
     {
-        $owner = User::factory()->create();
+        $owner = User::factory()->withAiAccess()->create();
         $conversation = $this->conversationFor($owner);
 
-        $this->actingAs($this->adminUser());
+        $this->actingAs($this->grantAiAccess($this->adminUser()));
 
         $this->deleteJson(route('ai.conversations.destroy', $conversation->id))->assertNotFound();
         $this->assertDatabaseHas('ai_conversations', ['id' => $conversation->id]);
@@ -154,9 +157,9 @@ final class AiConversationWebTest extends TestCase
     #[Test]
     public function an_admin_does_not_see_foreign_conversations_in_the_list(): void
     {
-        $this->conversationFor(User::factory()->create(), 'Fremd');
+        $this->conversationFor(User::factory()->withAiAccess()->create(), 'Fremd');
 
-        $this->actingAs($this->adminUser());
+        $this->actingAs($this->grantAiAccess($this->adminUser()));
 
         $this->getJson(route('ai.conversations.index'))->assertOk()->assertJsonCount(0, 'data');
     }

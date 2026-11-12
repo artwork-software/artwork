@@ -24,6 +24,8 @@
                 @withdraw="withdrawModalOpen = true"
                 @resubmit="resubmit(request)"
                 @go-to-week="goToWeekInShiftPlan(request)"
+                :can-view-shift-history="canViewShiftHistory"
+                @open-shift-history="openShiftHistoryModal"
             />
 
             <ShiftPlanRequestWeekNavigator
@@ -96,6 +98,17 @@
             :processing="processing"
             @close="closeHistoryDrawer"
             @reject-change="rejectRequestChange"
+        />
+
+        <!-- Schichtverlauf der KW, vorgefiltert auf das Gewerk der Anfrage -->
+        <ShiftHistoryModal
+            v-if="shiftHistoryFilter"
+            :crafts="shiftHistoryFilter.crafts"
+            :initial-craft-id="shiftHistoryFilter.craftId"
+            :initial-start-date="shiftHistoryFilter.startDate"
+            :initial-end-date="shiftHistoryFilter.endDate"
+            :auto-load="true"
+            @close="shiftHistoryFilter = null"
         />
 
         <AcceptShiftPlanRequestModal
@@ -176,8 +189,9 @@
 <script setup>
 import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import AppLayout from '@/Layouts/AppLayout.vue';
-import {Link, router} from '@inertiajs/vue3';
-import {computed, reactive, ref, watch} from 'vue';
+import {Link, router, usePage} from '@inertiajs/vue3';
+import {computed, defineAsyncComponent, reactive, ref, watch} from 'vue';
+import {usePermission} from '@/Composeables/Permission.js';
 import {IconArrowLeft, IconInfoCircle} from '@tabler/icons-vue';
 import ShiftPlanRequestHeader from './components/ShiftPlanRequestHeader.vue';
 import ShiftPlanRequestRow from './components/ShiftPlanRequestRow.vue';
@@ -195,7 +209,9 @@ import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
 import {useShiftPlanRequestActions} from './components/useShiftPlanRequestActions.js';
 import {useI18n} from 'vue-i18n';
 import {useShiftPlanRequestWeekNavigation} from './components/useShiftPlanRequestWeekNavigation.js';
-import {appendAbsenceEntries, appendForeignCraftEntries, sortDayEntriesByStart} from './components/shiftPlanRequestHelpers.js';
+import {appendAbsenceEntries, appendForeignCraftEntries, shiftHistoryFilterForRequest, sortDayEntriesByStart} from './components/shiftPlanRequestHelpers.js';
+
+const ShiftHistoryModal = defineAsyncComponent(() => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'));
 
 const {t} = useI18n();
 
@@ -817,6 +833,14 @@ const closeHistoryDrawer = () => {
     historyDrawer.shiftId = null;
 };
 const selectedShift = computed(() => props.shifts.find(s => s.id === historyDrawer.shiftId) || null);
+
+// Schichtverlauf-Modal (gleiche Sichtregel wie der Dienstplan)
+const {can, hasAdminRole} = usePermission(usePage().props);
+const canViewShiftHistory = computed(() => hasAdminRole() || can('can view shift plan'));
+const shiftHistoryFilter = ref(null);
+const openShiftHistoryModal = () => {
+    shiftHistoryFilter.value = shiftHistoryFilterForRequest(props.request);
+};
 
 // Stub-Funktion für Einzel-Änderung Reject (Drawer)
 const rejectRequestChange = (change) => {

@@ -19,9 +19,9 @@ use Tests\Concerns\GrantsAiAccess;
 use Tests\Feature\FeatureTestCase;
 
 /**
- * Konsolen-Recht "ai access" (ConsoleOnlyPermissionEnum::AiAccess): zusätzliche Schranke vor
- * Maschinen-API und KI-Routen, nur per Tinker vergebbar, und Voraussetzung, um KI-Keys in den
- * Tooleinstellungen zu sehen.
+ * Konsolen-Recht "ai access" (ConsoleOnlyPermissionEnum::AiAccess): zusätzliche Schranke vor den
+ * KI-Routen (/api/v1/ai/*), nur per Tinker vergebbar, und Voraussetzung, um KI-Keys in den
+ * Tooleinstellungen zu sehen. Die übrigen Maschinen-Routen regeln allein die Scopes.
  */
 final class AiAccessPermissionTest extends FeatureTestCase
 {
@@ -33,10 +33,29 @@ final class AiAccessPermissionTest extends FeatureTestCase
     public static function gatedRoutes(): array
     {
         return [
-            'machine api v1' => ['/api/v1/inventory', 'inventory:read'],
-            'legacy inventory api' => ['/api/inventory', 'inventory:read'],
             'ai routes' => ['/api/v1/ai/context', AiScopes::READ],
         ];
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string}>
+     */
+    public static function machineRoutes(): array
+    {
+        return [
+            'machine api v1 inventory' => ['/api/v1/inventory', 'inventory:read'],
+            'machine api v1 rooms' => ['/api/v1/rooms', 'calendar:read'],
+            'legacy inventory api' => ['/api/inventory', 'inventory:read'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('machineRoutes')]
+    public function machine_routes_do_not_need_the_permission(string $url, string $scope): void
+    {
+        Passport::actingAs(User::factory()->create(), [$scope]);
+
+        $this->getJson($url)->assertOk();
     }
 
     #[Test]
@@ -61,9 +80,9 @@ final class AiAccessPermissionTest extends FeatureTestCase
     public function the_admin_role_does_not_replace_the_permission(): void
     {
         $admin = $this->actingAsAdmin();
-        Passport::actingAs($admin, ['inventory:read']);
+        Passport::actingAs($admin, [AiScopes::READ]);
 
-        $this->getJson('/api/v1/inventory')->assertForbidden();
+        $this->getJson('/api/v1/ai/context')->assertForbidden();
     }
 
     #[Test]
@@ -74,9 +93,9 @@ final class AiAccessPermissionTest extends FeatureTestCase
         $user = User::factory()->create();
         $user->assignRole($role);
 
-        Passport::actingAs($user, ['inventory:read']);
+        Passport::actingAs($user, [AiScopes::READ]);
 
-        $this->getJson('/api/v1/inventory')->assertForbidden();
+        $this->getJson('/api/v1/ai/context')->assertForbidden();
     }
 
     #[Test]
@@ -154,6 +173,24 @@ final class AiAccessPermissionTest extends FeatureTestCase
 
         $this->delete(route('api-management.destroy', $aiToken->getKey()))->assertSessionHas('error');
         $this->assertFalse(Token::query()->findOrFail($aiToken->getKey())->revoked);
+    }
+
+    #[Test]
+    public function migration_grants_the_permission_to_owners_of_valid_ai_keys_only(): void
+    {
+        $this->preparePassportClient();
+        $aiKeyOwner = User::factory()->create();
+        $aiKeyOwner->createToken('KI-Schlüssel', [AiScopes::READ]);
+        $machineKeyOwner = User::factory()->create();
+        $machineKeyOwner->createToken('Raumbelegung', ['calendar:read']);
+        $revokedKeyOwner = User::factory()->create();
+        $revokedKeyOwner->createToken('Alt', [AiScopes::READ])->token->revoke();
+
+        (require base_path('database/migrations/2026_11_12_165112_grant_ai_access_to_owners_of_ai_keys.php'))->up();
+
+        $this->assertTrue($aiKeyOwner->fresh()->hasAiAccess());
+        $this->assertFalse($machineKeyOwner->fresh()->hasAiAccess());
+        $this->assertFalse($revokedKeyOwner->fresh()->hasAiAccess());
     }
 
     private function preparePassportClient(): void

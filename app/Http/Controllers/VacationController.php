@@ -187,7 +187,7 @@ class VacationController extends Controller
                 'full_day' => !$isHalf,
                 'day_part' => $resolvedDayPart,
                 'is_series' => false,
-                'comment' => $checked['type'],
+                'comment' => null,
             ]);
             $this->vacationService->create(
                 $user,
@@ -201,10 +201,10 @@ class VacationController extends Controller
             );
         } else {
             foreach ($vacations as $vacation) {
-                if ((string)$vacation->comment === (string)$vacationTypeBeforeUpdate['type']) {
+                if ($vacation->isDayStatusEntryOf($vacationTypeBeforeUpdate['type'] ?? null)) {
                     $vacation->update([
                         'type' => $checked['type'],
-                        'comment' => $checked['type'],
+                        'comment' => null,
                         'full_day' => !$isHalf,
                         'day_part' => $resolvedDayPart,
                         'created_by' => auth()->id(),
@@ -278,7 +278,7 @@ class VacationController extends Controller
                 'type' => 'vacation',
                 'full_day' => true,
                 'is_series' => false,
-                'comment' => $checked['type'],
+                'comment' => null,
             ]);
             $this->vacationService->create(
                 $freelancer,
@@ -292,10 +292,10 @@ class VacationController extends Controller
             );
         } else {
             foreach ($vacations as $vacation) {
-                if ((string)$vacation->comment === (string)$vacationTypeBeforeUpdate['type']) {
+                if ($vacation->isDayStatusEntryOf($vacationTypeBeforeUpdate['type'] ?? null)) {
                     $vacation->update([
                         'type' => $checked['type'],
-                        'comment' => $checked['type'],
+                        'comment' => null,
                         'created_by' => auth()->id(),
                     ]);
                 }
@@ -358,7 +358,7 @@ class VacationController extends Controller
                 'type' => 'vacation',
                 'full_day' => true,
                 'is_series' => false,
-                'comment' => $checked['type'],
+                'comment' => null,
             ]);
             $this->vacationService->create(
                 $serviceProvider,
@@ -372,10 +372,10 @@ class VacationController extends Controller
             );
         } else {
             foreach ($vacations as $vacation) {
-                if ((string)$vacation->comment === (string)$vacationTypeBeforeUpdate['type']) {
+                if ($vacation->isDayStatusEntryOf($vacationTypeBeforeUpdate['type'] ?? null)) {
                     $vacation->update([
                         'type' => $checked['type'],
-                        'comment' => $checked['type'],
+                        'comment' => null,
                         'created_by' => auth()->id(),
                     ]);
                 }

@@ -5,6 +5,7 @@ namespace Artwork\Modules\Project\Services\ContentExport;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
+use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -93,23 +94,75 @@ class ProjectContentExportColumns
     }
 
     /**
-     * @return array<int, array{key: string, name: string, kind: string, type: string}>
+     * Komponenten tragen die Namen ihrer Tabs mit, damit gleichnamige Komponenten (z. B. aus einem kopierten Tab)
+     * unterscheidbar sind.
+     *
+     * @return array<int, array{key: string, name: string, kind: string, type: string, tabs: array<int, string>}>
      */
     public function availableColumns(User $user): array
     {
         $system = [];
         foreach ($this->systemColumns() as $key => $translationKey) {
-            $system[] = ['key' => $key, 'name' => __($translationKey), 'kind' => 'system', 'type' => $key];
+            $system[] = [
+                'key' => $key,
+                'name' => __($translationKey),
+                'kind' => 'system',
+                'type' => $key,
+                'tabs' => [],
+            ];
         }
 
-        $components = $this->visibleComponents($user)->map(fn (Component $component): array => [
+        $visibleComponents = $this->visibleComponents($user);
+        $tabIdsByComponent = $this->visibilityService->visibleTabIdsByComponent(
+            $user,
+            collect($visibleComponents->modelKeys())
+        );
+        $tabLabels = $this->tabLabels();
+
+        $components = $visibleComponents->map(fn (Component $component): array => [
             'key' => self::COMPONENT_PREFIX . $component->id,
             'name' => (string) $component->name,
             'kind' => 'component',
             'type' => (string) $component->type,
+            'tabs' => collect($tabIdsByComponent[$component->id] ?? [])
+                ->sortBy(fn (int $tabId): int => $tabLabels[$tabId]['position'] ?? PHP_INT_MAX)
+                ->map(fn (int $tabId): ?string => $tabLabels[$tabId]['label'] ?? null)
+                ->filter()
+                ->values()
+                ->all(),
         ])->all();
 
         return [...$system, ...$components];
+    }
+
+    /**
+     * Anzeigename je Tab in Tab-Reihenfolge; gleichnamige Tabs werden durchnummeriert („Abfrage (2)“).
+     *
+     * @return array<int, array{label: string, position: int}>
+     */
+    private function tabLabels(): array
+    {
+        $tabs = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
+            ->orderBy('order')
+            ->orderBy('id')
+            ->get(['id', 'name']);
+        $totals = $tabs->countBy(static fn (ProjectTab $tab): string => mb_strtolower(trim((string) $tab->name)));
+
+        $labels = [];
+        $seen = [];
+        foreach ($tabs->values() as $position => $tab) {
+            $normalized = mb_strtolower(trim((string) $tab->name));
+            $seen[$normalized] = ($seen[$normalized] ?? 0) + 1;
+            $labels[$tab->id] = [
+                'label' => $totals[$normalized] > 1
+                    ? sprintf('%s (%d)', $tab->name, $seen[$normalized])
+                    : (string) $tab->name,
+                'position' => $position,
+            ];
+        }
+
+        return $labels;
     }
 
     public static function componentIdOf(string $key): ?int

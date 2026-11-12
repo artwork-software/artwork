@@ -111,6 +111,26 @@ class Vacation extends Model
         return $this->hasMany(VacationConflict::class, 'vacation_id', 'id');
     }
 
+    /**
+     * Ist das ein Eintrag aus dem Status-Dropdown des Dienstplans (ganzer oder halber Tag, ohne eigenen
+     * Kommentar) mit dem angegebenen bisherigen Status? Nur solche Einträge stellt ein Statuswechsel um;
+     * Abwesenheiten mit Uhrzeit oder eigenem Kommentar bleiben unberührt. Früher stand der Status
+     * selbst als Kommentar im Eintrag (z. B. „NOT_AVAILABLE“), das zählt weiter als Status-Eintrag.
+     */
+    public function isDayStatusEntryOf(?string $previousStatus): bool
+    {
+        $previousStatus = (string) $previousStatus;
+        $comment = trim((string) $this->comment);
+
+        if ($comment === $previousStatus) {
+            return true;
+        }
+
+        $hasTimeWindow = !$this->full_day && $this->getRawOriginal('start_time') !== null;
+
+        return $comment === '' && !$hasTimeWindow && (string) $this->type === $previousStatus;
+    }
+
     public function getDateCastedAttribute(): string
     {
         Carbon::setLocale('de');

@@ -23,6 +23,7 @@ use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Permission;
+use Tests\Concerns\GrantsAiAccess;
 use Tests\TestCase;
 
 /**
@@ -30,6 +31,8 @@ use Tests\TestCase;
  */
 final class AiUndoTest extends TestCase
 {
+    use GrantsAiAccess;
+
     private const MONDAY = '2026-09-14';
 
     private Room $room;
@@ -336,7 +339,7 @@ final class AiUndoTest extends TestCase
             ],
         ]);
 
-        $token = $this->actingAs($user)->postJson('/ai/session', [
+        $token = $this->actingAs($this->grantAiAccess($user))->postJson('/ai/session', [
             'scopes' => [AiScopes::WRITE],
             'action_id' => $turn->id,
         ])->assertOk()->json('access_token');

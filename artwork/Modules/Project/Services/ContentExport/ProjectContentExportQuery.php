@@ -15,6 +15,9 @@ use Illuminate\Database\Eloquent\Builder;
  * - Merkmale (Status, Kategorie, Genre, Bereich, Terminart): mindestens EIN gewähltes Merkmal trifft zu.
  * - Mitglieder: mindestens eine der Personen ist im Projektteam.
  * Die vier Bedingungen sind untereinander UND-verknüpft.
+ *
+ * Sind Projekte einzeln gewählt, gelten nur diese (ohne die übrigen Bedingungen); ein Zeitraum begrenzt dann
+ * nur die aufgeführten Termine, nicht die Projekte.
  */
 class ProjectContentExportQuery
 {
@@ -23,6 +26,13 @@ class ProjectContentExportQuery
      */
     public function build(User $user, ProjectContentExportConfiguration $configuration): Builder
     {
+        if ($configuration->hasExplicitProjects()) {
+            return Project::query()
+                ->where('is_group', false)
+                ->enterableBy($user)
+                ->whereKey($configuration->projectIds);
+        }
+
         return Project::query()
             ->where('is_group', false)
             ->enterableBy($user)

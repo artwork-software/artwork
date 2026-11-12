@@ -216,7 +216,7 @@ final class AiShiftPlanningApiTest extends TestCase
     private function writeToken(User $user, AiConversationTurn $turn): void
     {
         $this->app['auth']->forgetGuards();
-        $token = $this->actingAs($user)->postJson('/ai/session', [
+        $token = $this->actingAs($this->grantAiAccess($user))->postJson('/ai/session', [
             'scopes' => [AiScopes::WRITE],
             'action_id' => $turn->id,
         ])->assertOk()->json('access_token');

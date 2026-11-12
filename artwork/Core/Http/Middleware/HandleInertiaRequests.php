@@ -263,12 +263,10 @@ class HandleInertiaRequests extends Middleware
             parent::share($request),
             [
                 'name' => config('app.name'),
-                // Instanz-Version als Turn-Kontext der KI-Bar (core-ki-bar-ui, Konzept C4 §5).
-                // Quelle: config/app.php -> APP_VERSION; ohne gesetzte Variable null.
-                'artwork_version' => config('app.version'),
                 'ai' => $this->aiAssistantState($user),
                 'use_chat_module' => config('app.use_chat_module'),
-                // Nur für Angemeldete (Tool-Einstellungen) – Login- und Einladungsseiten verraten die Version nicht
+                // Nur für Angemeldete (Tool-Einstellungen, Turn-Kontext der KI-Bar) – Login- und Einladungsseiten
+                // verraten die Version nicht
                 'artworkVersion' => $user ? config('app.version') : null,
                 // Effektives PHP-Upload-Limit für transparente „Datei zu groß"-Meldungen
                 // und die Datei-Einstellungsseite (Abnahme RG-04); nginx kann zusätzlich begrenzen

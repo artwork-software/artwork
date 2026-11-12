@@ -85,7 +85,7 @@ function turnContext() {
     }
 
     context.locale = props.auth?.user?.language ?? document.documentElement.lang ?? null
-    context.artwork_version = props.artwork_version ?? null
+    context.artwork_version = props.artworkVersion ?? null
 
     return context
 }

@@ -118,7 +118,7 @@ Diese drei müssen auftauchen (`app/Console/Kernel.php:72,74,78`):
 
 | Command | Takt | Zweck |
 |---|---|---|
-| `passport:purge` | täglich 02:30 | abgelaufene und widerrufene Tokens |
+| `artwork:purge-oauth-tokens` | täglich 02:30 | abgelaufene und widerrufene Tokens (verlängerte Tokens erst nach ihrer Deadline) |
 | `ai:purge-transcripts` | täglich 02:45 | Chat-Historie nach `transcript_retention_days` |
 | `ai:expire-actions` | stündlich | offene bestätigungspflichtige Aktionen nach Fristablauf |
 

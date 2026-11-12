@@ -163,7 +163,7 @@ final class AiConfirmActionsTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        $response = $this->actingAs($user)->postJson('/ai/session', [
+        $response = $this->actingAs($this->grantAiAccess($user))->postJson('/ai/session', [
             'scopes' => [AiScopes::WRITE],
             'action_id' => $turn->id,
         ])->assertOk();
@@ -308,7 +308,7 @@ final class AiConfirmActionsTest extends TestCase
         $user = $this->planner();
         $turn = $this->pendingAction($user);
 
-        $response = $this->actingAs($user)->postJson('/ai/session', [
+        $response = $this->actingAs($this->grantAiAccess($user))->postJson('/ai/session', [
             'scopes' => [AiScopes::WRITE],
             'action_id' => $turn->id,
         ])->assertOk();

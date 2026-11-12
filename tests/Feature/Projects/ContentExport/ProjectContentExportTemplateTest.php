@@ -10,7 +10,7 @@ use Tests\Feature\FeatureTestCase;
 
 /**
  * Vorlagen des Projektinhalte-Exports: für alle mit Exportrecht sichtbar, ändern/löschen nur anlegende Person
- * oder Admins, ohne Zeitraum gespeichert.
+ * oder Admins, ohne Zeitraum und einzeln gewählte Projekte gespeichert.
  */
 final class ProjectContentExportTemplateTest extends FeatureTestCase
 {
@@ -34,6 +34,7 @@ final class ProjectContentExportTemplateTest extends FeatureTestCase
                     'date_end' => '2026-01-31',
                     'project_state_ids' => [3],
                     'member_ids' => [$member->id],
+                    'project_ids' => [42],
                     'evil' => 'x',
                 ],
                 'event_column' => ['event_type_ids' => [7]],
@@ -49,6 +50,7 @@ final class ProjectContentExportTemplateTest extends FeatureTestCase
         ], $template->columns);
         $this->assertArrayNotHasKey('date_start', $template->settings['filters']);
         $this->assertArrayNotHasKey('evil', $template->settings['filters']);
+        $this->assertArrayNotHasKey('project_ids', $template->settings['filters']);
         $this->assertSame([3], $template->settings['filters']['project_state_ids']);
         $this->assertSame([7], $template->settings['event_column']['event_type_ids']);
         $response->assertJsonPath('members.0.name', 'Ada Lovelace')->assertJsonPath('can_manage', true);

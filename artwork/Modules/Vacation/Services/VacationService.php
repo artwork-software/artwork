@@ -345,7 +345,7 @@ readonly class VacationService
                     'type' => 'vacation',
                     'full_day' => true,
                     'is_series' => false,
-                    'comment' => $vacationType['type'],
+                    'comment' => null,
                 ]);
 
                 $this->create(
@@ -403,7 +403,7 @@ readonly class VacationService
                     'type' => 'vacation',
                     'full_day' => true,
                     'is_series' => false,
-                    'comment' => $vacationType['type'],
+                    'comment' => null,
                 ]);
 
                 $this->create(

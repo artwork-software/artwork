@@ -21,6 +21,7 @@ final readonly class ProjectContentExportConfiguration
      * @param array<int, int> $eventTypeIds Merkmal: Projekte mit Terminen dieser Arten
      * @param array<int, int> $memberIds
      * @param array<int, int> $eventColumnTypeIds Terminarten der Termin-Spalte (leer = alle)
+     * @param array<int, int> $projectIds einzeln gewählte Projekte (ersetzen die übrigen Filter)
      */
     public function __construct(
         public string $format,
@@ -36,6 +37,7 @@ final readonly class ProjectContentExportConfiguration
         public array $memberIds = [],
         public array $eventColumnTypeIds = [],
         public ?int $templateId = null,
+        public array $projectIds = [],
     ) {
     }
 
@@ -80,7 +82,17 @@ final readonly class ProjectContentExportConfiguration
             templateId: isset($data['template_id']) && is_numeric($data['template_id'])
                 ? (int) $data['template_id']
                 : null,
+            projectIds: $ids($filters['project_ids'] ?? []),
         );
+    }
+
+    /**
+     * Einzeln gewählte Projekte ersetzen Zeitraum, Gruppe, Merkmale und Mitglieder als Auswahl. Ein Zeitraum
+     * begrenzt dann nur noch die aufgeführten Termine.
+     */
+    public function hasExplicitProjects(): bool
+    {
+        return $this->projectIds !== [];
     }
 
     public function hasDateRange(): bool

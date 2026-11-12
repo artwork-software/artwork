@@ -26,6 +26,9 @@
                         <div class="flex min-w-0 items-center gap-2">
                             <IconGripVertical class="size-3.5 shrink-0 text-text-subtle" stroke-width="1.5" />
                             <span class="truncate">{{ element.name }}</span>
+                            <span v-if="element.tabs?.length" class="truncate text-text-subtle" :title="tabsOf(element.key)">
+                                {{ tabsOf(element.key) }}
+                            </span>
                             <span v-if="element.kind === 'system'" class="shrink-0 rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] text-text-muted">
                                 {{ $t('System') }}
                             </span>
@@ -68,6 +71,7 @@
                             <span class="min-w-0 flex-1 truncate">
                                 {{ element.title || nameOf(element.key) }}
                                 <span v-if="element.title" class="text-text-subtle">({{ nameOf(element.key) }})</span>
+                                <span v-if="tabsOf(element.key)" class="text-text-subtle">· {{ tabsOf(element.key) }}</span>
                             </span>
                             <button
                                 type="button"
@@ -142,10 +146,13 @@ const availableColumns = computed(() => {
     const query = search.value.trim().toLowerCase();
 
     return props.columns.filter((column) => !selectedKeys.value.has(column.key) &&
-        (query === "" || column.name.toLowerCase().includes(query)));
+        (query === "" || [column.name, ...(column.tabs ?? [])].some((text) => text.toLowerCase().includes(query))));
 });
 
-const nameOf = (key) => props.columns.find((column) => column.key === key)?.name ?? key;
+const columnOf = (key) => props.columns.find((column) => column.key === key);
+const nameOf = (key) => columnOf(key)?.name ?? key;
+// Tabs der Komponente, damit gleichnamige Komponenten (z. B. aus kopierten Tabs) unterscheidbar sind
+const tabsOf = (key) => (columnOf(key)?.tabs ?? []).join(", ");
 
 // Systembausteine wie Projektname stehen in Word ohne Bezeichnung, eigene Komponenten mit
 const toSelected = (column) => ({key: column.key, title: null, show_label: column.kind === "component"});

@@ -9,9 +9,11 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectState;
+use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
@@ -147,6 +149,27 @@ final class ProjectContentExportTest extends FeatureTestCase
     }
 
     #[Test]
+    public function options_name_the_tabs_so_components_with_the_same_name_can_be_told_apart(): void
+    {
+        $this->actingAsUserWith(self::EXPORT, $this->member);
+        $firstTab = ProjectTab::factory()->create(['name' => 'Request', 'order' => 1, 'visible_for_all' => true]);
+        $copiedTab = ProjectTab::factory()->create(['name' => 'Request', 'order' => 2, 'visible_for_all' => true]);
+        $hiddenTab = ProjectTab::factory()->create(['name' => 'Hidden', 'order' => 3, 'visible_for_all' => false]);
+        $original = $this->createComponent('Duration', ProjectTabComponentEnum::TEXT_FIELD);
+        $copy = $this->createComponent('Duration', ProjectTabComponentEnum::TEXT_FIELD);
+        $this->placeInTab($firstTab, $original);
+        $this->placeInTab($hiddenTab, $original);
+        $this->placeInTab($copiedTab, $copy);
+
+        $columns = collect($this->getJson(route('projects.content-export.options'))->assertOk()->json('columns'))
+            ->keyBy('key');
+
+        $this->assertSame(['Request (1)'], $columns['component:' . $original->id]['tabs']);
+        $this->assertSame(['Request (2)'], $columns['component:' . $copy->id]['tabs']);
+        $this->assertSame([], $columns['system:events']['tabs']);
+    }
+
+    #[Test]
     public function department_membership_grants_access_like_the_policy(): void
     {
         $departmentUser = User::factory()->create();
@@ -274,6 +297,58 @@ final class ProjectContentExportTest extends FeatureTestCase
             ['Foreign project'],
             $this->exportedNames(['filters' => ['project_group_id' => $group->id]])
         );
+    }
+
+    #[Test]
+    public function individually_selected_projects_replace_the_other_filters(): void
+    {
+        $this->actingAsUserWith([self::EXPORT, PermissionEnum::PROJECT_VIEW->value]);
+        $group = Project::factory()->create(['name' => 'Festival', 'is_group' => true]);
+        $state = ProjectState::factory()->create();
+        Project::factory()->create(['name' => 'Unselected', 'state' => $state->id]);
+
+        $payload = $this->payload([
+            'columns' => [['key' => 'system:project_name'], ['key' => 'system:events']],
+            'filters' => [
+                'project_ids' => [$this->foreignProject->id, $group->id],
+                'project_group_id' => $group->id,
+                'project_state_ids' => [$state->id],
+                'member_ids' => [$this->member->id],
+                'date_start' => '2026-03-01',
+                'date_end' => '2026-03-31',
+            ],
+        ]);
+
+        $this->postJson(route('projects.content-export.preview'), $payload)
+            ->assertOk()
+            ->assertJsonPath('count', 1);
+
+        // Gruppe ist keine Zeile; der Zeitraum begrenzt nur die Termine (Februar-Termin fällt weg)
+        $sheet = $this->excel($payload);
+        $this->assertSame([['Project name', 'Events'], ['Foreign project', null]], $sheet);
+    }
+
+    #[Test]
+    public function individually_selected_projects_still_need_project_access(): void
+    {
+        $this->actingAsUserWith(self::EXPORT, $this->member);
+
+        $payload = ['filters' => ['project_ids' => [$this->teamProject->id, $this->foreignProject->id]]];
+
+        $this->postJson(route('projects.content-export.preview'), $payload)
+            ->assertOk()
+            ->assertJsonPath('count', 1);
+        $this->assertSame(['Team project'], $this->exportedNames($payload));
+    }
+
+    #[Test]
+    public function individually_selected_projects_must_be_ids(): void
+    {
+        $this->actingAsUserWith(self::EXPORT, $this->member);
+
+        $this->postJson(route('projects.content-export.cache'), $this->payload([
+            'filters' => ['project_ids' => ['abc']],
+        ]))->assertJsonValidationErrors('filters.project_ids.0');
     }
 
     #[Test]
@@ -435,6 +510,15 @@ final class ProjectContentExportTest extends FeatureTestCase
             'data' => $data,
             'special' => false,
             'permission_type' => $permissionType,
+        ]);
+    }
+
+    private function placeInTab(ProjectTab $tab, Component $component): void
+    {
+        ComponentInTab::query()->create([
+            'project_tab_id' => $tab->id,
+            'component_id' => $component->id,
+            'order' => 1,
         ]);
     }
 

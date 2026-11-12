@@ -24,6 +24,11 @@ final class ProjectContentExportRules
     ];
 
     /**
+     * Einzeln gewählte Projekte. Gehören bewusst nicht zur Vorlage (wie der Zeitraum).
+     */
+    public const PROJECT_IDS_FILTER = 'project_ids';
+
+    /**
      * @return array<string, array<int, mixed>>
      */
     public static function columns(bool $required = true): array
@@ -49,7 +54,7 @@ final class ProjectContentExportRules
     }
 
     /**
-     * @param bool $withDateRange Vorlagen speichern den Zeitraum bewusst nicht
+     * @param bool $withDateRange Vorlagen speichern Zeitraum und einzeln gewählte Projekte bewusst nicht
      * @return array<string, array<int, mixed>>
      */
     public static function filters(string $prefix = 'filters', bool $withDateRange = true): array
@@ -67,6 +72,8 @@ final class ProjectContentExportRules
             $rules["$prefix.$key.*"] = ['integer'];
         }
         if ($withDateRange) {
+            $rules["$prefix." . self::PROJECT_IDS_FILTER] = ['sometimes', 'array', 'max:500'];
+            $rules["$prefix." . self::PROJECT_IDS_FILTER . '.*'] = ['integer'];
             $rules["$prefix.date_start"] = ['nullable', 'date_format:Y-m-d', "required_with:$prefix.date_end"];
             $rules["$prefix.date_end"] = [
                 'nullable',

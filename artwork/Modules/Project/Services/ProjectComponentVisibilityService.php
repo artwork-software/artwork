@@ -216,6 +216,28 @@ class ProjectComponentVisibilityService
     }
 
     /**
+     * Tabs, in denen die Komponenten für die Person sichtbar liegen (direkt, in der Seitenleiste oder im Ordner),
+     * z. B. um gleichnamige Komponenten in Auswahllisten zu unterscheiden. Nicht platzierte Komponenten fehlen.
+     *
+     * @param Collection<int, int> $componentIds
+     * @return array<int, Collection<int, int>>
+     */
+    public function visibleTabIdsByComponent(User $user, Collection $componentIds): array
+    {
+        $placements = $this->placementTabIdsByComponent($user, $componentIds);
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return $placements;
+        }
+
+        $visibleTabIds = $this->visibleTabIds($user);
+
+        return array_map(
+            static fn (Collection $tabIds): Collection => $tabIds->intersect($visibleTabIds)->values(),
+            $placements
+        );
+    }
+
+    /**
      * Für die typgebundenen Daten-Endpunkte (Team, Status, Budget …): sichtbar, wenn die Person
      * mindestens eine Komponente dieser Typen sehen darf, die in einem für sie sichtbaren Tab liegt
      * (direkt, im Ordner oder in der Seitenleiste). Nicht platzierte Typen zeigt keine Oberfläche an.

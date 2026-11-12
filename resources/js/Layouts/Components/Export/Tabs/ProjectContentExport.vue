@@ -79,7 +79,7 @@
                         />
                     </div>
                     <p class="text-xs text-text-subtle">
-                        {{ $t('Templates are visible to everyone with the export permission and apply to Excel and Word. The time period is not saved.') }}
+                        {{ $t('Templates are visible to everyone with the export permission and apply to Excel and Word. The time period and individually selected projects are not saved.') }}
                     </p>
                     <p v-if="templateError" class="text-xs text-danger" role="alert">{{ templateError }}</p>
                     <p v-else-if="templateMessage" class="text-xs text-success" role="status">{{ templateMessage }}</p>
@@ -88,10 +88,20 @@
                 <!-- Projektauswahl -->
                 <section class="space-y-4 rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
                     <h2 class="text-sm font-semibold text-text">{{ $t('Project selection') }}</h2>
+                    <BaseTabs :tabs="selectionModeTabs" navigation-mode="buttons" @tab-click="(tab) => selectionMode = tab.mode" />
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <BaseInput id="projectContentDateStart" v-model="form.filters.date_start" type="date" label="Start date" />
                         <BaseInput id="projectContentDateEnd" v-model="form.filters.date_end" type="date" label="End date" />
-                        <div class="flex items-end gap-1">
+                        <div v-if="isExplicitSelection" class="min-w-0">
+                            <ProjectSearch
+                                :label="$t('Search for projects')"
+                                no-project-groups
+                                include-done-projects
+                                show-recent-projects
+                                @project-selected="addProject"
+                            />
+                        </div>
+                        <div v-else class="flex items-end gap-1">
                             <div class="min-w-0 flex-1">
                                 <BaseCombobox
                                     v-model="form.filters.project_group_id"
@@ -117,11 +127,26 @@
                     <p v-if="dateRangeInvalid" class="text-xs text-danger">
                         {{ $t('Please enter both start and end date, the start must not be after the end.') }}
                     </p>
-                    <p class="text-xs text-text-subtle">
+                    <template v-if="isExplicitSelection">
+                        <p class="text-xs text-text-subtle">
+                            {{ $t('Exactly the selected projects are exported. A time period only limits the listed events.') }}
+                        </p>
+                        <div v-if="selectedProjects.length" class="flex flex-wrap gap-1.5">
+                            <TagComponent
+                                v-for="project in selectedProjects"
+                                :key="project.id"
+                                :displayed-text="project.name"
+                                :property="project.id"
+                                :method="removeProject"
+                            />
+                        </div>
+                        <p v-else class="text-xs text-text-muted">{{ $t('No projects selected yet.') }}</p>
+                    </template>
+                    <p v-else class="text-xs text-text-subtle">
                         {{ $t('With a time period, only projects with at least one event in it are exported, and only these events are listed.') }}
                     </p>
 
-                    <div class="space-y-2">
+                    <div v-if="!isExplicitSelection" class="space-y-2">
                         <div class="text-xs font-medium text-text">{{ $t('Characteristics') }}</div>
                         <p class="text-xs text-text-subtle">
                             {{ $t('All projects to which at least one selected characteristic applies are exported.') }}
@@ -160,7 +185,7 @@
                         </div>
                     </div>
 
-                    <div class="space-y-2">
+                    <div v-if="!isExplicitSelection" class="space-y-2">
                         <UserSearch :label="$t('Project members')" @user-selected="addMember" />
                         <p class="text-xs text-text-subtle">
                             {{ $t('Only projects with at least one of these persons in the project team are exported.') }}
@@ -242,6 +267,8 @@ import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import ProjectContentColumnPicker from "@/Layouts/Components/Export/Components/ProjectContentColumnPicker.vue";
@@ -300,6 +327,9 @@ const newTemplateName = ref("");
 const templateError = ref("");
 const templateMessage = ref("");
 const savingTemplate = ref(false);
+// "filters": Auswahl über Zeitraum, Gruppe, Merkmale, Mitglieder; "projects": einzeln gesuchte Projekte
+const selectionMode = ref("filters");
+const selectedProjects = ref([]);
 
 const form = reactive({
     columns: defaultColumns(),
@@ -311,6 +341,14 @@ const selectedTemplate = computed(() => templates.value.find((template) => templ
 // Die Terminarten gelten für die Spalten Termine und Räume
 const hasEventsColumn = computed(() => form.columns.some((column) => ["system:events", "system:rooms"].includes(column.key)));
 
+const isExplicitSelection = computed(() => selectionMode.value === "projects");
+const selectionModeTabs = computed(() => [
+    {name: "By filters", mode: "filters", current: !isExplicitSelection.value, permission: true},
+    {name: "Individual projects", mode: "projects", current: isExplicitSelection.value, permission: true},
+]);
+// Ohne gewähltes Projekt würde der Server sonst nach den Filtern auswählen
+const explicitSelectionEmpty = computed(() => isExplicitSelection.value && selectedProjects.value.length === 0);
+
 const dateRangeInvalid = computed(() => {
     const {date_start: start, date_end: end} = form.filters;
     if (!start && !end) {
@@ -320,7 +358,27 @@ const dateRangeInvalid = computed(() => {
     return !start || !end || start > end;
 });
 
-const exportDisabled = computed(() => form.columns.length === 0 || dateRangeInvalid.value || exporting.value || projectCount.value === 0);
+const exportDisabled = computed(() => form.columns.length === 0
+    || dateRangeInvalid.value
+    || explicitSelectionEmpty.value
+    || exporting.value
+    || projectCount.value === 0);
+
+const selectionFilters = () => {
+    const dateRange = {
+        date_start: form.filters.date_start || null,
+        date_end: form.filters.date_end || null,
+    };
+    if (isExplicitSelection.value) {
+        return {...dateRange, project_ids: selectedProjects.value.map((project) => project.id)};
+    }
+
+    return {
+        ...form.filters,
+        ...dateRange,
+        member_ids: members.value.map((member) => member.id),
+    };
+};
 
 const payload = () => ({
     format: props.format,
@@ -330,12 +388,7 @@ const payload = () => ({
         title: column.title?.trim() || null,
         show_label: Boolean(column.show_label),
     })),
-    filters: {
-        ...form.filters,
-        date_start: form.filters.date_start || null,
-        date_end: form.filters.date_end || null,
-        member_ids: members.value.map((member) => member.id),
-    },
+    filters: selectionFilters(),
     event_column: {event_type_ids: hasEventsColumn.value ? [...form.event_column.event_type_ids] : []},
 });
 
@@ -361,6 +414,17 @@ const addMember = (user) => {
 
 const removeMember = (id) => {
     members.value = members.value.filter((member) => member.id !== id);
+};
+
+const addProject = (project) => {
+    if (project.is_group || selectedProjects.value.some((selected) => selected.id === project.id)) {
+        return;
+    }
+    selectedProjects.value = [...selectedProjects.value, {id: project.id, name: project.name}];
+};
+
+const removeProject = (id) => {
+    selectedProjects.value = selectedProjects.value.filter((project) => project.id !== id);
 };
 
 // Nur IDs übernehmen, die es noch gibt (gelöschte Gruppen, Status, Terminarten … aus älteren Vorlagen)
@@ -420,7 +484,11 @@ const saveTemplate = async (template) => {
     const data = {
         name: template ? template.name : newTemplateName.value.trim(),
         columns: payload().columns,
-        settings: {filters: payload().filters, event_column: payload().event_column},
+        // Vorlage speichert immer die Filter, auch wenn gerade einzelne Projekte gewählt sind
+        settings: {
+            filters: {...form.filters, member_ids: members.value.map((member) => member.id)},
+            event_column: payload().event_column,
+        },
     };
     try {
         const response = template
@@ -461,6 +529,10 @@ const refreshPreview = debounce(async () => {
         projectCount.value = null;
         return;
     }
+    if (explicitSelectionEmpty.value) {
+        projectCount.value = 0;
+        return;
+    }
     try {
         const {columns, filters, event_column} = payload();
         const response = await axios.post(route("projects.content-export.preview"), {columns, filters, event_column});
@@ -474,7 +546,7 @@ const refreshPreview = debounce(async () => {
     }
 }, 400);
 
-watch([() => form.filters, () => form.columns, members], () => {
+watch([() => form.filters, () => form.columns, members, selectionMode, selectedProjects], () => {
     exportError.value = "";
     refreshPreview();
 }, {deep: true});

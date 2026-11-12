@@ -234,6 +234,73 @@ final class ProjectDeletionLifecycleTest extends FeatureTestCase
         $this->assertSoftDeleted('comments', ['id' => $deletedComment->id]);
     }
 
+    /**
+     * Bis 1.10.1 lief die Kaskade vor dem Löschzeitpunkt des Projekts. Die Migration rückt den Zeitpunkt solcher
+     * Projekte auf den Beginn der Kaskade, damit das Wiederherstellen ihre Inhalte wieder findet.
+     */
+    #[Test]
+    public function migration_lets_legacy_trashed_projects_restore_their_contents(): void
+    {
+        $project = Project::factory()->create();
+        $user = User::factory()->create();
+        $earlierComment = Comment::factory()->create(['project_id' => $project->id, 'user_id' => $user->id]);
+        $comment = Comment::factory()->create(['project_id' => $project->id, 'user_id' => $user->id]);
+        $file = ProjectFile::factory()->create(['project_id' => $project->id]);
+        $checklist = Checklist::factory()->create(['project_id' => $project->id, 'user_id' => $user->id]);
+        $task = Task::factory()->create(['checklist_id' => $checklist->id]);
+
+        $earlierComment->delete();
+        $this->travel(2)->hours();
+        $cascadeStart = now()->startOfSecond();
+        $task->delete();
+        $checklist->delete();
+        $file->delete();
+        $comment->delete();
+        $this->travel(10)->minutes();
+        $project->delete();
+
+        $this->runAlignMigration();
+
+        $trashed = Project::onlyTrashed()->findOrFail($project->id);
+        $this->assertSame($cascadeStart->toDateTimeString(), $trashed->deleted_at->toDateTimeString());
+
+        app()->call([app(ProjectService::class), 'restore'], ['project' => $trashed]);
+
+        $this->assertNotSoftDeleted('comments', ['id' => $comment->id]);
+        $this->assertNotSoftDeleted('project_files', ['id' => $file->id]);
+        $this->assertNotSoftDeleted('checklists', ['id' => $checklist->id]);
+        $this->assertNotSoftDeleted('tasks', ['id' => $task->id]);
+        $this->assertSoftDeleted('comments', ['id' => $earlierComment->id]);
+    }
+
+    #[Test]
+    public function migration_leaves_projects_deleted_with_the_current_cascade_unchanged(): void
+    {
+        $project = Project::factory()->create();
+        $user = User::factory()->create();
+        $earlierComment = Comment::factory()->create(['project_id' => $project->id, 'user_id' => $user->id]);
+        Comment::factory()->create(['project_id' => $project->id, 'user_id' => $user->id]);
+
+        $earlierComment->delete();
+        $this->travel(5)->minutes();
+        $project->delete();
+        $deletedAt = Project::onlyTrashed()->findOrFail($project->id)->deleted_at->toDateTimeString();
+        $this->travel(1)->minutes();
+        app()->call([new SoftDeleteProjectJob($project->id), 'handle']);
+
+        $this->runAlignMigration();
+
+        $this->assertSame(
+            $deletedAt,
+            Project::onlyTrashed()->findOrFail($project->id)->deleted_at->toDateTimeString()
+        );
+    }
+
+    private function runAlignMigration(): void
+    {
+        (require base_path('database/migrations/2026_11_12_163950_align_deleted_at_of_legacy_trashed_projects.php'))->up();
+    }
+
     #[Test]
     public function queued_cascade_skips_a_project_restored_before_the_job_ran(): void
     {

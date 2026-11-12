@@ -81,6 +81,17 @@
                     />
                 </div>
 
+                <!-- Schichtverlauf der KW, vorgefiltert auf das Gewerk der Anfrage -->
+                <div class="flex flex-wrap gap-2 justify-end" v-if="canViewShiftHistory">
+                    <BaseUIButton
+                        type="button"
+                        variant="secondary"
+                        icon="IconHistory"
+                        :label="$t('Shift history')"
+                        @click="$emit('open-shift-history')"
+                    />
+                </div>
+
                 <div class="flex items-center gap-2" v-if="request.reviewed_by">
                     <img v-if="request.reviewed_by.profile_photo_url" :src="request.reviewed_by.profile_photo_url" alt="" class="h-7 w-7 rounded-full object-cover" />
                     <div class="text-right">
@@ -127,7 +138,9 @@ const props = defineProps({
     canWithdraw: { type: Boolean, default: false },
     canResubmit: { type: Boolean, default: false },
     processing: { type: String, default: null },
+    // Schichtverlauf-Button (Route shift.history.index braucht „can view shift plan“)
+    canViewShiftHistory: { type: Boolean, default: false },
 });
-const emits = defineEmits(['accept', 'start-reject', 'withdraw', 'resubmit', 'go-to-week']);
+const emits = defineEmits(['accept', 'start-reject', 'withdraw', 'resubmit', 'go-to-week', 'open-shift-history']);
 const { statusClasses, statusLabel, formatDateTime } = useShiftPlanRequest();
 </script>

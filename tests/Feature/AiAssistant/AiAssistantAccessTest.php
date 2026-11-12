@@ -6,14 +6,18 @@ use Artwork\Modules\AiAssistant\Services\AiAssistantAccess;
 use Artwork\Modules\AiAssistant\Settings\AiAssistantSettings;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Concerns\GrantsAiAccess;
 use Tests\TestCase;
 
 /**
  * Die Freischaltung ist bewusst ein Service und kein Gate: Gate::before gibt Artwork-Admins jede
- * Gate-Abfrage frei. Der Admin-Fall unten ist deshalb der wichtigste Test des Pakets.
+ * Gate-Abfrage frei. Der Admin-Fall unten ist deshalb der wichtigste Test des Pakets. Zusätzlich
+ * muss die Person das Konsolen-Recht "ai access" direkt halten; die Admin-Rolle ersetzt es nicht.
  */
 final class AiAssistantAccessTest extends TestCase
 {
+    use GrantsAiAccess;
+
     private function access(bool $instance, bool $house, bool $levelB = false, bool $levelC = false): AiAssistantAccess
     {
         config(['ai.enabled' => $instance]);
@@ -44,7 +48,30 @@ final class AiAssistantAccessTest extends TestCase
     #[Test]
     public function allowed_only_when_instance_and_house_are_on(): void
     {
-        $this->assertTrue($this->access(instance: true, house: true)->allowed(User::factory()->create()));
+        $this->assertTrue(
+            $this->access(instance: true, house: true)->allowed(User::factory()->withAiAccess()->create())
+        );
+    }
+
+    #[Test]
+    public function not_allowed_without_the_console_permission(): void
+    {
+        $this->assertFalse($this->access(instance: true, house: true)->allowed(User::factory()->create()));
+    }
+
+    #[Test]
+    public function an_admin_without_the_console_permission_is_not_allowed(): void
+    {
+        $this->assertFalse($this->access(instance: true, house: true, levelB: true, levelC: true)
+            ->allowed($this->adminUser()));
+    }
+
+    #[Test]
+    public function an_admin_with_the_console_permission_is_allowed(): void
+    {
+        $admin = $this->grantAiAccess($this->adminUser());
+
+        $this->assertTrue($this->access(instance: true, house: true)->allowed($admin));
     }
 
     #[Test]
@@ -56,7 +83,7 @@ final class AiAssistantAccessTest extends TestCase
     #[Test]
     public function an_admin_is_not_allowed_while_the_house_is_off(): void
     {
-        $admin = $this->adminUser();
+        $admin = $this->grantAiAccess($this->adminUser());
 
         $this->assertFalse($this->access(instance: true, house: false)->allowed($admin));
         $this->assertFalse($this->access(instance: false, house: true)->allowed($admin));
@@ -75,7 +102,7 @@ final class AiAssistantAccessTest extends TestCase
     #[Test]
     public function stage_c_requires_stage_b(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withAiAccess()->create();
 
         $access = $this->access(instance: true, house: true, levelB: false, levelC: true);
         $this->assertFalse($access->levelCAllowed($user));

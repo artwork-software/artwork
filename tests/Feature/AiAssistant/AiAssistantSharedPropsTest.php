@@ -51,9 +51,27 @@ final class AiAssistantSharedPropsTest extends FeatureTestCase
     }
 
     #[Test]
-    public function a_released_assistant_shares_its_stages(): void
+    public function a_user_without_the_console_permission_only_sees_the_flag(): void
     {
         $this->actingAs(User::factory()->create());
+        $this->settings(instance: true, house: true, levelB: true, levelC: true);
+
+        $this->assertSame(['enabled' => false], $this->share()['ai']);
+    }
+
+    #[Test]
+    public function an_admin_without_the_console_permission_only_sees_the_flag(): void
+    {
+        $this->actingAs($this->adminUser());
+        $this->settings(instance: true, house: true, levelB: true, levelC: true);
+
+        $this->assertSame(['enabled' => false], $this->share()['ai']);
+    }
+
+    #[Test]
+    public function a_released_assistant_shares_its_stages(): void
+    {
+        $this->actingAs(User::factory()->withAiAccess()->create());
         $this->settings(instance: true, house: true, levelB: true, levelC: true);
 
         $this->assertSame(
@@ -65,7 +83,7 @@ final class AiAssistantSharedPropsTest extends FeatureTestCase
     #[Test]
     public function stages_are_false_when_they_are_not_released(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withAiAccess()->create());
         $this->settings(instance: true, house: true);
 
         $this->assertSame(

@@ -69,7 +69,7 @@ final class AiActionConfirmTest extends DuskTestCase
 
         $this->artisan('ai:install')->assertSuccessful();
 
-        $this->user = User::factory()->create(['language' => 'de']);
+        $this->user = User::factory()->withAiAccess()->create(['language' => 'de']);
         UserCalendarSettings::factory()->create(['user_id' => $this->user->id]);
 
         // Der Rechte-Cache von spatie ueberdauert Testlaeufe und kann auf Zeilen zeigen, die es in

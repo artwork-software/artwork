@@ -51,8 +51,9 @@ Route::middleware('throttle:60,1')
     ->get('/ai/jwks', JwksController::class)
     ->name('api.v1.ai.jwks');
 
-// EnsureAiAccessPermission direkt hinter auth:api: zusätzliche, nur per Konsole vergebbare Schranke
-// (ConsoleOnlyPermissionEnum::AiAccess) für alle Maschinen- und KI-Routen.
+// KI-Routen: EnsureAiAccessPermission direkt hinter auth:api als zusätzliche, nur per Konsole vergebbare
+// Schranke (ConsoleOnlyPermissionEnum::AiAccess). Gilt nur für /ai/*; die übrigen Maschinen-Routen
+// (Inventar, Raumbelegung) regeln allein die Scopes des Schlüssels, siehe Gruppe weiter unten.
 Route::middleware(['auth:api', EnsureAiAccessPermission::class, 'throttle:api-token'])->group(function (): void {
     // Chat-Historie fuer artwork-ai. Der Token traegt immer den echten User; jede Abfrage ist auf
     // dessen Gespraeche eingeschraenkt, eine fremde ID liefert 404 statt 403.
@@ -253,6 +254,10 @@ Route::middleware(['auth:api', EnsureAiAccessPermission::class, 'throttle:api-to
         Route::get('/ai/actions/{action}', AiActionApiController::class)
             ->name('api.v1.ai.actions.show');
     });
+});
+
+// Maschinen-Routen für externe Systeme: Zugriff allein über die Scopes des Schlüssels, ohne „ai access“.
+Route::middleware(['auth:api', 'throttle:api-token'])->group(function (): void {
     Route::middleware(CheckToken::using('inventory:read'))->group(function (): void {
         Route::get('/inventory', [InventoryCategoryApiController::class, 'index'])
             ->name('api.v1.inventory.index');

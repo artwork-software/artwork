@@ -8,10 +8,11 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Zusätzliche Schranke hinter auth:api: Der Besitzer des Tokens muss das nur per Konsole
- * vergebbare Recht "ai access" direkt halten (User::hasAiAccess). Scopes regeln, WAS ein Token
- * darf; dieses Recht regelt, OB dessen Besitzer die Maschinen-API überhaupt nutzen darf. Ein
- * Entzug wirkt damit sofort auf alle bestehenden Tokens der Person.
+ * Zusätzliche Schranke hinter auth:api vor den KI-Routen (/api/v1/ai/*): Der Besitzer des Tokens
+ * muss das nur per Konsole vergebbare Recht "ai access" direkt halten (User::hasAiAccess). Scopes
+ * regeln, WAS ein Token darf; dieses Recht regelt, OB dessen Besitzer die KI-Schnittstelle überhaupt
+ * nutzen darf. Ein Entzug wirkt sofort auf alle bestehenden KI-Tokens der Person. Die übrigen
+ * Maschinen-Routen (Inventar, Raumbelegung) laufen bewusst ohne diese Schranke.
  *
  * Muss nach auth:api laufen, sonst ist der Token-Besitzer noch nicht aufgelöst.
  */

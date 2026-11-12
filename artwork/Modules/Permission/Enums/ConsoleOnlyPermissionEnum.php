@@ -14,7 +14,7 @@ namespace Artwork\Modules\Permission\Enums;
  */
 enum ConsoleOnlyPermissionEnum: string
 {
-    /** Zusätzliche Schranke vor der Maschinen-API (/api/v1, inkl. KI) und der alten /api/inventory. */
+    /** Zusätzliche Schranke vor der KI-Schnittstelle (/api/v1/ai/*) und der Verwaltung von KI-Schlüsseln. */
     case AiAccess = 'ai access';
 
     /** @return list<string> */

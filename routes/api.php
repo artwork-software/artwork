@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\RoomController;
-use Artwork\Core\Api\Middleware\EnsureAiAccessPermission;
 use Artwork\Core\Api\Middleware\RejectTransientTokens;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
@@ -91,7 +90,6 @@ Route::post('/inventory/article/search', [
 Route::middleware([
     RejectTransientTokens::class,
     'auth:api',
-    EnsureAiAccessPermission::class,
     CheckToken::using('inventory:read'),
 ])->group(function (): void {
     Route::get('/inventory', [InventoryCategoryApiController::class, 'index']);

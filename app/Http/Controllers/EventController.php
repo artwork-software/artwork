@@ -1453,7 +1453,6 @@ class EventController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
             // Raumauswahl im Termin-Dialog: Raumadmins werden nur als IDs gelesen (adminIdsOf), inkl. Team-Mitgliedern
             'rooms' => Room::listWithEffectiveAdminIds(['id', 'name', 'area_id', 'order']),
-            'projects' => Project::select(['id', 'name'])->get(),
             'historyObjects' => $dialogData['historyObjects'],
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),

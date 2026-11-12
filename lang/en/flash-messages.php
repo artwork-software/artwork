@@ -179,6 +179,7 @@ return [
         'error' => [
             'account_deactivated' => 'Your artwork account is deactivated. Please contact your administrator if you need access again.',
             'cannot_deactivate_self' => 'You cannot deactivate your own account.',
+            'cannot_deactivate_last_local_admin' => 'The last admin account with a local login cannot be deactivated.',
         ],
         'success' => [
             'deactivated' => 'Account deactivated',

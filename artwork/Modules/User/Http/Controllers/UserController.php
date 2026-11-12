@@ -65,6 +65,7 @@ use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\ContractSettingsResolver;
+use Artwork\Modules\ExternalUserManagement\Service\AdminLockoutGuard;
 use Artwork\Modules\User\Services\UserDeactivationService;
 use Artwork\Modules\User\Services\UserEmailChangeService;
 use Artwork\Modules\User\Services\UserService;
@@ -342,7 +343,9 @@ class UserController extends Controller
                 ? $this->deactivatedUsersForIndex($request)
                 : [],
             // Deaktivieren-Menü: Personalverwaltung darf Admin-Accounts nicht deaktivieren (UserPolicy::deactivate)
-            'adminUserIds' => User::role(RoleEnum::ARTWORK_ADMIN->value)->pluck('id'),
+            'adminUserIds' => Gate::allows('viewDeactivated', User::class)
+                ? User::role(RoleEnum::ARTWORK_ADMIN->value)->pluck('id')
+                : [],
             'all_permissions' => Permission::all()->groupBy('group'),
             'departments' => Department::all(),
             // Rollen (= Admin-Rolle) nur für Admins wählbar; Altbestand-Rollen in der DB werden nicht angeboten,
@@ -1961,13 +1964,19 @@ class UserController extends Controller
         return Redirect::back();
     }
 
-    public function deactivate(User $user, UserDeactivationService $userDeactivationService): RedirectResponse
-    {
+    public function deactivate(
+        User $user,
+        UserDeactivationService $userDeactivationService,
+        AdminLockoutGuard $adminLockoutGuard,
+    ): RedirectResponse {
         // Gate::before lässt Admins jede Policy passieren – der eigene Account bleibt trotzdem aktiv.
         if (Auth::id() === $user->getKey()) {
             return Redirect::back()->with('error', __('flash-messages.user.error.cannot_deactivate_self'));
         }
         $this->authorize('deactivate', $user);
+        if ($adminLockoutGuard->isLastLocalAdmin($user)) {
+            return Redirect::back()->with('error', __('flash-messages.user.error.cannot_deactivate_last_local_admin'));
+        }
 
         $userDeactivationService->deactivate($user, Auth::user());
 

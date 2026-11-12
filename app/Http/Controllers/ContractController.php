@@ -39,7 +39,18 @@ class ContractController extends Controller
     {
         $user = Auth::user();
 
-        $contracts = $this->contractService->visibleContractsQuery($user)->get();
+        $contracts = $this->contractService->visibleContractsQuery($user)
+            ->with([
+                'creator',
+                'project',
+                'contract_type',
+                'company_type',
+                'currency',
+                'accessingUsers.departments',
+                'accessingDepartments',
+                'comments',
+            ])
+            ->get();
 
         // Load saved contract filter for current user
         $savedFilter = $user->contractFilter;

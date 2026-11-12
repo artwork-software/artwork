@@ -76,7 +76,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(CleanupExportPdfsCommand::class)->dailyAt('03:40')->runInBackground();
         // Papierkorb: nach 30 Tagen endgültig löschen (so kündigt es die Papierkorb-Seite an) —
         // über dieselben Wege wie "Endgültig löschen", nicht per Modell-Pruning
-        $schedule->command(PurgeTrashCommand::class)->dailyAt('03:15')->withoutOverlapping()->runInBackground();
+        $schedule->command(PurgeTrashCommand::class)->dailyAt('03:15')->withoutOverlapping(120)->runInBackground();
         $schedule->command(CalculateDailyWorkingHoursOfUsers::class)
             ->dailyAt('23:59')
             // kurze Sperre: ein abgebrochener Lauf darf den Lauf am Folgetag nicht blockieren
@@ -115,7 +115,8 @@ class Kernel extends ConsoleKernel
         // ShiftRule validation - alle 5 Minuten für die nächsten 14 Tage
         $schedule->command('shift-rules:validate --days=14')
             ->everyFiveMinutes()
-            ->withoutOverlapping()
+            // kurze Sperre: ein abgebrochener Lauf (Deploy, Neustart) blockiert sonst 24 Stunden lang
+            ->withoutOverlapping(15)
             ->runInBackground();
 
         if (config('backup.enabled')) {

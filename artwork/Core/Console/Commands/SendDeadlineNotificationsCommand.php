@@ -241,6 +241,12 @@ class SendDeadlineNotificationsCommand extends Command
         // Erinnerung führt wie andere Aufgaben-Meldungen direkt zur Aufgabe
         $this->notificationService->setButtons(['showInTasks']);
         $this->notificationService->setNotificationTo($user);
-        $this->notificationService->createNotification();
+        // Scheitert die Erinnerung an eine Person, laufen die übrigen weiter und die Aufgabe gilt als erinnert
+        // (sonst bekämen alle davor täglich dieselbe Erinnerung erneut und alle späteren Aufgaben keine).
+        try {
+            $this->notificationService->createNotification();
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 }

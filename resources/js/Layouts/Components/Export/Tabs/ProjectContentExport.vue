@@ -486,8 +486,10 @@ const initializeDownload = async () => {
         const token = (await axios.post(route("projects.content-export.cache"), payload())).data;
         window.open(route("projects.content-export.download", {cacheToken: token}), "_blank", "noopener");
         emit("close");
-    } catch {
-        exportError.value = $t("Export could not be created. Please try again.");
+    } catch (error) {
+        // Meldung des Servers zeigen (z. B. keine der Spalten sichtbar), sonst hilft erneutes Versuchen nie
+        exportError.value = Object.values(error?.response?.data?.errors ?? {}).flat()[0]
+            ?? $t("Export could not be created. Please try again.");
     } finally {
         exporting.value = false;
     }

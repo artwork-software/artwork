@@ -307,7 +307,6 @@ class HandleInertiaRequests extends Middleware
                 'show_hints' => Auth::guest() ? false : false,
                 'rolesArray' => $rolesArray,
                 'permissionsArray' => $permissionsArray,
-                'myMoneySources' => $user ? $user->accessMoneySources()->pluck('money_source_id') : [],
                 'urlParameters' => $request->query(),
                 'flash' => [
                     'success' => fn() => $request->session()->get('success'),
@@ -335,7 +334,7 @@ class HandleInertiaRequests extends Middleware
                     'configured' => $ticketingConnections->isConfigured(),
                     'active' => $ticketingConnections->isActive(),
                     // Testmodus: jede Ansicht des Ticketings sagt, dass nichts davon echt verkauft ist.
-                    'testMode' => $ticketingConnections->isTestMode(),
+                    'testMode' => $ticketingConnections->isConfigured() && $ticketingConnections->isTestMode(),
                 ],
                 // Externe Zugänge: gated Einladen-Buttons und CRM-Verwaltungslinks im Frontend
                 'externalAccessEnabled' => app(ExternalAccessSettingsResolver::class)->isEnabled(),

@@ -448,7 +448,6 @@ const props = defineProps<{
     notificationCount: number,
     event: any,
     eventTypes: any[],
-    projects: any[],
     rooms: any[],
     historyObjects: any[],
     eventStatuses: any[],
@@ -573,10 +572,6 @@ const workTimesTodaySorted = computed(() => {
 function updateTaskStatus(task: any) {
     doneTaskForm.done = task.done
     doneTaskForm.patch(route('tasks.done', { task: task.id }))
-}
-
-function findProjectById(projectId?: number) {
-    return props.projects.find(p => p.id === projectId)
 }
 
 function findEventTypeById(eventTypeId?: number) {

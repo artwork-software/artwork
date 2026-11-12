@@ -319,12 +319,6 @@ parameters:
 			path: app/Http/Controllers/ShiftPlanRequestController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$comment\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Controllers/VacationController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$language\.$#'
 			identifier: property.notFound
 			count: 3
@@ -335,6 +329,96 @@ parameters:
 			identifier: varTag.differentVariable
 			count: 1
 			path: artwork/Core/Notifications/BaseNotification.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:getCollection\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/DTOs/AiConversationListData.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/AiAssistant/Listeners/AttachActivityOrigin.php
+
+		-
+			message: '#^Access to an undefined property Laravel\\Passport\\Client\:\:\$grant_types\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Passport/AiSessionGrant.php
+
+		-
+			message: '#^Access to an undefined property Laravel\\Passport\\Client\:\:\$redirect_uris\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Passport/AiSessionGrant.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:withTrashed\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiActionBatchService.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$model contains unresolvable type\.$#'
+			identifier: varTag.unresolvableType
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiActionBatchService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventName\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiEventWriteService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiEventWriteService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiEventWriteService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$event_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiProjectReadService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/AiAssistant/Services/AiProjectReadService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Freelancer\\Models\\Freelancer\|Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider\|Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiShiftReadService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shift_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiShiftReadService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shift_qualification_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiShiftReadService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/AiAssistant/Services/AiShiftReadService.php
 
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
@@ -451,15 +535,9 @@ parameters:
 			path: artwork/Modules/Budget/Services/BudgetService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sageAssignedData\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Budget/Services/BudgetService.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: artwork/Modules/Budget/Services/BudgetService.php
 
 		-
@@ -1097,30 +1175,6 @@ parameters:
 			identifier: method.nonObject
 			count: 1
 			path: artwork/Modules/Checklist/Http/Resources/ChecklistTemplateIndexResource.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$project\.$#'
-			identifier: property.notFound
-			count: 4
-			path: artwork/Modules/Checklist/Services/ChecklistService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$tasks\.$#'
-			identifier: property.notFound
-			count: 4
-			path: artwork/Modules/Checklist/Services/ChecklistService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 4
-			path: artwork/Modules/Checklist/Services/ChecklistService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
-			identifier: property.notFound
-			count: 4
-			path: artwork/Modules/Checklist/Services/ChecklistService.php
 
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'

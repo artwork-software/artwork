@@ -256,6 +256,9 @@ readonly class VacationService
         return $this->vacationRepository->getByIdAndModel($id, Freelancer::class);
     }
 
+    /**
+     * @return Collection<int, Vacation>
+     */
     public function findVacationWithinInterval(Vacationer $vacationer, string $day): Collection
     {
         return $this->vacationRepository->getVacationWithinInterval($vacationer, $day);

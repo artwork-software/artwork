@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use Artwork\Core\Console\Commands\PurgeOauthTokensCommand;
 use Artwork\Core\Console\Commands\CalculateDailyWorkingHoursOfUsers;
 use Artwork\Core\Console\Commands\CleanupBiExportsCommand;
 use Artwork\Core\Console\Commands\CleanupExportPdfsCommand;
@@ -90,7 +91,8 @@ class Kernel extends ConsoleKernel
         $schedule->command(ImportHolidaysCommand::class)->yearly()->runInBackground();
         // KI-Session-Tokens leben 15 Minuten und erzeugen bei aktiver Nutzung viele Zeilen in
         // oauth_access_tokens; ohne Purge bleiben abgelaufene und widerrufene Tokens dort liegen.
-        $schedule->command('passport:purge')->dailyAt('02:30')->runInBackground();
+        // Eigener Befehl statt passport:purge: verlängerte Tokens (PASSPORT_EXTENDED_TOKENS) bleiben bis zur Deadline.
+        $schedule->command(PurgeOauthTokensCommand::class)->dailyAt('02:30')->runInBackground();
         // KI-Chatverläufe nach der Aufbewahrungsfrist des Hauses (0 = unbegrenzt)
         $schedule->command('ai:purge-transcripts')->dailyAt('02:45')->runInBackground();
 

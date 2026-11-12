@@ -14,6 +14,7 @@ use Carbon\CarbonImmutable;
 use Laravel\Passport\ClientRepository;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-api-context-projects: GET /ai/context, /ai/projects, /ai/projects/{id}
@@ -21,6 +22,8 @@ use Tests\TestCase;
  */
 final class AiContextProjectsApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,7 +35,7 @@ final class AiContextProjectsApiTest extends TestCase
     /** @param string[] $scopes */
     private function actingAsToken(User $user, array $scopes = [AiScopes::READ]): void
     {
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

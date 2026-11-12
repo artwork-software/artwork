@@ -15,12 +15,15 @@ use Laravel\Passport\ClientRepository;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-api-inventory: GET /ai/inventory/availability (Konzept B1 §3, §8).
  */
 final class AiInventoryApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     private const DAY = '2026-09-16';
 
     protected function setUp(): void
@@ -36,7 +39,7 @@ final class AiInventoryApiTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

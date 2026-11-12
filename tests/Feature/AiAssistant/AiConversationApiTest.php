@@ -11,12 +11,15 @@ use Illuminate\Support\Str;
 use Laravel\Passport\ClientRepository;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-chat-historie, API v1 fuer artwork-ai (Konzept C3 §5, §6, §9).
  */
 final class AiConversationApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,7 +31,7 @@ final class AiConversationApiTest extends TestCase
     /** @param string[] $scopes */
     private function actingAsToken(User $user, array $scopes = [AiScopes::TRANSCRIPT]): void
     {
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

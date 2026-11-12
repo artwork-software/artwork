@@ -23,6 +23,7 @@ use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceTask;
 use Artwork\Modules\MoneySource\Models\MoneySourceUserPivot;
 use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Comment;
@@ -985,6 +986,15 @@ class User extends Model implements
         });
     }
 
+
+    /**
+     * Nur per Konsole vergebbares Recht als Schranke vor Maschinen-API und KI-Routen. Bewusst als
+     * Direktrecht geprüft: weder Rollen noch der Admin-Bypass aus Gate::before erfüllen es.
+     */
+    public function hasAiAccess(): bool
+    {
+        return $this->permissions->contains('name', ConsoleOnlyPermissionEnum::AiAccess->value);
+    }
 
     public function getHasProjectManagerPermission(): bool
     {

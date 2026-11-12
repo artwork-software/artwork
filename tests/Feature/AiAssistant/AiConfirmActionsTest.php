@@ -21,6 +21,7 @@ use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-confirm-actions: Aktion, Write-Token, Pruefkette, Revocation, Cancel, Ablauf
@@ -28,6 +29,8 @@ use Tests\TestCase;
  */
 final class AiConfirmActionsTest extends TestCase
 {
+    use GrantsAiAccess;
+
     private const MONDAY = '2026-09-14';
 
     private Room $room;
@@ -80,7 +83,7 @@ final class AiConfirmActionsTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
 
         return (string) $token->token->id;

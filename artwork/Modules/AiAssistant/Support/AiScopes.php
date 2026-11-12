@@ -31,6 +31,22 @@ final class AiScopes
     }
 
     /**
+     * KI-Key = Token mit mindestens einem ai:*-Scope (Übersicht der Schnittstellen-Seite).
+     *
+     * @param array<int, mixed> $scopeIds
+     */
+    public static function containsAiScope(array $scopeIds): bool
+    {
+        foreach ($scopeIds as $scope) {
+            if (is_string($scope) && self::isAiScope($scope)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param string[] $scopeIds
      * @return string[]
      */

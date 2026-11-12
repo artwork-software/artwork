@@ -75,7 +75,7 @@ final class AiUndoTest extends TestCase
 
     private function planner(): User
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withAiAccess()->create();
 
         foreach ([PermissionEnum::PROJECT_VIEW->value, PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value] as $name) {
             $user->givePermissionTo(Permission::findOrCreate($name, 'web'));

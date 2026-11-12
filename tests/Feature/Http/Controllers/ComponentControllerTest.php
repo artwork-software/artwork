@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\DisclosureComponents;
+use Illuminate\Support\Facades\Cache;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -60,6 +61,27 @@ final class ComponentControllerTest extends FeatureTestCase
 
         $response->assertOk();
         $this->assertDatabaseHas('components', ['name' => 'NewComp']);
+    }
+
+    #[Test]
+    public function a_new_component_shows_up_in_the_print_layout_palette_right_away(): void
+    {
+        Cache::flush();
+        $this->actingAsAdmin();
+        $this->get(route('project-print-layout.index'))->assertOk();
+
+        $this->post(route('component.store'), [
+            'name' => 'Frisch angelegt',
+            'type' => 'TextField',
+            'data' => [],
+            'permission_type' => null,
+        ])->assertOk();
+
+        $props = $this->get(route('project-print-layout.index'))->assertOk()->viewData('page')['props'];
+        $this->assertContains(
+            'Frisch angelegt',
+            collect($props['allComponents'])->pluck('name')->all()
+        );
     }
 
     #[Test]

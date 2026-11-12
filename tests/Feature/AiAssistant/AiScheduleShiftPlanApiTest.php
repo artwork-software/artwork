@@ -21,12 +21,15 @@ use Laravel\Passport\ClientRepository;
 use Spatie\Permission\Models\Permission;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-api-schedule-shifts: GET /ai/me/schedule und GET /ai/shift-plan (Konzept B1 §3, §6, §8).
  */
 final class AiScheduleShiftPlanApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     /** Mittwoch der ISO-Woche 38/2026 (Montag: 14.09.2026). */
     private const DAY = '2026-09-16';
 
@@ -58,7 +61,7 @@ final class AiScheduleShiftPlanApiTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

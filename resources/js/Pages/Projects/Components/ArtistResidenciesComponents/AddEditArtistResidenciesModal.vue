@@ -166,6 +166,16 @@
                                     <div v-if="showValidationErrors && validationErrors.accommodation" class="mt-1 text-sm text-danger">
                                         {{ $t(validationErrors.accommodation) }}
                                     </div>
+                                    <!-- Neuer Tab: der Dialog behält seine Eingaben -->
+                                    <a
+                                        v-if="props.canViewAccommodations && selectedAccommodation?.id"
+                                        :href="route('accommodation.show', selectedAccommodation.id)"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="mt-1 inline-block text-xs font-medium text-accent-700 underline hover:text-accent-700/80"
+                                    >
+                                        {{ $t('Edit daily allowance and breakfast deduction of this accommodation') }}
+                                    </a>
                                 </div>
 
                                 <div>
@@ -512,9 +522,16 @@
                 {{ $t('Attention') }}
             </h4>
             <AlertComponent
-                :text="$t('You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency')"
+                :text="$t('First create at least one accommodation in the CRM under the contact type “Accommodation” before you can maintain an artist residency.')"
                 type="error"
             />
+            <Link
+                v-if="can('can view crm') || hasAdminRole()"
+                :href="route('crm.index', { type: 'accommodation' })"
+                class="mt-2 inline-block text-sm font-medium text-accent-700 underline hover:text-accent-700/80"
+            >
+                {{ $t('Open accommodations in the CRM') }}
+            </Link>
         </div>
     </ArtworkBaseModal>
 </template>
@@ -523,7 +540,7 @@
 
 <script setup>
 
-import {useForm, usePage} from "@inertiajs/vue3";
+import {Link, useForm, usePage} from "@inertiajs/vue3";
 import { toYmd } from "@/Helper/IsoWeek.js";
 import { accommodationResidencyDefaults } from "@/Pages/Projects/Components/ArtistResidenciesComponents/accommodationResidencyDefaults.js";
 import {computed, ref, watch} from "vue";
@@ -596,6 +613,11 @@ const props = defineProps({
         type: Number,
         required: false,
         default: 0.00
+    },
+    canViewAccommodations: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 

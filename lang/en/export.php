@@ -54,7 +54,8 @@ return [
             'room' => 'Room',
             'project_team' => 'Project team',
             'project_properties' => 'Project properties'
-        ]
+        ],
+        'planned' => 'planned',
     ],
     'excel-event-calendar-export' => [
         'created-by' => 'Created by :0 at :1'

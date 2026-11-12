@@ -20,9 +20,9 @@ use Illuminate\Database\Eloquent\Collection;
  * Inventarverfuegbarkeit fuer artwork-ai (core-api-inventory; Konzept B1 §3).
  *
  * Gerechnet wird nicht selbst: `InventoryArticle::getAvailableStock()` ist dieselbe Methode, die
- * Artikelseite und Projekt-Tab benutzen (Spitzenlast per Sweep-Line, Menge im Status
- * „Einsatzbereit"). Sie wertet **geladene** Relationen ungefiltert aus — die Ausgaben werden
- * deshalb schon beim Eager Loading auf den Zeitraum eingeschraenkt.
+ * Artikelseite und Projekt-Tab benutzen (Spitzenlast per Sweep-Line, Menge im Standard-Status
+ * laut `InventoryArticle::readyQuantity()`). Sie wertet **geladene** Relationen ungefiltert aus;
+ * die Ausgaben werden deshalb schon beim Eager Loading auf den Zeitraum eingeschraenkt.
  */
 class AiInventoryReadService
 {
@@ -124,36 +124,21 @@ class AiInventoryReadService
     }
 
     /**
-     * Bestand im Zeitraum. Ohne gepflegte „Einsatzbereit"-Menge faellt `total` auf die
-     * Gesamtmenge des Artikels zurueck — wie im Projekt-Tab
-     * (`ProjectTabMaterialIssueService:100-104`), sonst stuende ueberall 0.
+     * Bestand im Zeitraum. `total` ist die Menge im Standard-Status; ohne gepflegte Statusmengen
+     * faellt sie auf die Gesamtmenge des Artikels zurueck. Beides entscheidet
+     * `InventoryArticle::readyQuantity()`, dieselbe Quelle wie Artikelseite, Planung und Projekt-Tab.
      *
      * @return array{total: float, reserved: float, available: float}
      */
     private function stockFor(InventoryArticle $article, string $fromDate, string $toDate): array
     {
         $stock = $article->getAvailableStock($fromDate, $toDate);
-        $total = (float) $stock['total'];
-        $reserved = (float) $stock['reserved'];
-
-        if ($total <= 0 && !$this->hasMaintainedReadyStatus($article) && (float) $article->quantity > 0) {
-            $total = (float) $article->quantity;
-        }
 
         return [
-            'total' => $total,
-            'reserved' => $reserved,
-            'available' => max($total - $reserved, 0),
+            'total' => (float) $stock['total'],
+            'reserved' => (float) $stock['reserved'],
+            'available' => (float) $stock['available'],
         ];
-    }
-
-    private function hasMaintainedReadyStatus(InventoryArticle $article): bool
-    {
-        if ($article->is_detailed_quantity) {
-            return $article->detailedArticleQuantities->isNotEmpty();
-        }
-
-        return $article->statusValues->firstWhere('name', 'Einsatzbereit') !== null;
     }
 
     /**

@@ -215,6 +215,20 @@ final class ProjectContentExportTest extends FeatureTestCase
     }
 
     #[Test]
+    public function event_column_leaves_out_planning_events_without_the_planning_calendar_permission(): void
+    {
+        $planning = $this->event($this->teamProject, $this->setup, '2026-02-03 10:00', '2026-02-03 18:00');
+        $planning->forceFill(['is_planning' => true])->save();
+        $payload = $this->payload(['columns' => [['key' => 'system:events']]]);
+
+        $this->actingAsUserWith(self::EXPORT, $this->member);
+        $this->assertStringNotContainsString('Setup', (string) $this->excel($payload)[1][0]);
+
+        $this->actingAsUserWith([self::EXPORT, PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value], $this->member);
+        $this->assertStringContainsString('Setup', (string) $this->excel($payload)[1][0]);
+    }
+
+    #[Test]
     public function characteristics_are_combined_with_or_and_other_filters_with_and(): void
     {
         $this->actingAsUserWith([self::EXPORT, PermissionEnum::PROJECT_VIEW->value]);

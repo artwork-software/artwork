@@ -6,7 +6,7 @@
 
         <div v-if="userContract.id">
             <BaseAlertComponent
-                message="This is an existing user contract. Editing it will update the contract for all users associated with it."
+                message="This is an existing contract template. Its values were copied into the contracts of the people who use it. For them, changes here only affect the three-month average and numeric values that are 0 in their own contract. Change all other values and switches in the contract of each person."
                 use-translation
                 type="warning"
             />

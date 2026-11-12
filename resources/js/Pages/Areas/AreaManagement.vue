@@ -691,7 +691,7 @@
                 variant="static"
                 title="What do these switches do?"
                 :paragraphs="[
-                    'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
+                    'Adjoining rooms record which rooms are next to each other. This is information about the room only: the conflict check still looks at the room itself, and events in an adjoining room neither block it nor trigger a warning.',
                     'Temporary rooms appear in the calendar only during the set period.',
                     'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
                     'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',
@@ -722,7 +722,7 @@
             <BaseCheckbox
                 id="newRoomEveryoneCanBook"
                 v-model="newRoomForm.everyone_can_book"
-                :description="$page.props.show_hints ? $t('Decides whether this room can be booked by everyone or only by the room admins.') : undefined"
+                :description="$page.props.show_hints ? $t('Decides whether everyone who may create events books this room directly or only the room admins. If it is off, the others can only request the room.') : undefined"
             >
                 <template #label>
                     {{ $t('Can be booked by anyone') }}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-muted">({{ $t('no effect') }})</span>
@@ -823,7 +823,7 @@
                 variant="static"
                 title="What do these switches do?"
                 :paragraphs="[
-                    'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
+                    'Adjoining rooms record which rooms are next to each other. This is information about the room only: the conflict check still looks at the room itself, and events in an adjoining room neither block it nor trigger a warning.',
                     'Temporary rooms appear in the calendar only during the set period.',
                     'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
                     'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',
@@ -854,7 +854,7 @@
             <BaseCheckbox
                 id="editRoomEveryoneCanBook"
                 v-model="editRoomForm.everyone_can_book"
-                :description="$page.props.show_hints ? $t('Decides whether this room can be booked by everyone or only by the room admins.') : undefined"
+                :description="$page.props.show_hints ? $t('Decides whether everyone who may create events books this room directly or only the room admins. If it is off, the others can only request the room.') : undefined"
             >
                 <template #label>
                     {{ $t('Can be booked by anyone') }}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-muted">({{ $t('no effect') }})</span>

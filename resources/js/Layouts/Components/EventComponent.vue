@@ -663,6 +663,9 @@
                             >
                                 {{ primaryButtonText }}
                             </BaseUIButton>
+                            <span v-else-if="lacksCreateRight" class="text-xs text-secondary">
+                                {{ $t('To create events you need a calendar permission or a role as room admin or requester in this room.') }}
+                            </span>
                             <span v-else-if="planningWithoutCreateRight" class="text-xs text-secondary">
                                 {{ $t('You lack the permission "Plan directly in the planning calendar" to create planned events in this room.') }}
                             </span>
@@ -933,6 +936,7 @@ import { router, useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { can } from 'laravel-permission-to-vuejs'
+import { mayCreateEventIn } from '@/Helper/roomAdminRights.js'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import TicketingSalesModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue'
@@ -1465,6 +1469,7 @@ const modalDescription = computed(() => {
         if (props.event?.isPlanning) return $t('Here you can view and edit the details of the planned event. Planned events are never room requests; saving keeps the event firmly planned.')
         return $t('Here you can view and edit the details of the event. Make sure to save any changes you make.')
     }
+    if (lacksCreateRight.value) return $t('To create events you need a calendar permission or a role as room admin or requester in this room.')
     return props.isPlanning
         ? $t('You are about to create a planned event. Please fill in the necessary details and save it. The event will not be visible to regular users until it is confirmed.')
         : !canCreateDirect.value
@@ -1478,13 +1483,25 @@ const checkedEventProperties = computed(() => (event_properties ?? []).filter(p 
 // Dialog geöffnet wurde (vorher wurde ein geplanter Termin im normalen Kalender wie ein regulärer behandelt).
 const effectiveIsPlanning = computed(() => (props.event?.id ? !!props.event.isPlanning : props.isPlanning))
 
+// Neue Termine nur mit Anlegerecht (EventPolicy::create). "Kann von jedem fest gebucht werden" allein reicht nicht:
+// vorher zeigte der Dialog dort "Speichern" auch ohne jedes Kalenderrecht, der Server antwortete mit 403.
+const lacksCreateRight = computed(() => !props.event?.id && !mayCreateEventIn({
+    room: selectedRoom.value,
+    userId: page.props.auth.user.id,
+    isAdmin: hasAdminRole(),
+    canRequestRooms: can('request room occupancy'),
+    canBookWithoutRequest: can('create events without request'),
+    canEditPlanning: can('can edit planning calendar'),
+    canPlanFixed: can('can plan fixed in planning calendar'),
+}))
+
 // "Termine immer direkt buchbar" (Instanz-Setting): nie Anfrage-Modus, jede anlegeberechtigte Person bucht direkt –
 // geplante Termine brauchen auch dann "Im Planungskalender fest planen" (EventPolicy::book)
 const canCreateDirect = computed(
-    () => (!!page.props.event_direct_booking_only && !effectiveIsPlanning.value) || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (effectiveIsPlanning.value ? can('can plan fixed in planning calendar') : can('create events without request'))
+    () => !lacksCreateRight.value && ((!!page.props.event_direct_booking_only && !effectiveIsPlanning.value) || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (effectiveIsPlanning.value ? can('can plan fixed in planning calendar') : can('create events without request')))
 )
 // Geplante Termine kennen keine Raumanfrage: ohne Anlegerecht gibt es keinen Anfrage-Button, nur einen Hinweis
-const planningWithoutCreateRight = computed(() => effectiveIsPlanning.value && !canCreateDirect.value)
+const planningWithoutCreateRight = computed(() => effectiveIsPlanning.value && !canCreateDirect.value && !lacksCreateRight.value)
 
 const isPrimaryDisabled = computed(() => {
     const invalidSeries = series.value && !seriesFieldsLocked.value && !seriesDefinitionValid.value

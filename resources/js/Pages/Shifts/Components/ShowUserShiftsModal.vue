@@ -489,7 +489,7 @@
                                 class="inline-flex h-1.5 w-1.5 rounded-full"
                                 :class="dotClassForChecked"
                             ></span>
-                            <span class="truncate">{{ checked?.name }}</span>
+                            <span class="truncate">{{ checked ? t(checked.name) : '' }}</span>
                         </div>
 
                         <Listbox v-else as="div" v-model="checked" class="relative mt-2 w-full">
@@ -500,7 +500,7 @@
                                         :class="dotClassForChecked"
                                     ></span>
                                     <span class="truncate">
-                                        {{ checked?.name }}
+                                        {{ checked ? t(checked.name) : '' }}
                                     </span>
                                 </div>
                                 <PropertyIcon name="IconChevronDown"
@@ -529,7 +529,7 @@
                                                 'truncate'
                                             ]"
                                         >
-                                            {{ type.name }}
+                                            {{ t(type.name) }}
                                         </span>
                                     </div>
                                     <PropertyIcon name="IconCheck"
@@ -1039,12 +1039,12 @@ const page = usePage();
 const projectAssignmentsEnabled = computed(() => page.props.project_assignments_enabled !== false);
 const { can, hasAdminRole } = usePermission(page.props);
 
-// Verfügbarkeits-Typen
+// Verfügbarkeits-Typen: name ist der Übersetzungsschlüssel, verglichen wird immer über type
 const vacationTypes = ref([
-    { name: 'Verfügbar', type: 'AVAILABLE' },
-    { name: 'Arbeitsfreier Tag', type: 'OFF_WORK' },
-    { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE' },
-    { name: 'Frei', type: 'FREE_WORK' },
+    { name: 'Available', type: 'AVAILABLE' },
+    { name: 'Work-free day', type: 'OFF_WORK' },
+    { name: 'Not available', type: 'NOT_AVAILABLE' },
+    { name: 'Free', type: 'FREE_WORK' },
 ]);
 
 // DP-18: Ganzer/Halber freier Tag für den "Frei"-Status

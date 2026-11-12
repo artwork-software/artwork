@@ -309,7 +309,7 @@
                             <div class="relative mt-1">
                                 <ListboxButton
                                     class="relative w-full cursor-pointer rounded-xl border border-border-subtle bg-white px-4 py-3 text-left text-sm hover:bg-surface-sunken">
-                                    <div class="block truncate">{{ selectedPaperSize.name }}</div>
+                                    <div class="block truncate">{{ paperSizeLabel(selectedPaperSize) }}</div>
                                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                         <component :is="IconSelector" class="h-5 w-5 text-text-subtle" />
                                     </span>
@@ -321,14 +321,14 @@
                                     <ListboxOptions
                                         class="absolute z-10 mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white py-2 text-sm shadow-lg ring-1 ring-black/10 focus:outline-none">
                                         <ListboxOption
-                                            v-for="paperSize in paperSizes"
+                                            v-for="paperSize in availablePaperSizes"
                                             :key="paperSize.id"
                                             :value="paperSize"
                                             v-slot="{ active, selected }"
                                             as="template">
                                             <li :class="['relative cursor-pointer select-none py-2 pl-3 pr-9', active ? 'bg-surface-inverse text-white' : 'text-text']">
                                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                                                    {{ paperSize.name }}
+                                                    {{ paperSizeLabel(paperSize) }}
                                                 </span>
                                                 <span v-if="selected" :class="[active ? 'text-white' : 'text-text', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                     <component :is="IconCheck" class="h-5 w-5" />
@@ -377,7 +377,7 @@
                         <BaseInput
                             id="shiftPlanDpi"
                             v-model="pdf.dpi"
-                            :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
+                            :label="$t('Resolution (DPI) (Standard: 96) (Maximum: 300)')"
                         />
                     </div>
                 </div>
@@ -416,7 +416,7 @@ const config = props.configuration ?? {}
 
 const paperSizes = [
     { id: 'a3', name: 'A3' },
-    { id: 'a4', name: 'A4 (Standard)' },
+    { id: 'a4', name: 'A4' },
     { id: 'a5', name: 'A5' },
 ]
 const paperOrientations = [
@@ -656,6 +656,18 @@ const exportDisabled = computed(() =>
     (pdf.exportMode === 'worker_matrix' && pdf.worker_types.length === 0) ||
     pdf.processing
 )
+
+// Die Personalübersicht gibt es nur in A3 und A4 (WorkerShiftPlanPdfExportRequest).
+const availablePaperSizes = computed(() => pdf.exportMode === 'worker_matrix'
+    ? paperSizes.filter((paperSize) => paperSize.id !== 'a5')
+    : paperSizes
+)
+
+// Vorbelegung je Ansicht: Räume nach Tag A4, Personalübersicht A3 (selectExportMode); nur sie heißt "(Standard)".
+const paperSizeLabel = (paperSize: { id: string, name: string }) => {
+    const defaultPaperSizeId = pdf.exportMode === 'worker_matrix' ? 'a3' : 'a4'
+    return paperSize.id === defaultPaperSizeId ? `${paperSize.name} (Standard)` : paperSize.name
+}
 
 const selectExportMode = (mode: string) => {
     pdf.exportMode = mode

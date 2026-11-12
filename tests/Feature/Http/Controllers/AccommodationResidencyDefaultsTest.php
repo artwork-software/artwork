@@ -4,8 +4,13 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
+use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Models\CrmContactType;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabArtistResidenciesService;
+use Artwork\Modules\User\Models\User;
+use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -143,6 +148,50 @@ final class AccommodationResidencyDefaultsTest extends FeatureTestCase
         $serialized = collect($payload['accommodations']->toArray())->firstWhere('id', $accommodation->id);
         $this->assertSame(28.0, $serialized['daily_allowance']);
         $this->assertNull($serialized['breakfast_deduction_per_day']);
+    }
+
+    /**
+     * Die Unterkunftsseite hat keinen Menüeintrag: die CRM-Detailseite eines Unterkunft-Kontakts verlinkt sie.
+     */
+    #[Test]
+    public function crm_detail_page_of_an_accommodation_contact_links_to_the_accommodation_page(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::CRM_VIEW->value);
+        $accommodation = Accommodation::factory()->create();
+        $accommodationType = CrmContactType::withTrashed()->firstOrCreate(
+            ['slug' => 'accommodation'],
+            ['name' => 'Unterkunft', 'is_system' => true, 'is_active' => true]
+        );
+        $contact = CrmContact::factory()->create([
+            'crm_contact_type_id' => $accommodationType->id,
+            'entity_type' => $accommodation->getMorphClass(),
+            'entity_id' => $accommodation->id,
+        ]);
+        $otherContact = CrmContact::factory()->create();
+
+        $this->get(route('crm.contacts.show', $contact))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('accommodationUrl', route('accommodation.show', $accommodation->id)));
+        $this->get(route('crm.contacts.show', $otherContact))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('accommodationUrl', null));
+    }
+
+    /**
+     * Der Aufenthaltsdialog verlinkt die Unterkunftsseite nur, wenn die Person sie öffnen darf.
+     */
+    #[Test]
+    public function residency_tab_payload_tells_whether_the_accommodation_page_may_be_opened(): void
+    {
+        $project = Project::factory()->create();
+        $service = app(ProjectTabArtistResidenciesService::class);
+
+        $this->actingAsUserWith(PermissionEnum::CRM_VIEW->value);
+        $this->assertTrue($service->buildArtistResidenciesPayload($project)['can_view_accommodations']);
+
+        $this->actingAs(User::factory()->create());
+        $this->assertFalse($service->buildArtistResidenciesPayload($project)['can_view_accommodations']);
     }
 
     /**

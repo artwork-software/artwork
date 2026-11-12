@@ -14,7 +14,7 @@
         "laravel-vite-plugin": "^2.0.1",
         "pusher-js": "^8.4.0",
         "tailwindcss": "^4.1.16",
-        "vite": "7.3.6",
+        "vite": "7.3.8",
         "vite-plugin-compression": "^0.5.1"
     },
     "dependencies": {

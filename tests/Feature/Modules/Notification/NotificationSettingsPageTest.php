@@ -48,6 +48,7 @@ final class NotificationSettingsPageTest extends FeatureTestCase
         $this->assertNotContains(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT->value, $types);
         $this->assertNotContains(NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST->value, $types);
         $this->assertNotContains(NotificationEnum::NOTIFICATION_REMINDER_ROOM_REQUEST->value, $types);
+        $this->assertNotContains(NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT->value, $types);
 
         $planner = $this->userWithSettings(PermissionEnum::SHIFT_PLANNER->value);
         $this->assertContains(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT->value, $this->visibleTypes($planner));

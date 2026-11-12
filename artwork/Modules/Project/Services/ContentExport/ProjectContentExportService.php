@@ -85,7 +85,7 @@ class ProjectContentExportService
     {
         $columns = $this->resolveColumns($user, $configuration)['columns'];
         $projects = $this->query->build($user, $configuration)->get();
-        $rows = $this->rowBuilder->build($projects, $columns, $configuration);
+        $rows = $this->rowBuilder->build($projects, $columns, $configuration, $user);
 
         $isWord = $configuration->format === ProjectContentExportConfiguration::FORMAT_DOCX;
         $path = $isWord

@@ -427,18 +427,15 @@ class AppSystemComponentService
      */
     private function checklists(User $user, Project $project, array $scope): array
     {
-        $isTeamMember = $project->users()->whereKey($user->id)->exists();
-
         return $project->checklists()
             ->with(['users:id', 'tasks' => static fn ($q) => $q->orderBy('order'), 'tasks.task_users:id'])
             ->tap(fn ($q) => $this->constrainToVisibleScope($q, $user, $scope))
             ->get()
-            ->filter(static function (Checklist $checklist) use ($user, $isTeamMember): bool {
+            ->filter(static function (Checklist $checklist) use ($user): bool {
                 if (!$checklist->private) {
                     return true;
                 }
                 return $checklist->user_id === $user->id
-                    || $isTeamMember
                     || $checklist->users->contains('id', $user->id)
                     || $checklist->tasks->contains(
                         static fn (Task $task) => $task->task_users->contains('id', $user->id),

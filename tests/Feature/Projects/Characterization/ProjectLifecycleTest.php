@@ -4,6 +4,7 @@ namespace Tests\Feature\Projects\Characterization;
 
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Category\Models\Category;
+use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Jobs\ForceDeleteProjectJob;
 use Artwork\Modules\Project\Jobs\SoftDeleteProjectJob;
@@ -53,6 +54,24 @@ final class ProjectLifecycleTest extends FeatureTestCase
         ]);
         $this->assertSame([$category->id], $copy->categories()->pluck('categories.id')->all());
         $this->assertNotNull($copy->table()->first());
+    }
+
+    #[Test]
+    public function duplicate_copies_the_cost_center(): void
+    {
+        $this->actingAsAdmin();
+        $costCenter = CostCenter::factory()->create();
+        $project = Project::factory()->create([
+            'name' => 'Hamlet',
+            'cost_center_id' => $costCenter->id,
+            'cost_center_description' => 'Gastspiel',
+        ]);
+
+        $this->post(route('projects.duplicate', $project))->assertRedirect();
+
+        $copy = Project::query()->where('name', __('(Copy)') . ' Hamlet')->sole();
+        $this->assertSame($costCenter->id, $copy->cost_center_id);
+        $this->assertSame('Gastspiel', $copy->cost_center_description);
     }
 
     #[Test]

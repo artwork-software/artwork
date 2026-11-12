@@ -16,7 +16,7 @@
             title="How does this area work?"
             :paragraphs="[
                 'Categories form the tree structure of the inventory sidebar. At the same time they define the field schema of the articles: the properties assigned to a category become the fields of its articles.',
-                'Caution: deleting a category also irrevocably deletes all articles in it.',
+                'A category can only be deleted once it no longer contains any articles (including those in the trash). Its sub-categories are deleted with it.',
             ]"
         />
         <div class="mb-10 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">

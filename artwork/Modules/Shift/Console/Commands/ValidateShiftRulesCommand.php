@@ -7,6 +7,7 @@ use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 
 class ValidateShiftRulesCommand extends Command
 {
@@ -53,7 +54,9 @@ class ValidateShiftRulesCommand extends Command
 
             $this->info('Shift rule validation completed successfully');
             return self::SUCCESS;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // Der Lauf startet im Hintergrund: ohne report() ginge der Fehler mit der Ausgabe verloren
+            report($e);
             $this->error('Error during shift rule validation: ' . $e->getMessage());
             return self::FAILURE;
         }
@@ -85,13 +88,7 @@ class ValidateShiftRulesCommand extends Command
                 continue;
             }
 
-            // Check if a child violation already exists for this
-            $existingChild = ShiftRuleViolation::where('parent_violation_id', $violationId)
-                ->where('status', 'active')
-                ->whereJsonContains('violation_data->type', 'compensation_deadline_expired')
-                ->exists();
-
-            if ($existingChild) {
+            if ($this->followUpViolationExists((int) $violationId, $firstDayOff->deadline)) {
                 continue;
             }
 
@@ -123,5 +120,21 @@ class ValidateShiftRulesCommand extends Command
                 . "deadline: {$firstDayOff->deadline->format('Y-m-d')})"
             );
         }
+    }
+
+    /**
+     * Gibt es für diesen Anspruch schon einen Folgeverstoß? Ein offener zählt immer; ein ignorierter oder
+     * bearbeiteter zählt für dieselbe Frist, damit er nicht bei jedem Prüflauf neu entsteht. Läuft nach
+     * erneutem Bearbeiten des Ursprungsverstoßes eine neue Frist ab, entsteht wieder ein Folgeverstoß.
+     */
+    private function followUpViolationExists(int $violationId, Carbon $deadline): bool
+    {
+        return ShiftRuleViolation::where('parent_violation_id', $violationId)
+            ->whereJsonContains('violation_data->type', 'compensation_deadline_expired')
+            ->where(function (Builder $query) use ($deadline): void {
+                $query->where('status', 'active')
+                    ->orWhereDate('violation_date', $deadline->toDateString());
+            })
+            ->exists();
     }
 }

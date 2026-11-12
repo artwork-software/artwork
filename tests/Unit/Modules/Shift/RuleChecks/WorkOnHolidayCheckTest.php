@@ -4,6 +4,8 @@ namespace Tests\Unit\Modules\Shift\RuleChecks;
 
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\RuleChecks\WorkOnHolidayCheck;
+use Artwork\Modules\User\Models\UserContract;
+use Artwork\Modules\User\Models\UserContractAssign;
 use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesShiftRuleFixtures;
@@ -81,6 +83,41 @@ final class WorkOnHolidayCheckTest extends TestCase
         $violations = $this->check->check($this->rule(), $user, $wednesday->copy(), $wednesday->copy());
 
         $this->assertCount(0, $violations);
+    }
+
+    #[Test]
+    public function later_special_day_still_counts_when_an_earlier_one_does_not_count_for_the_person(): void
+    {
+        $firstHoliday = $this->futureWeekday(Carbon::TUESDAY);
+        $secondHoliday = $firstHoliday->copy()->addDays(2);
+
+        [$user] = $this->userWithContract(
+            ['special_day_rule_active' => false],
+            ['special_day_rule_active' => false, 'valid_from' => null, 'valid_until' => $firstHoliday->toDateString()]
+        );
+        UserContractAssign::factory()->create([
+            'user_id' => $user->id,
+            'user_contract_id' => UserContract::factory()->create(['special_day_rule_active' => true])->id,
+            'special_day_rule_active' => true,
+            'valid_from' => $firstHoliday->copy()->addDay()->toDateString(),
+            'valid_until' => null,
+        ]);
+
+        $this->holiday($firstHoliday, 'Erster Sondertag', true);
+        $this->holiday($secondHoliday, 'Zweiter Sondertag', true);
+        $this->shiftFor($user, $firstHoliday);
+        $this->shiftFor($user, $secondHoliday);
+
+        $violations = $this->check->check(
+            $this->rule(),
+            $user,
+            $firstHoliday->copy()->subDay(),
+            $secondHoliday->copy()->addDay()
+        );
+
+        $this->assertCount(1, $violations);
+        $this->assertSame($secondHoliday->toDateString(), $violations->first()->violation_date->toDateString());
+        $this->assertSame('Zweiter Sondertag', $violations->first()->violation_data['holiday_name']);
     }
 
     #[Test]

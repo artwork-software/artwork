@@ -42,4 +42,39 @@ final class EventVerificationAllModeTest extends FeatureTestCase
         $service->approveVerification($verifications[2]->fresh());
         $this->assertFalse((bool) $event->fresh()->is_planning);
     }
+
+    /**
+     * Die anfragende Person ist die einzige Prüferin: ihre Prüfung entsteht genehmigt, und niemand sonst muss
+     * zustimmen. Vorher blieb der Termin geplant, ohne offene Anfrage.
+     */
+    #[Test]
+    public function a_request_by_the_only_verifier_confirms_the_event(): void
+    {
+        $requester = User::factory()->create();
+        $type = EventType::factory()->create(['verification_mode' => 'all']);
+        $type->verifiers()->attach($requester->id);
+        $event = Event::factory()->create(['event_type_id' => $type->id, 'is_planning' => true]);
+
+        app(EventVerificationService::class)->requestVerification($event, $requester);
+
+        $this->assertFalse((bool) $event->fresh()->is_planning);
+        $this->assertSame(1, $event->verifications()->count());
+        $this->assertSame('approved', $event->verifications()->first()->status);
+    }
+
+    #[Test]
+    public function a_request_by_one_of_several_verifiers_stays_planned_until_the_others_approved(): void
+    {
+        $requester = User::factory()->create();
+        $otherVerifier = User::factory()->create();
+        $type = EventType::factory()->create(['verification_mode' => 'all']);
+        $type->verifiers()->attach([$requester->id, $otherVerifier->id]);
+        $event = Event::factory()->create(['event_type_id' => $type->id, 'is_planning' => true]);
+
+        app(EventVerificationService::class)->requestVerification($event, $requester);
+
+        $this->assertTrue((bool) $event->fresh()->is_planning);
+        $this->assertSame(1, $event->verifications()->where('status', 'approved')->count());
+        $this->assertSame(1, $event->verifications()->where('status', 'pending')->count());
+    }
 }

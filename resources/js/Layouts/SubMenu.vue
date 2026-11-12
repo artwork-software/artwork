@@ -869,7 +869,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         prefetch: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | change calendar settings | change money source settings | change budget settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager | manage ticketing | inventory.settings') || is('artwork admin'),
+        has_permission: can('change tool settings | manage webhooks | create, delete and update rooms | change project settings | change event settings | change calendar settings | change money source settings | change budget settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager | manage ticketing | inventory.settings') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',
@@ -877,6 +877,15 @@ const navigation = ref([
                 icon: 'IconSettings',
                 current: route().current('tool.branding'),
                 has_permission: can('change tool settings') || is('artwork admin')
+            },
+            {
+                // Nur mit dem Recht "Webhooks verwalten": direkter Weg zur Schnittstellen-Seite,
+                // die übrigen Register der Tool-Einstellungen bleiben verschlossen.
+                name: 'Interfaces',
+                href: route('tool.interfaces'),
+                icon: 'IconWebhook',
+                current: route().current('tool.interfaces'),
+                has_permission: can('manage webhooks') && !can('change tool settings') && !is('artwork admin')
             },
             {
                 name: 'Shift settings',

@@ -733,7 +733,7 @@ const filteredMoneySources = computed(() => {
     if (openTasksFilter.value) {
         list = list.filter(ms => {
             const tasks = ms?.money_source_tasks ?? []
-            return tasks.some(t => t?.done === 0)
+            return tasks.some(t => !t?.done)
         })
     }
 

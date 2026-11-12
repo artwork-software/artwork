@@ -64,6 +64,8 @@ test('shift settings texts only promise what the code does', () => {
         'Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.',
         // Freelancer und Dienstleister nehmen nicht am Zu-/Absage-Flow teil (ShiftConfirmationEligibilityService)
         'Scheduled people can accept or decline their committed shifts in their own operational plan. Planners can record responses on behalf of freelancers and service providers.',
+        // auch vorläufige Schichten können zu- und abgesagt werden (ShiftWorkerConfirmationController)
+        'Scheduled users with the permission “Accept or decline shifts” can accept or decline their committed shifts in their own operational plan. Planners can record the response on behalf of these users. Freelancers and service providers do not take part.',
     ];
     for (const key of removed) {
         assert.ok(!source.includes(key), `ShiftSettings.vue still uses: ${key}`);
@@ -72,7 +74,7 @@ test('shift settings texts only promise what the code does', () => {
     }
 
     const crafts = 'Define crafts to which you can later assign employees and shifts. For each craft, you can also set the craft management and which users may plan its shifts.';
-    const confirmation = 'Scheduled users with the permission “Accept or decline shifts” can accept or decline their committed shifts in their own operational plan. Planners can record the response on behalf of these users. Freelancers and service providers do not take part.';
+    const confirmation = 'Scheduled users with the permission “Accept or decline shifts” can accept or decline their shifts in their own operational plan, including provisional shifts that are not committed yet. Planners can record the response on behalf of these users. Freelancers and service providers do not take part.';
     for (const key of [crafts, confirmation]) {
         assert.ok(source.includes(`$t('${key}')`), `ShiftSettings.vue misses: ${key}`);
         assert.equal(en[key], key, `en.json: ${key}`);
@@ -80,6 +82,7 @@ test('shift settings texts only promise what the code does', () => {
     }
     assert.match(de[confirmation], /Freelancer und Dienstleister nehmen nicht teil/);
     assert.match(de[confirmation], /Darf Schichten annehmen\/ablehnen/);
+    assert.match(de[confirmation], /auch vorläufige, noch nicht festgeschriebene Schichten/);
 });
 
 test('aria-labels in the craft modal are bound, not literal text', () => {

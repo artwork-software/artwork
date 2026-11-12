@@ -16,7 +16,6 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Events\UpdateProjectContractsDocuments;
 use Artwork\Modules\Project\Services\ProjectTabService;
-use Artwork\Modules\Role\Enums\RoleEnum;
 use Illuminate\Http\RedirectResponse;
 use Artwork\Modules\DocumentRequest\Models\DocumentRequest;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -40,22 +39,18 @@ class ContractController extends Controller
     {
         $user = Auth::user();
 
-        // Admins can see all contracts
-        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            $contracts = Contract::all();
-        } else {
-            // get all contracts where i am creator or i am accessing user or in accessing department
-            $userDepartmentIds = $user->departments->pluck('id')->toArray();
-
-            $contracts = Contract::where('creator_id', $user->id)
-                ->orWhereHas('accessingUsers', function ($query) use ($user): void {
-                    $query->where('user_id', $user->id);
-                })
-                ->orWhereHas('accessingDepartments', function ($query) use ($userDepartmentIds): void {
-                    $query->whereIn('department_id', $userDepartmentIds);
-                })
-                ->get();
-        }
+        $contracts = $this->contractService->visibleContractsQuery($user)
+            ->with([
+                'creator',
+                'project',
+                'contract_type',
+                'company_type',
+                'currency',
+                'accessingUsers.departments',
+                'accessingDepartments',
+                'comments',
+            ])
+            ->get();
 
         // Load saved contract filter for current user
         $savedFilter = $user->contractFilter;
@@ -204,7 +199,7 @@ class ContractController extends Controller
 
         return $this->contractService->exportContracts(
             $filters,
-            Auth::id(),
+            Auth::user(),
             Auth::user()->language ?? 'de'
         );
     }

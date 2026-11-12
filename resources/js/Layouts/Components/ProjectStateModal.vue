@@ -58,7 +58,7 @@ defineOptions({name: 'ProjectStateModal'})
 const DEFAULT_COLOR = '#FCFCFB';
 // Schlüssel enthalten Anführungszeichen, daher nicht direkt im Template-Attribut
 const PLANNING_LABEL_KEY = 'Project counts as "in planning"';
-const PLANNING_DESCRIPTION_KEY = 'When a project counts as "in planning", all appointments assigned to this project during creation are initially planned appointments instead of firmly scheduled ones.';
+const PLANNING_DESCRIPTION_KEY = 'If a project has a status where “Project counts as in planning” is enabled, the switch for planned events is preselected when events are entered in the project. Events are only created as planned while that switch is on.';
 
 const props = defineProps({
     // Projekteinstellungen steuern die Sichtbarkeit über show, der Status-Tag per v-if

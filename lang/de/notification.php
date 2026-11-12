@@ -33,6 +33,9 @@ return [
     'contract' => [
         'add' => 'Ein Vertrag wurde für dich freigegeben',
         'delete' => 'Ein Vertrag wurde gelöscht',
+        'task_assigned' => 'Neue Aufgabe an einem Vertrag für dich: :task',
+        'task_contract' => 'Vertrag: :contract',
+        'task_deadline' => 'Deadline: :date',
     ],
     'project_assignment' => [
         'dissolved_by_free_day' =>
@@ -112,8 +115,6 @@ return [
             'Die Schichten der Anfrage wurden auf den Stand vor der Anfrage zurückgesetzt.',
     ],
     'event' => [
-        'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',
-        'adjoining_is_loud' => 'Lauter Termin im Nebenraum',
         'conflict' => 'Terminkonflikt',
         'conflict_text' => 'Konflikttermin belegt: :date_time',
         'new_room_request' => 'Neue Raumanfrage',

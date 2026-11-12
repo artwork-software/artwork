@@ -877,19 +877,21 @@ class SeriesEventsService
     }
 
     /**
-     * Alle Termine einer Serie aus dem Papierkorb holen.
+     * Alle Termine einer Serie aus dem Papierkorb holen. Hat der Aufrufer die Termine schon geladen (etwa für
+     * die Berechtigungsprüfung, mit Projekt), werden sie übernommen statt erneut abgefragt.
      *
+     * @param Collection<int, Event>|null $trashed
      * @return int Anzahl wiederhergestellter Termine
      */
-    public function restoreSeries(SeriesEvents $series): int
+    public function restoreSeries(SeriesEvents $series, ?Collection $trashed = null): int
     {
-        $trashed = Event::onlyTrashed()->where('series_id', $series->id)->get();
+        $trashed ??= Event::onlyTrashed()->where('series_id', $series->id)->with('project')->get();
         if ($trashed->isEmpty()) {
             return 0;
         }
 
         foreach ($trashed as $event) {
-            if ($event->project_id && !$event->project()->exists()) {
+            if ($event->project_id && $event->project === null) {
                 $event->project_id = null;
                 $event->saveQuietly();
             }

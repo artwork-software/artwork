@@ -37,7 +37,7 @@ final class MachineApiScopeTest extends FeatureTestCase
     #[Test]
     public function token_with_matching_scope_is_allowed(): void
     {
-        Passport::actingAs(User::factory()->create(), ['inventory:read']);
+        Passport::actingAs(User::factory()->withAiAccess()->create(), ['inventory:read']);
 
         $this->getJson('/api/v1/inventory')->assertOk();
     }
@@ -45,7 +45,7 @@ final class MachineApiScopeTest extends FeatureTestCase
     #[Test]
     public function token_with_a_different_scope_is_rejected(): void
     {
-        Passport::actingAs(User::factory()->create(), ['ticketing:read']);
+        Passport::actingAs(User::factory()->withAiAccess()->create(), ['ticketing:read']);
 
         $this->getJson('/api/v1/inventory')->assertForbidden();
     }
@@ -56,7 +56,7 @@ final class MachineApiScopeTest extends FeatureTestCase
         // Das ist der Zustand jedes vor der Scope-Einführung ausgegebenen Tokens. Solche Tokens
         // lassen sich nicht nachrüsten — die Scopes stehen im signierten JWT — und müssen deshalb
         // neu erstellt werden. Dieser Test hält die Entscheidung fest.
-        Passport::actingAs(User::factory()->create(), []);
+        Passport::actingAs(User::factory()->withAiAccess()->create(), []);
 
         $this->getJson('/api/v1/inventory')->assertForbidden();
     }
@@ -64,7 +64,7 @@ final class MachineApiScopeTest extends FeatureTestCase
     #[Test]
     public function wildcard_scope_is_accepted(): void
     {
-        Passport::actingAs(User::factory()->create(), ['*']);
+        Passport::actingAs(User::factory()->withAiAccess()->create(), ['*']);
 
         $this->getJson('/api/v1/inventory')->assertOk();
     }
@@ -78,7 +78,7 @@ final class MachineApiScopeTest extends FeatureTestCase
         $this->assertFalse(Route::has('current-user-photo.destroy'));
         $this->assertFalse(Route::has('other-browser-sessions.destroy'));
 
-        Passport::actingAs(User::factory()->create(), ['calendar:read']);
+        Passport::actingAs(User::factory()->withAiAccess()->create(), ['calendar:read']);
 
         $this->get('/user/profile')->assertNotFound();
     }

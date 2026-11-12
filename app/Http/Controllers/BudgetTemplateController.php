@@ -120,42 +120,53 @@ class BudgetTemplateController extends Controller
             'is_template' => $isTemplate,
             'project_id' => $projectId
         ]);
-        $oldTable->columns->map(function (Column $column) use ($newTable): void {
+        $replicatedColumns = [];
+        $oldTable->columns->each(function (Column $column) use ($newTable, &$replicatedColumns): void {
             if ($column->type === 'sage') {
                 return;
             }
             $replicated_column = $column->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_column->save();
             $this->columns[$column->id] = $replicated_column->id;
-            $replicated_column->update([
-                'linked_first_column' => $column->linked_first_column !== null ?
-                    $this->columns[$column->linked_first_column] :
-                    null,
-                'linked_second_column' => $column->linked_second_column !== null ?
-                    $this->columns[$column->linked_second_column] :
-                    null
-            ]);
+            $replicatedColumns[$column->id] = $replicated_column;
         });
 
-        $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable): void {
+        // Verknüpfungen erst setzen, wenn alle Spalten kopiert sind: eine Summen- oder Differenzspalte
+        // kann vor ihren Quellspalten stehen. Die Sage-Spalte wird nicht kopiert, ihr Bezug entfällt.
+        $oldTable->columns->each(function (Column $column) use ($replicatedColumns): void {
+            if (!isset($replicatedColumns[$column->id])) {
+                return;
+            }
+            $replicatedColumns[$column->id]->update([
+                'linked_first_column' => $this->columns[$column->linked_first_column] ?? null,
+                'linked_second_column' => $this->columns[$column->linked_second_column] ?? null,
+            ]);
+        });
+        $replicatedRowIds = [];
+
+        $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable, &$replicatedRowIds): void {
             // Verifizierungen hängen an der Ursprungsposition und werden nicht mitkopiert.
             $replicated_mainPosition = $mainPosition->replicate()->fill([
                 'table_id' => $newTable->id,
                 'is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED,
             ]);
             $replicated_mainPosition->save();
-            $mainPosition->subPositions->map(function (SubPosition $subPosition) use ($replicated_mainPosition): void {
+            $mainPosition->subPositions->map(function (SubPosition $subPosition) use (
+                $replicated_mainPosition,
+                &$replicatedRowIds
+            ): void {
                 $replicated_subPosition = $subPosition->replicate()->fill([
                     'main_position_id' => $replicated_mainPosition->id,
                     'is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED,
                 ]);
                 $replicated_subPosition->save();
                 $subPosition->subPositionRows->map(
-                    function (SubPositionRow $subPositionRow) use ($replicated_subPosition): void {
+                    function (SubPositionRow $subPositionRow) use ($replicated_subPosition, &$replicatedRowIds): void {
                         $replicated_subPositionRow = $subPositionRow->replicate()->fill(
                             ['sub_position_id' => $replicated_subPosition->id]
                         );
                         $replicated_subPositionRow->save();
+                        $replicatedRowIds[] = $replicated_subPositionRow->id;
                         $subPositionRow->cells->map(
                             function (ColumnCell $columnCell) use ($replicated_subPositionRow): void {
                                 if ($columnCell->column->type === 'sage') {
@@ -199,6 +210,13 @@ class BudgetTemplateController extends Controller
                 );
             });
         });
+
+        // Summen- und Differenzspalten neu berechnen: Ein Bezug auf die nicht übernommene Sage-Spalte zählt
+        // als 0, und Spalten, die darauf aufbauen, ziehen mit.
+        $columnCellService = app(ColumnCellService::class);
+        foreach ($replicatedRowIds as $replicatedRowId) {
+            $columnCellService->recalculateAutomaticColumns($replicatedRowId);
+        }
     }
 
     public function useTemplate(

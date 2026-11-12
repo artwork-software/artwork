@@ -33,6 +33,9 @@ return [
     'contract' => [
         'add' => 'A contract has been shared with you',
         'delete' => 'A contract has been deleted',
+        'task_assigned' => 'New contract task for you: :task',
+        'task_contract' => 'Contract: :contract',
+        'task_deadline' => 'Deadline: :date',
     ],
     'project_assignment' => [
         'dissolved_by_free_day' =>
@@ -110,8 +113,6 @@ return [
         'confirmation_by_proxy' => 'Recorded by :userName',
     ],
     'event' => [
-        'with_adjoining_audience' => 'Event with audience in adjoining room',
-        'adjoining_is_loud' => 'Loud event in adjoining room',
         'conflict' => 'Event conflict',
         'conflict_text' => 'Conflict event booked: :date_time',
         'new_room_request' => 'New room request',

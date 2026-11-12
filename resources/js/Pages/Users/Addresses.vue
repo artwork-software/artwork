@@ -128,7 +128,8 @@
 
                 <template #row-actions="{ row }">
                     <!-- Right: Actions -->
-                    <BaseMenu v-if="is('artwork admin')" has-no-offset white-menu-background>
+                    <!-- Externe: Spiegel von FreelancerPolicy/ServiceProviderPolicy::canManageExternals() -->
+                    <BaseMenu v-if="is('artwork admin') || (row.type !== 'user' && (can('can manage workers') || can('can manage external workers')))" has-no-offset white-menu-background>
                         <BaseMenuItem :icon="IconEdit" title="Edit Profile" white-menu-background as-link :link="checkLink(row)" />
                         <BaseMenuItem :icon="IconTrash" v-if="row.type === 'user'" title="Delete user" white-menu-background @click="openDeleteUserModal(row)" />
                         <BaseMenuItem :icon="IconTrash" v-if="row.type === 'freelancer'" title="Delete freelancer" white-menu-background @click="openDeleteUserModal(row)" />

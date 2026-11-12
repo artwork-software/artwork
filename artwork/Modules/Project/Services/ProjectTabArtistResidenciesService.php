@@ -9,6 +9,7 @@ use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
+use Illuminate\Support\Facades\Gate;
 
 class ProjectTabArtistResidenciesService
 {
@@ -21,6 +22,8 @@ class ProjectTabArtistResidenciesService
         return [
             'artists' => Artist::all(),
             'accommodations' => Accommodation::with('roomTypes')->get(),
+            // Link im Aufenthaltsdialog zur Unterkunftsseite (Vorgaben Tagegeld und Abzug pro Frühstück)
+            'can_view_accommodations' => Gate::allows('viewAny', Accommodation::class),
             'crm_artists' => $artistType
                 ? CrmContact::where('crm_contact_type_id', $artistType->id)
                     ->with('propertyValues')

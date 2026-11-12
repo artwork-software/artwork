@@ -33,7 +33,8 @@ readonly class UserCalendarAboService
     ];
 
     public function __construct(
-        private UserCalendarAboRepository $userCalendarAboRepository
+        private UserCalendarAboRepository $userCalendarAboRepository,
+        private CalendarAboAlertService $calendarAboAlertService
     ) {
     }
 
@@ -151,13 +152,13 @@ readonly class UserCalendarAboService
         return ($description !== '' ? $description . ' ' : '') . 'Organisation: ' . $creatorName;
     }
 
-    public function addEventToCalendar($calendar, $event): void
+    public function addEventToCalendar($calendar, $event, ?UserCalendarAbo $calendarAbo = null): void
     {
         try {
             $title = $this->icsTitleFor($event);
             $description = $this->icsDescriptionFor($event);
 
-            $calendar->event(function ($calendarEvent) use ($event, $title, $description): void {
+            $calendar->event(function ($calendarEvent) use ($event, $title, $description, $calendarAbo): void {
                 $calendarEvent
                     ->name($title)
                     ->description($description)
@@ -188,6 +189,15 @@ readonly class UserCalendarAboService
                             ]
                         ),
                         'Im Projekt anzeigen'
+                    );
+                }
+
+                if ($calendarAbo !== null) {
+                    $this->calendarAboAlertService->addStartAlert(
+                        $calendarEvent,
+                        $calendarAbo,
+                        Carbon::parse($event->start_time),
+                        $title
                     );
                 }
             });

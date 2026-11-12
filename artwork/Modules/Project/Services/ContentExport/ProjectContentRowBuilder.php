@@ -7,6 +7,7 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -37,6 +38,7 @@ class ProjectContentRowBuilder
         EloquentCollection $projects,
         array $columns,
         ProjectContentExportConfiguration $configuration,
+        ?User $user = null,
     ): array {
         if ($projects->isEmpty()) {
             return [];
@@ -51,7 +53,7 @@ class ProjectContentRowBuilder
             [ProjectContentExportColumns::EVENTS, ProjectContentExportColumns::ROOMS],
             $keys
         ) !== [];
-        $events = $needsEvents ? $this->eventsByProject($projectIds, $configuration) : collect();
+        $events = $needsEvents ? $this->eventsByProject($projectIds, $configuration, $user) : collect();
         $firstEventStarts = $this->firstEventStarts($projectIds, $configuration);
         $values = $this->componentValues($projectIds, $columns);
         $periods = in_array(ProjectContentExportColumns::PROJECT_PERIOD, $keys, true)
@@ -262,10 +264,15 @@ class ProjectContentRowBuilder
      * @param array<int, int> $projectIds
      * @return Collection<int, Collection<int, Event>>
      */
-    private function eventsByProject(array $projectIds, ProjectContentExportConfiguration $configuration): Collection
-    {
+    private function eventsByProject(
+        array $projectIds,
+        ProjectContentExportConfiguration $configuration,
+        ?User $user,
+    ): Collection {
         $query = Event::query()
             ->whereIn('events.project_id', $projectIds)
+            // Planungstermine nur für Personen, die den Planungskalender sehen dürfen
+            ->when($user !== null, fn ($events) => $events->visiblePlanningFor($user))
             ->whereNotNull('events.start_time')
             ->whereNotNull('events.end_time')
             // Terminarten der Termin-Spalte gelten auch für die Räume-Spalte

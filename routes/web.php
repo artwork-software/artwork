@@ -3244,12 +3244,13 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->name('user.update.userOverviewHeight');
 
         // save user shift calendar abo
-        // (DP-16: nur der Abonnier-Button wird per Recht ausgeblendet; bestehende
-        // Abos bleiben unberührt, daher KEIN serverseitiges Gating der Abo-Routen.)
+        // (DP-16: nur das Anlegen verlangt "Dienstplan abonnieren". Bestehende Abos bleiben unberührt:
+        // Ändern, Link erneuern und der Feed selbst laufen ohne dieses Recht weiter.)
         Route::post(
             '/shift/calendar/abo/create',
             [UserShiftCalendarAboController::class, 'store']
-        )->name('user.shift.calendar.abo.create');
+        )->middleware('can:' . PermissionEnum::CAN_SUBSCRIBE_SHIFT_CALENDAR->value)
+            ->name('user.shift.calendar.abo.create');
 
         // user.shift.calendar.abo.update
         Route::patch(

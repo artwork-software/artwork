@@ -21,7 +21,7 @@ class AppTokenService
     {
         $result = $user->createToken($deviceName, [self::SCOPE]);
 
-        $result->token?->forceFill(['expires_at' => now()->addDays(self::LIFETIME_DAYS)])->save();
+        $result->getToken()?->forceFill(['expires_at' => now()->addDays(self::LIFETIME_DAYS)])->save();
 
         return $result->accessToken;
     }

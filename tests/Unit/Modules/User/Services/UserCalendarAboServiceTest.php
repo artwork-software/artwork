@@ -108,4 +108,91 @@ final class UserCalendarAboServiceTest extends TestCase
         $this->assertStringContainsString('Technikprobe', $ics);
         $this->assertStringContainsString('Organisation: Orga Nisator', $ics);
     }
+
+    #[Test]
+    public function add_event_to_calendar_adds_a_reminder_when_the_abo_enables_notifications(): void
+    {
+        $user = User::factory()->create(['language' => 'de']);
+        $this->service->create(
+            array_replace($this->defaultPayload(), [
+                'enable_notification' => true,
+                'notification_time' => 30,
+                'notification_time_unit' => 'minutes',
+            ]),
+            $user->id
+        );
+        $abo = UserCalendarAbo::where('user_id', $user->id)->firstOrFail();
+        $event = Event::factory()->create([
+            'eventName' => 'Generalprobe',
+            'start_time' => '2026-11-20 10:00:00',
+            'end_time' => '2026-11-20 12:00:00',
+        ]);
+
+        $calendar = Calendar::create('Test');
+        $this->service->addEventToCalendar($calendar, $event->fresh(), $abo);
+        $ics = str_replace("\r\n ", '', $calendar->get());
+
+        $this->assertStringContainsString('BEGIN:VALARM', $ics);
+        $this->assertMatchesRegularExpression('/TRIGGER[^\r\n]*20261120T093000/', $ics);
+        $this->assertStringContainsString(' beginnt in 30 Minuten.', $ics);
+    }
+
+    #[Test]
+    public function reminder_text_uses_the_language_of_the_abo_owner_and_the_singular_unit(): void
+    {
+        $user = User::factory()->create(['language' => 'en']);
+        $this->service->create(
+            array_replace($this->defaultPayload(), [
+                'enable_notification' => true,
+                'notification_time' => 1,
+                'notification_time_unit' => 'hours',
+            ]),
+            $user->id
+        );
+        $abo = UserCalendarAbo::where('user_id', $user->id)->firstOrFail();
+        $event = Event::factory()->create([
+            'eventName' => 'Generalprobe',
+            'start_time' => '2026-11-20 10:00:00',
+            'end_time' => '2026-11-20 12:00:00',
+        ]);
+
+        $calendar = Calendar::create('Test');
+        $this->service->addEventToCalendar($calendar, $event->fresh(), $abo);
+        $ics = str_replace("\r\n ", '', $calendar->get());
+
+        $this->assertMatchesRegularExpression('/TRIGGER[^\r\n]*20261120T090000/', $ics);
+        $this->assertStringContainsString(' starts in one hour.', $ics);
+    }
+
+    #[Test]
+    public function add_event_to_calendar_adds_no_reminder_for_an_unknown_unit(): void
+    {
+        $user = User::factory()->create();
+        $this->service->create($this->defaultPayload(), $user->id);
+        $abo = UserCalendarAbo::where('user_id', $user->id)->firstOrFail();
+        $abo->enable_notification = true;
+        $abo->notification_time = 15;
+        $abo->notification_time_unit = 'weeks';
+        $event = Event::factory()->create();
+
+        $calendar = Calendar::create('Test');
+        $this->service->addEventToCalendar($calendar, $event->fresh(), $abo);
+
+        $this->assertStringContainsString('BEGIN:VEVENT', $calendar->get());
+        $this->assertStringNotContainsString('VALARM', $calendar->get());
+    }
+
+    #[Test]
+    public function add_event_to_calendar_adds_no_reminder_when_notifications_are_disabled(): void
+    {
+        $user = User::factory()->create();
+        $this->service->create($this->defaultPayload(), $user->id);
+        $abo = UserCalendarAbo::where('user_id', $user->id)->firstOrFail();
+        $event = Event::factory()->create();
+
+        $calendar = Calendar::create('Test');
+        $this->service->addEventToCalendar($calendar, $event->fresh(), $abo);
+
+        $this->assertStringNotContainsString('VALARM', $calendar->get());
+    }
 }

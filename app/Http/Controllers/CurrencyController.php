@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Currency\Models\Currency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -38,6 +39,13 @@ class CurrencyController extends Controller
     public function forceDelete(int $id): \Illuminate\Http\RedirectResponse
     {
         $currency = Currency::onlyTrashed()->findOrFail($id);
+
+        if (Contract::withTrashed()->where('currency_id', $currency->id)->exists()) {
+            return Redirect::back()->with(
+                'error',
+                __('This currency is still used by contracts and cannot be deleted permanently.')
+            );
+        }
 
         $currency->forceDelete();
 

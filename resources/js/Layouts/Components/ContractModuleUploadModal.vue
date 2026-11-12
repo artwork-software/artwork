@@ -68,13 +68,6 @@
                 class="mb-0!"
                 :message="uploadDocumentFeedback"
             />
-
-            <BaseTextarea
-                id="contractModuleDescription"
-                v-model="contractModuleForm.description"
-                label="Comment / Note"
-                :rows="4"
-            />
         </form>
         <template #footer>
             <BaseUIButton
@@ -108,7 +101,6 @@ import {
 } from "@/Helper/sequentialUpload.js";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
@@ -122,7 +114,6 @@ export default {
     components: {
         ArtworkBaseModal,
         BaseUIButton,
-        BaseTextarea,
         BaseAlertComponent,
         PropertyIcon,
     },
@@ -131,8 +122,7 @@ export default {
             uploadDocumentFeedback: "",
             files: [],
             contractModuleForm: useForm({
-                file: null,
-                description: ""
+                file: null
             }),
             errorsAtUpload: [],
             closeModalIfUploaded: false,

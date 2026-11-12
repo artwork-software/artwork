@@ -1,6 +1,6 @@
 {
     "Calendar & events": "Kalender & Termine",
-    "Without permissions a person can only book in rooms that are bookable for everyone or in which they are listed as requester or room admin.": "Ohne Rechte kann eine Person nur in Räumen buchen, die „für alle buchbar“ sind oder in denen sie als anfrageberechtigt bzw. als Raum-Admin eingetragen ist.",
+    "Creating events requires one of the permissions to request, create or plan events, or a role as room admin or requester in the room. In rooms that can be booked by anyone, everyone who may create events books directly instead of sending a request.": "Termine anlegen kann nur, wer eines der Rechte zum Anfragen, Anlegen oder Planen von Terminen hat oder im Raum als Raum-Admin bzw. anfrageberechtigt eingetragen ist. In Räumen, die „von jedem fest gebucht werden“ können, bucht jede*r mit Anlegerecht fest statt anzufragen.",
     "Request room occupancy": "Raumbelegungen anfragen",
     "Button \"+\" in the calendar": "„+“-Button im Kalender",
     "Event dialog in request mode": "Termin-Dialog im Anfrage-Modus",

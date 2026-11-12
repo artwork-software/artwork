@@ -117,13 +117,15 @@ const tabsMap = computed(() => {
             key: "Trash/BudgetManagementAccount",
             name: proxy?.$t ? proxy.$t("Accounts") : "Accounts",
             href: route("budget-settings.account-management.trash-accounts"),
-            available: can("can manage global project budgets") || is('artwork admin'),
+            // wie die Routen: Budget-Einstellungen, nicht der globale Budgetzugriff
+            available: can("change budget settings") || is('artwork admin'),
         },
         "Trash/BudgetManagementCostUnit": {
             key: "Trash/BudgetManagementCostUnit",
             name: proxy?.$t ? proxy.$t("Cost Units") : "Cost Units",
             href: route("budget-settings.account-management.trash-cost-units"),
-            available: can("can manage global project budgets") || is('artwork admin'),
+            // wie die Routen: Budget-Einstellungen, nicht der globale Budgetzugriff
+            available: can("change budget settings") || is('artwork admin'),
         },
         "Trash/InventoryArticles": {
             key: "Trash/InventoryArticles",

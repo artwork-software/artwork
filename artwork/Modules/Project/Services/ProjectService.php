@@ -18,6 +18,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -36,6 +37,7 @@ use Artwork\Modules\User\Models\UserShiftPlanDailySettings;
 use Artwork\Modules\User\Models\UserShiftPlanSettings;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserProjectManagementSettingService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Collection;
@@ -389,6 +391,11 @@ class ProjectService
         return $project;
     }
 
+    /**
+     * Legt das Projekt samt Inhalten in den Papierkorb. Das Projekt geht zuerst in den Papierkorb (im Normalfall
+     * schon durch den Controller) und behält diesen Zeitpunkt: Er markiert den Beginn der Kaskade, alles danach
+     * Gelöschte gehört dazu und kommt beim Wiederherstellen zurück.
+     */
     public function softDelete(
         Project $project,
         ShiftsQualificationsService $shiftsQualificationsService,
@@ -408,6 +415,10 @@ class ProjectService
         ProjectTabService $projectTabService,
         TaskService $taskService
     ): bool {
+        if (!$project->trashed()) {
+            $project->delete();
+        }
+
         $projectFileService->deleteAll($project->project_files);
         $eventService->deleteAll(
             $project->events,
@@ -469,8 +480,6 @@ class ProjectService
             $table->delete();
         }
 
-        $project->categories()->detach();
-
         $project->contracts()->delete();
 
         $this->updateShiftRelevanteEventTypesForSoftDelete($project, now());
@@ -479,7 +488,7 @@ class ProjectService
 
         $this->updateMoneySources($project, now());
 
-        return $project->delete();
+        return $project->trashed();
     }
 
     public function forceDelete(
@@ -554,6 +563,18 @@ class ProjectService
         SubEventService $subEventService,
         TaskService $taskService
     ): bool {
+        // Nur zurückholen, was ZUSAMMEN mit dem Projekt in den Papierkorb ging: vorher einzeln gelöschte Dateien,
+        // Kommentare, Checklisten und Aufgaben bleiben gelöscht. Die Kaskade beginnt mit dem Löschzeitpunkt des
+        // Projekts und läuft danach (siehe softDelete und SoftDeleteProjectJob).
+        $deletedAt = $project->getAttribute($project->getDeletedAtColumn());
+        $cascadeStartedAt = $deletedAt instanceof CarbonInterface ? $deletedAt->copy() : null;
+        $trashedWithProject = static fn (Builder $query): Builder => $query
+            ->where('project_id', $project->id)
+            ->when(
+                $cascadeStartedAt !== null,
+                static fn (Builder $query): Builder => $query->where('deleted_at', '>=', $cascadeStartedAt)
+            );
+
         // restore
         $project->restore();
 
@@ -569,7 +590,11 @@ class ProjectService
         );
 
         // restore checklists and their tasks
-        $checklistService->restoreAll($project->checklists()->onlyTrashed()->get(), $taskService);
+        $checklistService->restoreAll(
+            $trashedWithProject(Checklist::onlyTrashed())->get(),
+            $taskService,
+            $cascadeStartedAt
+        );
 
         $table = $project->table()->onlyTrashed()->first();
         if ($table) {
@@ -615,12 +640,11 @@ class ProjectService
             }
         }
 
-        // soft delete the comments
-        $commentService->restoreAll($project->comments()->get());
-        //$project->comments()->restore();
+        // restore the comments
+        $commentService->restoreAll($trashedWithProject(Comment::onlyTrashed())->get());
 
         // restore the project files
-        $projectFileService->restoreAll($project->project_files()->get());
+        $projectFileService->restoreAll($trashedWithProject(ProjectFile::onlyTrashed())->get());
 
         // restore the contracts
         $project->contracts()->restore();

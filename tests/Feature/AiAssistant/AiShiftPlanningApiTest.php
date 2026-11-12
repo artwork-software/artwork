@@ -31,6 +31,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
 use Tests\Concerns\CreatesShiftRuleFixtures;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * ai-shift-planning (Core 1–6 + Erweiterung 1/2): Personen, Auslastung, Vorschlag ohne Speichern,
@@ -38,6 +39,8 @@ use Tests\TestCase;
  */
 final class AiShiftPlanningApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     use CreatesShiftRuleFixtures;
 
     /** Montag der ISO-Woche 45/2026. */
@@ -96,7 +99,7 @@ final class AiShiftPlanningApiTest extends TestCase
     private function actingAsToken(User $user, array $scopes = [AiScopes::READ]): void
     {
         $this->app['auth']->forgetGuards();
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

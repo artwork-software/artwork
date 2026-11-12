@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Event\Services;
 
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -81,30 +80,5 @@ class EventCollisionService
             ];
         }
         return $conflictObj;
-    }
-
-    /**
-     * @return Event[]
-     */
-    public function adjoiningCollision($request): array
-    {
-        $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
-        $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
-
-        $room = Room::find($request->roomId);
-        if (!$room) {
-            // Termine ohne Raum (z. B. Planungstermine) haben keine angrenzenden Räume.
-            return [];
-        }
-        $joiningRooms = $room->adjoining_rooms()->get();
-        $events = [];
-        foreach ($joiningRooms as $joiningRoom) {
-            $events[] = Event::query()
-                ->whereDate('start_time', '>=', $startDate)
-                ->whereDate('end_time', '<=', $endDate)
-                ->where('room_id', $joiningRoom->id)
-                ->get();
-        }
-        return $events;
     }
 }

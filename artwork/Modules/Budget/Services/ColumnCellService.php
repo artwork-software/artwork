@@ -10,6 +10,7 @@ use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Repositories\ColumnCellRepository;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 readonly class ColumnCellService
 {
@@ -146,6 +147,29 @@ readonly class ColumnCellService
         $cells = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get()->keyBy('column_id');
         $columns = Column::whereIn('id', $cells->keys())->get()->keyBy('id');
 
+        // Automatische Spalten koennen aufeinander aufbauen (C = B + D, B = A + Sage), unabhaengig von ihrer
+        // Reihenfolge. Daher so lange rechnen, bis sich nichts mehr aendert; hoechstens einmal je Spalte,
+        // damit ein Zirkelbezug nicht endlos laeuft.
+        for ($pass = 0; $pass < $columns->count(); $pass++) {
+            if (!$this->recalculateAutomaticCellsOnce($cells, $columns)) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Ein Rechendurchlauf ueber alle automatischen Zellen einer Zeile.
+     *
+     * @param Collection<int, ColumnCell> $cells nach column_id
+     * @param Collection<int, Column> $columns nach id
+     * @return bool ob sich ein Wert geaendert hat
+     */
+    private function recalculateAutomaticCellsOnce(
+        Collection $cells,
+        Collection $columns
+    ): bool {
+        $changed = false;
+
         foreach ($cells as $cell) {
             $column = $columns->get($cell->column_id);
 
@@ -169,8 +193,11 @@ readonly class ColumnCellService
             // trotzdem den saved-Observer und damit die Cache-Invalidierung.
             if ($cell->value !== $result) {
                 $cell->update(['value' => $result]);
+                $changed = true;
             }
         }
+
+        return $changed;
     }
 
     /**

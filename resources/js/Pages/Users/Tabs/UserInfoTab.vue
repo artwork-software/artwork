@@ -10,7 +10,7 @@
                 <div class="flex items-end gap-5">
                     <!-- Avatar -->
                     <button
-                        v-if="isSignedInUser() || hasAdminRole()"
+                        v-if="canEditProfile"
                         @click="openChangePictureModal"
                         class="group relative"
                         type="button"
@@ -46,8 +46,8 @@
             </div>
         </header>
 
-        <!-- NAME CARD (nur eigener Account oder Admin) -->
-        <section v-if="isSignedInUser() || hasAdminRole()" class="mt-8">
+        <!-- NAME CARD (eigener Account, Admin oder Personalverwaltung bei Nicht-Admin-Profilen) -->
+        <section v-if="canEditProfile" class="mt-8">
             <div class="rounded-3xl border border-border-subtle bg-white p-6 shadow-sm sm:p-8">
                 <h2 class="mb-5 text-base font-semibold text-text">
                     {{ $t('Basic information') }}
@@ -88,8 +88,8 @@
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <BaseInput
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.pronouns"
                         :label="$t('Pronouns')"
@@ -98,8 +98,8 @@
                     />
 
                     <BaseInput
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.business"
                         :label="$t('Company')"
@@ -108,8 +108,8 @@
                     />
 
                     <BaseInput
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.position"
                         :label="$t('Position')"
@@ -148,8 +148,8 @@
                     </div>
 
                     <BaseInput
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.phone_number"
                         :label="$t('Phone number')"
@@ -160,8 +160,8 @@
 
                 <div class="mt-6">
                     <BaseTextarea
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         :label="$t('What should other artwork users know?')"
                         v-model="userForm.description"
                         rows="5"
@@ -179,7 +179,7 @@
                         {{ $t('Preferences') }}
                     </h3>
 
-                    <div v-if="isSignedInUser() || hasAdminRole()" class="mb-5">
+                    <div v-if="canEditProfile" class="mb-5">
                         <Listbox as="div" v-model="selectedLanguage" @update:modelValue="editUser">
                             <ListboxLabel class="block text-sm font-medium text-text">
                                 {{ $t('Application language') }}
@@ -240,9 +240,9 @@
                                 @change="editUser"
                                 name="high_contrast"
                                 type="checkbox"
-                                :disabled="!canEditPreferences"
+                                :disabled="!canEditProfile"
                                 :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
-                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
+                                    canEditProfile ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
@@ -260,9 +260,9 @@
                                 @change="editUser"
                                 name="email_private"
                                 type="checkbox"
-                                :disabled="!canEditPreferences"
+                                :disabled="!canEditProfile"
                                 :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
-                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
+                                    canEditProfile ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
@@ -280,9 +280,9 @@
                                 @change="editUser"
                                 name="phone_private"
                                 type="checkbox"
-                                :disabled="!canEditPreferences"
+                                :disabled="!canEditProfile"
                                 :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
-                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
+                                    canEditProfile ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
@@ -300,9 +300,9 @@
                                 @change="editUser"
                                 name="use_chat"
                                 type="checkbox"
-                                :disabled="!canEditPreferences"
+                                :disabled="!canEditProfile"
                                 :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
-                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
+                                    canEditProfile ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
@@ -585,13 +585,21 @@ const { proxy } = getCurrentInstance()
 const page = usePage()
 const hasAdminRole = () => (is('artwork admin'))
 const isSignedInUser = () => props.user_to_edit?.id === page.props?.auth?.user?.id
-const canEditPreferences = computed(() => isSignedInUser() || can('can manage workers') || hasAdminRole())
+
+// Alle Profilfelder (Name, Foto, Sprache, Kontakt, Einstellungen): Spiegel von
+// UserController::updateUserDetails()/updateUserPhoto(). Das eigene Profil, Admins überall, die
+// Personalverwaltung bei allen Profilen außer denen von Admins; sonst lehnt der Server mit 403 ab.
+const isTargetAdmin = computed(() => (props.user_to_edit.roles ?? []).includes('artwork admin'))
+const canEditProfile = computed(() => isSignedInUser() || hasAdminRole()
+    || (can('can manage workers') && !isTargetAdmin.value))
 
 // Teams tragen Rechte (Projekt-Schreibrecht, Raumadmin, Verträge) – die eigene Zugehörigkeit
 // ändert deshalb nur eine andere Person (Admins ausgenommen), wie im Backend (updateUserDetails).
 const hasTeamRights = computed(() => can('teammanagement') || can('can manage workers') || hasAdminRole())
-const canEditTeams = computed(() => hasTeamRights.value && (!isSignedInUser() || hasAdminRole()))
-const isOwnProfileWithoutTeamRights = computed(() => hasTeamRights.value && !canEditTeams.value)
+// Admin-Profile ändert auch hier nur ein Admin (gleiche Regel wie oben).
+const canEditTeams = computed(() => hasTeamRights.value
+    && (hasAdminRole() || (!isSignedInUser() && !isTargetAdmin.value)))
+const isOwnProfileWithoutTeamRights = computed(() => isSignedInUser() && hasTeamRights.value && !canEditTeams.value)
 
 /* ----- Account deaktivieren/reaktivieren (Spiegel von UserPolicy::deactivate) ----- */
 const { formatDate } = useInstanceFormat()

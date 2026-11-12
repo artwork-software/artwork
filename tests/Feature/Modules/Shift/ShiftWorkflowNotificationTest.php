@@ -79,7 +79,7 @@ final class ShiftWorkflowNotificationTest extends FeatureTestCase
             'requested_at' => now(),
         ]);
 
-        $this->post(route('shift-plan-requests.reject', $request), []);
+        $this->post(route('shift-plan-requests.reject', $request), ['global_reason' => 'Besetzung prüfen']);
 
         Notification::assertSentTo($requester, ShiftNotification::class);
     }

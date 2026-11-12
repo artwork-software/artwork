@@ -18,8 +18,9 @@ return new PermissionModuleDefinition(
     icon: 'IconCalendarClock',
     navOrder: 20,
     moduleSetting: 'room_assignment',
-    hint: 'Without permissions a person can only book in rooms that are bookable for everyone '
-        . 'or in which they are listed as requester or room admin.',
+    hint: 'Creating events requires one of the permissions to request, create or plan events, or a role as room '
+        . 'admin or requester in the room. In rooms that can be booked by anyone, everyone who may create events '
+        . 'books directly instead of sending a request.',
     settingHints: [
         'event_direct_booking_only' => 'The setting "Events always bookable directly" is active: there are no room '
             . 'requests and no event verification. Everyone who may create events books directly. Room-specific '

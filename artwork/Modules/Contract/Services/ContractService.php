@@ -15,15 +15,18 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContractFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -227,9 +230,6 @@ class ContractService
 
     public function storeTasksAndComments(Model $contract, ?array $tasks = null, ?string $comment = null): void
     {
-        $task = null;
-        $taskObj = null;
-
         if ($tasks) {
             foreach ($tasks as $taskFromReq) {
                 $taskObj = (object)$taskFromReq;
@@ -240,20 +240,15 @@ class ContractService
                         'deadline' => $taskObj->deadline,
                         'done' => false,
                         'contract_id' => $contract->id,
-                        'order' => 1
+                        'order' => 1,
+                        'sent_deadline_notification' => false,
+                        'sent_deadline_tomorrow_notification' => false,
                     ]);
+
+                    $this->assignUsersToTask($task, $taskObj->assigned_users ?? []);
                 } else {
                     Task::where('id', $taskObj->id)->update(['done' => $taskObj->done]);
                 }
-            }
-        }
-
-        if ($task && $taskObj && isset($taskObj->assigned_users)) {
-            foreach ($taskObj->assigned_users as $assignedUser) {
-                $userObj = (object)$assignedUser;
-                $user = User::where('id', $userObj->id)->first();
-                $task->task_users()->save($user);
-                $user->tasks()->save($task);
             }
         }
 
@@ -267,9 +262,40 @@ class ContractService
         }
     }
 
-    public function exportContracts(array $filters, int $userId, string $language): BinaryFileResponse
+    /**
+     * Sichtbarkeitsregel der Vertragsliste, die auch der Export nutzt: Admins sehen alle Verträge,
+     * alle anderen ihre selbst angelegten sowie persönlich oder über ein Team freigegebene.
+     *
+     * @return Builder<Contract>
+     */
+    public function visibleContractsQuery(User $user): Builder
     {
-        $query = Contract::query()
+        $query = Contract::query();
+
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return $query;
+        }
+
+        $userDepartmentIds = $user->departments->pluck('id')->toArray();
+
+        return $query->where(function (Builder $visible) use ($user, $userDepartmentIds): void {
+            $visible->where('creator_id', $user->id)
+                ->orWhereHas('accessingUsers', function ($subQuery) use ($user): void {
+                    $subQuery->where('user_id', $user->id);
+                })
+                ->orWhereHas('accessingDepartments', function ($subQuery) use ($userDepartmentIds): void {
+                    $subQuery->whereIn('department_id', $userDepartmentIds);
+                });
+        });
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return Collection<int, Contract>
+     */
+    public function contractsForExport(array $filters, User $user): Collection
+    {
+        $query = $this->visibleContractsQuery($user)
             ->with(['project', 'contract_type', 'company_type', 'currency', 'creator']);
 
         if (!empty($filters['kskLiable'])) {
@@ -304,14 +330,15 @@ class ContractService
             $query->whereIn('contract_type_id', $filters['contractTypeIds']);
         }
 
-        $query->where(function ($q) use ($userId): void {
-            $q->where('creator_id', $userId)
-                ->orWhereHas('accessingUsers', function ($subQuery) use ($userId): void {
-                    $subQuery->where('user_id', $userId);
-                });
-        });
+        return $query->get();
+    }
 
-        $contracts = $query->get();
+    /**
+     * @param array<string, mixed> $filters
+     */
+    public function exportContracts(array $filters, User $user, string $language): BinaryFileResponse
+    {
+        $contracts = $this->contractsForExport($filters, $user);
 
         $export = new ContractExcelExport($contracts, $language);
         $filename = 'contracts_export_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
@@ -332,6 +359,112 @@ class ContractService
                 'contract_type_ids' => $filters['contractTypeIds'] ?? [],
             ]
         );
+    }
+
+    /**
+     * Beschreibung für Meldungen zu Folgeaufgaben: Frist und ein Link, den die Person öffnen darf.
+     * Zuständige brauchen keinen Zugriff auf den Vertrag. Den Vertragsnamen (oft der Dateiname des Uploads)
+     * und den Link zum Projekt sehen nur Personen, die Vertrag und Projekt öffnen dürfen; alle anderen
+     * bekommen einen Link zum Dashboard, wo die Aufgabe unter „Nächste Aufgaben“ steht.
+     *
+     * @return array<int, array{type: string, title: string, href: ?string}>
+     */
+    public function contractTaskNotificationDescription(Task $task, User $recipient): array
+    {
+        $language = $recipient->language;
+        $contract = $task->contract;
+        $project = $contract?->project;
+        $description = [];
+        $canOpenContract = $contract
+            && $project
+            && Gate::forUser($recipient)->allows('view', $contract)
+            && Gate::forUser($recipient)->allows('view', $project);
+
+        if ($canOpenContract) {
+            $description[] = [
+                'type' => 'string',
+                'title' => __('notification.contract.task_contract', ['contract' => $contract->name], $language),
+                'href' => null,
+            ];
+        }
+
+        if ($task->deadline) {
+            $description[] = [
+                'type' => 'string',
+                'title' => __(
+                    'notification.contract.task_deadline',
+                    ['date' => $task->deadline->format('d.m.Y H:i')],
+                    $language
+                ),
+                'href' => null,
+            ];
+        }
+
+        $description[] = $canOpenContract
+            ? [
+                'type' => 'link',
+                'title' => $project->name,
+                'href' => route('projects.tab', [
+                    $project->id,
+                    $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                        ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS
+                    ),
+                ]),
+            ]
+            : [
+                'type' => 'link',
+                'title' => __('Dashboard', [], $language),
+                'href' => route('dashboard'),
+            ];
+
+        return array_combine(range(1, count($description)), $description);
+    }
+
+    /**
+     * Jede neu angelegte Folgeaufgabe bekommt ihre eigenen Zuständigen; sie werden über die Zuweisung
+     * benachrichtigt, außer die zuweisende Person selbst.
+     *
+     * @param iterable<int, array{id: int}|object> $assignedUsers
+     */
+    private function assignUsersToTask(Task $task, iterable $assignedUsers): void
+    {
+        $assignedUserIds = [];
+        foreach ($assignedUsers as $assignedUser) {
+            $userObj = (object)$assignedUser;
+            $user = User::where('id', $userObj->id)->first();
+            if (!$user || in_array($user->id, $assignedUserIds, true)) {
+                continue;
+            }
+            $assignedUserIds[] = $user->id;
+
+            $task->task_users()->save($user);
+            $user->tasks()->save($task);
+
+            $this->sendContractTaskAssignedNotification($task, $user);
+        }
+    }
+
+    private function sendContractTaskAssignedNotification(Task $task, User $user): void
+    {
+        if ((int) $user->id === (int) Auth::id()) {
+            return;
+        }
+
+        $notificationTitle = __('notification.contract.task_assigned', ['task' => $task->name], $user->language);
+
+        $this->notificationService->clearNotificationData();
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setPriority(3);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_NEW_TASK);
+        $this->notificationService->setBroadcastMessage([
+            'id' => Str::uuid()->toString(),
+            'type' => 'success',
+            'message' => $notificationTitle,
+        ]);
+        $this->notificationService->setDescription($this->contractTaskNotificationDescription($task, $user));
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
     }
 
     private function sendContractAddedNotifications(Contract $contract, Project $project, string $originalName): void

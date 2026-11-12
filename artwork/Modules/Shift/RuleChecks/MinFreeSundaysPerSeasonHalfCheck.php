@@ -11,11 +11,16 @@ use Illuminate\Support\Collection;
 /**
  * Mindestens X freie Sonntage mit freiem Samstag oder Montag je Spielzeithälfte.
  *
- * X = $rule->individual_number_value; ist der Wert 0/leer, gilt der Zielwert aus dem Vertrag
- * (ShiftKpiTrackingService::extractTargets() → free_sundays_sat_mon_per_half). Ist-Werte je Hälfte
+ * X = $rule->individual_number_value; ist der Wert 0/leer, gilt der Zielwert aus dem Vertrag je Hälfte
+ * (ShiftKpiTrackingService::extractTargets() → free_sundays_sat_mon_per_half, target_half1/target_half2:
+ * aus den in der Hälfte gültigen Verträgen, bei einem Wechsel anteilig). Ist-Werte je Hälfte
  * liefert ShiftKpiTrackingService::computeForUser() (abgeschlossene Tage < heute). Dazu kommen die
  * "noch möglichen" Sonntage der laufenden Hälfte: Sonntage ab heute bis Hälftenende, an denen die
  * Person weder Schicht (effektive Zeiten) noch individuelle Zeit hat.
+ *
+ * Ob die Regel greift, entscheidet der Vertrag des letzten Tages der Hälfte, an dem ein Vertrag gilt (auch
+ * wenn er vor dem letzten Sonntag endet). Das Vertragsziel ist wie im Info-Fenster anteilig über die Hälfte
+ * gerechnet (Tage ohne Vertrag zählen 0), damit Regel und Kennzahl denselben Wert zeigen.
  *
  * Verstoß OHNE Schicht auf den letzten Sonntag der Hälfte, wenn ist + möglich < X (Ziel nicht mehr
  * erreichbar) oder wenn die Hälfte abgeschlossen ist und ist < X. Ohne Spielzeit-Einstellung
@@ -32,12 +37,15 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
         // Immer gesetzt: konfigurierte Spielzeit oder Kalenderjahr-Fallback
         [$seasonStart, $seasonEnd] = $kpiService->getSeasonBounds();
 
-        $target = $this->targetFor($rule, $user, $kpiService);
-        if ($target <= 0) {
+        $ruleValue = (int) round((float) $rule->individual_number_value);
+        $contractTargets = $ruleValue > 0 ? null : $kpiService->seasonTargets($user, $seasonStart, $seasonEnd);
+        $targets = $this->targetsFor($ruleValue, $contractTargets);
+        if (max($targets) <= 0) {
             return $violations;
         }
 
-        $kpis = $kpiService->computeForUser($user, $seasonStart, $seasonEnd);
+        // Zielwerte aus targetsFor() wiederverwenden statt sie in computeForUser() erneut zu rechnen
+        $kpis = $kpiService->computeForUser($user, $seasonStart, $seasonEnd, $contractTargets);
         $midpoint = $kpiService->getSeasonMidpoint($seasonStart, $seasonEnd);
         $today = now()->startOfDay();
 
@@ -55,7 +63,8 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
         ];
 
         foreach ($halves as $half => $window) {
-            if ($window['end']->lt($window['start'])) {
+            $target = $targets[$half];
+            if ($target <= 0 || $window['end']->lt($window['start'])) {
                 continue;
             }
 
@@ -88,7 +97,11 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
                 'half_start' => $window['start']->toDateString(),
                 'half_end' => $window['end']->toDateString(),
                 'completed' => $completed,
-            ], $completed ? 'error' : 'warning'));
+            ], $completed ? 'error' : 'warning', $this->lastContractDayIn(
+                $user,
+                $window['start'],
+                $window['end']
+            ) ?? $lastSunday));
         }
 
         return $violations;
@@ -118,16 +131,22 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
         return null;
     }
 
-    private function targetFor(ShiftRule $rule, User $user, ShiftKpiTrackingService $kpiService): int
+    /**
+     * @param array<string, array<string, mixed>>|null $contractTargets seasonTargets(), null bei Regelwert
+     * @return array{1: int, 2: int} Ziel je Hälfte
+     */
+    private function targetsFor(int $ruleValue, ?array $contractTargets): array
     {
-        $ruleValue = (int) round((float) $rule->individual_number_value);
         if ($ruleValue > 0) {
-            return $ruleValue;
+            return [1 => $ruleValue, 2 => $ruleValue];
         }
 
-        $targets = $kpiService->extractTargets($user);
+        $target = $contractTargets['free_sundays_sat_mon_per_half'] ?? [];
 
-        return (int) ($targets['free_sundays_sat_mon_per_half']['value'] ?? 0);
+        return [
+            1 => (int) ($target['target_half1'] ?? 0),
+            2 => (int) ($target['target_half2'] ?? 0),
+        ];
     }
 
     /**

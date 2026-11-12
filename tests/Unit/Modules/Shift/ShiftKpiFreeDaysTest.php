@@ -185,6 +185,82 @@ final class ShiftKpiFreeDaysTest extends TestCase
         $this->assertArrayNotHasKey('target_half1', $targets['free_half_days_per_week']);
     }
 
+    /**
+     * Vertragszeitraum mit eigenen Zielwerten (Zuweisung = Vorlage).
+     *
+     * @param array<string, int|bool> $values
+     */
+    private function contractPeriod(User $user, array $values, ?string $validFrom, ?string $validUntil): void
+    {
+        $values = array_merge([
+            'free_half_days_per_week' => 0,
+            'special_day_rule_active' => true,
+            'compensation_period' => 90,
+            'free_sundays_per_season' => 0,
+            'days_off_first_26_weeks' => 0,
+        ], $values);
+        $template = UserContract::create(array_merge(['name' => 'NV Bühne'], $values));
+        UserContractAssign::create(array_merge($values, [
+            'user_id' => $user->id,
+            'user_contract_id' => $template->id,
+            'valid_from' => $validFrom,
+            'valid_until' => $validUntil,
+        ]));
+    }
+
+    /**
+     * Vertragswechsel zum Beginn der zweiten Spielzeithälfte (30.01.2026): Die erste Hälfte misst sich am alten
+     * Vertrag, die zweite am neuen. Kalenderjahresziele und Urlaubsanspruch 2026 werden nach Tagen anteilig
+     * gewichtet (29 Tage alt, 336 Tage neu). Früher galt für alles der heute gültige (neue) Vertrag.
+     */
+    #[Test]
+    public function targets_come_from_the_contracts_valid_in_each_evaluation_period(): void
+    {
+        $user = $this->user();
+        $this->contractPeriod($user, [
+            'free_full_days_per_week' => 3,
+            'free_sundays_sat_mon_per_half' => 6,
+            'free_sundays_sat_mon_per_half_active' => true,
+            'free_sundays_per_calendar_year' => 20,
+            'free_sundays_per_calendar_year_active' => true,
+            'annual_vacation_days' => 30,
+        ], null, '2026-01-29');
+        $this->contractPeriod($user, [
+            'free_full_days_per_week' => 1,
+            'free_sundays_sat_mon_per_half' => 2,
+            'free_sundays_sat_mon_per_half_active' => true,
+            'free_sundays_per_calendar_year' => 10,
+            'free_sundays_per_calendar_year_active' => true,
+            'annual_vacation_days' => 20,
+        ], '2026-01-30', null);
+
+        $targets = $this->service()->computeForUser($user->fresh(), $this->seasonStart, $this->seasonEnd)['targets'];
+
+        $this->assertSame(78, $targets['free_full_days_per_week']['target_half1']); // 3 × 26,0
+        $this->assertSame(26, $targets['free_full_days_per_week']['target_half2']); // 1 × 26,1
+        $this->assertSame(6, $targets['free_sundays_sat_mon_per_half']['target_half1']);
+        $this->assertSame(2, $targets['free_sundays_sat_mon_per_half']['target_half2']);
+        $this->assertSame(11, $targets['free_sundays_per_calendar_year']['value']); // (20 × 29 + 10 × 336) / 365 = 10,8
+        $this->assertSame(21, $targets['annual_vacation_days']['value']); // (30 × 29 + 20 × 336) / 365 = 20,8
+        $this->assertSame(21, $this->service()->annualVacationEntitlement($user->fresh()));
+    }
+
+    #[Test]
+    public function days_without_contract_count_zero_towards_the_target(): void
+    {
+        $user = $this->user();
+        $this->contractPeriod($user, [
+            'free_full_days_per_week' => 2,
+            'annual_vacation_days' => 30,
+        ], '2026-01-30', null);
+
+        $targets = $this->service()->computeForUser($user->fresh(), $this->seasonStart, $this->seasonEnd)['targets'];
+
+        $this->assertSame(0, $targets['free_full_days_per_week']['target_half1']);
+        $this->assertSame(52, $targets['free_full_days_per_week']['target_half2']); // 2 × 26,1
+        $this->assertSame(28, $targets['annual_vacation_days']['value']); // 30 × 336 / 365 = 27,6
+    }
+
     #[Test]
     public function full_free_days_are_days_without_shift_and_without_individual_time(): void
     {

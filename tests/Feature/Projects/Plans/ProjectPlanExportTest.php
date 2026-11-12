@@ -7,6 +7,7 @@ use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
@@ -279,6 +280,29 @@ final class ProjectPlanExportTest extends FeatureTestCase
             'project' => $this->project,
             'artist_residency_id' => $foreignResidency->id,
         ]))->assertJsonValidationErrors('artist_residency_id');
+    }
+
+    #[Test]
+    public function planning_events_need_the_planning_calendar_permission(): void
+    {
+        $planning = $this->event($this->concert, $this->church, '2026-08-23 18:00', '2026-08-23 19:00', [
+            'eventName' => 'Geheime Vorplanung',
+            'is_planning' => true,
+        ]);
+        $member = User::factory()->create();
+        $this->project->users()->attach($member->id, ['can_write' => false]);
+        $this->actingAs($member);
+
+        $ids = collect($this->getJson(route('projects.plans.options', $this->project))->assertOk()->json('events'))
+            ->pluck('id');
+        $this->assertNotContains($planning->id, $ids);
+        $this->assertContains($this->concertEvent->id, $ids);
+        $text = $this->documentText($this->get(route('projects.plans.event-plan', $this->project))->assertOk());
+        $this->assertStringNotContainsString('Geheime Vorplanung', $text);
+
+        $this->actingAsUserWith(PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value, $member);
+        $text = $this->documentText($this->get(route('projects.plans.event-plan', $this->project))->assertOk());
+        $this->assertStringContainsString('Geheime Vorplanung', $text);
     }
 
     #[Test]

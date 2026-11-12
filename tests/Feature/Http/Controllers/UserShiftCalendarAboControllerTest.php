@@ -7,6 +7,7 @@ use Artwork\Modules\DayService\Models\DayService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
@@ -282,9 +283,9 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
     #[Test]
     public function storeAlwaysGeneratesTheFeedUuidOnTheServer(): void
     {
-        $user = User::factory()->create();
+        $user = $this->actingAsUserWith(PermissionEnum::CAN_SUBSCRIBE_SHIFT_CALENDAR->value);
 
-        $this->actingAs($user)->post(route('user.shift.calendar.abo.create'), [
+        $this->post(route('user.shift.calendar.abo.create'), [
             'calendar_abo_id' => 'attacker-chosen-uuid',
             'user_id' => User::factory()->create()->id,
             'date_range' => false,
@@ -300,6 +301,37 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
         $this->assertNotSame('attacker-chosen-uuid', $calendarAbo->calendar_abo_id);
         $this->assertTrue(Str::isUuid($calendarAbo->calendar_abo_id));
         $this->get(route('user-shift-calendar-abo.show', 'attacker-chosen-uuid'))->assertNotFound();
+    }
+
+    /**
+     * DP-16: nur das Anlegen eines Dienstplan-Abos verlangt "Dienstplan abonnieren"; ein bestehendes Abo
+     * lässt sich ohne das Recht weiter ändern, und der Feed liefert weiter.
+     */
+    #[Test]
+    public function creatingASubscriptionRequiresTheSubscribePermissionButExistingOnesStayUsable(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner)->post(route('user.shift.calendar.abo.create'), [
+            'date_range' => false,
+            'specific_crafts' => false,
+            'craft_ids' => [],
+            'enable_notification' => false,
+        ])->assertForbidden();
+        $this->assertSame(0, UserShiftCalendarAbo::query()->where('user_id', $owner->id)->count());
+
+        $calendarAbo = $this->createCalendarAbo($owner, ['date_range' => false]);
+        $this->patch(route('user.shift.calendar.abo.update', $calendarAbo->id), [
+            'id' => $calendarAbo->id,
+            'date_range' => true,
+            'start_date' => '2026-07-01',
+            'end_date' => '2026-07-31',
+            'specific_crafts' => false,
+            'craft_ids' => [],
+            'enable_notification' => false,
+        ])->assertSessionHasNoErrors();
+
+        $this->assertTrue((bool) $calendarAbo->fresh()->date_range);
+        $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id))->assertOk();
     }
 
     #[Test]

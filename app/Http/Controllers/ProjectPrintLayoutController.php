@@ -65,35 +65,47 @@ class ProjectPrintLayoutController extends Controller
         $printable = ProjectTabComponentEnum::printableValues();
 
         // Komponentenlisten verschlankt und gecacht (10 Minuten)
-        $components = Cache::remember('print_layout_components_not_special_v2', 600, function () use ($printable) {
-            return Component::notSpecial()
-                ->without(['users', 'departments'])
-                ->whereIn('type', $printable)
-                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
-                ->orderBy('type')
-                ->orderBy('name')
-                ->get()
-                ->groupBy('type');
-        });
+        $components = Cache::remember(
+            ProjectPrintLayoutService::CACHE_KEY_COMPONENTS_NOT_SPECIAL,
+            600,
+            function () use ($printable) {
+                return Component::notSpecial()
+                    ->without(['users', 'departments'])
+                    ->whereIn('type', $printable)
+                    ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
+                    ->orderBy('type')
+                    ->orderBy('name')
+                    ->get()
+                    ->groupBy('type');
+            }
+        );
 
-        $componentsSpecial = Cache::remember('print_layout_components_special_v2', 600, function () use ($printable) {
-            return Component::isSpecial()
-                ->without(['users', 'departments'])
-                ->whereIn('type', $printable)
-                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
-                ->orderBy('name')
-                ->get();
-        });
+        $componentsSpecial = Cache::remember(
+            ProjectPrintLayoutService::CACHE_KEY_COMPONENTS_SPECIAL,
+            600,
+            function () use ($printable) {
+                return Component::isSpecial()
+                    ->without(['users', 'departments'])
+                    ->whereIn('type', $printable)
+                    ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
 
-        $allComponents = Cache::remember('print_layout_all_components_v2', 600, function () use ($printable) {
-            return Component::query()
-                ->without(['users', 'departments'])
-                ->whereIn('type', $printable)
-                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
-                ->orderBy('type')
-                ->orderBy('name')
-                ->get();
-        });
+        $allComponents = Cache::remember(
+            ProjectPrintLayoutService::CACHE_KEY_ALL_COMPONENTS,
+            600,
+            function () use ($printable) {
+                return Component::query()
+                    ->without(['users', 'departments'])
+                    ->whereIn('type', $printable)
+                    ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
+                    ->orderBy('type')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
 
         return Inertia::render('Settings/ProjectPrintLayout/Index', [
             'components' => $components,

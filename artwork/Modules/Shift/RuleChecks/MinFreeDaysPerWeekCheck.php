@@ -12,7 +12,8 @@ use Illuminate\Support\Collection;
  * Mindestens X ganze freie Tage pro Woche (NV Bühne).
  *
  * X = $rule->individual_number_value; leer/0 = Vertragswert free_full_days_per_week (Zuweisung vor
- * Vorlage, ContractSettingsResolver). Ist auch dieser 0/leer, greift die Regel nicht.
+ * Vorlage, ContractSettingsResolver) des Vertrags, der am letzten Tag der Woche mit Vertrag gilt. Ist auch
+ * dieser 0/leer, greift die Regel in dieser Woche nicht. Derselbe Vertrag entscheidet, ob die Regel greift.
  *
  * Freier Tag = Kalendertag ohne Schicht (effektive Pivot-Zeiten, Über-Mitternacht-Schichten belegen
  * beide Tage) UND ohne individuelle Zeit. Verstoß je Kalenderwoche (Mo–So) OHNE Schichtbezug auf den
@@ -24,11 +25,6 @@ class MinFreeDaysPerWeekCheck extends AbstractRuleCheck
     {
         $violations = collect();
 
-        $target = $this->targetFor($rule, $user);
-        if ($target <= 0) {
-            return $violations;
-        }
-
         $firstMonday = $startDate->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
         $lastSunday = $endDate->copy()->endOfWeek(Carbon::SUNDAY)->startOfDay();
         $occupied = $this->getOccupiedDayKeys($user, $firstMonday, $lastSunday);
@@ -36,6 +32,11 @@ class MinFreeDaysPerWeekCheck extends AbstractRuleCheck
 
         for ($monday = $firstMonday->copy(); $monday->lte($lastSunday); $monday->addWeek()) {
             $sunday = $monday->copy()->addDays(6);
+            $ruleDate = $this->lastContractDayIn($user, $monday, $sunday) ?? $sunday;
+            $target = $this->targetFor($rule, $user, $ruleDate);
+            if ($target <= 0) {
+                continue;
+            }
 
             $freeDays = 0;
             for ($day = $monday->copy(); $day->lte($sunday); $day->addDay()) {
@@ -58,7 +59,7 @@ class MinFreeDaysPerWeekCheck extends AbstractRuleCheck
                 'week_start' => $monday->toDateString(),
                 'week_end' => $sunday->toDateString(),
                 'completed' => $completed,
-            ], $completed ? 'error' : 'warning'));
+            ], $completed ? 'error' : 'warning', $ruleDate));
         }
 
         return $violations;
@@ -75,14 +76,14 @@ class MinFreeDaysPerWeekCheck extends AbstractRuleCheck
         ];
     }
 
-    private function targetFor(ShiftRule $rule, User $user): int
+    private function targetFor(ShiftRule $rule, User $user, Carbon $ruleDate): int
     {
         $ruleValue = (int) round((float) $rule->individual_number_value);
         if ($ruleValue > 0) {
             return $ruleValue;
         }
 
-        return app(ContractSettingsResolver::class)->int($user, 'free_full_days_per_week', 0);
+        return app(ContractSettingsResolver::class)->int($user, 'free_full_days_per_week', 0, $ruleDate);
     }
 
     public function getTriggerType(): string

@@ -20,6 +20,7 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
+use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
@@ -65,6 +66,7 @@ use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\ContractSettingsResolver;
+use Artwork\Modules\ExternalUserManagement\Service\AdminLockoutGuard;
 use Artwork\Modules\User\Services\UserDeactivationService;
 use Artwork\Modules\User\Services\UserEmailChangeService;
 use Artwork\Modules\User\Services\UserService;
@@ -342,8 +344,13 @@ class UserController extends Controller
                 ? $this->deactivatedUsersForIndex($request)
                 : [],
             // Deaktivieren-Menü: Personalverwaltung darf Admin-Accounts nicht deaktivieren (UserPolicy::deactivate)
-            'adminUserIds' => User::role(RoleEnum::ARTWORK_ADMIN->value)->pluck('id'),
-            'all_permissions' => Permission::all()->groupBy('group'),
+            'adminUserIds' => Gate::allows('viewDeactivated', User::class)
+                ? User::role(RoleEnum::ARTWORK_ADMIN->value)->pluck('id')
+                : [],
+            'all_permissions' => Permission::query()
+                ->whereNotIn('name', ConsoleOnlyPermissionEnum::values())
+                ->get()
+                ->groupBy('group'),
             'departments' => Department::all(),
             // Rollen (= Admin-Rolle) nur für Admins wählbar; Altbestand-Rollen in der DB werden nicht angeboten,
             // weil StoreInvitationRequest nur RoleEnum akzeptiert.
@@ -1515,9 +1522,7 @@ class UserController extends Controller
 
     public function updateUserPhoto(User $user, Request $request): void
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
-            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
-        }
+        $this->authorizeProfileEdit($user);
 
         // Inhalt geprüft, nicht Endung: sonst landet HTML/SVG unter /storage/profile-photos.
         $request->validate([
@@ -1529,14 +1534,31 @@ class UserController extends Controller
 
     public function deleteUserPhoto(User $user): void
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
-            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
-        }
+        $this->authorizeProfileEdit($user);
 
         // Ersetzt Jetstreams current-user-photo.destroy: die liegt hinter dem
         // Passport-'api'-Guard (Web-Session → Redirect /login → Browser wiederholt
         // DELETE → 405) und würde zudem immer das Foto des EINGELOGGTEN Users löschen.
         $user->deleteProfilePhoto();
+    }
+
+    /**
+     * Das eigene Profil darf jede Person bearbeiten, fremde Profile nur die Personalverwaltung und Profile
+     * von Admins nur Admins.
+     */
+    private function authorizeProfileEdit(User $user): void
+    {
+        /** @var User $actor */
+        $actor = Auth::user();
+        if ($user->id === $actor->id) {
+            return;
+        }
+
+        abort_unless($actor->can(PermissionEnum::MA_MANAGER->value), \Illuminate\Http\Response::HTTP_FORBIDDEN);
+        abort_if(
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value) && !$actor->hasRole(RoleEnum::ARTWORK_ADMIN->value),
+            \Illuminate\Http\Response::HTTP_FORBIDDEN
+        );
     }
 
     /**
@@ -1607,16 +1629,10 @@ class UserController extends Controller
         $isSelf = $user->id === $actor->id;
         $actorIsAdmin = $actor->hasRole(RoleEnum::ARTWORK_ADMIN->value);
 
-        if (!$isSelf && !$actor->can(PermissionEnum::MA_MANAGER->value)) {
-            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
-        }
+        $this->authorizeProfileEdit($user);
 
-        // Nicht-Admins dürfen keine Admin-Konten bearbeiten und fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
+        // Nicht-Admins dürfen fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
         if (!$isSelf && !$actorIsAdmin) {
-            abort_if(
-                $user->hasRole(RoleEnum::ARTWORK_ADMIN->value),
-                \Illuminate\Http\Response::HTTP_FORBIDDEN
-            );
             abort_if(
                 $request->filled('email')
                 && strcasecmp((string) $request->input('email'), (string) $user->email) !== 0,
@@ -1784,7 +1800,7 @@ class UserController extends Controller
         // Der Rechte-Tab speichert bei jedem Klick sofort; schnelle Klickfolgen erzeugen parallele Requests.
         // syncPermissions/syncRoles sind detach + attach ohne Transaktion – ohne Sperre auf den User
         // schreiben zwei Requests dieselben Pivot-Zeilen (Duplicate entry auf model_has_permissions).
-        [$permissionsBefore, $rolesBefore] = DB::transaction(
+        [$permissionsBefore, $rolesBefore, $permissionsAfter] = DB::transaction(
             function () use ($user, $permissionsToGrant, $rolesToGrant): array {
                 User::query()->whereKey($user->getKey())->lockForUpdate()->first();
                 $user->unsetRelation('permissions')->unsetRelation('roles');
@@ -1792,10 +1808,18 @@ class UserController extends Controller
                 $permissionsBefore = $user->permissions()->pluck('name')->all();
                 $rolesBefore = $user->roles()->pluck('name')->all();
 
-                $user->syncPermissions($permissionsToGrant);
+                // Nur per Konsole vergebbare Rechte kennt der Rechte-Tab nicht; ohne Übernahme würde
+                // syncPermissions sie bei jedem Speichern still entziehen.
+                $consoleOnlyPermissions = array_values(
+                    array_intersect($permissionsBefore, ConsoleOnlyPermissionEnum::values())
+                );
+
+                $permissionsAfter = array_values(array_unique([...$permissionsToGrant, ...$consoleOnlyPermissions]));
+
+                $user->syncPermissions($permissionsAfter);
                 $user->syncRoles($rolesToGrant);
 
-                return [$permissionsBefore, $rolesBefore];
+                return [$permissionsBefore, $rolesBefore, $permissionsAfter];
             }
         );
         // Gecachte Inertia-Share-Daten sofort invalidieren statt auf den 5-Min.-TTL zu warten
@@ -1806,7 +1830,7 @@ class UserController extends Controller
             $user,
             Auth::user(),
             $permissionsBefore,
-            $permissionsToGrant,
+            $permissionsAfter,
             $rolesBefore,
             $rolesToGrant,
             $request->input('source')
@@ -1952,13 +1976,19 @@ class UserController extends Controller
         return Redirect::back();
     }
 
-    public function deactivate(User $user, UserDeactivationService $userDeactivationService): RedirectResponse
-    {
+    public function deactivate(
+        User $user,
+        UserDeactivationService $userDeactivationService,
+        AdminLockoutGuard $adminLockoutGuard,
+    ): RedirectResponse {
         // Gate::before lässt Admins jede Policy passieren – der eigene Account bleibt trotzdem aktiv.
         if (Auth::id() === $user->getKey()) {
             return Redirect::back()->with('error', __('flash-messages.user.error.cannot_deactivate_self'));
         }
         $this->authorize('deactivate', $user);
+        if ($adminLockoutGuard->isLastLocalAdmin($user)) {
+            return Redirect::back()->with('error', __('flash-messages.user.error.cannot_deactivate_last_local_admin'));
+        }
 
         $userDeactivationService->deactivate($user, Auth::user());
 

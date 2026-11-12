@@ -27,6 +27,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
 use Tests\Concerns\CreatesShiftRuleFixtures;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * ai-scenarios-4, lesende Teile: gemeinsame freie Zeit (S14), Vertraege (S15), Stundenuebersicht
@@ -35,6 +36,8 @@ use Tests\TestCase;
  */
 final class AiScenariosFourReadApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     use CreatesShiftRuleFixtures;
 
     private const DAY = '2026-11-03';
@@ -83,7 +86,7 @@ final class AiScenariosFourReadApiTest extends TestCase
     private function actingAsToken(User $user): void
     {
         $this->app['auth']->forgetGuards();
-        $token = $user->createToken('ai-session-test', [AiScopes::READ]);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', [AiScopes::READ]);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 
@@ -134,6 +137,8 @@ final class AiScenariosFourReadApiTest extends TestCase
     #[Test]
     public function common_free_slots_skip_shifts_absences_and_room_bookings(): void
     {
+        // Vergangene Fenster fallen weg; ohne feste Uhr waere der Test ab dem Stichtag rot.
+        $this->travelTo(CarbonImmutable::parse(self::DAY)->subDay()->setTime(8, 0));
         $ada = $this->worker('Eins');
         $bob = $this->worker('Zwei');
         $this->assignShift($ada, '08:00', '12:00');

@@ -38,7 +38,7 @@
                                 :class="currentVacationDotClass"
                             ></span>
                             <span class="truncate">
-                                {{ multiEditCellForm.vacation_type.name }}
+                                {{ $t(multiEditCellForm.vacation_type.name) }}
                             </span>
                         </div>
                         <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-text" aria-hidden="true" />
@@ -59,7 +59,7 @@
                                     :class="dotClassForVacationType(type)"
                                 ></span>
                                 <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'truncate']">
-                                    {{ type.name }}
+                                    {{ $t(type.name) }}
                                 </span>
                             </div>
                             <PropertyIcon name="IconCheck"
@@ -366,11 +366,12 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
+// name ist der Übersetzungsschlüssel (gleiche Schlüssel wie ShowUserShiftsModal); gespeichert wird nur type
 const vacationTypes = ref([
-    { name: 'Verfügbar', type: 'AVAILABLE' },
-    { name: 'Arbeitsfreier Tag', type: 'OFF_WORK' },
-    { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE' },
-    { name: 'Frei', type: 'FREE_WORK' },
+    { name: 'Available', type: 'AVAILABLE' },
+    { name: 'Work-free day', type: 'OFF_WORK' },
+    { name: 'Not available', type: 'NOT_AVAILABLE' },
+    { name: 'Free', type: 'FREE_WORK' },
 ]);
 
 const showSaveSuccess = ref(false);
@@ -378,7 +379,7 @@ const showSaveSuccess = ref(false);
 const multiEditCellForm = useForm({
     comment: '',
     vacation_type: {
-        name: 'Keine Änderung',
+        name: 'No change',
         type: null,
     },
     entities: props.multiEditCellByDayAndUser,

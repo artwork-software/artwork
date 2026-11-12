@@ -7,16 +7,20 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-schritt1-rueckfluss, Rueckfluss 2 aus Konzept 0.1 §4.
  *
  * Die Token-Verwaltung schreibt ein Ablaufdatum in oauth_access_tokens.expires_at, Passport liest
  * die Spalte beim Authentifizieren aber nie — das JWT traegt die globale PAT-Laufzeit von einem
- * Jahr. Das angezeigte Ablaufdatum war damit wirkungslos.
+ * Jahr. Durchgesetzt wird das Ablaufdatum vom ExtendedTokenValidator schon in auth:api; die Antwort
+ * ist deshalb das allgemeine 401 des Guards.
  */
 final class TokenExpiryTest extends TestCase
 {
+    use GrantsAiAccess;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,7 +31,7 @@ final class TokenExpiryTest extends TestCase
 
     private function tokenFor(User $user, ?string $expiresAt): string
     {
-        $result = $user->createToken('kunden-key', ['inventory:read']);
+        $result = $this->grantAiAccess($user)->createToken('kunden-key', ['inventory:read']);
 
         if ($expiresAt !== null) {
             Passport::token()->newQuery()
@@ -45,7 +49,7 @@ final class TokenExpiryTest extends TestCase
     {
         return [
             '/api/v1/inventory' => ['/api/v1/inventory'],
-            '/api/user' => ['/api/user'],
+            '/api/inventory' => ['/api/inventory'],
         ];
     }
 
@@ -57,8 +61,7 @@ final class TokenExpiryTest extends TestCase
 
         $this->withHeader('Authorization', 'Bearer ' . $token)
             ->getJson($url)
-            ->assertUnauthorized()
-            ->assertJson(['error' => 'token_expired']);
+            ->assertUnauthorized();
     }
 
     #[Test]

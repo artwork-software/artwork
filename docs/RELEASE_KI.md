@@ -28,9 +28,10 @@ mysqldump -u <user> -p <datenbank> > artwork-vor-ki-release-$(date +%F).sql
 
 ### A2 — Abgelaufene Kunden-Keys ermitteln und dem Haus melden
 
-Seit `core-schritt1-rueckfluss` prüft `artwork/Core/Api/Middleware/EnsureTokenNotExpired.php` das
+Seit `fix(schnittstellen)` vom 12.10.2026 prüft `app/Auth/ExtendedTokenValidator.php` das
 Ablaufdatum wirklich. Keys, die bisher trotz abgelaufenem `expires_at` funktioniert haben, hören
-mit diesem Release auf zu funktionieren — die Antwort ist dann `401` mit `{"error":"token_expired"}`.
+damit auf zu funktionieren. Die Antwort ist dann `401` mit `{"message":"Unauthenticated."}`; per
+`PASSPORT_EXTENDED_TOKENS` gelistete Tokens sind ausgenommen.
 
 ```sql
 select id, name, user_id, expires_at
@@ -163,20 +164,19 @@ Testsuite ab; was hier zählt, ist der Blick eines Menschen auf die fertigen Sei
 ### C10 — Kunden-Keys
 
 ```bash
-# gültiger Key -> 200
+# gültiger Key mit inventory:read -> 200
 curl -s -o /dev/null -w '%{http_code}\n' \
   -H "Authorization: Bearer <gueltiger-key>" -H 'Accept: application/json' \
-  https://<instanz>/api/user
+  https://<instanz>/api/inventory
 
-# abgelaufener Key -> 401 {"error":"token_expired"}
+# abgelaufener Key -> 401 {"message":"Unauthenticated."}
 curl -s -H "Authorization: Bearer <abgelaufener-key>" -H 'Accept: application/json' \
-  https://<instanz>/api/user
+  https://<instanz>/api/inventory
 ```
 
-`/api/user` ist hier die richtige Adresse, nicht `/api/v1/...`: unter `/api/v1` liegen ausschließlich
-die Endpunkte des Assistenten, die zusätzlich einen `ai:*`-Scope verlangen (`routes/api_v1.php`).
-Ein Kunden-Key trägt den nicht. Wer einen Key mit `inventory:read` prüfen will, nimmt
-`GET /api/inventory`.
+`/api/user` gibt es nicht mehr (auf `dev` entfernt, weil ungenutzt; ein Kunden-Key hätte dort ohne
+Scope-Prüfung das ganze User-Objekt bekommen). Geprüft wird deshalb an einem Endpunkt, der zum Scope
+des Keys passt, für `inventory:read` also `GET /api/inventory`.
 
 ### C11 — JWKS
 

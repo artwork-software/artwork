@@ -20,6 +20,11 @@ use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
  * nach Fristablauf mit severity = error. Dedupe je (Regel, Person, Datum).
  *
  * Der Check ist unabhängig vom übergebenen Prüfzeitraum: er läuft auch für Personen ohne Schichten.
+ *
+ * Vertragshistorie: Je Eintrag entscheidet der Vertrag, aus dem die Überstunden stammen (gültig am Buchungstag
+ * des Eintrags). Er hat die Frist bestimmt (OvertimeService), aus ihm kommen der Schalter overtime_rule_active
+ * und die Zuordnung der Regel. Endet der Vertrag vor der Frist (befristeter Vertrag, Austritt) oder gilt danach
+ * ein Vertrag ohne Überstundenregel, wird für die bereits entstandenen Überstunden trotzdem gewarnt.
  */
 class OvertimeDeadlineCheck extends AbstractRuleCheck
 {
@@ -30,7 +35,9 @@ class OvertimeDeadlineCheck extends AbstractRuleCheck
     {
         $violations = collect();
 
-        if (!$this->overtimeRuleActiveFor($user)) {
+        // Ohne Arbeitszeitberechnung werden keine Überstunden fortgeschrieben — die Regel hätte
+        // nur veraltete Einträge als Grundlage
+        if (!WorkTimeAccounting::isEnabled()) {
             return $violations;
         }
 
@@ -48,6 +55,10 @@ class OvertimeDeadlineCheck extends AbstractRuleCheck
             ->get();
 
         foreach ($entries as $entry) {
+            $bookingDay = Carbon::parse($entry->date)->startOfDay();
+            if (!$this->overtimeRuleActiveOn($user, $bookingDay)) {
+                continue;
+            }
             $deadline = Carbon::parse($entry->deadline)->startOfDay();
             // Carbon 3 liefert Float-Tage — ganzzahlig, negativ nach Fristablauf
             $daysLeft = (int) $today->diffInDays($deadline, false);
@@ -66,7 +77,8 @@ class OvertimeDeadlineCheck extends AbstractRuleCheck
                     'warn_days' => $warnDays,
                     'expired' => $expired,
                 ],
-                $expired ? 'error' : 'warning'
+                $expired ? 'error' : 'warning',
+                $bookingDay
             ));
         }
 
@@ -96,20 +108,17 @@ class OvertimeDeadlineCheck extends AbstractRuleCheck
         return null;
     }
 
-    private function overtimeRuleActiveFor(User $user): bool
+    /**
+     * Überstundenregel im Vertrag, der am Buchungstag des Eintrags galt (ohne Vertrag: nein).
+     */
+    private function overtimeRuleActiveOn(User $user, Carbon $bookingDay): bool
     {
-        // Ohne Arbeitszeitberechnung werden keine Überstunden fortgeschrieben — die Regel hätte
-        // nur veraltete Einträge als Grundlage
-        if (!WorkTimeAccounting::isEnabled()) {
-            return false;
-        }
-
         $resolver = app(ContractSettingsResolver::class);
-        if ($resolver->assignFor($user) === null) {
+        if ($resolver->assignFor($user, $bookingDay) === null) {
             return false;
         }
 
-        return $resolver->bool($user, 'overtime_rule_active');
+        return $resolver->bool($user, 'overtime_rule_active', false, $bookingDay);
     }
 
     public function getTriggerType(): string

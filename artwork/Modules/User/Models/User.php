@@ -23,6 +23,7 @@ use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceTask;
 use Artwork\Modules\MoneySource\Models\MoneySourceUserPivot;
 use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Comment;
@@ -986,6 +987,15 @@ class User extends Model implements
     }
 
 
+    /**
+     * Nur per Konsole vergebbares Recht als Schranke vor Maschinen-API und KI-Routen. Bewusst als
+     * Direktrecht geprüft: weder Rollen noch der Admin-Bypass aus Gate::before erfüllen es.
+     */
+    public function hasAiAccess(): bool
+    {
+        return $this->permissions->contains('name', ConsoleOnlyPermissionEnum::AiAccess->value);
+    }
+
     public function getHasProjectManagerPermission(): bool
     {
         return $this->hasPermissionTo(PermissionEnum::PROJECT_MANAGEMENT->value)
@@ -1113,6 +1123,56 @@ class User extends Model implements
             ->orderByDesc('valid_from')
             ->orderByDesc('id')
             ->first();
+    }
+
+    /**
+     * Vertragsabschnitte in [$from, $to]: aufeinanderfolgende Tage mit demselben gültigen Vertragszeitraum
+     * (contractAssignFor), assign null = an diesen Tagen kein Vertrag. Berechnet aus den Grenzen valid_from und
+     * valid_until der Historie statt Tag für Tag: Nur an diesen Grenzen kann sich der gültige Zeitraum ändern,
+     * aufgelöst wird je Grenze einmal. Lädt die Historie einmal mit (contractAssigns.userContract).
+     *
+     * @return list<array{assign: UserContractAssign|null, from: Carbon, until: Carbon, days: int}>
+     */
+    public function contractSegmentsBetween(Carbon $from, Carbon $to): array
+    {
+        $start = $from->copy()->startOfDay();
+        $end = $to->copy()->startOfDay();
+        if ($end->lt($start)) {
+            return [];
+        }
+
+        $this->loadMissing('contractAssigns.userContract');
+
+        $boundaries = [$start->toDateString() => $start];
+        foreach ($this->contractAssigns as $assign) {
+            $candidates = [
+                $assign->valid_from?->copy()->startOfDay(),
+                $assign->valid_until?->copy()->startOfDay()->addDay(),
+            ];
+            foreach ($candidates as $boundary) {
+                if ($boundary !== null && $boundary->gt($start) && $boundary->lte($end)) {
+                    $boundaries[$boundary->toDateString()] = $boundary;
+                }
+            }
+        }
+        ksort($boundaries);
+        $boundaries = array_values($boundaries);
+
+        $segments = [];
+        foreach ($boundaries as $index => $boundary) {
+            $until = isset($boundaries[$index + 1]) ? $boundaries[$index + 1]->copy()->subDay() : $end->copy();
+            $assign = $this->contractAssignFor($boundary);
+            $days = (int) round($boundary->diffInDays($until)) + 1;
+            $last = array_key_last($segments);
+            if ($last !== null && $segments[$last]['assign']?->id === $assign?->id) {
+                $segments[$last]['until'] = $until;
+                $segments[$last]['days'] += $days;
+                continue;
+            }
+            $segments[] = ['assign' => $assign, 'from' => $boundary->copy(), 'until' => $until, 'days' => $days];
+        }
+
+        return $segments;
     }
 
     /**

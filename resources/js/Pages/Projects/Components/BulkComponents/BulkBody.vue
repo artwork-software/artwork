@@ -418,7 +418,9 @@
                   :enums="[
                       exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
                       exportTabEnums.EXCEL_CALENDAR_EXPORT,
-                      exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
+                      ...(can('can manage global project budgets') || hasAdminRole()
+                          ? [exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT]
+                          : [])
                   ]"
                   :configuration="getExportModalConfiguration()"/>
 
@@ -436,7 +438,7 @@
         @close="showConfirmDeleteModal = false"
         @delete="deleteSelectedEvents"
         :title="$t('Do you really want to delete the selected events?')"
-        :description="$t('This action cannot be undone.')"
+        :description="$t('The events are moved to the trash and can be restored from there within 30 days.')"
         @closed="showConfirmDeleteModal = false"
     />
     <IndividualColumnSizeConfigModal
@@ -585,10 +587,10 @@ const updateBulkHeaderStickyTop = () => {
 };
 
 const copyTypes = ref([
-    {id: 1, name: 'Täglich', type: 'daily'},
-    {id: 2, name: 'Wöchentlich', type: 'weekly'},
-    {id: 3, name: 'Monatlich', type: 'monthly'},
-    {id: 4, name: 'am gleichen Tag', type: 'same_day'},
+    {id: 1, name: $t('Daily'), type: 'daily'},
+    {id: 2, name: $t('Weekly'), type: 'weekly'},
+    {id: 3, name: $t('Monthly'), type: 'monthly'},
+    {id: 4, name: $t('on the same day'), type: 'same_day'},
 ]);
 
 // BESSER: ref statt reactive([]) für zuverlässiges Re-Rendering bei Reassign/Filter

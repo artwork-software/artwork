@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-write-endpoints-dry-run: POST /ai/events/batch, PATCH /ai/events/{id},
@@ -26,6 +27,8 @@ use Tests\TestCase;
  */
 final class AiEventWriteApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     /** Montag */
     private const MONDAY = '2026-09-14';
 
@@ -62,7 +65,7 @@ final class AiEventWriteApiTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

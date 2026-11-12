@@ -269,6 +269,15 @@
     <div style="background:#27233C;background-color:#27233C;margin:0px auto;max-width:600px;">
         <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#27233C;background-color:#27233C;width:100%;">
             <tbody>
+                @if(trim($settings->email_footer ?? '') !== '')
+                <tr>
+                    <td align="left" style="font-size:0px;padding:25px 50px 0px;word-break:break-word;">
+                        <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:14px;line-height:1.5;text-align:left;color:#A7A6B1;">
+                            {!! nl2br(e(trim($settings->email_footer))) !!}
+                        </div>
+                    </td>
+                </tr>
+                @endif
                 <tr>
                     <td align="left" style="font-size:0px;padding:25px 50px;word-break:break-word;">
                         <a href="{{$settings->impressum_link}}" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">

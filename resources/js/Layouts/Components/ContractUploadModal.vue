@@ -575,7 +575,7 @@ export default {
                 contract_partner: this.documentRequest?.contract_partner || '',
                 company_type_id: this.documentRequest?.company_type_id || null,
                 contract_type_id: this.documentRequest?.contract_type_id || null,
-                amount: this.documentRequest?.amount || '',
+                amount: this.documentRequest?.contract_value || '',
                 currency_id: this.documentRequest?.currency_id || 1,
                 ksk_liable: this.documentRequest?.ksk_liable || false,
                 ksk_amount: this.documentRequest?.ksk_amount || null,

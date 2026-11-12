@@ -221,6 +221,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
+            self::NOTIFICATION_LOUD_ADJOINING_EVENT,
         ], true);
     }
 

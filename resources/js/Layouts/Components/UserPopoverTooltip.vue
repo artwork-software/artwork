@@ -31,12 +31,12 @@
                                 <div v-if="isDeactivated" class="mb-1">
                                     <DeactivatedAccountBadge :on-dark="!isWhite"/>
                                 </div>
-                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-text-subtle' : 'text-white/70'" v-else-if="resolvedUser.email && !resolvedUser.email_private || $can('can view private user info') || hasAdminRole()">
-                                    <PropertyIcon name="IconMail" class="h-4 w-4" v-if="resolvedUser.email"/>
+                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-text-subtle' : 'text-white/70'" v-else-if="resolvedUser.email && (!resolvedUser.email_private || $can('can view private user info') || hasAdminRole())">
+                                    <PropertyIcon name="IconMail" class="h-4 w-4"/>
                                     {{ resolvedUser.email }}
                                 </div>
-                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-text-subtle' : 'text-white/70'" v-if="resolvedUser.phone_number && !resolvedUser.phone_private || $can('can view private user info') || hasAdminRole()">
-                                    <PropertyIcon name="IconDeviceMobile" class="h-4 w-4" v-if="resolvedUser.phone_number"/>
+                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-text-subtle' : 'text-white/70'" v-if="resolvedUser.phone_number && (!resolvedUser.phone_private || $can('can view private user info') || hasAdminRole())">
+                                    <PropertyIcon name="IconDeviceMobile" class="h-4 w-4"/>
                                     {{ resolvedUser.phone_number }}
                                 </div>
                                 <div class="col-span-4 mt-2 break-all text-xs italic" :class="isWhite ? 'text-text-subtle' : 'text-white/70'" v-if="resolvedUser.description">
@@ -71,6 +71,7 @@ import {reactive} from "vue";
 import axios from "axios";
 import {DEACTIVATED_AVATAR_CLASSES, isUserDeactivated} from "@/Helper/UserDeactivation.js";
 import DeactivatedAccountBadge from "@/Layouts/Components/DeactivatedAccountBadge.vue";
+import {isTooltipUserEntity, needsTooltipDetails} from "@/Helper/userTooltipDetails.js";
 
 // Modulweiter Cache: Tooltip-Details werden pro User nur einmal geladen,
 // egal wie viele Popover-Instanzen (z.B. Kalender-Kacheln) denselben User zeigen.
@@ -125,8 +126,8 @@ export default {
             type: Boolean,
             default: false
         },
-        // Opt-in: user-Prop enthält nur Basisdaten (id, Name, Foto) — Kontaktdaten
-        // werden erst beim Öffnen des Popovers nachgeladen und pro User gecacht.
+        // Kontaktdaten erst beim Öffnen nachladen und pro User cachen. Schlanke Payloads ohne
+        // E-Mail und Telefon (User::AVATAR_FIELDS) werden auch ohne diesen Schalter erkannt.
         lazyLoad: {
             type: Boolean,
             default: false
@@ -152,11 +153,13 @@ export default {
                 this.can('can manage workers') ||
                 this.can('can view private user info');
         },
-        // Freelancer/Dienstleister teilen sich den Id-Raum nicht mit Usern —
-        // Lazy-Load (user.tooltip.info) und Cache gelten nur für echte User.
+        // Freelancer/Dienstleister teilen sich den Id-Raum nicht mit Usern:
+        // Nachladen (user.tooltip.info) und Cache gelten nur für echte User.
         isUserEntity() {
-            const type = this.user?.type;
-            return type === undefined || type === null || type === 'user' || type === 0;
+            return isTooltipUserEntity(this.user);
+        },
+        loadsDetails() {
+            return needsTooltipDetails(this.user, this.lazyLoad);
         },
         displayName() {
             const user = this.resolvedUser;
@@ -167,7 +170,7 @@ export default {
             return fullName || user.provider_name || user.name || '';
         },
         resolvedUser() {
-            if (!this.lazyLoad || !this.user?.id || !this.isUserEntity) {
+            if (!this.loadsDetails) {
                 return this.user;
             }
 
@@ -184,7 +187,7 @@ export default {
     },
     methods: {
         fetchLazyUserDetails() {
-            if (!this.lazyLoad || !this.user?.id || !this.isUserEntity) {
+            if (!this.loadsDetails) {
                 return;
             }
 

@@ -72,4 +72,28 @@ final class ToolSettingsInterfacesControllerTest extends FeatureTestCase
             'dateTo' => '2026-07-01',
         ])->assertSessionHasErrors('dateTo');
     }
+
+    /**
+     * Grundlage des Menüeintrags "Schnittstellen" für Personen mit nur dem Webhook-Recht: Die Seite
+     * öffnet sich mit dem Webhook-Bereich, die übrigen Register der Tool-Einstellungen bleiben zu.
+     */
+    #[Test]
+    public function webhook_permission_alone_opens_interfaces_but_no_other_tool_settings_tab(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::WEBHOOKS_MANAGE->value);
+
+        $this->get(route('tool.interfaces'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('canManageWebhooks', true)
+                ->where('canManageTokens', false));
+
+        $this->get(route('tool.branding'))->assertForbidden();
+        $this->get(route('tool.communication-and-legal'))->assertForbidden();
+        $this->get(route('tool.formats'))->assertForbidden();
+        $this->get(route('tool.module-settings.index'))->assertForbidden();
+        $this->get(route('tool.file-settings.index'))->assertForbidden();
+        $this->get(route('tool.mail'))->assertForbidden();
+        $this->get(route('tool.external-user-management'))->assertForbidden();
+    }
 }

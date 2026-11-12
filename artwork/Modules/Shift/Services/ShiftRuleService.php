@@ -20,6 +20,9 @@ use Illuminate\Support\Collection;
 
 class ShiftRuleService
 {
+    /** @var array<int, EloquentCollection<int, ShiftRule>>|null Regeln je Vertrag, nur während eines Laufs */
+    private ?array $rulesByContractCache = null;
+
     public function __construct(
         private readonly ShiftRuleRepository $shiftRuleRepository,
         private readonly ShiftRuleViolationRepository $shiftRuleViolationRepository,
@@ -359,6 +362,22 @@ class ShiftRuleService
      * einmal je Person und Lauf in einen ShiftRuleCheckContext geladen (Rand: Rückblick für "Tage in
      * Folge", Wochenfenster, Vortag für Ruhezeiten) und an alle Checks gereicht — die Zahl der Abfragen
      * je Person ist damit unabhängig von der Tagesanzahl.
+     *
+     * Vertragshistorie: Geprüft werden die Regeln aller Verträge der Historie der Person; ob eine Regel greift,
+     * entscheidet je Verstoß der Vertrag eines Stichtags (siehe AbstractRuleCheck::setViolationDateFilter()):
+     *  - Tagesregeln und Regeln, die auf einen Arbeitstag buchen (Tageshöchstzeit, Ruhezeiten, Wochenmaximum,
+     *    Tage in Folge, Wochendurchschnitt, Nachtarbeit, Sonn-/Feiertagsarbeit): der Vertrag des Tages, auf den
+     *    der Verstoß gebucht wird (violation_date). Die Tage davor zählen als Tatsachen mit.
+     *  - Regeln, die über einen Zeitraum zählen und auf dessen Ende buchen (freie Tage je Woche, freie Sonntage
+     *    je Spielzeithälfte und je Kalenderjahr): der Vertrag des letzten Tages im gezählten Zeitraum, an dem
+     *    ein Vertrag gilt, auch wenn er vor dem Buchungstag endet. Grenzwerte aus dem Vertrag (freie Tage je
+     *    Woche) kommen aus demselben Vertrag; nur das Vertragsziel der freien Sonntage je Hälfte wird wie im
+     *    Info-Fenster anteilig über die Hälfte gerechnet, damit Regel und Kennzahl denselben Wert zeigen.
+     *  - Überstundenfrist: der Vertrag, aus dem die Überstunden stammen (gültig am Buchungstag des Eintrags).
+     * Gilt die Regel am Stichtag nicht, entsteht kein Verstoß, ein bestehender automatischer Verstoß gilt als
+     * veraltet. An Tagen ohne Vertrag gelten keine Regeln. Die Historie wird je Person einmal geladen, die
+     * Regeln je Vertrag einmal je Lauf. Alle Verträge der Historie (nicht nur die im Prüfzeitraum), weil
+     * Zeitraum-Regeln auf Verträge außerhalb des Zeitraums zurückgreifen (z. B. Frist nach Austritt).
      */
     public function validateRulesForUser(
         User $user,
@@ -367,8 +386,10 @@ class ShiftRuleService
     ): Collection {
         $violations = collect();
 
-        $activeContract = $user->activeWorkContract();
-        $rules = $activeContract ? $this->getRulesForContract($activeContract) : collect();
+        $user->loadMissing('contractAssigns.userContract');
+        /** @var array<int, list<int>> $ruleIdsByContract Vertrags-ID => IDs seiner aktiven Regeln */
+        $ruleIdsByContract = [];
+        $rules = $this->rulesForHistory($user, $ruleIdsByContract);
 
         [$daysBefore, $daysAfter] = $this->contextWindowFor($rules, $startDate, $endDate);
         $context = ShiftRuleCheckContext::forRange($user, $startDate, $endDate, $daysBefore, $daysAfter);
@@ -388,10 +409,24 @@ class ShiftRuleService
                 $check = $this->ruleCheckFactory->create($rule->trigger_type);
                 if ($check instanceof AbstractRuleCheck) {
                     $check->setContext($context);
+                    $check->setViolationDateFilter(
+                        function (Carbon $date) use ($user, $rule, &$ruleIdsByContract): bool {
+                            $contract = $user->activeWorkContract($date);
+                            if ($contract === null) {
+                                return false;
+                            }
+                            $ruleIdsByContract[$contract->id] ??= $this->getRulesForContract($contract)
+                                ->pluck('id')
+                                ->all();
+
+                            return in_array($rule->id, $ruleIdsByContract[$contract->id], true);
+                        }
+                    );
                     $checksWithContext[] = $check;
                 }
 
-                $ruleViolations = $check->check($rule, $user, $startDate, $endDate);
+                // null = Verstoßdatum außerhalb der Gültigkeit der Regel (Vertrag des Tages)
+                $ruleViolations = $check->check($rule, $user, $startDate, $endDate)->filter();
                 $violations = $violations->concat($ruleViolations);
 
                 $coveredRangeByRule[$rule->id] = $check instanceof AbstractRuleCheck
@@ -401,6 +436,7 @@ class ShiftRuleService
         } finally {
             foreach ($checksWithContext as $check) {
                 $check->setContext(null);
+                $check->setViolationDateFilter(null);
             }
         }
 
@@ -413,6 +449,29 @@ class ShiftRuleService
         );
 
         return $violations;
+    }
+
+    /**
+     * Aktive Regeln aller Verträge der (geladenen) Vertragshistorie der Person, ohne Duplikate.
+     * Füllt $ruleIdsByContract (Vertrags-ID => Regel-IDs) für die Prüfung je Stichtag.
+     *
+     * @param array<int, list<int>> $ruleIdsByContract
+     * @return Collection<int, ShiftRule>
+     */
+    private function rulesForHistory(User $user, array &$ruleIdsByContract): Collection
+    {
+        $rules = collect();
+        foreach ($user->contractAssigns as $assign) {
+            $contract = $assign->userContract;
+            if ($contract === null || array_key_exists($contract->id, $ruleIdsByContract)) {
+                continue;
+            }
+            $contractRules = $this->getRulesForContract($contract);
+            $ruleIdsByContract[$contract->id] = $contractRules->pluck('id')->all();
+            $rules = $rules->concat($contractRules);
+        }
+
+        return $rules->unique('id')->values();
     }
 
     /** Deckel für den Rand des Datenkontexts in beide Richtungen (Tage). */
@@ -552,16 +611,43 @@ class ShiftRuleService
         return $ruleCheck->check($rule, $user, $startDate, $endDate);
     }
 
-    private function getRulesForContract(UserContract $contract): Collection
+    /**
+     * Aktive Regeln des am Stichtag (Default heute) gültigen Vertrags der Person (leer ohne Vertrag) —
+     * dieselbe Menge, die validateRulesForUser() für diesen Tag anwendet.
+     *
+     * @return Collection<int, ShiftRule>
+     */
+    public function getActiveRulesForUser(User $user, ?Carbon $date = null): Collection
     {
-        return ShiftRule::whereHas('contracts', function ($query) use ($contract): void {
-            $query->where('contract_id', $contract->id);
-        })->where('is_active', true)->get();
+        $activeContract = $user->activeWorkContract($date);
+
+        return $activeContract ? $this->getRulesForContract($activeContract) : collect();
     }
 
-    public function getActiveRuleByTriggerTypeForUser(User $user, string $triggerType): ?ShiftRule
+    /**
+     * Innerhalb von validateShiftRulesForDateRange() je Vertrag nur einmal abgefragt (Cache nur für die
+     * Dauer des Laufs, damit Regeländerungen beim nächsten Lauf greifen).
+     */
+    private function getRulesForContract(UserContract $contract): Collection
     {
-        $activeContract = $user->activeWorkContract();
+        if ($this->rulesByContractCache !== null && array_key_exists($contract->id, $this->rulesByContractCache)) {
+            return $this->rulesByContractCache[$contract->id];
+        }
+
+        $rules = ShiftRule::whereHas('contracts', function ($query) use ($contract): void {
+            $query->where('contract_id', $contract->id);
+        })->where('is_active', true)->get();
+
+        if ($this->rulesByContractCache !== null) {
+            $this->rulesByContractCache[$contract->id] = $rules;
+        }
+
+        return $rules;
+    }
+
+    public function getActiveRuleByTriggerTypeForUser(User $user, string $triggerType, ?Carbon $date = null): ?ShiftRule
+    {
+        $activeContract = $user->activeWorkContract($date);
         if (!$activeContract) {
             return null;
         }
@@ -590,11 +676,23 @@ class ShiftRuleService
                 $query->whereHas('contractAssigns')
                     ->orWhereIn('id', $usersWithStaleCandidates);
             })
+            // Vertragshistorie einmal für alle Personen: die Auflösung je Tag läuft danach im Speicher
+            ->with('contractAssigns.userContract')
             ->get();
 
-        foreach ($users as $user) {
-            $userViolations = $this->validateRulesForUser($user, $startDate, $endDate);
-            $violations = $violations->concat($userViolations);
+        $this->rulesByContractCache = [];
+        try {
+            foreach ($users as $user) {
+                // Ein fehlerhafter Datensatz darf die Prüfung der übrigen Personen nicht abbrechen
+                try {
+                    $userViolations = $this->validateRulesForUser($user, $startDate, $endDate);
+                    $violations = $violations->concat($userViolations);
+                } catch (\Throwable $exception) {
+                    report($exception);
+                }
+            }
+        } finally {
+            $this->rulesByContractCache = null;
         }
 
         return $violations;

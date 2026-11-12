@@ -487,22 +487,33 @@
         />
 
         <!-- Delete Request Modal -->
-        <BaseModal @closed="closeDeleteRequestModal" v-if="showDeleteRequestModal" modal-image="/Svgs/Overlays/illu_warning.svg">
-            <div class="mx-4">
-                <div class="text-2xl font-bold text-text my-2">
-                    {{ $t('Delete document request') }}
-                </div>
-                <div class="text-sm text-danger">
-                    {{ $t('Are you sure you want to delete this document request?') }}
-                </div>
-                <div class="mt-6 flex items-center justify-between">
-                    <BaseUIButton :label="$t('Delete')" is-delete-button @click="deleteRequest" />
-                    <button @click="closeDeleteRequestModal" class="text-sm text-text-subtle hover:text-text">
-                        {{ $t('Cancel') }}
-                    </button>
-                </div>
-            </div>
-        </BaseModal>
+        <ArtworkBaseModal
+            v-if="showDeleteRequestModal"
+            title="Delete document request"
+            modal-size="sm:max-w-lg"
+            @close="closeDeleteRequestModal"
+        >
+            <p class="text-sm text-text">
+                {{ $t('Are you sure you want to delete this document request?') }}
+            </p>
+            <template #footer>
+                <BaseUIButton
+                    label="No, not really"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="deletingRequest"
+                    @click="closeDeleteRequestModal"
+                />
+                <BaseUIButton
+                    label="Delete"
+                    variant="danger"
+                    icon="IconTrash"
+                    :processing="deletingRequest"
+                    :disabled="!selectedRequest?.id"
+                    @click="deleteRequest"
+                />
+            </template>
+        </ArtworkBaseModal>
     </div>
 </template>
 
@@ -515,7 +526,7 @@ import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import BaseTable from '@/Artwork/Table/BaseTable.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import ContractUploadModal from '@/Layouts/Components/ContractUploadModal.vue'
@@ -749,12 +760,20 @@ const closeDeleteRequestModal = () => {
     showDeleteRequestModal.value = false
 }
 
+const deletingRequest = ref(false)
+
 const deleteRequest = () => {
-    if (selectedRequest.value) {
-        router.delete(route('document-requests.destroy', selectedRequest.value.id), {
-            onSuccess: () => closeDeleteRequestModal()
-        })
+    if (!selectedRequest.value?.id || deletingRequest.value) {
+        return
     }
+    deletingRequest.value = true
+    router.delete(route('document-requests.destroy', selectedRequest.value.id), {
+        preserveScroll: true,
+        onSuccess: () => closeDeleteRequestModal(),
+        onFinish: () => {
+            deletingRequest.value = false
+        },
+    })
 }
 
 // Listen for broadcast updates

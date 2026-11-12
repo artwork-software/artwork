@@ -1,193 +1,188 @@
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
-            </TransitionChild>
-            <div class="fixed inset-0 z-50 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
-                                    <span class="sr-only">Close</span>
-                                    <IconX class="h-6 w-6" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <div class="relative z-40">
-                                <div class="font-black font-lexend text-text text-3xl my-2">
-                                    {{$t('Create timeline')}}
-                                </div>
-                                <p class="text-sm/5 font-bold text-text-subtle subpixel-antialiased">
-                                    {{$t('Define the shift-relevant times. You can create shifts along this timeline.')}}
-                                </p>
-                                <div class="mt-10">
-                                    <div class="mb-4" v-for="time in timeLine">
-                                        <SingleTimeLine :time="time" :preset="true"/>
-                                    </div>
-                                    <div class="w-full flex group">
-                                        <div v-if="showAddTimeLineForm" class="grid grid-cols-1 sm:grid-cols-2 w-full gap-2">
-                                            <div>
-                                                <input type="text"
-                                                       onfocus="(this.type='time')"
-                                                       :placeholder="$t('Start*')"
-                                                       v-model="addTimeLineForm.start"
-                                                       class="h-10 border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 w-full border-border"
-                                                       required
-                                                       @focusout="checkTime()"
-                                                />
-                                            </div>
-                                            <div>
-                                                <input type="text"
-                                                       onfocus="(this.type='time')"
-                                                       :placeholder="$t('End*')"
-                                                       v-model="addTimeLineForm.end"
-                                                       maxlength="3"
-                                                       required
-                                                       class="h-10 border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 w-full border-border"
-                                                       @focusout="checkTime()"
-                                                />
-                                            </div>
-                                            <span class="mt-2 text-danger text-xs" v-show="helpText.length > 0">{{ helpText }}</span>
-                                            <div class="mt-2 col-span-2">
-                                                <textarea
-                                                    v-model="addTimeLineForm.description"
-                                                    rows="4"
-                                                    name="comment"
-                                                    id="comment"
-                                                    class="block w-full border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 border-border"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="hidden group-hover:block ml-3">
-                                            <IconCircleX @click="showAddTimeLineForm = false" class="mt-2 h-5 w-5 text-accent-600 hover:text-danger cursor-pointer"/>
-                                        </div>
-                                    </div>
-                                    <div class="h-1">
-                                        <div
-                                            class="mt-5 w-full h-1 border-b-2 border-dashed flex items-center justify-center relative cursor-pointer group-hover:block" @click="showAddTimeLineForm = true">
-                                            <div class="absolute flex items-center justify-center w-full ">
-                                                <IconCirclePlus class="h-6 w-6"/>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex justify-center mt-5">
-                                <BaseUIButton
-                                    :label="$t('Save')"
-                                    @click="saveTimeLines"
-                                    :disabled="addTimeLineForm.processing"
-                                    is-add-button
-                                    />
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
+    <ArtworkBaseModal
+        title="Create timeline"
+        description="Define the shift-relevant times. You can create shifts along this timeline."
+        modal-size="sm:max-w-xl"
+        @close="closeModal(false)"
+    >
+        <div class="space-y-4">
+            <SingleTimeLine
+                v-for="time in timeLine"
+                :key="time.id"
+                :time="time"
+                :preset="true"
+            />
+
+            <div
+                v-if="showAddTimeLineForm"
+                class="space-y-3 rounded-lg border border-border-subtle bg-surface-sunken p-4"
+            >
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <BaseInput
+                        id="presetTimeLineStart"
+                        v-model="addTimeLineForm.start"
+                        type="time"
+                        label="Start time"
+                        required
+                        :error="helpText || addTimeLineForm.errors.start"
+                        @focusout="checkTime"
+                    />
+                    <BaseInput
+                        id="presetTimeLineEnd"
+                        v-model="addTimeLineForm.end"
+                        type="time"
+                        label="End time"
+                        required
+                        :error="addTimeLineForm.errors.end"
+                        @focusout="checkTime"
+                    />
+                </div>
+                <BaseTextarea
+                    id="presetTimeLineDescription"
+                    v-model="addTimeLineForm.description"
+                    label="Description"
+                    :rows="3"
+                />
+                <div class="flex justify-end">
+                    <BaseUIButton
+                        label="Remove"
+                        variant="ghost"
+                        size="sm"
+                        icon="IconX"
+                        @click="hideAddTimeLineForm"
+                    />
                 </div>
             </div>
-        </Dialog>
-    </TransitionRoot>
-</template>
-<script>
-import {IconCirclePlus, IconCircleX, IconX} from "@tabler/icons-vue";
-import {defineComponent} from 'vue'
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
-import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
-import Input from "@/Jetstream/Input.vue";
-import {useForm} from "@inertiajs/vue3";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+            <BaseUIButton
+                v-else
+                label="Add time"
+                variant="secondary"
+                icon="IconCirclePlus"
+                @click="showAddTimeLineForm = true"
+            />
 
-export default defineComponent({
-    name: "AddEditTimeLineModal",
-    components: {
-        BaseUIButton,
-        FormButton,
-        SingleTimeLine,
-        Input,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        IconX, DialogPanel, IconCirclePlus, IconCircleX
-    },
-    props: ['presetId', 'timeLine'],
-    data(){
-        return {
-            open: true,
-            helpText: '',
-            showAddTimeLineForm: this.timeLine.length === 0,
-            addTimeLineForm: useForm({
-                start: null,
-                end: null,
-                description: null
-            }),
+            <BaseAlertComponent
+                v-if="hasInvalidTimeLine"
+                type="error"
+                :message="$t('The start time must be before the end time.')"
+            />
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="processing"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="processing"
+                @click="saveTimeLines"
+            />
+        </template>
+    </ArtworkBaseModal>
+</template>
+
+<script setup>
+import {ref} from 'vue'
+import {router, useForm} from '@inertiajs/vue3'
+import {useI18n} from 'vue-i18n'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
+import SingleTimeLine from '@/Pages/Projects/Components/SingleTimeLine.vue'
+
+defineOptions({name: 'AddEditTimeLineModal'})
+
+const props = defineProps({
+    presetId: {type: [Number, String], required: true},
+    timeLine: {type: Array, default: () => []},
+})
+
+const emit = defineEmits(['closed'])
+
+const {t} = useI18n()
+
+const helpText = ref('')
+const processing = ref(false)
+const hasInvalidTimeLine = ref(false)
+const showAddTimeLineForm = ref(props.timeLine.length === 0)
+const addTimeLineForm = useForm({
+    start: null,
+    end: null,
+    description: null,
+})
+
+function closeModal(saved) {
+    emit('closed', saved)
+}
+
+function hideAddTimeLineForm() {
+    showAddTimeLineForm.value = false
+    helpText.value = ''
+    addTimeLineForm.reset()
+    addTimeLineForm.clearErrors()
+}
+
+function checkTime() {
+    if (!addTimeLineForm.start || !addTimeLineForm.end) {
+        helpText.value = t('Please fill in both fields.')
+        return false
+    }
+    if (addTimeLineForm.start >= addTimeLineForm.end) {
+        helpText.value = t('The start time must be before the end time.')
+        return false
+    }
+    helpText.value = ''
+    return true
+}
+
+function saveTimeLines() {
+    if (processing.value) {
+        return
+    }
+    hasInvalidTimeLine.value = props.timeLine.some((timeline) => timeline.start >= timeline.end)
+    if (hasInvalidTimeLine.value) {
+        return
+    }
+    if (showAddTimeLineForm.value) {
+        if (!checkTime()) {
+            return
         }
-    },
-    emits: ['closed'],
-    methods: {
-        closeModal(bool){
-            this.$emit('closed', bool);
-        },
-        saveTimeLines() {
-            let hasInvalid = false;
-            this.timeLine.forEach(function (timeline) {
-                if (timeline.start >= timeline.end) {
-                    hasInvalid = true;
-                }
-            });
-            if (!hasInvalid) {
-                if (this.showAddTimeLineForm) {
-                    if (this.checkTime()) {
-                        this.addTimeLineForm.post(
-                            route('preset.add.timeline.row', {shiftPreset: this.presetId}),
-                            {
-                                preserveState: true,
-                                preserveScroll: true,
-                                onFinish: () => {
-                                    //handle existing timelines which may be updated
-                                    this.updateTimes();
-                                }
-                            }
-                        );
-                    }
-                    return;
-                }
-                //handle existing timelines which may be updated
-                this.updateTimes();
-            }
-        },
-        updateTimes(){
-            this.$inertia.patch(route('preset.timeline.update'), {
-                timelines: this.timeLine
-            }, {
+        processing.value = true
+        addTimeLineForm.post(
+            route('preset.add.timeline.row', {shiftPreset: props.presetId}),
+            {
                 preserveState: true,
                 preserveScroll: true,
-                onFinish: () => {
-                    this.closeModal(true);
-                }
-            })
-        },
-        deleteTime(index){
-            this.$inertia.delete(route('preset.delete.timeline.row', index))
-        },
-        checkTime() {
-            if (this.addTimeLineForm.start === null || this.addTimeLineForm.end === null) {
-                this.helpText = this.$t('Please fill in both fields.');
-                return false;
-            } else if (this.addTimeLineForm.start >= this.addTimeLineForm.end) {
-                this.helpText = this.$t('The start time must be before the end time.');
-                return false;
-            } else {
-                this.helpText = '';
-                return true;
+                // bestehende Zeilen erst nach erfolgreichem Anlegen speichern
+                onSuccess: () => updateTimes(),
+                onError: () => {
+                    processing.value = false
+                },
             }
-        }
-
+        )
+        return
     }
-})
-</script>
-<style scoped>
+    processing.value = true
+    updateTimes()
+}
 
-</style>
+function updateTimes() {
+    router.patch(route('preset.timeline.update'), {
+        timelines: props.timeLine,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => closeModal(true),
+        onFinish: () => {
+            processing.value = false
+        },
+    })
+}
+</script>

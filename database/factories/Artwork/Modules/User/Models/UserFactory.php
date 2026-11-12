@@ -3,6 +3,8 @@
 namespace Database\Factories\Artwork\Modules\User\Models;
 
 use App\Models\Team;
+use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
+use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -38,6 +40,17 @@ class UserFactory extends Factory
             return [
                 'email_verified_at' => null,
             ];
+        });
+    }
+
+    /**
+     * Vergibt das nur per Konsole setzbare Recht "ai access" (Schranke vor Maschinen-API und KI-Routen).
+     */
+    public function withAiAccess(): static
+    {
+        return $this->afterCreating(static function (User $user): void {
+            $permission = Permission::findOrCreate(ConsoleOnlyPermissionEnum::AiAccess->value, 'web');
+            $user->givePermissionTo($permission);
         });
     }
 

@@ -439,8 +439,8 @@ const todayFormatted = computed(() => {
 })
 
 const paperSizes = [
-    { id: 'a4', name: 'A4 (Standard)' },
-    { id: 'a3', name: 'A3' },
+    { id: 'a4', name: 'A4' },
+    { id: 'a3', name: 'A3 (Standard)' },
     { id: 'a5', name: 'A5' },
     { id: 'a6', name: 'A6' }
 ]
@@ -487,7 +487,7 @@ const applyPreselectedDateRange = () => {
 }
 
 const pdfSelectedProject = ref<any | null>(null)
-const selectedPaperSize = ref<{ id: string; name: string }>({ id: 'a3', name: 'A3' })
+const selectedPaperSize = ref<{ id: string; name: string }>({ id: 'a3', name: 'A3 (Standard)' })
 const selectedPaperOrientation = ref<{ id: 'portrait' | 'landscape'; title: string }>({
     id: 'landscape',
     title: $t('Landscape format')

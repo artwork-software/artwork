@@ -21,7 +21,8 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
     'use_chat_module' => env('USE_CHAT_MODULE', false),
     'notion_api_token' => env('NOTION_API_TOKEN', ''),
-    // Installierte artwork-Version (Datei VERSION, beim Release hochzählen); passt zum Changelog
+    // Installierte artwork-Version (Datei VERSION, beim Release hochzählen); passt zum Changelog.
+    // Geht als Shared-Prop `artworkVersion` an Angemeldete; der KI-Assistent schickt sie als Turn-Kontext mit.
     'version' => \Artwork\Core\Version\InstalledVersion::fromFile(base_path('VERSION')),
     /*
     |--------------------------------------------------------------------------
@@ -235,6 +236,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
+        Artwork\Modules\AiAssistant\Providers\AiAssistantServiceProvider::class,
         Artwork\Modules\ExternalAccess\Providers\ExternalAccessServiceProvider::class,
         Artwork\Modules\Mail\Providers\MailSettingsServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,

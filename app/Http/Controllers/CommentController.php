@@ -36,20 +36,20 @@ class CommentController extends Controller
     {
         $project = $this->projectService->findById($request->input('project_id'));
 
+        // Ablehnung sichtbar machen: vorher verschwand der Kommentar ohne Rückmeldung
+        $this->authorize('createInProject', [Comment::class, $project]);
+
         /** @var User $user */
         $user = Auth::user();
-        $comment = null;
-        if ($user->can('createInProject', [Comment::class, $project])) {
-            $comment = $this->commentService->create(
-                text: $request->text,
-                user: $user,
-                changeService: $changeService,
-                project: $project,
-                tabId: $request->tab_id
-            );
-            // Live-Update darf den bereits gespeicherten Kommentar nicht in eine 500 verwandeln (WebSocket-Ausfall)
-            SafeBroadcast::send(new NewCommentInProject($comment, $project->id));
-        }
+        $comment = $this->commentService->create(
+            text: $request->text,
+            user: $user,
+            changeService: $changeService,
+            project: $project,
+            tabId: $request->tab_id
+        );
+        // Live-Update darf den bereits gespeicherten Kommentar nicht in eine 500 verwandeln (WebSocket-Ausfall)
+        SafeBroadcast::send(new NewCommentInProject($comment, $project->id));
     }
 
     public function update(Request $request, Comment $comment): RedirectResponse

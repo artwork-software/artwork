@@ -7,12 +7,14 @@ use App\Http\Requests\DeleteSageBookingDaysRequest;
 use App\Http\Requests\InitializeSageSpecificDayRequest;
 use Artwork\Core\Api\Models\ApiLog;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
+use Artwork\Modules\AiAssistant\Support\AiScopes;
 use Artwork\Modules\Budget\Models\SageBookingLog;
 use Artwork\Modules\Budget\Services\SageBookingDataDeleteService;
 use Artwork\Modules\Budget\Services\TableColumnOrderService;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -53,11 +55,16 @@ class ToolSettingsInterfacesController extends Controller
             $this->authorize('view', Token::class);
         }
 
+        // KI-Keys (ai:*-Scopes) sieht nur, wer das Konsolen-Recht "ai access" hält.
+        $canSeeAiTokens = $request->user() instanceof User && $request->user()->hasAiAccess();
+
         $tokens = $canManageTokens
             ? Token::query()
                 ->whereJsonDoesntContain('scopes', MachineScopes::APP_SCOPE)
                 ->orderBy('name')
                 ->get()
+                ->filter(fn (Token $token): bool => $canSeeAiTokens || !AiScopes::containsAiScope($token->scopes ?? []))
+                ->values()
                 ->map(function (Token $token): array {
                     return [
                         'id' => $token->id,
@@ -77,8 +84,12 @@ class ToolSettingsInterfacesController extends Controller
                 'tableColumnOrder' => $this->tableColumnOrderService->getAllOrderedByPosition(),
                 'canManageTokens' => $canManageTokens,
                 'tokens' => $tokens,
+                // ai:*-Scopes werden nicht angeboten — sie gehören zum Session-Token des
+                // KI-Assistenten, nicht zu langlebigen Kunden-Keys (Konzept C2 §3).
+                // StoreTokenRequest lehnt sie zusätzlich serverseitig ab.
                 'availableScopes' => $canManageTokens
                     ? MachineScopes::all()
+                        ->reject(fn (Scope $scope): bool => AiScopes::isAiScope($scope->id))
                         ->map(fn (Scope $scope): array => [
                             'id' => $scope->id,
                             'description' => $scope->description,
@@ -126,9 +137,15 @@ class ToolSettingsInterfacesController extends Controller
         ];
     }
 
-    public function tokenLogs(Token $token): JsonResponse
+    public function tokenLogs(Request $request, Token $token): JsonResponse
     {
         $this->authorize('view', Token::class);
+
+        // Wie in der Übersicht: KI-Keys existieren für Personen ohne "ai access" nicht.
+        abort_if(
+            AiScopes::containsAiScope($token->scopes ?? []) && !($request->user() instanceof User && $request->user()->hasAiAccess()),
+            404
+        );
 
         $logs = ApiLog::query()
             ->where('passport_token_id', $token->getKey())

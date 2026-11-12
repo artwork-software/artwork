@@ -113,7 +113,7 @@ final class ShiftPlanRequestApprovalFlowTest extends FeatureTestCase
             ->firstOrFail();
 
         $reject = $this->post(route('shift-plan-requests.reject', $request), [
-            'review_comment' => 'Insufficient staffing',
+            'global_reason' => 'Insufficient staffing',
         ]);
         $reject->assertRedirect();
 

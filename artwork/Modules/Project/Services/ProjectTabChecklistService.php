@@ -95,20 +95,15 @@ class ProjectTabChecklistService
             return ChecklistIndexResource::collection($shareProject($query->get()))->resolve();
         }
 
-        // Private checklists require user to be assigned, creator, or in project team
-        if (!$project->relationLoaded('users')) {
-            $project->load('users');
-        }
-
-        $checklists = $shareProject($query->get())->filter(function ($checklist) use ($userId, $project) {
+        // Private Listen sieht nur, wer sie angelegt hat oder ausdrücklich zugewiesen ist; das Projektteam nicht
+        $checklists = $shareProject($query->get())->filter(function ($checklist) use ($userId) {
             $isInChecklistUsers = $checklist->users->contains('id', $userId);
             $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
                 return $task->task_users->contains('id', $userId);
             });
             $isCreator = $checklist->user_id === $userId;
-            $isInProjectTeam = $project->users->contains('id', $userId);
 
-            return $isInChecklistUsers || $isInTaskUsers || $isCreator || $isInProjectTeam;
+            return $isInChecklistUsers || $isInTaskUsers || $isCreator;
         });
 
         return ChecklistIndexResource::collection($checklists)->resolve();

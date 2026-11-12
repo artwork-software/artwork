@@ -6,6 +6,7 @@ import {
     canWithdrawRequest,
     isRequesterOf,
     shiftDurationHours,
+    shiftHistoryFilterForRequest,
     shiftPlanRequestWeekLabel,
     sortDayEntriesByStart,
 } from '../../resources/js/Pages/ShiftPlanRequests/components/shiftPlanRequestHelpers.js';
@@ -158,4 +159,36 @@ test('appendAbsenceEntries adds absences to existing person rows only', async ()
     assert.equal(absenceTimeLabel({ full_day: true }), 'Full day');
     assert.equal(absenceTimeLabel({ full_day: false, day_part: 'afternoon' }), 'Afternoon');
     assert.equal(rows.has('user-2'), false);
+});
+
+test('shiftHistoryFilterForRequest prefilters craft and Monday–Sunday of the request week', () => {
+    const filter = shiftHistoryFilterForRequest({
+        week_number: 37,
+        year: 2026,
+        craft_id: 4,
+        craft: { id: 4, name: 'Licht', abbreviation: 'LI', color: '#fff' },
+    });
+    assert.deepEqual(filter, {
+        craftId: 4,
+        startDate: '2026-09-07',
+        endDate: '2026-09-13',
+        crafts: [{ id: 4, name: 'Licht', abbreviation: 'LI' }],
+    });
+});
+
+test('shiftHistoryFilterForRequest handles ISO year boundaries and missing craft data', () => {
+    // KW 1/2026 beginnt am Montag 29.12.2025
+    const boundary = shiftHistoryFilterForRequest({ week_number: 1, year: 2026, craft: { id: 2, name: 'Ton' } });
+    assert.equal(boundary.startDate, '2025-12-29');
+    assert.equal(boundary.endDate, '2026-01-04');
+    assert.equal(boundary.craftId, 2, 'craft id falls back to craft.id');
+
+    // ohne Gewerk-Objekt kein Vorfilter aufs Gewerk (Modal zeigt „Alle Gewerke“)
+    const withoutCraft = shiftHistoryFilterForRequest({ week_number: 10, year: 2026, craft_id: 3 });
+    assert.equal(withoutCraft.craftId, null);
+    assert.deepEqual(withoutCraft.crafts, []);
+
+    // ungültige KW → kein Verlauf
+    assert.equal(shiftHistoryFilterForRequest({ week_number: 53, year: 2025, craft_id: 1 }), null);
+    assert.equal(shiftHistoryFilterForRequest(null), null);
 });

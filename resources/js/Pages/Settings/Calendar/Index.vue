@@ -5,7 +5,7 @@
             storage-key="settings-guide.calendar.general"
             title="How does this area work?"
             :paragraphs="[
-                'Start and end time define which hours the day view of the calendar and the shift plan displays. The range may span midnight — for example 22:00 to 08:00.',
+                '“Hidden from” and “Hidden until” define a range of hours that the day view of the calendar and the shift plan hides, as long as nothing is scheduled in it on that day. The range may span midnight: to keep 08:00 to 23:00 visible, enter 23:00 under “Hidden from” and 08:00 under “Hidden until”.',
                 'Day remarks add one shared remark per day as a separate column in the calendar, the planning calendar and the shift plan.',
                 'If project creation from events is deactivated, events can only be linked to existing projects.',
             ]"
@@ -14,7 +14,7 @@
             <div>
                 <BasePageTitle
                     :title="$t('Calendar Settings')"
-                    :description="$t('Defines which hours the day view of the calendar and the shift plan displays. The range may span midnight (e.g. 22:00–08:00).')" />
+                    :description="$t('Defines which hours the day view of the calendar and the shift plan hides. Hours with events or shifts stay visible. The range may span midnight (e.g. hidden from 22:00 until 08:00).')" />
             </div>
 
             <div class="my-5">
@@ -25,7 +25,7 @@
                         <BaseInput type="time"
                             id="start"
                             v-model="tinyTimePeriod.start"
-                            :label="$t('Start-Time')"
+                            :label="$t('Hidden from')"
                             @focusout="saveTinyCalendarSettings"
 
                         />
@@ -34,7 +34,7 @@
                         <BaseInput type="time"
                             id="end"
                             v-model="tinyTimePeriod.end"
-                            :label="$t('End-Time')"
+                            :label="$t('Hidden until')"
                             @focusout="saveTinyCalendarSettings"
                         />
                     </div>

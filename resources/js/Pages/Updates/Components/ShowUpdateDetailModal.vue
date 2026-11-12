@@ -1,92 +1,79 @@
 <template>
-    <BaseModal @closed="$emit('close')" modal-size="sm:max-w-3xl">
-        <div class="flex items-center justify-between mt-4">
-            <div>
-                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
-                    {{ item.properties.find(property => property.id === 'title')?.plainText }}
-                </div>
-            </div>
-            <div v-if="item.properties.some(property => property.title === 'Status')">
-                <div
-                    v-for="property in item.properties.filter(p => p.title === 'Status')"
+    <ArtworkBaseModal
+        :title="updateTitle"
+        :description="updateDateText"
+        modal-size="sm:max-w-3xl"
+        @close="$emit('close')"
+    >
+        <div v-if="statusProperties.length > 0 || author" class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <span
+                    v-for="property in statusProperties"
                     :key="property.id"
-                    class="inline-block px-3 py-1 text-white text-xs rounded-full"
+                    class="inline-block rounded-full px-3 py-1 text-xs font-medium text-white"
                     :class="{
-                                        'bg-text-subtle': property.rawContent.color === 'gray',
-                                        'bg-danger': property.rawContent.color === 'red',
-                                        'bg-success': property.rawContent.color === 'green',
-                                        'bg-accent-600': property.rawContent.color === 'blue',
-                                        'bg-warning': property.rawContent.color === 'yellow',
-                                        'bg-special-violet': property.rawContent.color === 'purple',
-                                        'bg-special-pink': property.rawContent.color === 'pink',
-                                        'bg-special-orange': property.rawContent.color === 'orange',
-                                        'bg-brown-500': property.rawContent.color === 'brown',
-                                    }">
+                        'bg-text-subtle': property.rawContent?.color === 'gray',
+                        'bg-danger': property.rawContent?.color === 'red',
+                        'bg-success': property.rawContent?.color === 'green',
+                        'bg-accent-600': property.rawContent?.color === 'blue',
+                        'bg-warning': property.rawContent?.color === 'yellow',
+                        'bg-special-violet': property.rawContent?.color === 'purple',
+                        'bg-special-pink': property.rawContent?.color === 'pink',
+                        'bg-special-orange': property.rawContent?.color === 'orange',
+                        'bg-brown-500': property.rawContent?.color === 'brown',
+                    }"
+                >
                     {{ property.rawContent?.name }}
-                </div>
+                </span>
             </div>
-            <div v-if="item.properties.some(property => property.title === 'Author')" class="group block shrink-0 bg-white w-fit pr-3 shadow-md rounded-full border border-border-subtle">
-                <div class="flex items-center">
-                    <div>
-                        <img
-                            class="inline-block size-9 rounded-full object-cover"
-                            v-if="item.properties.find(property => property.title === 'Author')?.rawContent[0]?.avatar_url"
-                            :src="item.properties.find(property => property.title === 'Author')?.rawContent[0]?.avatar_url"
-                            alt=""
-                        />
-                    </div>
-                    <div class="mx-2">
-                        <p class="text-sm/5 font-semibold text-text group-hover:text-text"> {{ item.properties.find(property => property.title === 'Author')?.rawContent[0]?.name }}</p>
-                    </div>
-                </div>
+            <div v-if="author" class="flex items-center gap-x-2 rounded-full border border-border-subtle bg-surface py-1 pl-1 pr-3">
+                <img
+                    v-if="author.avatar_url"
+                    class="size-7 rounded-full object-cover"
+                    :src="author.avatar_url"
+                    alt=""
+                />
+                <span class="text-sm font-semibold text-text">{{ author.name }}</span>
             </div>
         </div>
-        <div class="mt-10 border-y border-dashed py-5 border-border">
-            <div v-for="pageContent in contentAsCollection">
-                <div v-if="pageContent.responseData.type === 'paragraph'" class="mt-1.5">
-                    <span v-for="textContent in pageContent.responseData.paragraph.text">
-                        <span :class="{
-                                'font-bold' : textContent?.annotations?.bold,
-                                'italic' : textContent?.annotations?.italic,
-                                'underline': textContent?.annotations?.underline,
-                                'line-through': textContent?.annotations?.strikethrough,
-                            }">
-                            {{ textContent?.plain_text }}
-                        </span>
-                    </span>
-                </div>
 
-                <ul v-if="pageContent.responseData.type === 'bulleted_list_item'"  class="list-disc list-inside">
+        <div class="space-y-1.5 text-sm text-text" :class="statusProperties.length > 0 || author ? 'mt-5 border-t border-border-subtle pt-5' : ''">
+            <template v-for="(pageContent, index) in contentAsCollection" :key="index">
+                <p v-if="pageContent.responseData.type === 'paragraph'">
+                    <span
+                        v-for="(textContent, textIndex) in pageContent.responseData.paragraph.text"
+                        :key="textIndex"
+                        :class="textClasses(textContent)"
+                    >{{ textContent?.plain_text }}</span>
+                </p>
+                <ul v-if="pageContent.responseData.type === 'bulleted_list_item'" class="list-inside list-disc">
                     <li>
-                        <span v-for="textContent in pageContent.responseData.bulleted_list_item.text">
-                        <span :class="{
-                                'font-bold' : textContent?.annotations?.bold,
-                                'italic' : textContent?.annotations?.italic,
-                                'underline': textContent?.annotations?.underline,
-                                'line-through': textContent?.annotations?.strikethrough,
-                            }">
-                            {{ textContent?.plain_text }}
-                        </span>
-                    </span>
+                        <span
+                            v-for="(textContent, textIndex) in pageContent.responseData.bulleted_list_item.text"
+                            :key="textIndex"
+                            :class="textClasses(textContent)"
+                        >{{ textContent?.plain_text }}</span>
                     </li>
                 </ul>
-            </div>
+            </template>
         </div>
-        <div class="mt-3">
-            <div v-if="item.properties.some(property => property.title === 'Update Datum')">
-                <div class="text-sm/5 font-semibold text-text">
-                    <span>{{ $t('Update date') }}: </span>
-                    <span>{{ convertDate(item.properties.find(property => property.title === 'Update Datum')?.rawContent?.start) }} </span>
-                    <span v-if="item.properties.find(property => property.title === 'Update Datum')?.rawContent?.end"> - {{ convertDate(item.properties.find(property => property.title === 'Update Datum')?.rawContent?.end) }} </span>
-                </div>
-            </div>
-        </div>
-    </BaseModal>
+
+        <template #footer>
+            <BaseUIButton
+                label="Close"
+                is-cancel-button
+                hide-icon
+                @click="$emit('close')"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import {computed} from "vue";
+import {useI18n} from "vue-i18n";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     item: {
@@ -103,8 +90,15 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['close'])
+defineEmits(['close'])
 
+const {t} = useI18n()
+
+const updateTitle = computed(() => props.item.properties.find(property => property.id === 'title')?.plainText ?? '')
+
+const statusProperties = computed(() => props.item.properties.filter(property => property.title === 'Status'))
+
+const author = computed(() => props.item.properties.find(property => property.title === 'Author')?.rawContent?.[0] ?? null)
 
 const convertDate = (date) => {
     return new Date(date).toLocaleDateString('de-DE', {
@@ -113,8 +107,24 @@ const convertDate = (date) => {
         day: 'numeric'
     })
 }
+
+// Zeitraum aus der Notion-Eigenschaft „Update Datum“ für die Kopfzeile
+const updateDateText = computed(() => {
+    const updateDate = props.item.properties.find(property => property.title === 'Update Datum')?.rawContent
+    if (!updateDate?.start) {
+        return ''
+    }
+    let text = t('Update date') + ': ' + convertDate(updateDate.start)
+    if (updateDate.end) {
+        text += ' - ' + convertDate(updateDate.end)
+    }
+    return text
+})
+
+const textClasses = (textContent) => ({
+    'font-bold': textContent?.annotations?.bold,
+    'italic': textContent?.annotations?.italic,
+    'underline': textContent?.annotations?.underline,
+    'line-through': textContent?.annotations?.strikethrough,
+})
 </script>
-
-<style scoped>
-
-</style>

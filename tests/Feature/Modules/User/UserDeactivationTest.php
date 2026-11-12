@@ -137,6 +137,47 @@ final class UserDeactivationTest extends FeatureTestCase
     }
 
     #[Test]
+    public function the_last_admin_with_a_local_login_cannot_be_deactivated(): void
+    {
+        // Alle bisherigen Admins gelten als IdP-gebunden (geteilte Test-DB, Rollback per Transaktion)
+        User::role(RoleEnum::ARTWORK_ADMIN->value)->update(['auth_provider' => 'oidc']);
+        $idpAdmin = $this->actingAsAdmin();
+        $idpAdmin->forceFill(['auth_provider' => 'oidc'])->save();
+        $localAdmin = User::factory()->create(['auth_provider' => 'local']);
+        $localAdmin->assignRole(RoleEnum::ARTWORK_ADMIN->value);
+        // Deaktivierter lokaler Admin zählt nicht als Notfallzugang
+        $paused = $this->deactivatedAndSaved(['email' => 'paused-admin@example.com', 'auth_provider' => 'local']);
+        $paused->assignRole(RoleEnum::ARTWORK_ADMIN->value);
+
+        $this->post(route('user.deactivate', $localAdmin))->assertRedirect()->assertSessionHas('error');
+        $this->assertFalse($localAdmin->refresh()->isDeactivated());
+
+        $second = User::factory()->create(['auth_provider' => 'local']);
+        $second->assignRole(RoleEnum::ARTWORK_ADMIN->value);
+        $this->post(route('user.deactivate', $localAdmin))->assertRedirect()->assertSessionHas('success');
+        $this->assertTrue($localAdmin->refresh()->isDeactivated());
+    }
+
+    #[Test]
+    public function admin_ids_are_only_sent_to_people_who_may_deactivate(): void
+    {
+        $this->actingAsUserWith([]);
+        $this->get(route('users'))->assertInertia(
+            fn (AssertableInertia $page) => $page->where('adminUserIds', [])
+        );
+
+        $admin = User::factory()->create();
+        $admin->assignRole(RoleEnum::ARTWORK_ADMIN->value);
+        $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
+        $this->get(route('users'))->assertInertia(
+            fn (AssertableInertia $page) => $page->where(
+                'adminUserIds',
+                fn ($ids) => collect($ids)->contains($admin->id)
+            )
+        );
+    }
+
+    #[Test]
     public function nobody_can_deactivate_their_own_account(): void
     {
         $admin = $this->actingAsAdmin();

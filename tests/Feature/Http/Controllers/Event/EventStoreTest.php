@@ -258,10 +258,6 @@ final class EventStoreTest extends FeatureTestCase
             ->once()
             ->with(Mockery::type(Event::class));
         $this->mock(EventCollisionService::class)
-            ->shouldReceive('adjoiningCollision')
-            ->once()
-            ->andReturn([])
-            ->getMock()
             ->shouldReceive('getCollision')
             ->once()
             ->andReturn(Event::query()->whereKey(-1));
@@ -274,6 +270,53 @@ final class EventStoreTest extends FeatureTestCase
         $event = Event::query()->latest('id')->firstOrFail();
         $this->assertSame($requester->id, $event->user_id);
         $this->assertTrue($event->occupancy_option);
+    }
+
+    /**
+     * "Kann von jedem fest gebucht werden" gibt kein Anlegerecht: ohne Kalenderrecht und ohne Rolle im Raum
+     * bleibt es beim 403, auch für den Serien-Weg (Vorschau und Anlegen). Der Termin-Dialog zeigt dann keinen
+     * Speichern-Knopf (mayCreateEventIn).
+     */
+    #[Test]
+    public function room_bookable_by_anyone_gives_no_right_to_create_events(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $room = Room::factory()->create(['everyone_can_book' => true]);
+        $eventType = EventType::factory()->create();
+
+        $this->postJson(route('events.store'), $this->validPayload($eventType, $room, ['isOption' => false]))
+            ->assertForbidden();
+        $this->postJson(route('events.store'), $this->validPayload($eventType, $room, [
+            'isOption' => false,
+            'is_series' => true,
+            'seriesFrequency' => 1,
+            'seriesEndDate' => '2026-05-20',
+        ]))->assertForbidden();
+        $this->postJson(route('events.series.preview'), [
+            'start' => '2026-05-10 10:00',
+            'end' => '2026-05-10 12:00',
+            'roomId' => $room->id,
+            'seriesFrequency' => 1,
+            'seriesEndDate' => '2026-05-20',
+        ])->assertForbidden();
+        $this->assertDatabaseCount('events', 0);
+    }
+
+    #[Test]
+    public function requester_without_global_rights_books_a_room_bookable_by_anyone_directly(): void
+    {
+        $requester = User::factory()->create();
+        $this->actingAs($requester);
+        $room = Room::factory()->create(['everyone_can_book' => true]);
+        $room->users()->attach($requester->id, ['is_admin' => false, 'can_request' => true]);
+        $eventType = EventType::factory()->create();
+
+        $this->postJson(route('events.store'), $this->validPayload($eventType, $room, ['isOption' => false]))
+            ->assertSuccessful();
+
+        $event = Event::query()->latest('id')->firstOrFail();
+        $this->assertSame($room->id, $event->room_id);
+        $this->assertFalse((bool) $event->occupancy_option);
     }
 
     #[Test]

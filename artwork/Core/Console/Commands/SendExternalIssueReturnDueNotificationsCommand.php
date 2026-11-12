@@ -5,6 +5,7 @@ namespace Artwork\Core\Console\Commands;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -72,7 +73,7 @@ class SendExternalIssueReturnDueNotificationsCommand extends Command
                         ['issueName' => $issue->name],
                         $language
                     ),
-                    'href' => route('extern-issue-of-material.index', ['issue' => $issue->id]),
+                    'href' => $this->issueLinkFor($responsible, $issue),
                 ],
             ];
 
@@ -112,5 +113,19 @@ class SendExternalIssueReturnDueNotificationsCommand extends Command
         }
 
         return CommandAlias::SUCCESS;
+    }
+
+    /**
+     * Das externe Ausgabebuch verlangt das Recht Inventardisposition. Wer die Ausgabe nur als
+     * verantwortliche Person betreut, bekommt stattdessen die Vorschau der Ausgabe, die er*sie
+     * öffnen darf (MaterialIssuePolicy::view); die Vorschau legt keine Datei an der Ausgabe ab.
+     */
+    private function issueLinkFor(User $responsible, ExternalIssue $issue): string
+    {
+        if ($responsible->can('viewAny', ExternalIssue::class)) {
+            return route('extern-issue-of-material.index', ['issue' => $issue->id]);
+        }
+
+        return route('extern-issue-of-material.print', ['externalIssue' => $issue->id, 'preview' => 1]);
     }
 }

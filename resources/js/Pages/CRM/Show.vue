@@ -232,6 +232,12 @@
 
             <!-- Room Types (for Accommodation type) -->
             <div v-if="contact.contact_type?.slug === 'accommodation' && activeTab === 'info'" class="mt-8">
+                <p v-if="accommodationUrl" class="mb-6 text-sm text-text-muted">
+                    {{ $t('Defaults such as daily allowance and deduction per breakfast are maintained on the accommodation page.') }}
+                    <Link :href="accommodationUrl" class="font-medium text-accent-700 underline hover:text-accent-700/80">
+                        {{ $t('Open accommodation page') }}
+                    </Link>
+                </p>
                 <h2 class="text-lg font-semibold mb-4">{{ $t('Room types') }}</h2>
 
                 <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
@@ -391,6 +397,7 @@ const props = defineProps({
     linkedProjects: { type: Array, default: () => [] },
     firstProjectTabId: { type: Number, default: null },
     sourceProfileUrl: { type: String, default: null },
+    accommodationUrl: { type: String, default: null },
     contactTypes: { type: Array, default: () => [] },
     canChangeType: { type: Boolean, default: false },
 })

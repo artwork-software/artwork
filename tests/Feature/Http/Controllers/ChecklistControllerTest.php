@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
@@ -72,6 +73,29 @@ final class ChecklistControllerTest extends FeatureTestCase
 
         $this->post(route('checklists.store'), ['template_id' => 999999999, 'private' => false])
             ->assertSessionHasErrors('template_id');
+    }
+
+    #[Test]
+    public function checklist_from_template_adds_the_template_users_to_the_project_team(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $templateUser = User::factory()->create();
+        $template = ChecklistTemplate::factory()->create();
+        $template->users()->attach($templateUser->id);
+
+        $this->post(route('checklists.store'), [
+            'template_id' => $template->id,
+            'project_id' => $project->id,
+            'private' => false,
+        ])->assertRedirect();
+
+        $checklist = Checklist::query()->where('project_id', $project->id)->sole();
+        $this->assertSame([$templateUser->id], $checklist->users()->pluck('users.id')->all());
+        $this->assertDatabaseHas('project_user', [
+            'project_id' => $project->id,
+            'user_id' => $templateUser->id,
+        ]);
     }
 
     #[Test]

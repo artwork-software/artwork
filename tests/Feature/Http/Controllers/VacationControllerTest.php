@@ -151,7 +151,100 @@ final class VacationControllerTest extends FeatureTestCase
         $this->assertDatabaseHas('vacations', [
             'vacationer_id' => $target->id,
             'vacationer_type' => User::class,
-            'comment' => 'OFF_WORK',
+            'type' => 'OFF_WORK',
+            'comment' => null,
+        ]);
+    }
+
+    /**
+     * Das Status-Dropdown schreibt den Status nicht mehr als Kommentar („NOT_AVAILABLE“) in die
+     * Abwesenheit; Dienstplan-Zelle und Freigabe-Anfrage zeigten ihn sonst als Kommentar an.
+     */
+    #[Test]
+    public function changing_the_status_updates_status_entries_without_writing_a_comment(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $target = User::factory()->create();
+        $statusEntry = $this->dayVacation($target, ['type' => 'NOT_AVAILABLE', 'comment' => null]);
+
+        $this->changeStatus($target, 'NOT_AVAILABLE', 'OFF_WORK')->assertSuccessful();
+
+        $statusEntry->refresh();
+        $this->assertSame('OFF_WORK', $statusEntry->type);
+        $this->assertNull($statusEntry->comment);
+    }
+
+    #[Test]
+    public function changing_the_status_converts_legacy_entries_and_clears_the_type_comment(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $target = User::factory()->create();
+        $legacyEntry = $this->dayVacation($target, ['type' => 'NOT_AVAILABLE', 'comment' => 'NOT_AVAILABLE']);
+
+        $this->changeStatus($target, 'NOT_AVAILABLE', 'FREE_WORK')->assertSuccessful();
+
+        $legacyEntry->refresh();
+        $this->assertSame('FREE_WORK', $legacyEntry->type);
+        $this->assertNull($legacyEntry->comment);
+    }
+
+    #[Test]
+    public function changing_the_status_keeps_absences_with_own_comment_or_time_window(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $target = User::factory()->create();
+        $withComment = $this->dayVacation($target, ['type' => 'NOT_AVAILABLE', 'comment' => 'Arzttermin']);
+        $withTimeWindow = $this->dayVacation($target, [
+            'type' => 'NOT_AVAILABLE',
+            'comment' => null,
+            'full_day' => false,
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+        ]);
+
+        $this->changeStatus($target, 'NOT_AVAILABLE', 'OFF_WORK')->assertSuccessful();
+
+        $this->assertSame('NOT_AVAILABLE', $withComment->refresh()->type);
+        $this->assertSame('Arzttermin', $withComment->comment);
+        $this->assertSame('NOT_AVAILABLE', $withTimeWindow->refresh()->type);
+    }
+
+    #[Test]
+    public function migration_removes_status_type_comments_but_keeps_real_comments(): void
+    {
+        $target = User::factory()->create();
+        $legacy = $this->dayVacation($target, ['type' => 'NOT_AVAILABLE', 'comment' => 'NOT_AVAILABLE']);
+        $legacyFree = $this->dayVacation($target, ['type' => 'FREE_WORK', 'comment' => 'FREE_WORK', 'date' => '2026-07-17']);
+        $real = $this->dayVacation($target, ['type' => 'NOT_AVAILABLE', 'comment' => 'Krank', 'date' => '2026-07-18']);
+
+        (require base_path('database/migrations/2026_11_12_155624_clear_status_type_comments_on_vacations.php'))->up();
+
+        $this->assertNull($legacy->refresh()->comment);
+        $this->assertNull($legacyFree->refresh()->comment);
+        $this->assertSame('Krank', $real->refresh()->comment);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function dayVacation(User $user, array $attributes): Vacation
+    {
+        return Vacation::factory()->create(array_merge([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-07-16',
+            'full_day' => true,
+            'is_series' => false,
+        ], $attributes));
+    }
+
+    private function changeStatus(User $user, string $from, string $to): \Illuminate\Testing\TestResponse
+    {
+        return $this->patchJson(route('user.check.vacation', $user), [
+            'checked' => ['type' => $to],
+            'day' => '2026-07-16',
+            'vacationTypeBeforeUpdate' => ['type' => $from],
+            'remove_from_shifts' => false,
         ]);
     }
 

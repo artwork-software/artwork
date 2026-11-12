@@ -179,7 +179,8 @@ final class ShiftPlanRequestWithdrawResubmitTest extends FeatureTestCase
             'requested_at' => now(),
         ]);
 
-        $this->post(route('shift-plan-requests.reject', $request), [])->assertRedirect();
+        $this->post(route('shift-plan-requests.reject', $request), ['global_reason' => 'Besetzung prüfen'])
+            ->assertRedirect();
 
         $expected = __('notification.shift.commit_request_rejected_rollback', [], $requester->language);
         Notification::assertSentTo(
@@ -188,5 +189,65 @@ final class ShiftPlanRequestWithdrawResubmitTest extends FeatureTestCase
             fn (ShiftNotification $notification) => collect($notification->toArray()->description)
                 ->contains(fn ($row) => ($row['title'] ?? null) === $expected)
         );
+    }
+
+    #[Test]
+    public function rejecting_without_any_reason_is_refused_and_the_request_stays_pending(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::CAN_COMMIT_SHIFTS->value]);
+        [$craft, $shift] = $this->createCraftAndShift();
+        $request = $this->submitRequest($craft);
+
+        $this->actingAsAdmin();
+        $this->post(route('shift-plan-requests.reject', $request), [])
+            ->assertSessionHasErrors('global_reason');
+        $this->post(route('shift-plan-requests.reject', $request), [
+            'global_reason' => '   ',
+            'days' => [['date' => '2026-05-06', 'reason' => ' ']],
+            'shifts' => [[
+                'shift_id' => $shift->id,
+                'unique_key' => 'shift-' . $shift->id,
+                'row_type' => 'unassigned',
+                'reason' => null,
+            ]],
+        ])->assertSessionHasErrors('global_reason');
+
+        $this->assertSame('pending', $request->fresh()->status);
+        $this->assertSame($request->id, $shift->fresh()->current_request_id);
+    }
+
+    #[Test]
+    public function a_day_reason_alone_is_enough_to_reject(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::CAN_COMMIT_SHIFTS->value]);
+        [$craft] = $this->createCraftAndShift();
+        $request = $this->submitRequest($craft);
+
+        $this->actingAsAdmin();
+        $this->post(route('shift-plan-requests.reject', $request), [
+            'days' => [['date' => '2026-05-06', 'reason' => 'Zu dünn besetzt']],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('rejected', $request->fresh()->status);
+    }
+
+    #[Test]
+    public function a_shift_reason_alone_is_enough_to_reject(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::CAN_COMMIT_SHIFTS->value]);
+        [$craft, $shift] = $this->createCraftAndShift();
+        $request = $this->submitRequest($craft);
+
+        $this->actingAsAdmin();
+        $this->post(route('shift-plan-requests.reject', $request), [
+            'shifts' => [[
+                'shift_id' => $shift->id,
+                'unique_key' => 'shift-' . $shift->id,
+                'row_type' => 'unassigned',
+                'reason' => 'Pause fehlt',
+            ]],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('rejected', $request->fresh()->status);
     }
 }

@@ -33,6 +33,9 @@ return [
     'contract' => [
         'add' => 'Ein Vertrag wurde für dich freigegeben',
         'delete' => 'Ein Vertrag wurde gelöscht',
+        'task_assigned' => 'Neue Aufgabe an einem Vertrag für dich: :task',
+        'task_contract' => 'Vertrag: :contract',
+        'task_deadline' => 'Deadline: :date',
     ],
     'project_assignment' => [
         'dissolved_by_free_day' =>
@@ -112,8 +115,6 @@ return [
             'Die Schichten der Anfrage wurden auf den Stand vor der Anfrage zurückgesetzt.',
     ],
     'event' => [
-        'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',
-        'adjoining_is_loud' => 'Lauter Termin im Nebenraum',
         'conflict' => 'Terminkonflikt',
         'conflict_text' => 'Konflikttermin belegt: :date_time',
         'new_room_request' => 'Neue Raumanfrage',
@@ -124,6 +125,13 @@ return [
         'room_request_accept' => 'Raumanfrage bestätigt',
         'room_request_declined' => 'Raumanfrage abgesagt',
         'deleted' => 'Termin abgesagt'
+    ],
+    'ai_assistant' => [
+        'created' => '{1} Termin angelegt (via Assistent)|[2,*] :count Termine angelegt (via Assistent)',
+        'updated' => '{1} Termin geändert (via Assistent)|[2,*] :count Termine geändert (via Assistent)',
+        'deleted' => '{1} Termin gelöscht (via Assistent)|[2,*] :count Termine gelöscht (via Assistent)',
+        'reverted' => '{1} Termin rückgängig gemacht (via Assistent)|' .
+            '[2,*] :count Termine rückgängig gemacht (via Assistent)',
     ],
     'moneySource' => [
         'add_permission' => 'Du hast Zugriff auf :moneySource erhalten',
@@ -165,6 +173,7 @@ return [
         'new' => 'Neue Anfrage für geplanten Termin',
         'open-index' => 'Planungsterminanfragen öffnen',
         'approved-finished' => 'Planungsterminanfrage genehmigt und abgeschlossen',
+        'approved-finished-by' => 'Planungsterminanfrage von :name genehmigt und abgeschlossen',
         'user-approved' => 'Planungsterminanfrage von :name genehmigt',
         'event-verification-description' => 'Der geplante Termin ":event" wurde genehmigt',
         'user-rejected' => 'Planungsterminanfrage von :name abgelehnt',

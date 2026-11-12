@@ -21,6 +21,8 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\Project\Policies\ProjectPolicy;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Project\Services\ProjectArtistService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sector\Models\Sector;
@@ -606,5 +608,87 @@ class Project extends Model
     public function scopeByName(Builder $builder, string $query): Builder
     {
         return $builder->where('name', 'like', "%" . $query . "%");
+    }
+
+    /**
+     * Projekte, die diese Person betreten darf (core-visibility-scopes, Konzept B1 §2).
+     *
+     * Die Regel ist aus der Oberflaeche extrahiert, nicht neu erfunden: sie entspricht
+     * ProjectPolicy::view und exakt der Abfrage, mit der ProjectController die canEnter-Flags der
+     * Projektuebersicht bildet — globales Recht (`view projects` / `write projects`), Mitglied im
+     * Projektteam oder Mitglied einer zugeordneten Abteilung.
+     *
+     * Artwork-Admins passieren ueber `canAny()` (Gate::before) genau wie in der Uebersicht. Ohne
+     * Benutzer ist die Menge leer — der Scope ist kein Ersatz fuer die Authentifizierung.
+     *
+     * Achtung: Die Projektuebersicht selbst filtert **nicht** damit; sie zeigt bewusst alle
+     * Projekte und gated nur den Einstieg. Der Scope ist die Regel fuer Aggregationen (B1).
+     */
+    public function scopeVisibleFor(Builder $builder, ?User $user): Builder
+    {
+        if (!$user instanceof User) {
+            return $builder->whereRaw('1 = 0');
+        }
+
+        if (self::mayEnterEveryProject($user)) {
+            return $builder;
+        }
+
+        return $builder->where(function (Builder $query) use ($user): void {
+            $query
+                ->whereHas('users', fn (Builder $userQuery) => $userQuery->where('users.id', $user->id))
+                ->orWhereHas(
+                    'departments.users',
+                    fn (Builder $departmentQuery) => $departmentQuery->where('users.id', $user->id)
+                );
+        });
+    }
+
+    /**
+     * Globales Zutrittsrecht — bewusst **nicht** ueber `can()`.
+     *
+     * Der Rechtekatalog dieser Anwendung existiert nur fuer den Guard `web`. Laeuft die Abfrage
+     * unter `auth:api` (Maschinen-API, KI-Endpunkte), leitet spatie den Guard aus dem aktiven
+     * Guard ab, findet dort kein Recht `view projects` und liefert stillschweigend false — der
+     * Scope wuerde in der API also weniger zeigen als in der Oberflaeche. Deshalb wird der Guard
+     * hier ausdruecklich genannt; `checkPermissionTo()` wirft nicht, wenn es das Recht nicht gibt.
+     *
+     * Die Admin-Abkuerzung entspricht `Gate::before` in App\Providers\AuthServiceProvider und
+     * damit dem Verhalten der Projektuebersicht.
+     */
+    private static function mayEnterEveryProject(User $user): bool
+    {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return true;
+        }
+
+        foreach (ProjectPolicy::GLOBAL_ENTER_PERMISSIONS as $permission) {
+            if ($user->checkPermissionTo($permission, 'web')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Projekte, die die Person öffnen darf: Query-Gegenstück zu ProjectPolicy::view (globales Projektrecht,
+     * Mitglied im Projektteam oder in einer Abteilung des Projekts). Beide Regeln müssen gleich bleiben.
+     */
+    public function scopeEnterableBy(Builder $builder, User $user): Builder
+    {
+        foreach (ProjectPolicy::GLOBAL_ENTER_PERMISSIONS as $permission) {
+            if ($user->can($permission)) {
+                return $builder;
+            }
+        }
+
+        return $builder->where(function (Builder $query) use ($user): void {
+            $query->whereHas('users', fn (Builder $users) => $users->whereKey($user->id))
+                ->orWhereHas(
+                    'departments.users',
+                    fn (Builder $users) => $users->whereKey($user->id)
+                );
+        });
     }
 }

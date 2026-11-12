@@ -163,7 +163,7 @@
                                 :icon="IconInfoCircle"
                                 icon-size="size-4"
                                 tooltip-width="w-72"
-                                :tooltip-text="$t('Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.')"
+                                :tooltip-text="$t('Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it. You can still assign people by dragging them onto the compact card.')"
                             />
                         </div>
 

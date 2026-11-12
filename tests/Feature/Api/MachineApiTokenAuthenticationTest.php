@@ -11,6 +11,7 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * Maschinen-Tokens über den echten auth:api-Guard — mit ausgestellten JWTs statt Passport::actingAs(),
@@ -18,6 +19,8 @@ use Tests\Feature\FeatureTestCase;
  */
 final class MachineApiTokenAuthenticationTest extends FeatureTestCase
 {
+    use GrantsAiAccess;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -33,25 +36,24 @@ final class MachineApiTokenAuthenticationTest extends FeatureTestCase
     {
         $user = User::factory()->create();
 
-        // Zustand der Instanzen nach der Migration: Legacy-Schema, Personal Access Client mit fester
-        // Grant-Type-Liste. Ohne sie leitete Passport client_credentials ab, und der TokenGuard verwarf
-        // jeden Token, dessen User-ID der Client-ID entspricht (typisch: User 1 / Client 1).
+        // Zustand der Instanzen nach den Migrationen: Personal Access Client mit fester Grant-Type-Liste.
+        // Ohne sie leitete Passport client_credentials ab, und der TokenGuard verwarf jeden Token,
+        // dessen User-ID der Client-ID entspricht (typisch: User 1 / Client 1).
         DB::table('oauth_clients')->insert([
             'id' => $user->id,
-            'user_id' => null,
+            'owner_type' => null,
+            'owner_id' => null,
             'name' => 'Artwork Personal Access Client',
             'secret' => 'secret',
             'provider' => null,
-            'redirect' => 'http://localhost',
+            'redirect_uris' => json_encode(['http://localhost']),
             'grant_types' => json_encode(['personal_access']),
-            'personal_access_client' => true,
-            'password_client' => false,
             'revoked' => false,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        $result = $user->createToken('Externes System', ['inventory:read']);
+        $result = $this->grantAiAccess($user)->createToken('Externes System', ['inventory:read']);
 
         $this->assertSame((string) $user->id, (string) $result->token->client_id);
 
@@ -71,7 +73,7 @@ final class MachineApiTokenAuthenticationTest extends FeatureTestCase
     public function token_is_rejected_after_the_expiry_date_set_in_the_settings(): void
     {
         app(ClientRepository::class)->createPersonalAccessGrantClient('Personal Access Client', 'users');
-        $this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value);
+        $this->grantAiAccess($this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value));
 
         $expiryDate = now()->addDay()->toDateString();
 
@@ -104,7 +106,7 @@ final class MachineApiTokenAuthenticationTest extends FeatureTestCase
     public function token_without_expiry_date_stays_valid(): void
     {
         app(ClientRepository::class)->createPersonalAccessGrantClient('Personal Access Client', 'users');
-        $this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value);
+        $this->grantAiAccess($this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value));
 
         $plainTextToken = $this
             ->post(route('api-management.store'), ['name' => 'Ticketshop', 'scopes' => ['inventory:read']])

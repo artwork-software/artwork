@@ -9,6 +9,7 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ComponentSelectionModeService;
 use Artwork\Modules\Project\Services\ProjectArtistService;
 use Artwork\Modules\Project\Services\ComponentUsageService;
+use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\JsonResponse;
@@ -110,9 +111,7 @@ class ComponentController extends Controller
         // Verwendungs-Cache leeren (Ordner-Label kann sich geändert haben)
         ComponentUsageService::clearCache();
         // Auch Drucklayout-bezogene Caches leeren
-        Cache::forget('print_layout_components_not_special');
-        Cache::forget('print_layout_components_special');
-        Cache::forget('print_layout_all_components');
+        ProjectPrintLayoutService::clearComponentCaches();
     }
 
     public function update(UpdateComponentRequest $request, Component $component): void
@@ -139,9 +138,7 @@ class ComponentController extends Controller
         // Verwendungs-Cache leeren (Ordner-Label kann sich geändert haben)
         ComponentUsageService::clearCache();
         // Auch Drucklayout-bezogene Caches leeren
-        Cache::forget('print_layout_components_not_special');
-        Cache::forget('print_layout_components_special');
-        Cache::forget('print_layout_all_components');
+        ProjectPrintLayoutService::clearComponentCaches();
     }
 
     public function destroy(Component $component, ProjectArtistService $projectArtistService): void
@@ -187,8 +184,6 @@ class ComponentController extends Controller
         Cache::forget('settings_tabs_with_relations');
         ComponentUsageService::clearCache();
         // Auch Drucklayout-bezogene Caches leeren
-        Cache::forget('print_layout_components_not_special');
-        Cache::forget('print_layout_components_special');
-        Cache::forget('print_layout_all_components');
+        ProjectPrintLayoutService::clearComponentCaches();
     }
 }

@@ -604,6 +604,28 @@ final class AppProjectTest extends TestCase
     }
 
     #[Test]
+    public function checklistTabHidesForeignPrivateChecklistsFromTheProjectTeam(): void
+    {
+        $owner = User::factory()->create();
+        $teamMember = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($teamMember->id);
+        [$tab] = $this->createTabWithComponent('ChecklistComponent');
+        Checklist::factory()->create([
+            'project_id' => $project->id,
+            'user_id' => $owner->id,
+            'name' => 'Private list',
+            'private' => true,
+        ]);
+
+        Passport::actingAs($teamMember, ['app']);
+
+        $this->getJson(route('app.v1.projects.tab', [$project, $tab]))
+            ->assertOk()
+            ->assertJsonCount(0, 'components.0.value.checklists');
+    }
+
+    #[Test]
     public function commentTabComponentContainsProjectCommentsNewestFirst(): void
     {
         $user = User::factory()->create();

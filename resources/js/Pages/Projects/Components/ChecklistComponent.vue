@@ -165,14 +165,14 @@
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 1"
                              :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                            {{ $t('ToDo-List name descending') }}
+                            {{ $t('ToDo-List name ascending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 2"
                              :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                            {{ $t('ToDo-List name ascending') }}
+                            {{ $t('ToDo-List name descending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
                         </div>
                     </MenuItem>
@@ -423,13 +423,17 @@ const filteredChecklists = computed(() => {
         return include;
     });
 
-    if (currentSort.value === 1 || (!props.isInOwnTaskManagement && currentSort.value === 1)) {
+    if (props.isInOwnTaskManagement && (currentSort.value === 1 || currentSort.value === 2)) {
+        // "Projektzeitraum": die Reihenfolge kommt vom Server (erster Projekttermin, sort_position
+        // über öffentliche und private Listen hinweg) und darf hier nicht nach Namen überschrieben werden
+        return checklists.sort((a, b) => (a?.sort_position ?? 0) - (b?.sort_position ?? 0));
+    } else if (currentSort.value === 1) {
         return checklists.sort((a, b) => {
             const nameA = a?.name ?? '';
             const nameB = b?.name ?? '';
             return nameA.localeCompare(nameB);
         });
-    } else if (currentSort.value === 2 || (!props.isInOwnTaskManagement && currentSort.value === 2)) {
+    } else if (currentSort.value === 2) {
         return checklists.sort((a, b) => {
             const nameA = a?.name ?? '';
             const nameB = b?.name ?? '';

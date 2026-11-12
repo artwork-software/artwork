@@ -3,8 +3,11 @@
 namespace Artwork\Modules\System\ApiManagement\Http\Controller;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\AiAssistant\Support\AiScopes;
 use Artwork\Modules\System\ApiManagement\Http\Requests\StoreTokenRequest;
 use Artwork\Modules\System\ApiManagement\Support\MachineScopes;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Laravel\Passport\Token;
@@ -46,7 +49,7 @@ class ApiManagementController extends Controller
             ->with('plainTextToken', $result->accessToken);
     }
 
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Request $request, string $id): RedirectResponse
     {
         $this->authorize('delete', Token::class);
 
@@ -55,6 +58,16 @@ class ApiManagementController extends Controller
             ->whereKey($id)
             ->whereJsonDoesntContain('scopes', MachineScopes::APP_SCOPE)
             ->first();
+
+        // KI-Keys sind ohne Konsolen-Recht "ai access" auch in der Liste unsichtbar.
+        $user = $request->user();
+        if (
+            $token
+            && AiScopes::containsAiScope($token->scopes ?? [])
+            && !($user instanceof User && $user->hasAiAccess())
+        ) {
+            $token = null;
+        }
 
         if (!$token) {
             return back()->with('error', __('Token not found.'));

@@ -91,15 +91,7 @@
                                     <!-- Delete button (visible on hover / permission) -->
                                     <div class="shrink-0">
                                         <button
-                                            v-if="
-                        is('artwork admin') ||
-                        can('write projects') ||
-                        effectiveProjectWriteIds?.includes($page.props.auth.user.id) ||
-                        effectiveProjectManagerIds?.includes($page.props.auth.user.id) ||
-                        isMemberOfADepartment ||
-                        comment.user?.id === $page.props.auth.user.id ||
-                        canEditComponent
-                      "
+                                            v-if="is('artwork admin') || comment.user?.id === $page.props.auth.user.id"
                                             type="button"
                                             class="invisible group-hover:visible inline-flex rounded-full p-1 text-text-subtle transition hover:bg-danger-surface hover:text-danger focus-visible:outline-none"
                                             @click="deleteCommentFromProject(comment)"

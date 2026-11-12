@@ -39,8 +39,9 @@ class WorkOnHolidayCheck extends AbstractRuleCheck
             }
 
             if (!$specialDayService->countsAsSpecialDayForUser($user, $date)) {
-                // Vertragsschalter aus: Sondertage zählen für diese Person nicht.
-                return $violations;
+                // Vertragsschalter an diesem Tag aus: der Sondertag zählt für die Person nicht. Der Schalter
+                // wird je Stichtag aufgelöst (Vertragshistorie), spätere Sondertage können wieder zählen.
+                continue;
             }
 
             $shift = $this->getShiftStartingOnDate($user, $date);

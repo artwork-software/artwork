@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -35,9 +36,16 @@ class CompanyTypeController extends Controller
         return Redirect::back();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(int $id): \Illuminate\Http\RedirectResponse
     {
         $companyType = CompanyType::onlyTrashed()->findOrFail($id);
+
+        if (Contract::withTrashed()->where('company_type_id', $companyType->id)->exists()) {
+            return Redirect::back()->with(
+                'error',
+                __('This company type is still used by contracts and cannot be deleted permanently.')
+            );
+        }
 
         $companyType->forceDelete();
 

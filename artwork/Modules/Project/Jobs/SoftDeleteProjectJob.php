@@ -46,14 +46,25 @@ class SoftDeleteProjectJob implements ShouldQueue
             return;
         }
 
+        // Zwischen Löschen und Job-Start wiederhergestellt: die Kaskade würde das aktive Projekt
+        // samt Terminen und Schichten erneut in den Papierkorb legen.
+        if (!$project->trashed()) {
+            return;
+        }
+
         // Queue-Jobs haben keinen auth()-User; ohne expliziten Causer würden alle
         // kaskadierten Lösch-Activities (Schichten etc.) als "System" geloggt. Den
         // auslösenden User setzen, damit der Schichtverlauf zeigt, wer gelöscht hat.
         $this->resolveCauser();
 
-        // Resolve softDelete's many service dependencies from the container while
-        // binding the project explicitly.
-        app()->call([$projectService, 'softDelete'], ['project' => $project]);
+        try {
+            // Resolve softDelete's many service dependencies from the container while
+            // binding the project explicitly.
+            app()->call([$projectService, 'softDelete'], ['project' => $project]);
+        } finally {
+            // Der Worker lebt weiter: ohne Zurücksetzen trügen alle folgenden Jobs diese Person als Verursacher
+            CauserResolver::setCauser(null);
+        }
     }
 
     private function resolveCauser(): void

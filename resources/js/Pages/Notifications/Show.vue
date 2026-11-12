@@ -171,9 +171,9 @@
                                                           />
                         </div>
                         <div  class="col-span-4 pr-8">
-                            <div v-if="globalNotification.image_url || globalNotification.title">
+                            <div v-if="globalNotification?.image_url || globalNotification?.title">
                                 <div class=" rounded-xl">
-                                    <img v-if="globalNotification.image_url" alt="Benachrichtigungs-Bild" class="max-h-96 rounded-t-xl"
+                                    <img v-if="globalNotification.image_url" :alt="globalNotification.title || $t('Image')" class="max-h-96 rounded-t-xl"
                                          :src="globalNotification.image_url"/>
                                     <div class="px-4 py-4">
                                         <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mt-2 mb-2">
@@ -204,87 +204,24 @@
 </template>
 
 <script>
-import {IconCheck, IconChevronDown, IconChevronRight, IconChevronUp, IconCircleX, IconDotsVertical, IconEdit, IconInfoCircle, IconPlus, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-
-import {
-  Listbox,
-  ListboxButton,
-  ListboxLabel,
-  ListboxOption,
-  ListboxOptions,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems
-} from '@headlessui/vue'
-import Button from "@/Jetstream/Button.vue";
-import JetButton from "@/Jetstream/Button.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import JetInput from "@/Jetstream/Input.vue";
-import JetInputError from "@/Jetstream/InputError.vue";
-import JetSecondaryButton from "@/Jetstream/SecondaryButton.vue";
-import Checkbox from "@/Layouts/Components/Checkbox.vue";
-import {Link, useForm} from "@inertiajs/vue3";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue";
+import {useForm} from "@inertiajs/vue3";
 import NotificationSettingsPanel from "@/Layouts/Components/NotificationComponents/NotificationSettingsPanel.vue";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent.vue";
 import {resetNotificationArrived} from "@/Helper/notificationIndicator.js";
-import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
-import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
-        NotificationBlock,
         SecondaryButton,
         GlobalNotificationModal,
         NotificationSectionComponent,
         NotificationSettingsPanel,
-        TeamIconCollection,
-        UserTooltip,
-        SvgCollection,
-        Button,
         AppLayout,
-        IconDotsVertical,
-        IconPlus,
-        IconSearch,
-        Listbox,
-        ListboxButton,
-        ListboxLabel,
-        ListboxOption,
-        ListboxOptions,
-        IconCheck,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        JetButton,
-        JetDialogModal,
-        JetInput,
-        JetInputError,
-        JetSecondaryButton,
-        IconInfoCircle,
-        IconChevronDown,
-        IconChevronUp,
-        Checkbox,
-        IconX,
-        IconEdit,
-        IconTrash,
-        IconCircleX,
-        Link,
-        InputComponent,
-        IconChevronRight,
-        NotificationUserIcon,
-        AnswerEventRequestComponent,
     },
     props: [
         'historyObjects',

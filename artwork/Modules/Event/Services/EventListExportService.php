@@ -8,6 +8,7 @@ use Artwork\Core\Services\CollectionService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Event\Abstracts\EventExportService;
 use Artwork\Modules\Event\Exports\EventListXlsxExport;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -103,9 +104,7 @@ class EventListExportService extends EventExportService
                     'event_type' => $desiredEvent->getAttribute('event_type')->getAttribute('name'),
                     'event_name' => $desiredEvent->getAttribute('name'),
                     'event_description' => $desiredEvent->getAttribute('description') ?? '',
-                    'event_status' => $this->eventSettingsService->get('enable_status', false) ?
-                        $desiredEvent->getAttribute('eventStatus')?->getAttribute('name') ?? '' :
-                        '',
+                    'event_status' => $this->eventStatusText($desiredEvent),
                     'room' => $desiredEvent->getAttribute('room')?->getAttribute('name') ?? '',
                     'artists' => $project ?
                         $this->aggregateDesiredProjectDataBy($column, $project) :
@@ -126,6 +125,26 @@ class EventListExportService extends EventExportService
         }
 
         return $rows;
+    }
+
+    /**
+     * Spalte "Terminstatus": Name des Terminstatus (sofern das Statusmodul aktiv ist). Geplante Termine, die
+     * Personen mit Planungskalender-Recht mit exportieren, sind hier als geplant gekennzeichnet; ohne
+     * Kennzeichnung waren sie in der Liste nicht von festen Terminen zu unterscheiden.
+     */
+    public function eventStatusText(Event $event): string
+    {
+        $statusName = $this->eventSettingsService->get('enable_status', false)
+            ? (string) ($event->getAttribute('eventStatus')?->getAttribute('name') ?? '')
+            : '';
+
+        if (!$event->getAttribute('is_planning')) {
+            return $statusName;
+        }
+
+        $planned = $this->translator->get('export.excel-event-list-export.planned');
+
+        return $statusName === '' ? $planned : sprintf('%s (%s)', $statusName, $planned);
     }
 
     public function aggregateDesiredProjectDataBy(string $column, Project $project): string

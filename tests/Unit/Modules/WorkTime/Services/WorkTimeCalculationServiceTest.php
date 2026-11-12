@@ -64,7 +64,9 @@ final class WorkTimeCalculationServiceTest extends TestCase
         User $user,
         bool $specialDayRule = true,
         bool $threeMonth = false,
-        ?bool $assignRule = null
+        ?bool $assignRule = null,
+        ?string $validFrom = null,
+        ?string $validUntil = null
     ): void {
         $template = UserContract::create([
             'name' => 'Testvertrag',
@@ -85,6 +87,8 @@ final class WorkTimeCalculationServiceTest extends TestCase
             'compensation_period' => 90,
             'free_sundays_per_season' => 0,
             'days_off_first_26_weeks' => 0,
+            'valid_from' => $validFrom,
+            'valid_until' => $validUntil,
         ]);
     }
 
@@ -357,6 +361,39 @@ final class WorkTimeCalculationServiceTest extends TestCase
 
         $this->assertSame(0, $day['target']);
         $this->assertSame(480, $day['target_reduction']);
+    }
+
+    /**
+     * Vertragswechsel mitten im Zeitraum: Bis Ende August gilt ein Vertrag mit Dreimonatsmodus, ab September
+     * (also heute) einer ohne. Der Sondertag im Juli mindert nach dem Dienstagsdurchschnitt, der im Oktober
+     * um das volle Tagessoll; früher entschied für beide der heute gültige Vertrag.
+     */
+    #[Test]
+    public function three_month_mode_follows_the_contract_valid_on_each_day(): void
+    {
+        Carbon::setTestNow('2026-11-11 10:00:00');
+        $user = $this->user();
+        $this->workTime($user, ['tuesday' => '08:00']);
+        $this->contract($user, specialDayRule: true, threeMonth: true, validUntil: '2026-08-31');
+        $this->contract($user, specialDayRule: true, threeMonth: false, validFrom: '2026-09-01');
+        $this->holiday(self::TUESDAY);
+        $this->holiday('2026-10-13');
+        $this->booking($user, '2026-04-07', 300);
+        $this->booking($user, '2026-05-12', 420);
+        $this->booking($user, '2026-07-07', 300);
+        $this->booking($user, '2026-08-04', 420);
+
+        $service = $this->service();
+        $context = $service->buildContext($user, Carbon::parse('2026-07-01'), Carbon::parse('2026-10-31'));
+        $july = $service->dayBreakdown($user, Carbon::parse(self::TUESDAY), $context);
+        $october = $service->dayBreakdown($user, Carbon::parse('2026-10-13'), $context);
+
+        $this->assertSame(360, $july['target_reduction']);
+        $this->assertSame(120, $july['target']);
+        $this->assertSame(360, $july['reference_weekday_average']);
+        $this->assertSame(480, $october['target_reduction']);
+        $this->assertSame(0, $october['target']);
+        $this->assertNull($october['reference_weekday_average']);
     }
 
     #[Test]

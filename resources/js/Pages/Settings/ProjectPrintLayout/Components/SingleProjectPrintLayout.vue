@@ -90,7 +90,7 @@
                     </div>
                 </div>
                 <div class="grid gap-4" :class="'grid-cols-' + layout['columns_footer']">
-                    <div v-for="index in layout['columns_header']" v-if="layout.open_footer_notes">
+                    <div v-for="index in layout['columns_footer']" v-if="layout.open_footer_notes">
                         <TextareaComponent
                             :id="'footerNote' + index"
                             v-model="layout.notes.footer[index - 1]"
@@ -98,7 +98,7 @@
                             @focusout="saveNotes('footer')"
                         />
                     </div>
-                    <div v-else v-for="index in layout['columns_header']">
+                    <div v-else v-for="index in layout['columns_footer']">
                         <p class="text-xs/[18px] text-text-subtle whitespace-pre-line">{{ layout.notes.footer[index - 1] }}</p>
                     </div>
                     <template v-for="col in layout['columns_footer']" :key="col">

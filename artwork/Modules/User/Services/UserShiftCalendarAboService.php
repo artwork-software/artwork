@@ -44,6 +44,7 @@ readonly class UserShiftCalendarAboService
     public function __construct(
         private UserShiftCalendarAboRepository $userShiftCalendarAboRepository,
         private ShiftSettings $shiftSettings,
+        private CalendarAboAlertService $calendarAboAlertService,
     ) {
         //
     }
@@ -196,7 +197,12 @@ readonly class UserShiftCalendarAboService
 
                 $this->markEventAsFree($event);
 
-                $this->addStartAlertToEvent($event, $calendarAbo, $date->copy()->startOfDay(), $title);
+                $this->calendarAboAlertService->addStartAlert(
+                    $event,
+                    $calendarAbo,
+                    $date->copy()->startOfDay(),
+                    $title
+                );
             });
         } catch (\Throwable $exception) {
             report($exception);
@@ -402,7 +408,7 @@ readonly class UserShiftCalendarAboService
                     $event->startsAt($eventStart)->endsAt($eventEnd);
                 }
 
-                $this->addStartAlertToEvent($event, $calendarAbo, $eventStart, $title);
+                $this->calendarAboAlertService->addStartAlert($event, $calendarAbo, $eventStart, $title);
             });
         } catch (\Throwable $e) {
             return;
@@ -421,34 +427,8 @@ readonly class UserShiftCalendarAboService
             ->appendProperty(TextProperty::create('X-MICROSOFT-CDO-BUSYSTATUS', 'FREE'));
     }
 
-    private function addStartAlertToEvent(
-        $event,
-        UserShiftCalendarAbo $calendarAbo,
-        Carbon $eventStart,
-        string $title
-    ): void {
-        if (!$calendarAbo->enable_notification) {
-            return;
-        }
-
-        $alertTime = $eventStart->copy();
-
-        match ($calendarAbo->notification_time_unit) {
-            'minutes' => $alertTime->subMinutes($calendarAbo->notification_time),
-            'hours' => $alertTime->subHours($calendarAbo->notification_time),
-            'days' => $alertTime->subDays($calendarAbo->notification_time),
-            default => null,
-        };
-
-        $event->alertAt(
-            $alertTime,
-            $title . ' beginnt in ' . $calendarAbo->notification_time . ' ' .
-            $calendarAbo->notification_time_unit
-        );
-    }
-
     /**
-     * Add alert to the event if notifications are enabled
+     * Erinnerung vor Schichtbeginn, wenn sie im Abo eingeschaltet ist; der Text nennt zusätzlich die Schichtzeit.
      */
     public function addAlertToEvent(
         $event,
@@ -459,23 +439,12 @@ readonly class UserShiftCalendarAboService
         $shiftEndTime = null,
         ?string $title = null
     ): void {
-        if ($calendarAbo->enable_notification) {
-            $alertTime = Carbon::parse($shiftStart . ' ' . $shiftStartTime);
-            switch ($calendarAbo->notification_time_unit) {
-                case 'minutes':
-                    $alertTime->subMinutes($calendarAbo->notification_time);
-                    break;
-                case 'hours':
-                    $alertTime->subHours($calendarAbo->notification_time);
-                    break;
-                case 'days':
-                    $alertTime->subDays($calendarAbo->notification_time);
-                    break;
-            }
-            $alertTitle = $title ?? ('Schicht: ' . ($shift->craft?->name ?? 'Schicht'));
-            $event->alertAt($alertTime, $alertTitle . ' (' .
-                $shiftStartTime . ' - ' . ($shiftEndTime ?? $shift->end) . ') beginnt in ' .
-                $calendarAbo->notification_time . ' ' . $calendarAbo->notification_time_unit);
-        }
+        $alertTitle = $title ?? ('Schicht: ' . ($shift->craft?->name ?? 'Schicht'));
+        $this->calendarAboAlertService->addStartAlert(
+            $event,
+            $calendarAbo,
+            Carbon::parse($shiftStart . ' ' . $shiftStartTime),
+            $alertTitle . ' (' . $shiftStartTime . ' - ' . ($shiftEndTime ?? $shift->end) . ')'
+        );
     }
 }

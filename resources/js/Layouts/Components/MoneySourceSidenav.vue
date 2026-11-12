@@ -309,7 +309,7 @@ import MoneySourceFileDeleteModal from '@/Layouts/Components/MoneySourceFileDele
 import MoneySourceCategoriesModal from '@/Layouts/Components/MoneySourceCategoriesModal.vue'
 import LinkProjectsToMoneySourcesComponent from '@/Layouts/Components/LinkProjectsToMoneySourcesComponent.vue'
 import EditMoneySourceUsersModal from '@/Layouts/Components/EditMoneySourceUsersModal.vue'
-import { is } from 'laravel-permission-to-vuejs'
+import { is, can } from 'laravel-permission-to-vuejs'
 
 // Icons (Tabler)
 import { IconChevronDown, IconUpload, IconDownload, IconCircleX, IconEdit } from '@tabler/icons-vue'
@@ -334,10 +334,16 @@ const props = defineProps<{
 /** Page */
 const page = usePage()
 
-/** Permissions */
+/** Permissions: Spiegel von MoneySourcePolicy::update, wie canManage in MoneySources/Show.vue */
 const canManage = computed(() => {
     const uid = page.props.auth.user.id
-    return is('artwork admin') || props.writeAccess.includes(uid) || props.competent.includes(uid)
+    return is('artwork admin')
+        || props.writeAccess.includes(uid)
+        || props.competent.includes(uid)
+        || props.money_source?.creator?.id === uid
+        || can('view edit add money_sources')
+        || can('can edit and delete money sources')
+        || can('can manage global project budgets')
 })
 
 /** UI State */

@@ -1,57 +1,96 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
-            <div class="mx-4">
-                <ModalHeader
-                    :title="$t('Upload document')"
-                    :description="$t('Upload documents to this room.')"
+    <ArtworkBaseModal
+        v-if="show"
+        title="Upload document"
+        description="Upload documents to this room."
+        modal-size="sm:max-w-xl"
+        @close="resetModal"
+    >
+        <form id="roomFileUploadForm" class="space-y-4" @submit.prevent="storeFiles">
+            <div>
+                <input
+                    id="roomFileUploadInput"
+                    ref="room_files"
+                    type="file"
+                    class="sr-only"
+                    multiple
+                    @change="upload"
                 />
-
-                <div>
-                    <input
-                        @change="upload"
-                        class="hidden"
-                        ref="room_files"
-                        id="file"
-                        type="file"
-                        multiple
-                    />
-                    <div @click="selectNewFiles" @dragover.prevent
-                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
-                        border-accent-600 border-dotted border-2 h-32  p-2 cursor-pointer">
-                        <p class="text-accent-600 font-bold text-center">
-                            {{ $t('Drag document here to upload or click in the field')}}
-                        </p>
-                    </div>
-                    <jet-input-error :message="uploadDocumentFeedback"/>
-                </div>
-                <div class="mb-3">
-                    <MultiAlertComponent :errors="roomFileForm.errors" v-show="Object.keys(roomFileForm.errors).length > 0"  :error-count="Object.keys(roomFileForm.errors).length" />
-                </div>
-                <div class="mb-6">
-                    <div v-for="file in files">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                {{ file.name }}
-                            </div>
-                            <div>
-                                <component :is="IconCircleX" class="size-5 text-danger cursor-pointer hover:text-accent-700 transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="justify-center flex w-full my-6">
-                    <FormButton
-                        :text="$t('Upload document')"
-                        @click="storeFiles"
-                        :disabled="files.length < 1 || isUploading"
-                    />
+                <div
+                    role="button"
+                    tabindex="0"
+                    class="flex min-h-28 w-full cursor-pointer flex-col items-center justify-center gap-y-2 rounded-lg border-2 border-dashed p-4 text-center transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                    :class="isDragging ? 'border-accent-600 bg-accent-50' : 'border-border'"
+                    @click="selectNewFiles"
+                    @keydown.enter.prevent="selectNewFiles"
+                    @keydown.space.prevent="selectNewFiles"
+                    @dragenter.prevent="isDragging = true"
+                    @dragover.prevent="isDragging = true"
+                    @dragleave="isDragging = $event.currentTarget.contains($event.relatedTarget)"
+                    @drop.stop.prevent="uploadDraggedDocuments($event)"
+                >
+                    <PropertyIcon name="IconUpload" class="size-6 text-text-subtle" stroke-width="1.5" aria-hidden="true"/>
+                    <p class="text-sm text-text-muted">
+                        <template v-if="isDragging">{{ $t('Drop here') }}</template>
+                        <template v-else>
+                            <span class="font-semibold text-accent-600">{{ $t('Choose file') }}</span>
+                            {{ $t('or drag and drop') }}
+                        </template>
+                    </p>
                 </div>
             </div>
-    </BaseModal>
+
+            <ul v-if="files.length > 0" class="divide-y divide-border-subtle rounded-lg border border-border-subtle">
+                <li
+                    v-for="(file, index) in files"
+                    :key="file.name + '-' + index"
+                    class="flex items-center justify-between gap-x-3 px-3 py-2 text-sm text-text"
+                >
+                    <div class="flex min-w-0 items-center gap-x-2">
+                        <PropertyIcon name="IconFile" class="size-4 shrink-0 text-text-subtle" stroke-width="1.5" aria-hidden="true"/>
+                        <span class="truncate">{{ file.name }}</span>
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-hover hover:text-danger disabled:cursor-default disabled:text-text-subtle"
+                        :aria-label="$t('Remove file')"
+                        :disabled="isUploading"
+                        @click="removeFile(index)"
+                    >
+                        <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                    </button>
+                </li>
+            </ul>
+
+            <BaseAlertComponent
+                v-if="uploadDocumentFeedback"
+                type="error"
+                class="mb-0!"
+                :message="uploadDocumentFeedback"
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="isUploading"
+                @click="resetModal"
+            />
+            <BaseUIButton
+                type="submit"
+                form="roomFileUploadForm"
+                label="Upload document"
+                variant="primary"
+                icon="IconUpload"
+                :processing="isUploading"
+                :disabled="files.length < 1 || isUploading"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-import JetInputError from '@/Jetstream/InputError.vue'
 import {ref} from "vue";
 import {router, useForm} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
@@ -61,11 +100,12 @@ import {
     submitInertiaForm,
     uploadSequentially,
 } from "@/Helper/sequentialUpload.js";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
-import {IconCircleX} from "@tabler/icons-vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+
+defineOptions({name: 'RoomFileUploadModal'})
 
 const props = defineProps({
     show: Boolean,
@@ -76,9 +116,8 @@ const props = defineProps({
 const uploadDocumentFeedback = ref("")
 const files = ref([])
 const room_files = ref(null)
-
-const closeModalIfUploaded = ref(false)
 const isUploading = ref(false)
+const isDragging = ref(false)
 const $t = useTranslation()
 
 const roomFileForm = useForm({
@@ -90,14 +129,30 @@ const selectNewFiles = () => {
 }
 
 const uploadDraggedDocuments = (event) => {
+    isDragging.value = false
     validateType([...event.dataTransfer.files])
 }
 
 const upload = (event) => {
     validateType([...event.target.files])
+    // Gleiche Datei erneut wählbar machen
+    event.target.value = ''
 }
 
-/** Eine Datei hochladen (Promise) – Fehler meldet das Modal selbst (kein globaler alert/Toast). */
+const removeFile = (index) => {
+    files.value.splice(index, 1)
+}
+
+const resetModal = () => {
+    if (isUploading.value) {
+        return
+    }
+    files.value = []
+    uploadDocumentFeedback.value = ''
+    props.closeModal()
+}
+
+/** Eine Datei hochladen (Promise). Fehler meldet das Modal selbst (kein globaler alert/Toast). */
 const storeFile = (file) => {
     roomFileForm.file = file
 
@@ -141,19 +196,12 @@ const storeFiles = async () => {
     files.value = [...failed.map(({ file }) => file), ...skipped]
 
     if (failed.length > 0) {
-        closeModalIfUploaded.value = false
         uploadDocumentFeedback.value = failed
             .map(({ file, error }) => `${file.name}: ${inertiaUploadErrorMessage(error, $t)}`)
             .join(' ')
         return
     }
 
-    closeModalIfUploaded.value = true
     props.closeModal()
 }
-
 </script>
-
-<style scoped>
-
-</style>

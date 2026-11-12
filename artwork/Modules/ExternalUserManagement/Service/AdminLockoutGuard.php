@@ -68,11 +68,23 @@ class AdminLockoutGuard
     }
 
     /**
-     * Anzahl der Accounts mit Admin-Rolle, die weiterhin lokal einloggen können.
+     * Ob der Account der letzte aktive Admin mit lokalem Login ist (Notfallzugang bei IdP-Ausfall).
+     */
+    public function isLastLocalAdmin(User $user): bool
+    {
+        return !$user->isDeactivated()
+            && $this->keepsLocalLogin($user)
+            && $user->getAttribute('auth_provider') === 'local'
+            && $this->localAdminCount() <= 1;
+    }
+
+    /**
+     * Anzahl der Accounts mit Admin-Rolle, die weiterhin lokal einloggen können (deaktivierte zählen nicht).
      */
     public function localAdminCount(): int
     {
         return User::role(RoleEnum::ARTWORK_ADMIN->value)
+            ->active()
             ->where('auth_provider', 'local')
             ->count();
     }

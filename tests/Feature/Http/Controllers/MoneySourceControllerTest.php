@@ -7,6 +7,7 @@ use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySource\Models\MoneySourceTask;
 use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -77,6 +78,92 @@ final class MoneySourceControllerTest extends FeatureTestCase
 
         $response->assertRedirect();
         $this->assertDatabaseHas('money_sources', ['name' => 'New Source']);
+    }
+
+    #[Test]
+    public function store_saves_the_group_chosen_in_the_create_dialog(): void
+    {
+        $this->actingAsAdmin();
+        $group = MoneySource::factory()->create(['is_group' => true]);
+
+        $this->post(route('money_sources.store'), [
+            'name' => 'Source In Group',
+            'amount' => '100',
+            'is_group' => false,
+            'group_id' => $group->id,
+            'users' => [],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('money_sources', ['name' => 'Source In Group', 'group_id' => $group->id]);
+    }
+
+    #[Test]
+    public function store_rejects_a_single_source_as_group(): void
+    {
+        $this->actingAsAdmin();
+        $singleSource = MoneySource::factory()->create(['is_group' => false]);
+
+        $this->post(route('money_sources.store'), [
+            'name' => 'Source In Single Source',
+            'amount' => '100',
+            'is_group' => false,
+            'group_id' => $singleSource->id,
+            'users' => [],
+        ])->assertSessionHasErrors('group_id');
+
+        $this->assertDatabaseMissing('money_sources', ['name' => 'Source In Single Source']);
+    }
+
+    #[Test]
+    public function a_new_group_does_not_belong_to_another_group(): void
+    {
+        $this->actingAsAdmin();
+        $group = MoneySource::factory()->create(['is_group' => true]);
+
+        $this->post(route('money_sources.store'), [
+            'name' => 'New Group',
+            'amount' => '100',
+            'is_group' => true,
+            'group_id' => $group->id,
+            'users' => [],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('money_sources', ['name' => 'New Group', 'is_group' => true, 'group_id' => null]);
+    }
+
+    #[Test]
+    public function update_keeps_a_group_out_of_other_groups(): void
+    {
+        $this->actingAsAdmin();
+        $group = MoneySource::factory()->create(['is_group' => true]);
+        $otherGroup = MoneySource::factory()->create(['is_group' => true]);
+
+        $this->patch(route('money_sources.update', $otherGroup), [
+            'name' => 'Other Group',
+            'amount' => '100',
+            'is_group' => true,
+            'group_id' => $group->id,
+            'users' => [],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('money_sources', ['id' => $otherGroup->id, 'group_id' => null]);
+    }
+
+    #[Test]
+    public function index_ships_tasks_and_categories_for_groups_so_the_filters_can_match(): void
+    {
+        $this->actingAsAdmin();
+        $group = MoneySource::factory()->create(['is_group' => true]);
+        MoneySourceTask::factory()->create(['money_source_id' => $group->id, 'done' => false]);
+
+        $props = $this->get(route('money_sources.index'))->assertOk()->viewData('page')['props'];
+        $groupRow = (array) collect($props['moneySourceGroups'])->firstWhere('id', $group->id);
+        $sourceRow = (array) collect($props['moneySources'])->firstWhere('id', $group->id);
+
+        $this->assertArrayHasKey('categories', $groupRow);
+        $this->assertCount(1, $groupRow['money_source_tasks']);
+        $this->assertFalse(((array) $groupRow['money_source_tasks'][0])['done']);
+        $this->assertFalse(((array) $sourceRow['money_source_tasks'][0])['done']);
     }
 
     #[Test]

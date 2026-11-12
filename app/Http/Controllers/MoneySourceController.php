@@ -63,7 +63,9 @@ class MoneySourceController extends Controller
         return inertia('MoneySources/MoneySourceManagement', [
             'moneySourceCategories' => MoneySourceCategory::all(),
             'moneySources' => $moneySources,
-            'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
+            'moneySourceGroups' => MoneySource::with(['categories', 'moneySourceTasks'])
+                ->where('is_group', true)
+                ->get(),
             //is set if index is called due to redirect response of store method
             'recentlyCreatedMoneySourceId' => session('recentlyCreatedMoneySourceId')
         ]);
@@ -175,7 +177,8 @@ class MoneySourceController extends Controller
             'source_name' => $request->source_name,
             'description' => $request->description,
             'is_group' => $request->boolean('is_group'),
-            'icon' => $request->boolean('is_group') ? $request->icon : null
+            'icon' => $request->boolean('is_group') ? $request->icon : null,
+            'group_id' => $request->boolean('is_group') ? null : $request->group_id,
         ]);
 
         $moneySource->users()->sync(collect($request->users));
@@ -478,7 +481,6 @@ class MoneySourceController extends Controller
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySourceCategories' => MoneySourceCategory::all(),
             'moneySources' => MoneySource::where('is_group', false)->get(),
-            'projects' => Project::select(['id', 'name'])->get(),
             'linkedProjects' => $moneySource->projects()->get(),
             'first_project_budget_tab_id' => $projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET)
@@ -522,7 +524,7 @@ class MoneySourceController extends Controller
             'description' => $request->description,
             'is_group' => $request->boolean('is_group'),
             'icon' => $request->boolean('is_group') ? $request->icon : null,
-            'group_id' => $request->group_id,
+            'group_id' => $request->boolean('is_group') ? null : $request->group_id,
             'funding_start_date' => $request->funding_start_date,
             'funding_end_date' => $request->funding_end_date,
         ]);

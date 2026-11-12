@@ -849,9 +849,11 @@ class ShiftRuleController extends Controller
             && \Artwork\Modules\Holidays\Models\Holiday::isSpecialDay($validated['granted_date'])
             && $compensationDayOff->user
         ) {
+            // Regeln des am Ersatzfrei-Tag gültigen Vertrags
             $rule = $this->shiftRuleService->getActiveRuleByTriggerTypeForUser(
                 $compensationDayOff->user,
-                'halfDayOffOnSpecialDay'
+                'halfDayOffOnSpecialDay',
+                Carbon::parse($validated['granted_date'])
             );
             if ($rule) {
                 $specialDayRule = [

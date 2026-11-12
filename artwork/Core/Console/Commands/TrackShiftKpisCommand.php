@@ -39,30 +39,36 @@ class TrackShiftKpisCommand extends Command
         $count = 0;
 
         foreach ($users as $user) {
-            $kpis = $service->computeForUser($user, $seasonStart, $seasonEnd);
+            // Ein fehlerhafter Datensatz darf die Kennzahlen der übrigen Personen nicht verhindern
+            try {
+                $kpis = $service->computeForUser($user, $seasonStart, $seasonEnd);
 
-            UserShiftKpiSnapshot::updateOrCreate(
-                [
-                    'user_id' => $user->id,
-                    'season_start' => $kpis['season_start'],
-                    'season_end' => $kpis['season_end'],
-                ],
-                [
-                    'calendar_year' => $kpis['calendar_year'],
-                    'free_sundays_sat_mon_half1' => $kpis['free_sundays_sat_mon_half1'],
-                    'free_sundays_sat_mon_half2' => $kpis['free_sundays_sat_mon_half2'],
-                    'free_sundays_and_saturdays_season' => $kpis['free_sundays_and_saturdays_season'],
-                    'free_sundays_calendar_year' => $kpis['free_sundays_calendar_year'],
-                    'free_sundays_per_season' => $kpis['free_sundays_per_season'],
-                    'one_and_half_combos_half1' => $kpis['one_and_half_combos_half1'],
-                    'one_and_half_combos_half2' => $kpis['one_and_half_combos_half2'],
-                    'granted_half_free_days_half1' => $kpis['granted_half_free_days_half1'],
-                    'granted_half_free_days_half2' => $kpis['granted_half_free_days_half2'],
-                    'days_off_first_26_weeks_count' => $kpis['days_off_first_26_weeks_count'],
-                    'granted_vacation_days_year' => $kpis['granted_vacation_days_year'],
-                    'recalculated_at' => $now,
-                ]
-            );
+                UserShiftKpiSnapshot::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'season_start' => $kpis['season_start'],
+                        'season_end' => $kpis['season_end'],
+                    ],
+                    [
+                        'calendar_year' => $kpis['calendar_year'],
+                        'free_sundays_sat_mon_half1' => $kpis['free_sundays_sat_mon_half1'],
+                        'free_sundays_sat_mon_half2' => $kpis['free_sundays_sat_mon_half2'],
+                        'free_sundays_and_saturdays_season' => $kpis['free_sundays_and_saturdays_season'],
+                        'free_sundays_calendar_year' => $kpis['free_sundays_calendar_year'],
+                        'free_sundays_per_season' => $kpis['free_sundays_per_season'],
+                        'one_and_half_combos_half1' => $kpis['one_and_half_combos_half1'],
+                        'one_and_half_combos_half2' => $kpis['one_and_half_combos_half2'],
+                        'granted_half_free_days_half1' => $kpis['granted_half_free_days_half1'],
+                        'granted_half_free_days_half2' => $kpis['granted_half_free_days_half2'],
+                        'days_off_first_26_weeks_count' => $kpis['days_off_first_26_weeks_count'],
+                        'granted_vacation_days_year' => $kpis['granted_vacation_days_year'],
+                        'recalculated_at' => $now,
+                    ]
+                );
+            } catch (\Throwable $exception) {
+                report($exception);
+                continue;
+            }
             $count++;
         }
 

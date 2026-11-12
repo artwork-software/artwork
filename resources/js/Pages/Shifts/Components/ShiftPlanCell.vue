@@ -46,14 +46,9 @@
                 >
                     <span class="truncate">{{ part.text }}</span>
                 </span>
-                <span v-else :class="part.class" :title="part.title || undefined">
-                    <!-- Freigabe-Status einer individuellen Zeit: Punkt in den Farben der KW-Kachel -->
-                    <span
-                        v-if="part.marker"
-                        class="mr-0.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
-                        :class="part.marker"
-                    ></span>{{ part.text }}
-                </span>
+                <!-- Freigabe-Status einer individuellen Zeit: Chip in den Farben der KW-Kachel -->
+                <span v-else-if="part.chip" :class="part.chip" :title="part.title || undefined">{{ part.text }}</span>
+                <span v-else :class="part.class" :title="part.title || undefined">{{ part.text }}</span>
                 <span v-if="part.suffix">{{ part.suffix }}</span>
             </template>
         </div>
@@ -146,6 +141,7 @@ import { usePage } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import { assignmentStripStyle, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js'
 import { formatViolationMeasure } from '@/Pages/ShiftWarnings/ruleTypes.js'
+import { individualTimeWorkflowMarker } from '@/Helper/individualTimeWorkflow.js'
 
 const { t } = useI18n()
 
@@ -161,13 +157,13 @@ const page = usePage()
 const compactMode = computed(() => !!page.props.auth?.user?.compact_mode)
 
 /**
- * Vacation types: Typ-Label-Mapping
+ * Vacation types: Typ → Übersetzungsschlüssel (gleiche Schlüssel wie ShowUserShiftsModal)
  */
 const vacationTypeMap = {
-    AVAILABLE: 'Verfügbar',
-    OFF_WORK: 'Arbeitsfreier Tag',
-    NOT_AVAILABLE: 'Nicht Verfügbar',
-    FREE_WORK: 'Frei',
+    AVAILABLE: 'Available',
+    OFF_WORK: 'Work-free day',
+    NOT_AVAILABLE: 'Not available',
+    FREE_WORK: 'Free',
 }
 
 /** Abwesenheit am Tag (Vacation-Einträge) */
@@ -181,7 +177,7 @@ const isOnVacation = computed(() => !!vacationToday.value)
 const vacationLabel = computed(() => {
     const v = vacationToday.value
     if (!v) return t('not available')
-    const label = vacationTypeMap[v.type] || t('not available')
+    const label = vacationTypeMap[v.type] ? t(vacationTypeMap[v.type]) : t('not available')
     if (!v.full_day && v.start_time && v.end_time) {
         return `${v.start_time} - ${v.end_time} ${label}`
     }
@@ -333,12 +329,15 @@ const cellParts = computed(() => {
         }
 
         const workflow = individualTimeWorkflowMarker(it?.workflow_status)
+        const text = `${time} ${it?.title ?? ''}`.trim()
         parts.push({
             key: `it:${it.id}`,
-            text: `${time} ${it?.title ?? ''}, `,
+            // Mit Chip steht das Komma außerhalb, damit es nicht mit eingefärbt wird
+            text: workflow ? text : `${text}, `,
             class: '',
-            marker: workflow?.marker ?? null,
-            title: workflow?.title ?? null,
+            chip: workflow?.chip ?? null,
+            title: workflow ? t(workflow.titleKey) : null,
+            suffix: workflow ? ', ' : null,
         })
     }
 
@@ -383,18 +382,6 @@ const cellParts = computed(() => {
 
     return parts
 })
-
-/** Freigabe-Status einer individuellen Zeit (gleiche Farben wie die KW-Kachel: blau angefragt, grün freigegeben) */
-function individualTimeWorkflowMarker(status) {
-    switch (status) {
-        case 'committed':
-            return { marker: 'bg-success', title: t('Individual time released') }
-        case 'requested':
-            return { marker: 'bg-accent-600', title: t('Individual time in release request') }
-        default:
-            return null
-    }
-}
 
 /** Compensation day offs am Tag */
 const compensationDayToday = computed(() => {

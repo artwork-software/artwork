@@ -58,7 +58,7 @@ final class ShiftModuleWave2RegressionTest extends FeatureTestCase
         $admin = $this->actingAsAdmin();
         $request = $this->createRequest('approved');
 
-        $this->post(route('shift-plan-requests.reject', $request), [])
+        $this->post(route('shift-plan-requests.reject', $request), ['global_reason' => 'Besetzung prüfen'])
             ->assertSessionHas('error');
 
         $this->assertSame('approved', $request->fresh()->status);
@@ -128,7 +128,7 @@ final class ShiftModuleWave2RegressionTest extends FeatureTestCase
             'changed_at' => now()->subDay(),
         ]);
 
-        $this->post(route('shift-plan-requests.reject', $currentRequest), [])
+        $this->post(route('shift-plan-requests.reject', $currentRequest), ['global_reason' => 'Besetzung prüfen'])
             ->assertSessionHas('success');
 
         $shift->refresh();

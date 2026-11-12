@@ -924,20 +924,6 @@ class BudgetService
     }
 
     /**
-     * Projektgruppen-Funktionalität: In der Spalte "Unterprojekte" (Typ `subprojects_column_for_group`)
-     * soll pro Gruppen-Zeile die Summe aller relevanten Werte aus den Unterprojekten angezeigt werden,
-     * die dieselbe KTO/KST-Kombination besitzen.
-     *
-     * Das Frontend berechnet diese Summe grundsätzlich aus `projectGroupRelevantBudgetData`.
-     * Da es in der Praxis jedoch vorkam, dass dort nicht korrekt gefiltert werden kann (Anzeige 0),
-     * reichern wir zusätzlich den Zellwert der Unterprojekte-Spalte in der Response an.
-     *
-     * Wichtig: Wir persistieren diese Summen NICHT in der DB, sondern setzen nur den Wert am geladenen
-     * Model für die Ausgabe.
-     *
-     * @param array<string, array<int, MatchRelevantProjectGroupDTO>> $groupedProjectData
-     */
-    /**
      * Nutzereingaben wie "1.234,56 €" in einen bcmath-tauglichen String überführen.
      * Nicht interpretierbare Werte werden als '0' behandelt statt bcadd() crashen zu lassen.
      */
@@ -968,6 +954,21 @@ class BudgetService
         return preg_match('/^-?\d+(\.\d+)?$/', $raw) === 1 ? $raw : '0';
     }
 
+    /**
+     * Projektgruppen-Funktionalität: In der Spalte "Unterprojekte" (Typ `subprojects_column_for_group`)
+     * steht pro Gruppen-Zeile ausschließlich die Summe der relevanten Werte aus den Unterprojekt-Zeilen
+     * mit derselben KTO/KST-Kombination; ohne passende Unterprojekt-Zeile 0. Eigene Werte und
+     * Sage-Buchungen der Gruppenzeile fließen nicht ein (vorher fiel die Anzeige ohne Treffer auf sie zurück).
+     *
+     * Das Frontend berechnet diese Summe grundsätzlich aus `projectGroupRelevantBudgetData`.
+     * Da es in der Praxis jedoch vorkam, dass dort nicht korrekt gefiltert werden kann (Anzeige 0),
+     * reichern wir zusätzlich den Zellwert der Unterprojekte-Spalte in der Response an.
+     *
+     * Wichtig: Wir persistieren diese Summen NICHT in der DB, sondern setzen nur den Wert am geladenen
+     * Model für die Ausgabe.
+     *
+     * @param array<string, array<int, MatchRelevantProjectGroupDTO>> $groupedProjectData
+     */
     private function enrichProjectGroupSubprojectsColumnValues(?Table $table, array $groupedProjectData): void
     {
         if (!$table) {
@@ -982,14 +983,6 @@ class BudgetService
         if (!$subprojectsColumnId) {
             return;
         }
-
-        $columns = $table->columns ?? collect();
-        // Budgetrelevante Spalte der Gruppe; Fallback für Altbestand ohne Flag:
-        // hinterste Wertspalte (zentral im Service).
-        $relevantColumns = collect(
-            [app(ColumnRelevanceService::class)->resolveRelevantColumn($columns)]
-        )->filter();
-        $sageColumn = $columns->firstWhere('type', 'sage');
 
         $sumByGroupRowIdAndColumn = [];
 
@@ -1021,48 +1014,8 @@ class BudgetService
                 foreach ($subPosition->subPositionRows ?? [] as $row) {
                     $rowId = (int) $row->id;
 
-                    foreach ($relevantColumns as $relevantColumn) {
-                        $columnId = (int) $relevantColumn->id;
-                        $groupCell = $row->cells?->firstWhere('column_id', $columnId);
-
-                        if ($groupCell && trim((string) ($groupCell->value ?? '')) !== '') {
-                            $groupValue = $this->normalizeDecimalString($groupCell->value);
-
-                            if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
-                                $sumByGroupRowIdAndColumn[$rowId] = [];
-                            }
-                            $sumByGroupRowIdAndColumn[$rowId][$columnId] = $groupValue;
-                        }
-                    }
-
-                    if ($sageColumn) {
-                        $sageColumnId = (int) $sageColumn->id;
-                        $groupSageCell = $row->cells?->firstWhere('column_id', $sageColumnId);
-
-                        if (
-                            $groupSageCell
-                             && $groupSageCell->sageAssignedData
-                             && $groupSageCell->sageAssignedData->isNotEmpty()
-                        ) {
-                            $sageValue = (string) $groupSageCell->sageAssignedData->sum('buchungsbetrag');
-
-                            if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
-                                $sumByGroupRowIdAndColumn[$rowId] = [];
-                            }
-                            $sumByGroupRowIdAndColumn[$rowId][$sageColumnId] = $sageValue;
-                        }
-                    }
-
-                    if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
-                        continue;
-                    }
-
-                    // Alle Einträge stammen bereits ausschließlich aus budgetrelevanten
-                    // bzw. Sage-Spalten (der Unterprojekte UND der Gruppe). Die Keys sind
-                    // Spalten-IDs der UNTERPROJEKT-Tabellen - ein Lookup in den
-                    // Gruppenspalten würde die Unterprojekt-Summen verwerfen.
                     $totalSum = '0';
-                    foreach ($sumByGroupRowIdAndColumn[$rowId] as $colSum) {
+                    foreach ($sumByGroupRowIdAndColumn[$rowId] ?? [] as $colSum) {
                         $totalSum = bcadd($totalSum, $colSum, 2);
                     }
 

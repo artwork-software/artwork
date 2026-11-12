@@ -22,7 +22,8 @@ class RoomCalendarResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $events = $this->events()->get();
+        // Nur offene Raumanfragen werden gebraucht, nicht alle Termine des Raums
+        $eventRequests = $this->events()->where('occupancy_option', true)->get();
 
         $historyArray = app(ChangeService::class)->historyForFrontendWithInlineCauser($this->resource);
 
@@ -45,6 +46,9 @@ class RoomCalendarResource extends JsonResource
             'everyone_can_book' => $this->everyone_can_book,
             'relevant_for_disposition' => $this->relevant_for_disposition,
             'capacity' => $this->capacity,
+            'street' => $this->street,
+            'zip_code' => $this->zip_code,
+            'city' => $this->city,
             'room_admins' => UserWithoutApartmentIndexResource::collection(
                 $this->users()->wherePivot('is_admin', true)->get()
             )->resolve(),
@@ -69,7 +73,7 @@ class RoomCalendarResource extends JsonResource
                 ])
                 ->values()
                 ->all(),
-            'event_requests' => EventShowResource::collection($events->where('occupancy_option', true))->resolve(),
+            'event_requests' => EventShowResource::collection($eventRequests)->resolve(),
             'area' => $this->area,
         ];
     }

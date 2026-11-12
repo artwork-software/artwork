@@ -50,12 +50,17 @@ class ForceDeleteProjectJob implements ShouldQueue
         // auslösenden User setzen, damit der Schichtverlauf zeigt, wer gelöscht hat.
         $this->resolveCauser();
 
-        $events = Event::onlyTrashed()->where('project_id', $this->projectId)->get();
+        try {
+            $events = Event::onlyTrashed()->where('project_id', $this->projectId)->get();
 
-        // Resolve the remaining service dependencies from the container while binding the
-        // already-loaded models explicitly.
-        app()->call([$eventService, 'forceDeleteAll'], ['events' => $events]);
-        app()->call([$projectService, 'forceDelete'], ['project' => $project]);
+            // Resolve the remaining service dependencies from the container while binding the
+            // already-loaded models explicitly.
+            app()->call([$eventService, 'forceDeleteAll'], ['events' => $events]);
+            app()->call([$projectService, 'forceDelete'], ['project' => $project]);
+        } finally {
+            // Der Worker lebt weiter: ohne Zurücksetzen trügen alle folgenden Jobs diese Person als Verursacher
+            CauserResolver::setCauser(null);
+        }
     }
 
     private function resolveCauser(): void

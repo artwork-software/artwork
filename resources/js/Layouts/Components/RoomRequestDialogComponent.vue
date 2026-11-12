@@ -1,488 +1,365 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" :modal-image="!this.event?.id ? '/Svgs/Overlays/illu_appointment_new.svg' : '/Svgs/Overlays/illu_appointment_edit.svg'">
-            <div class="mx-4">
-                <!--   Heading   -->
+    <ArtworkBaseModal
+        title="Comment on occupancy"
+        modal-size="sm:max-w-2xl"
+        @close="closeModal"
+    >
+        <div class="space-y-4">
+            <!--   Ersteller*in   -->
+            <div class="flex items-center gap-x-2 text-xs text-text-subtle">
+                {{ $t('Created by') }}
+                <UserPopoverTooltip
+                    v-if="event?.created_by"
+                    :user="event.created_by"
+                    :id="event.created_by.id"
+                    height="6"
+                    width="6"
+                />
+                <span v-else class="font-semibold">{{ $t('Deleted user') }}</span>
+            </div>
+
+            <!--    Termintyp und Name    -->
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                    <h1 class="my-1 flex">
-                        <div class="flex-grow font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
-                            {{$t('Comment on occupancy')}}
-                        </div>
-                    </h1>
-                    <div class="flex items-center">
-                        {{$t('Created by')}} <img v-if="this.event.created_by" :data-tooltip-target="this.event.created_by.id"
-                                          :src="this.event.created_by.profile_photo_url"
-                                          :alt="this.event.created_by.last_name"
-                                          class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                        <div class="text-sm/5 font-bold text-text-subtle ml-3" v-else>
-                            {{ $t('Deleted user') }}
-                        </div>
+                    <div v-if="!canEdit || disableEventTypeSelector" class="flex min-w-0 items-center gap-x-2">
+                        <span class="size-4 shrink-0 rounded-full" :style="{ backgroundColor: selectedEventType?.hex_code }"/>
+                        <span class="truncate font-lexend text-sm font-bold text-text">{{ selectedEventType?.name }}</span>
                     </div>
+                    <ArtworkBaseListbox
+                        v-else
+                        v-model="selectedEventType"
+                        :items="eventTypes"
+                        by="id"
+                        option-label="name"
+                        label="Event type"
+                        show-color-indicator
+                        color-property="hex_code"
+                    />
+                    <p v-if="error?.eventType" class="mt-1 text-[11.5px] text-danger">{{ error.eventType.join('. ') }}</p>
                 </div>
-                <!--    Form    -->
-                <!--    Type and Title    -->
-                <div class="flex py-2">
-                    <div class="w-1/2">
-                        <div class="w-full flex cursor-pointer truncate" v-if="!canEdit || this.disableEventTypeSelector">
-                            <div>
-                                <div class="block w-10 h-10 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }" />
-                            </div>
-                            <p class="ml-2 flex items-center text-lg font-lexend font-semibold">
-                                {{ selectedEventType?.name }}
-                            </p>
-                        </div>
-                        <Listbox as="div" class="flex h-12 mr-2" v-model="selectedEventType" v-if="canEdit && !this.disableEventTypeSelector"
-                                 id="eventType">
-                            <ListboxButton
-                                class="pl-3 h-12 border border-border w-full bg-white relative font-semibold py-2 text-left cursor-pointer sm:text-sm">
-                                <div class="flex items-center my-auto">
-                                    <div>
-                                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }" />
-                                    </div>
-                                    <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedEventType?.name }}</span>
-                                </span>
-                                    <span
-                                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
-                                </span>
-                                </div>
-                            </ListboxButton>
 
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions
-                                    class="absolute w-72 z-10 mt-12 bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8"
-                                                   v-for="eventType in eventTypes"
-                                                   :key="eventType.name"
-                                                   :value="eventType"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <div class="flex">
-                                                <div>
-                                                    <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : eventType?.hex_code }" />
-                                                </div>
-                                                <span
-                                                    :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ eventType.name }}
-                                                    </span>
-                                            </div>
-                                            <span
-                                                :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <IconCheck v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
-                        </Listbox>
-                        <p class="text-xs text-danger">{{ error?.eventType?.join('. ') }}</p>
-                    </div>
-
-                    <div class="w-1/2" v-if="canEdit">
-                        <input type="text"
-                               v-model="this.eventName"
-                               id="eventTitle"
-                               :placeholder="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
-                               :disabled="!canEdit"
-                               class="h-12 text-base/5 font-semibold text-text border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:border-text-subtle focus:border-1 w-full border-border"/>
-
-                        <p v-if="selectedEventType?.individual_name" class="text-xs text-danger">
-                            {{ error?.eventName?.join('. ') }}</p>
-                    </div>
-                    <div v-else class="flex w-1/2 ml-12 items-center">
-                        {{ this.eventName }}
-                    </div>
+                <BaseInput
+                    v-if="canEdit"
+                    id="eventTitle"
+                    v-model="eventName"
+                    label="Event name"
+                    :required="!!selectedEventType?.individual_name"
+                    :error="selectedEventType?.individual_name ? (error?.eventName?.join('. ') ?? '') : ''"
+                />
+                <div v-else-if="eventName" class="flex items-center text-sm font-semibold text-text">
+                    {{ eventName }}
                 </div>
-                <!-- Attribute Menu -->
-                <Menu as="div" class="inline-block text-left w-full" v-if="canEdit">
-                    <div>
-                        <MenuButton
-                            class="h-12 border border-border w-full bg-white px-4 py-2 text-sm font-medium text-black "
-                        >
+            </div>
 
-                            <span class="float-left flex text-sm/5 font-bold text-text-subtle subpixel-antialiased"><img
-                                src="/Svgs/IconSvgs/icon_adjustments.svg"
-                                class="mr-2"
-                                alt="attributeIcon"/>{{$t('Select appointment properties')}}</span>
-                            <IconChevronDown
-                                class="ml-2 -mr-1 h-5 w-5 text-text float-right"
-                                aria-hidden="true"
-                            />
-                        </MenuButton>
-                    </div>
-                    <transition
-                        enter-active-class="transition duration-50 ease-out"
-                        enter-from-class="transform scale-100 opacity-100"
-                        enter-to-class="transform scale-100 opacity-100"
-                        leave-active-class="transition duration-75 ease-in"
-                        leave-from-class="transform scale-100 opacity-100"
-                        leave-to-class="transform scale-95 opacity-0"
+            <!-- Termineigenschaften -->
+            <div v-if="canEdit" class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                <BaseCheckbox id="roomRequestAudience" v-model="audience" :disabled="!canEdit">
+                    <template #label>
+                        <span class="inline-flex items-center gap-x-1.5">
+                            <img src="/Svgs/IconSvgs/icon_public.svg" class="size-4" alt=""/>
+                            {{ $t('With audience') }}
+                        </span>
+                    </template>
+                </BaseCheckbox>
+                <BaseCheckbox id="roomRequestIsLoud" v-model="isLoud" :disabled="!canEdit">
+                    <template #label>
+                        <span class="inline-flex items-center gap-x-1.5">
+                            <img src="/Svgs/IconSvgs/icon_loud.svg" class="size-4" alt=""/>
+                            {{ $t('It gets loud') }}
+                        </span>
+                    </template>
+                </BaseCheckbox>
+            </div>
+
+            <!--    Nur lesen: Projekt, Raum und Zeitraum    -->
+            <div v-if="!canEdit" class="space-y-1 text-sm text-text">
+                <div v-if="selectedProject?.id" class="flex items-center gap-x-2 text-xs text-text-subtle">
+                    {{ $t('assigned to') }}
+                    <a
+                        :href="route('projects.tab', {project: selectedProject.id, projectTab: first_project_calendar_tab_id})"
+                        class="font-bold text-accent-600 hover:underline"
                     >
-                        <MenuItems
-                            class="absolute overflow-y-auto h-24 mt-2 w-[88%] origin-top-left divide-y divide-white/10 rounded-sm bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="mx-auto w-full rounded-2xl bg-surface-inverse border-none mt-2">
-                                <div class="flex w-full mb-4">
-                                    <input v-model="audience"
-                                           :disabled="!canEdit"
-                                           type="checkbox"
-                                           class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
-                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
-
-                                    <div :class="[audience ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto']">
-                                        {{$t('With audience')}}
-                                    </div>
-                                </div>
-                                <div class="flex w-full mb-2">
-                                    <input v-model="isLoud"
-                                           :disabled="!canEdit"
-                                           type="checkbox"
-                                           class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
-                                    <div :class="[isLoud ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto mx-2']">
-                                        {{$t('It gets loud')}}
-                                    </div>
-                                </div>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
-                <div v-if="!canEdit" class="flex w-full">
-                    <div class="w-1/2 flex items-center my-auto" v-if="this.selectedProject?.id">
-                        {{$t('assigned to')}}: <a
-                        :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
-                        class="ml-3 mt-1 text-sm items-center flex font-bold font-lexend text-text">
-                        {{ this.selectedProject?.name }}
+                        {{ selectedProject?.name }}
                     </a>
-                    </div>
-                    <div class="flex items-center w-1/2">
-                        <p class="truncate text-sm/5 font-bold text-text-subtle subpixel-antialiased max-w-60">
-                            {{ $t('Created by')}} {{ this.event.created_by.first_name }}
-                            {{ this.event.created_by.last_name }}</p> <img
-                        :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url"
-                        :alt="this.event.created_by.last_name"
-                        class="ml-4 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
-                    </div>
                 </div>
-                <div v-if="!canEdit" class="my-2">
-                    <div v-if="this.startDate === this.endDate">
-                        {{ this.selectedRoom?.name }},
-                        {{ this.startDate.toString().substring(10, 8) }}.{{
-                            this.startDate.toString().substring(7, 5)
-                        }}.{{ this.startDate.toString().substring(4, 0) }},
-                        {{ this.startTime }} - {{ this.endTime }}
-                    </div>
-                    <div v-else>
-                        {{ this.selectedRoom?.name }},
-                        {{ this.startDate.toString().substring(10, 8) }}.{{
-                            this.startDate.toString().substring(7, 5)
-                        }}.{{ this.startDate.toString().substring(4, 0) }},
-                        {{ this.startTime }} -
-                        {{ this.endDate.toString().substring(10, 8) }}.{{
-                            this.endDate.toString().substring(7, 5)
-                        }}.{{ this.endDate.toString().substring(4, 0) }},
-                        {{ this.endTime }}
-                    </div>
+                <div v-else class="text-xs text-text-subtle">
+                    {{ $t('No project assignment') }}
                 </div>
-                <!--    Properties    -->
-                <div class="flex py-2">
-                    <div v-if="audience">
-                        <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true"></TagComponent>
-                    </div>
-                    <div v-if="isLoud">
-                        <TagComponent :displayed-text="$t('It gets loud')" hideX="true"></TagComponent>
-                    </div>
+                <div v-if="startDate && endDate" class="font-semibold tabular-nums">
+                    <template v-if="startDate === endDate">
+                        {{ selectedRoom?.name }},
+                        {{ startDate.toString().substring(10, 8) }}.{{ startDate.toString().substring(7, 5) }}.{{ startDate.toString().substring(4, 0) }},
+                        {{ startTime }} - {{ endTime }}
+                    </template>
+                    <template v-else>
+                        {{ selectedRoom?.name }},
+                        {{ startDate.toString().substring(10, 8) }}.{{ startDate.toString().substring(7, 5) }}.{{ startDate.toString().substring(4, 0) }},
+                        {{ startTime }} -
+                        {{ endDate.toString().substring(10, 8) }}.{{ endDate.toString().substring(7, 5) }}.{{ endDate.toString().substring(4, 0) }},
+                        {{ endTime }}
+                    </template>
                 </div>
-                <!--    Project    -->
-                <div v-if="canEdit">
-                    <div class="text-sm/5 font-bold text-text-subtle flex" v-if="!this.creatingProject">
-                        Aktuell zugeordnet zu:
-                        <a v-if="this.selectedProject?.id"
-                           :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
-                           class="ml-3 flex text-sm/5 font-semibold text-text">
-                            {{ this.selectedProject?.name }}
+                <div v-if="audience || isLoud" class="flex flex-wrap gap-2 pt-1">
+                    <TagComponent v-if="audience" icon="audience" :displayed-text="$t('With audience')" hideX="true"/>
+                    <TagComponent v-if="isLoud" :displayed-text="$t('It gets loud')" hideX="true"/>
+                </div>
+            </div>
+
+            <!--    Projekt    -->
+            <div v-if="canEdit" class="space-y-2">
+                <div v-if="!creatingProject" class="flex items-center gap-x-2 text-xs text-text-subtle">
+                    <template v-if="selectedProject?.id">
+                        {{ $t('Currently assigned to:') }}
+                        <a
+                            :href="route('projects.tab', {project: selectedProject.id, projectTab: first_project_calendar_tab_id})"
+                            class="font-bold text-accent-600 hover:underline"
+                        >
+                            {{ selectedProject?.name }}
                         </a>
-                        <div v-else class="text-sm/5 font-semibold text-text ml-2">
-                            {{ this.selectedProject?.name ?? 'Keinem Projekt' }}
-                        </div>
-                        <div v-if="this.selectedProject?.id && this.canEdit" class="flex items-center my-auto">
-                            <button type="button"
-                                    @click="selectedProject = null">
-                                <IconCircleX class="pl-2 h-6 w-6 hover:text-danger text-text"/>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="text-sm/5 font-bold text-text-subtle" v-if="this.creatingProject">
-                        {{ $t('The project is created when it is saved.')}}
-                    </div>
+                        <button
+                            type="button"
+                            class="inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-text-subtle transition-colors duration-150 hover:bg-surface-hover hover:text-danger motion-reduce:transition-none"
+                            :aria-label="$t('Remove project')"
+                            v-tooltip.bottom="{ value: $t('Remove project'), class: 'aw-tooltip' }"
+                            @click="selectedProject = null"
+                        >
+                            <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                        </button>
+                    </template>
+                    <template v-else>
+                        {{ selectedProject?.name ?? $t('Not assigned to a project') }}
+                    </template>
+                </div>
+                <div v-else class="text-xs text-text-subtle">
+                    {{ $t('The project is created when it is saved.') }}
+                </div>
 
-                    <div class="my-2" v-if="this.canEdit">
-                        <div class="flex pb-2" v-if="projectCreationFromEventsEnabled">
-                            <span class="mr-4 "
-                                  :class="[!creatingProject ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle',]">
-                                {{$t('Existing project')}}
-                            </span>
-                            <div class="flex">
-                                <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
-                                    <input type="checkbox"
-                                           v-model="creatingProject"
-                                           :disabled="!canEdit"
-                                           id="project-toggle"
-                                           class="sr-only peer">
-                                    <div class="w-9 h-5 bg-border-subtle rounded-full
-                            peer-checked:after:translate-x-full peer-checked:after:border-white
-                            after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent-600">
-                                    </div>
-                                </label>
-                                <span class="ml-4 text-sm"
-                                      :class="[creatingProject ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle']">
-                                {{$t('New project')}}
-                            </span>
-                                <div v-if="showHints" class="ml-3 flex">
-                                    <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                                    <div class="ml-1 my-auto ">
-                                        {{$t('Create a new project at the same time')}}
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                        <input type="text"
-                               :placeholder="creatingProject ? $t('New project name') : $t('Search project')"
-                               v-model="projectName"
-                               class="h-10 border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:border-text-subtle focus:border-1 w-full border-border"/>
-                        <LastedProjects
-                            :limit="10"
-                            @select="chooseProject"
-                        />
-                        <div v-if="projectSearchResults.length > 0 && !creatingProject"
-                             class="absolute bg-surface-inverse truncate sm:text-sm w-10/12">
-                            <div v-for="(project, index) in projectSearchResults"
-                                 :key="index"
-                                 @click="chooseProject(project)"
-                                 class="p-4 text-sm/5 font-bold text-white border-l-4 hover:border-l-success border-l-surface-inverse cursor-pointer">
-                                {{ project.name }}
-                            </div>
-                        </div>
-
-                        <p class="text-xs text-danger">{{ error?.projectId?.join('. ') }}</p>
-                        <p class="text-xs text-danger">{{ error?.projectName?.join('. ') }}</p>
+                <div v-if="projectCreationFromEventsEnabled" class="flex items-center gap-x-3">
+                    <SwitchDualLabel
+                        v-model="creatingProject"
+                        :left-label="$t('Existing project')"
+                        :right-label="$t('New project')"
+                        icon="IconGeometry"
+                        :disabled="!canEdit"
+                    />
+                    <div v-if="showHints" class="flex items-center gap-x-1 text-xs text-text-subtle">
+                        <SvgCollection svgName="arrowLeft"/>
+                        {{ $t('Create a new project at the same time') }}
                     </div>
                 </div>
 
-                <!--    Time    -->
-                <div v-if="canEdit" class="flex pb-1 flex-col sm:flex-row align-baseline">
-                    <div class="sm:w-1/2">
-                        <label for="startDate" class="text-xs/[18px] text-text-subtle">{{ $t('Start*')}}</label>
-                        <div class="w-full flex">
-                            <input v-model="startDate"
-                                   id="startDate"
-                                   @change="checkChanges()"
-                                   type="date"
-                                   :disabled="!canEdit"
-                                   required
-                                   class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle disabled:border-none flex-grow"/>
-                            <input v-model="startTime"
-                                   id="changeStartTime"
-                                   @change="checkChanges()"
-                                   type="time"
-                                   :disabled="!canEdit"
-                                   required
-                                   class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle  disabled:border-none"/>
-                        </div>
-                        <p class="text-xs text-danger">{{ error?.start?.join('. ') }}</p>
-                    </div>
-                    <div class="sm:w-1/2">
-                        <label for="endDate" class="text-xs/[18px] text-text-subtle">{{ $t('End*')}}</label>
-                        <div class="w-full flex">
-                            <input v-model="endDate"
-                                   id="endDate"
-                                   @change="checkChanges()"
-                                   type="date"
-                                   required
-                                   :disabled="!canEdit"
-                                   class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle  disabled:border-none flex-grow"/>
-                            <input v-model="endTime"
-                                   id="changeEndTime"
-                                   @change="checkChanges()"
-                                   type="time"
-                                   required
-                                   :disabled="!canEdit"
-                                   class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle  disabled:border-none"/>
-                        </div>
-                        <p class="text-xs text-danger">{{ error?.end?.join('. ') }}</p>
-                    </div>
-
-                </div>
-
-                <!--    Room    -->
-                <div class="py-1" v-if="canEdit">
-                    <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit && selectedRoom">
-                        <ListboxButton class="border border-border w-full h-10 cursor-pointer truncate flex p-2">
-                            <div class="flex-grow flex text-left text-sm/5 font-semibold text-text">
-                                {{ selectedRoom?.name }}
-                            </div>
-                            <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
-                        </ListboxButton>
-                        <ListboxOptions class="w-5/6 bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute">
-                            <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-accent-600 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between "
-                                           :key="room.name"
-                                           :value="room"
-                                           v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
-                                    {{ room.name }}
-                                    <img
-                                        v-if="this.roomCollisionArray[room.id] > 0"
-                                        src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                        class="h-4 w-4 mx-2" alt="conflictIcon"
-                                    />
-                                </div>
-                                <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </Listbox>
-                    <Listbox as="div" v-model="selectedRoom" id="room" v-else>
-                        <ListboxButton class="border border-border w-full h-10 cursor-pointer truncate flex p-2">
-                            <div class="flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
-                                {{$t('Select room')}}*
-                            </div>
-                            <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
-                        </ListboxButton>
-                        <ListboxOptions class="w-[88%] bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute">
-                            <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-white/10 text-text-subtle cursor-pointer p-2 flex justify-between "
-                                           :key="room.name"
-                                           :value="room"
-                                           v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
-                                    {{ room.name }}
-                                    <img
-                                        v-if="this.roomCollisionArray[room.id] > 0"
-                                        src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                        class="h-4 w-4 mx-2" alt="conflictIcon"
-                                    />
-                                </div>
-                                <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </Listbox>
-                    <p class="text-xs text-danger">{{ error?.roomId?.join('. ') }}</p>
-                </div>
-                <!--    Description    -->
-                <div class="py-2">
-                    <textarea v-if="canEdit" :placeholder="$t('What do I need to bear in mind for the event?')"
-                              id="description"
-                              :disabled="!canEdit"
-                              v-model="description"
-                              rows="4"
-                              class="border border-border resize-none text-sm/5 font-semibold text-text placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:border-text-subtle focus:border-1 w-full border-border"/>
-                    <div v-else-if="this.description" class="mt-4 text-sm/5 font-semibold text-text">
-                        {{ this.description }}
-                    </div>
-                </div>
-                <div v-if="showComments" class="my-6" v-for="comment in this.event.comments">
-                    <div class="flex justify-between">
-                        <div class="flex items-center">
-                            <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
-                                            :width="8"></NewUserToolTip>
-                            <div class="ml-2 text-text-subtle">
-                                {{ comment.created_at }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-2 mr-14 subpixel-antialiased text-text">
-                        {{ comment.comment }}
-                    </div>
-                </div>
-                <div class="mt-6">
-                        <textarea v-if="canEdit" :placeholder="$t('Enter your answer')"
-                                  id="newComment"
-                                  :disabled="!canEdit"
-                                  v-model="newComment"
-                                  rows="4"
-                                  class="border border-border resize-none w-full text-sm/5 font-semibold text-text placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:border-text-subtle focus:border-1 border-border"/>
-                </div>
-                <div>
-                    <div class="flex justify-center w-full py-4">
-                        <button :disabled="sendingAnswer || this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || newComment === ''"
-                                :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || newComment === '' ? 'bg-text-subtle hover:bg-text-subtle' : ''"
-                                class="bg-accent-600 hover:bg-accent-700 py-2 px-8 rounded-full text-white"
-                                @click="updateAndAnswerEvent()">
-                            {{$t('Send answer')}}
+                <div class="relative">
+                    <BaseInput
+                        id="roomRequestProjectName"
+                        v-model="projectName"
+                        :label="creatingProject ? 'New project name' : 'Search project'"
+                        :show-label="false"
+                        :placeholder="creatingProject ? $t('New project name') : $t('Search project')"
+                        autocomplete="off"
+                    />
+                    <div
+                        v-if="projectSearchResults.length > 0 && !creatingProject"
+                        class="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-border-subtle bg-surface py-1 text-sm shadow-overlay"
+                    >
+                        <button
+                            v-for="(project, index) in projectSearchResults"
+                            :key="index"
+                            type="button"
+                            class="block w-full cursor-pointer truncate px-3 py-2 text-left text-text hover:bg-surface-hover"
+                            @click="chooseProject(project)"
+                        >
+                            {{ project.name }}
                         </button>
                     </div>
                 </div>
+                <LastedProjects
+                    :limit="10"
+                    @select="chooseProject"
+                />
+                <p v-if="error?.projectId" class="text-[11.5px] text-danger">{{ error.projectId.join('. ') }}</p>
+                <p v-if="error?.projectName" class="text-[11.5px] text-danger">{{ error.projectName.join('. ') }}</p>
             </div>
-    </BaseModal>
+
+            <!--    Zeitraum    -->
+            <div v-if="canEdit" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                    <div class="flex items-end gap-2">
+                        <BaseInput
+                            id="startDate"
+                            type="date"
+                            v-model="startDate"
+                            label="Start"
+                            required
+                            :disabled="!canEdit"
+                            @change="() => $nextTick(checkChanges)"
+                        />
+                        <BaseInput
+                            id="changeStartTime"
+                            type="time"
+                            v-model="startTime"
+                            label="Start time"
+                            required
+                            :disabled="!canEdit"
+                            @change="() => $nextTick(checkChanges)"
+                        />
+                    </div>
+                    <p v-if="error?.start" class="mt-1 text-[11.5px] text-danger">{{ error.start.join('. ') }}</p>
+                </div>
+                <div>
+                    <div class="flex items-end gap-2">
+                        <BaseInput
+                            id="endDate"
+                            type="date"
+                            v-model="endDate"
+                            label="End"
+                            required
+                            :disabled="!canEdit"
+                            @change="() => $nextTick(checkChanges)"
+                        />
+                        <BaseInput
+                            id="changeEndTime"
+                            type="time"
+                            v-model="endTime"
+                            label="End time"
+                            required
+                            :disabled="!canEdit"
+                            @change="() => $nextTick(checkChanges)"
+                        />
+                    </div>
+                    <p v-if="error?.end" class="mt-1 text-[11.5px] text-danger">{{ error.end.join('. ') }}</p>
+                </div>
+            </div>
+
+            <!--    Raum    -->
+            <div v-if="canEdit">
+                <ArtworkBaseListbox
+                    v-model="selectedRoom"
+                    :items="rooms"
+                    by="id"
+                    option-label="name"
+                    placeholder="Select room"
+                >
+                    <template #label>
+                        {{ $t('Room') }} <span class="text-danger">*</span>
+                    </template>
+                    <template #option="{ item, selected }">
+                        <div class="flex items-center gap-2">
+                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ item.name }}</span>
+                            <PropertyIcon
+                                v-if="roomCollisionArray[item.id] > 0"
+                                name="IconAlertTriangle"
+                                class="size-4 shrink-0 text-warning"
+                                stroke-width="1.5"
+                                :aria-label="$t('Conflict')"
+                            />
+                        </div>
+                        <span v-if="selected" class="absolute inset-y-0 right-0 flex items-center pr-4 text-accent-600">
+                            <PropertyIcon name="IconCheck" class="size-4" aria-hidden="true"/>
+                        </span>
+                    </template>
+                </ArtworkBaseListbox>
+                <p v-if="error?.roomId" class="mt-1 text-[11.5px] text-danger">{{ error.roomId.join('. ') }}</p>
+            </div>
+
+            <!--    Beschreibung    -->
+            <BaseTextarea
+                v-if="canEdit"
+                id="description"
+                v-model="description"
+                label="Description"
+                :placeholder="$t('What do I need to bear in mind for the event?')"
+                :disabled="!canEdit"
+                :rows="4"
+            />
+            <div v-else-if="description" class="text-sm text-text">
+                {{ description }}
+            </div>
+
+            <!--    Kommentare    -->
+            <template v-if="showComments">
+                <div
+                    v-for="comment in event?.comments ?? []"
+                    :key="comment.id"
+                    class="rounded-lg border border-border-subtle bg-surface-sunken p-3"
+                >
+                    <div class="flex items-center gap-x-2 text-xs text-text-subtle">
+                        <NewUserToolTip :id="comment.id" :user="comment.user" :height="6" :width="6"/>
+                        {{ comment.created_at }}
+                    </div>
+                    <div class="mt-2 text-sm text-text">
+                        {{ comment.comment }}
+                    </div>
+                </div>
+            </template>
+
+            <BaseTextarea
+                v-if="canEdit"
+                id="newComment"
+                v-model="newComment"
+                label="Comment"
+                required
+                :placeholder="$t('Enter your answer')"
+                :disabled="!canEdit"
+                :rows="4"
+            />
+        </div>
+        <template #footer>
+            <BaseUIButton
+                label="Cancel"
+                is-cancel-button
+                hide-icon
+                :disabled="sendingAnswer"
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                label="Send answer"
+                variant="primary"
+                icon="IconSend"
+                :processing="sendingAnswer"
+                :disabled="isSendAnswerDisabled"
+                @click="updateAndAnswerEvent()"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 
 <script>
-import {IconCheck, IconChevronDown, IconChevronUp, IconCircleX, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
 import {parseYmd, toYmd} from "@/Helper/IsoWeek.js";
-
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {
-  Listbox,
-  ListboxButton,
-  ListboxLabel,
-  ListboxOption,
-  ListboxOptions,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  Switch,
-  SwitchGroup,
-  SwitchLabel
-} from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import Input from "@/Jetstream/Input.vue";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import dayjs from "dayjs";
 import Permissions from "@/Mixins/Permissions.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
+import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions],
     components: {
+        ArtworkBaseModal,
+        ArtworkBaseListbox,
+        BaseUIButton,
+        BaseInput,
+        BaseTextarea,
+        BaseCheckbox,
+        SwitchDualLabel,
+        PropertyIcon,
         LastedProjects,
-        BaseModal,
         NewUserToolTip,
-        ListboxLabel,
-        SwitchLabel,
-        Switch,
-        SwitchGroup,
-        Input,
-        JetDialogModal,
-        IconX,
-        IconCircleX,
-        Listbox,
-        ListboxButton,
-        ListboxOption,
-        ListboxOptions,
-        IconChevronDown,
-        IconChevronUp,
+        UserPopoverTooltip,
         SvgCollection,
-        IconCheck,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        IconEdit,
-        IconTrash,
-        IconDotsVertical,
-        ConfirmationComponent,
         TagComponent,
-        InputComponent,
     },
     data() {
         return {
@@ -590,6 +467,14 @@ export default {
         projectCreationFromEventsEnabled() {
             return this.$page.props.project_creation_from_events_enabled !== false;
         },
+        isSendAnswerDisabled() {
+            return this.sendingAnswer
+                || !this.selectedRoom
+                || this.endDate > this.seriesEndDate
+                || (this.series && !this.seriesEndDate)
+                || !this.startDate || !this.startTime || !this.endDate || !this.endTime
+                || this.newComment === '';
+        },
         roomAdminIds() {
             let adminIds = [];
             this.selectedRoom?.room_admins?.forEach(admin => {
@@ -668,7 +553,7 @@ export default {
         closeModal(bool) {
             // Erst nach gespeicherter Antwort „geschlossen“ melden: die Benachrichtigung startet darauf
             // sofort einen eigenen Inertia-Request (Benachrichtigung entfernen), der diesen sonst
-            // abbrach – die Antwort ging verloren
+            // abbrach, die Antwort ging verloren
             if (bool && this.newComment) {
                 this.$inertia.post(this.route('event.answer', {event: this.event.id}), {
                     comment: this.newComment,

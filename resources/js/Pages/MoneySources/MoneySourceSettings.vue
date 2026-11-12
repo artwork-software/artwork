@@ -11,6 +11,9 @@
             <div v-if="showInvalidCategoryNameErrorText" class="text-danger text-sm mt-4">
                 {{ $t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')}}
             </div>
+            <div v-if="$page.props.errors?.name" class="text-danger text-sm mt-4">
+                {{ $page.props.errors.name }}
+            </div>
             <div class=" w-full grid grid-cols-2 grid-flow-col grid-rows-2">
                 <!-- Finanzierungsquellenkategorien -->
                 <div class="mt-8 mr-10 flex items-center gap-4">
@@ -63,7 +66,6 @@ import Button from "@/Jetstream/Button.vue";
 import {defineComponent} from 'vue'
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
@@ -80,7 +82,6 @@ export default defineComponent({
         BaseInput,
         TextInputComponent,
         ConfirmationComponent,
-        JetDialogModal,
         Button,
         AppLayout,
         IconCheck,
@@ -121,6 +122,9 @@ export default defineComponent({
         addMoneySourceCategory() {
             //Leerzeichen am Anfang und am Ende des Strings sind nicht erlaubt, aber innerhalb des Strings
             const regex = /^(?!\s)(?:(?!\s+$)\s|\S+\s*\S*)*(?<!\s)$/;
+            if (!this.moneySourceCategoryInput) {
+                return;
+            }
             if (regex.test(this.moneySourceCategoryInput)) {
                 this.showInvalidCategoryNameErrorText = false;
                 router.post(
@@ -129,6 +133,7 @@ export default defineComponent({
                         name: this.moneySourceCategoryInput
                     },
                     {
+                        preserveScroll: true,
                         onSuccess: () => this.moneySourceCategoryInput = ''
                     }
                 );

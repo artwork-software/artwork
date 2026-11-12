@@ -27,6 +27,7 @@
                     @drop.stop.prevent="uploadDraggedBigLogo($event)">
                     <img v-show="bigLogoPreview" :src="bigLogoPreview" alt="Logo" class="rounded-md h-auto w-auto">
                     <input type="file" class="hidden"
+                           accept="image/jpeg,image/png,image/webp"
                            ref="bigLogo"
                            @change="updateBigLogoPreview">
                     <div class="flex my-auto h-40 items-center text-sm/5 font-bold text-text-subtle"
@@ -40,7 +41,7 @@
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                     <span class="ml-2 my-auto ">
-                        {{ $t('Upload your logo in .svg, .png, .gif, or .jpg format. The logo will be used on the login page and throughout email communications.') }}
+                        {{ $t('Upload your logo in .jpg, .png or .webp format (max. 10 MB). The logo will be used on the login page and throughout email communications.') }}
                     </span>
                 </div>
             </div>
@@ -57,7 +58,7 @@
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedSmallLogo($event)">
                     <img v-show="smallLogoPreview" :src="smallLogoPreview" alt="Logo" class="rounded-md h-auto w-auto object-cover">
-                    <input type="file" class="hidden" ref="smallLogo" @change="updateSmallLogoPreview">
+                    <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" ref="smallLogo" @change="updateSmallLogoPreview">
                     <div class="text-sm/5 font-bold text-text-subtle flex my-auto h-40 items-center"
                          v-if="$page.props.small_logo === null && smallLogoPreview === null">
                         {{ $t('Drag your small artwork logo here') }}
@@ -70,7 +71,7 @@
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                     <span class="ml-2 my-auto">
-                        {{ $t('Upload your logo in .svg, .png, .gif, or .jpg format. The logo will be used in the header of your artwork.') }}
+                        {{ $t('Upload your logo in .jpg, .png or .webp format (max. 10 MB). The logo will be used in the header of your artwork.') }}
                     </span>
                 </div>
 
@@ -96,6 +97,7 @@
                                    @change="updateBannerPreview"
                                    name="file-upload"
                                    type="file"
+                                   accept="image/jpeg,image/png,image/webp"
                                    class="sr-only"
                             />
                         </div>
@@ -110,6 +112,7 @@
                              class="rounded-md h-auto w-auto object-cover"
                         >
                         <input type="file" class="hidden"
+                               accept="image/jpeg,image/png,image/webp"
                                ref="banner"
                                @change="updateBannerPreview">
                     </div>
@@ -117,7 +120,7 @@
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                     <span class="ml-2 my-auto ">
-                        {{ $t('Upload your illustration in .svg, .png, .gif, or .jpg format. The illustration will be used on the login page.') }}
+                        {{ $t('Upload your illustration in .jpg, .png or .webp format (max. 10 MB). The illustration will be used on the login page.') }}
                     </span>
                 </div>
             </div>
@@ -168,9 +171,7 @@ export default defineComponent({
 
             const allowedTypes = [
               "image/jpeg",
-              "image/svg+xml",
               "image/png",
-              "image/gif",
               "image/webp",
             ]
 
@@ -198,7 +199,7 @@ export default defineComponent({
                 reader.readAsDataURL(file);
             } else {
                 this.uploadDocumentFeedback = this.$t(
-                    'Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.'
+                    'Only logos and illustrations of the type .jpg, .png and .webp are accepted.'
                 );
             }
 

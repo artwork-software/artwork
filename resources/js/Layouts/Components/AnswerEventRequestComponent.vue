@@ -1,59 +1,108 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" :modal-image="type === 'accept' ? '/Svgs/Overlays/illu_success.svg' : '/Svgs/Overlays/illu_warning.svg'">
-            <div class="mx-4">
-                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
-                    {{ $t('Room request')}} {{ type === 'accept' ? $t('Confirm') : $t('Reject')}}
-                </div>
-                <div class="w-10/12" :class="type === 'accept' ? 'text-sm/5 text-success' : 'text-sm/5 text-danger'">
-                    {{ $t('Would you like to submit a room request for')}} {{ this.rooms.find(room => room.id === request.room_id).name}} | {{this.eventTypes.find(eventType => eventType.id === request.event_type_id).name}},
-                    {{request.eventName}}  {{ request.project_id ? '|' : ''}} {{this.projects.find(project => project.id === request.project_id)?.name}} | {{formatDate(request.start_time)}} - {{ formatDate(request.end_time)}}
-                    {{ type === 'accept' ? $t('Confirm') : $t('Reject')}}?
-                </div>
-                <div class="flex justify-between mt-6">
-                    <FormButton @click="closeModal(true)" :text="$t('Confirm')"/>
-                    <div class="flex my-auto">
-                            <span @click="closeModal(false)"
-                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really')}}</span>
-                    </div>
-                </div>
-            </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        :title="modalTitle"
+        :description="periodText"
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+            <dt class="text-text-subtle">{{ $t('Room') }}</dt>
+            <dd class="min-w-0 truncate font-semibold text-text">{{ room?.name ?? '–' }}</dd>
+
+            <dt class="text-text-subtle">{{ $t('Event type') }}</dt>
+            <dd class="flex min-w-0 items-center gap-x-2 text-text">
+                <span
+                    v-if="eventType?.hex_code"
+                    class="size-3 shrink-0 rounded-full"
+                    :style="{ backgroundColor: eventType.hex_code }"
+                />
+                <span class="truncate">{{ eventType?.name ?? '–' }}</span>
+            </dd>
+
+            <template v-if="request?.eventName">
+                <dt class="text-text-subtle">{{ $t('Event name') }}</dt>
+                <dd class="min-w-0 truncate text-text">{{ request.eventName }}</dd>
+            </template>
+
+            <template v-if="request?.project_id">
+                <dt class="text-text-subtle">{{ $t('Project') }}</dt>
+                <dd class="min-w-0 truncate text-text">{{ project?.name ?? '–' }}</dd>
+            </template>
+        </dl>
+        <template #footer>
+            <BaseUIButton
+                label="No, not really"
+                is-cancel-button
+                hide-icon
+                @click="closeModal(false)"
+            />
+            <BaseUIButton
+                v-if="type === 'accept'"
+                label="Confirm"
+                variant="primary"
+                icon="IconCheck"
+                @click="closeModal(true)"
+            />
+            <BaseUIButton
+                v-else
+                label="Reject"
+                variant="danger"
+                icon="IconX"
+                @click="closeModal(true)"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {IconCheck, IconX} from "@tabler/icons-vue";
+<script setup>
+import {computed} from 'vue'
+import {useI18n} from 'vue-i18n'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
-import 'vue-cal/dist/vuecal.css'
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+defineOptions({name: 'AnswerEventRequestComponent'})
 
-export default {
-    name: 'AnswerEventRequestComponent',
-    mixins: [Permissions],
-    components: {
-        BaseModal,
-        FormButton,
-        JetDialogModal,
-        IconX,
-        IconCheck
-    },
-    props: ['type','request','rooms','projects','eventTypes'],
-    emits: ['closed'],
-    methods: {
-        closeModal(bool) {
-            this.$emit('closed', bool);
-        },
-        formatDate(isoDate) {
-            if(isoDate?.split('T').length > 1){
-                return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
-            }else if(isoDate?.split(' ').length > 1){
-                return isoDate.split(' ')[0].substring(8, 10) + '.' + isoDate.split(' ')[0].substring(5, 7) + '.' + isoDate.split(' ')[0].substring(0, 4) + ', ' + isoDate.split(' ')[1].substring(0, 5)
-            }
-        },
-    },
+const props = defineProps({
+    type: {type: String, default: null},
+    request: {type: Object, default: null},
+    rooms: {type: Array, default: () => []},
+    projects: {type: Array, default: () => []},
+    eventTypes: {type: Array, default: () => []},
+})
+
+const emit = defineEmits(['closed'])
+
+const {t} = useI18n()
+
+// Titel wie bisher aus vorhandenen Schlüsseln zusammengesetzt
+const modalTitle = computed(() => `${t('Room request')} ${t(props.type === 'accept' ? 'Confirm' : 'Reject')}`)
+
+const room = computed(() => props.rooms?.find((roomItem) => roomItem.id === props.request?.room_id))
+const eventType = computed(() => props.eventTypes?.find((eventTypeItem) => eventTypeItem.id === props.request?.event_type_id))
+const project = computed(() => props.projects?.find((projectItem) => projectItem.id === props.request?.project_id))
+
+const periodText = computed(() => {
+    const start = formatDate(props.request?.start_time)
+    const end = formatDate(props.request?.end_time)
+    if (!start && !end) {
+        return ''
+    }
+    return `${start ?? ''} - ${end ?? ''}`
+})
+
+function closeModal(answered) {
+    emit('closed', answered)
+}
+
+function formatDate(isoDate) {
+    if (isoDate?.split('T').length > 1) {
+        const [date, time] = isoDate.split('T')
+        return date.substring(8, 10) + '.' + date.substring(5, 7) + '.' + date.substring(0, 4) + ', ' + time.substring(0, 5)
+    }
+    if (isoDate?.split(' ').length > 1) {
+        const [date, time] = isoDate.split(' ')
+        return date.substring(8, 10) + '.' + date.substring(5, 7) + '.' + date.substring(0, 4) + ', ' + time.substring(0, 5)
+    }
+    return null
 }
 </script>
-
-<style scoped></style>

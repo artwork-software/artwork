@@ -122,6 +122,8 @@ const props = defineProps<{
     delay?: number
     /** zeigt bei leerem Suchfeld die zuletzt geöffneten Projekte (localStorage) als Schnellauswahl */
     showRecentProjects?: boolean
+    /** listet auch abgeschlossene Projekte (z. B. für Exporte vergangener Spielzeiten) */
+    includeDoneProjects?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -149,7 +151,7 @@ let debounceTimer: number | null = null
 
 // Filterlogik
 function mustList(p: Project): boolean {
-    if (p.marked_as_done) return false
+    if (p.marked_as_done && !props.includeDoneProjects) return false
     if (props.noProjectGroups) return !p.is_group
     if (props.onlyProjectGroups) return !!p.is_group
     return true

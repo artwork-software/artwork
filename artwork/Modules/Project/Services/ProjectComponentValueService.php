@@ -49,6 +49,7 @@ readonly class ProjectComponentValueService
         $newData = $this->normalizer->normalize($component, $data, is_array($storedData) ? $storedData : null);
         $changed = false;
 
+        // Drei Versuche: das erste Speichern zweier Felder zugleich kann sich an der Lücken-Sperre verklemmen
         $value = $this->db->transaction(function () use ($project, $component, $newData, $inTransaction, &$changed) {
             $previousValue = ProjectComponentValue::query()
                 ->where('project_id', $project->id)
@@ -70,7 +71,7 @@ readonly class ProjectComponentValueService
             }
 
             return $value;
-        });
+        }, 3);
 
         // A focus change without an edit would otherwise make every viewer reload the value.
         if ($changed) {

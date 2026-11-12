@@ -113,22 +113,8 @@ class ChecklistController extends Controller
             );
         }
 
-        if ($checklist->hasProject()) {
-            $project = $checklist->project;
-            $userIds = $checklist->users->pluck('id');
-            foreach ($userIds as $id) {
-                if (!$project->users->contains($id)) {
-                    $project->users()->attach($id, ['can_write' => false]);
-                }
-            }
-        }
-
-        $checklist->users()->sync(
-            collect($template->users)
-                ->map(function ($user) {
-                    return $user['id'];
-                })
-        );
+        // Zuweisen samt Aufnahme ins Projektteam und Benachrichtigung, wie beim späteren Zuweisen
+        $this->checklistService->assignUsersById($checklist, $template->users->pluck('id')->all());
     }
 
     protected function createWithoutTemplate(Request $request): void

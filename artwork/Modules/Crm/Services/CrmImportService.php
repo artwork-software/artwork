@@ -7,8 +7,8 @@ use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Project\Services\ProjectComponentValueNormalizer;
+use Artwork\Modules\Crm\Support\CrmImportDateParser;
 use Artwork\Modules\Crm\Support\CrmPropertyValueFormat;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -682,7 +682,7 @@ readonly class CrmImportService
 
             CrmPropertyTypeEnum::NUMBER => is_numeric($value) ? $value : false,
 
-            CrmPropertyTypeEnum::DATE => $this->parseDate($value),
+            CrmPropertyTypeEnum::DATE => CrmImportDateParser::parse($value),
 
             CrmPropertyTypeEnum::CHECKBOX => in_array(
                 mb_strtolower($value),
@@ -699,14 +699,5 @@ readonly class CrmImportService
 
             CrmPropertyTypeEnum::UPLOAD => false,
         };
-    }
-
-    private function parseDate(string $value): string|false
-    {
-        try {
-            return Carbon::parse($value)->format('Y-m-d');
-        } catch (\Throwable) {
-            return false;
-        }
     }
 }

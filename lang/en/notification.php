@@ -33,6 +33,9 @@ return [
     'contract' => [
         'add' => 'A contract has been shared with you',
         'delete' => 'A contract has been deleted',
+        'task_assigned' => 'New contract task for you: :task',
+        'task_contract' => 'Contract: :contract',
+        'task_deadline' => 'Deadline: :date',
     ],
     'project_assignment' => [
         'dissolved_by_free_day' =>
@@ -110,8 +113,6 @@ return [
         'confirmation_by_proxy' => 'Recorded by :userName',
     ],
     'event' => [
-        'with_adjoining_audience' => 'Event with audience in adjoining room',
-        'adjoining_is_loud' => 'Loud event in adjoining room',
         'conflict' => 'Event conflict',
         'conflict_text' => 'Conflict event booked: :date_time',
         'new_room_request' => 'New room request',
@@ -122,6 +123,12 @@ return [
         'room_request_accept' => 'Room request confirmed',
         'room_request_declined' => 'Room request declined',
         'deleted' => 'Event cancelled'
+    ],
+    'ai_assistant' => [
+        'created' => '{1} Event created (via assistant)|[2,*] :count events created (via assistant)',
+        'updated' => '{1} Event changed (via assistant)|[2,*] :count events changed (via assistant)',
+        'deleted' => '{1} Event deleted (via assistant)|[2,*] :count events deleted (via assistant)',
+        'reverted' => '{1} Event undone (via assistant)|[2,*] :count events undone (via assistant)',
     ],
     'moneySource' => [
         'add_permission' => 'You have been granted access to :moneySource',
@@ -163,6 +170,7 @@ return [
         'new' => 'New request for planned event',
         'open-index' => 'Planning event requests open',
         'approved-finished' => 'Planning event request approved and completed',
+        'approved-finished-by' => 'Planning event request approved and completed by :name',
         'user-approved' => 'Planning event request approved by :name',
         'event-verification-description' => 'The planned event ":event" has been approved',
         'user-rejected' => 'Planning event request rejected by :name',

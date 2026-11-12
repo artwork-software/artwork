@@ -124,131 +124,106 @@
       </table>
     </div>
 
-    <BaseModal
+    <ArtworkBaseModal
       v-if="showCreateModal"
-      @closed="showCreateModal = false"
-      modalSize="sm:max-w-lg"
+      title="Create New API Key"
+      modal-size="sm:max-w-lg"
+      @close="closeCreateModal"
     >
-      <div>
-        <h3 class="text-lg leading-6 font-medium text-text mb-4">
-          {{ $t('Create New API Key') }}
-        </h3>
-        <form @submit.prevent="createToken">
-          <div class="mb-4">
-            <label for="name" class="block text-sm font-medium text-text-muted">
-              {{ $t('Name') }} <span class="text-danger">*</span>
-            </label>
-            <input
-              id="name"
-              v-model="form.name"
-              type="text"
-              class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 focus:ring-accent-600 focus:border-accent-600 sm:text-sm"
-              required
-            />
-            <div v-if="form.errors.name" class="text-danger text-xs mt-1">
-              {{ form.errors.name }}
-            </div>
+      <form id="createApiKeyForm" class="space-y-4" @submit.prevent="createToken">
+        <BaseInput
+          id="apiKeyName"
+          v-model="form.name"
+          label="Name"
+          required
+          autofocus
+          :error="form.errors.name"
+        />
+        <fieldset>
+          <legend class="font-lexend text-xs font-medium text-text">
+            {{ $t('Permissions') }} <span class="text-danger">*</span>
+          </legend>
+          <p class="mt-1 mb-2 text-xs text-text-muted">
+            {{ $t('A key can only do what you allow here. Grant as little as possible.') }}
+          </p>
+          <div class="space-y-2 rounded-lg border border-border-subtle bg-surface-sunken p-3">
+            <BaseCheckbox
+              v-for="scope in availableScopes"
+              :key="scope.id"
+              :id="'apiKeyScope-' + scope.id"
+              :model-value="form.scopes.includes(scope.id)"
+              :description="scope.description"
+              @update:model-value="(checked) => toggleScope(scope.id, checked)"
+            >
+              <template #label>
+                <span class="font-mono text-xs">{{ scope.id }}</span>
+              </template>
+            </BaseCheckbox>
           </div>
+          <p v-if="form.errors.scopes" class="mt-1 text-[11.5px] text-danger">
+            {{ form.errors.scopes }}
+          </p>
+        </fieldset>
+        <BaseInput
+          id="apiKeyExpiresAt"
+          v-model="form.expires_at"
+          type="date"
+          label="Expires At"
+          :error="form.errors.expires_at"
+        />
+      </form>
+      <template #footer>
+        <BaseUIButton
+          label="Cancel"
+          is-cancel-button
+          hide-icon
+          :disabled="form.processing"
+          @click="closeCreateModal"
+        />
+        <BaseUIButton
+          type="submit"
+          form="createApiKeyForm"
+          label="Create"
+          variant="primary"
+          icon="IconKey"
+          :processing="form.processing"
+          :disabled="form.processing"
+        />
+      </template>
+    </ArtworkBaseModal>
 
-          <div class="mb-4">
-            <span class="block text-sm font-medium text-text-muted">
-              {{ $t('Permissions') }} <span class="text-danger">*</span>
-            </span>
-            <p class="text-xs text-text-subtle mt-1 mb-2">
-              {{ $t('A key can only do what you allow here. Grant as little as possible.') }}
-            </p>
-            <div class="space-y-2">
-              <label
-                v-for="scope in availableScopes"
-                :key="scope.id"
-                class="flex items-start gap-2 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  :value="scope.id"
-                  v-model="form.scopes"
-                  class="mt-0.5 rounded border-border text-accent-600 focus:ring-accent-600"
-                />
-                <span class="text-sm">
-                  <span class="font-mono text-xs">{{ scope.id }}</span>
-                  <span class="block text-xs text-text-subtle">{{ scope.description }}</span>
-                </span>
-              </label>
-            </div>
-            <div v-if="form.errors.scopes" class="text-danger text-xs mt-1">
-              {{ form.errors.scopes }}
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <label for="expires_at" class="block text-sm font-medium text-text-muted">
-              {{ $t('Expires At') }}
-            </label>
-            <input
-              id="expires_at"
-              v-model="form.expires_at"
-              type="date"
-              class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 focus:ring-accent-600 focus:border-accent-600 sm:text-sm"
-            />
-            <div v-if="form.errors.expires_at" class="text-danger text-xs mt-1">
-              {{ form.errors.expires_at }}
-            </div>
-          </div>
-        </form>
-
-        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-          <button
-            @click="createToken"
-            type="button"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-600 text-base font-medium text-white hover:bg-accent-700 focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:ml-3 sm:w-auto sm:text-sm"
-            :disabled="form.processing"
-          >
-            {{ $t('Create') }}
-          </button>
-          <button
-            @click="showCreateModal = false"
-            type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:mt-0 sm:w-auto sm:text-sm"
-          >
-            {{ $t('Cancel') }}
-          </button>
-        </div>
-      </div>
-    </BaseModal>
-
-    <BaseModal
+    <ArtworkBaseModal
       v-if="newlyCreatedToken"
-      @closed="newlyCreatedToken = null"
-      modalSize="sm:max-w-lg"
+      title="Your new API key"
+      modal-size="sm:max-w-lg"
+      @close="newlyCreatedToken = null"
     >
-      <div>
-        <h3 class="text-lg leading-6 font-medium text-text mb-4">
-          {{ $t('Your new API key') }}
-        </h3>
-        <p class="text-sm text-text-muted mb-3">
-          {{ $t('Copy this key now. It is not stored and cannot be shown again — if you lose it, revoke the key and create a new one.') }}
-        </p>
-        <div class="mt-1 flex items-center bg-surface-sunken p-3 rounded border border-border-subtle">
-          <code class="text-xs break-all mr-2 flex-grow">{{ newlyCreatedToken }}</code>
-          <button
+      <div class="space-y-3">
+        <BaseAlertComponent
+          message="Copy this key now. It is not stored and cannot be shown again — if you lose it, revoke the key and create a new one."
+          use-translation
+          type="warning"
+        />
+        <div class="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-sunken p-3">
+          <code class="grow break-all font-mono text-xs text-text">{{ newlyCreatedToken }}</code>
+          <BaseUIButton
+            label="Copy"
+            variant="ghost"
+            size="sm"
+            icon="IconClipboardCopy"
             @click="copyToken(newlyCreatedToken)"
-            class="p-1 text-text-muted hover:bg-border-subtle rounded"
-          >
-            <IconClipboardCopy class="h-5 w-5" />
-          </button>
-        </div>
-
-        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-          <button
-            @click="newlyCreatedToken = null"
-            type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:mt-0 sm:w-auto sm:text-sm"
-          >
-            {{ $t('Close') }}
-          </button>
+          />
         </div>
       </div>
-    </BaseModal>
+      <template #footer>
+        <BaseUIButton
+          label="Close"
+          variant="secondary"
+          hide-icon
+          @click="newlyCreatedToken = null"
+        />
+      </template>
+    </ArtworkBaseModal>
 
     <confirmation-component
       v-if="tokenToDelete"
@@ -258,116 +233,117 @@
       @closed="handleDeleteConfirmation"
     />
 
-    <BaseModal
+    <ArtworkBaseModal
       v-if="showLogModal"
-      @closed="closeLogModal"
-      modalSize="sm:max-w-4xl"
+      title="API Logs"
+      :description="currentLogToken?.name ?? ''"
+      modal-size="sm:max-w-4xl"
+      @close="closeLogModal"
     >
-      <div>
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg leading-6 font-medium text-text">
-            {{ $t('API Logs') }}: {{ currentLogToken?.name }}
-          </h3>
-          <button @click="closeLogModal" class="text-text-subtle hover:text-text-subtle">
-            <IconX class="h-5 w-5" />
-          </button>
-        </div>
+      <div v-if="loadingLogs" class="flex justify-center items-center py-8">
+        <PropertyIcon name="IconLoader2" class="size-6 animate-spin text-text-muted" aria-hidden="true"/>
+        <span class="sr-only">{{ $t('Loading...') }}</span>
+      </div>
 
-        <div v-if="loadingLogs" class="flex justify-center items-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600"></div>
-        </div>
-
-        <div v-else>
-          <div v-if="logs.data && logs.data.length > 0" class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-border-subtle">
-              <thead class="bg-surface-sunken">
-                <tr>
-                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
-                    {{ $t('Date') }}
-                  </th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
-                        {{ $t('IP') }}
-                    </th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
-                    {{ $t('Method') }}
-                  </th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
-                    {{ $t('URL') }}
-                  </th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
-                    {{ $t('UserAgent') }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-border-subtle">
-                <tr v-for="log in logs.data" :key="log.id" class="hover:bg-surface-sunken">
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-text">
-                    {{ formatDate(log.created_at) }}
-                  </td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-text-subtle">
-                        {{ log.ip }}
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm">
-                    <span
-                      :class="getMethodClass(log.method)"
-                      class="px-2 py-1 rounded text-xs font-semibold"
-                    >
-                      {{ log.method }}
-                    </span>
-                  </td>
-                    <td class="px-4 py-3 text-sm text-text max-w-xs truncate" :title="log.url">
-                    {{ log.url }}
-                  </td>
-                    <td class="px-4 py-3 text-sm text-text max-w-xs truncate" :title="log.url">
-                    {{ log.user_agent }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div class="bg-surface-sunken px-4 py-3 border-t border-border-subtle sm:px-6 mt-4">
-              <div class="flex items-center justify-between">
-                <div class="text-sm text-text-muted">
-                  {{ $t('Showing') }} {{ logs.from }} {{ $t('to') }} {{ logs.to }} {{ $t('of') }} {{ logs.total }} {{ $t('entries') }}
-                </div>
-                <div class="flex space-x-2">
-                  <button
-                    @click="loadLogs(logs.current_page - 1)"
-                    :disabled="!logs.prev_page_url"
-                    class="relative inline-flex items-center px-3 py-1 border border-border text-sm font-medium rounded-md text-text-muted bg-white hover:bg-surface-sunken disabled:text-text-subtle disabled:cursor-not-allowed"
+      <div v-else-if="logs.data && logs.data.length > 0">
+        <div class="overflow-x-auto rounded-lg border border-border-subtle">
+          <table class="min-w-full divide-y divide-border-subtle">
+            <thead class="bg-surface-sunken">
+              <tr>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                  {{ $t('Date') }}
+                </th>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                  {{ $t('IP') }}
+                </th>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                  {{ $t('Method') }}
+                </th>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                  {{ $t('URL') }}
+                </th>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                  {{ $t('UserAgent') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-surface divide-y divide-border-subtle">
+              <tr v-for="log in logs.data" :key="log.id" class="hover:bg-surface-hover">
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-text">
+                  {{ formatDate(log.created_at) }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-text-muted">
+                  {{ log.ip }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <span
+                    :class="getMethodClass(log.method)"
+                    class="px-2 py-1 rounded text-xs font-semibold"
                   >
-                    {{ $t('Previous') }}
-                  </button>
-                  <span class="relative inline-flex items-center px-3 py-1 text-sm font-medium text-text-muted">
-                    {{ logs.current_page }} / {{ logs.last_page }}
+                    {{ log.method }}
                   </span>
-                  <button
-                    @click="loadLogs(logs.current_page + 1)"
-                    :disabled="!logs.next_page_url"
-                    class="relative inline-flex items-center px-3 py-1 border border-border text-sm font-medium rounded-md text-text-muted bg-white hover:bg-surface-sunken disabled:text-text-subtle disabled:cursor-not-allowed"
-                  >
-                    {{ $t('Next') }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+                </td>
+                <td class="px-4 py-3 text-sm text-text max-w-xs truncate" :title="log.url">
+                  {{ log.url }}
+                </td>
+                <td class="px-4 py-3 text-sm text-text max-w-xs truncate" :title="log.user_agent">
+                  {{ log.user_agent }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          <div v-else class="text-center py-8 text-text-subtle">
-            {{ $t('No logs found') }}
+        <div class="mt-4 flex items-center justify-between gap-4">
+          <div class="text-sm text-text-muted tabular-nums">
+            {{ $t('Showing') }} {{ logs.from }} {{ $t('to') }} {{ logs.to }} {{ $t('of') }} {{ logs.total }} {{ $t('entries') }}
+          </div>
+          <div class="flex items-center gap-2">
+            <BaseUIButton
+              label="Previous"
+              variant="secondary"
+              size="sm"
+              icon="IconChevronLeft"
+              :disabled="!logs.prev_page_url"
+              @click="loadLogs(logs.current_page - 1)"
+            />
+            <span class="text-sm font-medium text-text-muted tabular-nums">
+              {{ logs.current_page }} / {{ logs.last_page }}
+            </span>
+            <BaseUIButton
+              label="Next"
+              variant="secondary"
+              size="sm"
+              icon="IconChevronRight"
+              :disabled="!logs.next_page_url"
+              @click="loadLogs(logs.current_page + 1)"
+            />
           </div>
         </div>
       </div>
-    </BaseModal>
+
+      <EmptyState
+        v-else
+        icon="IconHistory"
+        :title="$t('No logs found')"
+      />
+    </ArtworkBaseModal>
   </div>
 </template>
 
 <script>
-import {IconChevronDown, IconCircleCheck, IconClipboardCopy, IconPlus, IconX} from "@tabler/icons-vue";
+import {IconChevronDown, IconPlus} from "@tabler/icons-vue";
 import { defineComponent } from 'vue'
 import { useForm } from '@inertiajs/vue3'
+import axios from 'axios'
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
+import EmptyState from '@/Artwork/Feedback/EmptyState.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
 import dayjs from 'dayjs'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 
@@ -375,12 +351,15 @@ export default defineComponent({
   components: {
     SettingsGuideBanner,
     ConfirmationComponent,
-    BaseModal,
+    ArtworkBaseModal,
+    BaseUIButton,
+    BaseInput,
+    BaseCheckbox,
+    EmptyState,
+    PropertyIcon,
+    BaseAlertComponent,
     IconPlus,
-    IconCircleCheck,
-    IconClipboardCopy,
-    IconChevronDown,
-    IconX
+    IconChevronDown
   },
   props: {
     tokens: {
@@ -428,13 +407,27 @@ export default defineComponent({
     formatDate(date) {
       return dayjs(date).format('DD.MM.YYYY HH:mm')
     },
+    closeCreateModal() {
+      this.showCreateModal = false
+      this.form.clearErrors()
+    },
+    toggleScope(scopeId, checked) {
+      const selected = this.form.scopes.filter((id) => id !== scopeId)
+      if (checked) {
+        selected.push(scopeId)
+      }
+      this.form.scopes = selected
+    },
     createToken() {
+      if (this.form.processing) {
+        return
+      }
       this.form.post(route('api-management.store'), {
         preserveScroll: true,
         onSuccess: () => {
           this.showCreateModal = false
           this.form.reset()
-          // Einzige Gelegenheit, den Klartext zu lesen — er wird serverseitig nicht gespeichert.
+          // Einzige Gelegenheit, den Klartext zu lesen: er wird serverseitig nicht gespeichert.
           this.newlyCreatedToken = this.$page.props.flash.plainTextToken ?? null
         }
       })

@@ -6,6 +6,7 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Services\ComponentUsageService;
+use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 
@@ -113,16 +114,12 @@ class TabTemplateUpgradeSupport
             'settings_components_not_special_tab_palette',
             'settings_components_special',
             'settings_tabs_with_relations',
-            'print_layout_components_not_special',
-            'print_layout_components_special',
-            'print_layout_all_components',
-            'print_layout_components_not_special_v2',
-            'print_layout_components_special_v2',
-            'print_layout_all_components_v2',
         ];
         foreach ($cacheKeys as $key) {
             Cache::forget($key);
         }
+
+        ProjectPrintLayoutService::clearComponentCaches();
 
         ComponentUsageService::clearCache();
     }

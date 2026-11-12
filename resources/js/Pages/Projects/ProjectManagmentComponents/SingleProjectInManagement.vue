@@ -69,7 +69,7 @@
                             white-menu-background
                             classes="invisible group-hover:visible group-focus-within:visible"
                         >
-                            <BaseMenuItem v-if="canEnterProject" white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" :icon="IconFolderOpen" />
+                            <BaseMenuItem v-if="canEnterProject" white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open this project" :icon="IconFolderOpen" />
                             <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')" />
                             <BaseMenuItem white-menu-background title="Undo pinning" :icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()" />
                             <BaseMenuItem white-menu-background title="Pin" :icon="IconPin" v-else @click="pinProject()" />
@@ -86,7 +86,7 @@
                     class="absolute z-50"
                 >
                     <BaseMenu white-menu-background has-no-offset :button-id="'project-invisible-menu-' + project.id" :show-icon="false" v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')">
-                        <BaseMenuItem v-if="canEnterProject" white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" :icon="IconFolderOpen" />
+                        <BaseMenuItem v-if="canEnterProject" white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open this project" :icon="IconFolderOpen" />
                         <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')" />
                         <BaseMenuItem white-menu-background title="Undo pinning" :icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()" />
                         <BaseMenuItem white-menu-background title="Pin" :icon="IconPin" v-else @click="pinProject()" />
@@ -112,31 +112,32 @@
         />
 
         <!-- Delete Modal -->
-        <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject">
-            <div class="mx-4">
-                <div class="text-2xl sm:text-3xl font-black text-text my-2">
-                    {{ $t('Delete project') }}
-                </div>
-                <div class="text-sm text-danger ">
-                    {{ $t('Are you sure you want to delete the project?', [project.name]) }}
-                </div>
-                <div class="flex flex-col sm:flex-row gap-4 justify-between mt-6">
-                    <button
-                        class="bg-success hover:bg-success text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
-                        @click="deleteProject"
-                    >
-                        {{ $t('Delete') }}
-                    </button>
-                    <button
-                        type="button"
-                        @click="closeDeleteProjectModal()"
-                        class="text-sm text-text-muted dark:text-text-subtle hover:underline underline-offset-4"
-                    >
-                        {{ $t('No, not really') }}
-                    </button>
-                </div>
-            </div>
-        </BaseModal>
+        <ArtworkBaseModal
+            v-if="deletingProject"
+            title="Delete project"
+            modal-size="sm:max-w-lg"
+            @close="closeDeleteProjectModal"
+        >
+            <p class="text-sm text-text">
+                {{ $t('Are you sure you want to delete the project?', [project.name]) }}
+            </p>
+            <template #footer>
+                <BaseUIButton
+                    label="No, not really"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="deleteProcessing"
+                    @click="closeDeleteProjectModal"
+                />
+                <BaseUIButton
+                    label="Delete"
+                    variant="danger"
+                    icon="IconTrash"
+                    :processing="deleteProcessing"
+                    @click="deleteProject"
+                />
+            </template>
+        </ArtworkBaseModal>
     </div>
 </template>
 
@@ -169,7 +170,8 @@ import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.
 import BuilderCrmContactListComponent from "@/Pages/Projects/BuilderComponents/BuilderCrmContactListComponent.vue";
 import BuilderLink from "@/Pages/Projects/BuilderComponents/BuilderLinkComponent.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseChip from "@/Artwork/Chips/BaseChip.vue";
 import { IconCopy, IconFolder, IconFolderOpen, IconPin, IconPinnedOff, IconTrash } from "@tabler/icons-vue";
 
@@ -212,6 +214,7 @@ const menuPosition = ref({ x: 0, y: 0 });
 const editingProject = ref(false);
 const showActionComponent = ref(false);
 const deletingProject = ref(false);
+const deleteProcessing = ref(false);
 
 const componentMapping = {
     BuilderProjectTitleComponent,
@@ -340,11 +343,14 @@ const duplicateProject = () => {
 const openDeleteProjectModal = () => (deletingProject.value = true);
 
 const deleteProject = () => {
+    if (deleteProcessing.value) return;
+    deleteProcessing.value = true;
     router.delete(route("projects.destroy", { project: props.project.id }), {
         data: { page: page.value, query: query.value },
         preserveScroll: true,
+        onSuccess: () => closeDeleteProjectModal(),
+        onFinish: () => (deleteProcessing.value = false),
     });
-    closeDeleteProjectModal();
 };
 
 const closeDeleteProjectModal = () => (deletingProject.value = false);

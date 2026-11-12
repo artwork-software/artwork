@@ -1,40 +1,43 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_warning.svg">
-            <div class="mx-4">
-                <div class="font-black font-lexend text-text text-3xl my-2">
-                    {{ titel }}
-                </div>
-                <div class="text-danger subpixel-antialiased">
-                    {{ description }}
-                </div>
-                <div class="flex justify-start mt-6">
-                    <FormButton @click="closeModal(true)" :text="confirm ?? $t('Yes')"/>
-                </div>
-            </div>
-    </BaseModal>
+    <ArtworkBaseModal
+        :title="titel || 'An error has occurred'"
+        modal-size="sm:max-w-lg"
+        @close="closeModal(false)"
+    >
+        <BaseAlertComponent
+            v-if="description"
+            class="mb-0!"
+            type="error"
+            :message="String(description)"
+        />
+        <template #footer>
+            <BaseUIButton
+                :label="confirm || 'OK'"
+                :use-translation="!confirm"
+                variant="primary"
+                icon="IconCheck"
+                @click="closeModal(true)"
+            />
+        </template>
+    </ArtworkBaseModal>
 </template>
 
 <script>
-import {IconCheck, IconX} from "@tabler/icons-vue";
-import 'vue-cal/dist/vuecal.css'
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 export default {
-    mixins: [Permissions],
     name: 'ErrorComponent',
     components: {
-        BaseModal,
-        FormButton,
-        JetDialogModal,
-        IconX,
-        IconCheck
+        ArtworkBaseModal,
+        BaseUIButton,
+        BaseAlertComponent,
     },
     props: [
         'titel',
         'description',
+        // Beschriftung der Bestätigung (bereits übersetzt)
         'confirm',
         'cancel'
     ],

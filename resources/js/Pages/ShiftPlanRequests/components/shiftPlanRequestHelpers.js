@@ -42,6 +42,23 @@ export function shiftPlanRequestWeekLabel(request) {
 }
 
 /**
+ * Vorfilter für den Schichtverlauf aus einer Freigabe-Anfrage: Gewerk der Anfrage und Montag–Sonntag
+ * ihrer KW. Die Gewerkliste enthält nur das Anfrage-Gewerk (das Modal ergänzt „Alle Gewerke“).
+ * @param {object|null|undefined} request
+ * @returns {{craftId: number|null, startDate: string, endDate: string, crafts: Array<{id: number, name: string, abbreviation?: string}>}|null}
+ *   null ohne gültige KW
+ */
+export function shiftHistoryFilterForRequest(request) {
+    const range = isoWeekToDateRange(request?.week_number, request?.year);
+    if (!range) return null;
+    const craftId = Number(request?.craft_id ?? request?.craft?.id) || null;
+    const crafts = craftId && request?.craft
+        ? [{ id: craftId, name: request.craft.name, abbreviation: request.craft.abbreviation }]
+        : [];
+    return { craftId: crafts.length ? craftId : null, startDate: range.start, endDate: range.end, crafts };
+}
+
+/**
  * Dauer einer Schicht in Stunden (Ende minus Start minus Pause). Endet die Schicht vor ihrem Start,
  * läuft sie über Mitternacht (z. B. 22:00–06:00).
  * @param {{start?: string, end?: string, break_minutes?: number}} shift

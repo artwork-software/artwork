@@ -24,7 +24,7 @@
                             ? 'bg-text-subtle cursor-not-allowed'
                             : 'bg-accent-600 cursor-pointer',
                         'w-10 h-10 rounded-full text-white p-2'
-                    ]" @click="deleteSageData()" />
+                    ]" @click="openDeleteSageDataConfirmation()" />
                 </div>
             </div>
         </div>
@@ -239,6 +239,10 @@
                                 :titel="$t('Delete bookings')"
                                 :description="$t('Are you sure you want to delete the selected booking data?')"
                                 @closed="onDeleteBookingDaysConfirmationClosed" />
+        <confirmation-component v-if="showDeleteSageDataConfirmation"
+                                :titel="$t('Delete all Sage data')"
+                                :description="$t('Are you sure you want to delete all imported Sage data? All bookings, including those already assigned to budgets and their comments, will be permanently deleted. This cannot be undone.')"
+                                @closed="onDeleteSageDataConfirmationClosed" />
         <SageBookingLogModal v-if="showLogModal" @closed="showLogModal = false"/>
         <success-modal v-if="$page.props.flash.success"
                        :title="$t('Sage interface')"
@@ -309,6 +313,7 @@ export default defineComponent({
             deleteBookingDaysKtr: null,
             deleteAssignedData: false,
             showDeleteBookingDaysConfirmation: false,
+            showDeleteSageDataConfirmation: false,
             showLogModal: false,
             dragging: false
         }
@@ -370,10 +375,19 @@ export default defineComponent({
                 preserveState: false
             });
         },
-        deleteSageData() {
+        openDeleteSageDataConfirmation() {
+            if (!this.sageInterfaceIsConfigured() || this.importProcessing) return;
+            this.showDeleteSageDataConfirmation = true;
+        },
+        onDeleteSageDataConfirmationClosed(confirmed) {
+            this.showDeleteSageDataConfirmation = false;
+            if (!confirmed || !this.sageInterfaceIsConfigured() || this.importProcessing) return;
+
+            this.importProcessing = true;
             router.delete(route('tool.interfaces.sage.delete'), {
                 preserveState: true,
-                preserveScroll: true
+                preserveScroll: true,
+                onFinish: () => this.importProcessing = false
             });
         },
         onDeleteBookingDaysConfirmationClosed(confirmed) {

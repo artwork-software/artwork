@@ -12,15 +12,13 @@ use Artwork\Modules\Checklist\Repositories\ChecklistRepository;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistTemplateIndexResource;
 use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
-use stdClass;
 
 readonly class ChecklistService
 {
@@ -132,6 +130,14 @@ readonly class ChecklistService
         $publicChecklists = $checklists->where('private', false)->values();
         $privateChecklists = $checklists->where('private', true)->values();
 
+        // Die Oberfläche zeigt öffentliche und private Listen in einer Liste: die Position hält die
+        // Sortierung über beide Gruppen hinweg fest.
+        $positions = $checklists->values()->pluck('id')->flip();
+        $withSortPosition = static fn (array $resolvedChecklists): array => array_map(
+            static fn (array $checklist): array => $checklist + ['sort_position' => $positions[$checklist['id']]],
+            $resolvedChecklists
+        );
+
         $openedChecklists = User::where('id', $userId)->first()?->opened_checklists ?? [];
 
         return [
@@ -139,8 +145,12 @@ readonly class ChecklistService
             'checklist_templates' => ChecklistTemplateIndexResource::collection(
                 ChecklistTemplate::with(['task_templates', 'user', 'users'])->get()
             )->resolve(),
-            'public_checklists' => ChecklistIndexResource::collection($publicChecklists)->resolve(),
-            'private_checklists' => ChecklistIndexResource::collection($privateChecklists)->resolve(),
+            'public_checklists' => $withSortPosition(
+                ChecklistIndexResource::collection($publicChecklists)->resolve()
+            ),
+            'private_checklists' => $withSortPosition(
+                ChecklistIndexResource::collection($privateChecklists)->resolve()
+            ),
         ];
     }
 
@@ -202,12 +212,27 @@ readonly class ChecklistService
         }
     }
 
-    public function restoreAll(Collection|array $checklists, TaskService $taskService): void
-    {
+    /**
+     * Stellt Checklisten samt ihren Aufgaben wieder her. Mit $deletedSince kommen nur die Aufgaben zurück,
+     * die ab diesem Zeitpunkt (also zusammen mit der Checkliste) in den Papierkorb gingen.
+     */
+    public function restoreAll(
+        Collection|array $checklists,
+        TaskService $taskService,
+        ?CarbonInterface $deletedSince = null
+    ): void {
         /** @var Checklist $checklist */
         foreach ($checklists as $checklist) {
             $checklist->restore();
-            $taskService->restoreAll($checklist->tasks);
+            $taskService->restoreAll(
+                $checklist->tasks()
+                    ->onlyTrashed()
+                    ->when(
+                        $deletedSince !== null,
+                        static fn ($query) => $query->where('tasks.deleted_at', '>=', $deletedSince)
+                    )
+                    ->get()
+            );
         }
     }
 
@@ -224,100 +249,7 @@ readonly class ChecklistService
     public function restore(Checklist $checklist, TaskService $taskService): void
     {
         $checklist->restore();
-        $taskService->restoreAll($checklist->tasks);
-    }
-
-    public function getProjectChecklists(
-        Project $project,
-        stdClass $headerObject,
-        ComponentInTab $componentInTab
-    ): stdClass {
-        $headerObject->project->opened_checklists = User::where('id', Auth::id())
-            ->first()->opened_checklists;
-        $headerObject->project->checklist_templates = ChecklistTemplateIndexResource::collection(
-            ChecklistTemplate::with(['task_templates', 'user', 'users'])->get()
-        )->resolve();
-        $userId = Auth::id();
-        $headerObject->project->public_checklists = ChecklistIndexResource::collection(
-            $project->checklists
-                ->whereIn('tab_id', $componentInTab->scope)
-                ->where('private', false)
-                ->filter(function ($checklist) use ($userId) {
-                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
-                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
-
-                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
-                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
-                        return $task->task_users->contains('id', $userId);
-                    });
-
-                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
-                    $isCreator = $checklist->user_id === $userId;
-
-                    //Prüfen, ob der Benutzer im Projektteam ist
-                    $isInProjectTeam = $checklist->project->users->contains('id', $userId);
-
-                    return $isInChecklistUsers || $isInTaskUsers || $isCreator || $isInProjectTeam;
-                })
-        );
-        $headerObject->project->private_checklists = ChecklistIndexResource::collection(
-            $project->checklists
-                ->whereIn('tab_id', $componentInTab->scope)
-                ->where('private', true)
-                ->filter(function ($checklist) use ($userId) {
-                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
-                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
-
-                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
-                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
-                        return $task->task_users->contains('id', $userId);
-                    });
-
-                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
-                    $isCreator = $checklist->user_id === $userId;
-
-                    //Prüfen, ob der Benutzer im Projektteam ist
-                    $isInProjectTeam = $checklist->project->users->contains('id', $userId);
-
-                    return $isInChecklistUsers || $isInTaskUsers || $isCreator || $isInProjectTeam;
-                })
-        );
-
-        return $headerObject;
-    }
-
-    public function getProjectChecklistsAll(Project $project, stdClass $headerObject): stdClass
-    {
-        $headerObject->project->opened_checklists = User::where('id', Auth::id())
-            ->first()->opened_checklists;
-        $userId = Auth::id();
-        $headerObject->project->public_all_checklists = ChecklistIndexResource::collection(
-            $project->checklists
-                ->where('private', false)
-                ->filter(function ($checklist) use ($userId) {
-                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
-                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
-                        return $task->task_users->contains('id', $userId);
-                    });
-                    $isCreator = $checklist->user_id === $userId;
-                    $isInProjectTeam = $checklist->project->users->contains('id', $userId);
-                    return $isInChecklistUsers || $isInTaskUsers || $isCreator || $isInProjectTeam;
-                })
-        )->resolve();
-        $headerObject->project->private_all_checklists = ChecklistIndexResource::collection(
-            $project->checklists
-                ->where('private', true)
-                ->filter(function ($checklist) use ($userId) {
-                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
-                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
-                        return $task->task_users->contains('id', $userId);
-                    });
-                    $isCreator = $checklist->user_id === $userId;
-                    $isInProjectTeam = $checklist->project->users->contains('id', $userId);
-                    return $isInChecklistUsers || $isInTaskUsers || $isCreator || $isInProjectTeam;
-                })
-        )->resolve();
-        return $headerObject;
+        $taskService->restoreAll($checklist->tasks()->onlyTrashed()->get());
     }
 
     public function createNewChecklist(array $attributes): Checklist

@@ -418,20 +418,14 @@ class ProjectController extends Controller
         // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
         // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
         // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
-        // Rechteliste kommt aus der Policy (eine Quelle); Admins passieren via Gate::before.
+        // Die Regel steht seit core-visibility-scopes in Project::scopeVisibleFor (eine Quelle
+        // für Übersicht und Aggregations-Endpunkte); Admins passieren via Gate::before.
         $authUser = Auth::user();
         $canEnterAll = $authUser->canAny(ProjectPolicy::GLOBAL_ENTER_PERMISSIONS);
         $canWriteAll = $authUser->can(PermissionEnum::WRITE_PROJECTS->value);
         $enterableProjectIds = $canEnterAll ? collect() : Project::query()
+            ->visibleFor($authUser)
             ->whereIn('id', $projects->pluck('id'))
-            ->where(function (Builder $query) use ($authUser): void {
-                $query
-                    ->whereHas('users', fn(Builder $userQuery) => $userQuery->where('users.id', $authUser->id))
-                    ->orWhereHas(
-                        'departments.users',
-                        fn(Builder $departmentQuery) => $departmentQuery->where('users.id', $authUser->id)
-                    );
-            })
             ->pluck('id')
             ->flip();
 
@@ -802,6 +796,7 @@ class ProjectController extends Controller
         $this->authorize('viewAny', Project::class);
 
         $projects = $projectService->searchProjectsByNameOrArtists($request->get('query'));
+        Project::loadFirstAndLastEventDates($projects);
 
         return $projects->map(fn(Project $project) => ProjectSearchDTO::fromModel($project));
         //return ProjectIndexResource::collection($projects)->resolve();
@@ -816,9 +811,12 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
 
-        return $projectService->searchProjectsByNameOrArtists((string) $request->get('query'))
+        $projects = $projectService->searchProjectsByNameOrArtists((string) $request->get('query'))
             ->reject(static fn (Project $project): bool => (bool) $project->is_group)
-            ->values()
+            ->values();
+        Project::loadFirstAndLastEventDates($projects);
+
+        return $projects
             ->map(static fn (Project $project): ProjectSearchDTO => ProjectSearchDTO::fromModel($project));
     }
 
@@ -912,7 +910,9 @@ class ProjectController extends Controller
             }
         } elseif (!empty($request->selectedGroup)) {
             $group = $this->resolveSelectedProjectGroup($request->selectedGroup['id'] ?? null);
-            $group?->projectsOfGroup()->syncWithoutDetaching($project->id);
+            if ($group !== null && !$group->is($project)) {
+                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+            }
         }
 
         $this->projectService->syncCategories(
@@ -3058,7 +3058,11 @@ class ProjectController extends Controller
 
         $headerObject->project->project_managers = $project->managerUsers;
 
-        $latestActivity = $project->activities()->latest()->first();
+        // Exporte (Projektinhalte-Export) stehen im Verlauf, sind aber keine Änderung am Projekt
+        $latestActivity = $project->activities()
+            ->where(fn ($query) => $query->whereNull('event')->orWhere('event', '!=', 'exported'))
+            ->latest()
+            ->first();
         $latestChange  = [];
         if ($latestActivity !== null) {
             $properties = $latestActivity->properties;
@@ -3663,7 +3667,9 @@ class ProjectController extends Controller
             : null;
         DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         if ($request->get('selectedGroup') !== null) {
-            $group?->projectsOfGroup()->syncWithoutDetaching($project->id);
+            if ($group !== null && !$group->is($project)) {
+                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+            }
 
             // Ensure the project has exactly one budget-relevant column
             $table = $project->table()->first();
@@ -3988,7 +3994,10 @@ class ProjectController extends Controller
 
     public function addProjectsToGroup(Request $request, Project $projectGroup): void
     {
-        $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id');
+        // Eine Gruppe enthält nie sich selbst (sonst Endlosrekursion beim Aufbau der Kalenderdaten)
+        $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id')
+            ->reject(fn ($id): bool => (int) $id === (int) $projectGroup->id)
+            ->values();
         $this->authorize('update', $projectGroup);
         Project::query()->whereIn('id', $projectIdsToAdd)->get()
             ->each(fn (Project $project) => $this->authorize('view', $project));
@@ -4236,9 +4245,9 @@ class ProjectController extends Controller
     {
         $newProject = Project::create([
             'name' => __('(Copy)') . ' ' . $project->name,
-            'description' => $project->description,
             'number_of_participants' => $project->number_of_participants,
-            'cost_center' => $project->cost_center,
+            'cost_center_id' => $project->cost_center_id,
+            'cost_center_description' => $project->cost_center_description,
             'state' => $project->state,
             'is_group' => $project->is_group,
         ]);

@@ -33,6 +33,44 @@ final class EventMultiCellTest extends FeatureTestCase
             ->assertForbidden();
     }
 
+    /**
+     * "Kann von jedem fest gebucht werden" gibt kein Anlegerecht (EventPolicy::create): ohne Kalenderrecht
+     * legen auch die Mehrfachaktionen nichts an, weder fest noch als Raumanfrage.
+     */
+    #[Test]
+    public function room_bookable_by_anyone_gives_no_right_to_create_events_in_cells(): void
+    {
+        $this->actingAsUserWith([]);
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => true]);
+
+        $this->postJson(route('events.multi-cell.create'), [
+            'cells' => [['day' => '2026-08-03', 'room_id' => $room->id]],
+            'event_type_id' => $eventType->id,
+            'name' => 'Ohne Anlegerecht',
+        ])->assertForbidden();
+
+        $this->assertDatabaseMissing('events', ['eventName' => 'Ohne Anlegerecht']);
+    }
+
+    #[Test]
+    public function request_only_user_books_cells_in_a_room_bookable_by_anyone_directly(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => true]);
+
+        $this->postJson(route('events.multi-cell.create'), [
+            'cells' => [['day' => '2026-08-03', 'room_id' => $room->id]],
+            'event_type_id' => $eventType->id,
+            'name' => 'Fest gebucht',
+        ])->assertSuccessful();
+
+        $event = Event::query()->where('eventName', 'Fest gebucht')->sole();
+        $this->assertSame($room->id, $event->room_id);
+        $this->assertFalse((bool) $event->occupancy_option);
+    }
+
     #[Test]
     public function admin_can_create_event_in_multiple_cells(): void
     {

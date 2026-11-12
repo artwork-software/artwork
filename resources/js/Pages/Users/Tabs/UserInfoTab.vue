@@ -1,4 +1,4 @@
-<<template>
+<template>
     <div class="">
         <!-- HERO / HEADER -->
         <header class="relative overflow-hidden rounded-3xl border border-border-subtle bg-gradient-to-r from-accent-600 to-accent-600 shadow-sm">
@@ -10,7 +10,7 @@
                 <div class="flex items-end gap-5">
                     <!-- Avatar -->
                     <button
-                        v-if="isSignedInUser() || hasAdminRole()"
+                        v-if="canEditProfile"
                         @click="openChangePictureModal"
                         class="group relative"
                         type="button"
@@ -46,8 +46,8 @@
             </div>
         </header>
 
-        <!-- NAME CARD (nur eigener Account oder Admin) -->
-        <section v-if="isSignedInUser() || hasAdminRole()" class="mt-8">
+        <!-- NAME CARD (eigener Account, Admin oder Personalverwaltung bei Nicht-Admin-Profilen) -->
+        <section v-if="canEditProfile" class="mt-8">
             <div class="rounded-3xl border border-border-subtle bg-white p-6 shadow-sm sm:p-8">
                 <h2 class="mb-5 text-base font-semibold text-text">
                     {{ $t('Basic information') }}
@@ -88,8 +88,8 @@
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <BaseInput
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.pronouns"
                         :label="$t('Pronouns')"
@@ -98,8 +98,8 @@
                     />
 
                     <BaseInput
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.business"
                         :label="$t('Company')"
@@ -108,8 +108,8 @@
                     />
 
                     <BaseInput
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.position"
                         :label="$t('Position')"
@@ -148,8 +148,8 @@
                     </div>
 
                     <BaseInput
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.phone_number"
                         :label="$t('Phone number')"
@@ -160,8 +160,8 @@
 
                 <div class="mt-6">
                     <BaseTextarea
-                        :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
+                        :disabled="!canEditProfile"
+                        :class="canEditProfile ? '' : 'bg-surface-sunken'"
                         :label="$t('What should other artwork users know?')"
                         v-model="userForm.description"
                         rows="5"
@@ -179,7 +179,7 @@
                         {{ $t('Preferences') }}
                     </h3>
 
-                    <div v-if="isSignedInUser() || hasAdminRole()" class="mb-5">
+                    <div v-if="canEditProfile" class="mb-5">
                         <Listbox as="div" v-model="selectedLanguage" @update:modelValue="editUser">
                             <ListboxLabel class="block text-sm font-medium text-text">
                                 {{ $t('Application language') }}
@@ -240,9 +240,9 @@
                                 @change="editUser"
                                 name="high_contrast"
                                 type="checkbox"
-                                :disabled="!canEditPreferences"
+                                :disabled="!canEditProfile"
                                 :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
-                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
+                                    canEditProfile ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
@@ -260,9 +260,9 @@
                                 @change="editUser"
                                 name="email_private"
                                 type="checkbox"
-                                :disabled="!canEditPreferences"
+                                :disabled="!canEditProfile"
                                 :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
-                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
+                                    canEditProfile ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
@@ -280,9 +280,9 @@
                                 @change="editUser"
                                 name="phone_private"
                                 type="checkbox"
-                                :disabled="!canEditPreferences"
+                                :disabled="!canEditProfile"
                                 :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
-                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
+                                    canEditProfile ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
@@ -300,9 +300,9 @@
                                 @change="editUser"
                                 name="use_chat"
                                 type="checkbox"
-                                :disabled="!canEditPreferences"
+                                :disabled="!canEditProfile"
                                 :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
-                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
+                                    canEditProfile ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
@@ -417,93 +417,123 @@
         </section>
 
         <!-- MODALS -->
-        <BaseModal
-            @closed="closeChangeTeamsModal"
+        <ArtworkBaseModal
             v-if="showChangeTeamsModal"
-            modal-image="/Svgs/Overlays/illu_team_user.svg"
+            title="Team membership"
+            modal-size="sm:max-w-lg"
+            @close="closeChangeTeamsModal"
         >
-            <div class="mx-3">
-                <div class="text-2xl font-bold text-text my-2">
-                    {{ $t('Team membership') }}
-                </div>
-                <div class="mt-2 text-sm text-text-muted">
-                    {{ $t('Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.') }}
-                </div>
-
-                <div class="mt-6 mb-8 space-y-2">
-          <span v-if="deptLocal.length === 0" class="text-text-muted flex my-6">
-            {{ $t('No teams have been created in the tool yet.') }}
-          </span>
-
-                    <div v-for="team in deptLocal" :key="team.id" class="rounded-xl border border-border-subtle px-3 py-2">
-                        <label :for="`dept-${team.id}`" class="flex items-center justify-between cursor-pointer">
-                            <div class="flex items-center gap-3">
-                                <input
-                                    :id="`dept-${team.id}`"
-                                    type="checkbox"
-                                    v-model="team.checked"
-                                    @change="teamChecked(team)"
-                                    class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
-                                />
-                                <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
-                                <span :class="team.checked ? 'text-text font-medium' : 'text-text-muted'">
-                  {{ team.name }}
-                </span>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="w-full items-center text-center">
-                    <BaseUIButton @click="saveNewTeams" :label="$t('Save')" is-add-button :disabled="userForm.processing" />
-                </div>
-            </div>
-        </BaseModal>
-
-        <BaseModal
-            @closed="closeChangePictureModal"
-            v-if="showChangePictureModal"
-            modal-image="/Svgs/Overlays/illu_team_user.svg"
-            :show-image="false"
-        >
-            <div class="mx-4">
-                <div class="text-2xl font-bold text-text my-2">
-                    {{ $t('Change profile picture') }}
-                </div>
+            <div class="space-y-4">
                 <p class="text-sm text-text-muted">
-                    {{ $t('Select your profile picture here. It should not exceed the size of 3072 KB.') }}
+                    {{ $t('Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.') }}
                 </p>
+                <EmptyState
+                    v-if="deptLocal.length === 0"
+                    icon="IconUsersGroup"
+                    :title="$t('No teams have been created in the tool yet.')"
+                />
+                <ul
+                    v-else
+                    class="max-h-80 divide-y divide-border-subtle overflow-y-auto rounded-lg border border-border bg-surface"
+                >
+                    <li v-for="team in deptLocal" :key="team.id" class="px-3 py-2">
+                        <BaseCheckbox
+                            :id="`dept-${team.id}`"
+                            v-model="team.checked"
+                            class="items-center"
+                            @change="teamChecked(team)"
+                        >
+                            <template #label>
+                                <span class="flex items-center gap-x-3">
+                                    <TeamIconCollection class="size-8 shrink-0 rounded-full" :iconName="team.svg_name" />
+                                    <span class="truncate">{{ team.name }}</span>
+                                </span>
+                            </template>
+                        </BaseCheckbox>
+                    </li>
+                </ul>
+            </div>
+            <template #footer>
+                <BaseUIButton
+                    label="Cancel"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="userForm.processing"
+                    @click="closeChangeTeamsModal"
+                />
+                <BaseUIButton
+                    label="Save"
+                    variant="primary"
+                    icon="IconDeviceFloppy"
+                    :processing="userForm.processing"
+                    :disabled="userForm.processing"
+                    @click="saveNewTeams"
+                />
+            </template>
+        </ArtworkBaseModal>
 
-                <!-- Hidden file input -->
-                <input ref="photoRef" type="file" class="hidden" @change="updatePhotoPreview" />
+        <ArtworkBaseModal
+            v-if="showChangePictureModal"
+            title="Change profile picture"
+            description="Select your profile picture here. It should not exceed the size of 3072 KB."
+            modal-size="sm:max-w-lg"
+            @close="closeChangePictureModal"
+        >
+            <div class="space-y-4">
+                <input ref="photoRef" type="file" accept="image/png,image/jpeg" class="hidden" @change="updatePhotoPreview" />
 
-                <!-- Preview + Buttons -->
-                <div class="mt-4 flex items-start gap-4">
-                    <div v-show="photoPreview" class="rounded-full ring-2 ring-border-subtle">
-            <span
-                class="block h-20 w-20 rounded-full bg-cover bg-no-repeat bg-center"
-                :style="`background-image: url('${photoPreview}');`"
-            />
-                    </div>
-
-                    <div class="flex flex-wrap gap-3">
-                        <BaseButton :text="$t('Select file')" @click.prevent="selectNewPhoto" />
-                        <BaseButton
+                <div class="flex items-center gap-4">
+                    <img
+                        :src="photoPreview || user_to_edit.profile_photo_url"
+                        :alt="user_to_edit.first_name"
+                        class="size-20 shrink-0 rounded-full object-cover ring-2 ring-border-subtle"
+                    />
+                    <div class="flex flex-wrap gap-2">
+                        <BaseUIButton
+                            label="Select file"
+                            variant="secondary"
+                            icon="IconUpload"
+                            size="sm"
+                            :disabled="userForm.processing"
+                            @click="selectNewPhoto"
+                        />
+                        <BaseUIButton
                             v-if="user_to_edit.profile_photo_url"
-                            @click.prevent="deletePhoto"
-                            :text="$t('Delete current profile picture')"
+                            label="Delete current profile picture"
+                            variant="ghost"
+                            icon="IconTrash"
+                            size="sm"
+                            :disabled="userForm.processing"
+                            @click="deletePhoto"
                         />
                     </div>
                 </div>
 
-                <JetInputError :message="updateProfilePictureFeedback" class="mt-2" />
-                <JetInputError :message="userForm.errors.photo" class="mt-2" />
-
-                <div class="mt-6">
-                    <BaseButton :text="$t('Save new profile picture')" @click="validateTypeAndChange" />
-                </div>
+                <BaseAlertComponent
+                    v-if="updateProfilePictureFeedback || userForm.errors.photo"
+                    type="error"
+                    class="mb-0!"
+                    :message="updateProfilePictureFeedback || userForm.errors.photo"
+                />
             </div>
-        </BaseModal>
+            <template #footer>
+                <BaseUIButton
+                    label="Cancel"
+                    is-cancel-button
+                    hide-icon
+                    :disabled="userForm.processing"
+                    @click="closeChangePictureModal"
+                />
+                <BaseUIButton
+                    label="Save new profile picture"
+                    variant="primary"
+                    icon="IconDeviceFloppy"
+                    :processing="userForm.processing"
+                    :disabled="userForm.processing"
+                    @click="validateTypeAndChange"
+                />
+            </template>
+        </ArtworkBaseModal>
 
         <DeactivateAccountModal v-if="showDeactivateModal" :user="user_to_edit" @closed="showDeactivateModal = false" />
 
@@ -528,15 +558,14 @@ import {
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
-import BaseButton from '@/Layouts/Components/General/Buttons/BaseButton.vue'
-import BaseMenu from '@/Components/Menu/BaseMenu.vue'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import VisualFeedback from '@/Components/Feedback/VisualFeedback.vue'
-import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
+import EmptyState from '@/Artwork/Feedback/EmptyState.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
-import {IconCheck, IconChevronDown, IconDotsVertical, IconEdit, IconTrash, IconUserCheck, IconUserOff, IconX} from "@tabler/icons-vue"
+import {IconCheck, IconChevronDown, IconTrash, IconUserCheck, IconUserOff} from "@tabler/icons-vue"
 import {is, can} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import LogoutOtherBrowserSessionsForm from "@/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue";
@@ -556,13 +585,21 @@ const { proxy } = getCurrentInstance()
 const page = usePage()
 const hasAdminRole = () => (is('artwork admin'))
 const isSignedInUser = () => props.user_to_edit?.id === page.props?.auth?.user?.id
-const canEditPreferences = computed(() => isSignedInUser() || can('can manage workers') || hasAdminRole())
+
+// Alle Profilfelder (Name, Foto, Sprache, Kontakt, Einstellungen): Spiegel von
+// UserController::updateUserDetails()/updateUserPhoto(). Das eigene Profil, Admins überall, die
+// Personalverwaltung bei allen Profilen außer denen von Admins; sonst lehnt der Server mit 403 ab.
+const isTargetAdmin = computed(() => (props.user_to_edit.roles ?? []).includes('artwork admin'))
+const canEditProfile = computed(() => isSignedInUser() || hasAdminRole()
+    || (can('can manage workers') && !isTargetAdmin.value))
 
 // Teams tragen Rechte (Projekt-Schreibrecht, Raumadmin, Verträge) – die eigene Zugehörigkeit
 // ändert deshalb nur eine andere Person (Admins ausgenommen), wie im Backend (updateUserDetails).
 const hasTeamRights = computed(() => can('teammanagement') || can('can manage workers') || hasAdminRole())
-const canEditTeams = computed(() => hasTeamRights.value && (!isSignedInUser() || hasAdminRole()))
-const isOwnProfileWithoutTeamRights = computed(() => hasTeamRights.value && !canEditTeams.value)
+// Admin-Profile ändert auch hier nur ein Admin (gleiche Regel wie oben).
+const canEditTeams = computed(() => hasTeamRights.value
+    && (hasAdminRole() || (!isSignedInUser() && !isTargetAdmin.value)))
+const isOwnProfileWithoutTeamRights = computed(() => isSignedInUser() && hasTeamRights.value && !canEditTeams.value)
 
 /* ----- Account deaktivieren/reaktivieren (Spiegel von UserPolicy::deactivate) ----- */
 const { formatDate } = useInstanceFormat()
@@ -638,7 +675,10 @@ onMounted(() => {
 const deptLocal = reactive((props.departments || []).map(d => ({ ...d, checked: false })))
 
 /* ----- Actions ----- */
+// Stand vor dem Öffnen: Abbrechen stellt ihn wieder her, sonst speichert das nächste editUser die Auswahl mit
+let departmentsBeforeTeamEdit = []
 const openChangeTeamsModal = () => {
+    departmentsBeforeTeamEdit = [...userForm.departments]
     // Synchronisieren: markiere Teams, die der User hat
     deptLocal.forEach(team => {
         team.checked = !!userForm.departments.find(t => t.id === team.id)
@@ -647,6 +687,7 @@ const openChangeTeamsModal = () => {
 }
 
 const closeChangeTeamsModal = () => {
+    userForm.departments = [...departmentsBeforeTeamEdit]
     showChangeTeamsModal.value = false
 }
 
@@ -665,7 +706,7 @@ const teamChecked = (team) => {
 const saveNewTeams = () => {
     userForm.patch(route('user.update', props.user_to_edit.id), {
         onSuccess: () => {
-            closeChangeTeamsModal()
+            showChangeTeamsModal.value = false
             openSuccessModal()
         },
     })
@@ -729,7 +770,12 @@ const resetPassword = () => {
 
 /* ----- Photo handling ----- */
 const openChangePictureModal = () => (showChangePictureModal.value = true)
-const closeChangePictureModal = () => (showChangePictureModal.value = false)
+const closeChangePictureModal = () => {
+    showChangePictureModal.value = false
+    photoPreview.value = null
+    updateProfilePictureFeedback.value = ''
+    userForm.clearErrors('photo')
+}
 
 const selectNewPhoto = () => photoRef.value?.click()
 
@@ -741,6 +787,7 @@ const updatePhotoPreview = () => {
     reader.onload = (e) => {
         const result = e.target?.result || ''
         if (typeof result === 'string' && (result.includes('data:image/png') || result.includes('data:image/jpeg'))) {
+            updateProfilePictureFeedback.value = ''
             photoPreview.value = result
         } else {
             updateProfilePictureFeedback.value = proxy.$t('Only .png and .jpeg files are supported')

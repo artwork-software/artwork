@@ -3,9 +3,11 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -83,6 +85,24 @@ final class UserPhotoAuthorizationTest extends FeatureTestCase
         $this->delete(route('user.delete.photo', $other))
             ->assertOk();
         $this->assertNull($other->refresh()->profile_photo_path);
+    }
+
+    #[Test]
+    public function hr_administrator_cannot_update_or_delete_an_admins_photo(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
+        Role::query()->firstOrCreate(['name' => RoleEnum::ARTWORK_ADMIN->value, 'guard_name' => 'web']);
+        $admin = User::factory()->create();
+        $admin->assignRole(RoleEnum::ARTWORK_ADMIN->value);
+        $admin->updateProfilePhoto(UploadedFile::fake()->create('avatar.jpg'));
+        $photoPath = $admin->refresh()->profile_photo_path;
+
+        $this->post(route('user.update.photo', $admin), ['photo' => UploadedFile::fake()->create('other.jpg')])
+            ->assertForbidden();
+        $this->delete(route('user.delete.photo', $admin))
+            ->assertForbidden();
+
+        $this->assertSame($photoPath, $admin->refresh()->profile_photo_path);
     }
 
     #[Test]

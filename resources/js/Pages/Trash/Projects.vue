@@ -178,7 +178,6 @@ import TrashLayout from "@/Layouts/TrashLayout.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {MenuButton, Menu, MenuItems, MenuItem} from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Link} from "@inertiajs/vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
@@ -230,7 +229,7 @@ export default {
         MenuButton,
         IconChevronDown,
         Menu, MenuItems, MenuItem, IconDotsVertical,
-        SvgCollection, IconChevronRight, JetDialogModal,
+        SvgCollection, IconChevronRight,
         IconX,
         IconRefresh,
         Link,

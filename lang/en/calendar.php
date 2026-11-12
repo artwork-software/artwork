@@ -2,6 +2,7 @@
 
 return [
     'daily_view_info' => 'Maximum of one month (31 days) possible in daily view',
+    'shift_plan_daily_view_info' => 'Maximum of 8 days possible in the daily view of the shift plan',
     'calendar_limit_two_years' => 'Maximum of 2 years possible in the display',
     'calendar_limit_one_month' => 'Maximum 1 month possible in the display',
     'calendar_limit_six_months' => 'Maximum 6 months possible in the display'

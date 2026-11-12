@@ -12,14 +12,24 @@ class AccommodationService
     ) {
     }
 
+    /**
+     * Legt die Unterkunft mit ihrem CRM-Kontakt an, wie bei Freelancer*innen und Dienstleistern.
+     */
     public function store(array $data)
     {
-        return $this->repository->create($data);
+        $accommodation = $this->repository->create($data);
+        $accommodation->createCrmContact();
+        $accommodation->syncToCrm();
+
+        return $accommodation;
     }
 
     public function update(Accommodation $accommodation, array $data)
     {
-        return $this->repository->update($accommodation, $data);
+        $accommodation = $this->repository->update($accommodation, $data);
+        $accommodation->syncToCrm();
+
+        return $accommodation;
     }
 
     public function destroy(Accommodation $accommodation): void

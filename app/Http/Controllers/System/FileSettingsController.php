@@ -27,7 +27,8 @@ class FileSettingsController extends Controller
         return \inertia('System/FileSettings/Index', [
             'areas' => $areas,
             'imageFileTypes' => array_keys(MimeTypeList::IMAGE_MIME_TYPES),
-            'otherFileTypes' => array_keys(MimeTypeList::MIME_TYPES),
+            'otherFileTypes' => MimeTypeList::selectableOtherFileTypes(),
+            'brandingFileTypes' => MimeTypeList::BRANDING_FILE_TYPES,
         ]);
     }
 

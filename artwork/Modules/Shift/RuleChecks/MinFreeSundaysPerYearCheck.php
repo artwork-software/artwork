@@ -17,6 +17,9 @@ use Illuminate\Support\Collection;
  * Sonntage vor heute ("have") plus die noch unbelegten Sonntage ab heute ("possible"). Ist die Summe
  * kleiner als X, ist das Ziel rechnerisch nicht mehr erreichbar (verbleibende freie Sonntage < noch
  * nötige) — Verstoß OHNE Schicht auf den letzten Sonntag des Jahres (Warnung; nach Jahresende Fehler).
+ *
+ * Ob die Regel greift, entscheidet der Vertrag des letzten Tages im Jahr, an dem ein Vertrag gilt (auch wenn
+ * er vor dem letzten Sonntag endet).
  */
 class MinFreeSundaysPerYearCheck extends AbstractRuleCheck
 {
@@ -61,6 +64,7 @@ class MinFreeSundaysPerYearCheck extends AbstractRuleCheck
             }
 
             $completed = $yearEnd->lt($today);
+            $ruleDate = $this->lastContractDayIn($user, $yearStart, $yearEnd) ?? $lastSunday;
 
             $violations->push($this->createViolationWithoutShift($rule, $user, $lastSunday, [
                 'type' => 'min_free_sundays_per_year',
@@ -69,7 +73,7 @@ class MinFreeSundaysPerYearCheck extends AbstractRuleCheck
                 'possible' => $possible,
                 'target' => $target,
                 'completed' => $completed,
-            ], $completed ? 'error' : 'warning'));
+            ], $completed ? 'error' : 'warning', $ruleDate));
         }
 
         return $violations;

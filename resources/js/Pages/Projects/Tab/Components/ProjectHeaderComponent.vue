@@ -106,6 +106,13 @@
                                 stroke="2"
                             />
                             <ToolTipComponent
+                                :tooltip-text="$t('Export event plan or artist plan')"
+                                icon="IconFileTypeDocx"
+                                direction="bottom"
+                                @click="showPlanExportModal = true"
+                                stroke="2"
+                            />
+                            <ToolTipComponent
                                 :tooltip-text="$t('Copy link')"
                                 icon="IconLink"
                                 direction="bottom"
@@ -113,10 +120,10 @@
                                 stroke="2"
                             />
 
-                            <BaseMenu menu-width="!w-fit" white-menu-background v-if="canWriteProject">
-                                <BaseMenuItem white-menu-background @click="openEditProjectModal" title="Edit basic data" :icon="IconEdit" />
+                            <BaseMenu menu-width="!w-fit" white-menu-background v-if="canWriteProject || canDeleteProject">
+                                <BaseMenuItem v-if="canWriteProject" white-menu-background @click="openEditProjectModal" title="Edit basic data" :icon="IconEdit" />
 
-                                <template v-if="project?.is_group">
+                                <template v-if="canWriteProject && project?.is_group">
                                     <BaseMenuItem
                                         white-menu-background
                                         @click="showAddProjectToGroup = true"
@@ -131,7 +138,7 @@
                                     />
                                 </template>
 
-                                <BaseMenuItem white-menu-background @click="duplicateProject(project)" :icon="IconCopy" title="Duplicate" />
+                                <BaseMenuItem v-if="canWriteProject" white-menu-background @click="duplicateProject(project)" :icon="IconCopy" title="Duplicate" />
 
                                 <BaseMenuItem
                                     white-menu-background
@@ -344,6 +351,12 @@
             :projects-in-group="projectsOfGroup"
         />
 
+        <ProjectPlanExportModal
+            v-if="showPlanExportModal"
+            :project="project"
+            @close="showPlanExportModal = false"
+        />
+
         <PrintLayoutSelectorModal
             :print-layouts="printLayouts"
             :project="project"
@@ -368,6 +381,7 @@ import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectGroupAddProject from "@/Pages/Projects/Components/Modals/ProjectGroupAddProject.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import PrintLayoutSelectorModal from "@/Pages/Projects/Components/PrintLayoutSelectorModal.vue";
+import ProjectPlanExportModal from "@/Pages/Projects/Components/Modals/ProjectPlanExportModal.vue";
 import ProjectStateChangeModal from "@/Layouts/Components/ProjectStateChangeModal.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { can, is } from "laravel-permission-to-vuejs";
@@ -411,6 +425,7 @@ const projectToDelete = ref(null);
 
 const showAddProjectToGroup = ref(false);
 const showPrintLayoutSelectorModal = ref(false);
+const showPlanExportModal = ref(false);
 const showProjectStateChangeModal = ref(false);
 const showProjectPlanningStateChangeModal = ref(false);
 
@@ -527,7 +542,7 @@ const canWriteProject = computed(() => {
 
 const canDeleteProject = computed(() => {
     const userId = page?.props?.auth?.user?.id;
-    return is("artwork admin") || props.headerObject?.projectDeleteIds?.includes(userId);
+    return is("artwork admin") || can("delete projects") || props.headerObject?.projectDeleteIds?.includes(userId);
 });
 
 // Tabs

@@ -255,7 +255,7 @@ const searchProjects = debounce(async () => {
     }
     try {
         const { data } = await axios.get(route('projects.search'), {
-            params: { search: projectSearch.value },
+            params: { query: projectSearch.value },
         })
         // Filter out already selected
         const selectedIds = new Set(selectedProjects.value.map(p => p.id))

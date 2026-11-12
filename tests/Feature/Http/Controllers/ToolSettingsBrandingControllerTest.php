@@ -54,6 +54,8 @@ final class ToolSettingsBrandingControllerTest extends FeatureTestCase
     {
         $this->get(route('login'))
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page->where('artworkVersion', null));
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('artworkVersion', null)
+                ->missing('artwork_version'));
     }
 }

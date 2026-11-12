@@ -33,10 +33,19 @@ class ProjectDTO extends Data
     }
 
 
+    /**
+     * @param list<int> $ancestorIds Projekte auf dem Weg hierher; schützt vor Endlosrekursion, wenn eine
+     *                               Projektgruppe (in)direkt sich selbst enthält
+     */
     public static function fromModel(
         Project $project,
-        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
+        array $ancestorIds = [],
     ): self {
+        $ancestorIds[] = (int) $project->id;
+        $groups = $project->groups->reject(
+            fn (Project $group): bool => in_array((int) $group->id, $ancestorIds, true)
+        );
         $statusModel = $project->relationLoaded('status') ? $project->status : null;
 
         return new self(
@@ -54,13 +63,13 @@ class ProjectDTO extends Data
             $project->color,
             $project->icon,
             $project->is_group,
-            $project->groups->isNotEmpty(),
-            $project
-                ->groups
-                ->isNotEmpty() ? $project
-                ->groups
-                ->map(fn (Project $group) => self::fromModel($group, $userCalendarSettings))
-                ->all() : null,
+            $groups->isNotEmpty(),
+            $groups->isNotEmpty()
+                ? $groups
+                    ->map(fn (Project $group) => self::fromModel($group, $userCalendarSettings, $ancestorIds))
+                    ->values()
+                    ->all()
+                : null,
             $project->users->pluck('id')->toArray(),
             $project->categories->firstWhere('pivot.is_main', true)?->color,
             $project->linked_artists,

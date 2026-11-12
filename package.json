@@ -14,7 +14,7 @@
         "laravel-vite-plugin": "^2.0.1",
         "pusher-js": "^8.4.0",
         "tailwindcss": "^4.1.16",
-        "vite": "7.3.6",
+        "vite": "7.3.8",
         "vite-plugin-compression": "^0.5.1"
     },
     "dependencies": {
@@ -37,8 +37,10 @@
         "axios": "1.20.0",
         "chart.js": "^4.5.1",
         "dayjs": "^1.11.18",
+        "eventsource-parser": "^4.1.0",
         "laravel-permission-to-vuejs": "^3.0.8",
         "lodash.debounce": "^4.0.8",
+        "markdown-it": "^15.0.2",
         "mathjax": "4.0.0",
         "primevue": "^4.4.1",
         "vue": "^3.5.22",

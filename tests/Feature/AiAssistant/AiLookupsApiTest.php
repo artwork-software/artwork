@@ -10,12 +10,15 @@ use Artwork\Modules\User\Models\User;
 use Laravel\Passport\ClientRepository;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-api-lookups: GET /ai/rooms, GET /ai/event-types (Konzept B1 §3, W1 §1).
  */
 final class AiLookupsApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -29,7 +32,7 @@ final class AiLookupsApiTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

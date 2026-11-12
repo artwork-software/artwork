@@ -53,7 +53,7 @@ final class CalendarApiTest extends FeatureTestCase
         ]);
         $this->project = Project::factory()->create(['name' => 'Gastspiel Nord']);
 
-        Passport::actingAs(User::factory()->create(), ['calendar:read']);
+        Passport::actingAs(User::factory()->withAiAccess()->create(), ['calendar:read']);
     }
 
     protected function tearDown(): void
@@ -79,7 +79,7 @@ final class CalendarApiTest extends FeatureTestCase
     #[Test]
     public function tokens_without_calendar_scope_are_rejected(): void
     {
-        Passport::actingAs(User::factory()->create(), ['inventory:read']);
+        Passport::actingAs(User::factory()->withAiAccess()->create(), ['inventory:read']);
 
         $this->getJson('/api/v1/events?from=2027-01-01&to=2027-12-31')->assertForbidden();
         $this->getJson('/api/v1/rooms')->assertForbidden();

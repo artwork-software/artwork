@@ -7,6 +7,7 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-schritt1-rueckfluss, Rueckfluss 2 aus Konzept 0.1 §4.
@@ -18,6 +19,8 @@ use Tests\TestCase;
  */
 final class TokenExpiryTest extends TestCase
 {
+    use GrantsAiAccess;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,7 +31,7 @@ final class TokenExpiryTest extends TestCase
 
     private function tokenFor(User $user, ?string $expiresAt): string
     {
-        $result = $user->createToken('kunden-key', ['inventory:read']);
+        $result = $this->grantAiAccess($user)->createToken('kunden-key', ['inventory:read']);
 
         if ($expiresAt !== null) {
             Passport::token()->newQuery()

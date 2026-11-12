@@ -39,6 +39,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
 use Tests\Concerns\CreatesShiftRuleFixtures;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * ai-scenarios-3 S1–S8: Tagesuebersicht, Budget, Gewerk besetzen + Sammelzuweisung, Abwesenheiten,
@@ -46,6 +47,8 @@ use Tests\TestCase;
  */
 final class AiScenariosApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     use CreatesShiftRuleFixtures;
 
     private const DAY = '2026-11-03';
@@ -98,7 +101,7 @@ final class AiScenariosApiTest extends TestCase
     private function actingAsToken(User $user, array $scopes = [AiScopes::READ]): void
     {
         $this->app['auth']->forgetGuards();
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

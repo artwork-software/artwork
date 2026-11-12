@@ -12,6 +12,7 @@ use Carbon\CarbonImmutable;
 use Laravel\Passport\ClientRepository;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-api-events-rooms: GET /ai/events, /ai/rooms/occupancy, /ai/rooms/free-slots
@@ -19,6 +20,8 @@ use Tests\TestCase;
  */
 final class AiEventsRoomsApiTest extends TestCase
 {
+    use GrantsAiAccess;
+
     private CarbonImmutable $day;
 
     protected function setUp(): void
@@ -35,7 +38,7 @@ final class AiEventsRoomsApiTest extends TestCase
     /** @param string[] $scopes */
     private function actingAsToken(User $user, array $scopes = [AiScopes::READ]): void
     {
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

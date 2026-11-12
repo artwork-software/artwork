@@ -21,6 +21,7 @@ use Laravel\Passport\ClientRepository;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * core-notification-buendelung (W4): eine Sammelmeldung je Batch und Empfaenger, ein
@@ -28,6 +29,8 @@ use Tests\TestCase;
  */
 final class AiBatchNotificationTest extends TestCase
 {
+    use GrantsAiAccess;
+
     private const MONDAY = '2026-09-14';
 
     private Room $room;
@@ -83,7 +86,7 @@ final class AiBatchNotificationTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        $token = $user->createToken('ai-session-test', $scopes);
+        $token = $this->grantAiAccess($user)->createToken('ai-session-test', $scopes);
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 

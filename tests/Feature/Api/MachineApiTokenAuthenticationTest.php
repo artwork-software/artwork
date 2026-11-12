@@ -11,6 +11,7 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * Maschinen-Tokens über den echten auth:api-Guard — mit ausgestellten JWTs statt Passport::actingAs(),
@@ -18,6 +19,8 @@ use Tests\Feature\FeatureTestCase;
  */
 final class MachineApiTokenAuthenticationTest extends FeatureTestCase
 {
+    use GrantsAiAccess;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -50,7 +53,7 @@ final class MachineApiTokenAuthenticationTest extends FeatureTestCase
             'updated_at' => now(),
         ]);
 
-        $result = $user->createToken('Externes System', ['inventory:read']);
+        $result = $this->grantAiAccess($user)->createToken('Externes System', ['inventory:read']);
 
         $this->assertSame((string) $user->id, (string) $result->token->client_id);
 
@@ -70,7 +73,7 @@ final class MachineApiTokenAuthenticationTest extends FeatureTestCase
     public function token_is_rejected_after_the_expiry_date_set_in_the_settings(): void
     {
         app(ClientRepository::class)->createPersonalAccessGrantClient('Personal Access Client', 'users');
-        $this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value);
+        $this->grantAiAccess($this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value));
 
         $expiryDate = now()->addDay()->toDateString();
 
@@ -103,7 +106,7 @@ final class MachineApiTokenAuthenticationTest extends FeatureTestCase
     public function token_without_expiry_date_stays_valid(): void
     {
         app(ClientRepository::class)->createPersonalAccessGrantClient('Personal Access Client', 'users');
-        $this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value);
+        $this->grantAiAccess($this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value));
 
         $plainTextToken = $this
             ->post(route('api-management.store'), ['name' => 'Ticketshop', 'scopes' => ['inventory:read']])

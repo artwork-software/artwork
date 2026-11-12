@@ -10,6 +10,7 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Concerns\GrantsAiAccess;
 
 /**
  * Sichert das Ergebnis von core-passport-schema-upgrade ab.
@@ -21,6 +22,8 @@ use Tests\TestCase;
  */
 final class PassportSchemaUpgradeTest extends TestCase
 {
+    use GrantsAiAccess;
+
     private function personalAccessClient(): Client
     {
         $repository = app(ClientRepository::class);
@@ -81,7 +84,7 @@ final class PassportSchemaUpgradeTest extends TestCase
     {
         $this->personalAccessClient();
 
-        $token = User::factory()->create()->createToken('schema-upgrade-test', ['inventory:read']);
+        $token = User::factory()->withAiAccess()->create()->createToken('schema-upgrade-test', ['inventory:read']);
 
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken)
             ->getJson('/api/v1/inventory')
@@ -101,7 +104,7 @@ final class PassportSchemaUpgradeTest extends TestCase
         // Die Kollision herstellen: Client-ID auf die User-ID ziehen.
         Client::query()->whereKey($client->getKey())->update(['id' => $user->id]);
 
-        $token = $user->createToken('schema-upgrade-collision', ['inventory:read']);
+        $token = $this->grantAiAccess($user)->createToken('schema-upgrade-collision', ['inventory:read']);
 
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken)
             ->getJson('/api/v1/inventory')

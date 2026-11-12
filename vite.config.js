@@ -89,8 +89,9 @@ export default defineConfig({
         cors: true,
         origin: origin,
         watch: {
-            //still knows about the changes in storage dir but is not watch reloading because of them
-            ignored: ['storage/*']
+            // Storage, Composer-Pakete und die Claude-Worktrees (je mit eigenem vendor/node_modules)
+            // nicht beobachten: sonst hält der Watcher Hunderttausende Dateien und lastet den Container aus.
+            ignored: ['**/storage/**', '**/vendor/**', '**/.claude/**']
         }
     },
     plugins: [

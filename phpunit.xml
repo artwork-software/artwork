@@ -27,6 +27,7 @@
     <env name="SCOUT_DRIVER" value="null"/>
     <env name="BROADCAST_DRIVER" value="log"/>
     <env name="DB_DATABASE" value="artwork_test"/>
+    <env name="LOG_CHANNEL" value="null"/>
   </php>
   <source>
     <include>

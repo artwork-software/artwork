@@ -204,6 +204,7 @@ final class AiScenariosApiTest extends TestCase
     private function writeToken(User $user, AiConversationTurn $turn): void
     {
         $this->app['auth']->forgetGuards();
+        $this->grantAiAccess($user);
         $token = $this->actingAs($user)->postJson('/ai/session', [
             'scopes' => [AiScopes::WRITE],
             'action_id' => $turn->id,

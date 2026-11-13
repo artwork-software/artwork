@@ -10,7 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Spatie\Activitylog\Contracts\Activity;
+use Artwork\Modules\AiAssistant\Listeners\AttachActivityOrigin;
+use Artwork\Modules\AiAssistant\Services\AiAssistantAccess;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class ChangeService
 {
@@ -62,19 +65,37 @@ class ChangeService
      */
     public function historyForFrontend(Model $model): array
     {
+        $viewer = Auth::user();
+        $viewerSeesAi = $viewer instanceof User && app(AiAssistantAccess::class)->visibleTo($viewer);
+
         return $this->activitiesFor($model)
             ->map(fn (Activity $activity): array => [
                 'changes' => $this->frontendChanges($activity),
                 'change_by' => $activity->causer,
                 'created_at' => $this->formatTimestamp($activity),
-                // Herkunft des Eintrags (core-via-activity-log): ui | api | ai_assistant | system.
-                // Der Causer ist immer der echte Mensch; `via` sagt, auf welchem Weg er gehandelt hat.
-                'via' => $activity->properties['via'] ?? null,
-                'via_detail' => $activity->properties['via_detail'] ?? null,
+                ...$this->origin($activity, $viewerSeesAi),
             ])
             ->filter(fn (array $row): bool => $row['changes'] !== [])
             ->values()
             ->all();
+    }
+
+    /**
+     * Herkunft des Eintrags (core-via-activity-log): ui | api | ai_assistant | system. Der Causer ist
+     * immer der echte Mensch; `via` sagt, auf welchem Weg er gehandelt hat. Ohne KI-Freischaltung
+     * der betrachtenden Person bleibt ein KI-Eintrag ohne Herkunftsangabe (ARTWORK-352).
+     *
+     * @return array{via: string|null, via_detail: string|null}
+     */
+    private function origin(Activity $activity, bool $viewerSeesAi): array
+    {
+        $via = $activity->properties['via'] ?? null;
+
+        if ($via === AttachActivityOrigin::VIA_AI_ASSISTANT && !$viewerSeesAi) {
+            return ['via' => null, 'via_detail' => null];
+        }
+
+        return ['via' => $via, 'via_detail' => $activity->properties['via_detail'] ?? null];
     }
 
     /**

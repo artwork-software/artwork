@@ -126,6 +126,7 @@ use Artwork\Modules\AiAssistant\Http\Controllers\AiActionBatchController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiActionController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiConversationController;
 use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiAssistantIsEnabled;
+use Artwork\Modules\AiAssistant\Http\Middleware\EnsureUserHasAiAccess;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiSessionController;
 use Artwork\Modules\AiAssistant\Http\Controllers\HelpRedirectController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
@@ -263,7 +264,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     // KI-Session-Token. throttle:ai-session steht nach der Auth-Gruppe, weil das Limit auf die
     // User-ID gekeyed ist — vorher waere der User noch nicht aufgeloest.
     Route::post('/ai/session', [AiSessionController::class, 'store'])
-        ->middleware('throttle:ai-session')
+        ->middleware([EnsureUserHasAiAccess::class, 'throttle:ai-session'])
         ->name('ai.session.store');
 
     // Gespraechsliste und Loeschen fuer die KI-Bar. Die Freischaltung haengt am Service, nicht an
@@ -642,8 +643,8 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::post('/mail/test', [MailSettingsController::class, 'test'])
             ->name('tool.mail.test');
 
-        // KI-ASSISTENT — eigene Permission, nicht "change tool settings"
-        Route::group(['middleware' => 'can:change ai assistant settings'], function (): void {
+        // KI-ASSISTENT — nur mit KI-Freischaltung (per Konsole), kein GUI-Recht, kein Admin-Bypass
+        Route::middleware(EnsureUserHasAiAccess::class)->group(function (): void {
             Route::get('/ai-assistant', [AiAssistantSettingsController::class, 'edit'])
                 ->name('tool.ai-assistant');
             Route::patch('/ai-assistant', [AiAssistantSettingsController::class, 'update'])

@@ -130,6 +130,13 @@ return [
         'deleted' => '{1} Event deleted (via assistant)|[2,*] :count events deleted (via assistant)',
         'reverted' => '{1} Event undone (via assistant)|[2,*] :count events undone (via assistant)',
     ],
+    // Same summary for recipients without AI access — without any AI reference (ARTWORK-352)
+    'event_batch' => [
+        'created' => '{1} Event created|[2,*] :count events created',
+        'updated' => '{1} Event changed|[2,*] :count events changed',
+        'deleted' => '{1} Event deleted|[2,*] :count events deleted',
+        'reverted' => '{1} Event undone|[2,*] :count events undone',
+    ],
     'moneySource' => [
         'add_permission' => 'You have been granted access to :moneySource',
         'remove_permission' => 'Your access to :moneySource has been revoked',

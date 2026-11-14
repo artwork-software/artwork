@@ -87,6 +87,25 @@ final class AiConversationWebTest extends TestCase
     }
 
     #[Test]
+    public function without_ai_access_the_endpoints_do_not_exist(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $conversation = $this->conversationFor($user, 'Eigen');
+
+        $this->getJson(route('ai.conversations.index'))->assertNotFound();
+        $this->deleteJson(route('ai.conversations.destroy', $conversation->id))->assertNotFound();
+    }
+
+    #[Test]
+    public function without_ai_access_the_endpoints_do_not_exist_for_an_admin_either(): void
+    {
+        $this->actingAs($this->adminUser());
+
+        $this->getJson(route('ai.conversations.index'))->assertNotFound();
+    }
+
+    #[Test]
     public function it_deletes_an_own_conversation_with_its_turns(): void
     {
         $user = User::factory()->withAiAccess()->create();

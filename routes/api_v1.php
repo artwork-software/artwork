@@ -52,7 +52,7 @@ Route::middleware('throttle:60,1')
     ->name('api.v1.ai.jwks');
 
 // KI-Routen: EnsureAiAccessPermission direkt hinter auth:api als zusätzliche, nur per Konsole vergebbare
-// Schranke (ConsoleOnlyPermissionEnum::AiAccess). Gilt nur für /ai/*; die übrigen Maschinen-Routen
+// Schranke (User::hasAiAccess). Gilt nur für /ai/*; die übrigen Maschinen-Routen
 // (Inventar, Raumbelegung) regeln allein die Scopes des Schlüssels, siehe Gruppe weiter unten.
 Route::middleware(['auth:api', EnsureAiAccessPermission::class, 'throttle:api-token'])->group(function (): void {
     // Chat-Historie fuer artwork-ai. Der Token traegt immer den echten User; jede Abfrage ist auf

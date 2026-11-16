@@ -9968,5 +9968,6 @@
     "Street and house number": "Straße und Hausnummer",
     "Appears in the event plan and the artist plan. External places such as hotels or restaurants can also be created as rooms with an address.": "Erscheint im Veranstaltungs- und Künstlerplan. Auch externe Orte wie Hotels oder Restaurants lassen sich als Raum mit Adresse anlegen.",
     "The email could not be sent. Please check the mail settings or contact your administrator.": "Die E-Mail konnte nicht versendet werden. Bitte prüft die Mail-Einstellungen oder wendet euch an die Administration.",
-    "The selected project has no budget.": "Das gewählte Projekt hat kein Budget."
+    "The selected project has no budget.": "Das gewählte Projekt hat kein Budget.",
+    "The event type could not be deleted.": "Die Terminart konnte nicht gelöscht werden."
 }

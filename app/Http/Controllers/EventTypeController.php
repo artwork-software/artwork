@@ -70,7 +70,7 @@ class EventTypeController extends Controller
         return Redirect::route('event_types.management');
     }
 
-    public function destroy(EventType $eventType)
+    public function destroy(EventType $eventType): RedirectResponse
     {
         if ($eventType->getAttribute('id') === 1) {
             return Redirect::back();
@@ -91,8 +91,11 @@ class EventTypeController extends Controller
                 $eventType->delete();
             });
             return Redirect::route('event_types.management');
-        } catch (\Exception $e) {
-            return $e;
+        } catch (\Throwable $throwable) {
+            // vorher wurde das Exception-Objekt selbst als Antwort zurückgegeben
+            report($throwable);
+
+            return Redirect::back()->with('error', __('The event type could not be deleted.'));
         }
     }
 

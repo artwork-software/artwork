@@ -35,6 +35,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -300,9 +301,23 @@ class BudgetTemplateController extends Controller
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): void {
-        if ($request->template_project_id !== $request->project_id) {
-            $templateProject = Project::find($request->template_project_id);
-            $project = Project::find($request->project_id);
+        $validated = $request->validate([
+            'template_project_id' => ['required', 'integer', 'exists:projects,id'],
+            'project_id' => ['required', 'integer', 'exists:projects,id'],
+        ]);
+
+        // Vergleich als Zahl: vorher String gegen Int, das eigene Projekt galt dadurch nie als gleich
+        if ((int) $validated['template_project_id'] !== (int) $validated['project_id']) {
+            $templateProject = Project::query()->findOrFail($validated['template_project_id']);
+            $project = Project::query()->findOrFail($validated['project_id']);
+
+            // Erst prüfen, dann löschen: ohne Budget im Quellprojekt war das eigene Budget sonst weg
+            $sourceTable = $templateProject->table()->first();
+            if ($sourceTable === null) {
+                throw ValidationException::withMessages([
+                    'template_project_id' => __('The selected project has no budget.'),
+                ]);
+            }
 
             $this->deleteOldTable(
                 $project,
@@ -327,7 +342,7 @@ class BudgetTemplateController extends Controller
 
             $this->createTemplate(
                 $templateProject->name . ' Budgettabelle',
-                $templateProject->table()->first(),
+                $sourceTable,
                 false,
                 $project->id
             );

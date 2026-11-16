@@ -699,8 +699,8 @@ class MoneySourceController extends Controller
         $newMoneySource->users()->sync(
             $moneySource->users()->get()->mapWithKeys(static fn (User $user): array => [
                 $user->id => [
-                    'competent' => (bool) $user->pivot->competent,
-                    'write_access' => (bool) $user->pivot->write_access,
+                    'competent' => (bool) $user->getRelation('pivot')->getAttribute('competent'),
+                    'write_access' => (bool) $user->getRelation('pivot')->getAttribute('write_access'),
                 ],
             ])->all()
         );

@@ -11,6 +11,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
+use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\Fluent\AssertableJson;
@@ -62,8 +63,8 @@ final class TicketingProjectTabTest extends FeatureTestCase
                 'name' => 'Großer Saal',
                 'street' => '', 'postalCode' => '', 'city' => '', 'country' => 'DE', 'seated' => true,
                 'zones' => [
-                    ['name' => 'Parkett', 'capacity' => 300, 'defaultPriceCents' => 2900],
-                    ['name' => 'Rang', 'capacity' => 80, 'defaultPriceCents' => null],
+                    ['key' => 'parkett', 'name' => 'Parkett', 'capacity' => 300, 'defaultPriceCents' => 2900],
+                    ['key' => 'rang', 'name' => 'Rang', 'capacity' => 80, 'defaultPriceCents' => null],
                 ],
             ]]]),
         ]);
@@ -96,9 +97,40 @@ final class TicketingProjectTabTest extends FeatureTestCase
             ->assertJsonPath('events.0.venue.capacity', 380)
             ->assertJsonPath('events.0.venue.seated', true)
             ->assertJsonPath('events.0.venue.zones.0.defaultPriceCents', 2900)
-            ->assertJsonPath('events.0.release.classes.0.quota', 250)
+            ->assertJsonPath('events.0.release.classes.0.quota', 300)
             ->assertJsonPath('events.0.release.classes.0.price_cents', 3500)
             ->assertJsonPath('events.0.release.state', 'draft');
+    }
+
+    #[Test]
+    public function reductions_carry_the_value_and_classes_the_production_grants_them_on(): void
+    {
+        $this->connect();
+        $reduced = '3b9f1a2c-0d4e-4f5a-8b6c-7d8e9f0a1b2c';
+        Http::fake([
+            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => []]),
+            self::TICKETS_URL . '/api/integration/v1/venues' => Http::response(['venues' => []]),
+            self::TICKETS_URL . '/api/integration/v1/reductions' => Http::response(['reductions' => [
+                ['id' => $reduced, 'name' => 'Ermäßigt', 'kind' => 'percent', 'value' => 5000, 'requiresProof' => true, 'defaultEnabled' => true],
+            ]]),
+            self::TICKETS_URL . '/api/integration/v1/productions/*' => Http::response([
+                'status' => 'published',
+                'shopUrl' => 'https://tickets.test/theater/hamlet',
+                'reductions' => [
+                    ['reductionTypeId' => $reduced, 'name' => 'Ermäßigt', 'kind' => 'fixed', 'value' => 300, 'enabled' => true, 'categories' => ['Parkett']],
+                ],
+            ]),
+        ]);
+
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        TicketingProduction::query()->create(['project_id' => $project->id, 'production_id' => '6f0f3c1e-1b1a-4a8e-9d55-1f2a3b4c5d6e']);
+
+        $this->getJson(route('projects.tabs.ticketing', $project))
+            ->assertOk()
+            ->assertJsonPath('reductions.0.kind', 'fixed')
+            ->assertJsonPath('reductions.0.value', 300)
+            ->assertJsonPath('reductions.0.categories', ['Parkett']);
     }
 
     #[Test]

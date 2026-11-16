@@ -150,6 +150,9 @@ function priceLines(passType) {
 }
 
 function usesLabel(passType) {
+    if (passType.uses === null) {
+        return t('Unlimited')
+    }
     if (passType.kind === 'card') {
         return passType.uses
     }

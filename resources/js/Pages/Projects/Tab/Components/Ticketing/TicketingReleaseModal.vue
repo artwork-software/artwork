@@ -42,7 +42,7 @@
                             <td class="px-4 py-2.5">
                                 <span v-if="classesOf(target).length === 0" class="text-text-subtle">–</span>
                                 <span v-else class="flex flex-col gap-1">
-                                    <span v-for="cls in classesOf(target)" :key="cls.zone_key ?? cls.name" class="whitespace-nowrap">{{ cls.name }} <span class="text-text-subtle tabular-nums">{{ cls.quota }} ·</span> <span class="tabular-nums">{{ formatEuro(cls.price_cents) }}</span></span>
+                                    <span v-for="cls in classesOf(target)" :key="cls.zone_key ?? cls.name" class="whitespace-nowrap">{{ cls.name }} <span v-if="cls.quota !== null" class="text-text-subtle tabular-nums">{{ cls.quota }} ·</span> <span class="tabular-nums">{{ formatEuro(cls.price_cents) }}</span></span>
                                 </span>
                             </td>
                             <td class="px-4 py-2.5">

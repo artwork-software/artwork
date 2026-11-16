@@ -61,7 +61,7 @@
                         <tr v-for="pass in customer.passes" :key="pass.id" class="border-t border-border-hairline">
                             <td class="px-4 py-2.5">{{ pass.name }}</td>
                             <td class="whitespace-nowrap px-4 py-2.5 font-mono text-xs tabular-nums">{{ pass.code }}</td>
-                            <td class="px-4 py-2.5 text-right tabular-nums">{{ pass.usesTotal - pass.usesUsed }} / {{ pass.usesTotal }}</td>
+                            <td class="px-4 py-2.5 text-right tabular-nums">{{ pass.usesTotal === null ? $t('Unlimited') : `${pass.usesTotal - pass.usesUsed} / ${pass.usesTotal}` }}</td>
                             <td class="whitespace-nowrap px-4 py-2.5 tabular-nums">{{ pass.validUntil ? formatDate(pass.validUntil) : '–' }}</td>
                         </tr>
                     </tbody>

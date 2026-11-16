@@ -13,7 +13,7 @@
 <script setup>
 /* A small either-or switch; options are [{ value, label, disabled? }], labels already translated. */
 defineProps({
-    modelValue: { type: String, required: true },
+    modelValue: { type: [String, Boolean], required: true },
     options: { type: Array, required: true },
     label: { type: String, default: undefined },
     disabled: { type: Boolean, default: false },

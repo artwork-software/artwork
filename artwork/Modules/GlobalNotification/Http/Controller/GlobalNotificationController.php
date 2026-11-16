@@ -104,6 +104,12 @@ class GlobalNotificationController extends Controller
 
     public function destroy(GlobalNotification $globalNotification): RedirectResponse
     {
+        // Bild mitlöschen, sonst bleibt es verwaist auf der public-Disk liegen
+        $notificationImage = (string) $globalNotification->getAttribute('image_name');
+        if ($this->isOwnNotificationImage($notificationImage)) {
+            $this->filesystemManager->disk('public')->delete($notificationImage);
+        }
+
         $globalNotification->delete();
 
         return $this->redirector->back();

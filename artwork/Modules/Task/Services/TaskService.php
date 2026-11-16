@@ -118,6 +118,11 @@ class TaskService
 
         /** @var Task $task */
         foreach ($tasks as $task) {
+            // Bereits erledigte Aufgaben behalten, wer sie wann erledigt hat
+            if ((bool) $task->done === $done) {
+                continue;
+            }
+
             $this->taskRepository->update(
                 $task,
                 [

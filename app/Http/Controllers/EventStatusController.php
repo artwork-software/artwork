@@ -11,6 +11,7 @@ use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Services\EventStatusService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class EventStatusController extends Controller
@@ -91,10 +92,21 @@ class EventStatusController extends Controller
      */
     public function destroy(EventStatus $eventStatus): void
     {
-        $eventsWithStatus = Event::where('event_status_id', $eventStatus->id)->get();
-        $eventsWithStatus->each(function ($event): void {
-            $event->update(['event_status_id' => 1]);
+        // Ersatz ist der Standardstatus, sonst der erste verbleibende Status. Status 1 muss nicht existieren.
+        $replacementStatusId = EventStatus::query()
+            ->whereKeyNot($eventStatus->id)
+            ->orderByDesc('default')
+            ->orderBy('order')
+            ->value('id');
+
+        DB::transaction(function () use ($eventStatus, $replacementStatusId): void {
+            // Auch Termine im Papierkorb umhängen, sonst blockiert der Fremdschlüssel das Löschen
+            Event::withTrashed()
+                ->where('event_status_id', $eventStatus->id)
+                ->each(function (Event $event) use ($replacementStatusId): void {
+                    $event->update(['event_status_id' => $replacementStatusId]);
+                });
+            $this->eventStatusService->delete($eventStatus);
         });
-        $this->eventStatusService->delete($eventStatus);
     }
 }

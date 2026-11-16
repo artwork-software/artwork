@@ -626,7 +626,25 @@ class MoneySourceController extends Controller
     {
         $this->authorize('update', $moneySource);
 
-        $moneySource->users()->sync(collect($request->users));
+        $validated = $request->validate([
+            'users' => ['nullable', 'array'],
+            'users.*.user_id' => ['required', 'integer', 'exists:users,id'],
+            'users.*.competent' => ['nullable', 'boolean'],
+            'users.*.write_access' => ['nullable', 'boolean'],
+        ]);
+
+        // Nur die beiden Rechte-Felder in den Pivot übernehmen: rohe Request-Daten konnten
+        // z. B. money_source_id überschreiben und so Rechte an einer fremden Quelle anlegen
+        $pivotDataByUserId = collect($validated['users'] ?? [])
+            ->mapWithKeys(fn (array $user): array => [
+                (int) $user['user_id'] => [
+                    'competent' => (bool) ($user['competent'] ?? false),
+                    'write_access' => (bool) ($user['write_access'] ?? false),
+                ],
+            ])
+            ->all();
+
+        $moneySource->users()->sync($pivotDataByUserId);
         $tasks = $moneySource->moneySourceTasks()->get();
         foreach ($tasks as $task) {
             $task->money_source_task_users()->sync($moneySource->competent()->get());
@@ -686,6 +704,8 @@ class MoneySourceController extends Controller
             'amount' => $moneySource->amount,
             'start_date' => $moneySource->start_date,
             'end_date' => $moneySource->end_date,
+            'funding_start_date' => $moneySource->funding_start_date,
+            'funding_end_date' => $moneySource->funding_end_date,
             'source_name' => $moneySource->source_name,
             'description' => $moneySource->description,
             'is_group' => $moneySource->is_group,
@@ -801,14 +821,25 @@ class MoneySourceController extends Controller
     {
         $this->authorize('update', $moneySource);
 
-        $moneySource->projects()->sync($request->linkedProjectIds);
+        // Fehlte die Liste, löste sync(null) still alle Projektverknüpfungen
+        $validated = $request->validate([
+            'linkedProjectIds' => ['present', 'array'],
+            'linkedProjectIds.*' => ['integer', 'exists:projects,id'],
+        ]);
+
+        $moneySource->projects()->sync($validated['linkedProjectIds']);
     }
 
     public function syncCategories(MoneySource $moneySource, Request $request): void
     {
         $this->authorize('update', $moneySource);
 
-        $moneySource->categories()->sync($request->categoryIds);
+        $validated = $request->validate([
+            'categoryIds' => ['present', 'array'],
+            'categoryIds.*' => ['integer', 'exists:money_source_categories,id'],
+        ]);
+
+        $moneySource->categories()->sync($validated['categoryIds']);
     }
 
     /**

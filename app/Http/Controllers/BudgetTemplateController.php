@@ -240,7 +240,14 @@ class BudgetTemplateController extends Controller
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
-        $project = Project::find($request->project_id);
+        $validated = $request->validate([
+            'project_id' => ['required', 'integer', 'exists:projects,id'],
+        ]);
+
+        // Nur Vorlagen dürfen Quelle sein: bei der eigenen Projekttabelle würde sie vor dem Kopieren gelöscht
+        abort_unless($table->is_template, 404);
+
+        $project = Project::query()->findOrFail($validated['project_id']);
 
         $this->deleteOldTable(
             $project,
@@ -352,8 +359,13 @@ class BudgetTemplateController extends Controller
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): void {
-        /** @var Table $tableToDelete */
+        /** @var Table|null $tableToDelete */
         $tableToDelete = $project->table()->first();
+
+        // Projekte ohne Budgettabelle haben nichts zu ersetzen
+        if ($tableToDelete === null) {
+            return;
+        }
 
         $this->tableService->forceDelete(
             $tableToDelete,

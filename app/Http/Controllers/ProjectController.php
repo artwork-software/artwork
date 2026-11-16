@@ -1543,15 +1543,7 @@ class ProjectController extends Controller
             $this->deleteVerificationRequestNotifications('sub', $subPosition->id);
         }
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setType('budget')
-                ->setModelClass(Project::class)
-                ->setModelId($request->project_id)
-                ->setTranslationKey('Sub position verified')
-                ->setTranslationKeyPlaceholderValues([$subPosition->name])
-        );
+        $this->logSubPositionChange($subPosition, 'Sub position verified');
 
         SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
@@ -1559,16 +1551,19 @@ class ProjectController extends Controller
     public function fixSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
+        abort_unless((bool) $subPosition, 404);
+
         $this->setSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_fixed' => true]);
 
-        $project = Project::find($request->project_id);
+        // Projekt aus der Position ableiten: project_id im Request fehlt bei Vorlagen oder kann abweichen
+        $project = $subPosition->mainPosition->table->project;
         $budgetData = new stdClass();
         $budgetData->position_id = $subPosition->id;
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST;
 
-        foreach ($project->access_budget()->get() as $user) {
+        foreach ($project?->access_budget()->get() ?? [] as $user) {
             $notificationTitle = __(
                 'notification.project.budget.fixed',
                 [],
@@ -1612,15 +1607,7 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setType('budget')
-                ->setModelClass(Project::class)
-                ->setModelId($project->id)
-                ->setTranslationKey('Sub position fixed')
-                ->setTranslationKeyPlaceholderValues([$subPosition->name])
-        );
+        $this->logSubPositionChange($subPosition, 'Sub position fixed');
 
         SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
@@ -1628,15 +1615,18 @@ class ProjectController extends Controller
     public function unfixSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
+        abort_unless((bool) $subPosition, 404);
+
         $this->removeSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_fixed' => false]);
-        $project = Project::find($request->project_id);
+        // Projekt aus der Position ableiten: project_id im Request fehlt bei Vorlagen oder kann abweichen
+        $project = $subPosition->mainPosition->table->project;
         $budgetData = new stdClass();
         $budgetData->position_id = $subPosition->id;
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST;
 
-        foreach ($project->access_budget()->get() as $user) {
+        foreach ($project?->access_budget()->get() ?? [] as $user) {
             $notificationTitle = __(
                 'notification.project.budget.unfixed',
                 [],
@@ -1680,15 +1670,7 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setType('budget')
-                ->setModelClass(Project::class)
-                ->setModelId($request->project_id)
-                ->setTranslationKey('Sub position Fixing canceled')
-                ->setTranslationKeyPlaceholderValues([$subPosition->name])
-        );
+        $this->logSubPositionChange($subPosition, 'Sub position Fixing canceled');
 
         SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
@@ -1804,6 +1786,27 @@ class ProjectController extends Controller
         );
 
         SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
+    }
+
+    /**
+     * Budget-Verlauf am Projekt der Unterposition; Vorlagen haben kein Projekt und damit keinen Verlauf.
+     */
+    private function logSubPositionChange(SubPosition $subPosition, string $translationKey): void
+    {
+        $projectId = $subPosition->mainPosition->table->project_id;
+        if ($projectId === null) {
+            return;
+        }
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('budget')
+                ->setModelClass(Project::class)
+                ->setModelId($projectId)
+                ->setTranslationKey($translationKey)
+                ->setTranslationKeyPlaceholderValues([$subPosition->name])
+        );
     }
 
     private function setSubPositionCellVerifiedValue(SubPosition $subPosition): void

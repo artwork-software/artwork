@@ -7,6 +7,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\Vacation;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -229,13 +230,21 @@ final class VacationControllerTest extends FeatureTestCase
      */
     private function dayVacation(User $user, array $attributes): Vacation
     {
-        return Vacation::factory()->create(array_merge([
+        $vacation = Vacation::factory()->create(array_merge([
             'vacationer_type' => User::class,
             'vacationer_id' => $user->id,
             'date' => '2026-07-16',
             'full_day' => true,
             'is_series' => false,
         ], $attributes));
+
+        // Alt-Einträge mit dem Status als Kommentar lässt das Model nicht mehr zu; direkt in die Tabelle schreiben
+        if (array_key_exists('comment', $attributes)) {
+            DB::table('vacations')->where('id', $vacation->id)->update(['comment' => $attributes['comment']]);
+            $vacation->refresh();
+        }
+
+        return $vacation;
     }
 
     private function changeStatus(User $user, string $from, string $to): \Illuminate\Testing\TestResponse

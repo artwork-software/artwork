@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Shift\Models\PresetShift;
+use Artwork\Modules\Shift\Models\ShiftPreset;
 use Artwork\Modules\Shift\Services\PresetShiftService;
 use Artwork\Modules\Shift\Services\PresetShiftsShiftsQualificationsService;
 use Illuminate\Http\Request;
@@ -17,11 +18,27 @@ class PresetShiftController extends Controller
 
     public function store(int $shiftPreset, Request $request): void
     {
-        $request->validate(['description' => ['nullable', 'string', 'max:10000']]);
+        // Wie beim Bearbeiten: fehlende Felder bzw. Qualifikationsliste endeten in SQL-Fehlern oder einem
+        // foreach über null (500); die Vorlage muss existieren (Routenparameter ohne Model-Binding)
+        abort_unless(ShiftPreset::query()->whereKey($shiftPreset)->exists(), 404);
+        $validated = $request->validate([
+            'start' => ['required', 'date_format:H:i,H:i:s'],
+            'end' => ['required', 'date_format:H:i,H:i:s'],
+            'break_minutes' => ['required', 'integer', 'min:0', 'max:1440'],
+            'craft_id' => ['required', 'integer', 'exists:crafts,id'],
+            'description' => ['nullable', 'string', 'max:10000'],
+            'presetShiftsQualifications' => ['nullable', 'array'],
+            'presetShiftsQualifications.*.shift_qualification_id' => [
+                'required',
+                'integer',
+                'exists:shift_qualifications,id',
+            ],
+            'presetShiftsQualifications.*.value' => ['nullable', 'integer', 'min:0', 'max:65535'],
+        ]);
 
         $presetShiftId = $this->presetShiftService->createFromRequestForShiftPreset($shiftPreset, $request);
 
-        foreach ($request->get('presetShiftsQualifications') as $presetShiftsQualification) {
+        foreach ($validated['presetShiftsQualifications'] ?? [] as $presetShiftsQualification) {
             $this->presetShiftsShiftsQualificationsService->createShiftsQualificationsForPresetShift(
                 $presetShiftId,
                 $presetShiftsQualification

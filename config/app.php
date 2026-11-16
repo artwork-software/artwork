@@ -154,6 +154,7 @@ return [
     'supported_locales' => [
         'de' => 'Deutsch',
         'en' => 'English',
+        'nl' => 'Nederlands',
     ],
 
     /*

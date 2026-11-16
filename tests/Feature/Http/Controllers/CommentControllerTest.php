@@ -12,21 +12,6 @@ use Tests\Feature\FeatureTestCase;
 final class CommentControllerTest extends FeatureTestCase
 {
     #[Test]
-    public function guest_cannot_view_create(): void
-    {
-        $this->get(route('comments.create'))
-            ->assertRedirect(route('login'));
-    }
-
-    #[Test]
-    public function admin_can_view_create(): void
-    {
-        $this->actingAsAdmin();
-
-        $this->get(route('comments.create'))->assertOk();
-    }
-
-    #[Test]
     public function guest_cannot_store(): void
     {
         $this->post(route('comments.store'), ['text' => 'X', 'project_id' => 1])

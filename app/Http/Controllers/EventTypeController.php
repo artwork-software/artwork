@@ -38,13 +38,6 @@ class EventTypeController extends Controller
         return Redirect::back();
     }
 
-    public function show(EventType $eventType): Response|ResponseFactory
-    {
-        return inertia('Events/EventType', [
-            'event_type' => new EventTypeResource($eventType),
-        ]);
-    }
-
     public function update(
         StoreOrUpdateEventTypeRequest $request,
         EventType $eventType,

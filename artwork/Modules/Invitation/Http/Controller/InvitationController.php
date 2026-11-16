@@ -7,8 +7,6 @@ use Artwork\Modules\Invitation\Http\Requests\AcceptInvitationRequest;
 use Artwork\Modules\Invitation\Http\Requests\StoreInvitationRequest;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Invitation\Services\InvitationService;
-use Artwork\Modules\Permission\Services\PermissionService;
-use Artwork\Modules\Role\Services\RoleService;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Hashing\HashManager;
 use Illuminate\Http\RedirectResponse;
@@ -25,28 +23,10 @@ class InvitationController extends Controller
         private readonly InvitationService $invitationService,
         private readonly Redirector $redirector,
         private readonly ResponseFactory $responseFactory,
-        private readonly RoleService $roleService,
-        private readonly PermissionService $permissionService,
         private readonly UserService $userService,
         private readonly HashManager $hashManager
     ) {
         $this->authorizeResource(Invitation::class);
-    }
-
-    public function invite(): Response|ResponseFactory
-    {
-        $this->authorize('create', Invitation::class);
-
-        return $this->responseFactory->render(
-            'Users/Invite',
-            [
-                'available_roles' => $this->roleService->getAllRoleNames(),
-                'available_permissions' => collect($this->invitationService->filterGrantablePermissions(
-                    $this->permissionService->getAllPermissionNames()->all(),
-                    $this->userService->getAuthUser()
-                )),
-            ]
-        );
     }
 
     public function store(StoreInvitationRequest $request): RedirectResponse

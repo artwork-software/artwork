@@ -103,7 +103,6 @@ use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Http\Requests\ProjectIndexPaginateRequest;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
-use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
@@ -836,12 +835,6 @@ class ProjectController extends Controller
             'budget_deadline' => $budgetDeadline,
         ]);
     }
-
-    public function create(): Response|ResponseFactory
-    {
-        return inertia('Projects/Create');
-    }
-
 
     public function store(
         StoreProjectRequest $request,
@@ -3644,18 +3637,6 @@ class ProjectController extends Controller
                 $this->eventService->save($event);
             }
         }
-    }
-
-    public function edit(Project $project): Response|ResponseFactory
-    {
-        return inertia('Projects/Edit', [
-            'project' => new ProjectEditResource($project),
-            // email_private mitladen: User::toArray() blendet private Adressen sonst nicht aus
-            'users' => User::select([
-                'id', 'first_name', 'last_name', 'email', 'email_private', 'profile_photo_path', 'deactivated_at',
-            ])->get(),
-            'departments' => Department::select(['id', 'name'])->get()
-        ]);
     }
 
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse

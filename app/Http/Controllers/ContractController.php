@@ -75,14 +75,6 @@ class ContractController extends Controller
         ]);
     }
 
-    public function show(Contract $contract): Response|ResponseFactory
-    {
-        $this->authorize('view', $contract);
-        return inertia('Contracts/Contracts', [
-            'contract' => new ContractResource($contract),
-        ]);
-    }
-
     public function store(ContractStoreRequest $request, Project $project): RedirectResponse
     {
         $this->authorizeContractStore($request, $project);

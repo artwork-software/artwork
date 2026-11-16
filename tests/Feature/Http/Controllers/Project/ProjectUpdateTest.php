@@ -10,24 +10,6 @@ use Tests\Feature\FeatureTestCase;
 final class ProjectUpdateTest extends FeatureTestCase
 {
     #[Test]
-    public function guest_cannot_edit_project(): void
-    {
-        $project = Project::factory()->create();
-
-        $this->get('/projects/' . $project->id . '/edit')
-            ->assertRedirect(route('login'));
-    }
-
-    #[Test]
-    public function admin_can_view_edit_page(): void
-    {
-        $this->actingAsAdmin();
-        $project = Project::factory()->create();
-
-        $this->get('/projects/' . $project->id . '/edit')->assertOk();
-    }
-
-    #[Test]
     public function guest_cannot_update_project(): void
     {
         $project = Project::factory()->create();

@@ -2285,6 +2285,11 @@ Route::group(['middleware' => ['auth']], function (): void {
             Route::get('/sageNotAssignedData/trashed', [SageNotAssignedDataController::class, 'getTrashed'])
                 ->name('sageNotAssignedData.trashed');
 
+            // vor der Parameter-Route: sonst bindet Laravel "force-all" als {sageNotAssignedData} (404)
+            Route::delete(
+                '/sageNotAssignedData/force-all',
+                [SageNotAssignedDataController::class, 'forceDeleteAll']
+            )->name('sageNotAssignedData.forceDeleteAll');
             Route::delete(
                 '/sageNotAssignedData/{sageNotAssignedData}',
                 [
@@ -2300,10 +2305,6 @@ Route::group(['middleware' => ['auth']], function (): void {
             )
                 ->name('sageNotAssignedData.forceDelete')
                 ->withTrashed();
-            Route::delete(
-                '/sageNotAssignedData/force-all',
-                [SageNotAssignedDataController::class, 'forceDeleteAll']
-            )->name('sageNotAssignedData.forceDeleteAll');
             Route::patch(
                 '/sageNotAssignedData/{sageNotAssignedData}/restore',
                 [
@@ -2698,9 +2699,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     // Vacation
 
     Route::post('/user/vacation/{user}/add', [VacationController::class, 'store'])->name('user.vacation.add');
-    Route::patch('/user/vacation/{userVacations}/update', [VacationController::class, 'update'])
+    Route::patch('/user/vacation/{vacation}/update', [VacationController::class, 'update'])
         ->name('user.vacation.update');
-    Route::delete('/user/vacation/{userVacations}/delete', [VacationController::class, 'destroy'])
+    Route::delete('/user/vacation/{vacation}/delete', [VacationController::class, 'destroy'])
         ->name('user.vacation.delete');
 
 

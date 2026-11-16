@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Vacation\Https\Requests;
 
+use Artwork\Modules\Vacation\Rules\MaxSeriesLength;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -35,7 +36,7 @@ class UpdateVacationRequest extends FormRequest
             'comment' => 'nullable|string|max:100',
             'is_series' => 'nullable|boolean',
             'series_repeat' => 'nullable|string',
-            'series_repeat_until' => 'nullable|date',
+            'series_repeat_until' => ['nullable', 'date', new MaxSeriesLength()],
             'type' => 'required|string',
             'type_before_update' => 'required|string',
         ];

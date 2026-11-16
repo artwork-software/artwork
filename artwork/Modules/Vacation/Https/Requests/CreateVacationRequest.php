@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Vacation\Https\Requests;
 
+use Artwork\Modules\Vacation\Rules\MaxSeriesLength;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -37,6 +38,7 @@ class CreateVacationRequest extends FormRequest
                 'nullable',
                 'date',
                 'after_or_equal:date',
+                new MaxSeriesLength(),
             ],
         ];
     }

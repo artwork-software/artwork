@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class Handler extends ExceptionHandler
 {
@@ -21,6 +22,9 @@ class Handler extends ExceptionHandler
         OAuthServerException::class,
         // Gewollte Ablehnung (keine Gewerksplaner:in) mit Meldung an die Person — kein Fehler für Sentry
         \Artwork\Modules\Craft\Exceptions\CraftNotPlannableException::class,
+        // Gewollte Sperren mit Toast/422 an die Person (Termin im Verkauf, CRM-Systemeintrag)
+        TicketingLockedException::class,
+        \Artwork\Modules\Crm\Exceptions\CrmSettingLockedException::class,
     ];
 
     protected $dontFlash = [
@@ -36,6 +40,22 @@ class Handler extends ExceptionHandler
             return $request->expectsJson()
                 ? response()->json(['message' => $e->getMessage()], 422)
                 : back()->with('error', $e->getMessage());
+        });
+
+        // Mailserver nicht erreichbar/lehnt ab (Sentry HAU-ARTWORK-65, BERLINISCHE-GALERIE-3B): statt
+        // 500-Seite eine Meldung an der Stelle, an der die Person war. Gemeldet wird weiterhin.
+        $this->renderable(function (TransportExceptionInterface $e, $request) {
+            $message = __(
+                'The email could not be sent. Please check the mail settings or contact your administrator.'
+            );
+
+            if ($request->expectsJson() && !$request->header('X-Inertia')) {
+                return response()->json(['message' => $message], 503);
+            }
+
+            return $request->user() === null
+                ? back()->withInput($request->except($this->dontFlash))->withErrors(['email' => $message])
+                : back()->with('error', $message);
         });
 
         $this->reportable(function (Throwable $e): void {

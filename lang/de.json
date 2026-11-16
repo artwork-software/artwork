@@ -8121,7 +8121,6 @@
     "Narrow down": "Eingrenzen",
     "No match. Change the filter or just type your answer.": "Kein Treffer. Filter ändern oder die Antwort einfach tippen.",
     "More matches — narrow your search": "Mehr Treffer — enger eingrenzen",
-    "Accept or decline own shifts (also provisional ones), optionally with a comment": "Eigene Schichten zu- oder absagen (auch vorläufige), optional mit Kommentar",
     "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded; the shift was committed by {username}.": "Du bist am {date} {start} - {end} eingeteilt, entgegen deines ursprünglichen Eintrags. Wer die Einteilung vorgenommen hat, ist nicht gespeichert; festgeschrieben wurde die Schicht von {username}.",
     "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded.": "Du bist am {date} {start} - {end} eingeteilt, entgegen deines ursprünglichen Eintrags. Wer die Einteilung vorgenommen hat, ist nicht gespeichert.",
     "Assignment made on {date}.": "Zuweisung erfolgte am {date}.",
@@ -8229,7 +8228,6 @@
     "Shifts starting between": "Schichten mit Start zwischen",
     "The period refers to the start date of the shifts, not to when a change was made. Every entry of a shift starting in this period is shown, regardless of when it was changed.": "Der Zeitraum bezieht sich auf das Startdatum der Schichten, nicht auf den Zeitpunkt einer Änderung. Jeder Eintrag einer Schicht, die in diesem Zeitraum beginnt, wird angezeigt – egal, wann sie geändert wurde.",
     "and": "und",
-    "Narrow down": "Eingrenzen",
     "Narrows the entries already loaded, immediately and without reloading. To search beyond the loaded entries, use 'Search in all entries'.": "Grenzt die bereits geladenen Einträge ein – sofort und ohne Neuladen. Um über die geladenen Einträge hinaus zu suchen, nutze „In allen Einträgen suchen“.",
     "Group by": "Gruppieren nach",
     "Change date": "Änderungsdatum",
@@ -9763,7 +9761,6 @@
     "Until then the pass is blocked. The next charge and every later date move back by the length of the pause. The holder gets an e-mail.": "Bis dahin ist die Karte gesperrt. Die nächste Abbuchung und alle späteren Termine verschieben sich um die Pause. Die Person bekommt eine E-Mail.",
     "Pause": "Pausieren",
     "Cancel this subscription? It ends with the paid period, never inside the minimum term. The holder gets the confirmation by e-mail.": "Dieses Abo kündigen? Es endet mit dem bezahlten Zeitraum, nie innerhalb der Mindestlaufzeit. Die Bestätigung geht per E-Mail an die Person.",
-    "Keep": "Behalten",
     "Cancel subscription": "Kündigen",
     "End this subscription now? The pass stops working at once and nothing more is charged. Nothing already paid is refunded automatically — settle that directly with the holder.": "Dieses Abo sofort beenden? Die Karte gilt ab jetzt nicht mehr, und es wird nichts mehr abgebucht. Bereits Bezahltes wird nicht automatisch erstattet – das klärst du direkt mit der Person.",
     "End pause": "Pause beenden",
@@ -9969,5 +9966,6 @@
     "Without accommodation": "Ohne Unterkunft",
     "Export event plan or artist plan": "Veranstaltungsplan oder Künstlerplan exportieren",
     "Street and house number": "Straße und Hausnummer",
-    "Appears in the event plan and the artist plan. External places such as hotels or restaurants can also be created as rooms with an address.": "Erscheint im Veranstaltungs- und Künstlerplan. Auch externe Orte wie Hotels oder Restaurants lassen sich als Raum mit Adresse anlegen."
+    "Appears in the event plan and the artist plan. External places such as hotels or restaurants can also be created as rooms with an address.": "Erscheint im Veranstaltungs- und Künstlerplan. Auch externe Orte wie Hotels oder Restaurants lassen sich als Raum mit Adresse anlegen.",
+    "The email could not be sent. Please check the mail settings or contact your administrator.": "Die E-Mail konnte nicht versendet werden. Bitte prüft die Mail-Einstellungen oder wendet euch an die Administration."
 }

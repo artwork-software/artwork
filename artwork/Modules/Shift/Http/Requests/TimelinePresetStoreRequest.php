@@ -16,6 +16,11 @@ class TimelinePresetStoreRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'dataset' => 'required|array',
+            // wie beim Bearbeiten: ungültige Zeiten bzw. zu lange Beschreibungen endeten in einem SQL-Fehler (500)
+            'dataset.*' => 'array',
+            'dataset.*.start' => 'nullable|date_format:H:i,G:i,H:i:s',
+            'dataset.*.end' => 'nullable|date_format:H:i,G:i,H:i:s',
+            'dataset.*.description' => 'nullable|string|max:255',
         ];
     }
 

@@ -15,7 +15,10 @@ class DepartmentRepository extends BaseRepository
      */
     public function searchDepartments(string $query): Collection
     {
-        return Department::search($query)->get();
+        // Treffer zeigen ihre Mitglieder samt Abteilungen: vorladen statt je Person nachzuladen
+        return Department::search($query)
+            ->query(static fn ($builder) => $builder->with('users.departments'))
+            ->get();
     }
 
     /**

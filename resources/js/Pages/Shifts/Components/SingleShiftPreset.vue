@@ -37,7 +37,6 @@
             </div>
         </div>
         <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full" v-if="showShift">
-            <!--<PresetTimeLine :time-line="preset.timeline" :preset-id="preset.id" />-->
             <div class="w-[175px]" v-for="presetShift in preset.shifts">
                 <SinglePresetShift :preset-shift="presetShift"
                                    :shift-qualifications="shiftQualifications"
@@ -72,7 +71,6 @@
 import {defineComponent} from 'vue'
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal.vue";
-import PresetTimeLine from "@/Pages/Shifts/Components/PresetTimeLine.vue";
 import SinglePresetShift from "@/Pages/Shifts/Components/SinglePresetShift.vue";
 import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPresetModal.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -90,7 +88,6 @@ export default defineComponent({
         AddEditShiftPresetModal,
         SinglePresetShift,
         IconCirclePlus,
-        PresetTimeLine,
         IconChevronDown,
         AddShiftPresetModal,
         ConfirmDeleteModal,

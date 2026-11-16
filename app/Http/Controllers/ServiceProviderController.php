@@ -150,9 +150,15 @@ class ServiceProviderController extends Controller
     {
         $this->authorize('updateWorkProfile', ServiceProvider::class);
 
+        // Spalten sind varchar(255): ohne Längenprüfung endete zu langer Text in einem SQL-Fehler (500)
+        $validated = $request->validate([
+            'workName' => ['nullable', 'string', 'max:255'],
+            'workDescription' => ['nullable', 'string', 'max:255'],
+        ]);
+
         $serviceProvider->update([
-            'work_name' => $request->get('workName'),
-            'work_description' => $request->get('workDescription')
+            'work_name' => $validated['workName'] ?? null,
+            'work_description' => $validated['workDescription'] ?? null,
         ]);
 
         $serviceProvider->syncToCrm();
@@ -196,17 +202,12 @@ class ServiceProviderController extends Controller
     {
         $this->authorize('updateWorkProfile', ServiceProvider::class);
 
-        $serviceProvider->assignedCrafts()->attach($request->get('craftId'));
+        $validated = $request->validate([
+            'craftId' => ['required', 'integer', 'exists:crafts,id'],
+        ]);
 
-        /*$craftToAssign = Craft::find($request->get('craftId'));
-
-        if (is_null($craftToAssign)) {
-            return Redirect::back();
-        }
-
-        if (!$serviceProvider->assignedCrafts->contains($craftToAssign)) {
-            $serviceProvider->assignedCrafts()->attach(Craft::find($request->get('craftId')));
-        }*/
+        // Ohne Prüfung entstand bei erneutem Zuweisen eine doppelte Pivot-Zeile
+        $serviceProvider->assignedCrafts()->syncWithoutDetaching([(int) $validated['craftId']]);
 
         return Redirect::back();
     }

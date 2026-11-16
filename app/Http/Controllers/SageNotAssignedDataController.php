@@ -87,6 +87,9 @@ class SageNotAssignedDataController extends Controller
      */
     public function forceDeleteAll(Request $request): RedirectResponse
     {
+        // Globale Aufräumaktion: nur wer den Sage-Papierkorb sehen darf; Budgetzugriff auf ein Projekt genügt nicht
+        $this->authorize('getTrashed', SageNotAssignedData::class);
+
         $user = $request->user();
         $trashed = SageNotAssignedData::onlyTrashed()->with('project');
         $trashed->each(function (SageNotAssignedData $item) use ($user): void {

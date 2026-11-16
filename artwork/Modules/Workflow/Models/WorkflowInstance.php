@@ -98,11 +98,14 @@ class WorkflowInstance extends Model
 
     public function transitionTo(string $place, ?string $transition = null): void
     {
+        // Vor dem Update merken: danach liefert getOriginal() bereits den neuen Ort
+        $fromPlace = $this->current_place;
+
         $this->update(['current_place' => $place]);
 
         $this->workflowLogs()->create([
             'transition' => $transition,
-            'from_place' => $this->getOriginal('current_place'),
+            'from_place' => $fromPlace,
             'to_place' => $place,
             'triggered_at' => now()
         ]);

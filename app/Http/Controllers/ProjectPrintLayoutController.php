@@ -494,6 +494,14 @@ class ProjectPrintLayoutController extends Controller
 
     public function addComponent(ProjectPrintLayout $projectPrintLayout, Request $request): void
     {
+        // Ohne Validierung endeten fehlende Komponenten als 500er und beliebige Bereiche als Datenmüll
+        $request->validate([
+            'component_id' => ['required', 'integer', 'exists:components,id'],
+            'type' => ['required', 'string', 'in:header,body,footer'],
+            'row' => ['required', 'integer', 'min:0'],
+            'col' => ['required', 'integer', 'min:0'],
+        ]);
+
         $projectPrintLayout->components()->create([
             'component_id' => $request->get('component_id'),
             'type' => $request->get('type'),

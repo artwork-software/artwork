@@ -9759,7 +9759,6 @@
     "Until then the pass is blocked. The next charge and every later date move back by the length of the pause. The holder gets an e-mail.": "Until then the pass is blocked. The next charge and every later date move back by the length of the pause. The holder gets an e-mail.",
     "Pause": "Pause",
     "Cancel this subscription? It ends with the paid period, never inside the minimum term. The holder gets the confirmation by e-mail.": "Cancel this subscription? It ends with the paid period, never inside the minimum term. The holder gets the confirmation by e-mail.",
-    "Keep": "Keep",
     "Cancel subscription": "Cancel subscription",
     "End this subscription now? The pass stops working at once and nothing more is charged. Nothing already paid is refunded automatically — settle that directly with the holder.": "End this subscription now? The pass stops working at once and nothing more is charged. Nothing already paid is refunded automatically — settle that directly with the holder.",
     "End pause": "End pause",
@@ -9966,5 +9965,10 @@
     "Export event plan or artist plan": "Export event plan or artist plan",
     "Street and house number": "Street and house number",
     "Appears in the event plan and the artist plan. External places such as hotels or restaurants can also be created as rooms with an address.": "Appears in the event plan and the artist plan. External places such as hotels or restaurants can also be created as rooms with an address.",
+    "The email could not be sent. Please check the mail settings or contact your administrator.": "The email could not be sent. Please check the mail settings or contact your administrator.",
+    "The selected project has no budget.": "The selected project has no budget.",
+    "The event type could not be deleted.": "The event type could not be deleted.",
+    "A series may run for at most :years years.": "A series may run for at most :years years.",
+    "A series may run for at most {years} years.": "A series may run for at most {years} years.",
     "New article": "New article"
 }

@@ -61,7 +61,6 @@ use App\Http\Controllers\MoneySourceTaskController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PermissionPresetController;
 use App\Http\Controllers\PresetShiftController;
-use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
@@ -725,7 +724,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
 
     //Invitations
-    Route::get('/users/invitations/invite', [InvitationController::class, 'invite'])->name('user.invite');
     Route::post('/users/invitations', [InvitationController::class, 'store'])->name('invitations.store');
 
     Route::patch('/users/{user}/calendar-settings', [UserController::class, 'updateCalendarSettings'])
@@ -981,7 +979,6 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->middleware('can:can access trash')->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
-    Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::post('/projects/appleFilter', [ProjectController::class, 'saveProjectManagementFilter'])
         ->name('projects.filter');
@@ -994,8 +991,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::post('/projects/{project}/updateKeyVisual', [ProjectController::class, 'updateKeyVisual'])
         ->name('projects_key_visual.update');
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
-    Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])
-        ->middleware(CanEditProject::class);
 
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::patch('/projects/{project}/type', [ProjectController::class, 'updateType'])
@@ -1178,7 +1173,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     )->name('money_sources_delete_file');
 
     //Checklists
-    Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');
     Route::post('/checklists', [ChecklistController::class, 'store'])->name('checklists.store');
     Route::post('/checklists/{checklist}/duplicate', [ChecklistController::class, 'duplicate'])
         ->name('checklists.duplicate');
@@ -1226,13 +1220,11 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     //TaskTemplates
     Route::group(['middleware' => 'can:admin checklistTemplates'], function (): void {
-        Route::get('/task_templates/create', [TaskTemplateController::class, 'create'])->name('task_templates.create');
         Route::post('/task_templates', [TaskTemplateController::class, 'store'])->name('task_templates.store');
         Route::put('/task_templates/order', [
             TaskTemplateController::class,
             'updateOrder',
         ])->name('task_templates.order');
-        Route::get('/task_templates/{task_template}/edit', [TaskTemplateController::class, 'edit']);
         Route::patch('/task_templates/{task_template}', [TaskTemplateController::class, 'update'])
             ->name('task_templates.update');
         Route::delete('/task_templates/{task_template}', [TaskTemplateController::class, 'destroy'])
@@ -1290,7 +1282,6 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->middleware('can:change project settings')->name('sectors.force');
 
     //Comments
-    Route::get('/comments/create', [CommentController::class, 'create'])->name('comments.create');
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::patch('/comments/{comment}', [CommentController::class, 'update']);
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
@@ -1715,7 +1706,6 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     Route::group(['middleware' => 'can:change event settings'], function (): void {
         Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
-        Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
         Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
         Route::delete('/event_types/{event_type}', [
             EventTypeController::class,
@@ -1788,7 +1778,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
-    Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
     Route::get('/contracts/export/excel', [ContractController::class, 'export'])->name('contracts.export');
     Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
@@ -2285,6 +2274,11 @@ Route::group(['middleware' => ['auth']], function (): void {
             Route::get('/sageNotAssignedData/trashed', [SageNotAssignedDataController::class, 'getTrashed'])
                 ->name('sageNotAssignedData.trashed');
 
+            // vor der Parameter-Route: sonst bindet Laravel "force-all" als {sageNotAssignedData} (404)
+            Route::delete(
+                '/sageNotAssignedData/force-all',
+                [SageNotAssignedDataController::class, 'forceDeleteAll']
+            )->name('sageNotAssignedData.forceDeleteAll');
             Route::delete(
                 '/sageNotAssignedData/{sageNotAssignedData}',
                 [
@@ -2300,10 +2294,6 @@ Route::group(['middleware' => ['auth']], function (): void {
             )
                 ->name('sageNotAssignedData.forceDelete')
                 ->withTrashed();
-            Route::delete(
-                '/sageNotAssignedData/force-all',
-                [SageNotAssignedDataController::class, 'forceDeleteAll']
-            )->name('sageNotAssignedData.forceDeleteAll');
             Route::patch(
                 '/sageNotAssignedData/{sageNotAssignedData}/restore',
                 [
@@ -2698,9 +2688,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     // Vacation
 
     Route::post('/user/vacation/{user}/add', [VacationController::class, 'store'])->name('user.vacation.add');
-    Route::patch('/user/vacation/{userVacations}/update', [VacationController::class, 'update'])
+    Route::patch('/user/vacation/{vacation}/update', [VacationController::class, 'update'])
         ->name('user.vacation.update');
-    Route::delete('/user/vacation/{userVacations}/delete', [VacationController::class, 'destroy'])
+    Route::delete('/user/vacation/{vacation}/delete', [VacationController::class, 'destroy'])
         ->name('user.vacation.delete');
 
 
@@ -2883,25 +2873,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::patch('/shift/preset/{shiftPreset}/update', [ShiftPresetController::class, 'update'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('update.shift.preset');
-    Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.delete.timeline.row');
-    Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.add.timeline.row');
-
-    Route::patch('/preset/timeline/update', [PresetTimeLineController::class, 'update'])
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.timeline.update');
-    Route::delete(
-        '/preset/timeline/{presetTimeLine}/delete',
-        [PresetTimeLineController::class, 'destroy']
-    )
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.delete.timeline.row');
-    Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.add.timeline.row');
 
     Route::patch('/user/{user}/check/vacation', [VacationController::class, 'checkVacation'])
         ->name('user.check.vacation');

@@ -2368,8 +2368,8 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only([
-            'checklist_style'
+        $user->update($request->validate([
+            'checklist_style' => ['required', 'string', 'in:list,kanban'],
         ]));
     }
 
@@ -2390,7 +2390,9 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('at_a_glance'));
+        $user->update($request->validate([
+            'at_a_glance' => ['required', 'boolean'],
+        ]));
     }
 
     public function updateShiftPlanZoomFactor(User $user, Request $request): void
@@ -2410,7 +2412,10 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('bulk_sort_id'));
+        // Sortierungen 0 bis 3 der Bulk-Ansicht
+        $user->update($request->validate([
+            'bulk_sort_id' => ['required', 'integer', 'between:0,3'],
+        ]));
     }
 
     public function updateDailyView(User $user, Request $request): void
@@ -2478,7 +2483,9 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('show_description_in_bulk'));
+        $user->update($request->validate([
+            'show_description_in_bulk' => ['required', 'boolean'],
+        ]));
     }
 
     public function updateShiftPeriodOnStartDateChange(User $user, Request $request): void
@@ -2588,14 +2595,18 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('compact_mode'));
+        $user->update($request->validate([
+            'compact_mode' => ['required', 'boolean'],
+        ]));
     }
 
     public function toggleShowProjectTeamNames(User $user, Request $request): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('show_project_team_names'));
+        $user->update($request->validate([
+            'show_project_team_names' => ['required', 'boolean'],
+        ]));
     }
 
     public function updateShowCrafts(User $user, Request $request): void
@@ -2625,14 +2636,21 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('show_qualifications'));
+        $request->validate([
+            'show_qualifications' => ['present', 'array'],
+            'show_qualifications.*' => ['integer'],
+        ]);
+
+        $user->update(['show_qualifications' => array_values($request->input('show_qualifications'))]);
     }
 
     public function calendarGoToStepper(User $user, Request $request): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('goto_mode'));
+        $user->update($request->validate([
+            'goto_mode' => ['required', 'string', 'in:day,week,month'],
+        ]));
     }
 
     /**
@@ -2690,7 +2708,12 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('drawer_height'));
+        // Beim Ziehen können Pixelwerte mit Nachkommastellen ankommen; die Spalte ist ganzzahlig
+        $validated = $request->validate([
+            'drawer_height' => ['required', 'numeric', 'min:0', 'max:10000'],
+        ]);
+
+        $user->update(['drawer_height' => (int) round((float) $validated['drawer_height'])]);
     }
 
     public function updateChecklistFilter(User $user, Request $request): void
@@ -2798,7 +2821,12 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('opened_crafts'));
+        $request->validate([
+            'opened_crafts' => ['present', 'array'],
+            'opened_crafts.*' => ['integer'],
+        ]);
+
+        $user->update(['opened_crafts' => array_values($request->input('opened_crafts'))]);
     }
 
     public function updateSortWorkersByQualification(User $user, Request $request): void

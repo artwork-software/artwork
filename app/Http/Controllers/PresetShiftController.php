@@ -31,11 +31,26 @@ class PresetShiftController extends Controller
 
     public function update(Request $request, PresetShift $presetShift): void
     {
-        $request->validate(['description' => ['nullable', 'string', 'max:10000']]);
+        // Ohne Prüfung führten ungültige Zeiten, negative Pausen/Bedarfe oder eine fehlende
+        // Qualifikationsliste zu SQL-Fehlern bzw. einem foreach über null (500)
+        $validated = $request->validate([
+            'start' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
+            'end' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
+            'break_minutes' => ['sometimes', 'required', 'integer', 'min:0', 'max:1440'],
+            'craft_id' => ['sometimes', 'required', 'integer', 'exists:crafts,id'],
+            'description' => ['nullable', 'string', 'max:10000'],
+            'presetShiftsQualifications' => ['sometimes', 'array'],
+            'presetShiftsQualifications.*.shift_qualification_id' => [
+                'required',
+                'integer',
+                'exists:shift_qualifications,id',
+            ],
+            'presetShiftsQualifications.*.value' => ['nullable', 'integer', 'min:0', 'max:65535'],
+        ]);
 
         $this->presetShiftService->updateFromRequest($presetShift, $request);
 
-        foreach ($request->get('presetShiftsQualifications') as $presetShiftsQualification) {
+        foreach ($validated['presetShiftsQualifications'] ?? [] as $presetShiftsQualification) {
             $this->presetShiftsShiftsQualificationsService->updateShiftsQualificationForShift(
                 $presetShift->id,
                 $presetShiftsQualification

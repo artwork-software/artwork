@@ -28,9 +28,9 @@ class UpdateVacationRequest extends FormRequest
     {
         return [
             'id' => 'required|integer|exists:vacations,id',
-            'start_time' => 'nullable',
-            'end_time' => 'nullable',
-            'date' => 'required',
+            'start_time' => 'nullable|date_format:H:i,H:i:s',
+            'end_time' => 'nullable|date_format:H:i,H:i:s',
+            'date' => 'required|date',
             'full_day' => 'nullable|boolean',
             'comment' => 'nullable|string|max:100',
             'is_series' => 'nullable|boolean',
@@ -39,5 +39,17 @@ class UpdateVacationRequest extends FormRequest
             'type' => 'required|string',
             'type_before_update' => 'required|string',
         ];
+    }
+
+    /**
+     * full_day und is_series sind NOT-NULL-Spalten: fehlende bzw. leere Flags gelten als false.
+     */
+    protected function prepareForValidation(): void
+    {
+        foreach (['full_day', 'is_series'] as $flag) {
+            if ($this->input($flag) === null) {
+                $this->merge([$flag => false]);
+            }
+        }
     }
 }

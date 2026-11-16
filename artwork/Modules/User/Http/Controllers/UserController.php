@@ -51,7 +51,7 @@ use Artwork\Modules\User\Enums\UserSortEnum;
 use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Http\Requests\MembersManagementRequest;
 use Artwork\Modules\User\Http\Resources\MinimalUserIndexResource;
-use Artwork\Modules\User\Http\Resources\UserIndexResource;
+use Artwork\Modules\User\Http\Resources\UserSearchResultResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\WorkTime\Models\OvertimePayout;
 use Artwork\Modules\WorkTime\Http\Requests\RebookWorkTimeRequest;
@@ -129,9 +129,10 @@ class UserController extends Controller
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->limit(self::PROFILE_SEARCH_LIMIT)
+            ->with('departments')
             ->get();
 
-        return UserIndexResource::collection($users)->resolve();
+        return UserSearchResultResource::collection($users)->resolve();
     }
 
 

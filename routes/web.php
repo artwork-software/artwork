@@ -61,7 +61,6 @@ use App\Http\Controllers\MoneySourceTaskController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PermissionPresetController;
 use App\Http\Controllers\PresetShiftController;
-use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
@@ -2874,25 +2873,6 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::patch('/shift/preset/{shiftPreset}/update', [ShiftPresetController::class, 'update'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('update.shift.preset');
-    Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.delete.timeline.row');
-    Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.add.timeline.row');
-
-    Route::patch('/preset/timeline/update', [PresetTimeLineController::class, 'update'])
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.timeline.update');
-    Route::delete(
-        '/preset/timeline/{presetTimeLine}/delete',
-        [PresetTimeLineController::class, 'destroy']
-    )
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.delete.timeline.row');
-    Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
-        ->middleware('shift-settings-area:shift-templates,edit')
-        ->name('preset.add.timeline.row');
 
     Route::patch('/user/{user}/check/vacation', [VacationController::class, 'checkVacation'])
         ->name('user.check.vacation');

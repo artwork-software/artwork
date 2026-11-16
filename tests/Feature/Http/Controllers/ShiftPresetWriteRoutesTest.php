@@ -206,18 +206,6 @@ final class ShiftPresetWriteRoutesTest extends FeatureTestCase
     }
 
     #[Test]
-    public function preset_timeline_delete_route_removes_timeline_preset_with_times(): void
-    {
-        $timelinePreset = ShiftPresetTimeline::factory()->create();
-        $time = PresetTimelineTime::factory()->create(['preset_timeline_id' => $timelinePreset->id]);
-
-        $this->delete(route('preset.delete.timeline.row', $timelinePreset))->assertSuccessful();
-
-        $this->assertNull($timelinePreset->fresh());
-        $this->assertNull($time->fresh());
-    }
-
-    #[Test]
     public function shift_filter_destroy_deletes_own_filter_only(): void
     {
         $ownFilter = ShiftFilter::factory()->create(['user_id' => $this->admin->id]);

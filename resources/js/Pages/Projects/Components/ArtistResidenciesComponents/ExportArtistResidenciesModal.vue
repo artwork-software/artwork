@@ -56,7 +56,9 @@
 
 <script setup>
 import {ref} from "vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
+import {useI18n} from "vue-i18n";
+import {supportedLocaleOptions} from "@/Helper/appLocale.js";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
@@ -70,11 +72,11 @@ const props = defineProps({
 })
 
 const emits = defineEmits(['close'])
+const {locale} = useI18n()
 
-const languageMethods = [
-    {id: 'de', title: 'German'},
-    {id: 'en', title: 'English'},
-]
+// Exportsprachen = Sprachen der Oberfläche (app.supported_locales), vorausgewählt die aktive
+const languageMethods = supportedLocaleOptions(usePage().props.supportedLocales)
+    .map((language) => ({id: language.id, title: language.name}))
 
 const exportMethods = [
     {id: 'pdf', title: 'PDF-Export'},
@@ -82,7 +84,7 @@ const exportMethods = [
     {id: 'per-diem-pdf', title: 'Per Diem Export'},
 ]
 
-const selectedLanguage = ref(languageMethods[0])
+const selectedLanguage = ref(languageMethods.find((language) => language.id === locale.value) ?? languageMethods[0])
 const selectedExportMode = ref(exportMethods[0])
 const processing = ref(false)
 

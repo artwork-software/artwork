@@ -9971,5 +9971,6 @@
     "The selected project has no budget.": "Das gewählte Projekt hat kein Budget.",
     "The event type could not be deleted.": "Die Terminart konnte nicht gelöscht werden.",
     "A series may run for at most :years years.": "Eine Serie darf höchstens :years Jahre laufen.",
-    "A series may run for at most {years} years.": "Eine Serie darf höchstens {years} Jahre laufen."
+    "A series may run for at most {years} years.": "Eine Serie darf höchstens {years} Jahre laufen.",
+    "New article": "Neuer Artikel"
 }

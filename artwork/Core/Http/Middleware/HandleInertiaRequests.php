@@ -4,6 +4,7 @@ namespace Artwork\Core\Http\Middleware;
 
 use App\Settings\EventSettings;
 use App\Settings\GeneralCalendarSettings;
+use Artwork\Core\Localization\SupportedLocales;
 use Artwork\Modules\AiAssistant\Services\AiAssistantAccess;
 use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\Craft\Models\Craft;
@@ -268,6 +269,8 @@ class HandleInertiaRequests extends Middleware
                 // Nur für Angemeldete (Tool-Einstellungen, Turn-Kontext der KI-Bar) – Login- und Einladungsseiten
                 // verraten die Version nicht
                 'artworkVersion' => $user ? config('app.version') : null,
+                // Wählbare Sprachen (Code + Eigenname) aus app.supported_locales
+                'supportedLocales' => SupportedLocales::toFrontend(),
                 // Effektives PHP-Upload-Limit für transparente „Datei zu groß"-Meldungen
                 // und die Datei-Einstellungsseite (Abnahme RG-04); nginx kann zusätzlich begrenzen
                 'server_upload_limit_mb' => \Artwork\Core\FileHandling\ServerUploadLimit::inMegabytes(),

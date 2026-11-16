@@ -1285,7 +1285,6 @@ const currentMainImage = ref(0)
 const queryManufacturer = ref('')
 const query = ref('')
 const searchDetailedArticleQuery = ref('')
-const currentPageLanguage = ref(document.documentElement.lang || 'en')
 const activeId = ref(null)
 const activeKey = ref(null)
 const storedDetailedArticleQuantities = ref([])
@@ -1637,7 +1636,7 @@ const addNewDetailedArticle = () => {
 
     const newItem = {
         _key: uid(),
-        name: currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article',
+        name: $t('New article'),
         description: '',
         quantity: detailedAlwaysOne.value ? 1 : 0,
         properties: baseProps,
@@ -1850,7 +1849,7 @@ watch(() => articleForm.is_detailed_quantity, (isDetailed) => {
                 individual_value: !!p.individual_value,
             }))
             articleForm.detailed_article_quantities = [{
-                name: articleForm.name || (currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article'),
+                name: articleForm.name || $t('New article'),
                 description: articleForm.description,
                 quantity: detailedAlwaysOne.value ? 1 : '',
                 properties: baseProps,
@@ -2489,7 +2488,7 @@ const executeBulkCreate = () => {
     for (let i = 0; i < count; i++) {
         const newItem = {
             _key: uid(),
-            name: (currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article') + ' ' + (currentLength + i + 1),
+            name: $t('New article') + ' ' + (currentLength + i + 1),
             description: '',
             quantity: 1,
             properties: baseProps.map(p => {

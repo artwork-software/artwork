@@ -9969,5 +9969,6 @@
     "The selected project has no budget.": "The selected project has no budget.",
     "The event type could not be deleted.": "The event type could not be deleted.",
     "A series may run for at most :years years.": "A series may run for at most :years years.",
-    "A series may run for at most {years} years.": "A series may run for at most {years} years."
+    "A series may run for at most {years} years.": "A series may run for at most {years} years.",
+    "New article": "New article"
 }

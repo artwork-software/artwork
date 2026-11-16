@@ -181,7 +181,7 @@ class MoneySourceController extends Controller
             'group_id' => $request->boolean('is_group') ? null : $request->group_id,
         ]);
 
-        $moneySource->users()->sync(collect($request->users));
+        $moneySource->users()->sync($this->validatedUserPivotData($request));
 
         if ($request->boolean('is_group')) {
             foreach ($request->input('sub_money_source_ids', []) ?? [] as $sub_money_source_id) {
@@ -513,7 +513,7 @@ class MoneySourceController extends Controller
             $beforeSubMoneySource->update(['group_id' => null]);
         }
 
-        $moneySource->users()->sync(collect($request->users));
+        $moneySource->users()->sync($this->validatedUserPivotData($request));
 
         $moneySource->update([
             'name' => $request->name,
@@ -626,25 +626,7 @@ class MoneySourceController extends Controller
     {
         $this->authorize('update', $moneySource);
 
-        $validated = $request->validate([
-            'users' => ['nullable', 'array'],
-            'users.*.user_id' => ['required', 'integer', 'exists:users,id'],
-            'users.*.competent' => ['nullable', 'boolean'],
-            'users.*.write_access' => ['nullable', 'boolean'],
-        ]);
-
-        // Nur die beiden Rechte-Felder in den Pivot übernehmen: rohe Request-Daten konnten
-        // z. B. money_source_id überschreiben und so Rechte an einer fremden Quelle anlegen
-        $pivotDataByUserId = collect($validated['users'] ?? [])
-            ->mapWithKeys(fn (array $user): array => [
-                (int) $user['user_id'] => [
-                    'competent' => (bool) ($user['competent'] ?? false),
-                    'write_access' => (bool) ($user['write_access'] ?? false),
-                ],
-            ])
-            ->all();
-
-        $moneySource->users()->sync($pivotDataByUserId);
+        $moneySource->users()->sync($this->validatedUserPivotData($request));
         $tasks = $moneySource->moneySourceTasks()->get();
         foreach ($tasks as $task) {
             $task->money_source_task_users()->sync($moneySource->competent()->get());
@@ -850,5 +832,30 @@ class MoneySourceController extends Controller
     private function parseCellAmount(mixed $value): float
     {
         return (float) str_replace(',', '.', (string) $value);
+    }
+
+    /**
+     * Personen einer Finanzierungsquelle: nur die beiden Rechte-Felder in den Pivot übernehmen. Rohe
+     * Request-Daten konnten z. B. money_source_id überschreiben und so Rechte an einer fremden Quelle anlegen.
+     *
+     * @return array<int, array{competent: bool, write_access: bool}>
+     */
+    private function validatedUserPivotData(Request $request): array
+    {
+        $validated = $request->validate([
+            'users' => ['nullable', 'array'],
+            'users.*.user_id' => ['required', 'integer', 'exists:users,id'],
+            'users.*.competent' => ['nullable', 'boolean'],
+            'users.*.write_access' => ['nullable', 'boolean'],
+        ]);
+
+        return collect($validated['users'] ?? [])
+            ->mapWithKeys(fn (array $user): array => [
+                (int) $user['user_id'] => [
+                    'competent' => (bool) ($user['competent'] ?? false),
+                    'write_access' => (bool) ($user['write_access'] ?? false),
+                ],
+            ])
+            ->all();
     }
 }

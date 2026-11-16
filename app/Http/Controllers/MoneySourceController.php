@@ -693,8 +693,18 @@ class MoneySourceController extends Controller
             'is_group' => $moneySource->is_group,
             'icon' => $moneySource->icon,
             'group_id' => $moneySource->group_id,
-            'users' => $moneySource->users
         ]);
+
+        // Personen samt ihrer Rechte und die Kategorien gehören zur Kopie (Wunsch 16.11.2026)
+        $newMoneySource->users()->sync(
+            $moneySource->users()->get()->mapWithKeys(static fn (User $user): array => [
+                $user->id => [
+                    'competent' => (bool) $user->pivot->competent,
+                    'write_access' => (bool) $user->pivot->write_access,
+                ],
+            ])->all()
+        );
+        $newMoneySource->categories()->sync($moneySource->categories()->get()->modelKeys());
 
         return Redirect::route('money_sources.index');
     }

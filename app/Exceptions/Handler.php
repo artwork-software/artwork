@@ -44,6 +44,8 @@ class Handler extends ExceptionHandler
 
         // Mailserver nicht erreichbar/lehnt ab (Sentry HAU-ARTWORK-65, BERLINISCHE-GALERIE-3B): statt
         // 500-Seite eine Meldung an der Stelle, an der die Person war. Gemeldet wird weiterhin.
+        // Typ im ersten Parameter wählt die Exception aus; benutzt wird nur $request
+        // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
         $this->renderable(function (TransportExceptionInterface $e, $request) {
             $message = __(
                 'The email could not be sent. Please check the mail settings or contact your administrator.'

@@ -4471,6 +4471,7 @@ class ProjectController extends Controller
         $perPage = (int) $request->input('entitiesPerPage', 25);
 
         $trashedProjects = Project::onlyTrashed()
+            ->with(['users.departments', 'departments', 'costCenter'])
             ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
             ->orderByDesc('deleted_at')
             ->paginate($perPage)

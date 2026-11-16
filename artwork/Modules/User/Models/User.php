@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Core\Localization\SupportedLocales;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Chat\Models\Chat;
@@ -495,7 +496,7 @@ class User extends Model implements
     {
         $language = $this->getAttribute('language');
 
-        return in_array($language, config('app.supported_locales', ['de', 'en']), true) ? $language : null;
+        return SupportedLocales::isSupported($language) ? $language : null;
     }
 
     public function sendPasswordResetNotification($token): void

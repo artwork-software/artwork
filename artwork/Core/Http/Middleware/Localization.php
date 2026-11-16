@@ -8,13 +8,14 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Session;
+use Artwork\Core\Localization\SupportedLocales;
 use Carbon\CarbonPeriod;
 
 class Localization
 {
     public function handle(Request $request, Closure $next)
     {
-        $supported = config('app.supported_locales', ['de', 'en']);
+        $supported = SupportedLocales::codes();
 
         // Reihenfolge: 1) User, 2) Session, 3) Cookie, 4) Browser Accept-Language oder App-Default
         if (Auth::check() && filled(Auth::user()->language)) {

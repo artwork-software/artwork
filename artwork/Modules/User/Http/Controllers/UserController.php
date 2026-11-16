@@ -6,6 +6,7 @@ use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Http\Controllers\Controller;
 use Spatie\Activitylog\Models\Activity;
 use Artwork\Core\Http\Requests\SearchRequest;
+use Artwork\Core\Localization\SupportedLocales;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -1630,6 +1631,11 @@ class UserController extends Controller
         $actorIsAdmin = $actor->hasRole(RoleEnum::ARTWORK_ADMIN->value);
 
         $this->authorizeProfileEdit($user);
+
+        // Nur Sprachen aus app.supported_locales, sonst landete ein beliebiger Code in users.language
+        $request->validate([
+            'language' => ['sometimes', 'nullable', 'string', Rule::in(SupportedLocales::codes())],
+        ]);
 
         // Nicht-Admins dürfen fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
         if (!$isSelf && !$actorIsAdmin) {

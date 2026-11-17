@@ -187,6 +187,7 @@ use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\Project\Http\Controllers\ProjectContentExportController;
 use Artwork\Modules\Project\Http\Controllers\ProjectPlanExportController;
+use Artwork\Modules\Project\Http\Controllers\ProjectSimilarNamesController;
 use Artwork\Modules\Project\Http\Controllers\ProjectContentExportTemplateController;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
@@ -887,6 +888,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
+    // Hinweis auf gleich- oder ähnlich benannte Projekte/Gruppen im Anlage-Modal (Route vor {project}!)
+    Route::get('/projects/similar-names', ProjectSimilarNamesController::class)
+        ->name('projects.similar-names');
 
     // Matrix über alle Produktionen hinweg — braucht das globale Projekt-Leserecht,
     // Team-Mitgliedschaft in einzelnen Projekten reicht nicht (Route vor {project}!)

@@ -195,11 +195,20 @@ readonly class CrmDuplicateService
                     $hasValue = $existing !== null && trim((string) $existing->value) !== '';
 
                     if (!$hasValue && trim((string) $value->value) !== '') {
-                        $this->contactService->savePropertyValue(
-                            $primary,
-                            $value->crm_property_id,
-                            $value->value
-                        );
+                        if ($value->file_name !== null) {
+                            $this->contactService->savePropertyFile(
+                                $primary,
+                                $value->crm_property_id,
+                                $value->value,
+                                $value->file_name
+                            );
+                        } else {
+                            $this->contactService->savePropertyValue(
+                                $primary,
+                                $value->crm_property_id,
+                                $value->value
+                            );
+                        }
                         $primaryValues->put($value->crm_property_id, $value);
                     }
                 }

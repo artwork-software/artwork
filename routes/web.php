@@ -3580,6 +3580,10 @@ Route::group(['middleware' => ['auth']], function (): void {
             CrmContactController::class,
             'deletePropertyFile',
         ])->middleware('can:can view crm')->name('crm.contacts.property-file.delete');
+        Route::patch('/contacts/{crmContact}/property-file', [
+            CrmContactController::class,
+            'renamePropertyFile',
+        ])->middleware('can:can view crm')->name('crm.contacts.property-file.rename');
         // Eigenschaftsdateien liegen privat: Download nur hier (Gruppen-Sichtbarkeit im Controller)
         Route::get('/contacts/{crmContact}/property-file/{property}', [
             CrmContactController::class,

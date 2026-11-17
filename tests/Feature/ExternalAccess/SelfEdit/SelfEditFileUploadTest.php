@@ -233,6 +233,10 @@ final class SelfEditFileUploadTest extends TestCase
             ->where('crm_property_id', $this->uploadProperty->id)
             ->value('value');
         $this->assertSame('crm-property-files/' . basename($pendingPath), $value);
+        $this->assertSame('rider.pdf', CrmPropertyValue::query()
+            ->where('crm_contact_id', $external->crm_contact_id)
+            ->where('crm_property_id', $this->uploadProperty->id)
+            ->value('file_name'));
         Storage::disk('local')->assertExists($value);
         Storage::disk('local')->assertMissing('crm-property-files/alt.pdf');
         Storage::disk('local')->assertMissing($pendingPath);

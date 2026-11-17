@@ -20,6 +20,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CrmContactController extends Controller
@@ -420,8 +421,43 @@ class CrmContactController extends Controller
         $path = $file->storeAs(CrmPropertyFileService::DIRECTORY, StoredFileName::forUpload($file), 'local');
 
         $previousPath = $crmContact->propertyValues()->where('crm_property_id', $propertyId)->value('value');
-        $this->contactService->savePropertyValue($crmContact, $propertyId, $path);
+        $this->contactService->savePropertyFile(
+            $crmContact,
+            $propertyId,
+            $path,
+            $this->propertyFileService->displayName($file->getClientOriginalName(), $path)
+        );
         $this->propertyFileService->delete($previousPath);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Ändert nur den Anzeigenamen der Datei (Download-Name), nicht die Datei auf der Disk.
+     */
+    public function renamePropertyFile(Request $request, CrmContact $crmContact): RedirectResponse
+    {
+        $this->abortIfMirrored($crmContact);
+
+        $request->validate([
+            'property_id' => 'required|integer|exists:crm_properties,id',
+            'file_name' => 'required|string|max:200',
+        ]);
+
+        $propertyId = (int) $request->input('property_id');
+        $this->authorizePropertyEdits([$propertyId]);
+
+        $path = $this->propertyFileService->normalisePath(
+            $crmContact->propertyValues()->where('crm_property_id', $propertyId)->value('value')
+        );
+        abort_if($path === null, 404);
+
+        $fileName = $this->propertyFileService->displayName($request->input('file_name'), $path);
+        if ($fileName === null) {
+            throw ValidationException::withMessages(['file_name' => __('Please enter a valid file name.')]);
+        }
+
+        $this->contactService->renamePropertyFile($crmContact, $propertyId, $fileName);
 
         return redirect()->back();
     }
@@ -438,7 +474,7 @@ class CrmContactController extends Controller
         $this->authorizePropertyEdits([$propertyId]);
 
         $previousPath = $crmContact->propertyValues()->where('crm_property_id', $propertyId)->value('value');
-        $this->contactService->savePropertyValue($crmContact, $propertyId, null);
+        $this->contactService->savePropertyFile($crmContact, $propertyId, null, null);
         $this->propertyFileService->delete($previousPath);
 
         return redirect()->back();
@@ -461,12 +497,18 @@ class CrmContactController extends Controller
         $visiblePropertyIds = $this->propertyGroupService->getVisiblePropertyIds($user->id, $deptIds, $isCrmManager);
         abort_unless(in_array($property->id, array_map('intval', $visiblePropertyIds), true), 403);
 
-        $path = $this->propertyFileService->normalisePath(
-            $crmContact->propertyValues()->where('crm_property_id', $property->id)->value('value')
-        );
+        $propertyValue = $crmContact->propertyValues()
+            ->where('crm_property_id', $property->id)
+            ->first(['value', 'file_name']);
+        $path = $this->propertyFileService->normalisePath($propertyValue?->value);
         abort_if($path === null, 404);
 
-        return PrivateFileResponse::make($path, basename($path), $request->boolean('inline'));
+        // Altbestand ohne gespeicherten Namen: Hash-Name der Datei
+        return PrivateFileResponse::make(
+            $path,
+            $propertyValue->file_name ?? basename($path),
+            $request->boolean('inline')
+        );
     }
 
     /**

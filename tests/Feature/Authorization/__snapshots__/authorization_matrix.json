@@ -590,6 +590,7 @@
     "PATCH contract_types/{contract_type}/update": "forbidden",
     "PATCH contracts/{contract}": "forbidden",
     "PATCH crm/contacts/{crmContact}": "forbidden",
+    "PATCH crm/contacts/{crmContact}/property-file": "forbidden",
     "PATCH crm/contacts/{crmContact}/room-types": "forbidden",
     "PATCH crm/contacts/{crmContact}/room-types/{roomType}/name": "forbidden",
     "PATCH crm/contacts/{crmContact}/type": "forbidden",

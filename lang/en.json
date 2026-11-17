@@ -9998,5 +9998,7 @@
     "A project or project group with this name already exists": "A project or project group with this name already exists",
     "There are projects or project groups with a similar name": "There are projects or project groups with a similar name",
     "Check whether you mean one of them. You can still create it.": "Check whether you mean one of them. You can still create it.",
-    "Click again to create it anyway.": "Click again to create it anyway."
+    "Click again to create it anyway.": "Click again to create it anyway.",
+    "Rename file": "Rename file",
+    "Please enter a valid file name.": "Please enter a valid file name."
 }

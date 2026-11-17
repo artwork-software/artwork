@@ -23,6 +23,7 @@
                         <CrmPropertyValueInput
                             :property="property"
                             :value="getPropertyValue(property.id)"
+                            :file-name="getPropertyFileName(property.id)"
                             :contact-id="contact.id"
                             :required="!!property.pivot?.is_required"
                             :error="errors[property.id] || ''"
@@ -55,7 +56,7 @@
                                 <template v-else-if="property.type === 'upload' && getPropertyValue(property.id)">
                                     <a :href="route('crm.contacts.property-file.download', { crmContact: contact.id, property: property.id })" target="_blank" download class="inline-flex items-center gap-1.5 text-accent-700 hover:underline">
                                         <component :is="IconFile" class="h-4 w-4" />
-                                        {{ getPropertyValue(property.id).split('/').pop() }}
+                                        {{ getPropertyFileName(property.id) || getPropertyValue(property.id).split('/').pop() }}
                                     </a>
                                 </template>
                                 <template v-else-if="property.type === 'date' && getPropertyValue(property.id)">
@@ -106,6 +107,12 @@ const formatDate = (value) => {
 const getPropertyValue = (propertyId) => {
     const pv = props.contact.property_values?.find(v => v.crm_property_id === propertyId)
     return pv?.value ?? ''
+}
+
+// Upload: Anzeigename der Datei (Originalname bzw. umbenannt), null bei Altbestand
+const getPropertyFileName = (propertyId) => {
+    const pv = props.contact.property_values?.find(v => v.crm_property_id === propertyId)
+    return pv?.file_name ?? null
 }
 
 const onUpdateValue = (propertyId, value) => {

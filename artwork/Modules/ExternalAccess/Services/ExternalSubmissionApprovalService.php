@@ -6,6 +6,7 @@ use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Models\CrmPropertyValue;
+use Artwork\Modules\Crm\Services\CrmPropertyFileService;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionStatus;
 use Artwork\Modules\ExternalAccess\Enums\FieldApprovalStatus;
 use Artwork\Modules\ExternalAccess\Exceptions\EmailAlreadyInUseException;
@@ -31,6 +32,7 @@ class ExternalSubmissionApprovalService
         private readonly DatabaseManager $db,
         private readonly ExternalNotificationSender $notificationSender,
         private readonly ExternalSelfEditFileService $fileService,
+        private readonly CrmPropertyFileService $propertyFileService,
     ) {
     }
 
@@ -343,12 +345,14 @@ class ExternalSubmissionApprovalService
         }
 
         $newPath = null;
+        $fileName = null;
         if ($parsed['kind'] === ExternalSelfEditFileService::KIND_UPLOAD) {
             $pendingPath = $this->fileService->existingPendingPathOf($change->new_value);
             if ($pendingPath === null) {
                 return false; // vorläufige Datei fehlt
             }
             $newPath = $this->fileService->promote($pendingPath);
+            $fileName = $this->propertyFileService->displayName($parsed['name'] ?? null, $newPath);
             $fileOps['promoted'][] = $newPath;
             $fileOps['delete_pending'][] = $change->new_value;
         }
@@ -360,7 +364,7 @@ class ExternalSubmissionApprovalService
 
         CrmPropertyValue::updateOrCreate(
             ['crm_contact_id' => $contactId, 'crm_property_id' => $propertyId],
-            ['value' => $newPath],
+            ['value' => $newPath, 'file_name' => $fileName],
         );
         $fileOps['delete_property_files'][] = $previousValue;
 

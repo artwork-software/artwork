@@ -187,6 +187,26 @@ readonly class CrmContactService
         $this->writeBackToSource($contact, $propertyId, $value);
     }
 
+    /**
+     * Upload-Eigenschaft setzen oder leeren: Pfad auf der Disk plus Anzeigename der Datei.
+     */
+    public function savePropertyFile(CrmContact $contact, int $propertyId, ?string $path, ?string $fileName): void
+    {
+        $this->propertyValueRepository->updateOrCreateFile($contact->id, $propertyId, $path, $fileName);
+
+        $this->writeBackToSource($contact, $propertyId, $path);
+    }
+
+    /**
+     * Nur der Anzeigename ändert sich; die Datei behält ihren Hash-Namen auf der Disk.
+     */
+    public function renamePropertyFile(CrmContact $contact, int $propertyId, string $fileName): void
+    {
+        $contact->propertyValues()
+            ->where('crm_property_id', $propertyId)
+            ->update(['file_name' => $fileName]);
+    }
+
     private function writeBackToSource(CrmContact $contact, int $propertyId, ?string $value): void
     {
         $entity = $contact->getSourceEntity();

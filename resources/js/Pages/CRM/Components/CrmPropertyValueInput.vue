@@ -146,13 +146,55 @@
             <div>
                 <label class="block text-sm font-medium text-text-muted mb-1">{{ $t(property.name) }}<span v-if="required" class="text-danger ml-0.5">*</span></label>
 
+                <!-- Existing file: rename inline -->
+                <div v-if="value && renaming" class="mb-2 rounded-lg border border-border-subtle bg-white px-3 py-2">
+                    <div class="flex items-end gap-2">
+                        <BaseInput
+                            :id="`prop_${property.id}_file_name`"
+                            v-model="renameValue"
+                            label="File name"
+                            class="min-w-0 flex-1"
+                            :error="renameError"
+                            @keydown.enter.prevent="saveRename"
+                            @keydown.esc.prevent="cancelRename"
+                        />
+                        <button
+                            type="button"
+                            class="mb-1 rounded-md p-1 text-text-subtle hover:text-success"
+                            :disabled="savingRename"
+                            :aria-label="$t('Save')"
+                            @click="saveRename"
+                        >
+                            <component :is="IconCheck" class="h-4 w-4" />
+                        </button>
+                        <button
+                            type="button"
+                            class="mb-1 rounded-md p-1 text-text-subtle hover:text-danger"
+                            :aria-label="$t('Cancel')"
+                            @click="cancelRename"
+                        >
+                            <component :is="IconX" class="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Existing file -->
-                <div v-if="value" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2 mb-2">
+                <div v-else-if="value" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2 mb-2">
                     <component :is="IconFile" class="h-5 w-5 text-text-subtle shrink-0" />
-                    <a v-if="fileDownloadUrl" :href="fileDownloadUrl" target="_blank" download class="min-w-0 flex-1 truncate text-sm font-medium text-accent-700 hover:underline">
-                        {{ fileName }}
+                    <a v-if="fileDownloadUrl" :href="fileDownloadUrl" target="_blank" download class="min-w-0 flex-1 truncate text-sm font-medium text-accent-700 hover:underline" :title="displayFileName">
+                        {{ displayFileName }}
                     </a>
-                    <span v-else class="min-w-0 flex-1 truncate text-sm font-medium text-text">{{ fileName }}</span>
+                    <span v-else class="min-w-0 flex-1 truncate text-sm font-medium text-text" :title="displayFileName">{{ displayFileName }}</span>
+                    <button
+                        v-if="contactId"
+                        type="button"
+                        class="rounded-md p-1 text-text-subtle hover:text-accent-700"
+                        :aria-label="$t('Rename file')"
+                        :title="$t('Rename file')"
+                        @click="startRename"
+                    >
+                        <component :is="IconPencil" class="h-4 w-4" />
+                    </button>
                     <button
                         v-if="contactId"
                         type="button"
@@ -209,7 +251,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconFile, IconTrash, IconUpload, IconX } from '@tabler/icons-vue'
+import { IconCheck, IconFile, IconPencil, IconTrash, IconUpload, IconX } from '@tabler/icons-vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const $t = useTranslation()
@@ -217,6 +259,8 @@ const $t = useTranslation()
 const props = defineProps({
     property: { type: Object, required: true },
     value: { type: [String, Number], default: '' },
+    // Upload: Anzeigename der Datei (Originalname bzw. umbenannt); fehlt er, wird der Speichername gezeigt
+    fileName: { type: String, default: null },
     contactId: { type: Number, default: null },
     required: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false },
@@ -282,10 +326,52 @@ const onMultiselectListboxChange = (options) => {
 const uploading = ref(false)
 const deleting = ref(false)
 
-const fileName = computed(() => {
+const displayFileName = computed(() => {
     if (!props.value) return ''
-    return props.value.split('/').pop()
+    return props.fileName || String(props.value).split('/').pop()
 })
+
+const renaming = ref(false)
+const renameValue = ref('')
+const renameError = ref('')
+const savingRename = ref(false)
+
+const startRename = () => {
+    renameValue.value = displayFileName.value
+    renameError.value = ''
+    renaming.value = true
+}
+
+const cancelRename = () => {
+    renaming.value = false
+    renameError.value = ''
+}
+
+const saveRename = () => {
+    if (!props.contactId || savingRename.value) return
+
+    const name = renameValue.value.trim()
+    if (name === '') {
+        renameError.value = $t('Please enter a valid file name.')
+        return
+    }
+    if (name === displayFileName.value) {
+        cancelRename()
+        return
+    }
+
+    savingRename.value = true
+    router.patch(route('crm.contacts.property-file.rename', props.contactId), {
+        property_id: props.property.id,
+        file_name: name,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => { renaming.value = false },
+        onError: (errors) => { renameError.value = errors.file_name ?? errors.property_id ?? '' },
+        onFinish: () => { savingRename.value = false },
+    })
+}
 
 const fileDownloadUrl = computed(() => {
     if (!props.value || !props.contactId) return null

@@ -10000,5 +10000,7 @@
     "A project or project group with this name already exists": "Es gibt schon ein Projekt oder eine Projektgruppe mit diesem Namen",
     "There are projects or project groups with a similar name": "Es gibt Projekte oder Projektgruppen mit ähnlichem Namen",
     "Check whether you mean one of them. You can still create it.": "Prüfe, ob du eines davon meinst. Anlegen kannst du trotzdem.",
-    "Click again to create it anyway.": "Klicke noch einmal, um trotzdem anzulegen."
+    "Click again to create it anyway.": "Klicke noch einmal, um trotzdem anzulegen.",
+    "Rename file": "Datei umbenennen",
+    "Please enter a valid file name.": "Bitte gib einen gültigen Dateinamen ein."
 }

@@ -45,7 +45,8 @@
                                 <span class="block font-mono text-xs text-text-subtle">{{ code(holding) }}</span>
                             </td>
                             <td class="w-48 py-2.5 pr-3">
-                                <template v-if="hasCard(holding)">
+                                <span v-if="hasCard(holding) && holding.usesTotal === null">{{ $t('Unlimited') }}</span>
+                                <template v-else-if="hasCard(holding)">
                                     <span class="tabular-nums">{{ $t('{left} of {total} left', { left: holding.usesTotal - holding.usesUsed, total: holding.usesTotal }) }}</span>
                                     <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
                                         <div class="h-full rounded-full bg-accent-500" :style="{ width: `${((holding.usesTotal - holding.usesUsed) / Math.max(1, holding.usesTotal)) * 100}%` }"></div>

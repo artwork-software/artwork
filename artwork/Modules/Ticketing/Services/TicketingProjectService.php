@@ -81,13 +81,7 @@ class TicketingProjectService
                         : null,
                 ],
             ],
-            'reductions' => array_map(static fn (array $reduction): array => [
-                'id' => $reduction['id'],
-                'name' => $reduction['name'],
-                'kind' => $reduction['kind'],
-                'value' => $reduction['value'],
-                'defaultEnabled' => (bool) $reduction['defaultEnabled'],
-            ], $reductions),
+            'reductions' => $this->reductionsPayload($reductions, $detail['reductions'] ?? []),
             'events' => $this->events($project)
                 ->map(fn (Event $event): array => $this->eventPayload($event, $links, $venues))
                 ->values(),
@@ -104,6 +98,29 @@ class TicketingProjectService
                 ])
                 ->values(),
         ];
+    }
+
+    /**
+     * Die Ermäßigungen des Hauses, mit dem Wert und den Preisklassen, die die Produktion in tickets
+     * für sie festgelegt hat — so rechnet auch der Shop.
+     *
+     * @param list<array<string, mixed>> $reductions
+     * @param list<array<string, mixed>> $granted
+     * @return list<array<string, mixed>>
+     */
+    private function reductionsPayload(array $reductions, array $granted): array
+    {
+        $own = collect($granted)->keyBy('reductionTypeId');
+
+        return array_map(static fn (array $reduction): array => [
+            'id' => $reduction['id'],
+            'name' => $reduction['name'],
+            'kind' => $own[$reduction['id']]['kind'] ?? $reduction['kind'],
+            'value' => $own[$reduction['id']]['value'] ?? $reduction['value'],
+            // null: alle Preisklassen, sonst ihre Namen.
+            'categories' => $own[$reduction['id']]['categories'] ?? null,
+            'defaultEnabled' => (bool) $reduction['defaultEnabled'],
+        ], $reductions);
     }
 
     /** @return Collection<int, Event> */
@@ -161,6 +178,7 @@ class TicketingProjectService
             'release' => $release ? [
                 'state' => $release->state,
                 'classes' => TicketingReleaseService::fittedClasses($release, $venue),
+                'capacity' => TicketingReleaseService::ownCapacity($release, $venue),
                 // Seit dem letzten Speichern in einen anderen Raum gewechselt: die Klassen sind die des neuen, zum Prüfen.
                 'roomChanged' => $roomChanged,
                 'previousRoom' => $roomChanged ? ($venues[$release->venue_id]['name'] ?? null) : null,

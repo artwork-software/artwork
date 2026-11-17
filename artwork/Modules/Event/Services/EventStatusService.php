@@ -61,7 +61,8 @@ readonly class EventStatusService
                 ->value('id');
 
             if ($statusIdForEventsWithoutStatus !== null) {
-                Event::whereNull('event_status_id')->each(function (Event $event) use (
+                // eachById: each() blättert per Offset und überspringt Termine, weil die Schleife die Filterspalte ändert
+                Event::whereNull('event_status_id')->eachById(function (Event $event) use (
                     $statusIdForEventsWithoutStatus
                 ): void {
                     $event->update(['event_status_id' => $statusIdForEventsWithoutStatus]);

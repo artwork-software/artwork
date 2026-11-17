@@ -377,6 +377,7 @@
     "GET projects/exports/pdf/{project}/{privacyMode}/shift-plan": "forbidden",
     "GET projects/search": "validation",
     "GET projects/search/single": "validation",
+    "GET projects/similar-names": "forbidden",
     "GET projects/users_departments/search": "validation",
     "GET projects/{project}/basic": "forbidden",
     "GET projects/{project}/bi": "forbidden",

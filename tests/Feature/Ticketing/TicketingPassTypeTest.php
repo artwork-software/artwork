@@ -143,6 +143,22 @@ final class TicketingPassTypeTest extends FeatureTestCase
     }
 
     #[Test]
+    public function an_unlimited_pass_reaches_tickets_without_a_number(): void
+    {
+        $this->connect();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+
+        Http::fake([
+            self::TICKETS_URL . '/api/integration/v1/pass-types' => Http::response(['id' => self::PASS_TYPE_ID]),
+        ]);
+
+        $this->post(route('settings.tickets.passes.store'), $this->card(['uses' => null]))
+            ->assertSessionHasNoErrors();
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && $request['uses'] === null);
+    }
+
+    #[Test]
     public function a_pass_can_count_for_a_group(): void
     {
         $this->connect();

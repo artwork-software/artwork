@@ -192,7 +192,7 @@
                                         <span v-if="classesOf(event).length === 0" class="block leading-6 text-text-subtle">–</span>
                                         <ul v-else class="flex flex-col">
                                             <li v-for="cls in classesOf(event)" :key="cls.zone_key ?? cls.name" class="flex items-baseline justify-between gap-3 whitespace-nowrap leading-6">
-                                                <span class="truncate">{{ cls.name }} <span class="text-xs text-text-subtle tabular-nums">· {{ cls.quota }}</span></span>
+                                                <span class="truncate">{{ cls.name }} <span v-if="cls.quota !== null" class="text-xs text-text-subtle tabular-nums">· {{ cls.quota }}</span></span>
                                                 <span class="tabular-nums text-text">{{ formatEuro(cls.price_cents) }}</span>
                                             </li>
                                         </ul>

@@ -365,10 +365,31 @@ final class EventRoomBookingRightsTest extends FeatureTestCase
     // ------------------------------------------------------------------ Bulk / Multi-Edit / Serien-Update
 
     #[Test]
-    public function request_only_creator_cannot_move_an_event_via_single_bulk_update(): void
+    public function request_only_creator_moves_an_event_as_room_request_via_single_bulk_update(): void
     {
+        Notification::fake();
         $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
         $event = $this->bookedEvent($requester, Room::factory()->create(['everyone_can_book' => false]));
+        [$targetRoom, $roomAdmin] = $this->roomWithAdmin();
+
+        // Wie im Termin-Dialog: ohne Buchungsrecht im Zielraum wird der Raumwechsel zur Raumanfrage
+        $this->patchJson(route('event.update.single.bulk', $event), [
+            'data' => $this->bulkData($event, ['room' => ['id' => $targetRoom->id]]),
+        ])
+            ->assertSuccessful()
+            ->assertJsonPath('event.occupancy_option', true);
+
+        $event->refresh();
+        $this->assertSame($targetRoom->id, $event->room_id);
+        $this->assertTrue((bool) $event->occupancy_option);
+        $this->assertSame(1, $this->roomRequestsSentTo($roomAdmin));
+    }
+
+    #[Test]
+    public function creator_without_request_permission_cannot_move_an_event_via_single_bulk_update(): void
+    {
+        $creator = $this->actingAsUserWith([]);
+        $event = $this->bookedEvent($creator, Room::factory()->create(['everyone_can_book' => false]));
         $originalRoomId = $event->room_id;
         $targetRoom = Room::factory()->create(['everyone_can_book' => false]);
 
@@ -376,7 +397,9 @@ final class EventRoomBookingRightsTest extends FeatureTestCase
             'data' => $this->bulkData($event, ['room' => ['id' => $targetRoom->id]]),
         ])->assertForbidden();
 
-        $this->assertSame($originalRoomId, $event->fresh()->room_id);
+        $event->refresh();
+        $this->assertSame($originalRoomId, $event->room_id);
+        $this->assertFalse((bool) $event->occupancy_option);
     }
 
     #[Test]
@@ -409,10 +432,32 @@ final class EventRoomBookingRightsTest extends FeatureTestCase
     }
 
     #[Test]
-    public function request_only_creator_cannot_move_events_via_bulk_multi_edit(): void
+    public function request_only_creator_moves_events_as_room_requests_via_bulk_multi_edit(): void
     {
+        Notification::fake();
         $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
-        $event = $this->bookedEvent($requester, Room::factory()->create(['everyone_can_book' => false]));
+        [$targetRoom, $roomAdmin] = $this->roomWithAdmin();
+        $moved = $this->bookedEvent($requester, Room::factory()->create(['everyone_can_book' => false]));
+        // Liegt schon im Zielraum: bleibt fest gebucht
+        $alreadyThere = $this->bookedEvent($requester, $targetRoom);
+
+        $this->postJson(route('events.bulk-multi-edit'), [
+            'eventIds' => [$moved->id, $alreadyThere->id],
+            'selectedRoom' => ['id' => $targetRoom->id],
+        ])->assertSuccessful();
+
+        $moved->refresh();
+        $this->assertSame($targetRoom->id, $moved->room_id);
+        $this->assertTrue((bool) $moved->occupancy_option);
+        $this->assertFalse((bool) $alreadyThere->fresh()->occupancy_option);
+        $this->assertSame(1, $this->roomRequestsSentTo($roomAdmin));
+    }
+
+    #[Test]
+    public function creator_without_request_permission_cannot_move_events_via_bulk_multi_edit(): void
+    {
+        $creator = $this->actingAsUserWith([]);
+        $event = $this->bookedEvent($creator, Room::factory()->create(['everyone_can_book' => false]));
         $originalRoomId = $event->room_id;
         $targetRoom = Room::factory()->create(['everyone_can_book' => false]);
 

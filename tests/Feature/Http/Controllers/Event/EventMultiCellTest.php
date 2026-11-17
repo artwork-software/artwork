@@ -148,10 +148,11 @@ final class EventMultiCellTest extends FeatureTestCase
     }
 
     #[Test]
-    public function request_only_user_cannot_create_direct_bulk_project_events(): void
+    public function request_only_user_never_creates_direct_bulk_project_events(): void
     {
-        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
         $project = Project::factory()->create();
+        $project->users()->attach($requester->id);
         $eventType = EventType::factory()->create();
         $room = Room::factory()->create(['everyone_can_book' => false]);
 
@@ -162,9 +163,11 @@ final class EventMultiCellTest extends FeatureTestCase
                 'room' => ['id' => $room->id],
                 'type' => ['id' => $eventType->id],
             ]],
-        ])->assertForbidden();
+        ])->assertSuccessful();
 
-        $this->assertDatabaseMissing('events', ['eventName' => 'Direkter Termin']);
+        // Der Termin entsteht, aber nur als Raumanfrage
+        $this->assertDatabaseHas('events', ['eventName' => 'Direkter Termin', 'occupancy_option' => true]);
+        $this->assertDatabaseMissing('events', ['eventName' => 'Direkter Termin', 'occupancy_option' => false]);
     }
 
     #[Test]

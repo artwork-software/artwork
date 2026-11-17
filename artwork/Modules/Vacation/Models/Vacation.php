@@ -131,6 +131,14 @@ class Vacation extends Model
         return $comment === '' && !$hasTimeWindow && (string) $this->type === $previousStatus;
     }
 
+    /**
+     * Ein Kommentar, der nur aus einem Statusnamen besteht (z. B. „FREE_WORK“), wird nicht gespeichert.
+     */
+    public function setCommentAttribute(?string $comment): void
+    {
+        $this->attributes['comment'] = \Artwork\Modules\Vacation\Enums\Vacation::withoutBareStatus($comment);
+    }
+
     public function getDateCastedAttribute(): string
     {
         Carbon::setLocale('de');

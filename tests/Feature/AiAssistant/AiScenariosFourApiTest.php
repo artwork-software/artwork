@@ -211,6 +211,7 @@ final class AiScenariosFourApiTest extends TestCase
     {
         $turn = $this->confirmedAction($user, $tool, $args);
         $this->app['auth']->forgetGuards();
+        $this->grantAiAccess($user);
         $token = $this->actingAs($user)->postJson('/ai/session', [
             'scopes' => [AiScopes::WRITE],
             'action_id' => $turn->id,

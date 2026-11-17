@@ -8,7 +8,7 @@
             <dl class="grid grid-cols-3 gap-2">
                 <div class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2">
                     <dt class="font-lexend text-[11px] text-text-subtle">{{ $t('Uses') }}</dt>
-                    <dd class="text-[15px] font-semibold tabular-nums text-text">{{ $t('{left} of {total} left', { left: card.usesTotal - card.usesUsed, total: card.usesTotal }) }}</dd>
+                    <dd class="text-[15px] font-semibold tabular-nums text-text">{{ card.usesTotal === null ? $t('Unlimited') : $t('{left} of {total} left', { left: card.usesTotal - card.usesUsed, total: card.usesTotal }) }}</dd>
                 </div>
                 <div class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2">
                     <dt class="font-lexend text-[11px] text-text-subtle">{{ $t('Valid until') }}</dt>
@@ -27,8 +27,8 @@
                 {{ $t('This pass is blocked.') }}
             </p>
 
-            <!-- Korrekturen von Hand: Nutzungen, Gültigkeit, Sperre -->
-            <div v-if="mayManage" class="flex flex-col gap-3 rounded-lg border border-border-subtle px-4 py-3">
+            <!-- Korrekturen von Hand: Nutzungen, Gültigkeit, Sperre; eine unbegrenzte Karte hat kein Guthaben zu korrigieren -->
+            <div v-if="mayManage && card.usesTotal !== null" class="flex flex-col gap-3 rounded-lg border border-border-subtle px-4 py-3">
                 <p class="font-lexend text-xs font-medium text-text">{{ $t('Correct uses') }}</p>
                 <div class="flex flex-wrap items-end gap-2">
                     <BaseInput id="card-correct-count" v-model="count" type="number" min="1" max="500" label="Number" class="!w-24" />

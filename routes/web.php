@@ -125,6 +125,7 @@ use Artwork\Modules\AiAssistant\Http\Controllers\AiActionBatchController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiActionController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiConversationController;
 use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiAssistantIsEnabled;
+use Artwork\Modules\AiAssistant\Http\Middleware\EnsureUserHasAiAccess;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiSessionController;
 use Artwork\Modules\AiAssistant\Http\Controllers\HelpRedirectController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
@@ -186,6 +187,7 @@ use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\Project\Http\Controllers\ProjectContentExportController;
 use Artwork\Modules\Project\Http\Controllers\ProjectPlanExportController;
+use Artwork\Modules\Project\Http\Controllers\ProjectSimilarNamesController;
 use Artwork\Modules\Project\Http\Controllers\ProjectContentExportTemplateController;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
@@ -262,7 +264,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     // KI-Session-Token. throttle:ai-session steht nach der Auth-Gruppe, weil das Limit auf die
     // User-ID gekeyed ist — vorher waere der User noch nicht aufgeloest.
     Route::post('/ai/session', [AiSessionController::class, 'store'])
-        ->middleware('throttle:ai-session')
+        ->middleware([EnsureUserHasAiAccess::class, 'throttle:ai-session'])
         ->name('ai.session.store');
 
     // Gespraechsliste und Loeschen fuer die KI-Bar. Die Freischaltung haengt am Service, nicht an
@@ -641,8 +643,8 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::post('/mail/test', [MailSettingsController::class, 'test'])
             ->name('tool.mail.test');
 
-        // KI-ASSISTENT — eigene Permission, nicht "change tool settings"
-        Route::group(['middleware' => 'can:change ai assistant settings'], function (): void {
+        // KI-ASSISTENT — nur mit KI-Freischaltung (per Konsole), kein GUI-Recht, kein Admin-Bypass
+        Route::middleware(EnsureUserHasAiAccess::class)->group(function (): void {
             Route::get('/ai-assistant', [AiAssistantSettingsController::class, 'edit'])
                 ->name('tool.ai-assistant');
             Route::patch('/ai-assistant', [AiAssistantSettingsController::class, 'update'])
@@ -886,6 +888,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
+    // Hinweis auf gleich- oder ähnlich benannte Projekte/Gruppen im Anlage-Modal (Route vor {project}!)
+    Route::get('/projects/similar-names', ProjectSimilarNamesController::class)
+        ->name('projects.similar-names');
 
     // Matrix über alle Produktionen hinweg — braucht das globale Projekt-Leserecht,
     // Team-Mitgliedschaft in einzelnen Projekten reicht nicht (Route vor {project}!)

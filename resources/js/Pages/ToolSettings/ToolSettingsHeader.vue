@@ -123,8 +123,8 @@ export default defineComponent({
                     name: this.$t('AI assistant'),
                     href: route('tool.ai-assistant'),
                     current: route().current('tool.ai-assistant'),
-                    // Eigene Permission, bewusst nicht an "change tool settings" gekoppelt
-                    permission: this.$can('change ai assistant settings') || this.hasAdminRole()
+                    // Nur mit KI-Freischaltung (per Konsole); weder Rechte noch Admin-Rolle reichen
+                    permission: this.$page.props.ai?.visible === true
                 },
             ]
         }

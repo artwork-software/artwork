@@ -2219,6 +2219,7 @@ readonly class EventService
         array $event,
         Project $project,
         int $userId,
+        bool $asRoomRequest = false,
     ): Event {
 
         // Handle null or missing day input by using current date as fallback
@@ -2268,6 +2269,8 @@ readonly class EventService
             'event_type_id' => $event['type']['id'],
             'room_id' => $event['room']['id'],
             'is_planning' => $event['is_planning'] ?? false,
+            // Entscheidet der Aufrufer anhand der Rechte im Raum, nie der Client
+            'occupancy_option' => $asRoomRequest,
         ]);
 
         $eventStatusSetting = app(EventSettings::class);

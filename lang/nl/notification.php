@@ -130,6 +130,12 @@ return [
         'deleted' => '{1} Activiteit verwijderd (via assistent)|[2,*] :count activiteiten verwijderd (via assistent)',
         'reverted' => '{1} Activiteit ongedaan gemaakt (via assistent)|[2,*] :count activiteiten ongedaan gemaakt (via assistent)',
     ],
+    'event_batch' => [
+        'created' => '{1} Activiteit aangemaakt|[2,*] :count activiteiten aangemaakt',
+        'updated' => '{1} Activiteit gewijzigd|[2,*] :count activiteiten gewijzigd',
+        'deleted' => '{1} Activiteit verwijderd|[2,*] :count activiteiten verwijderd',
+        'reverted' => '{1} Activiteit ongedaan gemaakt|[2,*] :count activiteiten ongedaan gemaakt',
+    ],
     'moneySource' => [
         'add_permission' => 'Je hebt toegang gekregen tot :moneySource',
         'remove_permission' => 'Je toegang tot :moneySource is ingetrokken',
@@ -183,6 +189,6 @@ return [
     'material' => [
         'return_due_title' => 'Retourdatum bereikt: :issueName',
         'return_due_description' => 'De externe materiaaluitgifte aan ":externalName" had op :date retour moeten zijn.'
-            . 'Please confirm the return or report that the material has not been returned yet.',
+            . 'Bevestig de retourontvangst of meld dat het materiaal nog niet is teruggebracht.',
     ],
 ];

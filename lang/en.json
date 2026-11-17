@@ -1203,6 +1203,8 @@
     "Start time must be within the event group period": "Start time must be within the event group period",
     "End time must be within the event group period": "End time must be within the event group period",
     "The event must not be shorter than 30 minutes": "The event must not be shorter than 30 minutes",
+    "Events you create here are submitted as room requests and are not firmly booked until they have been accepted. You can edit your own events in this list.": "Events you create here are submitted as room requests and are not firmly booked until they have been accepted. You can edit your own events in this list.",
+    "Room request: this event is not firmly booked until the request has been accepted.": "Room request: this event is not firmly booked until the request has been accepted.",
     "Room request": "Room request",
     "Reject": "Reject",
     "Would you like to submit a room request for": "Would you like to submit a room request for",
@@ -9992,5 +9994,9 @@
     "Optional. Weeks run Monday to Sunday. A booking counts on the day of the performance, a stamp on the day it is given.": "Optional. Weeks run Monday to Sunday. A booking counts on the day of the performance, a stamp on the day it is given.",
     "Without a limit the pass can be used any number of times, even for several dates on the same day. Best set one, e.g. 1 per week.": "Without a limit the pass can be used any number of times, even for several dates on the same day. Best set one, e.g. 1 per week.",
     "unused ones carried into the next month": "unused ones carried into the next month",
-    "0: whatever is not used in the month lapses.": "0: whatever is not used in the month lapses."
+    "0: whatever is not used in the month lapses.": "0: whatever is not used in the month lapses.",
+    "A project or project group with this name already exists": "A project or project group with this name already exists",
+    "There are projects or project groups with a similar name": "There are projects or project groups with a similar name",
+    "Check whether you mean one of them. You can still create it.": "Check whether you mean one of them. You can still create it.",
+    "Click again to create it anyway.": "Click again to create it anyway."
 }

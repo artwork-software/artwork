@@ -4166,9 +4166,9 @@ class EventController extends Controller
     }
 
     /**
-     * Bulk-Endpunkte legen Termine direkt an (ohne Anfrage-Workflow) — deshalb reicht die
-     * EventPolicy::create (die auch reine Anfrage-Berechtigte durchlässt) hier nicht aus.
-     * Spiegelt das Frontend-Gating in BulkBody.vue (hasCreateEventsPermission);
+     * Direkt buchen ohne Anfrage-Workflow — deshalb reicht die EventPolicy::create (die auch reine
+     * Anfrage-Berechtigte durchlässt) hier nicht aus. Die Terminliste im Projekt nutzt
+     * authorizeBulkEventCreationOrRoomRequest(): wer nur anfragen darf, legt dort Raumanfragen an.
      * Admins passieren über Gate::before.
      */
     private function authorizeBulkEventCreation(bool $isPlanning, Room $room): void
@@ -4196,9 +4196,10 @@ class EventController extends Controller
     }
 
     /**
-     * Kalender-Mehrfachbearbeitung (Anlegen in Zellen, Duplizieren): wer im Raum nicht direkt buchen, aber
-     * anfragen darf, legt Raumanfragen an – wie im Termin-Dialog (resolveRoomBookingOption). Geplante Termine
-     * und "Termine immer direkt buchbar" kennen keine Raumanfrage.
+     * Kalender-Mehrfachbearbeitung (Anlegen in Zellen, Duplizieren) und Terminliste im Projekt (Anlegen,
+     * Raumwechsel): wer im Raum nicht direkt buchen, aber anfragen darf, legt Raumanfragen an – wie im
+     * Termin-Dialog (resolveRoomBookingOption). Geplante Termine und "Termine immer direkt buchbar" kennen
+     * keine Raumanfrage.
      *
      * @return bool true = als Raumanfrage anlegen
      */
@@ -4219,6 +4220,32 @@ class EventController extends Controller
         return true;
     }
 
+    /**
+     * Raumwechsel in der Terminliste ohne Buchungsrecht im Zielraum: der Termin wird dort zur Raumanfrage,
+     * wie im Termin-Dialog (updateEvent). Bereits offene Anfragen meldet notifyRoomAdminsOfChangedOpenRequests().
+     *
+     * @param array<int, int> $eventIds
+     * @param array<int, string> $openRoomRequestsBefore
+     */
+    private function turnMovedEventsIntoRoomRequests(array $eventIds, array $openRoomRequestsBefore): void
+    {
+        if ($eventIds === []) {
+            return;
+        }
+
+        foreach (Event::query()->whereIn('id', $eventIds)->get() as $movedEvent) {
+            $movedEvent->update([
+                'occupancy_option' => true,
+                'declined_room_id' => null,
+                'accepted' => false,
+            ]);
+        }
+
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            array_values(array_diff($eventIds, array_keys($openRoomRequestsBefore)))
+        );
+    }
+
     public function bulkProjectEventStore(
         EventBulkCreateRequest $request,
         Project $project
@@ -4229,24 +4256,42 @@ class EventController extends Controller
 
         // Erst ALLE Zeilen autorisieren, dann anlegen — sonst stehen bei einem 403
         // mitten in der Liste die ersten Termine bereits in der DB (Teil-Erstellung).
-        foreach ($events as $event) {
-            $room = Room::query()->findOrFail($event['room']['id']);
-            $this->authorizeBulkEventCreation((bool) ($event['is_planning'] ?? false), $room);
+        // Wer im Raum nur anfragen darf, legt die Zeile als Raumanfrage an
+        $checkedRooms = [];
+        $rooms = [];
+        $asRoomRequest = [];
+        foreach ($events as $index => $event) {
+            $roomId = (int) $event['room']['id'];
+            $rooms[$roomId] ??= Room::query()->findOrFail($roomId);
+            $asRoomRequest[$index] = $this->authorizeBulkEventCreationOnce(
+                $checkedRooms,
+                (bool) ($event['is_planning'] ?? false),
+                $rooms[$roomId],
+                true
+            );
         }
 
-        $storedEvents = DB::transaction(function () use ($events, $project): array {
+        $storedEvents = DB::transaction(function () use ($events, $project, $asRoomRequest): array {
             $stored = [];
 
-            foreach ($events as $event) {
+            foreach ($events as $index => $event) {
                 $stored[] = $this->eventService->createBulkEvent(
                     $event,
                     $project,
-                    $this->authManager->id()
+                    $this->authManager->id(),
+                    $asRoomRequest[$index]
                 );
             }
 
             return $stored;
         });
+
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            collect($storedEvents)
+                ->filter(static fn (Event $storedEvent): bool => (bool) $storedEvent->occupancy_option)
+                ->pluck('id')
+                ->all()
+        );
 
         $createdEventPayloads = [];
         $freshEvents = [];
@@ -4278,10 +4323,11 @@ class EventController extends Controller
 
         $data =  $request->collect('data');
 
-        // Raumwechsel bucht direkt (kein Anfrage-Workflow) – wie beim Bulk-Anlegen nur mit Buchungsrecht im Zielraum
+        // Raumwechsel wie beim Bulk-Anlegen: mit Buchungsrecht im Zielraum fest, mit Anfragerecht als Raumanfrage
         $newRoomId = data_get($data, 'room.id');
+        $becomesRoomRequest = false;
         if ($newRoomId !== null && (int) $newRoomId !== (int) $event->room_id) {
-            $this->authorizeBulkEventCreation(
+            $becomesRoomRequest = $this->authorizeBulkEventCreationOrRoomRequest(
                 $this->eventService->resolveBulkIsPlanning($data, $event),
                 Room::query()->findOrFail($newRoomId)
             );
@@ -4292,6 +4338,9 @@ class EventController extends Controller
             $data,
             $event
         );
+        if ($becomesRoomRequest) {
+            $this->turnMovedEventsIntoRoomRequests([(int) $event->id], $openRoomRequestsBefore);
+        }
         $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
 
         $freshEvent = $event->fresh();
@@ -4326,13 +4375,18 @@ class EventController extends Controller
         // gingen day/end_day/name/Zeiten verloren und createBulkEvent fiel auf "heute" zurück.
         $data = $request->input('event');
         $room = Room::query()->findOrFail($data['room']['id']);
-        $this->authorizeBulkEventCreation((bool) ($data['is_planning'] ?? false), $room);
+        // Wer im Raum nur anfragen darf, legt den Termin als Raumanfrage an
+        $asRoomRequest = $this->authorizeBulkEventCreationOrRoomRequest((bool) ($data['is_planning'] ?? false), $room);
 
         $event = $this->eventService->createBulkEvent(
             $data,
             $project,
-            $this->authManager->id()
+            $this->authManager->id(),
+            $asRoomRequest
         );
+        if ($asRoomRequest) {
+            $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests([(int) $event->id]);
+        }
         $freshEvent = $event->fresh();
         // Broadcasts nach der Response — hängender Websocket-Server darf den Create nicht bremsen
         dispatch(static function () use ($freshEvent): void {
@@ -4393,12 +4447,22 @@ class EventController extends Controller
         $selectedRoomId = data_get($request->input('selectedRoom'), 'id');
         $selectedRoom = $selectedRoomId !== null ? Room::query()->findOrFail($selectedRoomId) : null;
 
+        $checkedRooms = [];
+        $movedAsRoomRequestIds = [];
         foreach (Event::whereIn('id', $eventIds)->get() as $eventToAuthorize) {
             $this->authorize('update', $eventToAuthorize);
 
-            // Raumwechsel bucht direkt (kein Anfrage-Workflow) – Buchungsrecht im Zielraum nötig
+            // Raumwechsel: mit Buchungsrecht im Zielraum fest, mit Anfragerecht als Raumanfrage
             if ($selectedRoom !== null && (int) $eventToAuthorize->room_id !== (int) $selectedRoom->id) {
-                $this->authorizeBulkEventCreation((bool) $eventToAuthorize->is_planning, $selectedRoom);
+                $becomesRoomRequest = $this->authorizeBulkEventCreationOnce(
+                    $checkedRooms,
+                    (bool) $eventToAuthorize->is_planning,
+                    $selectedRoom,
+                    true
+                );
+                if ($becomesRoomRequest) {
+                    $movedAsRoomRequestIds[] = (int) $eventToAuthorize->id;
+                }
             }
         }
 
@@ -4418,6 +4482,7 @@ class EventController extends Controller
             ])
         );
 
+        $this->turnMovedEventsIntoRoomRequests($movedAsRoomRequestIds, $openRoomRequestsBefore);
         $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
 
         // Broadcasts nach der Response (hängender Websocket-Server bremst sonst den Client) – einzige Stelle,

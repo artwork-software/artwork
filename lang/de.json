@@ -1206,6 +1206,8 @@
     "Start time must be within the event group period": "Startzeit muss innerhalb Termingruppenzeitraum liegen",
     "End time must be within the event group period": "Endzeit muss innerhalb Termingruppenzeitraum liegen",
     "The event must not be shorter than 30 minutes": "Der Termin darf nicht kürzer als 30 Minuten sein",
+    "Events you create here are submitted as room requests and are not firmly booked until they have been accepted. You can edit your own events in this list.": "Termine, die du hier anlegst, werden als Raumanfragen gestellt und sind erst nach der Zusage fest gebucht. Deine eigenen Termine kannst du in dieser Liste bearbeiten.",
+    "Room request: this event is not firmly booked until the request has been accepted.": "Raumanfrage: Der Termin ist erst fest gebucht, wenn die Anfrage angenommen wurde.",
     "Room request": "Raumanfrage",
     "Reject": "Ablehnen",
     "Would you like to submit a room request for": "Möchtest du die Raumanfrage für",
@@ -9994,5 +9996,9 @@
     "Optional. Weeks run Monday to Sunday. A booking counts on the day of the performance, a stamp on the day it is given.": "Optional. Wochen laufen von Montag bis Sonntag. Bei Buchungen zählt der Tag der Vorstellung, beim Stempeln der Tag des Stempels.",
     "Without a limit the pass can be used any number of times, even for several dates on the same day. Best set one, e.g. 1 per week.": "Ohne Grenze kann die Karte beliebig oft eingesetzt werden, auch für mehrere Termine am selben Tag. Setz am besten eine, z. B. 1 pro Woche.",
     "unused ones carried into the next month": "ungenutzte in den nächsten Monat mitnehmen",
-    "0: whatever is not used in the month lapses.": "0 heißt: Was im Monat nicht genutzt wird, verfällt."
+    "0: whatever is not used in the month lapses.": "0 heißt: Was im Monat nicht genutzt wird, verfällt.",
+    "A project or project group with this name already exists": "Es gibt schon ein Projekt oder eine Projektgruppe mit diesem Namen",
+    "There are projects or project groups with a similar name": "Es gibt Projekte oder Projektgruppen mit ähnlichem Namen",
+    "Check whether you mean one of them. You can still create it.": "Prüfe, ob du eines davon meinst. Anlegen kannst du trotzdem.",
+    "Click again to create it anyway.": "Klicke noch einmal, um trotzdem anzulegen."
 }

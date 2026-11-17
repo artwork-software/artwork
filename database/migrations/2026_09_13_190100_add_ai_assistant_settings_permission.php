@@ -1,6 +1,5 @@
 <?php
 
-use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Setup\DataProvider\BaseDataProvider;
 use Illuminate\Database\Migrations\Migration;
@@ -13,7 +12,7 @@ return new class extends Migration
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $definition = collect((new BaseDataProvider())->getPermissions())
-            ->firstWhere('name', PermissionEnum::AI_ASSISTANT_SETTINGS_UPDATE->value);
+            ->firstWhere('name', 'change ai assistant settings');
 
         if ($definition !== null) {
             Permission::firstOrCreate(
@@ -28,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Permission::query()
-            ->where('name', PermissionEnum::AI_ASSISTANT_SETTINGS_UPDATE->value)
+            ->where('name', 'change ai assistant settings')
             ->delete();
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();

@@ -572,6 +572,7 @@ import LogoutOtherBrowserSessionsForm from "@/Pages/Profile/Partials/LogoutOther
 import DeactivateAccountModal from "@/Pages/Users/Components/DeactivateAccountModal.vue";
 import {canChangeAccountActivation, isUserDeactivated} from "@/Helper/UserDeactivation.js";
 import {useInstanceFormat} from "@/Composeables/InstanceFormat.js";
+import {supportedLocaleOptions} from "@/Helper/appLocale.js";
 
 const props = defineProps({
     user_to_edit: { type: Object, required: true },
@@ -661,10 +662,7 @@ const resetPasswordForm = useForm({
 })
 
 /* ----- Languages ----- */
-const languages = computed(() => ([
-    { id: 'en', name: proxy.$t('English') },
-    { id: 'de', name: proxy.$t('German') },
-]))
+const languages = computed(() => supportedLocaleOptions(page.props.supportedLocales))
 const selectedLanguage = ref(null)
 
 onMounted(() => {

@@ -61,7 +61,7 @@ final class AiBatchNotificationTest extends TestCase
         $this->eventType = EventType::factory()->create();
         $this->project = Project::factory()->create(['name' => 'Tosca']);
 
-        $this->manager = User::factory()->create();
+        $this->manager = User::factory()->withAiAccess()->create();
         $this->project->users()->attach($this->manager->id, ['is_manager' => true]);
 
         $this->fakeActionGuard();
@@ -168,6 +168,20 @@ final class AiBatchNotificationTest extends TestCase
     }
 
     #[Test]
+    public function recipients_without_ai_access_get_the_summary_without_any_ai_reference(): void
+    {
+        EventFacade::fake([OccupancyUpdated::class]);
+        $this->manager->revokeAiAccess();
+
+        $planner = $this->planner();
+        $this->actingAsToken($planner);
+
+        $this->postJson('/api/v1/ai/events/batch', $this->execution($this->seriesPayload()))->assertOk();
+
+        $this->assertSame(['3 Termine angelegt'], $this->titlesFor($this->manager));
+    }
+
+    #[Test]
     public function the_causer_is_not_notified(): void
     {
         $planner = $this->planner();
@@ -198,7 +212,8 @@ final class AiBatchNotificationTest extends TestCase
             $this->execution(['name' => 'Neuer Name'])
         )->assertOk();
 
-        $this->assertSame(['Termin geändert (via Assistent)'], $this->titlesFor($worker));
+        // Ohne KI-Freischaltung erfährt die Person nicht, dass der Assistent beteiligt war.
+        $this->assertSame(['Termin geändert'], $this->titlesFor($worker));
     }
 
     // --- Einzelaktion ------------------------------------------------------------------------

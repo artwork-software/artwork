@@ -112,6 +112,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
 import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
 import { followStartDate } from '@/Helper/followStartDate.js'
+import { exceedsSeriesLimit, MAX_SERIES_YEARS } from '@/Helper/vacationSeriesLimit.js'
 
 const props = defineProps({
     user: { type: Object, required: true },
@@ -194,6 +195,9 @@ const validate = () => {
     errors.end_date = !entry.end_date
         ? proxy.$t('Please select a date.')
         : (entry.end_date < entry.start_date ? proxy.$t('The end date must not be before the start date.') : '')
+    if (!errors.end_date && exceedsSeriesLimit(entry.start_date, entry.end_date)) {
+        errors.end_date = proxy.$t('A series may run for at most {years} years.', { years: MAX_SERIES_YEARS })
+    }
 
     errors.start_time = ''
     errors.end_time = ''
@@ -218,6 +222,9 @@ const validate = () => {
         : ''
     if (!errors.repeat_until && entry.repeat_weekly && entry.repeat_until && entry.repeat_until <= entry.start_date) {
         errors.repeat_until = proxy.$t('The end date must be after the start date.')
+    }
+    if (!errors.repeat_until && entry.repeat_weekly && exceedsSeriesLimit(entry.start_date, entry.repeat_until)) {
+        errors.repeat_until = proxy.$t('A series may run for at most {years} years.', { years: MAX_SERIES_YEARS })
     }
 
     errors.comment = entry.comment && entry.comment.length > 100

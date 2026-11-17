@@ -11,7 +11,7 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Department\Repositories\DepartmentRepository;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\User\Http\Resources\UserIndexResource;
+use Artwork\Modules\User\Http\Resources\UserSearchResultResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Database\Eloquent\Collection;
@@ -32,7 +32,8 @@ readonly class DepartmentService
                     'id' => $department->id,
                     'name' => $department->name,
                     'svg_name' => $department->svg_name,
-                    'users' => UserIndexResource::collection($department->users)->resolve()
+                    // ohne Schichtliste: die Suche zeigt nur Mitglieder, keine Schichten
+                    'users' => UserSearchResultResource::collection($department->users)->resolve()
                 ]
             );
     }

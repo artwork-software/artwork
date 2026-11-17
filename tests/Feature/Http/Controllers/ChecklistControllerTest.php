@@ -15,21 +15,6 @@ use Tests\Feature\FeatureTestCase;
 final class ChecklistControllerTest extends FeatureTestCase
 {
     #[Test]
-    public function guest_cannot_view_checklist_create_page(): void
-    {
-        $this->get(route('checklists.create'))
-            ->assertRedirect(route('login'));
-    }
-
-    #[Test]
-    public function admin_can_view_checklist_create_page(): void
-    {
-        $this->actingAsAdmin();
-
-        $this->get(route('checklists.create'))->assertOk();
-    }
-
-    #[Test]
     public function guest_cannot_store_checklist(): void
     {
         $this->post(route('checklists.store'), [

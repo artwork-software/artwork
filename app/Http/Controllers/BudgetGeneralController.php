@@ -55,9 +55,12 @@ class BudgetGeneralController extends Controller
         return Redirect::back()->with('success', __('flash-messages.budget-general-setting.success.update'));
     }
 
-    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): void
+    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): RedirectResponse
     {
-        $this->sage100Service->moveSageDataRow($columnCell, $movedColumn, $request);
+        $this->validateSageRowMove($request);
+
+        // Redirect samt Fehlermeldung weiterreichen, sonst verschwindet die Ablehnung des Drops
+        return $this->sage100Service->moveSageDataRow($columnCell, $movedColumn, $request);
     }
 
     public function moveSageDataRowToNewRow(
@@ -67,6 +70,17 @@ class BudgetGeneralController extends Controller
         int $positionBefore,
         ColumnCell $columnCell
     ): void {
+        $this->validateSageRowMove($request);
+
+        // Neue Zeile nur in einer Unterposition der angegebenen Tabelle anlegen
+        abort_unless((int) $sub_position_id->mainPosition?->table_id === (int) $table_id->id, 404);
+
+        // Ohne zu verschiebende Buchung bliebe sonst eine leere Zeile samt verschobener Positionen zurück
+        $movableData = $request->multiple === false
+            ? $columnCell->sageAssignedData
+            : $columnCell->sageAssignedData->whereIn('id', $request->input('selectedData', []));
+        abort_if($movableData->isEmpty(), 422);
+
         if ($request->multiple === false) {
             $this->sage100Service->moveSingleSageDataRowToNewRow(
                 $request,
@@ -84,6 +98,18 @@ class BudgetGeneralController extends Controller
                 $columnCell
             );
         }
+    }
+
+    /**
+     * Mehrfachauswahl braucht die Liste der gewählten Buchungen, sonst scheitert der Service mit einem 500er.
+     */
+    private function validateSageRowMove(Request $request): void
+    {
+        $request->validate([
+            'multiple' => ['required', 'boolean'],
+            'selectedData' => ['required_if_accepted:multiple', 'array'],
+            'selectedData.*' => ['integer'],
+        ]);
     }
 
     public function updateColumnRelevant(Column $column, ColumnRelevanceService $columnRelevanceService): void

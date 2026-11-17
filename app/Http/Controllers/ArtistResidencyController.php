@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Core\Enums\ExportType;
+use Artwork\Core\Localization\SupportedLocales;
 use Artwork\Modules\ArtistResidency\Http\Requests\ArtistResidencyCreateRequest;
 use Artwork\Modules\ArtistResidency\Http\Requests\ArtistResidencyUpdateRequest;
 use Artwork\Modules\ArtistResidency\Models\Artist;
@@ -143,19 +144,37 @@ class ArtistResidencyController extends Controller
 
     public function exportPdf(Project $project, string $language = 'en'): \Symfony\Component\HttpFoundation\Response
     {
-        return $this->artistResidencyService->exportService($project, ExportType::PDF->value, $language);
+        return $this->artistResidencyService->exportService(
+            $project,
+            ExportType::PDF->value,
+            $this->exportLanguage($language)
+        );
     }
 
     public function exportExcel(Project $project, string $language = 'en'): \Symfony\Component\HttpFoundation\Response
     {
-        return $this->artistResidencyService->exportService($project, ExportType::EXCEL->value, $language);
+        return $this->artistResidencyService->exportService(
+            $project,
+            ExportType::EXCEL->value,
+            $this->exportLanguage($language)
+        );
     }
 
     public function exportPerDiemPdf(
         Project $project,
         string $language = 'en'
     ): \Symfony\Component\HttpFoundation\Response {
-        return $this->artistResidencyService->exportPerDiemPdf($project, $language);
+        return $this->artistResidencyService->exportPerDiemPdf($project, $this->exportLanguage($language));
+    }
+
+    /**
+     * Sprache aus der URL nur übernehmen, wenn sie in app.supported_locales steht; sonst Englisch.
+     */
+    private function exportLanguage(string $language): string
+    {
+        return SupportedLocales::isSupported($language)
+            ? $language
+            : (string) config('app.fallback_locale', 'en');
     }
 
     public function exportPdfDownload(

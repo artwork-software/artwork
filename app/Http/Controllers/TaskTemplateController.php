@@ -6,16 +6,9 @@ use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
-use Inertia\Response;
-use Inertia\ResponseFactory;
 
 class TaskTemplateController extends Controller
 {
-    public function create(): Response|ResponseFactory
-    {
-        return inertia('TaskTemplates/Create');
-    }
-
     /**
      * Vorlagenzugehörigkeit nur per exists: die Routen liegen komplett hinter "can:admin checklistTemplates".
      *
@@ -51,17 +44,6 @@ class TaskTemplateController extends Controller
         ]);
 
         return Redirect::back();
-    }
-
-    public function edit(TaskTemplate $taskTemplate): Response|ResponseFactory
-    {
-        return inertia('TaskTemplates/Edit', [
-            'task_templates' => [
-                'name' => $taskTemplate->name,
-                'description' => $taskTemplate->description,
-                'done' => $taskTemplate->done,
-            ]
-        ]);
     }
 
     public function update(Request $request, TaskTemplate $taskTemplate): RedirectResponse

@@ -19,8 +19,12 @@ readonly class ChecklistTemplateService
 
     public function duplicate(ChecklistTemplate $checklistTemplate, int $userId): ChecklistTemplate
     {
+        // Namen kürzen, damit der Zusatz nicht über die Spaltenlänge (255) hinausläuft
+        $suffix = ' ' . __('(Copy)');
+        $name = mb_substr((string) $checklistTemplate->getAttribute('name'), 0, 255 - mb_strlen($suffix)) . $suffix;
+
         $newChecklistTemplate = $this->createChecklistTemplate([
-            'name' => $checklistTemplate->getAttribute('name') . ' ' . __('(Copy)'),
+            'name' => $name,
             'user_id' => $userId,
         ]);
         $this->checklistTemplateRepository->save($newChecklistTemplate);

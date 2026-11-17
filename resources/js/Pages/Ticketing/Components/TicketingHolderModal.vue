@@ -75,7 +75,7 @@
                             <span>
                                 {{ formatDate(period.startsAt) }} – {{ formatDate(period.endsAt) }}
                                 <span class="block text-xs text-text-subtle">
-                                    {{ $t('+{granted} uses', { granted: period.usesGranted }) }}<template v-if="period.usesCarried"> · {{ $t('{count} carried', { count: period.usesCarried }) }}</template><template v-if="period.usesForfeited"> · {{ $t('{count} lapsed', { count: period.usesForfeited }) }}</template>
+                                    {{ period.usesGranted === null ? $t('Unlimited') : $t('+{granted} uses', { granted: period.usesGranted }) }}<template v-if="period.usesCarried"> · {{ $t('{count} carried', { count: period.usesCarried }) }}</template><template v-if="period.usesForfeited"> · {{ $t('{count} lapsed', { count: period.usesForfeited }) }}</template>
                                 </span>
                             </span>
                             <span class="text-right">{{ period.paidCents === null ? period.orderNumber ?? '–' : formatEuro(period.paidCents) }}</span>

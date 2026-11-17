@@ -218,6 +218,36 @@ class BiDerivedValuesService
     }
 
     /**
+     * Sage-Buchungen je Budget-Tabelle in einer Abfrage (Dashboard: sonst eine Zählung je Projekt,
+     * Sentry HAU-ARTWORK-63). Gelöschte Positionen/Zeilen/Zellen zählen wie bei getBookingCount nicht.
+     *
+     * @param array<int, int> $tableIds
+     * @return array<int, int> table_id => Anzahl (Tabellen ohne Buchungen fehlen)
+     */
+    public function getBookingCountsByTableId(array $tableIds): array
+    {
+        if ($tableIds === []) {
+            return [];
+        }
+
+        return SageAssignedData::query()
+            ->join('column_sub_position_row as cells', 'cells.id', '=', 'sage_assigned_data.column_cell_id')
+            ->join('sub_position_rows as budget_rows', 'budget_rows.id', '=', 'cells.sub_position_row_id')
+            ->join('sub_positions as subs', 'subs.id', '=', 'budget_rows.sub_position_id')
+            ->join('main_positions as mains', 'mains.id', '=', 'subs.main_position_id')
+            ->whereNull('cells.deleted_at')
+            ->whereNull('budget_rows.deleted_at')
+            ->whereNull('subs.deleted_at')
+            ->whereNull('mains.deleted_at')
+            ->whereIn('mains.table_id', array_values(array_unique($tableIds)))
+            ->groupBy('mains.table_id')
+            ->selectRaw('mains.table_id as budget_table_id, count(*) as booking_count')
+            ->pluck('booking_count', 'budget_table_id')
+            ->map(static fn ($count): int => (int) $count)
+            ->all();
+    }
+
+    /**
      * Umsatz-Vorschläge aus dem Budget-Modul für die Plan/Ist-Erfassung:
      * plan = Einnahmen-Summe der budgetrelevanten Spalte (identisch zu den
      * Stichtag-Exporten; Fallback Altbestand: letzte Wertspalte), actual =

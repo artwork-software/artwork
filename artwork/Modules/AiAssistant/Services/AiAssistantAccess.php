@@ -13,8 +13,9 @@ use Artwork\Modules\User\Models\User;
  * fuer Admins true, waehrend das Haus den Assistenten abgeschaltet hat. Alle Konsumenten
  * (Shared-Props, Session-Endpunkt, Bar) rufen diesen Service direkt.
  *
- * Neben Instanz- und Hausschalter muss die Person das Konsolen-Recht "ai access" direkt halten
- * (User::hasAiAccess). Admin-Rolle allein reicht nicht.
+ * Vor allem steht die KI-Freischaltung der Person (User::hasAiAccess, nur per Konsole vergebbar):
+ * ohne sie existiert der Assistent für diese Person nicht — keine Bar, keine Einstellungen,
+ * kein KI-Hinweis, auch nicht für Admins (ARTWORK-352).
  */
 class AiAssistantAccess
 {
@@ -22,13 +23,22 @@ class AiAssistantAccess
     {
     }
 
+    /**
+     * Ob die Person überhaupt etwas vom Assistenten sehen darf — unabhängig davon, ob das Haus ihn
+     * eingeschaltet hat (die Einstellungsseite muss auch bei abgeschaltetem Haus erreichbar sein).
+     */
+    public function visibleTo(?User $user): bool
+    {
+        return $user !== null && $user->hasAiAccess();
+    }
+
     public function allowed(?User $user): bool
     {
-        if ($user === null) {
+        if (!$this->visibleTo($user)) {
             return false;
         }
 
-        return (bool) config('ai.enabled') && $this->settings->enabled && $user->hasAiAccess();
+        return (bool) config('ai.enabled') && $this->settings->enabled;
     }
 
     /** Stufe B — Datenauswertung. Nur sinnvoll, wenn der Assistent ueberhaupt frei ist. */

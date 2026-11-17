@@ -18,19 +18,6 @@ class WorkflowController extends Controller
     ) {
     }
 
-    public function create(): Response
-    {
-        $definitions = WorkflowDefinition::with('currentConfig')
-            ->where('is_active', true)
-            ->whereHas('currentConfig')
-            ->get()
-            ->filter(fn($definition) => !$definition->hasReachedMaxInstances());
-
-        return Inertia::render('Workflow/Create', [
-            'definitions' => $definitions,
-        ]);
-    }
-
     public function index(): Response
     {
         $definitions = WorkflowDefinition::with('currentConfig')->get();

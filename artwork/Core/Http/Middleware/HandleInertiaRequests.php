@@ -4,6 +4,7 @@ namespace Artwork\Core\Http\Middleware;
 
 use App\Settings\EventSettings;
 use App\Settings\GeneralCalendarSettings;
+use Artwork\Core\Localization\SupportedLocales;
 use Artwork\Modules\AiAssistant\Services\AiAssistantAccess;
 use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\Craft\Models\Craft;
@@ -268,6 +269,8 @@ class HandleInertiaRequests extends Middleware
                 // Nur für Angemeldete (Tool-Einstellungen, Turn-Kontext der KI-Bar) – Login- und Einladungsseiten
                 // verraten die Version nicht
                 'artworkVersion' => $user ? config('app.version') : null,
+                // Wählbare Sprachen (Code + Eigenname) aus app.supported_locales
+                'supportedLocales' => SupportedLocales::toFrontend(),
                 // Effektives PHP-Upload-Limit für transparente „Datei zu groß"-Meldungen
                 // und die Datei-Einstellungsseite (Abnahme RG-04); nginx kann zusätzlich begrenzen
                 'server_upload_limit_mb' => \Artwork\Core\FileHandling\ServerUploadLimit::inMegabytes(),
@@ -379,9 +382,11 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * KI-Assistent: ein einziger Prop für das Rendern der Bar. Ist der Assistent nicht frei,
-     * wird bewusst nur `enabled: false` geteilt — die Stufen sind dann keine Information,
-     * die das Frontend braucht (core-modul-settings-policy).
+     * KI-Assistent: ein einziger Prop für das Rendern von Bar, Menüpunkt, Einstellungs-Reiter und
+     * KI-Hinweisen. Ohne KI-Freischaltung der Person (User::hasAiAccess) wird nur `enabled: false`
+     * geteilt — exakt dasselbe wie bei abgeschaltetem Haus, damit nichts verrät, dass es den
+     * Assistenten gibt (ARTWORK-352). `visible` heißt: die Person darf KI-Bezüge sehen und die
+     * Einstellungen öffnen, auch wenn das Haus den Assistenten gerade abgeschaltet hat.
      *
      * @return array<string, bool>
      */
@@ -389,11 +394,16 @@ class HandleInertiaRequests extends Middleware
     {
         $access = app(AiAssistantAccess::class);
 
-        if (!$access->allowed($user)) {
+        if (!$access->visibleTo($user)) {
             return ['enabled' => false];
         }
 
+        if (!$access->allowed($user)) {
+            return ['visible' => true, 'enabled' => false];
+        }
+
         return [
+            'visible' => true,
             'enabled' => true,
             'levelB' => $access->levelBAllowed($user),
             'levelC' => $access->levelCAllowed($user),

@@ -174,6 +174,22 @@ final class ExportPDFControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function monthly_pdf_with_end_month_before_start_month_exports_the_swapped_range(): void
+    {
+        // Sentry HAU-ARTWORK-64: Bis-Monat vor Von-Monat ließ die Monatsliste leer → 500
+        $this->actingAsAdmin();
+        $this->mockSnappyPdf($capturedViewData);
+
+        $this->post(route('calendar.export.monthly-pdf'), [
+            'startMonth' => '2026-12',
+            'endMonth' => '2026-10',
+        ])->assertRedirectContains('download');
+
+        self::assertNotNull($capturedViewData);
+        self::assertCount(3, $capturedViewData['pages']);
+    }
+
+    #[Test]
     public function monthly_overview_shows_identical_type_and_names_only_once(): void
     {
         // Kundenfall: Terminart-Kürzel = Name ("TE TE") und Terminname = Projektname

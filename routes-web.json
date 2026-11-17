@@ -156,12 +156,6 @@
         "area": null
     },
     {
-        "name": "company_types.index",
-        "path": "/company_types",
-        "label": null,
-        "area": null
-    },
-    {
         "name": "compensation-day-offs.dashboard",
         "path": "/compensation-day-offs/dashboard",
         "label": "Übersicht ersatzfreie Tage",
@@ -170,6 +164,12 @@
     {
         "name": "component.index",
         "path": "/settings/component/index",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "components.crm-contact-list.contact-types",
+        "path": "/components/crm-contact-list/contact-types",
         "label": null,
         "area": null
     },
@@ -184,12 +184,6 @@
         "path": "/contracts/view",
         "label": "Verträge",
         "area": "Dokumente"
-    },
-    {
-        "name": "contracts.module.management",
-        "path": "/contract_modules",
-        "label": null,
-        "area": null
     },
     {
         "name": "crm.contacts.mask",
@@ -244,12 +238,6 @@
         "path": "/crm/settings",
         "label": "CRM-Einstellungen",
         "area": "System"
-    },
-    {
-        "name": "currencies.index",
-        "path": "/currencies",
-        "label": null,
-        "area": null
     },
     {
         "name": "dashboard",
@@ -600,12 +588,6 @@
         "area": "Kalender"
     },
     {
-        "name": "profile.show",
-        "path": "/user/profile",
-        "label": null,
-        "area": null
-    },
-    {
         "name": "project-day-assignments.full-period.index",
         "path": "/project-day-assignments/full-period",
         "label": null,
@@ -632,12 +614,6 @@
     {
         "name": "project-roles.index",
         "path": "/project-roles",
-        "label": null,
-        "area": null
-    },
-    {
-        "name": "project.budget.cell.comment.get",
-        "path": "/project/budget/cell/comments",
         "label": null,
         "area": null
     },
@@ -678,6 +654,18 @@
         "area": "Projekte"
     },
     {
+        "name": "projects.content-export.options",
+        "path": "/projects/content-export/options",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "projects.content-export.templates.index",
+        "path": "/projects/content-export/templates",
+        "label": null,
+        "area": null
+    },
+    {
         "name": "projects.create",
         "path": "/projects/create",
         "label": null,
@@ -714,12 +702,6 @@
         "area": null
     },
     {
-        "name": "rooms.free",
-        "path": "/rooms/free",
-        "label": null,
-        "area": null
-    },
-    {
         "name": "rooms.move",
         "path": "/rooms/move",
         "label": null,
@@ -752,6 +734,54 @@
     {
         "name": "settings.inventory-tags.index",
         "path": "/settings/inventory-tags",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.tickets",
+        "path": "/settings/tickets",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.tickets.availability",
+        "path": "/settings/tickets/availability",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.tickets.billing",
+        "path": "/settings/tickets/billing",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.tickets.groups",
+        "path": "/settings/tickets/groups",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.tickets.passes",
+        "path": "/settings/tickets/passes",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.tickets.reductions",
+        "path": "/settings/tickets/reductions",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.tickets.rooms",
+        "path": "/settings/tickets/rooms",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.tickets.team",
+        "path": "/settings/tickets/team",
         "label": null,
         "area": null
     },
@@ -852,12 +882,6 @@
         "area": "System"
     },
     {
-        "name": "shift.template.search",
-        "path": "/shift/template/search",
-        "label": null,
-        "area": null
-    },
-    {
         "name": "shift.work-time-pattern",
         "path": "/shift/work-time-pattern",
         "label": null,
@@ -894,18 +918,6 @@
         "area": null
     },
     {
-        "name": "shifts.events.for-rooms-by-days-and-project",
-        "path": "/shifts/view/events-and-workers",
-        "label": null,
-        "area": null
-    },
-    {
-        "name": "shifts.events.for-rooms-by-days-and-project-no-workers",
-        "path": "/shifts/view/events-and-no-workers",
-        "label": null,
-        "area": null
-    },
-    {
         "name": "shifts.plan",
         "path": "/shifts/view",
         "label": "Dienstpläne",
@@ -918,6 +930,12 @@
         "area": "Dienstplan"
     },
     {
+        "name": "shifts.plan.list-view.days",
+        "path": "/shifts/list-view/days",
+        "label": null,
+        "area": null
+    },
+    {
         "name": "shifts.presets",
         "path": "/shifts/presets",
         "label": "Schichtvorlagen",
@@ -926,6 +944,12 @@
     {
         "name": "shifts.timeline-presets.index",
         "path": "/timeline-preset",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shifts.trashed",
+        "path": "/trashedShifts",
         "label": null,
         "area": null
     },
@@ -984,6 +1008,42 @@
         "area": "To-dos"
     },
     {
+        "name": "ticketing.calendar-summary",
+        "path": "/ticketing/calendar-summary",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "ticketing.move-check",
+        "path": "/ticketing/move-check",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "ticketing.open",
+        "path": "/ticketing/open",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "ticketing.section.holdings",
+        "path": "/artwork-tickets/holdings",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "ticketing.section.passes",
+        "path": "/artwork-tickets/passes",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "ticketing.section.sales",
+        "path": "/artwork-tickets/sales",
+        "label": null,
+        "area": null
+    },
+    {
         "name": "tool.ai-assistant",
         "path": "/tool/ai-assistant",
         "label": null,
@@ -1016,6 +1076,12 @@
     {
         "name": "tool.file-settings.index",
         "path": "/tool/system/file-settings",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tool.formats",
+        "path": "/tool/formats",
         "label": null,
         "area": null
     },
@@ -1070,6 +1136,12 @@
     {
         "name": "user-contract-settings.index",
         "path": "/user-contracts",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "user.browser-sessions.index",
+        "path": "/user/browser-sessions",
         "label": null,
         "area": null
     },

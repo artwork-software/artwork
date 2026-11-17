@@ -304,8 +304,9 @@ class EventVerificationController extends Controller
 
     private function validatedRejectionReason(Request $request): string
     {
+        // TEXT fasst 65.535 Byte; 16.000 Zeichen passen auch bei 4-Byte-Zeichen sicher hinein
         return (string) ($request->validate([
-            'rejection_reason' => ['nullable', 'string', 'max:65000'],
+            'rejection_reason' => ['nullable', 'string', 'max:16000'],
         ])['rejection_reason'] ?? '');
     }
 

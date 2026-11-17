@@ -830,6 +830,11 @@ class ExportPDFController extends Controller
                     ? Carbon::parse($endMonth . '-01')->endOfMonth()
                     : $start->copy()->endOfMonth();
 
+                // Bis-Monat vor dem Von-Monat: ohne Tausch bliebe $months leer (500 bei $months[0])
+                if ($end->lt($start)) {
+                    [$start, $end] = [$end->copy()->startOfMonth(), $start->copy()->endOfMonth()];
+                }
+
                 $cursor = $start->copy();
                 while ($cursor->lte($end)) {
                     $months[] = [

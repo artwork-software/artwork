@@ -1,6 +1,5 @@
 <?php
 
-use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
@@ -9,7 +8,11 @@ use Spatie\Permission\PermissionRegistrar;
 /**
  * Die KI-Schnittstelle (/api/v1/ai/*) verlangt seit 2026_11_12_100000 das Konsolen-Recht "ai access". Damit
  * bestehende KI-Schlüssel weiterlaufen, bekommen deren Besitzer:innen das Recht einmalig: gültige, nicht
- * widerrufene Tokens mit mindestens einem ai:*-Scope. Die kurzlebigen Sitzungs-Tokens der KI-Leiste
+ * widerrufene Tokens mit mindestens einem ai:*-Scope.
+ *
+ * Seit 2026_11_13_100000 ist die Freischaltung kein Spatie-Recht mehr (users.ai_access_granted_at). Diese
+ * Migration greift nur noch, wo die Rechte-Zeile schon existiert; die dortige Migration übernimmt die
+ * Zuordnungen und vergibt die Freischaltung zusätzlich selbst an die Besitzer:innen von KI-Schlüsseln. Die kurzlebigen Sitzungs-Tokens der KI-Leiste
  * (ai_session_client_id) zählen nicht, sonst hätte jede Person, die die Leiste einmal benutzt hat, danach
  * Zugriff auf die KI-Verwaltung. Idempotent: vorhandene Zuordnungen bleiben unverändert.
  */
@@ -18,7 +21,7 @@ return new class extends Migration
     public function up(): void
     {
         $permissionId = DB::table('permissions')
-            ->where('name', ConsoleOnlyPermissionEnum::AiAccess->value)
+            ->where('name', 'ai access')
             ->where('guard_name', 'web')
             ->value('id');
 

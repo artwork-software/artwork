@@ -51,6 +51,9 @@ class ShiftPresetController extends Controller
 
     public function update(Request $request, ShiftPreset $shiftPreset): void
     {
+        // name ist NOT NULL und varchar(255): leer bzw. zu lang endete in einem SQL-Fehler (500)
+        $request->validate(['name' => ['required', 'string', 'max:255']]);
+
         $this->shiftPresetService->updateFromRequest($shiftPreset, $request);
     }
 

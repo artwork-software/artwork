@@ -75,14 +75,6 @@ class ContractController extends Controller
         ]);
     }
 
-    public function show(Contract $contract): Response|ResponseFactory
-    {
-        $this->authorize('view', $contract);
-        return inertia('Contracts/Contracts', [
-            'contract' => new ContractResource($contract),
-        ]);
-    }
-
     public function store(ContractStoreRequest $request, Project $project): RedirectResponse
     {
         $this->authorizeContractStore($request, $project);
@@ -172,11 +164,15 @@ class ContractController extends Controller
 
     public function storeFile(Request $request): void
     {
-        $contract = Contract::find($request->contract);
-        if ($contract) {
-            $this->authorize('update', $contract);
-            $this->contractService->storeContractFile($contract, $request->file);
-        }
+        // Fehlende Datei endete in einem TypeError (500), ein unbekannter Vertrag wurde still ignoriert
+        $request->validate([
+            'contract' => ['required', 'integer', 'exists:contracts,id'],
+            'file' => ['required', 'file'],
+        ]);
+
+        $contract = Contract::query()->findOrFail($request->integer('contract'));
+        $this->authorize('update', $contract);
+        $this->contractService->storeContractFile($contract, $request->file('file'));
     }
 
     public function destroy(Contract $contract): RedirectResponse

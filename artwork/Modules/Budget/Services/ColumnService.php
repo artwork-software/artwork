@@ -134,6 +134,7 @@ readonly class ColumnService
             }
         );
 
+        $this->preloadCellRelations($column);
         $column->cells->each(
             function (ColumnCell $columnCell) use (
                 $columnCellService,
@@ -212,6 +213,7 @@ readonly class ColumnService
             }
         );
 
+        $this->preloadCellRelations($column);
         $column->cells->each(
             function (ColumnCell $columnCell) use (
                 $columnCellService,
@@ -323,5 +325,19 @@ readonly class ColumnService
     public function updateOrFail(Column $column, array $attributes): void
     {
         $this->columnRepository->updateOrFail($column, $attributes);
+    }
+
+    /**
+     * Die Zell-Löschung liest je Zelle Kommentare, Rechnungen, Sage-Buchungen und über die Zeile die
+     * Tabelle (Vorlage? Projekt?). Vorgeladen sind das wenige Abfragen statt bis zu sieben je Zeile.
+     */
+    private function preloadCellRelations(Column $column): void
+    {
+        $column->loadMissing([
+            'cells.comments',
+            'cells.calculations',
+            'cells.sageAssignedData',
+            'cells.subPositionRow.subPosition.mainPosition.table',
+        ]);
     }
 }

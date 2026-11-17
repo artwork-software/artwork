@@ -87,8 +87,9 @@ class AiBatchNotifier
         $this->notificationService->setCreatedBy($causer);
 
         foreach ($recipients as $recipient) {
+            // Ohne KI-Freischaltung erfährt der Empfänger nicht, dass der Assistent beteiligt war (ARTWORK-352).
             $title = trans_choice(
-                'notification.ai_assistant.' . $action,
+                ($recipient->hasAiAccess() ? 'notification.ai_assistant.' : 'notification.event_batch.') . $action,
                 $events->count(),
                 ['count' => $events->count()],
                 $recipient->language

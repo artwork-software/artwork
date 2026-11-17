@@ -100,10 +100,11 @@ class EventStatusController extends Controller
             ->value('id');
 
         DB::transaction(function () use ($eventStatus, $replacementStatusId): void {
-            // Auch Termine im Papierkorb umhängen, sonst blockiert der Fremdschlüssel das Löschen
+            // Auch Termine im Papierkorb umhängen, sonst blockiert der Fremdschlüssel das Löschen.
+            // eachById: each() blättert per Offset und überspringt Termine, weil die Schleife die Filterspalte ändert
             Event::withTrashed()
                 ->where('event_status_id', $eventStatus->id)
-                ->each(function (Event $event) use ($replacementStatusId): void {
+                ->eachById(function (Event $event) use ($replacementStatusId): void {
                     $event->update(['event_status_id' => $replacementStatusId]);
                 });
             $this->eventStatusService->delete($eventStatus);

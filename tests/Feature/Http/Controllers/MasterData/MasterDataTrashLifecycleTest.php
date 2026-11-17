@@ -272,6 +272,43 @@ final class MasterDataTrashLifecycleTest extends FeatureTestCase
     }
 
     #[Test]
+    public function destroying_an_event_status_moves_more_than_one_page_of_events(): void
+    {
+        $this->actingAsAdmin();
+        $default = EventStatus::factory()->create(['default' => true]);
+        $status = EventStatus::factory()->create();
+        $this->createEventsWithStatus($status->id, 1001);
+
+        $this->delete(route('event_status.delete', $status))->assertOk();
+
+        $this->assertModelMissing($status);
+        $this->assertSame(1001, Event::query()->where('event_status_id', $default->id)->count());
+    }
+
+    #[Test]
+    public function enabling_the_status_assigns_it_to_more_than_one_page_of_events(): void
+    {
+        $this->actingAsAdmin();
+        EventStatus::factory()->create(['default' => true]);
+        $this->createEventsWithStatus(null, 1001);
+
+        $this->patch(route('event_status.update_settings'), ['enable_status' => true])->assertSuccessful();
+
+        $this->assertSame(0, Event::query()->whereNull('event_status_id')->count());
+    }
+
+    /**
+     * Viele Termine in einem Insert: die Seitengröße von each()/eachById() liegt bei 1.000 Zeilen.
+     */
+    private function createEventsWithStatus(?int $eventStatusId, int $count): void
+    {
+        $attributes = Event::factory()->create(['event_status_id' => $eventStatusId])->fresh()->getAttributes();
+        unset($attributes['id']);
+
+        Event::query()->insert(array_fill(0, $count - 1, $attributes));
+    }
+
+    #[Test]
     public function updating_an_event_property_changes_only_name_and_icon(): void
     {
         $this->actingAsAdmin();

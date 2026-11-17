@@ -25,9 +25,16 @@ export function roomChangeNote(event, t) {
     })
 }
 
+/** The date's places over all classes: as saved, else the sum of the classes. */
 export function capacityOf(event) {
     const classes = classesOf(event)
-    return classes.length ? classes.reduce((sum, cls) => sum + (Number(cls.quota) || 0), 0) : null
+    return event.release?.capacity ?? (classes.length ? classes.reduce((sum, cls) => sum + (cls.quota ?? 0), 0) : null)
+}
+
+/** A price after a reduction, rounded as Artwork-Tickets charges it: never below zero. */
+export function reducedCents(priceCents, reduction) {
+    const off = reduction.kind === 'percent' ? Math.round((priceCents * reduction.value) / 10000) : reduction.value
+    return priceCents - Math.min(Math.max(0, off), priceCents)
 }
 
 /** The house reductions the production grants: its own choice once saved, else the house defaults. */

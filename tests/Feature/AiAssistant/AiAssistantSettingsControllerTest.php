@@ -25,11 +25,11 @@ final class AiAssistantSettingsControllerTest extends TestCase
     }
 
     #[Test]
-    public function a_user_without_the_permission_cannot_open_the_page(): void
+    public function without_ai_access_the_page_does_not_exist(): void
     {
         $this->actingAs(User::factory()->create());
 
-        $this->get(route('tool.ai-assistant'))->assertForbidden();
+        $this->get(route('tool.ai-assistant'))->assertNotFound();
     }
 
     #[Test]
@@ -37,29 +37,38 @@ final class AiAssistantSettingsControllerTest extends TestCase
     {
         $this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value);
 
-        $this->get(route('tool.ai-assistant'))->assertForbidden();
+        $this->get(route('tool.ai-assistant'))->assertNotFound();
     }
 
     #[Test]
-    public function a_user_with_the_permission_can_open_the_page(): void
+    public function an_admin_without_ai_access_cannot_open_or_update_the_page(): void
     {
-        $this->actingAsUserWith(PermissionEnum::AI_ASSISTANT_SETTINGS_UPDATE->value);
+        $this->actingAsAdmin();
+
+        $this->get(route('tool.ai-assistant'))->assertNotFound();
+        $this->patch(route('tool.ai-assistant.update'), $this->payload())->assertNotFound();
+    }
+
+    #[Test]
+    public function with_ai_access_the_page_opens(): void
+    {
+        $this->actingAs(User::factory()->withAiAccess()->create());
 
         $this->get(route('tool.ai-assistant'))->assertOk();
     }
 
     #[Test]
-    public function a_user_without_the_permission_cannot_update(): void
+    public function without_ai_access_updating_is_impossible(): void
     {
         $this->actingAs(User::factory()->create());
 
-        $this->patch(route('tool.ai-assistant.update'), $this->payload())->assertForbidden();
+        $this->patch(route('tool.ai-assistant.update'), $this->payload())->assertNotFound();
     }
 
     #[Test]
     public function the_settings_are_stored(): void
     {
-        $this->actingAsUserWith(PermissionEnum::AI_ASSISTANT_SETTINGS_UPDATE->value);
+        $this->actingAs(User::factory()->withAiAccess()->create());
 
         $this->patch(route('tool.ai-assistant.update'), $this->payload([
             'level_c_enabled' => true,
@@ -76,7 +85,7 @@ final class AiAssistantSettingsControllerTest extends TestCase
     #[Test]
     public function stage_c_without_stage_b_is_rejected(): void
     {
-        $this->actingAsUserWith(PermissionEnum::AI_ASSISTANT_SETTINGS_UPDATE->value);
+        $this->actingAs(User::factory()->withAiAccess()->create());
 
         $this->patch(route('tool.ai-assistant.update'), $this->payload([
             'level_b_enabled' => false,
@@ -87,7 +96,7 @@ final class AiAssistantSettingsControllerTest extends TestCase
     #[Test]
     public function switching_the_assistant_on_is_logged(): void
     {
-        $this->actingAsUserWith(PermissionEnum::AI_ASSISTANT_SETTINGS_UPDATE->value);
+        $this->actingAs(User::factory()->withAiAccess()->create());
 
         $this->patch(route('tool.ai-assistant.update'), $this->payload(['enabled' => true]));
 
@@ -99,7 +108,7 @@ final class AiAssistantSettingsControllerTest extends TestCase
     #[Test]
     public function changing_only_the_retention_period_is_not_logged(): void
     {
-        $this->actingAsUserWith(PermissionEnum::AI_ASSISTANT_SETTINGS_UPDATE->value);
+        $this->actingAs(User::factory()->withAiAccess()->create());
 
         // Erst den Ausgangszustand herstellen, dann nur die Aufbewahrungsdauer aendern.
         $this->patch(route('tool.ai-assistant.update'), $this->payload());

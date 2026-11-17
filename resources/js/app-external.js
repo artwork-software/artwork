@@ -17,7 +17,7 @@ import '../css/global.css'
 import { createApp, h } from 'vue'
 import { createInertiaApp, router } from '@inertiajs/vue3'
 import { createI18n } from 'vue-i18n'
-import { createLocaleSwitcher, resolveInitialLocale } from '@/Helper/appLocale.js'
+import { createLocaleSwitcher, loadFallbackMessages, resolveInitialLocale } from '@/Helper/appLocale.js'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import Tooltip from 'primevue/tooltip'
@@ -60,6 +60,8 @@ createInertiaApp({
         }
 
         i18n.global.setLocaleMessage(initialLocale, await loadLocaleMessages(initialLocale))
+        // Englische Rückfalltexte für Lücken in anderen Sprachen, ohne den Start zu blockieren
+        loadFallbackMessages(i18n, loadLocaleMessages, i18n.global.fallbackLocale.value)
 
         app.use(i18n)
         app.use(PrimeVue, {

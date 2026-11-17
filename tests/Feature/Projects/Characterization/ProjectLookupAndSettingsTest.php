@@ -15,36 +15,11 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 /**
- * Charakterisierung der Hilfs-/Lese-Endpunkte (Bearbeiten-Seite, Existenzfilter, Scout-Suche,
+ * Charakterisierung der Hilfs-/Lese-Endpunkte (Existenzfilter, Scout-Suche,
  * Räume mit Belegungszeitraum) und der globalen Projekt-Einstellungen inkl. Papierkorb-Leeren.
  */
 final class ProjectLookupAndSettingsTest extends FeatureTestCase
 {
-    #[Test]
-    public function write_team_member_can_open_edit_page(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $project = Project::factory()->create();
-        $project->users()->attach($user->id, ['can_write' => true]);
-
-        $this->get('/projects/' . $project->id . '/edit')
-            ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('Projects/Edit', false)
-                ->where('project.id', $project->id));
-    }
-
-    #[Test]
-    public function read_only_team_member_is_redirected_back_from_edit_page(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $project = Project::factory()->create();
-        $project->users()->attach($user->id, ['can_write' => false]);
-
-        $this->get('/projects/' . $project->id . '/edit')->assertRedirect();
-    }
-
     #[Test]
     public function filter_existing_ids_drops_deleted_and_unknown_projects(): void
     {

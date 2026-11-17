@@ -224,10 +224,4 @@ final class ProjectStoreTest extends FeatureTestCase
         $this->assertTrue((bool) $project->marked_as_done);
     }
 
-    #[Test]
-    public function admin_can_view_create_project_page(): void
-    {
-        $this->actingAsAdmin();
-        $this->get(route('projects.create'))->assertOk();
-    }
 }

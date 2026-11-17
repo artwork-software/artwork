@@ -2052,7 +2052,7 @@ components:
         holder_name: { type: string }
         holder_email: { type: string }
         subscription: { type: boolean, description: The card behind an Abo }
-        uses_left: { type: integer }
+        uses_left: { type: integer, nullable: true, description: Null on an unlimited pass }
         valid_until: { type: string, format: date-time, nullable: true }
         block:
           type: string

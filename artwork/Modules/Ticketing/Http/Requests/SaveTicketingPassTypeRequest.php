@@ -8,7 +8,7 @@ use Illuminate\Validation\Validator;
 
 /**
  * Eine Mehrfachkarte oder ein Abo aus dem Tab "Karten & Abos", in der Form, die tickets erwartet:
- * Beträge in Cent, Tage als Y-m-d, "Gültig bis" als Uhrzeit des Hauses. Was nur tickets prüfen
+ * Beträge in Cent, Tage als Y-m-d, "Gültig bis" als Uhrzeit des Hauses, uses null = unbegrenzt. Was nur tickets prüfen
  * kann (Saisonlänge, Verkauftes bleibt fest), kommt von dort als Meldung zurück.
  */
 class SaveTicketingPassTypeRequest extends FormRequest
@@ -32,7 +32,7 @@ class SaveTicketingPassTypeRequest extends FormRequest
             'name' => 'required|string|min:2|max:120',
             'description' => 'nullable|string|max:4000',
             'price' => 'nullable|integer|min:0',
-            'uses' => 'required|integer|min:1|max:1000',
+            'uses' => 'present|nullable|integer|min:1|max:1000',
             'monthlyPrice' => 'nullable|integer|min:' . self::MIN_SUBSCRIPTION_PRICE_CENTS,
             'upfrontPrice' => 'nullable|integer|min:' . self::MIN_SUBSCRIPTION_PRICE_CENTS,
             'termMode' => ['required', Rule::in(['open', 'months', 'season'])],

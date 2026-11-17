@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {safeGetItem, safeRemoveItem, safeSetItem} from '../../resources/js/Helper/safeStorage.js';
-import {createLocaleSwitcher, resolveInitialLocale} from '../../resources/js/Helper/appLocale.js';
+import {
+    createLocaleSwitcher,
+    loadFallbackMessages,
+    resolveInitialLocale,
+    supportedLocaleOptions,
+} from '../../resources/js/Helper/appLocale.js';
 
 function memoryStorage() {
     const data = new Map();
@@ -130,4 +135,49 @@ test('failed message load keeps the current language', async () => {
     await withWindow({localStorage: memoryStorage()}, () => switchLocale('en'));
 
     assert.equal(i18n.global.locale.value, 'de');
+});
+
+test('selectable languages come from the shared supportedLocales prop', () => {
+    assert.deepEqual(
+        supportedLocaleOptions([
+            {code: 'de', name: 'Deutsch'},
+            {code: 'en', name: 'English'},
+            {code: 'nl', name: 'Nederlands'},
+        ]),
+        [
+            {id: 'de', name: 'Deutsch'},
+            {id: 'en', name: 'English'},
+            {id: 'nl', name: 'Nederlands'},
+        ],
+    );
+});
+
+test('invalid or missing locale entries fall back to the fallback language', () => {
+    assert.deepEqual(supportedLocaleOptions([{code: 'xy'}, {name: 'kaputt'}, null]), [{id: 'xy', name: 'xy'}]);
+    assert.deepEqual(supportedLocaleOptions(undefined), [{id: 'en', name: 'en'}]);
+});
+
+test('fallback messages are loaded once, and only when missing', async () => {
+    const i18n = fakeI18n('nl');
+    const loaded = [];
+    const loadMessages = async (locale) => {
+        loaded.push(locale);
+        return {hello: 'Hello'};
+    };
+
+    await loadFallbackMessages(i18n, loadMessages, 'en');
+    await loadFallbackMessages(i18n, loadMessages, 'en');
+
+    assert.deepEqual(loaded, ['en']);
+    assert.deepEqual(i18n.global.messages.get('en'), {hello: 'Hello'});
+});
+
+test('a failing fallback load never throws', async () => {
+    const i18n = fakeI18n('nl');
+
+    await loadFallbackMessages(i18n, async () => {
+        throw new Error('offline');
+    }, 'en');
+
+    assert.equal(i18n.global.messages.has('en'), false);
 });

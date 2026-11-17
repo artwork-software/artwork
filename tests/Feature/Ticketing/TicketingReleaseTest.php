@@ -123,6 +123,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$first->id, $second->id],
+            'capacity' => 250,
             'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3500, 'quota' => 250]],
             'description' => null,
             'reductions' => [],
@@ -141,6 +142,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$first->id],
+            'capacity' => 310,
             'classes' => [
                 ['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3900, 'quota' => 300],
                 ['zone_key' => null, 'name' => 'Premium', 'price_cents' => 7900, 'quota' => 10],
@@ -223,6 +225,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$event->id],
+            'capacity' => 280,
             'classes' => [
                 ['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3100, 'quota' => 270],
                 ['zone_key' => null, 'name' => 'Premium', 'price_cents' => 7900, 'quota' => 10],
@@ -239,6 +242,84 @@ final class TicketingReleaseTest extends FeatureTestCase
     }
 
     #[Test]
+    public function places_in_total_cap_the_date_and_classes_without_places_draw_from_them(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+
+        $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
+            'event_ids' => [$event->id],
+            'capacity' => 20,
+            'classes' => [
+                ['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 1700, 'quota' => null],
+                ['zone_key' => null, 'name' => 'Frühbucher', 'price_cents' => 1200, 'quota' => 5],
+            ],
+            'description' => null,
+            'reductions' => [],
+        ])->assertOk()->assertJsonPath('events.0.release.capacity', 20);
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/dates')
+            && $request['capacity'] === 20
+            && $request['categories'][0]['quota'] === null
+            && $request['categories'][1]['quota'] === 5);
+    }
+
+    #[Test]
+    public function a_class_cannot_have_more_places_than_the_date(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+
+        $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
+            'event_ids' => [$event->id],
+            'capacity' => 20,
+            'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 1700, 'quota' => 21]],
+            'description' => null,
+            'reductions' => [],
+        ])->assertUnprocessable()->assertJsonValidationErrors('classes.0.quota');
+    }
+
+    #[Test]
+    public function without_a_total_every_class_sells_its_places_and_the_date_their_sum(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+
+        $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
+            'event_ids' => [$event->id],
+            'capacity' => null,
+            'classes' => [
+                ['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 1700, 'quota' => 45],
+                ['zone_key' => null, 'name' => 'Loge', 'price_cents' => 8900, 'quota' => 30],
+            ],
+            'description' => null,
+            'reductions' => [],
+        ])->assertOk()->assertJsonPath('events.0.release.capacity', null);
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/dates')
+            && $request['capacity'] === 75
+            && $request['categories'][0]['quota'] === 45
+            && $request['categories'][1]['quota'] === 30);
+    }
+
+    #[Test]
+    public function without_a_total_every_class_needs_its_places(): void
+    {
+        $this->fakeTickets();
+        $event = $this->releasedEvent();
+
+        $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
+            'event_ids' => [$event->id],
+            'capacity' => null,
+            'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 1700, 'quota' => null]],
+            'description' => null,
+            'reductions' => [],
+        ])->assertUnprocessable()->assertJsonValidationErrors('classes.0.quota');
+    }
+
+    #[Test]
     public function a_date_keeps_its_own_text_and_reductions_and_sends_them_to_the_shop(): void
     {
         $this->fakeTickets();
@@ -248,6 +329,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$event->id],
+            'capacity' => 300,
             'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 2900, 'quota' => 300]],
             'description' => "## Premiere\nMit anschließender Feier.",
             'reductions' => [['id' => $pupils, 'offered' => false], ['id' => $members, 'offered' => true]],
@@ -289,6 +371,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$event->id],
+            'capacity' => 300,
             'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 2900, 'quota' => 300]],
             'description' => null,
             'reductions' => [['id' => 'students', 'offered' => false]],
@@ -754,6 +837,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$first->id, $third->id],
+            'capacity' => 300,
             'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3400, 'quota' => 300]],
             'description' => null,
             'reductions' => [],
@@ -807,6 +891,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$own->id, $foreign->id],
+            'capacity' => 300,
             'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3400, 'quota' => 300]],
             'description' => null,
             'reductions' => [],
@@ -987,6 +1072,49 @@ final class TicketingReleaseTest extends FeatureTestCase
     }
 
     #[Test]
+    public function after_a_room_change_classes_without_places_share_the_new_room(): void
+    {
+        $this->fakeTickets($this->withStudio(seated: false));
+        $event = $this->releasedEvent([
+            'venue_id' => self::VENUE_ID,
+            'capacity' => 200,
+            'classes' => [
+                ['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3500, 'quota' => null],
+                ['zone_key' => null, 'name' => 'Premiere', 'price_cents' => 9000, 'quota' => null],
+            ],
+        ]);
+
+        $this->moveConfirmed($event, ['room_id' => $this->studio()->id]);
+        $this->runTicketingSync();
+
+        $sent = Http::recorded(fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/dates'))->last()[0];
+        $this->assertSame(120, $sent['capacity']);
+        $this->assertNull($sent['categories'][2]['quota']);
+    }
+
+    #[Test]
+    public function a_date_in_a_room_with_a_seating_plan_sells_its_chairs_whatever_total_was_saved(): void
+    {
+        $this->fakeTickets($this->withStudio(seated: true));
+        $event = $this->releasedEvent(['venue_id' => self::STUDIO_ID, 'capacity' => 500]);
+        $event->updateQuietly(['room_id' => $this->studio()->id]);
+
+        $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
+            'event_ids' => [$event->id],
+            'capacity' => 500,
+            'classes' => [['zone_key' => 'parkett', 'name' => 'Parkett', 'price_cents' => 3500, 'quota' => 80]],
+            'description' => null,
+            'reductions' => [],
+        ])->assertOk()->assertJsonPath('events.0.release.capacity', null);
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/dates')
+            && $request['capacity'] === 120
+            && $request['categories'][0]['priceCents'] === 3500);
+    }
+
+    #[Test]
     public function saving_the_prices_after_a_room_change_settles_them_on_the_new_room(): void
     {
         $this->fakeTickets($this->withStudio(seated: false));
@@ -995,6 +1123,7 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         $this->putJson(route('projects.tabs.ticketing.draft', $this->project), [
             'event_ids' => [$event->id],
+            'capacity' => 40,
             'classes' => [['zone_key' => 'stehplatz', 'name' => 'Stehplatz', 'price_cents' => 1800, 'quota' => 40]],
             'description' => null,
             'reductions' => [],

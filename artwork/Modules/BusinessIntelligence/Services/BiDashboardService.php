@@ -211,6 +211,9 @@ class BiDashboardService
 
         // Plan-Aggregation (nur Projekte mit Plan-Werten zählen in die Erreichung)
         $planMetrics = $this->metricsService->forScope('plan');
+        $bookingCounts = $this->derivedValuesService->getBookingCountsByTableId(
+            $projects->map(static fn (Project $project): ?int => $project->table?->id)->filter()->values()->all()
+        );
         $planVisitorsTotal = 0;
         $planRevenueTotal = 0.0;
         $planCostsTotal = 0.0;
@@ -271,7 +274,7 @@ class BiDashboardService
             }
 
             $contracts = $project->contracts->count();
-            $bookings = $this->derivedValuesService->getBookingCount($project);
+            $bookings = $project->table ? ($bookingCounts[$project->table->id] ?? 0) : 0;
             [$openTasks, $totalTasks] = $this->taskCounts($project);
             $documents = $project->project_files->count();
             $effortHours = $this->effortHours($project);

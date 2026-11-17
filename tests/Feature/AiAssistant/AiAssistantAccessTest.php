@@ -54,6 +54,17 @@ final class AiAssistantAccessTest extends TestCase
     }
 
     #[Test]
+    public function visible_only_with_ai_access_and_independent_of_the_house_switch(): void
+    {
+        $access = $this->access(instance: true, house: false);
+
+        $this->assertTrue($access->visibleTo(User::factory()->withAiAccess()->create()));
+        $this->assertFalse($access->visibleTo(User::factory()->create()));
+        $this->assertFalse($access->visibleTo($this->adminUser()));
+        $this->assertFalse($access->visibleTo(null));
+    }
+
+    #[Test]
     public function not_allowed_without_the_console_permission(): void
     {
         $this->assertFalse($this->access(instance: true, house: true)->allowed(User::factory()->create()));

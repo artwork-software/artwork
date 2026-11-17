@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\AiAssistant\Http\Requests;
 
-use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\AiAssistant\Services\AiAssistantAccess;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -10,7 +10,7 @@ class UpdateAiAssistantSettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can(PermissionEnum::AI_ASSISTANT_SETTINGS_UPDATE->value);
+        return app(AiAssistantAccess::class)->visibleTo($this->user());
     }
 
     /**

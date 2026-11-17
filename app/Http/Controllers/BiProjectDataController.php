@@ -317,7 +317,8 @@ class BiProjectDataController extends Controller
 
     public function updateRoomCapacity(Request $request, Project $project, Room $room): JsonResponse
     {
-        $request->validate(['capacity_override' => ['nullable', 'integer', 'min:0']]);
+        // Obergrenze wie bei den Kategorie-Werten; größere Zahlen sprengen die unsigned-int-Spalte
+        $request->validate(['capacity_override' => ['nullable', 'integer', 'min:0', 'max:100000000']]);
 
         $capacity = $this->biProjectDataService->updateRoomCapacity(
             $project->id,

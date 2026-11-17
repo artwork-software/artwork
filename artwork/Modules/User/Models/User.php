@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Core\Localization\SupportedLocales;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Chat\Models\Chat;
@@ -23,7 +24,6 @@ use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceTask;
 use Artwork\Modules\MoneySource\Models\MoneySourceUserPivot;
 use Artwork\Modules\Notification\Models\NotificationSetting;
-use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Comment;
@@ -317,6 +317,7 @@ class User extends Model implements
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'ai_access_granted_at' => 'datetime',
         'deactivated_at' => 'datetime',
         'opened_checklists' => 'array',
         'opened_areas' => 'array',
@@ -372,6 +373,8 @@ class User extends Model implements
      */
     protected $hidden = [
         'password',
+        // KI-Freischaltung (nur per Konsole): taucht in keinem Payload auf, auch nicht für Admins
+        'ai_access_granted_at',
         // reine Vorauswahl des Künstlerplans, gehört in keinen Payload
         'artist_plan_event_type_ids',
         'pending_email',
@@ -495,7 +498,7 @@ class User extends Model implements
     {
         $language = $this->getAttribute('language');
 
-        return in_array($language, config('app.supported_locales', ['de', 'en']), true) ? $language : null;
+        return SupportedLocales::isSupported($language) ? $language : null;
     }
 
     public function sendPasswordResetNotification($token): void
@@ -988,12 +991,26 @@ class User extends Model implements
 
 
     /**
-     * Nur per Konsole vergebbares Recht als Schranke vor Maschinen-API und KI-Routen. Bewusst als
-     * Direktrecht geprüft: weder Rollen noch der Admin-Bypass aus Gate::before erfüllen es.
+     * KI-Freischaltung (ARTWORK-352): Voraussetzung für alles, was mit KI zu tun hat — KI-Bar,
+     * KI-Einstellungen, KI-Keys, Maschinen-API. Bewusst kein Spatie-Recht und nicht fillable:
+     * weder Rollen noch der Admin-Bypass aus Gate::before noch irgendeine Oberfläche erreichen sie.
+     * Vergabe nur per Konsole: `User::find($id)->grantAiAccess();`
      */
     public function hasAiAccess(): bool
     {
-        return $this->permissions->contains('name', ConsoleOnlyPermissionEnum::AiAccess->value);
+        return $this->ai_access_granted_at !== null;
+    }
+
+    public function grantAiAccess(): void
+    {
+        $this->forceFill(['ai_access_granted_at' => now()])->save();
+        $this->forgetCachedShareData();
+    }
+
+    public function revokeAiAccess(): void
+    {
+        $this->forceFill(['ai_access_granted_at' => null])->save();
+        $this->forgetCachedShareData();
     }
 
     public function getHasProjectManagerPermission(): bool

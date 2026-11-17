@@ -83,23 +83,23 @@ final class AiSessionTokenTest extends TestCase
         $this->postJson(route('ai.session.store'))->assertForbidden();
     }
 
-    /** Nur ausgewählte Personen: ohne Konsolen-Recht "ai access" kein Token, auch nicht für Admins. */
+    /** Nur ausgewählte Personen: ohne KI-Freischaltung gibt es den Endpunkt nicht, auch nicht für Admins. */
     #[Test]
-    public function a_user_without_the_console_permission_yields_403(): void
+    public function without_ai_access_the_endpoint_does_not_exist(): void
     {
         $this->actingAs(User::factory()->create());
         $this->house(enabled: true);
 
-        $this->postJson(route('ai.session.store'))->assertForbidden();
+        $this->postJson(route('ai.session.store'))->assertNotFound();
     }
 
     #[Test]
-    public function an_admin_without_the_console_permission_yields_403(): void
+    public function without_ai_access_the_endpoint_does_not_exist_for_an_admin_either(): void
     {
         $this->actingAs($this->adminUser());
         $this->house(enabled: true);
 
-        $this->postJson(route('ai.session.store'))->assertForbidden();
+        $this->postJson(route('ai.session.store'))->assertNotFound();
     }
 
     #[Test]

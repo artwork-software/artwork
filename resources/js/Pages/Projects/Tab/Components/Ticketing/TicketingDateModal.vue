@@ -33,8 +33,20 @@
                 <span>{{ roomChange }}</span>
             </div>
 
+            <div v-if="!seated" class="flex items-center gap-2.5">
+                <span class="font-lexend text-xs font-medium text-[#3F424A]">{{ $t('Places') }}</span>
+                <ChoiceSegments v-model="ownPlaces" :label="$t('Places')"
+                                :options="[{ value: false, label: $t('Shared by all classes') }, { value: true, label: $t('Fixed places per class') }]"
+                                @update:model-value="switchPlaces" />
+            </div>
             <div class="grid grid-cols-[minmax(0,1fr)_96px_140px_28px] gap-2.5 font-lexend text-xs font-medium text-[#3F424A]">
                 <span>{{ $t('Price class') }}</span><span>{{ $t('Places') }}</span><span>{{ $t('Price') }}</span><span></span>
+            </div>
+            <div class="-mx-2 grid grid-cols-[minmax(0,1fr)_96px_140px_28px] items-center gap-2.5 rounded-md bg-surface-sunken px-2 py-1.5">
+                <label :for="perClass ? undefined : 'ticketing-capacity'" class="text-[13px] font-medium text-text">{{ $t('All price classes together') }}</label>
+                <p v-if="perClass" class="flex h-8 items-center px-2.5 text-[13px] font-medium tabular-nums text-text">= {{ totalPlaces }}</p>
+                <BaseInput v-else id="ticketing-capacity" v-model="capacityInput" type="number" :min="0" :label="$t('Places in total')" :show-label="false" required is-small class="tabular-nums" />
+                <span class="text-xs text-text-subtle">{{ perClass ? $t('Sum of the classes') : $t('Places in total') }}</span>
             </div>
             <div class="flex flex-col gap-2">
                 <div v-for="(cls, index) in classes" :key="cls.zone_key ?? `custom-${index}`" class="grid grid-cols-[minmax(0,1fr)_96px_140px_28px] items-start gap-2.5">
@@ -44,7 +56,7 @@
                         <p v-if="differsFromRoom(cls)" class="mt-1 text-xs text-text-subtle tabular-nums">{{ $t('Room default: {places} places · {price}', { places: defaultFor(cls.zone_key).quota, price: formatEuro(defaultFor(cls.zone_key).price_cents) }) }}</p>
                     </div>
                     <p v-if="seated" class="flex h-8 items-center justify-end text-[13px] tabular-nums text-text-subtle" :title="$t('From the seating plan')">{{ cls.quotaInput }}</p>
-                    <BaseInput v-else :id="`ticketing-class-${index}-quota`" v-model="cls.quotaInput" type="number" :min="0" :label="$t('Places')" :show-label="false" required is-small class="tabular-nums" />
+                    <BaseInput v-else :id="`ticketing-class-${index}-quota`" v-model="cls.quotaInput" type="number" :min="0" :max="perClass ? undefined : capacityInput" :label="$t('Places')" :show-label="false" :placeholder="perClass || capacityInput === '' ? '–' : $t('up to {count}', { count: capacityInput })" is-small class="tabular-nums" />
                     <div class="flex h-8 overflow-hidden rounded-md border border-border bg-surface">
                         <input v-model="cls.priceInput" type="number" :min="0" step="0.01" required :aria-label="$t('Price')" class="flex-1 min-w-0 border-0 px-2.5 text-[13px] tabular-nums focus:ring-0" />
                         <span class="flex items-center px-2 bg-surface-sunken border-l border-border-subtle text-xs text-text-subtle">€</span>
@@ -54,9 +66,26 @@
                             :disabled="classes.length === 1" :aria-label="$t('Remove')" :title="$t('Not sold on these dates')" @click="classes.splice(index, 1)">
                         <IconTrash class="size-[15px]" />
                     </button>
+                    <template v-for="reduced in reducedPrices(cls)" :key="reduced.id">
+                        <span class="flex min-w-0 items-center gap-1.5 pl-3 text-xs text-text-subtle">
+                            ↳ <span class="shrink-0 rounded-full bg-accent-50 px-1.5 py-px text-[11px] font-medium text-accent-700">{{ $t('Reduction') }}</span>
+                            <span class="truncate">{{ reduced.name }} {{ reduced.value }}</span>
+                        </span>
+                        <span class="text-[11px] text-text-subtle">{{ $t('same places') }}</span>
+                        <span class="px-2.5 text-xs tabular-nums text-text-subtle">{{ formatEuro(reduced.cents) }}</span>
+                        <span></span>
+                    </template>
+                    <p v-if="perClass && cls.quotaInput === ''" class="col-span-4 text-xs leading-[18px] text-danger">{{ $t('With fixed places, every price class needs its number.') }}</p>
+                    <p v-if="exceedsTotal(cls)" class="col-span-4 text-xs leading-[18px] text-danger">{{ $t('A price class cannot have more places than the date in total.') }}</p>
+                    <p v-if="isReductionName(cls.name)" class="col-span-4 text-xs leading-[18px] text-warning">
+                        {{ $t('“{name}” is also a reduction and lowers every price class already. A price class of its own is usually not needed.', { name: cls.name.trim() }) }}
+                    </p>
                 </div>
             </div>
 
+            <p v-if="unreachable" class="text-xs leading-[18px] text-warning">
+                {{ $t('The price classes have only {count} places together, so the date never sells all {total}.', { count: totalPlaces, total: capacity }) }}
+            </p>
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
                 <button v-if="!seated" type="button" class="inline-flex items-center gap-1.5 text-[13px] font-medium text-accent-600 hover:underline" @click="classes.push(customClass())">
                     <IconPlus class="size-3.5" stroke-width="2.5" />{{ $t('Add price class') }}
@@ -66,8 +95,9 @@
                 </button>
                 <button v-if="sharedVenue" type="button" class="ml-auto text-[13px] text-text-subtle hover:text-text" @click="resetToRoom">{{ $t('Reset to room') }}</button>
             </div>
-
-            <p class="text-xs text-text-subtle">{{ $t('{count} places in total.', { count: totalPlaces }) }}</p>
+            <p v-if="!seated" class="-mt-2 text-xs leading-[18px] text-text-subtle">
+                {{ perClass ? $t('Every class sells exactly its places; together they make the places of the date.') : $t('A price class without places sells until the date is full. With places, it sells at most that many, counted within the total.') }}
+            </p>
 
             <section class="flex flex-col gap-3 border-t border-border-hairline pt-4">
                 <BaseCheckbox id="ticketing-date-own-text" :model-value="ownText" :label="$t('Own description in the shop')"
@@ -124,12 +154,13 @@ import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseRichTextEditor from '@/Artwork/Inputs/BaseRichTextEditor.vue'
+import ChoiceSegments from '@/Pages/Settings/Tickets/ChoiceSegments.vue'
 import SeriesScopeChoice from '@/Layouts/Components/SeriesScopeChoice.vue'
 import TicketingReductionChips from '@/Pages/Projects/Tab/Components/Ticketing/TicketingReductionChips.vue'
 import { formatEuro } from '@/Helper/ticketingFormat.js'
 import { fromCents, toCents } from '@/Pages/Settings/Tickets/drafts.js'
 import { ticketingMoveHeaders } from '@/Composeables/useTicketingMove.js'
-import { classesOf, defaultClassesOfVenue, formatWhen, grantedIdsOf, isReleased, offeredIdsOf, roomChangeNote, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { capacityOf, classesOf, defaultClassesOfVenue, formatWhen, grantedIdsOf, isReleased, offeredIdsOf, reducedCents, reductionValue, roomChangeNote, seriesOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 
 const props = defineProps({
     projectId: { type: Number, required: true },
@@ -139,7 +170,7 @@ const props = defineProps({
     allEvents: { type: Array, required: true },
     /** The production's shop settings: its text and the reductions it grants, what a date departs from. */
     production: { type: Object, required: true },
-    /** The house reductions. */
+    /** The house reductions, with the value and price classes the production grants them on. */
     reductions: { type: Array, required: true },
     /** The rooms that sell in Artwork-Tickets, each with its venue; where a date can move to. */
     rooms: { type: Array, required: true },
@@ -172,13 +203,14 @@ const sharedVenue = computed(() => {
 })
 /** What the modal edits of one date, comparable across dates. */
 function saleOf(event) {
-    return JSON.stringify([classesOf(event), event.release?.description ?? null, [...offeredIdsOf(event, props.production, props.reductions)].sort()])
+    return JSON.stringify([classesOf(event), event.release?.capacity ?? null, event.release?.description ?? null, [...offeredIdsOf(event, props.production, props.reductions)].sort()])
 }
 const uniform = computed(() => props.events.every((event) => saleOf(event) === saleOf(props.events[0])))
 
-/* Rows keep the inputs as strings; the payload turns them into cents and integers. */
-function toRow(cls) {
-    return { zone_key: cls.zone_key, name: cls.name, quotaInput: String(cls.quota ?? 0), priceInput: fromCents(cls.price_cents ?? 0) }
+/* Rows keep the inputs as strings; the payload turns them into cents and integers. Under a shared total,
+   places equal to it cap nothing, so they start empty. */
+function toRow(cls, total = null) {
+    return { zone_key: cls.zone_key, name: cls.name, quotaInput: cls.quota === null || cls.quota === total ? '' : String(cls.quota), priceInput: fromCents(cls.price_cents ?? 0) }
 }
 
 function customClass() {
@@ -193,11 +225,14 @@ const roomClasses = computed(() => defaultClassesOfVenue(sharedVenue.value))
 /** The saved classes; on a seating plan the room's, carrying the date's saved prices. */
 function initialRows() {
     const saved = classesOf(props.events[0])
-    if (!seated.value) return saved.map(toRow)
+    if (!seated.value) return saved.map((cls) => toRow(cls, props.events[0].release?.capacity))
     return roomClasses.value.map((room) => toRow({ ...room, price_cents: saved.find((cls) => cls.zone_key === room.zone_key)?.price_cents ?? room.price_cents }))
 }
 
 const classes = ref(initialRows())
+const capacityInput = ref(String(capacityOf(props.events[0]) ?? ''))
+/* Without a total of its own a date sells each class's places exactly, as the room's zones do. */
+const ownPlaces = ref((props.events[0].release?.capacity ?? null) === null)
 const ownText = ref(Boolean(props.events[0].release?.description))
 const description = ref(props.events[0].release?.description ?? '')
 const granted = grantedIdsOf(props.production, props.reductions)
@@ -209,8 +244,41 @@ const askScope = ref(false)
 const missingRoomClasses = computed(() => roomClasses.value.filter((room) => !classes.value.some((cls) => cls.zone_key === room.zone_key)))
 const totalPlaces = computed(() => classes.value.reduce((sum, cls) => sum + (Number(cls.quotaInput) || 0), 0))
 
-const valid = computed(() => !mixedPlan.value && classes.value.length > 0 && classes.value.every((cls) =>
-    cls.name.trim() !== '' && toCents(cls.priceInput) !== null && cls.quotaInput !== '' && Number(cls.quotaInput) >= 0))
+const perClass = computed(() => seated.value || ownPlaces.value)
+const capacity = computed(() => (perClass.value ? totalPlaces.value : Number(capacityInput.value)))
+
+const valid = computed(() => !mixedPlan.value && classes.value.length > 0 && (perClass.value || capacityInput.value !== '') && capacity.value >= 0
+    && classes.value.every((cls) => cls.name.trim() !== '' && toCents(cls.priceInput) !== null
+        && (cls.quotaInput === '' ? !perClass.value : Number(cls.quotaInput) >= 0) && !exceedsTotal(cls)))
+
+/* Every class capped, together below the total: the rest of the date can never sell. */
+const unreachable = computed(() => !perClass.value && capacityInput.value !== ''
+    && classes.value.every((cls) => cls.quotaInput !== '') && totalPlaces.value < capacity.value)
+
+function exceedsTotal(cls) {
+    return !perClass.value && cls.quotaInput !== '' && Number(cls.quotaInput) > capacity.value
+}
+
+/* Going shared starts from the places the classes add up to. */
+function switchPlaces(fixed) {
+    if (!fixed) capacityInput.value = String(totalPlaces.value)
+}
+
+const offered = computed(() => props.reductions.filter((reduction) => offeredIds.value.includes(reduction.id)))
+
+/** What the shop sells this class for with each reduction offered on it. */
+function reducedPrices(cls) {
+    const cents = toCents(cls.priceInput)
+    if (!cents) return []
+    return offered.value
+        .filter((reduction) => reduction.categories === null || reduction.categories.includes(cls.name.trim()))
+        .map((reduction) => ({ id: reduction.id, name: reduction.name, value: reductionValue(reduction), cents: reducedCents(cents, reduction) }))
+}
+
+function isReductionName(name) {
+    const normalized = name.trim().toLowerCase()
+    return normalized !== '' && offered.value.some((reduction) => reduction.name.toLowerCase() === normalized)
+}
 
 function defaultFor(zoneKey) {
     return roomClasses.value.find((room) => room.zone_key === zoneKey) ?? null
@@ -219,11 +287,13 @@ function defaultFor(zoneKey) {
 /* The room's default is only worth a line once the date departs from it. */
 function differsFromRoom(cls) {
     const room = defaultFor(cls.zone_key)
-    return room !== null && ((!seated.value && Number(cls.quotaInput) !== room.quota) || toCents(cls.priceInput) !== room.price_cents)
+    return room !== null && ((!seated.value && cls.quotaInput !== '' && Number(cls.quotaInput) !== room.quota) || toCents(cls.priceInput) !== room.price_cents)
 }
 
 function resetToRoom() {
-    classes.value = roomClasses.value.map(toRow)
+    classes.value = roomClasses.value.map((room) => toRow(room))
+    capacityInput.value = String(sharedVenue.value.capacity)
+    ownPlaces.value = true
 }
 
 /* Same as the server after a move: classes both rooms share keep their price, own ones only survive without a plan. */
@@ -231,9 +301,11 @@ watch(targetRoom, () => {
     if (!roomMoved.value) return
     const fitted = roomClasses.value.map((room) => {
         const kept = classes.value.find((cls) => cls.zone_key === room.zone_key)
-        return kept ? { ...toRow(room), priceInput: kept.priceInput } : toRow(room)
+        return { ...toRow(room), priceInput: kept?.priceInput ?? fromCents(room.price_cents) }
     })
     classes.value = seated.value ? fitted : [...fitted, ...classes.value.filter((cls) => cls.zone_key === null)]
+    capacityInput.value = String(sharedVenue.value.capacity)
+    ownPlaces.value = true
 })
 
 /* An own text starts from the production's, which is usually only to be adapted. */
@@ -277,11 +349,12 @@ async function submit(targets) {
         if (roomMoved.value && !(await moveRoom(targets))) return
         const { data } = await axios.put(route('projects.tabs.ticketing.draft', { project: props.projectId }), {
             event_ids: targets.map((event) => event.id),
+            capacity: perClass.value ? null : capacity.value,
             classes: classes.value.map((cls) => ({
                 zone_key: cls.zone_key,
                 name: cls.name.trim(),
                 price_cents: toCents(cls.priceInput),
-                quota: Number(cls.quotaInput),
+                quota: cls.quotaInput === '' ? null : Number(cls.quotaInput),
             })),
             description: ownText.value && description.value.trim() !== '' ? description.value : null,
             reductions: departures.value,

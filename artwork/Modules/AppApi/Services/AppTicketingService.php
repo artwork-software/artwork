@@ -123,7 +123,7 @@ class AppTicketingService
                 'holder_name' => $pass['holderName'],
                 'holder_email' => $pass['holderEmail'],
                 'subscription' => (bool) $pass['subscription'],
-                'uses_left' => (int) $pass['usesLeft'],
+                'uses_left' => $pass['usesLeft'],
                 'valid_until' => $pass['validUntil'],
                 'block' => $pass['block'],
                 'to_pay' => array_map(static fn (array $price): array => [

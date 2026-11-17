@@ -3,8 +3,6 @@
 namespace Database\Factories\Artwork\Modules\User\Models;
 
 use App\Models\Team;
-use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
-use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -44,14 +42,12 @@ class UserFactory extends Factory
     }
 
     /**
-     * Vergibt das nur per Konsole setzbare Recht "ai access" (Schranke vor Maschinen-API und KI-Routen).
+     * KI-Freischaltung (nur per Konsole vergebbar): Voraussetzung für KI-Bar, KI-Einstellungen,
+     * KI-Keys und Maschinen-API.
      */
     public function withAiAccess(): static
     {
-        return $this->afterCreating(static function (User $user): void {
-            $permission = Permission::findOrCreate(ConsoleOnlyPermissionEnum::AiAccess->value, 'web');
-            $user->givePermissionTo($permission);
-        });
+        return $this->state(fn (): array => ['ai_access_granted_at' => now()]);
     }
 
     public function withPersonalTeam(): static

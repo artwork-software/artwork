@@ -146,8 +146,15 @@ return [
 
     'fallback_locale' => 'en',
 
-    // Sprachen mit vollständigen Übersetzungen (lang/*.json) – Oberfläche und Empfängersprache
-    'supported_locales' => ['de', 'en'],
+    /*
+    | Sprachen der Oberfläche, Mails und Exporte: Code => Eigenname der Sprache.
+    | Eine neue Sprache braucht hier einen Eintrag sowie lang/<code>.json (Schlüssel = englischer
+    | Ausgangstext) und lang/<code>/*.php. Fehlende Übersetzungen fallen auf Englisch zurück.
+    */
+    'supported_locales' => [
+        'de' => 'Deutsch',
+        'en' => 'English',
+    ],
 
     /*
     |--------------------------------------------------------------------------

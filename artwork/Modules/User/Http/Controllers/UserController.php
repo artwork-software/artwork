@@ -6,6 +6,7 @@ use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Http\Controllers\Controller;
 use Spatie\Activitylog\Models\Activity;
 use Artwork\Core\Http\Requests\SearchRequest;
+use Artwork\Core\Localization\SupportedLocales;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -20,7 +21,6 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
-use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
@@ -51,7 +51,7 @@ use Artwork\Modules\User\Enums\UserSortEnum;
 use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Http\Requests\MembersManagementRequest;
 use Artwork\Modules\User\Http\Resources\MinimalUserIndexResource;
-use Artwork\Modules\User\Http\Resources\UserIndexResource;
+use Artwork\Modules\User\Http\Resources\UserSearchResultResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\WorkTime\Models\OvertimePayout;
 use Artwork\Modules\WorkTime\Http\Requests\RebookWorkTimeRequest;
@@ -129,9 +129,10 @@ class UserController extends Controller
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->limit(self::PROFILE_SEARCH_LIMIT)
+            ->with('departments')
             ->get();
 
-        return UserIndexResource::collection($users)->resolve();
+        return UserSearchResultResource::collection($users)->resolve();
     }
 
 
@@ -347,10 +348,7 @@ class UserController extends Controller
             'adminUserIds' => Gate::allows('viewDeactivated', User::class)
                 ? User::role(RoleEnum::ARTWORK_ADMIN->value)->pluck('id')
                 : [],
-            'all_permissions' => Permission::query()
-                ->whereNotIn('name', ConsoleOnlyPermissionEnum::values())
-                ->get()
-                ->groupBy('group'),
+            'all_permissions' => Permission::all()->groupBy('group'),
             'departments' => Department::all(),
             // Rollen (= Admin-Rolle) nur für Admins wählbar; Altbestand-Rollen in der DB werden nicht angeboten,
             // weil StoreInvitationRequest nur RoleEnum akzeptiert.
@@ -1631,6 +1629,11 @@ class UserController extends Controller
 
         $this->authorizeProfileEdit($user);
 
+        // Nur Sprachen aus app.supported_locales, sonst landete ein beliebiger Code in users.language
+        $request->validate([
+            'language' => ['sometimes', 'nullable', 'string', Rule::in(SupportedLocales::codes())],
+        ]);
+
         // Nicht-Admins dürfen fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
         if (!$isSelf && !$actorIsAdmin) {
             abort_if(
@@ -1800,7 +1803,7 @@ class UserController extends Controller
         // Der Rechte-Tab speichert bei jedem Klick sofort; schnelle Klickfolgen erzeugen parallele Requests.
         // syncPermissions/syncRoles sind detach + attach ohne Transaktion – ohne Sperre auf den User
         // schreiben zwei Requests dieselben Pivot-Zeilen (Duplicate entry auf model_has_permissions).
-        [$permissionsBefore, $rolesBefore, $permissionsAfter] = DB::transaction(
+        [$permissionsBefore, $rolesBefore] = DB::transaction(
             function () use ($user, $permissionsToGrant, $rolesToGrant): array {
                 User::query()->whereKey($user->getKey())->lockForUpdate()->first();
                 $user->unsetRelation('permissions')->unsetRelation('roles');
@@ -1808,18 +1811,10 @@ class UserController extends Controller
                 $permissionsBefore = $user->permissions()->pluck('name')->all();
                 $rolesBefore = $user->roles()->pluck('name')->all();
 
-                // Nur per Konsole vergebbare Rechte kennt der Rechte-Tab nicht; ohne Übernahme würde
-                // syncPermissions sie bei jedem Speichern still entziehen.
-                $consoleOnlyPermissions = array_values(
-                    array_intersect($permissionsBefore, ConsoleOnlyPermissionEnum::values())
-                );
-
-                $permissionsAfter = array_values(array_unique([...$permissionsToGrant, ...$consoleOnlyPermissions]));
-
-                $user->syncPermissions($permissionsAfter);
+                $user->syncPermissions($permissionsToGrant);
                 $user->syncRoles($rolesToGrant);
 
-                return [$permissionsBefore, $rolesBefore, $permissionsAfter];
+                return [$permissionsBefore, $rolesBefore];
             }
         );
         // Gecachte Inertia-Share-Daten sofort invalidieren statt auf den 5-Min.-TTL zu warten
@@ -1830,7 +1825,7 @@ class UserController extends Controller
             $user,
             Auth::user(),
             $permissionsBefore,
-            $permissionsAfter,
+            $permissionsToGrant,
             $rolesBefore,
             $rolesToGrant,
             $request->input('source')
@@ -2367,8 +2362,8 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only([
-            'checklist_style'
+        $user->update($request->validate([
+            'checklist_style' => ['required', 'string', 'in:list,kanban'],
         ]));
     }
 
@@ -2389,7 +2384,9 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('at_a_glance'));
+        $user->update($request->validate([
+            'at_a_glance' => ['required', 'boolean'],
+        ]));
     }
 
     public function updateShiftPlanZoomFactor(User $user, Request $request): void
@@ -2409,7 +2406,10 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('bulk_sort_id'));
+        // Sortierungen 0 bis 3 der Bulk-Ansicht
+        $user->update($request->validate([
+            'bulk_sort_id' => ['required', 'integer', 'between:0,3'],
+        ]));
     }
 
     public function updateDailyView(User $user, Request $request): void
@@ -2477,7 +2477,9 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('show_description_in_bulk'));
+        $user->update($request->validate([
+            'show_description_in_bulk' => ['required', 'boolean'],
+        ]));
     }
 
     public function updateShiftPeriodOnStartDateChange(User $user, Request $request): void
@@ -2587,14 +2589,18 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('compact_mode'));
+        $user->update($request->validate([
+            'compact_mode' => ['required', 'boolean'],
+        ]));
     }
 
     public function toggleShowProjectTeamNames(User $user, Request $request): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('show_project_team_names'));
+        $user->update($request->validate([
+            'show_project_team_names' => ['required', 'boolean'],
+        ]));
     }
 
     public function updateShowCrafts(User $user, Request $request): void
@@ -2624,14 +2630,21 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('show_qualifications'));
+        $request->validate([
+            'show_qualifications' => ['present', 'array'],
+            'show_qualifications.*' => ['integer'],
+        ]);
+
+        $user->update(['show_qualifications' => array_values($request->input('show_qualifications'))]);
     }
 
     public function calendarGoToStepper(User $user, Request $request): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('goto_mode'));
+        $user->update($request->validate([
+            'goto_mode' => ['required', 'string', 'in:day,week,month'],
+        ]));
     }
 
     /**
@@ -2689,7 +2702,12 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('drawer_height'));
+        // Beim Ziehen können Pixelwerte mit Nachkommastellen ankommen; die Spalte ist ganzzahlig
+        $validated = $request->validate([
+            'drawer_height' => ['required', 'numeric', 'min:0', 'max:10000'],
+        ]);
+
+        $user->update(['drawer_height' => (int) round((float) $validated['drawer_height'])]);
     }
 
     public function updateChecklistFilter(User $user, Request $request): void
@@ -2797,7 +2815,12 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('opened_crafts'));
+        $request->validate([
+            'opened_crafts' => ['present', 'array'],
+            'opened_crafts.*' => ['integer'],
+        ]);
+
+        $user->update(['opened_crafts' => array_values($request->input('opened_crafts'))]);
     }
 
     public function updateSortWorkersByQualification(User $user, Request $request): void

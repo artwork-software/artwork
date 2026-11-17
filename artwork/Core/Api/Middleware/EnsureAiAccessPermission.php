@@ -9,8 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Zusätzliche Schranke hinter auth:api vor den KI-Routen (/api/v1/ai/*): Der Besitzer des Tokens
- * muss das nur per Konsole vergebbare Recht "ai access" direkt halten (User::hasAiAccess). Scopes
- * regeln, WAS ein Token darf; dieses Recht regelt, OB dessen Besitzer die KI-Schnittstelle überhaupt
+ * die nur per Konsole vergebbare KI-Freischaltung haben (User::hasAiAccess). Scopes
+ * regeln, WAS ein Token darf; die Freischaltung regelt, OB dessen Besitzer die KI-Schnittstelle überhaupt
  * nutzen darf. Ein Entzug wirkt sofort auf alle bestehenden KI-Tokens der Person. Die übrigen
  * Maschinen-Routen (Inventar, Raumbelegung) laufen bewusst ohne diese Schranke.
  *

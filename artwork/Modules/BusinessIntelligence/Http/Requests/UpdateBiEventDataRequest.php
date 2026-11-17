@@ -14,9 +14,10 @@ class UpdateBiEventDataRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'visitors' => ['nullable', 'integer', 'min:0'],
-            'sold_tickets' => ['nullable', 'integer', 'min:0'],
-            'revenue' => ['nullable', 'numeric', 'min:0'],
+            // Obergrenzen passend zu den Spalten (unsigned int bzw. decimal(12,2)), sonst 500er beim Speichern
+            'visitors' => ['nullable', 'integer', 'min:0', 'max:100000000'],
+            'sold_tickets' => ['nullable', 'integer', 'min:0', 'max:100000000'],
+            'revenue' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'scope' => ['nullable', 'in:actual,plan'],
         ];
     }

@@ -14,13 +14,14 @@ class UpdateBiProjectDataRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'visitors_total' => ['nullable', 'integer', 'min:0'],
+            // Obergrenzen passend zu den Spalten, sonst 500er (Out of range) beim Speichern
+            'visitors_total' => ['nullable', 'integer', 'min:0', 'max:100000000'],
             'visitors_not_applicable' => ['boolean'],
-            'sold_tickets_total' => ['nullable', 'integer', 'min:0'],
+            'sold_tickets_total' => ['nullable', 'integer', 'min:0', 'max:100000000'],
             'sold_tickets_not_applicable' => ['boolean'],
-            'revenue_total' => ['nullable', 'numeric', 'min:0'],
+            'revenue_total' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'revenue_not_applicable' => ['boolean'],
-            'costs_total' => ['nullable', 'numeric', 'min:0'],
+            'costs_total' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'costs_not_applicable' => ['boolean'],
             'is_new_production' => ['boolean'],
             'is_co_production' => ['boolean'],

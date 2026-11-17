@@ -62,6 +62,10 @@ class ContractModuleController extends Controller
     {
         $this->authorize('delete', $module);
 
+        // Gespeicherte Datei mit entfernen, sonst bleibt sie verwaist im Storage liegen
+        if ($module->basename !== '') {
+            Storage::delete('contract_modules/' . $module->basename);
+        }
         $module->delete();
         return Redirect::route('contracts.index');
     }

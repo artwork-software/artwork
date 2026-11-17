@@ -133,6 +133,13 @@ return [
         'reverted' => '{1} Termin rückgängig gemacht (via Assistent)|' .
             '[2,*] :count Termine rückgängig gemacht (via Assistent)',
     ],
+    // Dieselbe Sammelmeldung für Empfänger ohne KI-Freischaltung — ohne KI-Bezug (ARTWORK-352)
+    'event_batch' => [
+        'created' => '{1} Termin angelegt|[2,*] :count Termine angelegt',
+        'updated' => '{1} Termin geändert|[2,*] :count Termine geändert',
+        'deleted' => '{1} Termin gelöscht|[2,*] :count Termine gelöscht',
+        'reverted' => '{1} Termin rückgängig gemacht|[2,*] :count Termine rückgängig gemacht',
+    ],
     'moneySource' => [
         'add_permission' => 'Du hast Zugriff auf :moneySource erhalten',
         'remove_permission' => 'Dein Zugriff auf :moneySource wurde gelöscht',

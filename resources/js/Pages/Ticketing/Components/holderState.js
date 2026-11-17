@@ -11,7 +11,7 @@ export function passState(pass, t) {
     if (pass.status === 'revoked') return { label: t('Revoked'), variant: 'warning' }
     if (pass.validUntil && dayjs(pass.validUntil).isBefore(dayjs())) return { label: t('Expired'), variant: 'neutral' }
     if (pausedUntil(pass)) return { label: t('Paused'), variant: 'warning' }
-    if (pass.usesUsed >= pass.usesTotal) return { label: t('Used up'), variant: 'neutral' }
+    if (pass.usesTotal !== null && pass.usesUsed >= pass.usesTotal) return { label: t('Used up'), variant: 'neutral' }
     return { label: t('Active'), variant: 'success' }
 }
 

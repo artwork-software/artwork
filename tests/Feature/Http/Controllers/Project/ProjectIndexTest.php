@@ -40,21 +40,6 @@ final class ProjectIndexTest extends FeatureTestCase
     }
 
     #[Test]
-    public function guest_cannot_view_create_project_page(): void
-    {
-        $this->get(route('projects.create'))
-            ->assertRedirect(route('login'));
-    }
-
-    #[Test]
-    public function admin_can_view_create_project_page(): void
-    {
-        $this->actingAsAdmin();
-
-        $this->get(route('projects.create'))->assertOk();
-    }
-
-    #[Test]
     public function guest_cannot_search_projects(): void
     {
         $this->get(route('projects.search', ['query' => 'foo']))

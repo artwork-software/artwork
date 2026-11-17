@@ -122,6 +122,12 @@ class SumDetailsController extends Controller
 
     public function update(SumMoneySource $sumMoneySource, Request $request): JsonResponse|RedirectResponse
     {
+        // Wie beim Anlegen: eine unbekannte Finanzierungsquelle hinterließ eine tote Verknüpfung und einen 500er
+        $request->validate([
+            'linked_type' => ['nullable', 'string'],
+            'money_source_id' => ['nullable', 'integer', 'exists:money_sources,id'],
+        ]);
+
         $sumMoneySource->update([
             'linked_type' => $request->linked_type,
             'money_source_id' => $request->money_source_id

@@ -113,6 +113,9 @@ class BudgetManagementCostUnitController extends Controller
         ProjectService $projectService,
         ColumnCellService $columnCellService
     ): RedirectResponse {
+        // Papierkorb-Route: aktive Einträge nicht am Papierkorb vorbei endgültig löschen
+        abort_unless($budgetManagementCostUnit->trashed(), 404);
+
         $this->budgetManagementCostUnitService->forceDelete(
             $budgetManagementCostUnit,
             $projectService,

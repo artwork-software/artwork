@@ -181,7 +181,7 @@ class MoneySourceController extends Controller
             'group_id' => $request->boolean('is_group') ? null : $request->group_id,
         ]);
 
-        $moneySource->users()->sync(collect($request->users));
+        $moneySource->users()->sync($this->validatedUserPivotData($request));
 
         if ($request->boolean('is_group')) {
             foreach ($request->input('sub_money_source_ids', []) ?? [] as $sub_money_source_id) {
@@ -513,7 +513,7 @@ class MoneySourceController extends Controller
             $beforeSubMoneySource->update(['group_id' => null]);
         }
 
-        $moneySource->users()->sync(collect($request->users));
+        $moneySource->users()->sync($this->validatedUserPivotData($request));
 
         $moneySource->update([
             'name' => $request->name,
@@ -626,7 +626,7 @@ class MoneySourceController extends Controller
     {
         $this->authorize('update', $moneySource);
 
-        $moneySource->users()->sync(collect($request->users));
+        $moneySource->users()->sync($this->validatedUserPivotData($request));
         $tasks = $moneySource->moneySourceTasks()->get();
         foreach ($tasks as $task) {
             $task->money_source_task_users()->sync($moneySource->competent()->get());
@@ -686,13 +686,25 @@ class MoneySourceController extends Controller
             'amount' => $moneySource->amount,
             'start_date' => $moneySource->start_date,
             'end_date' => $moneySource->end_date,
+            'funding_start_date' => $moneySource->funding_start_date,
+            'funding_end_date' => $moneySource->funding_end_date,
             'source_name' => $moneySource->source_name,
             'description' => $moneySource->description,
             'is_group' => $moneySource->is_group,
             'icon' => $moneySource->icon,
             'group_id' => $moneySource->group_id,
-            'users' => $moneySource->users
         ]);
+
+        // Personen samt ihrer Rechte und die Kategorien gehören zur Kopie (Wunsch 16.11.2026)
+        $newMoneySource->users()->sync(
+            $moneySource->users()->get()->mapWithKeys(static fn (User $user): array => [
+                $user->id => [
+                    'competent' => (bool) $user->getRelation('pivot')->getAttribute('competent'),
+                    'write_access' => (bool) $user->getRelation('pivot')->getAttribute('write_access'),
+                ],
+            ])->all()
+        );
+        $newMoneySource->categories()->sync($moneySource->categories()->get()->modelKeys());
 
         return Redirect::route('money_sources.index');
     }
@@ -801,14 +813,25 @@ class MoneySourceController extends Controller
     {
         $this->authorize('update', $moneySource);
 
-        $moneySource->projects()->sync($request->linkedProjectIds);
+        // Fehlte die Liste, löste sync(null) still alle Projektverknüpfungen
+        $validated = $request->validate([
+            'linkedProjectIds' => ['present', 'array'],
+            'linkedProjectIds.*' => ['integer', 'exists:projects,id'],
+        ]);
+
+        $moneySource->projects()->sync($validated['linkedProjectIds']);
     }
 
     public function syncCategories(MoneySource $moneySource, Request $request): void
     {
         $this->authorize('update', $moneySource);
 
-        $moneySource->categories()->sync($request->categoryIds);
+        $validated = $request->validate([
+            'categoryIds' => ['present', 'array'],
+            'categoryIds.*' => ['integer', 'exists:money_source_categories,id'],
+        ]);
+
+        $moneySource->categories()->sync($validated['categoryIds']);
     }
 
     /**
@@ -819,5 +842,30 @@ class MoneySourceController extends Controller
     private function parseCellAmount(mixed $value): float
     {
         return (float) str_replace(',', '.', (string) $value);
+    }
+
+    /**
+     * Personen einer Finanzierungsquelle: nur die beiden Rechte-Felder in den Pivot übernehmen. Rohe
+     * Request-Daten konnten z. B. money_source_id überschreiben und so Rechte an einer fremden Quelle anlegen.
+     *
+     * @return array<int, array{competent: bool, write_access: bool}>
+     */
+    private function validatedUserPivotData(Request $request): array
+    {
+        $validated = $request->validate([
+            'users' => ['nullable', 'array'],
+            'users.*.user_id' => ['required', 'integer', 'exists:users,id'],
+            'users.*.competent' => ['nullable', 'boolean'],
+            'users.*.write_access' => ['nullable', 'boolean'],
+        ]);
+
+        return collect($validated['users'] ?? [])
+            ->mapWithKeys(fn (array $user): array => [
+                (int) $user['user_id'] => [
+                    'competent' => (bool) ($user['competent'] ?? false),
+                    'write_access' => (bool) ($user['write_access'] ?? false),
+                ],
+            ])
+            ->all();
     }
 }

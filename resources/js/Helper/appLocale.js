@@ -32,3 +32,30 @@ export function createLocaleSwitcher(i18n, loadMessages, documentElement) {
         safeSetItem('locale', newLocale);
     };
 }
+
+/**
+ * Wählbare Sprachen aus dem geteilten Prop "supportedLocales" (Server: app.supported_locales).
+ * Jede Sprache trägt ihren Eigennamen ("Deutsch", "Nederlands"), unabhängig von der aktiven Oberfläche.
+ */
+export function supportedLocaleOptions(sharedLocales, fallbackLocale = 'en') {
+    const options = (Array.isArray(sharedLocales) ? sharedLocales : [])
+        .filter((locale) => locale && typeof locale.code === 'string' && locale.code !== '')
+        .map((locale) => ({id: locale.code, name: locale.name || locale.code}));
+
+    return options.length > 0 ? options : [{id: fallbackLocale, name: fallbackLocale}];
+}
+
+/**
+ * Rückfallsprache im Hintergrund nachladen. Die Schlüssel sind englische Ausgangstexte, ohne geladene
+ * Rückfalltexte zeigte eine fehlende Übersetzung aber Platzhalter wie {count} wörtlich an.
+ */
+export async function loadFallbackMessages(i18n, loadMessages, fallbackLocale = 'en') {
+    if (i18n.global.availableLocales.includes(fallbackLocale)) {
+        return;
+    }
+    try {
+        i18n.global.setLocaleMessage(fallbackLocale, await loadMessages(fallbackLocale));
+    } catch {
+        // Ohne Rückfalltexte bleibt der Schlüssel (englischer Ausgangstext) sichtbar
+    }
+}

@@ -382,9 +382,11 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * KI-Assistent: ein einziger Prop für das Rendern der Bar. Ist der Assistent nicht frei,
-     * wird bewusst nur `enabled: false` geteilt — die Stufen sind dann keine Information,
-     * die das Frontend braucht (core-modul-settings-policy).
+     * KI-Assistent: ein einziger Prop für das Rendern von Bar, Menüpunkt, Einstellungs-Reiter und
+     * KI-Hinweisen. Ohne KI-Freischaltung der Person (User::hasAiAccess) wird nur `enabled: false`
+     * geteilt — exakt dasselbe wie bei abgeschaltetem Haus, damit nichts verrät, dass es den
+     * Assistenten gibt (ARTWORK-352). `visible` heißt: die Person darf KI-Bezüge sehen und die
+     * Einstellungen öffnen, auch wenn das Haus den Assistenten gerade abgeschaltet hat.
      *
      * @return array<string, bool>
      */
@@ -392,11 +394,16 @@ class HandleInertiaRequests extends Middleware
     {
         $access = app(AiAssistantAccess::class);
 
-        if (!$access->allowed($user)) {
+        if (!$access->visibleTo($user)) {
             return ['enabled' => false];
         }
 
+        if (!$access->allowed($user)) {
+            return ['visible' => true, 'enabled' => false];
+        }
+
         return [
+            'visible' => true,
             'enabled' => true,
             'levelB' => $access->levelBAllowed($user),
             'levelC' => $access->levelCAllowed($user),

@@ -21,7 +21,6 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
-use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
@@ -349,10 +348,7 @@ class UserController extends Controller
             'adminUserIds' => Gate::allows('viewDeactivated', User::class)
                 ? User::role(RoleEnum::ARTWORK_ADMIN->value)->pluck('id')
                 : [],
-            'all_permissions' => Permission::query()
-                ->whereNotIn('name', ConsoleOnlyPermissionEnum::values())
-                ->get()
-                ->groupBy('group'),
+            'all_permissions' => Permission::all()->groupBy('group'),
             'departments' => Department::all(),
             // Rollen (= Admin-Rolle) nur für Admins wählbar; Altbestand-Rollen in der DB werden nicht angeboten,
             // weil StoreInvitationRequest nur RoleEnum akzeptiert.
@@ -1807,7 +1803,7 @@ class UserController extends Controller
         // Der Rechte-Tab speichert bei jedem Klick sofort; schnelle Klickfolgen erzeugen parallele Requests.
         // syncPermissions/syncRoles sind detach + attach ohne Transaktion – ohne Sperre auf den User
         // schreiben zwei Requests dieselben Pivot-Zeilen (Duplicate entry auf model_has_permissions).
-        [$permissionsBefore, $rolesBefore, $permissionsAfter] = DB::transaction(
+        [$permissionsBefore, $rolesBefore] = DB::transaction(
             function () use ($user, $permissionsToGrant, $rolesToGrant): array {
                 User::query()->whereKey($user->getKey())->lockForUpdate()->first();
                 $user->unsetRelation('permissions')->unsetRelation('roles');
@@ -1815,18 +1811,10 @@ class UserController extends Controller
                 $permissionsBefore = $user->permissions()->pluck('name')->all();
                 $rolesBefore = $user->roles()->pluck('name')->all();
 
-                // Nur per Konsole vergebbare Rechte kennt der Rechte-Tab nicht; ohne Übernahme würde
-                // syncPermissions sie bei jedem Speichern still entziehen.
-                $consoleOnlyPermissions = array_values(
-                    array_intersect($permissionsBefore, ConsoleOnlyPermissionEnum::values())
-                );
-
-                $permissionsAfter = array_values(array_unique([...$permissionsToGrant, ...$consoleOnlyPermissions]));
-
-                $user->syncPermissions($permissionsAfter);
+                $user->syncPermissions($permissionsToGrant);
                 $user->syncRoles($rolesToGrant);
 
-                return [$permissionsBefore, $rolesBefore, $permissionsAfter];
+                return [$permissionsBefore, $rolesBefore];
             }
         );
         // Gecachte Inertia-Share-Daten sofort invalidieren statt auf den 5-Min.-TTL zu warten
@@ -1837,7 +1825,7 @@ class UserController extends Controller
             $user,
             Auth::user(),
             $permissionsBefore,
-            $permissionsAfter,
+            $permissionsToGrant,
             $rolesBefore,
             $rolesToGrant,
             $request->input('source')

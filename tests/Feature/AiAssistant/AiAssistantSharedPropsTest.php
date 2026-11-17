@@ -11,6 +11,8 @@ use Tests\Feature\FeatureTestCase;
 
 final class AiAssistantSharedPropsTest extends FeatureTestCase
 {
+    use GrantsAiAccess;
+
     /**
      * @return array<string, mixed>
      */
@@ -50,6 +52,16 @@ final class AiAssistantSharedPropsTest extends FeatureTestCase
         $this->assertSame(['enabled' => false], $this->share()['ai']);
     }
 
+    /** Mit Freischaltung bleiben Einstellungs-Reiter und KI-Hinweise sichtbar, auch bei abgeschaltetem Haus. */
+    #[Test]
+    public function with_ai_access_the_assistant_stays_visible_while_the_house_is_off(): void
+    {
+        $this->actingAs($this->grantAiAccess($this->adminUser()));
+        $this->settings(instance: true, house: false, levelB: true, levelC: true);
+
+        $this->assertSame(['visible' => true, 'enabled' => false], $this->share()['ai']);
+    }
+
     #[Test]
     public function a_user_without_the_console_permission_only_sees_the_flag(): void
     {
@@ -75,7 +87,7 @@ final class AiAssistantSharedPropsTest extends FeatureTestCase
         $this->settings(instance: true, house: true, levelB: true, levelC: true);
 
         $this->assertSame(
-            ['enabled' => true, 'levelB' => true, 'levelC' => true],
+            ['visible' => true, 'enabled' => true, 'levelB' => true, 'levelC' => true],
             $this->share()['ai']
         );
     }
@@ -87,7 +99,7 @@ final class AiAssistantSharedPropsTest extends FeatureTestCase
         $this->settings(instance: true, house: true);
 
         $this->assertSame(
-            ['enabled' => true, 'levelB' => false, 'levelC' => false],
+            ['visible' => true, 'enabled' => true, 'levelB' => false, 'levelC' => false],
             $this->share()['ai']
         );
     }

@@ -3,7 +3,6 @@
 namespace Tests\Feature\Api;
 
 use Artwork\Modules\AiAssistant\Support\AiScopes;
-use Artwork\Modules\Permission\Enums\ConsoleOnlyPermissionEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
@@ -13,15 +12,14 @@ use Laravel\Passport\Passport;
 use Laravel\Passport\Token;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Tests\Concerns\GrantsAiAccess;
 use Tests\Feature\FeatureTestCase;
 
 /**
- * Konsolen-Recht "ai access" (ConsoleOnlyPermissionEnum::AiAccess): zusätzliche Schranke vor den
- * KI-Routen (/api/v1/ai/*), nur per Tinker vergebbar, und Voraussetzung, um KI-Keys in den
- * Tooleinstellungen zu sehen. Die übrigen Maschinen-Routen regeln allein die Scopes.
+ * KI-Freischaltung (User::hasAiAccess, Spalte users.ai_access_granted_at): zusätzliche Schranke vor
+ * den KI-Routen (/api/v1/ai/*), nur per Konsole vergebbar, Voraussetzung für KI-Keys in den
+ * Tooleinstellungen — und über keine Oberfläche sicht- oder vergebbar, auch nicht für Admins. Die
+ * übrigen Maschinen-Routen regeln allein die Scopes.
  */
 final class AiAccessPermissionTest extends FeatureTestCase
 {
@@ -86,19 +84,6 @@ final class AiAccessPermissionTest extends FeatureTestCase
     }
 
     #[Test]
-    public function the_permission_on_a_role_does_not_count(): void
-    {
-        $role = Role::findOrCreate('api-role', 'web');
-        $role->givePermissionTo(Permission::findOrCreate(ConsoleOnlyPermissionEnum::AiAccess->value, 'web'));
-        $user = User::factory()->create();
-        $user->assignRole($role);
-
-        Passport::actingAs($user, [AiScopes::READ]);
-
-        $this->getJson('/api/v1/ai/context')->assertForbidden();
-    }
-
-    #[Test]
     public function the_app_api_stays_open_without_the_permission(): void
     {
         Passport::actingAs(User::factory()->create(), ['app']);
@@ -107,7 +92,7 @@ final class AiAccessPermissionTest extends FeatureTestCase
     }
 
     #[Test]
-    public function saving_the_permissions_tab_keeps_the_permission(): void
+    public function saving_the_permissions_tab_keeps_ai_access(): void
     {
         $this->actingAsAdmin();
         $user = $this->grantAiAccess(User::factory()->create());
@@ -117,22 +102,62 @@ final class AiAccessPermissionTest extends FeatureTestCase
             'roles' => [],
         ])->assertSessionMissing('error');
 
-        $user->unsetRelation('permissions');
-        $this->assertTrue($user->hasAiAccess());
-        $this->assertTrue($user->hasDirectPermission(PermissionEnum::PROJECT_VIEW->value));
+        $this->assertTrue($user->fresh()->hasAiAccess());
+        $this->assertTrue($user->fresh()->hasDirectPermission(PermissionEnum::PROJECT_VIEW->value));
     }
 
     #[Test]
-    public function the_permissions_tab_cannot_grant_the_permission(): void
+    public function ai_access_is_no_permission_and_cannot_be_granted_via_the_permissions_tab(): void
     {
         $this->actingAsAdmin();
         $user = User::factory()->create();
 
         $this->patch(route('user.update.permissions-and-roles', $user), [
-            'permissions' => [ConsoleOnlyPermissionEnum::AiAccess->value],
+            'permissions' => ['ai access', 'change ai assistant settings'],
             'roles' => [],
         ]);
 
+        $this->assertFalse($user->fresh()->hasAiAccess());
+        $this->assertDatabaseMissing('permissions', ['name' => 'ai access']);
+        $this->assertDatabaseMissing('permissions', ['name' => 'change ai assistant settings']);
+    }
+
+    #[Test]
+    public function ai_access_cannot_be_mass_assigned(): void
+    {
+        $this->actingAsAdmin();
+        $user = User::factory()->create();
+
+        $this->patch(route('user.update', $user), [
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'ai_access_granted_at' => now()->toDateTimeString(),
+        ]);
+
+        $user->fill(['ai_access_granted_at' => now()]);
+
+        $this->assertNull($user->ai_access_granted_at);
+        $this->assertFalse($user->fresh()->hasAiAccess());
+    }
+
+    #[Test]
+    public function ai_access_never_appears_in_a_user_payload(): void
+    {
+        $user = $this->grantAiAccess(User::factory()->create());
+
+        $this->assertArrayNotHasKey('ai_access_granted_at', $user->fresh()->toArray());
+    }
+
+    #[Test]
+    public function grant_and_revoke_work_from_the_console(): void
+    {
+        $user = User::factory()->create();
+
+        $user->grantAiAccess();
+        $this->assertTrue($user->fresh()->hasAiAccess());
+
+        $user->revokeAiAccess();
         $this->assertFalse($user->fresh()->hasAiAccess());
     }
 
@@ -176,7 +201,7 @@ final class AiAccessPermissionTest extends FeatureTestCase
     }
 
     #[Test]
-    public function migration_grants_the_permission_to_owners_of_valid_ai_keys_only(): void
+    public function migration_grants_ai_access_to_owners_of_valid_ai_keys_only(): void
     {
         $this->preparePassportClient();
         $aiKeyOwner = User::factory()->create();
@@ -186,7 +211,7 @@ final class AiAccessPermissionTest extends FeatureTestCase
         $revokedKeyOwner = User::factory()->create();
         $revokedKeyOwner->createToken('Alt', [AiScopes::READ])->token->revoke();
 
-        (require base_path('database/migrations/2026_11_12_165112_grant_ai_access_to_owners_of_ai_keys.php'))->up();
+        (require base_path('database/migrations/2026_11_13_100000_move_ai_access_to_users_column.php'))->up();
 
         $this->assertTrue($aiKeyOwner->fresh()->hasAiAccess());
         $this->assertFalse($machineKeyOwner->fresh()->hasAiAccess());

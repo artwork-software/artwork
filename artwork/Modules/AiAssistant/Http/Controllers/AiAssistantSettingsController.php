@@ -12,8 +12,8 @@ use Inertia\Response;
 /**
  * Hauseinstellungen des KI-Assistenten (core-modul-settings-policy).
  *
- * Die Rechtepruefung haengt an der Route (`can:change ai assistant settings`) und zusaetzlich am
- * FormRequest. `ai_session_client_id` wird bewusst weder gelesen noch geschrieben — das ist
+ * Zugriff nur mit KI-Freischaltung (EnsureUserHasAiAccess an der Route, zusaetzlich im
+ * FormRequest). `ai_session_client_id` wird bewusst weder gelesen noch geschrieben — das ist
  * Installationszustand aus `ai:install`, keine Hauseinstellung.
  */
 class AiAssistantSettingsController extends Controller

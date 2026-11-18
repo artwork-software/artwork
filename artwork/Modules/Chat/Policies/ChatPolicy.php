@@ -12,7 +12,8 @@ class ChatPolicy
 
     /**
      * Nur Mitglieder eines Chats dürfen ihn lesen/beschreiben.
-     * (Artwork-Admins passieren bereits über Gate::before im AuthServiceProvider.)
+     * Achtung: Artwork-Admins passieren jede Policy über Gate::before im AuthServiceProvider. Die
+     * Chat-Routen prüfen deshalb direkt über Chat::hasMember() und nutzen diese Policy nicht.
      */
     public function view(User $user, Chat $chat): bool
     {

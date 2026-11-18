@@ -28,6 +28,8 @@ final class AiContextProjectsApiTest extends TestCase
     {
         parent::setUp();
 
+        $this->enableAiAssistant();
+
         app(ClientRepository::class)
             ->createPersonalAccessGrantClient('PAT client', config('auth.guards.api.provider'));
     }

@@ -71,6 +71,12 @@ class CredentialLoginService
 
         $user = User::query()->where('email', $email)->first();
 
+        // Die Spalte vergleicht akzentunabhängig ("ánna@" trifft "anna@"). Als Treffer zählt nur
+        // dieselbe Adresse, Groß-/Kleinschreibung bleibt egal.
+        if ($user !== null && !LoginAccountKey::sameAddress((string) $user->email, $email)) {
+            $user = null;
+        }
+
         // OIDC-Accounts melden sich ausschließlich über den SSO-Button an – das
         // Flag ist am Passwortformular die einzige verfügbare OIDC-Information.
         if ($user !== null && $user->isProvider('oidc')) {

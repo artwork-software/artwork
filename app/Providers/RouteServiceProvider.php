@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Artwork\Modules\ExternalUserManagement\Service\LoginAccountKey;
 use Artwork\Modules\Project\Models\Project;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -100,7 +101,9 @@ class RouteServiceProvider extends ServiceProvider
                 Limit::perMinute(5)->by('app-login:identity:' . hash('sha256', $email . '|' . $ip)),
                 // Pro Konto unabhängig von der IP (wie der Web-Login): bremst Password-Spraying und das
                 // Durchprobieren von 2FA-Codes über viele Adressen; höchstens 15 Minuten Wartezeit.
-                Limit::perMinutes(15, 10)->by('app-login:account:' . hash('sha256', trim($email))),
+                // Schlüssel am aufgelösten Konto: Akzentvarianten derselben Adresse teilen sich einen Eimer.
+                Limit::perMinutes(15, 10)
+                    ->by('app-login:account:' . hash('sha256', LoginAccountKey::for($email))),
             ];
         });
 

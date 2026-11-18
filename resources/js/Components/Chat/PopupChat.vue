@@ -182,11 +182,20 @@
                                         class="chat-tooltip-black-icon"
                                     />
                                 </button>
-                                <button class="btn-icon" @click="showDeleteConfirm = true" aria-label="Delete group">
+                                <button v-if="canDeleteCurrentChat" class="btn-icon" @click="showDeleteConfirm = true" aria-label="Delete group">
                                     <ToolTipComponent
                                         direction="top"
                                         icon="IconTrash"
                                         :tooltip-text="$t('Delete Group Chat')"
+                                        icon-size="size-4"
+                                        class="chat-tooltip-black-icon"
+                                    />
+                                </button>
+                                <button v-else class="btn-icon" @click="showLeaveConfirm = true" aria-label="Leave group">
+                                    <ToolTipComponent
+                                        direction="top"
+                                        icon="IconLogout"
+                                        :tooltip-text="$t('Leave Group Chat')"
                                         icon-size="size-4"
                                         class="chat-tooltip-black-icon"
                                     />
@@ -350,6 +359,12 @@
         @close="showDeleteConfirm = false"
         @deleted="handleChatDeleted"
     />
+    <LeaveGroupChatModal
+        v-if="showLeaveConfirm"
+        :chat="chatPartner"
+        @close="showLeaveConfirm = false"
+        @left="handleChatLeft"
+    />
     <AddNewChat v-if="openAddNewChat" @close="closeAddNewChat" />
 </template>
 
@@ -370,6 +385,7 @@ const SingleMessageInChat = defineAsyncComponent(() => import('@/Components/Chat
 const ChatToastNotification = defineAsyncComponent(() => import('@/Components/Chat/Components/ChatToastNotification.vue'));
 const RenameGroupChatModal = defineAsyncComponent(() => import('@/Components/Chat/Modals/RenameGroupChatModal.vue'));
 const DeleteGroupChatModal = defineAsyncComponent(() => import('@/Components/Chat/Modals/DeleteGroupChatModal.vue'));
+const LeaveGroupChatModal = defineAsyncComponent(() => import('@/Components/Chat/Modals/LeaveGroupChatModal.vue'));
 
 const props = defineProps({})
 const chats = ref([])
@@ -394,6 +410,7 @@ const isAutoScrolling = ref(false);
 const scrollAnchor = ref(null);
 const showRenameModal = ref(false);
 const showDeleteConfirm = ref(false);
+const showLeaveConfirm = ref(false);
 // Wenn sich chatPartner  ändert, Status neu laden
 const closeChat = () => {
     isChatOpen.value = false;
@@ -912,6 +929,18 @@ const registerChatListeners = (chat) => {
             }
         });
 
+    // Mitglied hat den Gruppenchat verlassen: Teilnehmerliste in Übersicht und offenem Chat nachziehen
+    window.Echo.private(`chat.${chat.id}`)
+        .listen('.member.left', (e) => {
+            const target = chats.value.find(c => c.id === chat.id);
+            if (target?.users) {
+                target.users = target.users.filter(user => user.id !== e.user_id);
+            }
+            if (chatPartner.value?.id === chat.id && chatPartner.value.users) {
+                chatPartner.value.users = chatPartner.value.users.filter(user => user.id !== e.user_id);
+            }
+        });
+
     window.Echo.private(`chat.${chat.id}`)
         .listen('.message.read', (e) => {
             const isCurrentOpen = isChatOpen.value &&
@@ -1042,6 +1071,28 @@ const handleChatDeleted = (chatId) => {
     // Go back to chat list
     chatPartner.value = null;
 };
+
+// Verlassen: Chat aus der eigenen Liste nehmen und den Kanal abmelden (für die anderen bleibt er bestehen)
+const handleChatLeft = (chatId) => {
+    window.Echo.leave(`chat.${chatId}`);
+    registeredChatIds.delete(chatId);
+    handleChatDeleted(chatId);
+};
+
+// Löschen darf, wer den Gruppenchat angelegt hat. Fehlt diese Person, ist sie deaktiviert oder nicht mehr
+// Mitglied, darf jedes Mitglied löschen (gleiche Regel wie Chat::canBeDeletedBy im Backend).
+const canDeleteCurrentChat = computed(() => {
+    const chat = chatPartner.value;
+    if (!chat) {
+        return false;
+    }
+    if (!chat.created_by || chat.created_by === currentUserId) {
+        return true;
+    }
+    const creator = (chat.users ?? []).find(user => user.id === chat.created_by);
+
+    return !creator || !!creator.deactivated_at;
+});
 
 
 const enableOrDisablePushNotification = () => {

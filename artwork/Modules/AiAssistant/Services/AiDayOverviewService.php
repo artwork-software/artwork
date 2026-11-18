@@ -17,6 +17,8 @@ use Artwork\Modules\AiAssistant\Support\AiShiftPlanningAccess;
 use Artwork\Modules\AiAssistant\Support\AiText;
 use Artwork\Modules\AppApi\Services\AppDashboardService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -25,7 +27,8 @@ use Carbon\CarbonImmutable;
  * Tagesuebersicht (ai-scenarios-3 S1). Baut auf denselben Abfragen wie das Dashboard der App auf
  * (`AppDashboardService::eventsOfDayQuery()`, `ownTasksQuery()`), eigene Schichten wie
  * `/ai/me/schedule`, der Planer-Block auf den Planungs-Lesediensten (offene Schichten im
- * Gewerks-Scope, Abwesenheiten, Doppelbelegungen).
+ * Gewerks-Scope, Abwesenheiten, Doppelbelegungen). Der Planer-Block entfaellt, wenn das Haus das
+ * Modul Dienstplan abgeschaltet hat (Admins ausgenommen, wie `EnsureAiHouseSwitches`).
  */
 class AiDayOverviewService
 {
@@ -40,6 +43,7 @@ class AiDayOverviewService
         private readonly AiShiftInsightsService $insights,
         private readonly AiAbsenceReadService $absences,
         private readonly AiRoomConflictService $conflicts,
+        private readonly ModuleSettingsService $moduleSettings,
     ) {
     }
 
@@ -52,8 +56,16 @@ class AiDayOverviewService
             events: $this->events($user, $day, $limit),
             my_shifts: $this->shifts->schedule($user, $day->startOfDay(), $day->endOfDay(), $limit),
             my_tasks_due: $this->tasks->dueUntil($user, $day, self::TASK_LIMIT),
-            planner: AiShiftPlanningAccess::mayPlanShifts($user) ? $this->planner($user, $day) : null,
+            planner: AiShiftPlanningAccess::mayPlanShifts($user) && $this->shiftPlanModuleAvailable($user)
+                ? $this->planner($user, $day)
+                : null,
         );
+    }
+
+    private function shiftPlanModuleAvailable(User $user): bool
+    {
+        return $this->moduleSettings->isModuleVisible('shift_plan')
+            || $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
     }
 
     private function events(User $user, CarbonImmutable $day, int $limit): AiDayEventListData

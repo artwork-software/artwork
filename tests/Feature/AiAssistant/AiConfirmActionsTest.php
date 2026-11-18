@@ -354,6 +354,65 @@ final class AiConfirmActionsTest extends TestCase
     }
 
     #[Test]
+    public function completing_rechecks_the_status_under_a_row_lock(): void
+    {
+        // Sicherheits-Audit 18.11.2026, N7: zwei parallele Ausfuehrungen kommen beide an
+        // assertExecutable() vorbei; der Abschluss liest den Turn gesperrt und prueft erneut.
+        $user = $this->planner();
+        $turn = $this->pendingAction($user);
+        $service = app(AiActionService::class);
+
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+        $service->complete($user, $turn->id, null);
+        $queries = array_column(\Illuminate\Support\Facades\DB::getQueryLog(), 'query');
+        \Illuminate\Support\Facades\DB::disableQueryLog();
+
+        $locked = array_filter(
+            $queries,
+            static fn (string $query): bool => str_contains($query, $turn->getTable())
+                && str_contains(strtolower($query), 'for update')
+        );
+        $this->assertNotEmpty($locked, 'Der Turn wird beim Abschluss nicht mit FOR UPDATE gelesen.');
+        $this->assertSame(AiActionService::STATUS_EXECUTED, $turn->fresh()->status);
+
+        // Die „zweite" Ausfuehrung: der Turn steht inzwischen auf executed
+        try {
+            $service->complete($user, $turn->id, null);
+            $this->fail('Der zweite Abschluss haette scheitern muessen.');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $exception) {
+            $this->assertSame(409, $exception->getStatusCode());
+        }
+    }
+
+    #[Test]
+    public function a_parallel_execution_that_loses_the_race_writes_nothing(): void
+    {
+        $user = $this->planner();
+        $args = $this->createArgs();
+        $turn = $this->pendingAction($user, $args);
+        [, $turn] = $this->writeTokenFor($user, $turn);
+
+        // Die andere Anfrage schliesst die Aktion ab, waehrend diese schon an der Pruefung vorbei ist
+        // und schreibt: simuliert ueber den ersten angelegten Termin.
+        $raced = false;
+        Event::created(function () use (&$raced, $turn): void {
+            if ($raced) {
+                return;
+            }
+            $raced = true;
+            AiConversationTurn::query()->whereKey($turn->id)->update(['status' => AiActionService::STATUS_EXECUTED]);
+        });
+
+        $this->postJson(
+            '/api/v1/ai/events/batch',
+            array_merge($args, ['dry_run' => false, 'action_id' => $turn->id])
+        )->assertStatus(409);
+
+        $this->assertTrue($raced);
+        $this->assertSame(0, Event::query()->where('project_id', $this->project->id)->count());
+    }
+
+    #[Test]
     public function a_second_execution_with_a_fresh_token_is_a_conflict(): void
     {
         $user = $this->planner();

@@ -6,6 +6,7 @@ use App\Events\MessageRead;
 use App\Events\NewChatMessage;
 use App\Events\ChatCreated;
 use App\Http\Controllers\Controller;
+use Artwork\Modules\Chat\Events\ChatMemberLeft;
 use Artwork\Modules\Chat\Http\Requests\StoreChatRequest;
 use Artwork\Modules\Chat\Http\Requests\UpdateChatRequest;
 use Artwork\Modules\Chat\Models\Chat;
@@ -132,15 +133,15 @@ class ChatController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Löscht einen Gruppenchat samt Verlauf für alle. Nur durch die anlegende Person, siehe
+     * Chat::canBeDeletedBy(). Alle anderen Mitglieder können den Chat nur verlassen.
      */
-    public function destroy(Chat $chat)
+    public function destroy(Chat $chat): \Illuminate\Http\JsonResponse
     {
         /** @var User $user */
         $user = $this->auth->user();
 
-        // Check if user is a member of the chat
-        if (!$chat->users()->where('users.id', $user->id)->exists()) {
+        if (!$chat->hasMember($user)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -149,32 +150,71 @@ class ChatController extends Controller
             return response()->json(['error' => 'Can only delete group chats'], 400);
         }
 
-        // Store chat ID for response
+        if (!$chat->canBeDeletedBy($user)) {
+            return response()->json(['error' => 'Only the creator can delete this group chat'], 403);
+        }
+
         $chatId = $chat->id;
-
-        // Delete related data first (cascade)
-        // Delete message reads
-        \DB::table('chat_message_reads')
-            ->whereIn('message_id', function ($query) use ($chatId): void {
-                $query->select('id')
-                    ->from('chat_messages')
-                    ->where('chat_id', $chatId);
-            })
-            ->delete();
-
-        // Delete messages
-        $chat->messages()->delete();
-
-        // Delete chat-user relationships
-        $chat->users()->detach();
-
-        // Delete the chat itself
-        $chat->delete();
+        $this->deleteChatWithHistory($chat);
 
         return response()->json([
             'message' => 'Group chat deleted successfully',
             'chat_id' => $chatId,
         ]);
+    }
+
+    /**
+     * Entfernt die eigene Mitgliedschaft aus einem Gruppenchat. Der Verlauf bleibt für die übrigen
+     * Mitglieder erhalten. Verlässt das letzte Mitglied den Chat, wird er samt Verlauf gelöscht.
+     */
+    public function leave(Chat $chat): \Illuminate\Http\JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->auth->user();
+
+        $chat->abortUnlessMember($user);
+
+        if (!$chat->is_group) {
+            return response()->json(['error' => 'Can only leave group chats'], 400);
+        }
+
+        $chatId = $chat->id;
+        $chat->users()->detach($user->id);
+
+        $chatDeleted = !$chat->users()->exists();
+        if ($chatDeleted) {
+            $this->deleteChatWithHistory($chat);
+        } else {
+            SafeBroadcast::send(new ChatMemberLeft($chatId, $user->id));
+        }
+
+        return response()->json([
+            'message' => 'Group chat left successfully',
+            'chat_id' => $chatId,
+            'chat_deleted' => $chatDeleted,
+        ]);
+    }
+
+    /**
+     * Löscht Lesebestätigungen, Nachrichten, Mitgliedschaften und den Chat selbst.
+     */
+    private function deleteChatWithHistory(Chat $chat): void
+    {
+        $chatId = $chat->id;
+
+        \DB::transaction(function () use ($chat, $chatId): void {
+            \DB::table('chat_message_reads')
+                ->whereIn('message_id', function ($query) use ($chatId): void {
+                    $query->select('id')
+                        ->from('chat_messages')
+                        ->where('chat_id', $chatId);
+                })
+                ->delete();
+
+            $chat->messages()->delete();
+            $chat->users()->detach();
+            $chat->delete();
+        });
     }
 
     public function getChats()
@@ -212,9 +252,9 @@ class ChatController extends Controller
 
     public function getChatMessages(Chat $chat, Request $request)
     {
-        $this->authorize('view', $chat);
         /** @var User $user */
         $user = $this->auth->user();
+        $chat->abortUnlessMember($user);
 
         $messagesPaginator = $chat->messages()
             ->with(['sender', 'reads.user'])
@@ -248,7 +288,7 @@ class ChatController extends Controller
 
     public function sendMessage(Chat $chat, Request $request)
     {
-        $this->authorize('view', $chat);
+        $chat->abortUnlessMember($this->auth->user());
         $request->validate(['message' => ['required', 'string', 'max:10000']]);
         // Rohtext; Umbrüche rendert das Frontend per white-space: pre-line.
         $plain = (string) $request->get('message');
@@ -279,9 +319,9 @@ class ChatController extends Controller
 
     public function markAsRead(ChatMessage $message)
     {
-        $this->authorize('view', $message->chat);
         /** @var User $user */
         $user = $this->auth->user();
+        abort_unless($message->chat?->hasMember($user) ?? false, 403);
 
         if (!$message->reads()->where('user_id', $user->id)->exists() && $message->sender_id !== $user->id) {
             $read = $message->reads()->create([

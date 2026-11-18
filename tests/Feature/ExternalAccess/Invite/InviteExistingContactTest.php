@@ -148,7 +148,8 @@ final class InviteExistingContactTest extends TestCase
     #[Test]
     public function invite_info_endpoint_returns_contact_email_and_accesses(): void
     {
-        $this->actingAsUserWith([PermissionEnum::INVITE_EXTERNAL]);
+        // Der Dialog mit festem Kontakt öffnet sich nur auf der Kontaktseite (Recht „can view crm“)
+        $this->actingAsUserWith([PermissionEnum::INVITE_EXTERNAL, PermissionEnum::CRM_VIEW]);
         $contact = $this->freelancerContact('ada@example.test');
         ExternalAccess::factory()->active()->create(['email' => 'ada@example.test', 'crm_contact_id' => $contact->id]);
 
@@ -162,7 +163,8 @@ final class InviteExistingContactTest extends TestCase
     #[Test]
     public function http_invite_of_existing_contact_without_email_requires_email(): void
     {
-        $this->actingAsUserWith([PermissionEnum::INVITE_EXTERNAL]);
+        // Der Dialog mit festem Kontakt öffnet sich nur auf der Kontaktseite (Recht „can view crm“)
+        $this->actingAsUserWith([PermissionEnum::INVITE_EXTERNAL, PermissionEnum::CRM_VIEW]);
         $type = CrmContactType::query()->create(['name' => 'Agentur', 'slug' => 'agency']);
         $contact = CrmContact::query()->create(['crm_contact_type_id' => $type->id, 'display_name' => 'Agentur X', 'is_active' => true]);
 

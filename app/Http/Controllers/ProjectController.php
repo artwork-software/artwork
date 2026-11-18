@@ -2541,10 +2541,16 @@ class ProjectController extends Controller
         SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
+    /**
+     * Speichert die Kalkulationen einer Zelle. Die cell_id muss eine einzelne Ganzzahl sein und auf eine
+     * vorhandene Zelle zeigen; die Budget-Middleware hat deren Projekt bereits geprüft.
+     */
     public function updateCellCalculation(Request $request)
     {
-        // Hole cell_id aus Request (wird jetzt immer mitgesendet)
-        $cellId = $request->input('cell_id');
+        $request->validate(['cell_id' => ['nullable', 'integer']]);
+        $cellId = $request->filled('cell_id') ? $request->integer('cell_id') : null;
+        $cell = $cellId !== null ? ColumnCell::find($cellId) : null;
+        abort_if($cellId !== null && $cell === null, 404);
         $calculations = $request->input('calculations', []);
         $sentCalculationIds = []; // Sammle IDs der gesendeten Kalkulationen
 
@@ -2593,10 +2599,7 @@ class ProjectController extends Controller
             }
 
             // Aktualisiere den Cell-Value auf die Summe aller Kalkulationen
-            $cell = ColumnCell::find($cellId);
-            if ($cell) {
-                $cell->update(['value' => $cell->calculations()->sum('value')]);
-            }
+            $cell->update(['value' => $cell->calculations()->sum('value')]);
         }
 
         // Wenn AJAX-Request: JSON-Response — auch ohne cell_id, sonst folgt der Browser dem 302 mit PATCH (405)
@@ -2604,7 +2607,7 @@ class ProjectController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Calculations saved successfully',
-                'cell_value' => isset($cell) && $cell ? $cell->value : null
+                'cell_value' => $cell?->value
             ]);
         }
 

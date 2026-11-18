@@ -36,6 +36,9 @@ return [
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/filtering/
     'before_send' => [\Artwork\Core\Sentry\SentryEventScrubber::class, 'beforeSend'],
 
+    // Performance-Transaktionen laufen nicht durch before_send: Tokens aus URLs auch dort entfernen
+    'before_send_transaction' => [\Artwork\Core\Sentry\SentryEventScrubber::class, 'beforeSendTransaction'],
+
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#ignore-exceptions
     // 'ignore_exceptions' => [],
 

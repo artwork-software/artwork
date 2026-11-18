@@ -4386,7 +4386,10 @@
                         "$ref": "#/components/schemas/AiPersonData"
                     },
                     "minutes_planned": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "minutes_max": {
                         "type": [
@@ -4415,7 +4418,6 @@
                 },
                 "required": [
                     "person",
-                    "minutes_planned",
                     "absences"
                 ],
                 "title": "AiCraftCapacityEntryData"
@@ -5780,7 +5782,14 @@
                         }
                     },
                     "planned": {
-                        "$ref": "#/components/schemas/AiPlannedMinutesData"
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiPlannedMinutesData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "target_minutes_by_week": {
                         "type": [
@@ -5798,15 +5807,20 @@
                         }
                     },
                     "remaining": {
-                        "$ref": "#/components/schemas/AiRemainingData"
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRemainingData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     }
                 },
                 "required": [
                     "person",
                     "rules",
-                    "planned",
-                    "absences",
-                    "remaining"
+                    "absences"
                 ],
                 "title": "AiPersonWorkloadData"
             },
@@ -6620,7 +6634,10 @@
                         "$ref": "#/components/schemas/AiPersonData"
                     },
                     "minutes_planned_week": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "minutes_remaining_week": {
                         "type": [
@@ -6630,8 +6647,7 @@
                     }
                 },
                 "required": [
-                    "person",
-                    "minutes_planned_week"
+                    "person"
                 ],
                 "title": "AiShiftCandidateData"
             },

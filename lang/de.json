@@ -3540,6 +3540,8 @@
     "You have selected multiple users. This will create a group chat. You will automatically be included as a member. Please provide a name for the group.": "Du hast mehrere Nutzer*innen ausgewählt. Dies erstellt einen Gruppenchat. Du wirst automatisch als Mitglied hinzugefügt. Bitte gib einen Namen für die Gruppe an.",
     "Rename Group Chat": "Gruppenchat umbenennen",
     "Delete Group Chat": "Gruppenchat löschen",
+    "Leave Group Chat": "Gruppenchat verlassen",
+    "Are you sure you want to leave this group chat? You will no longer see its messages. The chat remains available to the other members.": "Möchtest du diesen Gruppenchat wirklich verlassen? Du siehst seine Nachrichten dann nicht mehr. Für die anderen Mitglieder bleibt der Chat bestehen.",
     "Enter a new name for this group chat": "Gib einen neuen Namen für diesen Gruppenchat ein",
     "Group Name": "Gruppenname",
     "Enter group name": "Gruppenname eingeben",
@@ -9988,5 +9990,6 @@
     "The change goes beyond the confirmed booking and was sent as a room request. If it is declined, the event keeps its confirmed booking. You will be notified after it has been reviewed.": "Die Änderung geht über die bestätigte Belegung hinaus und wurde als Raumanfrage gestellt. Wird sie abgelehnt, bleibt es bei der bestätigten Belegung. Du wirst benachrichtigt, sobald sie geprüft wurde.",
     "This change goes beyond the confirmed booking and has to be requested again.": "Diese Änderung geht über die bestätigte Belegung hinaus und muss neu angefragt werden.",
     "This event is still being saved. Please wait a moment and reload the calendar.": "Der Termin wird gerade noch gespeichert. Bitte warte einen Moment und lade den Kalender neu.",
-    "Included for room admins": "Als Raumadmin immer enthalten"
+    "Included for room admins": "Als Raumadmin immer enthalten",
+    ":count event stays in the trash because you may not delete it.|:count events stay in the trash because you may not delete them.": ":count Termin bleibt im Papierkorb, weil du ihn nicht löschen darfst.|:count Termine bleiben im Papierkorb, weil du sie nicht löschen darfst."
 }

@@ -1402,8 +1402,10 @@ class EventController extends Controller
             ->get();
 
         // get user events from Projects in which the user is currently working
+        // Planungstermine nur mit Planungskalender-Recht, wie an den übrigen Lesepfaden
         $userEvents = Event::where('start_time', '>=', Carbon::now()->startOfDay())
             ->where('start_time', '<=', Carbon::now()->endOfDay())
+            ->visiblePlanningFor($user)
             ->whereHas(
                 'project',
                 function (Builder $query): void {
@@ -1861,6 +1863,9 @@ class EventController extends Controller
             $request->has('isOption') &&
             !$request->booleanValue('isOption');
 
+        // Vor der Änderung bestimmen: nur wer die Raumanfrage beantworten darf, schreibt als Raumverwaltung
+        $commentsAsRoomAdministration = $request->user()->can('answerRoomRequest', $event);
+
         if ($shouldAcceptRoomRequest) {
             $this->authorize('answerRoomRequest', $event);
         }
@@ -1913,9 +1918,12 @@ class EventController extends Controller
                 $event->comments()->create([
                     'user_id' => Auth::id(),
                     'comment' => $request->adminComment,
-                    'is_admin_comment' => true
+                    'is_admin_comment' => $commentsAsRoomAdministration
                 ]);
+            }
 
+            // Die „Nachricht der Raumverwaltung“ geht nur raus, wenn sie auch von dort kommt
+            if (!empty($request->adminComment) && $commentsAsRoomAdministration) {
                 $this->notificationService->setIcon('blue');
                 $this->notificationService->setPriority(1);
                 $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
@@ -3791,14 +3799,32 @@ class EventController extends Controller
         SubEventService $subEventService,
         NotificationService $notificationService
     ): RedirectResponse {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $trashedEvents = Event::onlyTrashed()->get();
+        // Wie beim einzelnen endgültigen Löschen: nur Termine, die die Person löschen darf
+        $deletableEvents = $trashedEvents->filter(
+            static fn (Event $event): bool => $user->can('delete', $event)
+        );
+
         $this->eventService->forceDeleteAll(
-            Event::onlyTrashed()->get(),
+            $deletableEvents,
             $eventCommentService,
             $timelineService,
             $shiftService,
             $subEventService,
             $notificationService
         );
+
+        $remaining = $trashedEvents->count() - $deletableEvents->count();
+        if ($remaining > 0) {
+            session()->flash('error', trans_choice(
+                ':count event stays in the trash because you may not delete it.|'
+                    . ':count events stay in the trash because you may not delete them.',
+                $remaining,
+                ['count' => $remaining]
+            ));
+        }
 
         return Redirect::route('events.trashed');
     }

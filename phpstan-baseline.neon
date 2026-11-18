@@ -177,7 +177,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
 			identifier: property.notFound
-			count: 5
+			count: 1
 			path: app/Http/Controllers/ProjectController.php
 
 		-
@@ -2350,12 +2350,6 @@ parameters:
 			path: artwork/Modules/Shift/Services/ShiftFreelancerService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Shift/Services/ShiftFreelancerService.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currentRequest\.$#'
 			identifier: property.notFound
 			count: 1
@@ -2494,12 +2488,6 @@ parameters:
 			path: artwork/Modules/Shift/Services/ShiftServiceProviderService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Shift/Services/ShiftServiceProviderService.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:withTrashed\(\)\.$#'
 			identifier: method.notFound
 			count: 2
@@ -2507,12 +2495,6 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/Shift/Services/ShiftUserService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 1
 			path: artwork/Modules/Shift/Services/ShiftUserService.php

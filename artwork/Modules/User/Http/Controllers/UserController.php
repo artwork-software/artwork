@@ -1559,64 +1559,6 @@ class UserController extends Controller
         );
     }
 
-    /**
-     * @param User $user
-     * @param $month
-     * @return array<string, mixed>
-     */
-    private function getAvailabilityData(User $user, $month = null): array
-    {
-        $vacationDays = $user->vacations()->orderBy('date', 'ASC')->get();
-
-        $currentMonth = Carbon::now()->startOfMonth();
-
-        if ($month) {
-            $currentMonth = Carbon::parse($month)->startOfMonth();
-        }
-
-        $startDate = $currentMonth->copy()->startOfWeek();
-        $endDate = $currentMonth->copy()->endOfMonth()->endOfWeek();
-
-        $calendarData = [];
-        $currentDate = $startDate->copy();
-
-        while ($currentDate <= $endDate) {
-            $onVacation = false;
-            $weekNumber = $currentDate->weekOfYear;
-            $day = $currentDate->day;
-            foreach ($vacationDays as $vacationDay) {
-                if ($currentDate->isSameDay($vacationDay->date)) {
-                    $onVacation = true;
-                }
-            }
-
-            if (!isset($calendarData[$weekNumber])) {
-                $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
-            }
-
-            $notInMonth = !$currentDate->isSameMonth($currentMonth);
-
-            $calendarData[$weekNumber]['days'][] = [
-                'day' => $day,
-                'notInMonth' => $notInMonth,
-                'onVacation' => $onVacation,
-                'day_formatted' => $currentDate->format('Y-m-d'),
-            ];
-
-            $currentDate->addDay();
-        }
-
-        $dateToShow = [
-            $currentMonth->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('MMMM YYYY'),
-            $currentMonth->copy()->startOfMonth()->toDate()
-        ];
-
-        return [
-            'calendarData' => array_values($calendarData),
-            'dateToShow' => $dateToShow
-        ];
-    }
-
     public function updateUserDetails(
         Request $request,
         User $user,

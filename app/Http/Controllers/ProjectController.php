@@ -6,14 +6,10 @@ use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Settings\EventSettings;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Core\Http\Requests\SearchRequest;
-use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Area\Services\AreaService;
-use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
-use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Exports\BudgetExport;
 use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
-use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
@@ -45,7 +41,6 @@ use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
-use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
@@ -60,18 +55,13 @@ use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Contract\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\CostCenter\Services\CostCenterService;
-use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
-use Artwork\Modules\InternalIssue\Models\InternalIssue;
-use Artwork\Modules\Inventory\Models\InventoryTag;
-use Artwork\Modules\Inventory\Models\InventoryTagGroup;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Department\Models\Department;
-use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Services\EventService;
@@ -117,7 +107,6 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\Project\Services\ProjectTeamService;
-use Artwork\Modules\Project\Models\ProjectManagementBuilder;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -134,17 +123,13 @@ use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Sector\Services\SectorService;
-use Artwork\Modules\ServiceProvider\Enums\ServiceProviderTypes;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftGroupService;
-use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
-use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
-use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Services\SubEventService;
@@ -182,7 +167,6 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use phpDocumentor\Reflection\PseudoTypes\IntegerRange;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -3534,34 +3518,6 @@ class ProjectController extends Controller
                 'name' => $request->contract->name,
             ] : null,
         ];
-    }
-
-    /**
-     * Array/Collection der Projekt-User für Budget-Tab.
-     *
-     * @return \Illuminate\Support\Collection<int,array<string,mixed>>
-     */
-    private function mapProjectUsers(Project $project): \Illuminate\Support\Collection
-    {
-        return $project->users->map(
-            fn (User $user) => [
-                'id'                  => $user->id,
-                'first_name'          => $user->first_name,
-                'last_name'           => $user->last_name,
-                'profile_photo_url'   => $user->profile_photo_url,
-                'deactivated_at'      => User::deactivatedAtFor($user),
-                'email'               => $user->visibleEmailFor(Auth::user()),
-                'departments'         => $user->departments,
-                'position'            => $user->position,
-                'business'            => $user->business,
-                'phone_number'        => $user->visiblePhoneNumberFor(Auth::user()),
-                'project_management'  => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
-                'pivot_access_budget' => (bool) ($user->pivot?->access_budget),
-                'pivot_is_manager'    => (bool) ($user->pivot?->is_manager),
-                'pivot_can_write'     => (bool) ($user->pivot?->can_write),
-                'pivot_delete_permission' => (bool) ($user->pivot?->delete_permission),
-            ]
-        );
     }
 
     /**

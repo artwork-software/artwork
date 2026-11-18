@@ -6,12 +6,9 @@ use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\Shift\Models\ShiftWorker;
-use Artwork\Modules\Shift\Models\ShiftQualification;
-use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
@@ -20,7 +17,6 @@ use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
 use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
-use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 
 readonly class ShiftFreelancerService
@@ -76,47 +72,6 @@ readonly class ShiftFreelancerService
     }
 
 
-
-    private function handleAssignedToShift(
-        Shift $shift,
-        Freelancer $freelancer,
-        ShiftQualification $shiftQualification,
-        NotificationService $notificationService,
-        VacationConflictService $vacationConflictService,
-        AvailabilityConflictService $availabilityConflictService,
-        ChangeService $changeService
-    ): void {
-        if ($shift?->event?->exists) {
-            $changeService->saveFromBuilder(
-                $changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Freelancer was added to the shift as')
-                    ->setTranslationKeyPlaceholderValues([
-                        $freelancer->getNameAttribute(),
-                        $shift->craft->abbreviation,
-                        $shift->event->eventName,
-                        $shiftQualification->name,
-                    ])
-            );
-        }
-
-        $vacationConflictService->checkVacationConflictsShifts(
-            $shift,
-            $notificationService,
-            null,
-            $freelancer
-        );
-        $availabilityConflictService->checkAvailabilityConflictsShifts(
-            $shift,
-            $notificationService,
-            null,
-            $freelancer
-        );
-    }
 
 
 
@@ -190,38 +145,6 @@ readonly class ShiftFreelancerService
     }
 
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
-    private function removeFreelancerFromAllShiftsWithSameUuid(
-        Shift $shift,
-        Freelancer $freelancer,
-        NotificationService $notificationService,
-        ShiftCountService $shiftCountService,
-        VacationConflictService $vacationConflictService,
-        AvailabilityConflictService $availabilityConflictService,
-        ChangeService $changeService
-    ): void {
-        foreach ($this->shiftRepository->getShiftsByUuid($shift->shift_uuid) as $shiftByUuid) {
-            if ($shiftByUuid->id === $shift->id) {
-                continue;
-            }
-
-            $shiftFreelancerPivotByUuid = $this->shiftRepository->getShiftWorkerPivotById(
-                $shiftByUuid,
-                Freelancer::class,
-                $freelancer->id
-            );
-
-            if ($shiftFreelancerPivotByUuid instanceof ShiftWorker) {
-                $this->shiftWorkerService->removeFromShift(
-                    $shiftFreelancerPivotByUuid,
-                    true,
-                    $notificationService,
-                    $vacationConflictService,
-                    $availabilityConflictService,
-                    $changeService
-                );
-            }
-        }
-    }
 
     public function getShiftByUserPivotId(int $usersPivot): Shift
     {
@@ -342,45 +265,6 @@ readonly class ShiftFreelancerService
         );
     }
 
-    private function handleRemovedFromShift(
-        Shift $shift,
-        Freelancer $freelancer,
-        NotificationService $notificationService,
-        VacationConflictService $vacationConflictService,
-        AvailabilityConflictService $availabilityConflictService,
-        ChangeService $changeService
-    ): void {
-        if ($shift?->event?->exists) {
-            $changeService->saveFromBuilder(
-                $changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Freelancer was removed from shift')
-                    ->setTranslationKeyPlaceholderValues([
-                        $freelancer->getNameAttribute(),
-                        $shift->craft->abbreviation,
-                        $shift->event->eventName,
-                    ])
-            );
-        }
-
-        $vacationConflictService->checkVacationConflictsShifts(
-            $shift,
-            $notificationService,
-            null,
-            $freelancer
-        );
-        $availabilityConflictService->checkAvailabilityConflictsShifts(
-            $shift,
-            $notificationService,
-            null,
-            $freelancer
-        );
-    }
-
     public function delete(ShiftFreelancer $shiftFreelancer): bool
     {
         return $this->shiftFreelancerRepository->delete($shiftFreelancer);
@@ -426,53 +310,5 @@ readonly class ShiftFreelancerService
             $shiftFreelancer->freelancer_id,
             $shiftFreelancer->shift_id
         );
-    }
-
-    private function logManualRemovalActivity(Shift $shift, ShiftFreelancer $shiftFreelancerPivot): void
-    {
-        if (! $shift->is_committed && ! $shift->in_workflow) {
-            return;
-        }
-
-        activity('shift')
-            ->performedOn($shift)
-            ->causedBy($this->auth->user())
-            ->event('removed')
-            ->tap(function ($activity) use ($shift, $shiftFreelancerPivot): void {
-                $activity->properties = $activity->properties->merge([
-                    'translation_key' => '{0} removed from shift as {1} for {2} ({3})',
-                    'translation_key_placeholder_values' => [
-                        $shiftFreelancerPivot->freelancer->name,
-                        $shiftFreelancerPivot->shiftQualification->name,
-                        $shift->craft->name,
-                        $shiftFreelancerPivot->craft_abbreviation,
-                    ],
-                ]);
-            })
-            ->log('Freelancer removed from shift');
-    }
-
-    private function logManualAssignmentActivity(Shift $shift, ShiftFreelancer $shiftFreelancerPivot): void
-    {
-        if (! $shift->is_committed && ! $shift->in_workflow) {
-            return;
-        }
-
-        activity('shift')
-            ->performedOn($shift)
-            ->causedBy($this->auth->user())
-            ->event('assigned')
-            ->tap(function ($activity) use ($shift, $shiftFreelancerPivot): void {
-                $activity->properties = $activity->properties->merge([
-                    'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
-                    'translation_key_placeholder_values' => [
-                        $shiftFreelancerPivot->freelancer->name,
-                        $shiftFreelancerPivot->shiftQualification->name,
-                        $shift->craft->name,
-                        $shiftFreelancerPivot->craft_abbreviation,
-                    ],
-                ]);
-            })
-            ->log('Freelancer assigned to shift');
     }
 }

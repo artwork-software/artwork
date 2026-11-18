@@ -1170,6 +1170,7 @@ import dayjs from 'dayjs'
 import debounce from 'lodash.debounce'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import {useShiftCalendarListener} from '@/Composeables/Listener/useShiftCalendarListener.js'
+import {useOccupancyUpdates} from '@/Composeables/Listener/useOccupancyUpdates.js'
 import {enrichDays, clearDayPropsCache} from '@/Composeables/calendarDateUtils.js'
 import {provideShiftPlanLookups} from '@/Composeables/useShiftPlanLookups.js'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
@@ -3082,6 +3083,7 @@ onMounted(async () => {
     attach()
 
     startShiftCalendarListener()
+    occupancyUpdates.start()
 
     // wenn nur ein kurzer Hinweis: direkt leeren, Timeout möglichst klein halten
     setTimeout(() => {
@@ -3094,6 +3096,7 @@ onBeforeUnmount(() => {
     isShiftPlanUnmounted = true
     shiftCalendarListener?.dispose()
     shiftCalendarListener = null
+    occupancyUpdates.stop()
     if (userOverviewScrollSaveTimer) clearTimeout(userOverviewScrollSaveTimer)
     if (userOverviewScrollRestoreTimer) clearTimeout(userOverviewScrollRestoreTimer)
     saveUserOverviewScroll()
@@ -3437,6 +3440,23 @@ function closeAddShiftModalApply(savedShift: any) {
  * Neu angelegte/verschobene Schicht in einem Raum, der hier nicht geladen ist (z.B. „leere Räume
  * ausblenden"): der Listener kann sie nirgends einfügen — Plan nachladen statt sie still zu verwerfen.
  */
+// Sammel-Signal anderer Personen (Massenlöschen, Wiederherstellen, KI-Stapel, Serien-Turnus): diese Termine
+// kommen nicht über die Raumkanäle. Nur nachladen, wenn der gemeldete Zeitraum den angezeigten berührt, und nicht
+// mitten in einer Mehrfachbearbeitung (die würde sonst verworfen).
+const occupancyUpdates = useOccupancyUpdates(async (range) => {
+    if (isShiftPlanUnmounted || multiEditMode.value) return
+    const shownStart = String(props.dateValue?.[0] ?? '')
+    const shownEnd = String(props.dateValue?.[1] ?? shownStart)
+    if (range && shownStart && (range.end < shownStart || range.start > shownEnd)) return
+    try {
+        await initializeShiftPlan()
+    } catch (error) {
+        console.error('[ShiftPlan] Nachladen nach Belegungsänderung fehlgeschlagen', error)
+        return
+    }
+    if (!isShiftPlanUnmounted) startShiftCalendarListener()
+})
+
 async function reloadIfShiftRoomNotLoaded(savedShift: any) {
     if (savedShift?.removed) return
     const shifts = Array.isArray(savedShift?.shifts) ? savedShift.shifts : [savedShift?.shift]

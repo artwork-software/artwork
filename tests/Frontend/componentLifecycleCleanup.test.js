@@ -46,13 +46,14 @@ test('series changes refetch the calendar, because the backend sends no live upd
     const eventModal = read('Layouts/Components/EventComponent.vue');
     const eventTile = read('Components/Calendar/Elements/Events/FullEventInCalendar.vue');
 
-    assert.match(calendar, /provide\('calendarRefetchLoadedMonths', refetchLoadedMonths\)/);
+    assert.match(calendar, /provide\('calendarRefetchLoadedMonths', \(\) => refetchLoadedMonths\(\)\)/);
     assert.match(eventTile, /inject\('calendarRefetchLoadedMonths', null\)/);
     assert.match(eventModal, /inject\('calendarRefetchLoadedMonths', null\)/);
     // Löschen (folgende/alle), Serie beenden, Bearbeiten mehrerer Serientermine
     assert.match(eventModal, /events\.series\.delete[\s\S]{0,120}refetchCalendarAfterSeriesChange\(\)/);
     assert.match(eventModal, /if \(mode === 'end'\) refetchCalendarAfterSeriesChange\(\)/);
-    assert.match(eventModal, /seriesScope\.value !== 'single'\) refetchCalendarAfterSeriesChange\(\)/);
+    // Bearbeiten mehrerer Serientermine: Geschwister kommen einzeln live, nur Turnus/Ende-Änderungen laden nach
+    assert.match(eventModal, /seriesScope\.value !== 'single' && definitionChangedOnSave\) refetchCalendarAfterSeriesChange\(\)/);
 });
 
 test('room request notification is only removed after the event request succeeded', () => {

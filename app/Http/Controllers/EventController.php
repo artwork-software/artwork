@@ -31,7 +31,6 @@ use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\BulkEventChanged;
 use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventUpdated;
-use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
@@ -1531,16 +1530,16 @@ class EventController extends Controller
             $this->roomRequestNotificationService->notifyRoomAdmins($firstEvent);
         }
 
-        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
-
-        if ($request->booleanValue('showProjectPeriodInCalendar')) {
-            return $this->redirector->back();
-        }
-
+        // Live-Update über den Raumkanal (weitere Serientermine sendet der SeriesEventsService einzeln) –
+        // auch im Projektzeitraum-Modus, dort fehlte es bisher
         SafeBroadcast::send(new EventCreated(
             $firstEvent->load(['event_type', 'project']),
             $firstEvent->room_id
         ));
+
+        if ($request->booleanValue('showProjectPeriodInCalendar')) {
+            return $this->redirector->back();
+        }
 
         return new CalendarEventResource($firstEvent);
     }

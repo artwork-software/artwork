@@ -15,6 +15,7 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -137,10 +138,10 @@ readonly class EventService
         app(ShiftDeletionService::class)->deleteMany($event->shifts);
         $subEventService->deleteSubEvents($event->subEvents);
 
-        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
         $notificationService->markOpenRoomRequestsHandled($event->id, 'deleted', $this->deletingUser());
 
+        // Live-Update über den Raumkanal (offene Kalender entfernen die Kachel)
         if ($event->room_id) {
             SafeBroadcast::send(new RemoveEvent($event, $event->room_id));
         }
@@ -215,15 +216,14 @@ readonly class EventService
                 $this->deletingUser()
             );
         }
-        $eventsDeleted = $deletedEventIds !== [];
-
-        // Broadcast once after the whole batch instead of per event. OccupancyUpdated is a
-        // generic, payload-less ping that just makes open calendars refetch their visible
-        // range, so a single broadcast already updates all clients live. Firing it per event
-        // meant thousands of redundant broadcasts and was a main cause of timeouts when
-        // deleting projects with very many events.
-        if ($eventsDeleted) {
-            SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
+        // Ein Sammel-Signal für den ganzen Stapel statt RemoveEvent je Termin (beim Löschen von Projekten mit
+        // sehr vielen Terminen waren das Tausende Broadcasts): offene Kalender laden die sichtbaren Monate im
+        // Zeitraum der gelöschten Termine neu
+        if ($deletedEventIds !== []) {
+            SafeBroadcast::send(
+                OccupancyUpdated::forEvents(collect($events)->whereIn('id', $deletedEventIds)),
+                toOthers: true
+            );
         }
     }
 
@@ -257,7 +257,8 @@ readonly class EventService
         // Beim Löschen wurde die offene Raumanfrage geschlossen – wiederhergestellt ist sie wieder offen
         app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents([(int) $event->id]);
 
-        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
+        // Live-Update über den Raumkanal: offene Kalender zeigen den Termin wieder an
+        SafeBroadcast::send(new EventCreated($event->fresh()->load(['event_type', 'project']), $event->room_id));
     }
 
     public function forceDeleteAll(
@@ -341,7 +342,10 @@ readonly class EventService
         // Ein Ping für den ganzen Stapel wie in deleteAll (vorher je Termin: beim Wiederherstellen eines
         // Projekts mit vielen Terminen ebenso viele Aufrufe an den WebSocket-Server)
         if ($restoredEventIds !== []) {
-            SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
+            SafeBroadcast::send(
+                OccupancyUpdated::forEvents(collect($events)->whereIn('id', $restoredEventIds)),
+                toOthers: true
+            );
         }
     }
 

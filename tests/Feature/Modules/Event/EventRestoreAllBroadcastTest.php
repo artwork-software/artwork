@@ -41,7 +41,10 @@ final class EventRestoreAllBroadcastTest extends FeatureTestCase
     public function restoring_several_events_broadcasts_a_single_occupancy_ping(): void
     {
         $this->actingAsAdmin();
-        $events = Event::factory()->count(3)->create();
+        $events = (new \Illuminate\Database\Eloquent\Collection(['2026-11-05', '2026-11-20', '2027-02-01']))->map(fn (string $day): Event => Event::factory()->create([
+            'start_time' => $day . ' 10:00:00',
+            'end_time' => $day . ' 12:00:00',
+        ]));
         $events->each->delete();
         EventFacade::fake([OccupancyUpdated::class]);
 
@@ -49,6 +52,10 @@ final class EventRestoreAllBroadcastTest extends FeatureTestCase
 
         $this->assertSame(0, Event::onlyTrashed()->whereKey($events->modelKeys())->count());
         EventFacade::assertDispatchedTimes(OccupancyUpdated::class, 1);
+        EventFacade::assertDispatched(
+            OccupancyUpdated::class,
+            fn (OccupancyUpdated $signal): bool => $signal->start === '2026-11-05' && $signal->end === '2027-02-01'
+        );
     }
 
     #[Test]

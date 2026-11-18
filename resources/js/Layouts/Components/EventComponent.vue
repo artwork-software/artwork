@@ -2148,12 +2148,14 @@ async function doSaveEvent() {
         return
     }
 
+    const definitionChangedOnSave = seriesDefinitionChanged()
     try {
         if (!props.event?.id) await axios.post('/events', data)
         else {
             await axios.put(`/events/${props.event.id}`, data, { headers })
-            // Mitgeänderte Serientermine kommen nicht per Live-Update (nur der bearbeitete Termin)
-            if (isSeriesEvent.value && seriesScope.value !== 'single') refetchCalendarAfterSeriesChange()
+            // Mitgeänderte Serientermine kommen einzeln per Live-Update; eine Turnus-/Ende-Änderung legt aber Termine
+            // ohne Einzel-Signal in den Papierkorb
+            if (isSeriesEvent.value && seriesScope.value !== 'single' && definitionChangedOnSave) refetchCalendarAfterSeriesChange()
         }
         handleSuccessfulSave()
     } catch (e) {

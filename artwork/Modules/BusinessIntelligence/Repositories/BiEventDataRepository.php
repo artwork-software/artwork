@@ -45,9 +45,4 @@ class BiEventDataRepository extends BaseRepository
             $data
         );
     }
-
-    public function deleteByProjectId(int $projectId): void
-    {
-        $this->getNewModelQuery()->where('project_id', $projectId)->delete();
-    }
 }

@@ -97,18 +97,6 @@ class InventoryArticleRepository
         return InventoryArticle::query();
     }
 
-    public function withRelations($query, int $perPage = 50)
-    {
-        return $query->with([
-            'properties',
-            'category',
-            'subCategory',
-            'images',
-            'detailedArticleQuantities.status',
-            'statusValues',
-        ])->paginate($perPage);
-    }
-
     public function applyFilters($query, array $filters)
     {
         foreach ($filters as $filter) {
@@ -468,10 +456,5 @@ class InventoryArticleRepository
         // Get all available stock for the given article
         // get article stock for the given date range in all issues and returns the available stock of the article
         return $article->getAvailableStock($startDate, $endDate);
-    }
-
-    public function getAllWithCategories(): \Illuminate\Support\Collection
-    {
-        return InventoryArticle::with(['category', 'subCategory'])->get()->keyBy('id');
     }
 }

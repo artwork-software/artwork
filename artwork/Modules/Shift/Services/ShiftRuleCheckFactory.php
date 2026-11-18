@@ -72,9 +72,4 @@ class ShiftRuleCheckFactory
 
         return $this->checks[$triggerType];
     }
-
-    public function getAllTriggerTypes(): array
-    {
-        return array_keys($this->checks);
-    }
 }

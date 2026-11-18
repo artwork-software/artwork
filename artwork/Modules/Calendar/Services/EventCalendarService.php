@@ -2,24 +2,18 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Illuminate\Support\Facades\Auth;
-use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
-use Artwork\Modules\Calendar\DTO\MinimalEventDTO;
 use Artwork\Modules\Calendar\DTO\PdfEventDTO;
-use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -228,38 +222,6 @@ readonly class EventCalendarService
             ->without([]);
     }
 
-    public function filterRoomsEventsWithMinimalData(
-        SupportCollection $rooms,
-        UserFilter $filter,
-        $startDate,
-        $endDate,
-        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
-    ): SupportCollection {
-        $events = $this->filter(
-            $this->getEventQueryWithMinimalData(),
-            $rooms,
-            $filter,
-            $startDate,
-            $endDate,
-            $userCalendarSettings,
-        );
-
-        $eventDTOs = $events->map(function ($event) {
-            return new MinimalEventDTO(
-                id: (int)$event->id,
-                start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
-                end:   Carbon::parse($event->end_time)->format('Y-m-d H:i'),
-                roomId: (int)$event->room_id,
-            );
-        })->groupBy('roomId');
-
-        foreach ($rooms as $room) {
-            $room->events = $eventDTOs[$room->id] ?? collect();
-        }
-
-        return $rooms;
-    }
-
     private function getEventQueryWithData(): Builder
     {
         return Event::query()
@@ -282,11 +244,6 @@ readonly class EventCalendarService
                 'timelines',
                 'verifications as has_pending_verification' => fn ($q) => $q->where('status', 'pending'),
             ]);
-    }
-
-    private function getEventQueryWithMinimalData(): Builder
-    {
-        return Event::query()->select(['id','start_time','end_time','room_id','user_id','is_planning']);
     }
 
     private function filter(

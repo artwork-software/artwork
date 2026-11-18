@@ -1528,38 +1528,6 @@ readonly class EventService
         return $series->toDefinitionArray();
     }
 
-    public function mapRoomsToContent(Collection $rooms, $startDate, $endDate, bool $withShifts = true): array
-    {
-        return $rooms->map(function ($room) use ($withShifts, $startDate, $endDate) {
-            $content = $this->initializeContentArray($startDate, $endDate);
-
-            if ($withShifts) {
-                $shifts = $room->shifts;
-                foreach ($shifts as $shift) {
-                    $shiftDate = Carbon::parse($shift->start_date)->format('d.m.Y');
-                    if (isset($content[$shiftDate])) {
-                        $content[$shiftDate]['shifts'][] = $shift;
-                    }
-                }
-            }
-            foreach ($room->events as $event) {
-                $eventDate = Carbon::parse($event['startTime'])->format('d.m.Y');
-                if (isset($content[$eventDate])) {
-                    $content[$eventDate]['events'][] = $event;
-                }
-            }
-
-            return [
-                'roomId' => $room->id,
-                'roomName' => $room->name,
-                // Raum-/Areal-Farbe wie in MapRoomsToContentForCalendar/ShiftCalendarService
-                // durchreichen — sonst bleibt die Raumleiste im Projekt-Tab-Kalender farblos
-                'roomColor' => $room->getEffectiveColor(),
-                'content' => $content,
-            ];
-        })->toArray();
-    }
-
     public function mapRoomsToContentForCalendar(Collection $rooms, $startDate, $endDate)
     {
         return $rooms->map(function ($room) use ($startDate, $endDate) {
@@ -2036,34 +2004,6 @@ readonly class EventService
         return $latestEndTime;
     }
 
-
-    public function createSeriesEvent(
-        $startDate,
-        $endDate,
-        $request,
-        $series,
-        $projectId,
-        $user,
-    ): Model|Event {
-        $event = new Event();
-
-        $event->name = $request->title;
-        $event->eventName = $request->eventName;
-        $event->description = $request->description;
-        $event->start_time = $startDate;
-        $event->end_time = $endDate;
-        $event->occupancy_option = $request->isOption;
-        $event->audience = $request->audience;
-        $event->is_loud = $request->isLoud;
-        $event->event_type_id = $request->eventTypeId;
-        $event->room_id = $request->roomId;
-        $event->project_id = $projectId ?: null;
-        $event->is_series = true;
-        $event->series_id = $series->id;
-        $event->allDay = $request->allDay;
-        $event->creator()->associate($user);
-        return $this->eventRepository->save($event);
-    }
 
     public function save(Event $event): Event|Model
     {

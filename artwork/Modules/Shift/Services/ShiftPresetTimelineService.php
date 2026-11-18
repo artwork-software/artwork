@@ -4,26 +4,12 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
 use Artwork\Modules\Shift\Repositories\ShiftPresetTimelineRepository;
-use Artwork\Modules\Timeline\Models\Timeline;
 use Illuminate\Support\Facades\DB;
 
 readonly class ShiftPresetTimelineService
 {
     public function __construct(private ShiftPresetTimelineRepository $shiftPresetTimelineRepository)
     {
-    }
-
-    public function createFromExistingTimeline(int $shiftPresetId, Timeline $timeline): ShiftPresetTimeline
-    {
-        $shiftPresetTimeline = new ShiftPresetTimeline([
-            'shift_preset_id' => $shiftPresetId,
-            'start' => $timeline->start,
-            'end' => $timeline->end,
-            'description' => $timeline->description,
-        ]);
-        $this->shiftPresetTimelineRepository->save($shiftPresetTimeline);
-
-        return $shiftPresetTimeline;
     }
 
     public function createFromExistingPresetTimeline(

@@ -22,22 +22,6 @@ class WorkflowDefinitionRepository extends BaseRepository
         return WorkflowDefinition::query();
     }
 
-    public function findByType(string $type): \Illuminate\Database\Eloquent\Collection
-    {
-        return $this->getBuilder()
-            ->where('type', $type)
-            ->where('is_active', true)
-            ->get();
-    }
-
-    public function findActiveByName(string $name): ?WorkflowDefinition
-    {
-        return $this->getBuilder()
-            ->where('name', $name)
-            ->where('is_active', true)
-            ->first();
-    }
-
     public function getActive(): \Illuminate\Database\Eloquent\Collection
     {
         return $this->getBuilder()

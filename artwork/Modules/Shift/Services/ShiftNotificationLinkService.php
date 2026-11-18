@@ -73,16 +73,6 @@ final class ShiftNotificationLinkService
     }
 
     /**
-     * Eigener Einsatzplan, geöffnet auf eine Kalenderwoche.
-     */
-    public static function ownOperationPlanForCalendarWeek(User|int $user, int $week, int $year): string
-    {
-        [$start, $end] = self::weekRangeForCalendarWeek($week, $year);
-
-        return self::ownOperationPlan($user, $start, $end);
-    }
-
-    /**
      * Dienstplan (Planer*innen-Sicht), geöffnet auf den übergebenen Zeitraum.
      */
     public static function shiftPlan(Carbon $start, Carbon $end): string

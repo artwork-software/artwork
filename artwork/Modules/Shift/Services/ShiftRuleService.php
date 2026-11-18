@@ -124,11 +124,6 @@ class ShiftRuleService
         $this->revalidationService->revalidateForContracts([$contract->id]);
     }
 
-    public function getActiveViolations(): EloquentCollection
-    {
-        return $this->shiftRuleViolationRepository->getActiveWithRelations();
-    }
-
     /**
      * Seite der gefilterten Verstöße (Liste "Offene Verstöße"), Einträge bereits fürs Frontend gemappt.
      */
@@ -599,16 +594,6 @@ class ShiftRuleService
                 $violation->delete();
             }
         }
-    }
-
-    public function checkRuleForUser(
-        ShiftRule $rule,
-        User $user,
-        Carbon $startDate,
-        Carbon $endDate
-    ): Collection {
-        $ruleCheck = $this->ruleCheckFactory->create($rule->trigger_type);
-        return $ruleCheck->check($rule, $user, $startDate, $endDate);
     }
 
     /**

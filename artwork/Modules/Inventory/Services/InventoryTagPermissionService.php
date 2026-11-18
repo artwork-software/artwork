@@ -56,28 +56,4 @@ class InventoryTagPermissionService
 
         return true;
     }
-
-    /**
-     * Welche Tags darf der User in Formularen auswählen?
-     */
-    public function getSelectableTagsForUser(User $user): Collection
-    {
-        return \Artwork\Modules\Inventory\Models\InventoryTag::query()
-            ->with(['group', 'allowedUsers', 'allowedDepartments'])
-            ->where(function ($q) use ($user): void {
-                $q->where('has_restricted_permissions', false)
-                    ->orWhere(function ($q) use ($user): void {
-                        $q->whereHas('allowedUsers', function ($q) use ($user): void {
-                            $q->where('users.id', $user->id);
-                        })
-                            ->orWhereHas('allowedDepartments', function ($q) use ($user): void {
-                                $q->whereIn('departments.id', $user->departments->pluck('id'));
-                            });
-                    });
-            })
-            ->orderBy('inventory_tag_group_id')
-            ->orderBy('position')
-            ->orderBy('name')
-            ->get();
-    }
 }

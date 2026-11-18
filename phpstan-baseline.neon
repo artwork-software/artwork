@@ -1161,7 +1161,7 @@ parameters:
 		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:activities\(\)\.$#'
 			identifier: method.notFound
-			count: 2
+			count: 1
 			path: artwork/Modules/Change/Services/ChangeService.php
 
 		-
@@ -1479,25 +1479,25 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$events\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: artwork/Modules/Event/Services/EventService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 3
+			count: 2
 			path: artwork/Modules/Event/Services/EventService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: artwork/Modules/Event/Services/EventService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shifts\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: artwork/Modules/Event/Services/EventService.php
 
 		-
@@ -1509,7 +1509,7 @@ parameters:
 		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getEffectiveColor\(\)\.$#'
 			identifier: method.notFound
-			count: 2
+			count: 1
 			path: artwork/Modules/Event/Services/EventService.php
 
 		-
@@ -2105,12 +2105,6 @@ parameters:
 
 		-
 			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:categories\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: artwork/Modules/Room/Repositories/RoomRepository.php
-
-		-
-			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:users\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: artwork/Modules/Room/Repositories/RoomRepository.php
@@ -2948,12 +2942,6 @@ parameters:
 			identifier: nullCoalesce.variable
 			count: 1
 			path: artwork/Modules/Workflow/Notifications/ShiftRuleViolationNotification.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 3
-			path: artwork/Modules/Workflow/Repositories/WorkflowInstanceRepository.php
 
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Workflow\\Contracts\\WorkflowSubject\|Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'

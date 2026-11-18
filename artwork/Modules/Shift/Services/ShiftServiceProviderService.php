@@ -275,5 +275,4 @@ readonly class ShiftServiceProviderService
             $shiftWorker
         );
     }
-
 }

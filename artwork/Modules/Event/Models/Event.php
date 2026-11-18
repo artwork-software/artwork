@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Models;
 
 use Artwork\Modules\AiAssistant\Support\WebGuardScope;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Event\Services\EventChangeApprovalService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Models\EventComment;
 use Artwork\Modules\Event\Models\EventProperty;
@@ -173,6 +174,17 @@ class Event extends Model
             $eventService = app()->get(EventService::class);
             $event->earliest_start_datetime = $eventService->getEarliestStartTime($event);
             $event->latest_end_datetime = $eventService->getLatestEndTime($event);
+
+            // Geplante Termine und Termine ohne Raum haben keine bestätigte Belegung (sonst buchte das spätere
+            // Wiedereinsetzen des Raums ohne Anfrage fest). Nur mit geladenen Spalten: ein teilweise geladenes
+            // Modell darf dabei nichts leeren
+            $attributes = $event->getAttributes();
+            if (
+                (array_key_exists('is_planning', $attributes) && $event->is_planning)
+                || (array_key_exists('room_id', $attributes) && $event->room_id === null)
+            ) {
+                $event->forceFill(EventChangeApprovalService::CLEARED_APPROVAL);
+            }
         });
 
         // Kopien (Duplizieren, Serien) sind neue Termine: weder eine bestätigte Belegung noch eine laufende

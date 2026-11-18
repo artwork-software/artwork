@@ -32,8 +32,14 @@ class EnsureAiHouseSwitches
         '/api/v1/ai/checklists' => 'tasks',
     ];
 
-    /** Termin-Schichten liegen unter /ai/events, gehören aber zum Dienstplan. */
-    private const SHIFT_PLAN_PATTERNS = ['#^/api/v1/ai/events/\d+/shifts$#'];
+    /**
+     * Termin-Schichten liegen unter /ai/events, die Auslastung (Schicht-Planzahlen) unter /ai/people; beides
+     * gehört zum Dienstplan.
+     */
+    private const SHIFT_PLAN_PATTERNS = [
+        '#^/api/v1/ai/events/\d+/shifts$#',
+        '#^/api/v1/ai/people/[^/]+/\d+/workload$#',
+    ];
 
     /** Stunden-Auswertungen nur mit eingeschalteter Arbeitszeitberechnung. */
     private const WORK_TIME_PATTERNS = [

@@ -4,6 +4,7 @@ namespace Tests\Feature\Modules\Event;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Event\Services\SeriesEventsService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Jobs\SendNotificationMailJob;
@@ -19,8 +20,12 @@ use Illuminate\Notifications\ChannelManager;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
+use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 use Tests\Feature\FeatureTestCase;
 
 /**
@@ -218,6 +223,83 @@ final class RoomRequestChangeApprovalTest extends FeatureTestCase
     }
 
     #[Test]
+    public function a_failing_decline_of_a_change_request_keeps_the_request_open(): void
+    {
+        $event = $this->changeRequest($this->recipient());
+        $this->partialMock(SeriesEventsService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('moveShiftsWithEvent')->andThrow(new RuntimeException('Speichern gescheitert'));
+        });
+
+        $this->actingAs($this->roomAdmin);
+        $this->put(route('events.decline', $event))->assertServerError();
+
+        // Kein Zwischenstand: weder fest gebucht im angefragten Slot noch halb zurückgesprungen
+        $event->refresh();
+        $this->assertTrue($event->occupancy_option);
+        $this->assertSame('2026-11-22 00:00:00', $event->start_time->format('Y-m-d H:i:s'));
+        $this->assertSame($this->room->id, $event->approved_room_id);
+    }
+
+    #[Test]
+    public function cancelling_a_booking_forgets_the_confirmed_slot(): void
+    {
+        // Verkürzt durch eine Person ohne Direktbuchrecht: die ursprüngliche Belegung ist gemerkt
+        $event = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', [
+            'approved_room_id' => $this->room->id,
+            'approved_start_time' => '2026-11-20 00:00:00',
+            'approved_end_time' => '2026-11-20 23:59:00',
+        ]);
+
+        $this->actingAs($this->roomAdmin);
+        $this->put(route('events.decline', $event))->assertRedirect();
+
+        $event->refresh();
+        $this->assertNull($event->room_id);
+        $this->assertNull($event->approved_room_id);
+        $this->assertNull($event->approved_start_time);
+
+        // Raum wieder eintragen ist damit eine neue Anfrage, keine stille Rückbuchung
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST], $this->requester);
+        $this->putJson(route('events.update', $event), $this->updatePayload($event, ['roomId' => $this->room->id]))
+            ->assertSuccessful()
+            ->assertJsonPath('room_request', 'created');
+        $this->assertTrue($event->fresh()->occupancy_option);
+    }
+
+    #[Test]
+    public function planning_events_and_events_without_room_keep_no_confirmed_slot(): void
+    {
+        $attributes = [
+            'approved_room_id' => $this->room->id,
+            'approved_start_time' => '2026-11-20 00:00:00',
+            'approved_end_time' => '2026-11-20 23:59:00',
+        ];
+        $planned = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', $attributes);
+        $planned->update(['is_planning' => true]);
+        $withoutRoom = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', $attributes);
+        $withoutRoom->update(['room_id' => null]);
+
+        $this->assertNull($planned->fresh()->approved_room_id);
+        $this->assertNull($withoutRoom->fresh()->approved_room_id);
+    }
+
+    #[Test]
+    public function a_partially_loaded_event_keeps_its_confirmed_slot_on_save(): void
+    {
+        $event = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', [
+            'approved_room_id' => $this->room->id,
+            'approved_start_time' => '2026-11-20 00:00:00',
+            'approved_end_time' => '2026-11-20 23:59:00',
+        ]);
+
+        $partial = Event::query()->select(['id', 'name', 'start_time', 'end_time'])->findOrFail($event->id);
+        $partial->update(['name' => 'Umbenannt']);
+
+        $event->refresh();
+        $this->assertSame($this->room->id, $event->approved_room_id);
+    }
+
+    #[Test]
     public function accepting_a_change_request_confirms_the_new_slot_and_answers_requester_and_creator(): void
     {
         $creator = $this->recipient();
@@ -319,6 +401,20 @@ final class RoomRequestChangeApprovalTest extends FeatureTestCase
     }
 
     #[Test]
+    public function renaming_an_all_day_event_in_the_project_event_list_keeps_it_booked(): void
+    {
+        // Der Dialog speichert ganztägig bis 23:59:00, die Terminliste bis 23:59:59 (endOfDay)
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST], $this->requester);
+        $event = $this->confirmedAllDayEvent();
+
+        $this->patchJson(route('event.update.single.bulk', $event), [
+            'data' => $this->bulkData($event, ['name' => 'Neuer Name', 'start_time' => null, 'end_time' => null]),
+        ])->assertSuccessful()->assertJsonPath('event.occupancy_option', false);
+
+        $this->assertSame(0, $this->roomRequestsOf($this->roomAdmin, $event)->count());
+    }
+
+    #[Test]
     public function copies_do_not_inherit_the_confirmed_booking_or_the_requester(): void
     {
         $event = $this->changeRequest($this->recipient());
@@ -397,6 +493,29 @@ final class RoomRequestChangeApprovalTest extends FeatureTestCase
             RoomRequestNotification::class,
             static fn (RoomRequestNotification $sent, array $channels): bool => $channels === ['mail']
         );
+    }
+
+    #[Test]
+    public function the_mail_job_is_dropped_when_the_triggering_transaction_rolls_back(): void
+    {
+        // Echte (synchrone) Warteschlange statt Fake: nur sie wartet auf den Commit
+        config(['queue.default' => 'sync']);
+        Bus::fake([self::class]);
+        Queue::fake([self::class]);
+        Notification::fake();
+        $notification = new RoomRequestNotification((object) [
+            'type' => NotificationEnum::NOTIFICATION_ROOM_REQUEST->value,
+            'title' => 'Neue Raumanfrage',
+        ]);
+
+        // Wie die KI-Vorschau (dry_run): alles wird zurückgerollt
+        DB::beginTransaction();
+        SendNotificationMailJob::dispatch($this->roomAdmin, $notification);
+        DB::rollBack();
+        Notification::assertNothingSent();
+
+        DB::transaction(fn () => SendNotificationMailJob::dispatch($this->roomAdmin, $notification));
+        Notification::assertSentTo($this->roomAdmin, RoomRequestNotification::class);
     }
 
     #[Test]

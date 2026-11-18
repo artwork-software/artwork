@@ -181,8 +181,8 @@ class EventChangeApprovalService
         return $slot['room_id'] === $approval['room_id']
             && $slot['start_time'] !== null
             && $slot['end_time'] !== null
-            && $slot['start_time']->gte($approval['start_time'])
-            && $slot['end_time']->lte($approval['end_time']);
+            && $this->toMinute($slot['start_time'])->gte($this->toMinute($approval['start_time']))
+            && $this->toMinute($slot['end_time'])->lte($this->toMinute($approval['end_time']));
     }
 
     /**
@@ -214,7 +214,16 @@ class EventChangeApprovalService
             return $first === $second;
         }
 
-        return $first->equalTo($second);
+        return $this->toMinute($first)->equalTo($this->toMinute($second));
+    }
+
+    /**
+     * Minutengenau: der Termin-Dialog speichert das Ende ganztägiger Termine als 23:59:00, Terminliste und KI als
+     * 23:59:59 (endOfDay). Ohne Abschneiden wurde ein unveränderter ganztägiger Termin dort zur Raumanfrage.
+     */
+    private function toMinute(Carbon $moment): Carbon
+    {
+        return $moment->copy()->startOfMinute();
     }
 
     private function nullableInt(mixed $value): ?int

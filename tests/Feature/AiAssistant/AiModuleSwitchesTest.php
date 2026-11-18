@@ -64,6 +64,7 @@ final class AiModuleSwitchesTest extends TestCase
             'Dienstplan' => ['/api/v1/ai/shift-plan', 'shift_plan'],
             'Schichtzuweisung' => ['/api/v1/ai/shift-assignments/bulk', 'shift_plan'],
             'Termin-Schichten' => ['/api/v1/ai/events/5/shifts', 'shift_plan'],
+            'Auslastung' => ['/api/v1/ai/people/user/7/workload', 'shift_plan'],
             'Inventar' => ['/api/v1/ai/inventory/availability', 'inventory'],
             'Verträge' => ['/api/v1/ai/contracts', 'contracts'],
             'Aufgaben' => ['/api/v1/ai/me/tasks', 'tasks'],

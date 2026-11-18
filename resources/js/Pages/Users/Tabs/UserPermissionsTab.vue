@@ -219,8 +219,13 @@ function persist(source = null) {
         {
             preserveScroll: true,
             preserveState: true,
-            only: ['user_to_edit', 'permission_history', 'catalog'],
-            onSuccess: () => {
+            // flash mitladen: lehnt der Server ab (z. B. letzter Admin), kommt die Meldung sonst nie an
+            only: ['user_to_edit', 'permission_history', 'catalog', 'flash'],
+            onSuccess: (page) => {
+                if (page.props.flash?.error) {
+                    saveState.value = 'error'
+                    return
+                }
                 const now = new Date()
                 savedAt.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
                 saveState.value = 'saved'

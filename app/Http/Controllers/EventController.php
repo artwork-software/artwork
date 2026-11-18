@@ -2723,7 +2723,9 @@ class EventController extends Controller
                 'occupancy_option' => false,
                 'declined_room_id' => $roomId,
                 'room_id' => null,
-            ]);
+                // Ohne Raum keine bestätigte Belegung mehr: sonst buchte das Wiedereinsetzen des Raums
+                // ohne Anfrage fest
+            ] + EventChangeApprovalService::CLEARED_APPROVAL);
 
         abort_if($updated === 0, 409, 'This room request has already been answered.');
         $event->refresh();
@@ -2982,27 +2984,38 @@ class EventController extends Controller
         $approvedStart = Carbon::parse($event->approved_start_time);
         $approvedEnd = Carbon::parse($event->approved_end_time);
 
-        // Atomar wie die übrige Absage: eine parallele zweite Antwort trifft 0 Zeilen → 409
-        $updated = Event::query()
-            ->whereKey($event->id)
-            ->where('occupancy_option', true)
-            ->where('room_id', $requestedRoomId)
-            ->update(['occupancy_option' => false]);
-        abort_if($updated === 0, 409, 'This room request has already been answered.');
-
-        $event->refresh();
-        // Über das Modell speichern: abgeleitete Zeitfelder und Projektzuordnungen ziehen mit
-        $event->forceFill([
-            'room_id' => $approvedRoomId,
-            'start_time' => $approvedStart,
-            'end_time' => $approvedEnd,
-            'declined_room_id' => null,
-        ] + EventChangeApprovalService::CLEARED_APPROVAL);
-        $this->eventService->save($event);
-        $this->seriesEventsService->moveShiftsWithEvent(
+        // Atomar wie die übrige Absage: eine parallele zweite Antwort trifft 0 Zeilen → 409. Status und Rücksprung
+        // in einer Transaktion: scheitert das Speichern (z. B. Termin im Verkauf), bleibt die Anfrage offen, statt
+        // den Termin fest im nie bestätigten Raum/Zeitraum stehen zu lassen
+        DB::transaction(function () use (
             $event,
-            (int) $previousStart->copy()->startOfDay()->diffInDays($approvedStart->copy()->startOfDay(), false)
-        );
+            $requestedRoomId,
+            $approvedRoomId,
+            $approvedStart,
+            $approvedEnd,
+            $previousStart
+        ): void {
+            $updated = Event::query()
+                ->whereKey($event->id)
+                ->where('occupancy_option', true)
+                ->where('room_id', $requestedRoomId)
+                ->update(['occupancy_option' => false]);
+            abort_if($updated === 0, 409, 'This room request has already been answered.');
+
+            $event->refresh();
+            // Über das Modell speichern: abgeleitete Zeitfelder und Projektzuordnungen ziehen mit
+            $event->forceFill([
+                'room_id' => $approvedRoomId,
+                'start_time' => $approvedStart,
+                'end_time' => $approvedEnd,
+                'declined_room_id' => null,
+            ] + EventChangeApprovalService::CLEARED_APPROVAL);
+            $this->eventService->save($event);
+            $this->seriesEventsService->moveShiftsWithEvent(
+                $event,
+                (int) $previousStart->copy()->startOfDay()->diffInDays($approvedStart->copy()->startOfDay(), false)
+            );
+        });
 
         if (!empty($request->comment)) {
             $event->comments()->create([

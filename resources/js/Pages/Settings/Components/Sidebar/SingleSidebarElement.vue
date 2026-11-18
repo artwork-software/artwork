@@ -51,7 +51,6 @@ function removeComponentFromSidebar(id) {
         router.delete(route("sidebar.component.remove", { sidebarTabComponent: id }), {
             preserveScroll: true,
             onSuccess: () => {
-                console.log('Komponente erfolgreich aus Sidebar entfernt');
                 router.reload({ only: ['tabs'] });
             },
             onError: (errors) => {
@@ -62,41 +61,23 @@ function removeComponentFromSidebar(id) {
 }
 
 function updateComponentOrder(components) {
-    console.log('🔄 updateComponentOrder aufgerufen');
-    console.log('   - Anzahl Komponenten:', components.length);
-    console.log('   - Sidebar-Tab ID:', props.sidebarTab.id);
-
     components.forEach((c, i) => {
         c.order = i + 1;
-        console.log(`   - Komponente ${c.id}: Order = ${c.order}`);
     });
 
     const minimal = components.map((c) => ({ id: c.id, order: c.order }));
-    console.log('📤 Sende Daten:', minimal);
-
     const routeUrl = route("sidebar.tab.update.component.order", {
         projectTabSidebarTab: props.sidebarTab.id,
     });
-    console.log('🌐 Route URL:', routeUrl);
-
     router.post(
         routeUrl,
         { components: minimal },
         {
             preserveScroll: true,
             preserveState: true,
-            onStart: () => {
-                console.log('⏳ Request gestartet...');
-            },
-            onSuccess: (page) => {
-                console.log('📄 Response:', page);
-            },
             onError: (errors) => {
                 console.error('❌ Fehler beim Aktualisieren der Reihenfolge:', errors);
             },
-            onFinish: () => {
-                console.log('🏁 Request abgeschlossen');
-            }
         }
     );
 }

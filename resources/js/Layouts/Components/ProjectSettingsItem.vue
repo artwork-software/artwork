@@ -32,7 +32,6 @@
 <script>
 import {ref} from "vue";
 import draggable from "vuedraggable";
-import {useForm} from "@inertiajs/vue3";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import EditableTagComponent from "@/Components/Tags/EditableTagComponent.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -92,15 +91,6 @@ export default {
         add() {
             this.$emit('add', this.input, this.hex_code)
             this.input = ''
-        },
-        updateItemOrder(items) {
-            items.map((item, index) => {
-                item.order = index + 1
-            })
-
-            this.itemOrderForm.headlines = items
-
-            this.itemOrderForm.put('/project_headlines/order')
         },
         UpdateColor(color) {
             this.hex_code = color

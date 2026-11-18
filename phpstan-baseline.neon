@@ -2734,18 +2734,6 @@ parameters:
 			path: artwork/Modules/User/Http/Resources/UserWithoutShiftsResource.php
 
 		-
-			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$end_time\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/User/Models/User.php
-
-		-
-			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$start_time\.$#'
-			identifier: property.notFound
-			count: 1
-			path: artwork/Modules/User/Models/User.php
-
-		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Vacation\\Models\\Vacation\:\:\$from\.$#'
 			identifier: property.notFound
 			count: 1

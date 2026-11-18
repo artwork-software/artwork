@@ -18,10 +18,8 @@ use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\GlobalQualification;
-use Artwork\Modules\Shift\Models\PresetShift;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\Shift\Events\AssignUserToShift;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
@@ -37,7 +35,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
-use stdClass;
 use Illuminate\Support\Collection as SupportCollection;
 
 class ShiftService
@@ -122,29 +119,6 @@ class ShiftService
         }
 
         return Project::whereKey($projectId)->exists() ? (int) $projectId : null;
-    }
-
-    public function createShiftWithoutEvent(int $craftId, array $data): Shift|Model
-    {
-        $start = Carbon::parse($data['start']);
-        $end = Carbon::parse($data['end']);
-        $startDate = Carbon::parse($data['start_date']);
-
-        $endDate = $this->endDateFor($startDate, $start, $end);
-
-        $shift = new Shift([
-            'start_date' => $startDate->format('Y-m-d'),
-            'end_date' => $endDate,
-            'start' => $start->format('H:i'),
-            'end' => $end->format('H:i'),
-            'break_minutes' => $data['break_minutes'],
-            'description' => $data['description'] ?? null,
-            'room_id' => $data['room_id'],
-        ]);
-
-        $shift->craft()->associate($craftId);
-
-        return $this->save($shift);
     }
 
     public function createRemovedAllUsersFromShiftHistoryEntry(Shift $shift, ChangeService $changeService): void

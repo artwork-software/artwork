@@ -199,6 +199,8 @@ class MoneySourceController extends Controller
                     ->setTranslationKey('Money source created')
             );
         } catch (\Throwable $t) {
+            // Verlaufseintrag ist Beiwerk: die Quelle ist angelegt, der Fehler wird nur gemeldet
+            report($t);
         }
 
         return back()->with(['recentlyCreatedMoneySourceId' => $moneySource->id]);

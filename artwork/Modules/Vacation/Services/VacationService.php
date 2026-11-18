@@ -328,43 +328,6 @@ readonly class VacationService
         );
     }
 
-    public function updateVacationOfEntity(
-        array $vacationType,
-        string $modelClass,
-        Vacationer $entityModel,
-        string $day
-    ): void {
-        if ($vacationType['type'] && in_array($modelClass, [User::class, Freelancer::class], true)) {
-            $this->invalidateVacationerCache($entityModel);
-            $vacations = $entityModel->vacations()->where('date', $day)->get();
-
-            if ($vacations->isNotEmpty()) {
-                $this->deleteVacationInterval($entityModel, $day);
-            }
-
-            if ($vacationType['type'] !== \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value) {
-                $createVacationRequest = new CreateVacationRequest([
-                    'date' => $day,
-                    'type' => 'vacation',
-                    'full_day' => true,
-                    'is_series' => false,
-                    'comment' => null,
-                ]);
-
-                $this->create(
-                    $entityModel,
-                    $createVacationRequest,
-                    $this->vacationConflictService,
-                    $this->vacationSeriesService,
-                    $this->changeService,
-                    $this->schedulingService,
-                    $this->notificationService,
-                    $vacationType['type']
-                );
-            }
-        }
-    }
-
     /**
      * Bulk update vacations for an entity across multiple days.
      * Pre-loads all vacations to avoid N+1 queries.

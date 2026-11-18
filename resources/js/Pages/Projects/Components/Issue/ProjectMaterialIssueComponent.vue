@@ -1044,6 +1044,7 @@ function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape')     closePreview()
 }
 
+onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 // Externe Ausgabe-Kacheln mutieren über Inertia-Visits (Bearbeiten/Rückgabe/Löschen);

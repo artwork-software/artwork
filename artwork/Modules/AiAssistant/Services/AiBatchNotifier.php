@@ -59,11 +59,11 @@ class AiBatchNotifier
             $this->notifyGroup($causer, $action, $group);
         }
 
-        // Ein payloadloser Refresh fuer den ganzen Batch statt eines Broadcasts je Termin (W4 §2).
+        // Ein Sammel-Signal (Zeitraum der Termine) fuer den ganzen Batch statt eines Broadcasts je Termin (W4 §2).
         // Dasselbe Muster wie `EventService::deleteAll()`, aber ueber `SafeBroadcast`: ein nicht
         // erreichbarer WebSocket-Server macht die bereits gespeicherte Aktion sonst zu einer 500,
         // und in einer offenen Transaktion wird erst nach dem Commit gesendet (ai-shift-planning, 6).
-        SafeBroadcast::send(new OccupancyUpdated(), true);
+        SafeBroadcast::send(OccupancyUpdated::forEvents($events), true);
     }
 
     /**

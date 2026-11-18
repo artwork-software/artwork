@@ -167,9 +167,49 @@ final class AiUndoTest extends TestCase
     }
 
     #[Test]
-    public function reverting_a_deletion_restores_the_events(): void
+    public function reverting_a_deletion_without_trash_access_is_forbidden(): void
     {
         $user = $this->planner();
+        $event = $this->event();
+        $before = $event->getRawOriginal();
+        $event->delete();
+
+        $batch = $this->batchFor($user, [
+            ['model' => $event, 'action' => AiActionBatchItem::ACTION_DELETE, 'before_state' => $before],
+        ]);
+
+        $this->actingAs($user)->postJson('/ai/actions/batches/' . $batch->id . '/revert')->assertForbidden();
+
+        $this->assertSame(0, Event::query()->whereKey($event->id)->count());
+        $this->assertSame(AiActionBatch::STATUS_EXECUTED, $batch->fresh()->status);
+    }
+
+    #[Test]
+    public function a_right_revoked_after_the_execution_also_blocks_the_undo(): void
+    {
+        $user = $this->planner();
+        $event = $this->event();
+        $before = $event->getRawOriginal();
+        $event->forceFill(['eventName' => 'Geaendert'])->save();
+        $batch = $this->batchFor($user, [
+            ['model' => $event, 'action' => AiActionBatchItem::ACTION_UPDATE, 'before_state' => $before],
+        ]);
+
+        // Die Person darf den Termin inzwischen nicht mehr bearbeiten: dann auch nicht ueber die KI-Ruecknahme
+        $user->revokePermissionTo(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($user->fresh())->postJson('/ai/actions/batches/' . $batch->id . '/revert')->assertForbidden();
+
+        $this->assertSame('Geaendert', $event->fresh()->eventName);
+    }
+
+    #[Test]
+    public function reverting_a_deletion_restores_the_events(): void
+    {
+        // Wie „aus dem Papierkorb wiederherstellen“ in der Oberflaeche: Loesch- und Papierkorb-Recht
+        $user = $this->planner();
+        $user->givePermissionTo(Permission::findOrCreate(PermissionEnum::TRASH_ACCESS->value, 'web'));
         $event = $this->event();
         $before = $event->getRawOriginal();
         $event->delete();

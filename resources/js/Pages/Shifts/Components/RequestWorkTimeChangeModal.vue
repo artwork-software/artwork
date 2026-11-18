@@ -77,6 +77,7 @@
 </template>
 
 <script setup>
+import { toastValidationErrors } from "@/Helper/appToast";
 import { computed } from "vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -134,9 +135,7 @@ const  submit = () => {
             emit('submitted');
             emit('close');
         },
-        onError: (errors) => {
-            console.error(errors);
-        }
+        onError: (errors) => toastValidationErrors(errors),
     });
 };
 </script>

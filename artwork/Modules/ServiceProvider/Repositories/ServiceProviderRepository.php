@@ -27,11 +27,6 @@ class ServiceProviderRepository extends BaseRepository
     }
 
 
-    public function findWorker(int $workerId): ServiceProvider|null
-    {
-        return ServiceProvider::query()->canWorkShifts()->where('id', $workerId)->first();
-    }
-
 
     public function getWorkers(): Collection
     {

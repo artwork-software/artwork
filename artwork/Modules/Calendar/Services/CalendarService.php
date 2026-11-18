@@ -2,22 +2,12 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use App\Http\Controllers\FilterController;
-use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Availability\Models\Available;
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
-use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
-use Artwork\Modules\EventType\Services\EventTypeService;
-use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\Room\Services\RoomAttributeService;
-use Artwork\Modules\Room\Services\RoomCategoryService;
-use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,7 +16,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Throwable;
 
 class CalendarService
 {
@@ -235,16 +224,6 @@ class CalendarService
         }
 
         return array_values($roomsData);
-    }
-
-    public function getEventsOfInterval($startDate, $endDate, ?Project $project = null): Collection
-    {
-        $all_events = Event::query();
-        $startDate = Carbon::parse($startDate)->startOfDay();
-        $endDate = Carbon::parse($endDate)->endOfDay();
-
-        $filteredEvents = $this->filterEvents($all_events, $startDate, $endDate, null, $project);
-        return $filteredEvents->get();
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising

@@ -11,7 +11,6 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\User\Models\UserCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -70,11 +69,6 @@ readonly class RoomService
             $startDate,
             $endDate
         );
-    }
-
-    public function deleteAllByArea(Area $area): void
-    {
-        $this->roomRepository->deleteByReference($area, 'rooms');
     }
 
     public function getAllWithoutTrashed(array $with = [], array $without = []): EloquentCollection
@@ -175,30 +169,6 @@ readonly class RoomService
             $calendarFilter,
             $project
         );
-    }
-
-    public function collectEventsForRoomsShift(
-        array|Collection $rooms,
-        array|Collection $events,
-        CarbonPeriod $calendarPeriod,
-    ): Collection {
-        $roomEvents = collect();
-
-        foreach ($rooms as $room) {
-            $roomEvents->add(
-                $this->convertEventsForFrontend(
-                    $room,
-                    $events->filter(
-                        function ($event) use ($room): bool {
-                            return $event->room_id === $room->id;
-                        }
-                    ),
-                    $calendarPeriod,
-                )
-            );
-        }
-
-        return $roomEvents;
     }
 
     /**

@@ -299,11 +299,6 @@ class NotificationService
         return $this;
     }
 
-    public function getCreatedBy(): ?User
-    {
-        return $this->createdBy;
-    }
-
     public function setCreatedBy(?User $createdBy): void
     {
         $this->createdBy = $createdBy;

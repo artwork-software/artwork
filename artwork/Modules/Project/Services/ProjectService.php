@@ -36,7 +36,6 @@ use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserShiftPlanDailySettings;
 use Artwork\Modules\User\Models\UserShiftPlanSettings;
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
@@ -759,11 +758,6 @@ class ProjectService
     public function getLatestEndingEventInProject(int|Project $project): Event|null
     {
         return $this->projectRepository->getLatestEndingEvent($project);
-    }
-
-    public function getProjectsWithAccessBudgetAndManagerUsers(): Collection
-    {
-        return $this->projectRepository->getProjects(['access_budget', 'managerUsers']);
     }
 
     public function associateProjectWithGroup(Project $project, Project $projectGroup): void

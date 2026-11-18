@@ -383,6 +383,98 @@ final class AiEventWriteApiTest extends TestCase
         $this->assertSame('20:00:00', $event->fresh()->start_time->format('H:i:s'));
     }
 
+    // --- Raumwechsel mit den Raumrechten der Person (wie die Terminliste der Oberflaeche) ------------
+
+    private function ownEventIn(User $creator): Event
+    {
+        return Event::factory()->create([
+            'room_id' => $this->room->id,
+            'project_id' => $this->project->id,
+            'event_type_id' => $this->eventType->id,
+            'user_id' => $creator->id,
+            'start_time' => '2026-09-14 19:00:00',
+            'end_time' => '2026-09-14 21:00:00',
+            'occupancy_option' => false,
+        ]);
+    }
+
+    #[Test]
+    public function moving_an_event_into_a_room_one_may_only_request_turns_it_into_a_room_request(): void
+    {
+        $this->fakeActionGuard();
+        $requester = $this->userWith([PermissionEnum::EVENT_REQUEST->value]);
+        $event = $this->ownEventIn($requester);
+        $targetRoom = Room::factory()->create();
+        $this->actingAsToken($requester);
+
+        $this->patchJson('/api/v1/ai/events/' . $event->id, [
+            'room_id' => $targetRoom->id,
+            'dry_run' => false,
+            'action_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $event = $event->fresh();
+        $this->assertSame($targetRoom->id, $event->room_id);
+        $this->assertTrue((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function moving_an_event_into_a_room_without_any_right_there_is_blocked(): void
+    {
+        $creator = $this->userWith([]);
+        $event = $this->ownEventIn($creator);
+        $targetRoom = Room::factory()->create();
+        $this->actingAsToken($creator);
+
+        $payload = $this->patchJson('/api/v1/ai/events/' . $event->id, ['room_id' => $targetRoom->id])
+            ->assertOk()
+            ->json();
+
+        $types = array_column($payload['items'][0]['conflicts'], 'type');
+        $this->assertContains(AiWriteConflictData::MISSING_PERMISSION, $types);
+        $this->assertSame($this->room->id, $event->fresh()->room_id);
+    }
+
+    #[Test]
+    public function moving_several_events_applies_the_room_rights_to_each_event(): void
+    {
+        $this->fakeActionGuard();
+        $requester = $this->userWith([PermissionEnum::EVENT_REQUEST->value]);
+        $event = $this->ownEventIn($requester);
+        $targetRoom = Room::factory()->create();
+        $this->actingAsToken($requester);
+
+        $this->patchJson('/api/v1/ai/events/batch', [
+            'event_ids' => [$event->id],
+            'room_id' => $targetRoom->id,
+            'dry_run' => false,
+            'action_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $event = $event->fresh();
+        $this->assertSame($targetRoom->id, $event->room_id);
+        $this->assertTrue((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function a_planner_who_may_book_directly_keeps_the_moved_event_booked(): void
+    {
+        $this->fakeActionGuard();
+        $event = $this->existingEvent('2026-09-14 19:00:00', '2026-09-14 21:00:00');
+        $targetRoom = Room::factory()->create();
+        $this->actingAsToken($this->planner());
+
+        $this->patchJson('/api/v1/ai/events/' . $event->id, [
+            'room_id' => $targetRoom->id,
+            'dry_run' => false,
+            'action_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $event = $event->fresh();
+        $this->assertSame($targetRoom->id, $event->room_id);
+        $this->assertFalse((bool) $event->occupancy_option);
+    }
+
     // --- Ganztaegig (core-api-lookups) --------------------------------------------------------
 
     #[Test]

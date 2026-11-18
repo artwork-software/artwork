@@ -26,12 +26,6 @@ final class OwnIndividualTimeAccess
         ]);
     }
 
-    public static function mayEnterOwnTimes(User $user): bool
-    {
-        return self::managesOwnTimesOnAnyDay($user)
-            || $user->can(PermissionEnum::CAN_ENTER_OWN_INDIVIDUAL_TIMES->value);
-    }
-
     /**
      * Alle übergebenen Tage müssen für die Person bearbeitbar sein; null-Werte werden ignoriert.
      *

@@ -167,11 +167,6 @@ class ChangeService
         return array_is_list($properties) ? $properties : [];
     }
 
-    public function latestHistoryEntry(Model $model): ?Activity
-    {
-        return $model->activities()->latest()->first();
-    }
-
     /**
      * @return Collection<int, Activity>
      */

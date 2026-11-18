@@ -1828,31 +1828,6 @@ class ProjectDayAssignmentService
     }
 
     /**
-     * Einzeltag-Zuordnungen, die außerhalb des (hypothetischen) Zeitraums liegen —
-     * pro Person gruppiert, für die Anzeige im Confirm-Dialog.
-     *
-     * @param array{start: Carbon, end: Carbon}|null $period
-     * @return array<int, array{worker_name: string, type: string, dates: array<string>}>
-     */
-    public function getOutOfPeriodSingleDayAssignments(Project $project, ?array $period): array
-    {
-        $rows = ProjectDayAssignment::query()
-            ->where('project_id', $project->id)
-            ->where('is_full_period', false)
-            ->when($period !== null, static function ($query) use ($period): void {
-                $query->where(static function ($dateQuery) use ($period): void {
-                    $dateQuery
-                        ->where('date', '<', $period['start']->toDateString())
-                        ->orWhere('date', '>', $period['end']->toDateString());
-                });
-            })
-            ->orderBy('date')
-            ->get();
-
-        return $this->groupAssignmentsForDialog($rows);
-    }
-
-    /**
      * Einzeltag-Zuordnungen, die durch eine Zeitraum-Aenderung NEU herausfallen:
      * ausserhalb des neuen Zeitraums, aber innerhalb des heutigen. Zuordnungen,
      * die schon jetzt ausserhalb liegen, loest die Aenderung nicht auf — sonst

@@ -31,7 +31,6 @@ use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\BulkEventChanged;
 use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventUpdated;
-use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
@@ -43,6 +42,7 @@ use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\DirectBookingActivationService;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Event\Services\EventRoomBookingService;
 use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Event\Services\EventCommentService;
 use Artwork\Modules\Event\Services\SeriesEventsService;
@@ -1531,16 +1531,16 @@ class EventController extends Controller
             $this->roomRequestNotificationService->notifyRoomAdmins($firstEvent);
         }
 
-        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
-
-        if ($request->booleanValue('showProjectPeriodInCalendar')) {
-            return $this->redirector->back();
-        }
-
+        // Live-Update über den Raumkanal (weitere Serientermine sendet der SeriesEventsService einzeln) –
+        // auch im Projektzeitraum-Modus, dort fehlte es bisher
         SafeBroadcast::send(new EventCreated(
             $firstEvent->load(['event_type', 'project']),
             $firstEvent->room_id
         ));
+
+        if ($request->booleanValue('showProjectPeriodInCalendar')) {
+            return $this->redirector->back();
+        }
 
         return new CalendarEventResource($firstEvent);
     }
@@ -4178,46 +4178,23 @@ class EventController extends Controller
 
     private function mayCreateBulkEventDirectly(bool $isPlanning, Room $room): bool
     {
-        $user = $this->authManager->user();
-
-        if ($isPlanning) {
-            return $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value);
-        }
-
-        // "Termine immer direkt buchbar": "Raumbelegungen anfragen" bedeutet dann "Termine anlegen"
-        // und schließt Bulk-Anlage und Serien ein (Entscheidung 18.09.2026).
-        // "Kann von jedem fest gebucht werden" gibt kein Anlegerecht: nur wer laut EventPolicy::create anlegen
-        // darf, bucht dort fest (vorher genügte der Schalter allein).
-        return $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
-            || ($this->eventSettingsService->alwaysDirectBooking()
-                && $user->can(PermissionEnum::EVENT_REQUEST->value))
-            || ($room->everyone_can_book && $user->can('create', [Event::class, $room]))
-            || $room->isAdministeredBy($user);
+        return app(EventRoomBookingService::class)->mayBookDirectly($this->authManager->user(), $isPlanning, $room);
     }
 
     /**
      * Kalender-Mehrfachbearbeitung (Anlegen in Zellen, Duplizieren) und Terminliste im Projekt (Anlegen,
      * Raumwechsel): wer im Raum nicht direkt buchen, aber anfragen darf, legt Raumanfragen an – wie im
-     * Termin-Dialog (resolveRoomBookingOption). Geplante Termine und "Termine immer direkt buchbar" kennen
-     * keine Raumanfrage.
+     * Termin-Dialog (resolveRoomBookingOption). Regel in EventRoomBookingService (auch für die KI).
      *
      * @return bool true = als Raumanfrage anlegen
      */
     private function authorizeBulkEventCreationOrRoomRequest(bool $isPlanning, Room $room): bool
     {
-        if ($this->mayCreateBulkEventDirectly($isPlanning, $room)) {
-            return false;
-        }
+        $asRoomRequest = app(EventRoomBookingService::class)
+            ->roomRequestRequired($this->authManager->user(), $isPlanning, $room);
+        abort_if($asRoomRequest === null, 403);
 
-        // Ohne Anlegerecht auch keine Anfrage (EventPolicy::book allein ließe sie über everyone_can_book zu)
-        $user = $this->authManager->user();
-        $mayRequestRoom = !$isPlanning
-            && !$this->eventSettingsService->alwaysDirectBooking()
-            && $user->can('create', [Event::class, $room])
-            && $user->can('book', [Event::class, $room, true, false]);
-        abort_unless($mayRequestRoom, 403);
-
-        return true;
+        return $asRoomRequest;
     }
 
     /**
@@ -4229,21 +4206,7 @@ class EventController extends Controller
      */
     private function turnMovedEventsIntoRoomRequests(array $eventIds, array $openRoomRequestsBefore): void
     {
-        if ($eventIds === []) {
-            return;
-        }
-
-        foreach (Event::query()->whereIn('id', $eventIds)->get() as $movedEvent) {
-            $movedEvent->update([
-                'occupancy_option' => true,
-                'declined_room_id' => null,
-                'accepted' => false,
-            ]);
-        }
-
-        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
-            array_values(array_diff($eventIds, array_keys($openRoomRequestsBefore)))
-        );
+        app(EventRoomBookingService::class)->turnIntoRoomRequests($eventIds, array_keys($openRoomRequestsBefore));
     }
 
     public function bulkProjectEventStore(

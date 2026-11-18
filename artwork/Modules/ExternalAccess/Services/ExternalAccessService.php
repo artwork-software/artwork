@@ -50,17 +50,6 @@ class ExternalAccessService
     }
 
     /**
-     * @throws InternalUserEmailConflictException
-     */
-    public function findExistingByEmail(string $email): ?ExternalAccess
-    {
-        $normalized = mb_strtolower(trim($email));
-        $this->guardAgainstInternalUserEmail($normalized);
-
-        return $this->externalAccessRepository->findByEmail($normalized);
-    }
-
-    /**
      * Main entry point for inviting an external person.
      *
      * @throws InternalUserEmailConflictException

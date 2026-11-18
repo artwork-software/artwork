@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Models;
 
+use Artwork\Modules\AiAssistant\Support\WebGuardScope;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Models\EventComment;
@@ -655,12 +656,19 @@ class Event extends Model
      * `/calendar/view`) haengt an keinem Recht, und
      * `CalendarService::filterEvents():252` filtert ausschliesslich nach den Kalendereinstellungen
      * der Person (Raeume, Bereiche, Termintypen, Publikum, laut/leise) — nie nach Rechten.
-     * Deshalb liefert der Scope fuer jede angemeldete Person alles und ohne Benutzer nichts.
-     * Er existiert trotzdem als eigene Methode, damit die Aggregations-Endpunkte (B1) genau eine
-     * Stelle haben, an der sich die Regel aendern laesst, wenn die Oberflaeche sie bekommt.
+     * Deshalb liefert der Scope fuer jede angemeldete Person alle festen Termine und ohne Benutzer nichts.
+     * Planungstermine nur mit Planungskalender-Recht (EventPolicy::viewPlanning, wie der Planungskalender
+     * und die Raumkanaele); Admins ueber Gate::before. Die Pruefung laeuft im web-Guard, weil Spatie-Rechte
+     * unter dem api-Guard (KI-Token) sonst immer false liefern.
      */
     public function scopeVisibleFor(Builder $builder, ?User $user): Builder
     {
-        return $user instanceof User ? $builder : $builder->whereRaw('1 = 0');
+        if (!$user instanceof User) {
+            return $builder->whereRaw('1 = 0');
+        }
+
+        $mayViewPlanning = WebGuardScope::run(static fn (): bool => $user->can('viewPlanning', self::class));
+
+        return $mayViewPlanning ? $builder : $builder->where($builder->qualifyColumn('is_planning'), false);
     }
 }

@@ -5,6 +5,8 @@ namespace Tests\Feature\AiAssistant;
 use Artwork\Modules\AiAssistant\Support\AiScopes;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Spatie\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
@@ -110,6 +112,31 @@ final class AiEventsRoomsApiTest extends TestCase
         $this->assertSame('Studio 1', $payload['data'][0]['room']['name']);
         $this->assertNotNull($payload['data'][0]['project']['id']);
         $this->assertStringStartsWith('2026-09-16T10:00:00', $payload['data'][0]['start']);
+    }
+
+    #[Test]
+    public function planning_events_are_only_listed_for_people_who_may_see_the_planning_calendar(): void
+    {
+        $room = Room::factory()->create();
+        $fixed = $this->eventIn($room, '2026-09-16 10:00:00', '2026-09-16 12:00:00');
+        $planned = $this->eventIn($room, '2026-09-16 14:00:00', '2026-09-16 16:00:00');
+        $planned->forceFill(['is_planning' => true])->save();
+
+        // Die KI handelt mit den Rechten der Person: ohne Planungskalender-Recht kein Planungstermin
+        $this->actingAsToken(User::factory()->create());
+        $ids = array_column($this->getJson('/api/v1/ai/events?' . $this->range())->assertOk()->json('data'), 'id');
+        $this->assertSame([$fixed->id], $ids);
+
+        $planner = User::factory()->create();
+        Permission::findOrCreate(PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value, 'web');
+        $planner->givePermissionTo(PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value);
+        $this->flushHeaders();
+        // Der Guard merkt sich sonst die Person der ersten Anfrage
+        $this->app['auth']->forgetGuards();
+        $this->actingAsToken($planner);
+        $ids = array_column($this->getJson('/api/v1/ai/events?' . $this->range())->assertOk()->json('data'), 'id');
+        sort($ids);
+        $this->assertSame([$fixed->id, $planned->id], $ids);
     }
 
     #[Test]

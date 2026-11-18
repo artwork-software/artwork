@@ -11,6 +11,7 @@
 </template>
 
 <script setup>
+import { toastValidationErrors } from "@/Helper/appToast";
 
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
@@ -49,9 +50,7 @@ const submit = () => {
         onSuccess: () => {
             emits('close')
         },
-        onError: () => {
-            console.log('Error')
-        }
+        onError: (errors) => toastValidationErrors(errors),
     })
 }
 </script>

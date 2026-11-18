@@ -101,7 +101,9 @@ class AiProjectReadService
         $project->loadMissing('status');
         $counts = $this->eventAndRoomCounts([$project->id]);
 
+        // Planungstermine nur mit Planungskalender-Recht, wie in der Oberflaeche
         $nextEvents = Event::query()
+            ->visibleFor($user)
             ->where('project_id', $project->id)
             ->where('end_time', '>=', CarbonImmutable::now())
             ->with('room')

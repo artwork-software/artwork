@@ -14,6 +14,14 @@ final class AiAssistantSettingsControllerTest extends TestCase
     /**
      * @return array<string, mixed>
      */
+    /**
+     * KI-Freischaltung plus das Recht für Tool-Einstellungen: nur wer es selbst darf, ändert die KI-Schalter.
+     */
+    private function actingAsAiSettingsManager(): User
+    {
+        return $this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value, User::factory()->withAiAccess()->create());
+    }
+
     private function payload(array $overrides = []): array
     {
         return array_merge([
@@ -41,6 +49,24 @@ final class AiAssistantSettingsControllerTest extends TestCase
     }
 
     #[Test]
+    public function ai_access_alone_is_not_enough_to_change_house_wide_settings(): void
+    {
+        $this->actingAs(User::factory()->withAiAccess()->create());
+
+        $this->get(route('tool.ai-assistant'))->assertForbidden();
+        $this->patch(route('tool.ai-assistant.update'), $this->payload())->assertForbidden();
+    }
+
+    #[Test]
+    public function an_admin_with_ai_access_may_change_the_settings(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $admin->forceFill(['ai_access_granted_at' => now()])->save();
+
+        $this->get(route('tool.ai-assistant'))->assertOk();
+    }
+
+    #[Test]
     public function an_admin_without_ai_access_cannot_open_or_update_the_page(): void
     {
         $this->actingAsAdmin();
@@ -50,9 +76,9 @@ final class AiAssistantSettingsControllerTest extends TestCase
     }
 
     #[Test]
-    public function with_ai_access_the_page_opens(): void
+    public function with_ai_access_and_the_tool_settings_permission_the_page_opens(): void
     {
-        $this->actingAs(User::factory()->withAiAccess()->create());
+        $this->actingAsAiSettingsManager();
 
         $this->get(route('tool.ai-assistant'))->assertOk();
     }
@@ -68,7 +94,7 @@ final class AiAssistantSettingsControllerTest extends TestCase
     #[Test]
     public function the_settings_are_stored(): void
     {
-        $this->actingAs(User::factory()->withAiAccess()->create());
+        $this->actingAsAiSettingsManager();
 
         $this->patch(route('tool.ai-assistant.update'), $this->payload([
             'level_c_enabled' => true,
@@ -85,7 +111,7 @@ final class AiAssistantSettingsControllerTest extends TestCase
     #[Test]
     public function stage_c_without_stage_b_is_rejected(): void
     {
-        $this->actingAs(User::factory()->withAiAccess()->create());
+        $this->actingAsAiSettingsManager();
 
         $this->patch(route('tool.ai-assistant.update'), $this->payload([
             'level_b_enabled' => false,
@@ -96,7 +122,7 @@ final class AiAssistantSettingsControllerTest extends TestCase
     #[Test]
     public function switching_the_assistant_on_is_logged(): void
     {
-        $this->actingAs(User::factory()->withAiAccess()->create());
+        $this->actingAsAiSettingsManager();
 
         $this->patch(route('tool.ai-assistant.update'), $this->payload(['enabled' => true]));
 
@@ -108,7 +134,7 @@ final class AiAssistantSettingsControllerTest extends TestCase
     #[Test]
     public function changing_only_the_retention_period_is_not_logged(): void
     {
-        $this->actingAs(User::factory()->withAiAccess()->create());
+        $this->actingAsAiSettingsManager();
 
         // Erst den Ausgangszustand herstellen, dann nur die Aufbewahrungsdauer aendern.
         $this->patch(route('tool.ai-assistant.update'), $this->payload());

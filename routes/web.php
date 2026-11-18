@@ -643,7 +643,9 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::post('/mail/test', [MailSettingsController::class, 'test'])
             ->name('tool.mail.test');
 
-        // KI-ASSISTENT — nur mit KI-Freischaltung (per Konsole), kein GUI-Recht, kein Admin-Bypass
+        // KI-ASSISTENT — KI-Freischaltung (per Konsole, kein Admin-Bypass) UND dasselbe Recht wie alle anderen
+        // Tool-Einstellungen: hausweite Schalter darf nur ändern, wer Tool-Einstellungen ändern darf
+        // (Recht im Controller/Request geprüft: route-'can' liefe wegen der Middleware-Priorität vor der Freischaltung)
         Route::middleware(EnsureUserHasAiAccess::class)->group(function (): void {
             Route::get('/ai-assistant', [AiAssistantSettingsController::class, 'edit'])
                 ->name('tool.ai-assistant');

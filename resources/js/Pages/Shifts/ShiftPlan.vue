@@ -3007,7 +3007,14 @@ onMounted(async () => {
         .catch(() => { craftsLoaded.value = [] })
     const workersPromise = loadShiftPlanWorkers()
 
-    await initializeShiftPlan()
+    try {
+        await initializeShiftPlan()
+    } catch (error) {
+        // Fehler-Toast kommt vom globalen axios-Interceptor; Guard und Watcher sind schon registriert,
+        // ein Datums-/Filterwechsel lädt neu
+        console.error('[ShiftPlan] Laden fehlgeschlagen', error)
+        return
+    }
     if (isShiftPlanUnmounted) return
 
     // Handle highlight query param from list view navigation

@@ -2305,6 +2305,8 @@ onMounted(async () => {
             }).catch(() => { craftsLoaded.value = [] }),
         loadProjectDayAssignments(),
     ])
+    // Während des Ladens verlassen: keine Echo-/Resize-Listener mehr an die tote Instanz hängen
+    if (_isUnmounted) return
 
     startShiftCalendarListener()
 
@@ -2314,6 +2316,7 @@ onMounted(async () => {
     }
 
     await nextTick()
+    if (_isUnmounted) return
     measureTopBarHeight()
     checkAllRoomNameTruncations()
     scrollToRequestedDay()
@@ -2332,7 +2335,8 @@ onUnmounted(() => {
     shiftCalendarListener = null
     projectAssignmentEchoChannel?.stopListening('.project-day-assignments.changed', loadProjectDayAssignments)
     projectAssignmentEchoChannel = null
-    if (ro && topBarEl.value) ro.unobserve(topBarEl.value)
+    // disconnect statt unobserve: das Template-Ref ist in onUnmounted schon null
+    ro?.disconnect()
     ro = null
     window.removeEventListener("resize", measureTopBarHeight)
     window.removeEventListener("resize", checkAllRoomNameTruncations)

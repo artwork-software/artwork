@@ -2963,6 +2963,43 @@ function startShiftCalendarListener() {
 }
 
 onMounted(async () => {
+    // Watcher, Listener und Navigations-Guard vor dem ersten await registrieren: nach einem await
+    // ist die Komponenteninstanz nicht mehr aktiv, Watcher würden beim Verlassen nicht gestoppt und
+    // ein bereits verlassener Plan würde router.visit noch nachträglich überschreiben.
+    FULLSCREEN_EVENTS.forEach((eventName) => document.addEventListener(eventName, onFullscreenChange))
+    setupInertiaNavigationGuard()
+
+    // currentDayRef folgt immer currentDayOnView
+    watch(
+        () => currentDayOnView.value,
+        (v) => {
+            currentDayRef.value = v
+        },
+    )
+
+    // Tage aus Props aktualisieren (nur Referenz, kein deep-Watch – schneller)
+    watch(
+        () => props.days,
+        (v) => {
+            const newDays = (v ?? []) as any[]
+            days.value = newDays
+            daysRef.value = newDays
+
+            // falls sich Tage komplett ändern, ggf. currentDay neu setzen
+            currentDayOnView.value = pickInitialCurrentDay(newDays)
+        },
+    )
+
+    // Bei Datums- oder Craft-Filter-Änderung Worker neu laden.
+    // Bewusst KEIN deep-Watcher: der feuerte auch bei identischem Inhalt (neue Array-Identität)
+    // und löste damit unnötige Worker-Reloads aus — Wert-Vergleich über serialisierten Key.
+    watch(
+        () => `${props.dateValue?.[0]}|${props.dateValue?.[1]}|${(props.user_filters?.craft_ids ?? []).join(',')}`,
+        () => {
+            loadShiftPlanWorkers()
+        },
+    )
+
     // Crafts + Workers sofort parallel zum Meta/Batch-Load starten — die drei
     // Endpunkte sind unabhängig; vorher liefen alle vier Requests seriell
     const craftsPromise = axios.get(route('shifts.crafts'))
@@ -2971,6 +3008,7 @@ onMounted(async () => {
     const workersPromise = loadShiftPlanWorkers()
 
     await initializeShiftPlan()
+    if (isShiftPlanUnmounted) return
 
     // Handle highlight query param from list view navigation
     const urlParams = new URLSearchParams(window.location.search);
@@ -3011,6 +3049,7 @@ onMounted(async () => {
     // Crafts + Workers wurden oben bereits parallel gestartet — hier nur noch abwarten
     await craftsPromise
     await workersPromise
+    if (isShiftPlanUnmounted) return
 
     // Dev-only: overflow debug check for visible cells
     if (import.meta.env.DEV && expandDays.value) {
@@ -3033,55 +3072,9 @@ onMounted(async () => {
         }, 500)
     }
 
-    document.addEventListener('fullscreenchange', () => {
-        isFullscreen.value = !!document.fullscreenElement
-    })
-    document.addEventListener('webkitfullscreenchange', () => {
-        isFullscreen.value = !!(document as any).webkitFullscreenElement
-    })
-    document.addEventListener('mozfullscreenchange', () => {
-        isFullscreen.value = !!(document as any).mozFullScreenElement
-    })
-    document.addEventListener('MSFullscreenChange', () => {
-        isFullscreen.value = !!(document as any).msFullscreenElement
-    })
-
-    // currentDayRef folgt immer currentDayOnView
-    watch(
-        () => currentDayOnView.value,
-        (v) => {
-            currentDayRef.value = v
-        },
-    )
-
-    // Tage aus Props aktualisieren (nur Referenz, kein deep-Watch – schneller)
-    watch(
-        () => props.days,
-        (v) => {
-            const newDays = (v ?? []) as any[]
-            days.value = newDays
-            daysRef.value = newDays
-
-            // falls sich Tage komplett ändern, ggf. currentDay neu setzen
-            currentDayOnView.value = pickInitialCurrentDay(newDays)
-        },
-    )
-
-    // Bei Datums- oder Craft-Filter-Änderung Worker neu laden.
-    // Bewusst KEIN deep-Watcher: der feuerte auch bei identischem Inhalt (neue Array-Identität)
-    // und löste damit unnötige Worker-Reloads aus — Wert-Vergleich über serialisierten Key.
-    watch(
-        () => `${props.dateValue?.[0]}|${props.dateValue?.[1]}|${(props.user_filters?.craft_ids ?? []).join(',')}`,
-        () => {
-            loadShiftPlanWorkers()
-        },
-    )
-
     attach()
 
     startShiftCalendarListener()
-
-    setupInertiaNavigationGuard()
 
     // wenn nur ein kurzer Hinweis: direkt leeren, Timeout möglichst klein halten
     setTimeout(() => {
@@ -3104,7 +3097,9 @@ onBeforeUnmount(() => {
     monthObserver.value?.disconnect()
     monthObserver.value = null
 
-    if (originalVisit.value) {
+    FULLSCREEN_EVENTS.forEach((eventName) => document.removeEventListener(eventName, onFullscreenChange))
+    // Nur zurücksetzen, wenn noch dieser Guard aktiv ist (sonst würde ein fremder Wrapper überschrieben)
+    if (originalVisit.value && router.visit === guardedVisit) {
         router.visit = originalVisit.value
     }
     // Sonst fragte der Browser auf fremden Seiten "Seite verlassen?" (tote Closure mit multiEditMode)
@@ -3465,11 +3460,20 @@ function shiftPlanBeforeUnload(event: BeforeUnloadEvent) {
     }
 }
 
+const FULLSCREEN_EVENTS = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
+
+function onFullscreenChange() {
+    const doc = document as any
+    isFullscreen.value = !!(document.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement)
+}
+
+let guardedVisit: ((url: string, options?: any) => Promise<void>) | null = null
+
 function setupInertiaNavigationGuard() {
     originalVisit.value = router.visit
     window.onbeforeunload = shiftPlanBeforeUnload
 
-    router.visit = async (url: string, options: any = {}) => {
+    guardedVisit = async (url: string, options: any = {}) => {
         // Standardmäßig Scroll-Position beibehalten, außer explizit überschrieben
         options = {preserveScroll: true, ...options}
         if (multiEditMode.value && userForMultiEdit.value && !preventNextNavigation.value) {
@@ -3485,6 +3489,7 @@ function setupInertiaNavigationGuard() {
             originalVisit.value.call(router, url, options)
         }
     }
+    router.visit = guardedVisit as any
 }
 
 function isWorkerUser(worker: any) {

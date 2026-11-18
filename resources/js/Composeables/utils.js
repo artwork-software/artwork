@@ -4,6 +4,7 @@ import {
     defineComponent,
     ref,
     onMounted,
+    onBeforeUnmount,
 } from 'vue';
 
 export const lazyLoadComponentIfVisible = ({
@@ -27,6 +28,7 @@ export const lazyLoadComponentIfVisible = ({
         loadingComponent: defineComponent({
             setup() {
                 const elRef = ref();
+                let observer = null;
 
                 async function loadComponent() {
                     const component = await componentLoader();
@@ -40,16 +42,23 @@ export const lazyLoadComponentIfVisible = ({
                         return;
                     }
 
-                    const observer = new IntersectionObserver(async (entries) => {
+                    observer = new IntersectionObserver(async (entries) => {
                         if (!entries[0].isIntersecting) {
                             return;
                         }
 
-                        observer.unobserve(elRef.value);
+                        observer?.disconnect();
+                        observer = null;
                         await loadComponent();
                     });
 
                     observer.observe(elRef.value);
+                });
+
+                // Platzhalter verschwindet, bevor er sichtbar wurde: Observer sonst nie getrennt
+                onBeforeUnmount(() => {
+                    observer?.disconnect();
+                    observer = null;
                 });
 
                 return () => {

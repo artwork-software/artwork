@@ -889,7 +889,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
     // Hinweis auf gleich- oder ähnlich benannte Projekte/Gruppen im Anlage-Modal (Route vor {project}!)
+    // Feuert beim Tippen (Debounce 400 ms) und vergleicht mit allen Projektnamen: gedrosselt
     Route::get('/projects/similar-names', ProjectSimilarNamesController::class)
+        ->middleware('throttle:60,1')
         ->name('projects.similar-names');
 
     // Matrix über alle Produktionen hinweg — braucht das globale Projekt-Leserecht,

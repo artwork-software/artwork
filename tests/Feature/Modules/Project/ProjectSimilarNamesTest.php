@@ -108,6 +108,18 @@ final class ProjectSimilarNamesTest extends FeatureTestCase
     }
 
     #[Test]
+    public function is_throttled_because_it_fires_while_typing_and_scans_all_project_names(): void
+    {
+        $this->actingAsAdmin();
+
+        for ($request = 0; $request < 60; $request++) {
+            $this->getJson(route('projects.similar-names', ['name' => 'Faust']))->assertOk();
+        }
+
+        $this->getJson(route('projects.similar-names', ['name' => 'Faust']))->assertTooManyRequests();
+    }
+
+    #[Test]
     public function requires_a_name(): void
     {
         $this->actingAsAdmin();

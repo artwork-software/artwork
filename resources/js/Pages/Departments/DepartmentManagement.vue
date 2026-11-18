@@ -296,7 +296,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { stopListeningOnPrivateChannel } from '@/Composeables/Listener/echoChannel.js'
 import { router, useForm, Link } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 
@@ -369,12 +370,17 @@ function getEditHref(department: any) {
 }
 
 /* ---------- Realtime Reload ---------- */
+function reloadDepartments() {
+    router.reload({ only: ['departments'] })
+}
 onMounted(() => {
     try {
-        Echo?.private('departments')?.listen('DepartmentUpdated', () => {
-            router.reload({ only: ['departments'] })
-        })
+        Echo?.private('departments')?.listen('.departments.updated', reloadDepartments)
     } catch (_) { /* Echo optional */ }
+})
+// Sonst hängt jeder Besuch der Seite einen weiteren Handler an
+onBeforeUnmount(() => {
+    stopListeningOnPrivateChannel('departments', '.departments.updated', reloadDepartments)
 })
 
 /* ---------- Modals & Forms ---------- */

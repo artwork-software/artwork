@@ -1006,6 +1006,12 @@ const oldEndTime = ref(null)
 // im Bulk-Kontext wird die von BulkBody bereitgestellte Ref geteilt, damit beide
 // Umschalter synchron bleiben.
 const injectedShiftPeriod = inject('shiftPeriodOnStartDateChange', null)
+// Serien-Änderungen (Löschen, Beenden, Bearbeiten mehrerer Termine) senden kein Live-Update je Termin:
+// im Kalender danach selbst nachladen
+const calendarRefetchLoadedMonths = inject('calendarRefetchLoadedMonths', null)
+function refetchCalendarAfterSeriesChange() {
+    if (typeof calendarRefetchLoadedMonths === 'function') calendarRefetchLoadedMonths()
+}
 const shiftPeriodOnStartDateChange = injectedShiftPeriod
     ?? ref(usePage().props.auth.user?.shift_period_on_start_date_change ?? false)
 
@@ -1259,6 +1265,7 @@ async function confirmDetach(mode) {
     isLoading.value = true
     try {
         await axios.post(route('events.series.detach', { event: props.event.id }), { mode })
+        if (mode === 'end') refetchCalendarAfterSeriesChange()
         showSeriesDetachModal.value = false
         isLoading.value = false
         closeModal(true)
@@ -1282,7 +1289,10 @@ async function deleteSeriesScoped(scope) {
     isLoading.value = true
     try {
         if (scope === 'single') await axios.delete(`/events/${props.event.id}`)
-        else await axios.delete(route('events.series.delete', { event: props.event.id }), { data: { scope } })
+        else {
+            await axios.delete(route('events.series.delete', { event: props.event.id }), { data: { scope } })
+            refetchCalendarAfterSeriesChange()
+        }
         showSeriesDeleteModal.value = false
         isLoading.value = false
         closeModal(true)
@@ -2140,7 +2150,11 @@ async function doSaveEvent() {
 
     try {
         if (!props.event?.id) await axios.post('/events', data)
-        else await axios.put(`/events/${props.event.id}`, data, { headers })
+        else {
+            await axios.put(`/events/${props.event.id}`, data, { headers })
+            // Mitgeänderte Serientermine kommen nicht per Live-Update (nur der bearbeitete Termin)
+            if (isSeriesEvent.value && seriesScope.value !== 'single') refetchCalendarAfterSeriesChange()
+        }
         handleSuccessfulSave()
     } catch (e) {
         isLoading.value = false

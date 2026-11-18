@@ -561,6 +561,8 @@ provide('calendarMultiEdit', multiEdit);
 // damit eine Antwort nur die Kacheln der betroffenen Termine neu rendert.
 const ticketSales = reactive(new Map());
 provide('calendarTicketSales', ticketSales);
+// Serien-Löschungen senden kein Live-Update je Termin: Kacheln/Modals stoßen darüber das Neuladen an
+provide('calendarRefetchLoadedMonths', refetchLoadedMonths);
 const isFullscreen = ref(false);
 const showMultiEditModal = ref(false);
 const editEvents = ref([]);
@@ -1235,6 +1237,8 @@ onMounted(async () => {
         const targets = windowKeysAround(idx, 1);
         cancelAllExcept(targets);
         await Promise.allSettled(targets.map(k => loadMonth(k, epoch)));
+        // Unmount bricht die Loads ab: dann keine Listener mehr an die tote Instanz hängen
+        if (isCalendarUnmounted) return;
     }
 
 
@@ -1781,6 +1785,22 @@ async function refetchMonthForDay(day: any, targetDate: string | null = null) {
         failedMonths.value.delete(monthKey);
         return loadMonth(monthKey, epoch);
     }));
+}
+
+// Nach dem Löschen bzw. Beenden einer Serie: Das Backend sendet bewusst kein Live-Update je Termin
+// (eine Serie kann Hunderte Termine haben). Die Monate um den Fokus sofort neu laden, alle übrigen
+// geladenen Monate als veraltet markieren; die lädt der Hintergrund-Prefetch nach.
+async function refetchLoadedMonths() {
+    const focusIdx = focusedMonthKey.value ? monthIndexByKey.value.get(focusedMonthKey.value) : undefined;
+    const visibleKeys = focusIdx == null ? [] : windowKeysAround(focusIdx, 1);
+    for (const key of new Set([...loadedMonths.value, ...loadingMonths.value])) {
+        abortInflightMonth(key);
+        loadedMonths.value.delete(key);
+        failedMonths.value.delete(key);
+    }
+    const epoch = ++currentEpoch;
+    await Promise.allSettled(visibleKeys.map((monthKey) => loadMonth(monthKey, epoch)));
+    if (epoch === currentEpoch) scheduleBackgroundPrefetch();
 }
 
 // When multi-edit is enabled, clicking an event toggles its selection

@@ -97,7 +97,16 @@
             </div>
 
             <!-- Room -->
-            <div :style="getColumnSize(4)">
+            <div :style="getColumnSize(4)" class="relative">
+                <!-- Raumanfrage: noch nicht fest gebucht. Absolut positioniert, die Zeilenhöhe bleibt gleich. -->
+                <span
+                    v-if="event.occupancy_option && !event.is_planning"
+                    v-tooltip.top="roomRequestTooltipBinding"
+                    class="absolute -top-1.5 -right-1.5 z-10 flex size-4 items-center justify-center rounded-full bg-warning text-white"
+                >
+                    <IconHourglassEmpty class="size-3" stroke-width="2" aria-hidden="true"/>
+                    <span class="sr-only">{{ $t('Room request') }}</span>
+                </span>
                 <ArtworkBaseListbox
                     v-model="event.room"
                     :items="sortedRooms"
@@ -329,6 +338,13 @@
                     </BaseMenu>
                 </div>
             </div>
+            <!-- Zeile ohne Bearbeitungsrecht: gleiche Breite frei halten, sonst verrutschen die Spalten -->
+            <div
+                v-else-if="reserveActionsSpace"
+                class="col-span-1 print:hidden shrink-0"
+                :class="isInModal ? 'w-16' : 'w-56'"
+                aria-hidden="true"
+            ></div>
         </div>
 
         <!-- Inline description row -->
@@ -410,7 +426,7 @@ import {
     IconCheck,
     IconChevronDown,
     IconCircleCheckFilled, IconCopy, IconDeviceFloppy, IconEdit, IconFileImport, IconNote,
-    IconCirclePlus, IconRepeat, IconTrash,
+    IconCirclePlus, IconHourglassEmpty, IconRepeat, IconTrash,
 } from "@tabler/icons-vue";
 import {
     Listbox,
@@ -472,6 +488,8 @@ const props = defineProps({
     eventStatuses: { type: Object, required: true },
     multiEdit: { type: Boolean, required: false, default: false },
     hasPermission: { type: Boolean, required: false, default: true },
+    // Platz der Aktionsspalte auch ohne Bearbeitungsrecht frei halten (Liste mit nur teilweise bearbeitbaren Zeilen)
+    reserveActionsSpace: { type: Boolean, required: false, default: false },
     lastEditEventIds: { type: Array, required: false, default: () => [] },
     showEndDate: { type: Boolean, required: false, default: false },
 });
@@ -555,6 +573,21 @@ const formatFullDate = (iso) => {
     const d = parseISODateToUTCMidnight(iso);
     if (!d) return '';
     return `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}`;
+};
+
+const roomRequestTooltipBinding = computed(() => ({
+    value: $t('Room request: this event is not firmly booked until the request has been accepted.'),
+    appendTo: 'body',
+    class: 'aw-tooltip'
+}));
+
+// Antwort des Speicherns übernehmen: Markierung "zuletzt bearbeitet" und Raumanfrage-Kennzeichen
+// (ein Raumwechsel ohne Buchungsrecht macht den Termin zur Raumanfrage)
+const applySavedEvent = (event, savedEvent) => {
+    markRowEdited(event.id, savedEvent?.updated_at);
+    if (savedEvent && 'occupancy_option' in savedEvent) {
+        event.occupancy_option = !!savedEvent.occupancy_option;
+    }
 };
 
 const endChipTooltipBinding = computed(() => ({
@@ -647,7 +680,7 @@ const saveDescription = async () => {
         const {data} = await axios.patch(route('event.update.description', event.id), {
             description: draft
         });
-        markRowEdited(event.id, data?.event?.updated_at);
+        applySavedEvent(event, data?.event);
     } catch {
         // Fehlermeldung zeigt der axios-Interceptor; Entwurf nicht verlieren, Feld wieder öffnen
         event.description = previousDescription;
@@ -839,7 +872,7 @@ const updateEventInDatabase = async () => {
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
         const {data} = await axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers });
-        markRowEdited(event.id, data?.event?.updated_at);
+        applySavedEvent(event, data?.event);
 
         // Snapshot nach erfolgreichem Patch aktualisieren
         window.__bulkEventSnapshots[snapshotKey] = getComparableEvent(event);
@@ -930,7 +963,7 @@ const onStartDateFocusOut = async () => {
         const previousEndDay = event.end_day;
         axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers })
             .then(({data}) => {
-                markRowEdited(event.id, data?.event?.updated_at);
+                applySavedEvent(event, data?.event);
                 // Update snapshot after successful patch
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
                 const snapshotKey = `event-snapshot-${event.id}`;
@@ -1004,7 +1037,7 @@ const onRoomChange = async (newRoom) => {
 
         axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers })
             .then(({data}) => {
-                markRowEdited(event.id, data?.event?.updated_at);
+                applySavedEvent(event, data?.event);
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
                 const snapshotKey = `event-snapshot-${event.id}`;
                 window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...event, room: newRoom });
@@ -1036,7 +1069,7 @@ const onTypeChange = (newType) => {
 
         axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload })
             .then(({data}) => {
-                markRowEdited(event.id, data?.event?.updated_at);
+                applySavedEvent(event, data?.event);
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
                 const snapshotKey = `event-snapshot-${event.id}`;
                 window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...event, type: newType });

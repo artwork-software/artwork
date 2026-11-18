@@ -105,7 +105,6 @@ test('components that show request errors themselves opt out of the global toast
         'Layouts/Components/MultiCellMoveModal.vue': 1,
         'Layouts/Components/MultiCellDuplicateModal.vue': 1,
         'Layouts/Components/MultiCellEventCreateModal.vue': 1,
-        'Layouts/Components/ShiftPlanComponents/CopyWeekModal.vue': 1,
         'Layouts/Components/CellDetailModal.vue': 4,
         'Layouts/Components/Export/Modals/SaveFilterPresetModal.vue': 1,
         'Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue': 1,

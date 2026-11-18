@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Project\Services;
 
-use Artwork\Modules\Project\Models\Project;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -127,10 +126,5 @@ class ProjectArtistService
         }
 
         return implode(', ', $parts);
-    }
-
-    public static function displayTextFor(Project $project): string
-    {
-        return self::displayText($project->artists, $project->linked_artists);
     }
 }

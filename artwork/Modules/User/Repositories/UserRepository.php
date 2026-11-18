@@ -60,11 +60,6 @@ class UserRepository extends BaseRepository
         return User::query()->whereRaw('SHA2(LOWER(TRIM(email)), 256) = ?', [$emailHash])->exists();
     }
 
-    public function findWorker(int $workerId): User|null
-    {
-        return User::query()->canWorkShifts()->where('id', $workerId)->first();
-    }
-
     /**
      * @throws ModelNotFoundException<Model>
      */
@@ -162,19 +157,6 @@ class UserRepository extends BaseRepository
         return $user->availabilities()
             ->betweenDates($monthDate->copy()->startOfMonth(), $monthDate->copy()->endOfMonth())
             ->orderedByDate()
-            ->get();
-    }
-
-    public function getShiftsOrderedByStartAscending(int|User $user, bool $committedOnly = false): Collection
-    {
-        if (!$user instanceof User) {
-            $user = $this->findUser($user);
-        }
-        return $user
-            ->shifts()
-            ->with('project')
-            ->when($committedOnly, fn (Builder $query) => $query->where('is_committed', true))
-            ->orderedByStart()
             ->get();
     }
 

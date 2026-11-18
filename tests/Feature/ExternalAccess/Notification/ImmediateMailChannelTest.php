@@ -9,17 +9,20 @@ use Artwork\Modules\ExternalAccess\Services\ExternalNotificationSender;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
+use Artwork\Modules\Notification\Jobs\SendNotificationMailJob;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 /**
  * Die Sofort-Mail an die einladende Person hängt an deren Benachrichtigungseinstellung
- * (E-Mail aktiv + Frequenz „sofort“). Ohne Einstellung bleibt es bei der Datenbank-Meldung.
+ * (E-Mail aktiv + Frequenz „sofort“) und geht über die Warteschlange. Ohne Einstellung bleibt es bei der
+ * Datenbank-Meldung.
  */
 final class ImmediateMailChannelTest extends TestCase
 {
@@ -84,17 +87,22 @@ final class ImmediateMailChannelTest extends TestCase
     }
 
     #[Test]
-    public function immediately_with_email_enabled_uses_mail_channel(): void
+    public function immediately_with_email_enabled_queues_the_mail(): void
     {
         Notification::fake();
+        Bus::fake([SendNotificationMailJob::class]);
         [$external, $inviter] = $this->externalWithInviter();
         $this->setting($inviter, NotificationFrequencyEnum::IMMEDIATELY);
 
         $this->submit($external);
 
-        $channels = $this->channelsUsedFor($inviter);
-        $this->assertContains('database', $channels);
-        $this->assertContains('mail', $channels);
+        // Die Glocke sofort, die Mail über die Warteschlange (ein langsamer Mailserver bremst die Aktion nicht)
+        $this->assertSame(['database'], $this->channelsUsedFor($inviter));
+        Bus::assertDispatched(
+            SendNotificationMailJob::class,
+            static fn (SendNotificationMailJob $job): bool => $job->notifiable->is($inviter)
+                && $job->notification instanceof ExternalTabComponentUpdatedNotification
+        );
     }
 
     #[Test]
@@ -115,12 +123,14 @@ final class ImmediateMailChannelTest extends TestCase
     public function immediately_with_email_disabled_does_not_use_mail_channel(): void
     {
         Notification::fake();
+        Bus::fake([SendNotificationMailJob::class]);
         [$external, $inviter] = $this->externalWithInviter();
         $this->setting($inviter, NotificationFrequencyEnum::IMMEDIATELY, email: false);
 
         $this->submit($external);
 
         $this->assertNotContains('mail', $this->channelsUsedFor($inviter));
+        Bus::assertNotDispatched(SendNotificationMailJob::class);
     }
 
     #[Test]

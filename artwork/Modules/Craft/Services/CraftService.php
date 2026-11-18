@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Craft\Services;
 
-use Artwork\Modules\Craft\Http\Requests\CraftStoreRequest;
 use Artwork\Modules\Craft\Http\Requests\CraftUpdateRequest;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Repositories\CraftRepository;
@@ -13,7 +12,6 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection as SupportCollection;
-use Illuminate\Support\Facades\Log;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -147,19 +145,6 @@ class CraftService
         }
 
         return $crafts;
-    }
-
-    public function storeByRequest(CraftStoreRequest $craftStoreRequest): void
-    {
-        $craft = new Craft();
-        $craft->fill($craftStoreRequest->only(['name', 'abbreviation', 'assignable_by_all', 'universally_applicable']));
-        $this->craftRepository->save($craft);
-
-        if (!$craftStoreRequest->boolean('assignable_by_all')) {
-            $this->craftRepository->syncUsers($craft, $craftStoreRequest->get('users'));
-            // Craft-Planer-Status steckt im gecachten shift_workflow_flags-Prop
-            User::forgetCachedShareDataForIds($craftStoreRequest->get('users') ?? []);
-        }
     }
 
     public function updateByRequest(CraftUpdateRequest $craftUpdateRequest, Craft $craft): void

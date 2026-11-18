@@ -54,12 +54,17 @@
                     <div>
                         <div>
                             <div class="px-6 py-2">
-                                <div class="relative flex w-full mb-4">
+                                <div class="relative w-full mb-4">
                                     <BaseInput
                                         id="projectName"
                                         v-model="createProjectForm.name"
                                         label="Project name*"
                                         />
+                                    <ProjectSimilarNamesHint
+                                        v-if="!project"
+                                        ref="projectSimilarNamesHint"
+                                        :name="createProjectForm.name"
+                                    />
                                 </div>
                                 <div class="pt-1" v-if="createSettings.show_artists">
                                     <BaseInput
@@ -266,6 +271,11 @@
                                 v-model="createProjectForm.name"
                                 label="Title*"
                             />
+                            <ProjectSimilarNamesHint
+                                v-if="createProjectGroup"
+                                ref="groupSimilarNamesHint"
+                                :name="createProjectForm.name"
+                            />
                             <div v-if="createProjectGroup && showInvalidProjectNameHelpText" class="text-danger text-xs mt-1">
                                 {{ t('Project name is a required field.')}}
                             </div>
@@ -354,6 +364,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import CrmArtistLinkManager from "@/Components/Crm/CrmArtistLinkManager.vue";
 import ProjectTypeChangeConfirmModal from "@/Layouts/Components/ProjectTypeChangeConfirmModal.vue";
 import ProjectStateSelect from "@/Layouts/Components/ProjectStateSelect.vue";
+import ProjectSimilarNamesHint from "@/Layouts/Components/ProjectSimilarNamesHint.vue";
 
 // Define props
 const props = defineProps({
@@ -542,9 +553,27 @@ const addColorToProject = (color) => {
     createProjectForm.color = color;
 };
 
-const addProject = (bool) => {
+// Hinweis auf gleich- oder ähnlich benannte Projekte/Gruppen (nur bei Neuanlage, nur einer ist sichtbar)
+const projectSimilarNamesHint = ref(null);
+const groupSimilarNamesHint = ref(null);
+const checkingSimilarNames = ref(false);
+
+const confirmSimilarNames = async () => {
+    const hint = createProjectGroup.value ? groupSimilarNamesHint.value : projectSimilarNamesHint.value;
+    if (props.project || !hint) {
+        return true;
+    }
+    checkingSimilarNames.value = true;
+    try {
+        return await hint.confirmBeforeCreate();
+    } finally {
+        checkingSimilarNames.value = false;
+    }
+};
+
+const addProject = async (bool) => {
     // Doppelklick auf „Anlegen" erzeugte sonst zwei Projekte
-    if (createProjectForm.processing) {
+    if (createProjectForm.processing || checkingSimilarNames.value) {
         return;
     }
     if (createProjectForm.name === '') {
@@ -554,6 +583,10 @@ const addProject = (bool) => {
 
     if (isStateRequired.value && !selectedState.value) {
         showInvalidProjectStateHelpText.value = true;
+        return;
+    }
+
+    if (!(await confirmSimilarNames())) {
         return;
     }
 

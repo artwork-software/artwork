@@ -31,7 +31,6 @@ use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\BulkEventChanged;
 use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventUpdated;
-use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
@@ -43,6 +42,8 @@ use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\DirectBookingActivationService;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Event\Services\EventChangeApprovalService;
+use Artwork\Modules\Event\Services\EventRoomBookingService;
 use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Event\Services\EventCommentService;
 use Artwork\Modules\Event\Services\SeriesEventsService;
@@ -114,6 +115,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Carbon as IlluminateCarbon;
@@ -137,6 +139,8 @@ class EventController extends Controller
     private const MAX_MULTI_CELL_TARGETS = 250;
     private const MAX_MULTI_CELL_SOURCE_EVENTS = 50;
     private const MAX_MULTI_CELL_DUPLICATES = 500;
+    private const EVENT_STORE_KEY_MINUTES = 30;
+    private const EVENT_STORE_WAIT_SECONDS = 10;
 
     public function __construct(
         private readonly EventCollisionService $collisionService,
@@ -180,6 +184,7 @@ class EventController extends Controller
         private readonly RoomRequestNotificationService $roomRequestNotificationService,
         private readonly SeriesEventsService $seriesEventsService,
         private readonly EventSettingsService $eventSettingsService,
+        private readonly EventChangeApprovalService $changeApprovalService,
     ) {
     }
 
@@ -1491,8 +1496,29 @@ class EventController extends Controller
         );
         $request->merge(['isOption' => $isOption]);
 
-        /** @var Event $firstEvent */
-        $firstEvent = Event::create($request->data());
+        // Wiederholtes Absenden desselben Dialogs (z. B. nach einem Abbruch durch Zeitüberschreitung, obwohl der
+        // Termin längst gespeichert war) liefert den schon angelegten Termin statt eines zweiten
+        $storeKey = $this->eventStoreIdempotencyKey($request, $user);
+        $alreadyStoredEvent = $storeKey !== null ? $this->claimEventStoreKey($storeKey) : null;
+        if ($alreadyStoredEvent !== null) {
+            return $request->booleanValue('showProjectPeriodInCalendar')
+                ? $this->redirector->back()
+                : new CalendarEventResource($alreadyStoredEvent);
+        }
+
+        try {
+            /** @var Event $firstEvent */
+            $firstEvent = Event::create($request->data());
+        } catch (Throwable $exception) {
+            if ($storeKey !== null) {
+                Cache::forget($storeKey);
+            }
+
+            throw $exception;
+        }
+        if ($storeKey !== null) {
+            Cache::put($storeKey, (int) $firstEvent->id, now()->addMinutes(self::EVENT_STORE_KEY_MINUTES));
+        }
         $firstEvent->eventProperties()->sync($request->input('event_properties', []));
         $this->conflictCheck($request, $firstEvent);
         if ($request->get('projectName')) {
@@ -1531,18 +1557,55 @@ class EventController extends Controller
             $this->roomRequestNotificationService->notifyRoomAdmins($firstEvent);
         }
 
-        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
-
-        if ($request->booleanValue('showProjectPeriodInCalendar')) {
-            return $this->redirector->back();
-        }
-
+        // Live-Update über den Raumkanal (weitere Serientermine sendet der SeriesEventsService einzeln) –
+        // auch im Projektzeitraum-Modus, dort fehlte es bisher
         SafeBroadcast::send(new EventCreated(
             $firstEvent->load(['event_type', 'project']),
             $firstEvent->room_id
         ));
 
+        if ($request->booleanValue('showProjectPeriodInCalendar')) {
+            return $this->redirector->back();
+        }
+
         return new CalendarEventResource($firstEvent);
+    }
+
+    /**
+     * Cache-Schlüssel für einen Speichervorgang des Termin-Dialogs (clientRequestId gilt je Öffnen des Dialogs),
+     * je Person getrennt. null = der Aufrufer schickt keine Kennung mit (andere Oberflächen, API).
+     */
+    private function eventStoreIdempotencyKey(Request $request, User $user): ?string
+    {
+        $clientRequestId = trim((string) $request->input('clientRequestId', ''));
+        if ($clientRequestId === '' || strlen($clientRequestId) > 100) {
+            return null;
+        }
+
+        return 'event-store:' . $user->id . ':' . sha1($clientRequestId);
+    }
+
+    /**
+     * Reserviert den Schlüssel für diesen Speichervorgang. Liefert den bereits angelegten Termin, wenn derselbe
+     * Dialog schon gespeichert hat; läuft der erste Vorgang noch, wird kurz auf ihn gewartet.
+     */
+    private function claimEventStoreKey(string $storeKey): ?Event
+    {
+        if (Cache::add($storeKey, 0, now()->addMinutes(self::EVENT_STORE_KEY_MINUTES))) {
+            return null;
+        }
+
+        $deadline = microtime(true) + self::EVENT_STORE_WAIT_SECONDS;
+        do {
+            $storedEventId = (int) Cache::get($storeKey, 0);
+            if ($storedEventId > 0) {
+                // Inzwischen gelöscht: dann legt dieser Vorgang ihn neu an
+                return Event::query()->find($storedEventId);
+            }
+            usleep(250_000);
+        } while (microtime(true) < $deadline);
+
+        abort(409, __('This event is still being saved. Please wait a moment and reload the calendar.'));
     }
 
     /**
@@ -1783,10 +1846,15 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    /**
+     * Antwort für den Termin-Dialog (axios): room_request sagt, was aus der Raumanfrage geworden ist –
+     * "created" (die Änderung braucht eine neue Bestätigung), "pending" (offene Anfrage, geändert) oder "none".
+     * Inertia-Aufrufe bekommen wie bisher eine leere Antwort.
+     */
     public function updateEvent(
         EventUpdateRequest $request,
         Event $event
-    ): void {
+    ): ?JsonResponse {
         $this->authorize('update', $event);
 
         $shouldAcceptRoomRequest = $event->occupancy_option &&
@@ -1856,7 +1924,7 @@ class EventController extends Controller
                 $this->notificationService->setEventId($event->id);
                 $this->notificationService->setButtons(['answerDialog']);
                 foreach ($projectManagers as $projectManager) {
-                    if ($projectManager->id === $event->user_id) {
+                    if ($this->isRoomRequestAnswerRecipient($event, $projectManager)) {
                         continue;
                     }
                     $notificationTitle = __('notification.event.admin_message', [], $projectManager->language);
@@ -1910,12 +1978,6 @@ class EventController extends Controller
                     $this->notificationService->setNotificationTo($projectManager);
                     $this->notificationService->createNotification();
                 }
-                $notificationTitle = __('notification.event.admin_message', [], $event->creator?->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
 
                 //$this->eventService->save($event);
                 $notificationDescription = [
@@ -1954,13 +2016,9 @@ class EventController extends Controller
                         'href' => null
                     ]
                 ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationKey(Str::random(15));
-                if ($event->creator !== null) {
-                    $this->notificationService->setNotificationTo($event->creator);
-                    $this->notificationService->createNotification();
+                foreach ($this->roomRequestAnswerRecipients($event) as $answerRecipient) {
+                    $this->sendRoomRequestAnswerTo($answerRecipient, 'notification.event.admin_message', 'success');
                 }
             }
         }
@@ -1978,7 +2036,7 @@ class EventController extends Controller
             $this->notificationService->setEventId($event->id);
 
             foreach ($projectManagers as $projectManager) {
-                if ($projectManager->id === $event->user_id) {
+                if ($this->isRoomRequestAnswerRecipient($event, $projectManager)) {
                     continue;
                 }
                 $notificationTitle = __('notification.event.room_change_confirmed', [], $projectManager->language);
@@ -2030,12 +2088,6 @@ class EventController extends Controller
                 $this->notificationService->setNotificationTo($projectManager);
                 $this->notificationService->createNotification();
             }
-            $notificationTitle = __('notification.event.room_change_confirmed', [], $event->creator?->language);
-            $broadcastMessage = [
-                'id' => Str::uuid()->toString(),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
             $notificationDescription = [
                 1 => [
                     'type' => 'link',
@@ -2073,15 +2125,13 @@ class EventController extends Controller
                 ]
             ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
-            if ($event->creator !== null) {
-                $this->notificationService->setNotificationTo($event->creator);
-                $this->notificationService->createNotification();
+            foreach ($this->roomRequestAnswerRecipients($event) as $answerRecipient) {
+                $this->sendRoomRequestAnswerTo($answerRecipient, 'notification.event.room_change_confirmed', 'success');
             }
         }
 
+        $approvalBefore        = $this->changeApprovalService->snapshot($event);
         $oldEventDescription   = $event->description;
         $oldEventRoom          = $event->room_id;
         $oldEventProject       = $event->project_id;
@@ -2114,6 +2164,13 @@ class EventController extends Controller
             // Einzeln verschobener Serientermin: beim Neu-Ausrollen/Zeit-Delta der Serie schützen
             $event->is_series_exception = true;
         }
+
+        // Ohne Direktbuchrecht im Raum: Raumwechsel oder Zeitraum über die bestätigte Belegung hinaus wird zur
+        // Raumanfrage, Verkürzen innerhalb der Belegung bleibt fest (EventChangeApprovalService). Geplante Termine
+        // und "Termine immer direkt buchbar" kennen keine Raumanfrage.
+        /** @var User $actingUser */
+        $actingUser = $this->authManager->user();
+        $changeBecameRequest = $this->changeApprovalService->evaluate($actingUser, $event, $approvalBefore);
 
         // Nur synchronisieren, wenn der Dialog Eigenschaften mitschickt (sonst wurden sie gelöscht)
         $newEventPropertyIds = $request->has('event_properties')
@@ -2150,43 +2207,12 @@ class EventController extends Controller
             );
         }
 
-        // If room changed and new room requires approval, create a room request notification.
-        // Geplante Termine kennen keine Raumanfrage: der Raumwechsel ist mit dem Bearbeitungsrecht
-        // (EventPolicy::update) abgedeckt und bleibt fest.
-        $roomChangeBecameRequest = false;
-        if (
-            $event->room_id
-            && (int) $oldEventRoom !== (int) $event->room_id
-            && !$event->is_planning
-            && !$this->eventSettingsService->alwaysDirectBooking()
-        ) {
-            $newRoom = Room::find($event->room_id);
-            if ($newRoom) {
-                /** @var User $user */
-                $user = $this->authManager->user();
-                // Buchungsrecht wie beim Anlegen (roomBookingRights, inkl. Trennung Kalender/Planungskalender).
-                // Anders als storeEvent bewusst KEIN 403 ohne Anfragerecht: ein Raumwechsel ohne Buchungsrecht
-                // wurde schon immer zur Raumanfrage – das bleibt so.
-                $canBookDirectly = $this->roomBookingRights(
-                    $user,
-                    $newRoom,
-                    (bool) $event->is_planning
-                )['canBookDirectly'];
-
-                if (!$canBookDirectly) {
-                    $event->update([
-                        'occupancy_option' => true,
-                        'declined_room_id' => null,
-                        'accepted' => false,
-                    ]);
-                    $this->roomRequestNotificationService->notifyRoomAdmins($event);
-                    $roomChangeBecameRequest = true;
-                }
-            }
+        if ($changeBecameRequest) {
+            $this->roomRequestNotificationService->notifyRoomAdmins($event);
         }
 
         // Update existing room request notifications if event details changed while request is still pending
-        if (!$roomChangeBecameRequest && !$event->is_planning && $event->occupancy_option && $event->room_id) {
+        if (!$changeBecameRequest && !$event->is_planning && $event->occupancy_option && $event->room_id) {
             $this->roomRequestNotificationService->notifyRoomAdmins($event);
         }
 
@@ -2229,8 +2255,8 @@ class EventController extends Controller
                 sort($sortedNew);
                 $propertiesChanged = $sortedOld !== $sortedNew;
 
-                // Raumwechsel der Serie: dieselbe Raumrechte-Entscheidung wie für den bearbeiteten Termin –
-                // wurde er zur Raumanfrage, werden es die mitverschobenen Geschwister auch (inkl. Benachrichtigung).
+                // Mitverschobene Geschwister: dieselbe Freigabe-Regel wie für den bearbeiteten Termin, je Termin
+                // gegen die eigene bestätigte Belegung (inkl. Benachrichtigung).
                 $this->seriesEventsService->propagateToSiblings(
                     $event,
                     $seriesScope,
@@ -2239,7 +2265,6 @@ class EventController extends Controller
                     (int) $diffStartMinutes,
                     (int) $diffEndMinutes,
                     $propertiesChanged ? $newEventPropertyIds : null,
-                    $roomChangeBecameRequest,
                     $deferredRoomRequestEventIds
                 );
             }
@@ -2287,6 +2312,60 @@ class EventController extends Controller
         // (erneutes Speichern legte sonst z. B. Serien doppelt an)
         $freshEvent = $event->fresh();
         SafeBroadcast::send(new EventCreated($freshEvent, $freshEvent->room_id));
+
+        if ($request->header('X-Inertia')) {
+            return null;
+        }
+
+        $isOpenRequest = (bool) $freshEvent->occupancy_option && !$freshEvent->is_planning;
+
+        return new JsonResponse([
+            'room_request' => match (true) {
+                $changeBecameRequest => 'created',
+                $isOpenRequest => 'pending',
+                default => 'none',
+            },
+        ]);
+    }
+
+    /**
+     * Wer die Antwort auf eine Raumanfrage bekommt: die anfragende Person (z. B. wer den Termin in einen anderen Raum
+     * verschoben hat) und die Person, die den Termin angelegt hat, ohne Doppelte.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    private function roomRequestAnswerRecipients(Event $event): \Illuminate\Support\Collection
+    {
+        return collect([$event->requester, $event->creator])
+            ->filter(static fn (?User $user): bool => $user !== null)
+            ->unique(static fn (User $user): int => (int) $user->id)
+            ->values();
+    }
+
+    /**
+     * Projektleitungen, die schon als anfragende Person oder Ersteller*in benachrichtigt werden, nicht doppelt.
+     */
+    private function isRoomRequestAnswerRecipient(Event $event, User $user): bool
+    {
+        return in_array((int) $user->id, [(int) $event->user_id, (int) $event->requested_by_id], true);
+    }
+
+    /**
+     * Antwort auf eine Raumanfrage an eine Person; Titel in ihrer Sprache. Icon, Typ, Beschreibung usw. hat der
+     * Aufrufer am NotificationService gesetzt.
+     */
+    private function sendRoomRequestAnswerTo(User $recipient, string $titleKey, string $broadcastType): void
+    {
+        $title = __($titleKey, [], $recipient->language);
+        $this->notificationService->setTitle($title);
+        $this->notificationService->setBroadcastMessage([
+            'id' => Str::uuid()->toString(),
+            'type' => $broadcastType,
+            'message' => $title,
+        ]);
+        $this->notificationService->setNotificationKey(Str::random(15));
+        $this->notificationService->setNotificationTo($recipient);
+        $this->notificationService->createNotification();
     }
 
     private function createEventScheduleNotification(Event $event): void
@@ -2476,7 +2555,7 @@ class EventController extends Controller
             ->whereKey($event->id)
             ->where('occupancy_option', true)
             ->whereNotNull('room_id')
-            ->update(['occupancy_option' => false]);
+            ->update(['occupancy_option' => false] + EventChangeApprovalService::CLEARED_APPROVAL);
 
         abort_if($updated === 0, 409, 'This room request has already been answered.');
         $event->refresh();
@@ -2504,7 +2583,7 @@ class EventController extends Controller
         $this->notificationService->setEventId($event->id);
         $this->notificationService->setProjectId($event->project_id);
         foreach ($projectManagers as $projectManager) {
-            if ($projectManager->id === $event->user_id) {
+            if ($this->isRoomRequestAnswerRecipient($event, $projectManager)) {
                 continue;
             }
             $notificationTitle = __('notification.event.room_request_accept', [], $projectManager->language);
@@ -2555,12 +2634,6 @@ class EventController extends Controller
             $this->notificationService->setNotificationTo($projectManager);
             $this->notificationService->createNotification();
         }
-        $notificationTitle = __('notification.event.room_request_accept', [], $event->creator?->language);
-        $broadcastMessage = [
-            'id' => Str::uuid()->toString(),
-            'type' => 'success',
-            'message' => $notificationTitle
-        ];
         $notificationDescription = [
             1 => [
                 'type' => 'link',
@@ -2597,12 +2670,9 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
-        if ($event->creator !== null) {
-            $this->notificationService->setNotificationTo($event->creator);
-            $this->notificationService->createNotification();
+        foreach ($this->roomRequestAnswerRecipients($event) as $answerRecipient) {
+            $this->sendRoomRequestAnswerTo($answerRecipient, 'notification.event.room_request_accept', 'success');
         }
 
         /** @var User $currentUser */
@@ -2624,6 +2694,16 @@ class EventController extends Controller
         abort_if($event->room_id === null, 409, 'This room request has already been answered.');
         $this->authorize('declineEvent', $event);
 
+        // Änderungsanfrage zu einer bestätigten Belegung: der Termin springt auf sie zurück,
+        // statt den Raum zu verlieren
+        if (
+            $event->occupancy_option
+            && $event->hasDeviatingApproval()
+            && Room::query()->whereKey($event->approved_room_id)->exists()
+        ) {
+            return $this->declineChangeRequest($request, $event);
+        }
+
         $projectManagers = [];
         $roomId = $event->room_id;
         $room = $event->room()->first();
@@ -2643,7 +2723,9 @@ class EventController extends Controller
                 'occupancy_option' => false,
                 'declined_room_id' => $roomId,
                 'room_id' => null,
-            ]);
+                // Ohne Raum keine bestätigte Belegung mehr: sonst buchte das Wiedereinsetzen des Raums
+                // ohne Anfrage fest
+            ] + EventChangeApprovalService::CLEARED_APPROVAL);
 
         abort_if($updated === 0, 409, 'This room request has already been answered.');
         $event->refresh();
@@ -2666,7 +2748,7 @@ class EventController extends Controller
             $this->notificationService->setProjectId($event->project_id);
             $this->notificationService->setButtons(['answer']);
             foreach ($projectManagers as $projectManager) {
-                if ($projectManager->id === $event->user_id) {
+                if ($this->isRoomRequestAnswerRecipient($event, $projectManager)) {
                     continue;
                 }
                 $notificationTitle = __('notification.event.admin_message', [], $projectManager->language);
@@ -2718,12 +2800,6 @@ class EventController extends Controller
                 $this->notificationService->setNotificationTo($projectManager);
                 $this->notificationService->createNotification();
             }
-            $notificationTitle = __('notification.event.admin_message', [], $event->creator?->language);
-            $broadcastMessage = [
-                'id' => Str::uuid()->toString(),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
             $notificationDescription = [
                 1 => [
                     'type' => 'link',
@@ -2760,13 +2836,9 @@ class EventController extends Controller
                     'href' => null
                 ]
             ];
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationKey(Str::random(15));
-            if ($event->creator !== null) {
-                $this->notificationService->setNotificationTo($event->creator);
-                $this->notificationService->createNotification();
+            foreach ($this->roomRequestAnswerRecipients($event) as $answerRecipient) {
+                $this->sendRoomRequestAnswerTo($answerRecipient, 'notification.event.admin_message', 'success');
             }
         }
 
@@ -2794,7 +2866,7 @@ class EventController extends Controller
         $this->notificationService->setProjectId($event->project_id);
         $this->notificationService->setButtons(['change_request', 'event_delete']);
         foreach ($projectManagers as $projectManager) {
-            if ($projectManager->id === $event->user_id) {
+            if ($this->isRoomRequestAnswerRecipient($event, $projectManager)) {
                 continue;
             }
             $notificationTitle = __('notification.event.room_request_declined', [], $projectManager->language);
@@ -2846,12 +2918,6 @@ class EventController extends Controller
             $this->notificationService->setNotificationTo($projectManager);
             $this->notificationService->createNotification();
         }
-        $notificationTitle = __('notification.event.room_request_declined', [], $event->creator?->language);
-        $broadcastMessage = [
-            'id' => Str::uuid()->toString(),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
         $notificationDescription = [
             1 => [
                 'type' => 'link',
@@ -2888,13 +2954,9 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setNotificationKey(Str::random(15));
-        if ($event->creator !== null) {
-            $this->notificationService->setNotificationTo($event->creator);
-            $this->notificationService->createNotification();
+        foreach ($this->roomRequestAnswerRecipients($event) as $answerRecipient) {
+            $this->sendRoomRequestAnswerTo($answerRecipient, 'notification.event.room_request_declined', 'error');
         }
 
         /** @var User $currentUser */
@@ -2905,6 +2967,136 @@ class EventController extends Controller
             $event,
             $roomId
         ));
+
+        return Redirect::back();
+    }
+
+    /**
+     * Abgelehnte Änderungsanfrage (Zeitraum über die Bestätigung hinaus oder anderer Raum, siehe
+     * EventChangeApprovalService): der Termin kehrt zur bestätigten Belegung zurück und bleibt fest gebucht.
+     */
+    private function declineChangeRequest(Request $request, Event $event): RedirectResponse
+    {
+        $requestedRoomId = (int) $event->room_id;
+        $requestedRoom = Room::find($requestedRoomId);
+        $previousStart = Carbon::parse($event->start_time);
+        $approvedRoomId = (int) $event->approved_room_id;
+        $approvedStart = Carbon::parse($event->approved_start_time);
+        $approvedEnd = Carbon::parse($event->approved_end_time);
+
+        // Atomar wie die übrige Absage: eine parallele zweite Antwort trifft 0 Zeilen → 409. Status und Rücksprung
+        // in einer Transaktion: scheitert das Speichern (z. B. Termin im Verkauf), bleibt die Anfrage offen, statt
+        // den Termin fest im nie bestätigten Raum/Zeitraum stehen zu lassen
+        DB::transaction(function () use (
+            $event,
+            $requestedRoomId,
+            $approvedRoomId,
+            $approvedStart,
+            $approvedEnd,
+            $previousStart
+        ): void {
+            $updated = Event::query()
+                ->whereKey($event->id)
+                ->where('occupancy_option', true)
+                ->where('room_id', $requestedRoomId)
+                ->update(['occupancy_option' => false]);
+            abort_if($updated === 0, 409, 'This room request has already been answered.');
+
+            $event->refresh();
+            // Über das Modell speichern: abgeleitete Zeitfelder und Projektzuordnungen ziehen mit
+            $event->forceFill([
+                'room_id' => $approvedRoomId,
+                'start_time' => $approvedStart,
+                'end_time' => $approvedEnd,
+                'declined_room_id' => null,
+            ] + EventChangeApprovalService::CLEARED_APPROVAL);
+            $this->eventService->save($event);
+            $this->seriesEventsService->moveShiftsWithEvent(
+                $event,
+                (int) $previousStart->copy()->startOfDay()->diffInDays($approvedStart->copy()->startOfDay(), false)
+            );
+        });
+
+        if (!empty($request->comment)) {
+            $event->comments()->create([
+                'user_id' => Auth::id(),
+                'comment' => $request->comment,
+                'is_admin_comment' => true,
+            ]);
+        }
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Event::class)
+                ->setModelId($event->id)
+                ->setTranslationKey('Room change declined')
+        );
+
+        $project = $event->project()->first();
+        $approvedRoom = Room::find($approvedRoomId);
+        $this->notificationService->setIcon('blue');
+        $this->notificationService->setPriority(1);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+        $this->notificationService->setRoomId($approvedRoomId);
+        $this->notificationService->setEventId($event->id);
+        $this->notificationService->setProjectId($event->project_id);
+        $this->notificationService->setButtons(['show_in_calendar']);
+        $this->notificationService->setDescription([
+            1 => [
+                'type' => 'link',
+                'title' => $approvedRoom?->name,
+                'href' => $approvedRoom ? route('rooms.show', $approvedRoom->id) : null,
+            ],
+            2 => [
+                'type' => 'string',
+                'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
+                'href' => null,
+            ],
+            3 => [
+                'type' => 'link',
+                'title' => $project?->name ?? '',
+                'href' => $project ? route('projects.tab', [
+                    $project->id,
+                    $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                        ProjectTabComponentEnum::CALENDAR
+                    ),
+                ]) : null,
+            ],
+            4 => [
+                'type' => 'string',
+                'title' => $approvedStart->translatedFormat('d.m.Y H:i') . ' - '
+                    . $approvedEnd->translatedFormat('d.m.Y H:i'),
+                'href' => null,
+            ],
+            5 => [
+                'type' => 'comment',
+                'title' => $request->comment,
+                'href' => null,
+            ],
+        ]);
+
+        $recipients = $this->roomRequestAnswerRecipients($event);
+        if ($project !== null) {
+            $recipients = $recipients->merge(
+                $project->managerUsers()->get()->reject(
+                    fn (User $manager): bool => $this->isRoomRequestAnswerRecipient($event, $manager)
+                )
+            );
+        }
+        foreach ($recipients as $recipient) {
+            $this->sendRoomRequestAnswerTo($recipient, 'notification.event.room_change_request_declined', 'error');
+        }
+
+        /** @var User $currentUser */
+        $currentUser = $this->authManager->user();
+        $this->notificationService->updateRoomRequestNotificationStatus($event->id, 'declined', $currentUser);
+
+        $freshEvent = $event->fresh();
+        SafeBroadcast::send(new EventCreated($freshEvent, $approvedRoomId));
+        if ($requestedRoom !== null && $requestedRoomId !== $approvedRoomId) {
+            SafeBroadcast::send(new EventCreated($freshEvent, $requestedRoomId));
+        }
 
         return Redirect::back();
     }
@@ -3392,6 +3584,7 @@ class EventController extends Controller
 
         // Alles oder nichts: ein Fehler mitten in der Serie (auch ein Termin im Verkauf, der das
         // Verschieben ablehnt) darf sie nicht halb verschoben zurücklassen.
+        $approvalBefore = $this->changeApprovalSnapshots($seriesEvents);
         DB::transaction(function () use ($seriesEvents, $request): void {
             foreach ($seriesEvents as $seriesEvent) {
                 if ($request->get('newRoomId') !== null) {
@@ -3550,6 +3743,9 @@ class EventController extends Controller
             }
         });
 
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            $this->applyChangeApproval($approvalBefore)
+        );
         $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
 
         foreach ($seriesEvents as $seriesEvent) {
@@ -3885,18 +4081,28 @@ class EventController extends Controller
         );
 
         // Ein Termin im Verkauf kann das Speichern ablehnen; dann bleibt keiner der anderen halb verschoben.
-        DB::transaction(function () use ($request, $events): void {
+        $changedToRequestIds = DB::transaction(function () use ($request, $events): array {
+            $becameRequest = [];
             foreach ($events as $event) {
+                $approvalBefore = $this->changeApprovalService->snapshot($event);
                 if ($request->get('newRoomId') !== null) {
                     $event->setAttribute('room_id', $request->integer('newRoomId'));
                 }
                 $this->applyMultiEditTime($event, $request);
                 $event->save();
+                // Ohne Direktbuchrecht: Zeitraum über die bestätigte Belegung hinaus wird zur Raumanfrage
+                $actingUser = $this->authManager->user();
+                if ($this->changeApprovalService->applyAfterChange($actingUser, $event, $approvalBefore)) {
+                    $becameRequest[] = (int) $event->id;
+                }
                 $freshEvent = $event->fresh();
                 SafeBroadcast::send(new EventCreated($freshEvent, $freshEvent->room_id));
             }
+
+            return $becameRequest;
         });
 
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests($changedToRequestIds);
         $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
     }
 
@@ -4166,9 +4372,9 @@ class EventController extends Controller
     }
 
     /**
-     * Bulk-Endpunkte legen Termine direkt an (ohne Anfrage-Workflow) — deshalb reicht die
-     * EventPolicy::create (die auch reine Anfrage-Berechtigte durchlässt) hier nicht aus.
-     * Spiegelt das Frontend-Gating in BulkBody.vue (hasCreateEventsPermission);
+     * Direkt buchen ohne Anfrage-Workflow — deshalb reicht die EventPolicy::create (die auch reine
+     * Anfrage-Berechtigte durchlässt) hier nicht aus. Die Terminliste im Projekt nutzt
+     * authorizeBulkEventCreationOrRoomRequest(): wer nur anfragen darf, legt dort Raumanfragen an.
      * Admins passieren über Gate::before.
      */
     private function authorizeBulkEventCreation(bool $isPlanning, Room $room): void
@@ -4178,45 +4384,77 @@ class EventController extends Controller
 
     private function mayCreateBulkEventDirectly(bool $isPlanning, Room $room): bool
     {
-        $user = $this->authManager->user();
-
-        if ($isPlanning) {
-            return $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value);
-        }
-
-        // "Termine immer direkt buchbar": "Raumbelegungen anfragen" bedeutet dann "Termine anlegen"
-        // und schließt Bulk-Anlage und Serien ein (Entscheidung 18.09.2026).
-        // "Kann von jedem fest gebucht werden" gibt kein Anlegerecht: nur wer laut EventPolicy::create anlegen
-        // darf, bucht dort fest (vorher genügte der Schalter allein).
-        return $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
-            || ($this->eventSettingsService->alwaysDirectBooking()
-                && $user->can(PermissionEnum::EVENT_REQUEST->value))
-            || ($room->everyone_can_book && $user->can('create', [Event::class, $room]))
-            || $room->isAdministeredBy($user);
+        return app(EventRoomBookingService::class)->mayBookDirectly($this->authManager->user(), $isPlanning, $room);
     }
 
     /**
-     * Kalender-Mehrfachbearbeitung (Anlegen in Zellen, Duplizieren): wer im Raum nicht direkt buchen, aber
-     * anfragen darf, legt Raumanfragen an – wie im Termin-Dialog (resolveRoomBookingOption). Geplante Termine
-     * und "Termine immer direkt buchbar" kennen keine Raumanfrage.
+     * Kalender-Mehrfachbearbeitung (Anlegen in Zellen, Duplizieren) und Terminliste im Projekt (Anlegen,
+     * Raumwechsel): wer im Raum nicht direkt buchen, aber anfragen darf, legt Raumanfragen an – wie im
+     * Termin-Dialog (resolveRoomBookingOption). Regel in EventRoomBookingService (auch für die KI).
      *
      * @return bool true = als Raumanfrage anlegen
      */
     private function authorizeBulkEventCreationOrRoomRequest(bool $isPlanning, Room $room): bool
     {
-        if ($this->mayCreateBulkEventDirectly($isPlanning, $room)) {
-            return false;
+        $asRoomRequest = app(EventRoomBookingService::class)
+            ->roomRequestRequired($this->authManager->user(), $isPlanning, $room);
+        abort_if($asRoomRequest === null, 403);
+
+        return $asRoomRequest;
+    }
+
+    /**
+     * Stand vor einer Zeit-/Raumänderung je Termin-ID (EventChangeApprovalService::snapshot).
+     *
+     * @param iterable<Event> $events
+     * @return array<int, array<string, mixed>>
+     */
+    private function changeApprovalSnapshots(iterable $events): array
+    {
+        $snapshots = [];
+        foreach ($events as $event) {
+            $snapshots[(int) $event->id] = $this->changeApprovalService->snapshot($event);
         }
 
-        // Ohne Anlegerecht auch keine Anfrage (EventPolicy::book allein ließe sie über everyone_can_book zu)
-        $user = $this->authManager->user();
-        $mayRequestRoom = !$isPlanning
-            && !$this->eventSettingsService->alwaysDirectBooking()
-            && $user->can('create', [Event::class, $room])
-            && $user->can('book', [Event::class, $room, true, false]);
-        abort_unless($mayRequestRoom, 403);
+        return $snapshots;
+    }
 
-        return true;
+    /**
+     * Nach dem Speichern: Zeitraum über die bestätigte Belegung hinaus oder Raumwechsel ohne Direktbuchrecht wird
+     * zur Raumanfrage (EventChangeApprovalService). Benachrichtigen muss der Aufrufer.
+     *
+     * @param array<int, array<string, mixed>> $snapshots Ergebnis von changeApprovalSnapshots()
+     * @return array<int, int> IDs der Termine, die dadurch zur Raumanfrage wurden
+     */
+    private function applyChangeApproval(array $snapshots): array
+    {
+        if ($snapshots === []) {
+            return [];
+        }
+
+        /** @var User|null $user */
+        $user = $this->authManager->user();
+        $becameRequest = [];
+        foreach (Event::query()->whereIn('id', array_keys($snapshots))->get() as $changedEvent) {
+            $before = $snapshots[(int) $changedEvent->id];
+            if ($this->changeApprovalService->applyAfterChange($user, $changedEvent, $before)) {
+                $becameRequest[] = (int) $changedEvent->id;
+            }
+        }
+
+        return $becameRequest;
+    }
+
+    /**
+     * Raumwechsel in der Terminliste ohne Buchungsrecht im Zielraum: der Termin wird dort zur Raumanfrage,
+     * wie im Termin-Dialog (updateEvent). Bereits offene Anfragen meldet notifyRoomAdminsOfChangedOpenRequests().
+     *
+     * @param array<int, int> $eventIds
+     * @param array<int, string> $openRoomRequestsBefore
+     */
+    private function turnMovedEventsIntoRoomRequests(array $eventIds, array $openRoomRequestsBefore): void
+    {
+        app(EventRoomBookingService::class)->turnIntoRoomRequests($eventIds, array_keys($openRoomRequestsBefore));
     }
 
     public function bulkProjectEventStore(
@@ -4229,24 +4467,42 @@ class EventController extends Controller
 
         // Erst ALLE Zeilen autorisieren, dann anlegen — sonst stehen bei einem 403
         // mitten in der Liste die ersten Termine bereits in der DB (Teil-Erstellung).
-        foreach ($events as $event) {
-            $room = Room::query()->findOrFail($event['room']['id']);
-            $this->authorizeBulkEventCreation((bool) ($event['is_planning'] ?? false), $room);
+        // Wer im Raum nur anfragen darf, legt die Zeile als Raumanfrage an
+        $checkedRooms = [];
+        $rooms = [];
+        $asRoomRequest = [];
+        foreach ($events as $index => $event) {
+            $roomId = (int) $event['room']['id'];
+            $rooms[$roomId] ??= Room::query()->findOrFail($roomId);
+            $asRoomRequest[$index] = $this->authorizeBulkEventCreationOnce(
+                $checkedRooms,
+                (bool) ($event['is_planning'] ?? false),
+                $rooms[$roomId],
+                true
+            );
         }
 
-        $storedEvents = DB::transaction(function () use ($events, $project): array {
+        $storedEvents = DB::transaction(function () use ($events, $project, $asRoomRequest): array {
             $stored = [];
 
-            foreach ($events as $event) {
+            foreach ($events as $index => $event) {
                 $stored[] = $this->eventService->createBulkEvent(
                     $event,
                     $project,
-                    $this->authManager->id()
+                    $this->authManager->id(),
+                    $asRoomRequest[$index]
                 );
             }
 
             return $stored;
         });
+
+        $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests(
+            collect($storedEvents)
+                ->filter(static fn (Event $storedEvent): bool => (bool) $storedEvent->occupancy_option)
+                ->pluck('id')
+                ->all()
+        );
 
         $createdEventPayloads = [];
         $freshEvents = [];
@@ -4278,20 +4534,26 @@ class EventController extends Controller
 
         $data =  $request->collect('data');
 
-        // Raumwechsel bucht direkt (kein Anfrage-Workflow) – wie beim Bulk-Anlegen nur mit Buchungsrecht im Zielraum
+        // Raumwechsel wie beim Bulk-Anlegen: mit Buchungsrecht im Zielraum fest, mit Anfragerecht als Raumanfrage
         $newRoomId = data_get($data, 'room.id');
+        $becomesRoomRequest = false;
         if ($newRoomId !== null && (int) $newRoomId !== (int) $event->room_id) {
-            $this->authorizeBulkEventCreation(
+            $becomesRoomRequest = $this->authorizeBulkEventCreationOrRoomRequest(
                 $this->eventService->resolveBulkIsPlanning($data, $event),
                 Room::query()->findOrFail($newRoomId)
             );
         }
 
         $openRoomRequestsBefore = $this->openRoomRequestSnapshot([(int) $event->id]);
+        $approvalBefore = $this->changeApprovalSnapshots([$event]);
         $this->eventService->updateBulkEvent(
             $data,
             $event
         );
+        // Zeitraum über die bestätigte Belegung hinaus wird ohne Direktbuchrecht ebenfalls zur Raumanfrage
+        if ($this->applyChangeApproval($approvalBefore) !== [] || $becomesRoomRequest) {
+            $this->turnMovedEventsIntoRoomRequests([(int) $event->id], $openRoomRequestsBefore);
+        }
         $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
 
         $freshEvent = $event->fresh();
@@ -4326,13 +4588,18 @@ class EventController extends Controller
         // gingen day/end_day/name/Zeiten verloren und createBulkEvent fiel auf "heute" zurück.
         $data = $request->input('event');
         $room = Room::query()->findOrFail($data['room']['id']);
-        $this->authorizeBulkEventCreation((bool) ($data['is_planning'] ?? false), $room);
+        // Wer im Raum nur anfragen darf, legt den Termin als Raumanfrage an
+        $asRoomRequest = $this->authorizeBulkEventCreationOrRoomRequest((bool) ($data['is_planning'] ?? false), $room);
 
         $event = $this->eventService->createBulkEvent(
             $data,
             $project,
-            $this->authManager->id()
+            $this->authManager->id(),
+            $asRoomRequest
         );
+        if ($asRoomRequest) {
+            $this->roomRequestNotificationService->notifyRoomAdminsOfOpenRequests([(int) $event->id]);
+        }
         $freshEvent = $event->fresh();
         // Broadcasts nach der Response — hängender Websocket-Server darf den Create nicht bremsen
         dispatch(static function () use ($freshEvent): void {
@@ -4360,10 +4627,47 @@ class EventController extends Controller
 
         // can_update: der Dialog schaltet Bearbeiten/Lesen nach derselben Policy wie das Speichern
         // (vorher kannte er weder "Geplante Termine bearbeiten" noch das Projekt-Schreibrecht).
+        $requester = $event->requester;
+
         return new JsonResponse([
             'description' => $event->description,
             'can_update' => $this->authManager->user()?->can('update', $event) ?? false,
+            // Wer die laufende Anfrage gestellt hat, wenn es nicht die Person ist, die den Termin angelegt hat
+            'requested_by' => $requester !== null && (int) $requester->id !== (int) $event->user_id ? [
+                'id' => $requester->id,
+                'first_name' => $requester->first_name,
+                'last_name' => $requester->last_name,
+                'profile_photo_url' => $requester->profile_photo_url,
+                'deactivated_at' => User::deactivatedAtFor($requester),
+            ] : null,
+            // Bestätigte Belegung eines fest gebuchten Termins: der Dialog sagt vorher, ob eine Änderung neu
+            // angefragt werden muss (EventChangeApprovalService)
+            'approved_booking' => $this->approvedBookingPayload($event),
         ]);
+    }
+
+    /**
+     * @return array{room_id: int, start: string, end: string}|null
+     */
+    private function approvedBookingPayload(Event $event): ?array
+    {
+        if ($event->occupancy_option || $event->is_planning) {
+            return null;
+        }
+
+        $hasDeviatingApproval = $event->hasDeviatingApproval();
+        $roomId = $hasDeviatingApproval ? $event->approved_room_id : $event->room_id;
+        if ($roomId === null) {
+            return null;
+        }
+
+        return [
+            'room_id' => (int) $roomId,
+            'start' => Carbon::parse($hasDeviatingApproval ? $event->approved_start_time : $event->start_time)
+                ->utc()->toIso8601String(),
+            'end' => Carbon::parse($hasDeviatingApproval ? $event->approved_end_time : $event->end_time)
+                ->utc()->toIso8601String(),
+        ];
     }
 
     public function updateDescription(Request $request, Event $event): JsonResponse
@@ -4393,18 +4697,29 @@ class EventController extends Controller
         $selectedRoomId = data_get($request->input('selectedRoom'), 'id');
         $selectedRoom = $selectedRoomId !== null ? Room::query()->findOrFail($selectedRoomId) : null;
 
+        $checkedRooms = [];
+        $movedAsRoomRequestIds = [];
         foreach (Event::whereIn('id', $eventIds)->get() as $eventToAuthorize) {
             $this->authorize('update', $eventToAuthorize);
 
-            // Raumwechsel bucht direkt (kein Anfrage-Workflow) – Buchungsrecht im Zielraum nötig
+            // Raumwechsel: mit Buchungsrecht im Zielraum fest, mit Anfragerecht als Raumanfrage
             if ($selectedRoom !== null && (int) $eventToAuthorize->room_id !== (int) $selectedRoom->id) {
-                $this->authorizeBulkEventCreation((bool) $eventToAuthorize->is_planning, $selectedRoom);
+                $becomesRoomRequest = $this->authorizeBulkEventCreationOnce(
+                    $checkedRooms,
+                    (bool) $eventToAuthorize->is_planning,
+                    $selectedRoom,
+                    true
+                );
+                if ($becomesRoomRequest) {
+                    $movedAsRoomRequestIds[] = (int) $eventToAuthorize->id;
+                }
             }
         }
 
         $openRoomRequestsBefore = $this->openRoomRequestSnapshot(
             $eventIds->map(static fn ($id): int => (int) $id)->all()
         );
+        $approvalBefore = $this->changeApprovalSnapshots(Event::whereIn('id', $eventIds)->get());
         $this->eventService->bulkMultiEditEvent(
             $eventIds,
             $request->only([
@@ -4418,6 +4733,12 @@ class EventController extends Controller
             ])
         );
 
+        // Zeitraum über die bestätigte Belegung hinaus wird ohne Direktbuchrecht ebenfalls zur Raumanfrage
+        $movedAsRoomRequestIds = array_values(array_unique(array_merge(
+            $movedAsRoomRequestIds,
+            $this->applyChangeApproval($approvalBefore)
+        )));
+        $this->turnMovedEventsIntoRoomRequests($movedAsRoomRequestIds, $openRoomRequestsBefore);
         $this->notifyRoomAdminsOfChangedOpenRequests($openRoomRequestsBefore);
 
         // Broadcasts nach der Response (hängender Websocket-Server bremst sonst den Client) – einzige Stelle,
@@ -4685,6 +5006,7 @@ class EventController extends Controller
             $moved = [];
 
             foreach ($events as $event) {
+                $approvalBefore = $this->changeApprovalService->snapshot($event);
                 $start = Carbon::parse($event->getAttribute('start_time'));
                 $newStart = Carbon::parse($validated['cell']['day'])
                     ->setTimeFromTimeString($start->toTimeString());
@@ -4698,6 +5020,8 @@ class EventController extends Controller
                     Carbon::parse($event->getAttribute('end_time'))->addDays($dayDelta)
                 );
                 $event->save();
+                // Ohne Direktbuchrecht auf einen anderen Tag verschoben: wird zur Raumanfrage (unten gemeldet)
+                $this->changeApprovalService->applyAfterChange($this->authManager->user(), $event, $approvalBefore);
 
                 foreach ($event->shifts as $shift) {
                     $shift->setAttribute(

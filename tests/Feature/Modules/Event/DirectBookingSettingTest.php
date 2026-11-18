@@ -168,8 +168,12 @@ final class DirectBookingSettingTest extends FeatureTestCase
 
         $this->postJson(route('events.bulk.store', $project), $payload)->assertSuccessful();
 
+        $this->assertFalse((bool) Event::query()->latest('id')->firstOrFail()->occupancy_option);
+
+        // Ohne die Einstellung entsteht aus derselben Zeile eine Raumanfrage
         $this->setDirectBooking(false);
-        $this->postJson(route('events.bulk.store', $project), $payload)->assertForbidden();
+        $this->postJson(route('events.bulk.store', $project), $payload)->assertSuccessful();
+        $this->assertTrue((bool) Event::query()->latest('id')->firstOrFail()->occupancy_option);
     }
 
     #[Test]

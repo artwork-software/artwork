@@ -340,35 +340,180 @@ final class EventBulkActionsTest extends FeatureTestCase
     #[Test]
     public function user_without_permission_cannot_create_single_bulk_event(): void
     {
-        $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $user = $this->actingAsUserWith([]);
         $project = Project::factory()->create();
+        $project->users()->attach($user->id);
         $eventType = EventType::factory()->create();
         $room = Room::factory()->create(['everyone_can_book' => false]);
 
         $this->postJson(route('event.store.bulk.single', $project), [
             'event' => [
+                'name' => 'Ohne Recht',
                 'type' => ['id' => $eventType->id],
                 'room' => ['id' => $room->id],
             ],
         ])
             ->assertForbidden();
+
+        $this->assertDatabaseMissing('events', ['eventName' => 'Ohne Recht']);
+    }
+
+    #[Test]
+    public function request_only_user_creates_a_room_request_via_single_bulk_create(): void
+    {
+        $requester = $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $project = Project::factory()->create();
+        $project->users()->attach($requester->id);
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+
+        $response = $this->postJson(route('event.store.bulk.single', $project), [
+            'event' => [
+                'name' => 'Angefragt',
+                'day' => '2026-09-01',
+                'type' => ['id' => $eventType->id],
+                'room' => ['id' => $room->id],
+                // vom Client gesendete Werte entscheiden nicht über fest/angefragt
+                'occupancy_option' => false,
+            ],
+        ]);
+
+        $response->assertSuccessful();
+        // Die Liste braucht beides: Kennzeichen "angefragt" und wer angelegt hat (eigene Zeilen bearbeitbar)
+        $response->assertJsonPath('event.occupancy_option', true);
+        $response->assertJsonPath('event.created_by_id', $requester->id);
+        $this->assertDatabaseHas('events', [
+            'eventName' => 'Angefragt',
+            'room_id' => $room->id,
+            'user_id' => $requester->id,
+            'occupancy_option' => true,
+        ]);
+    }
+
+    #[Test]
+    public function user_with_create_events_permission_books_directly_via_single_bulk_create(): void
+    {
+        $planner = $this->actingAsUserWith(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+        $project = Project::factory()->create();
+        $project->users()->attach($planner->id);
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+
+        $response = $this->postJson(route('event.store.bulk.single', $project), [
+            'event' => [
+                'name' => 'Fest gebucht',
+                'day' => '2026-09-01',
+                'type' => ['id' => $eventType->id],
+                'room' => ['id' => $room->id],
+                'occupancy_option' => true,
+            ],
+        ]);
+
+        $response->assertSuccessful();
+        $response->assertJsonPath('event.occupancy_option', false);
+        $this->assertDatabaseHas('events', ['eventName' => 'Fest gebucht', 'occupancy_option' => false]);
+    }
+
+    #[Test]
+    public function request_only_user_cannot_create_a_planned_event_via_single_bulk_create(): void
+    {
+        $requester = $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $project = Project::factory()->create();
+        $project->users()->attach($requester->id);
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+
+        // Geplante Termine kennen keine Raumanfrage
+        $this->postJson(route('event.store.bulk.single', $project), [
+            'event' => [
+                'name' => 'Geplant',
+                'type' => ['id' => $eventType->id],
+                'room' => ['id' => $room->id],
+                'is_planning' => true,
+            ],
+        ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('events', ['eventName' => 'Geplant']);
     }
 
     #[Test]
     public function user_without_permission_cannot_bulk_project_event_store(): void
     {
-        $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $user = $this->actingAsUserWith([]);
         $project = Project::factory()->create();
+        $project->users()->attach($user->id);
         $eventType = EventType::factory()->create();
         $room = Room::factory()->create(['everyone_can_book' => false]);
 
         $this->postJson(route('events.bulk.store', $project), [
             'events' => [[
+                'name' => 'Ohne Recht',
                 'type' => ['id' => $eventType->id],
                 'room' => ['id' => $room->id],
             ]],
         ])
             ->assertForbidden();
+
+        $this->assertDatabaseMissing('events', ['eventName' => 'Ohne Recht']);
+    }
+
+    #[Test]
+    public function request_only_user_creates_room_requests_via_bulk_project_event_store(): void
+    {
+        $requester = $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $project = Project::factory()->create();
+        $project->users()->attach($requester->id);
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+        $row = ['type' => ['id' => $eventType->id], 'room' => ['id' => $room->id], 'day' => '2026-09-01'];
+
+        $response = $this->postJson(route('events.bulk.store', $project), [
+            'events' => [$row + ['name' => 'Kopie 1'], $row + ['name' => 'Kopie 2']],
+        ]);
+
+        $response->assertSuccessful();
+        $response->assertJsonPath('events.0.occupancy_option', true);
+        $response->assertJsonPath('events.1.occupancy_option', true);
+        $this->assertSame(2, Event::query()
+            ->where('user_id', $requester->id)
+            ->where('room_id', $room->id)
+            ->where('occupancy_option', true)
+            ->count());
+    }
+
+    #[Test]
+    public function request_only_user_can_edit_and_delete_an_own_room_request_via_the_bulk_endpoints(): void
+    {
+        $requester = $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $event = Event::factory()->create([
+            'user_id' => $requester->id,
+            'room_id' => Room::factory()->create(['everyone_can_book' => false])->id,
+            'occupancy_option' => true,
+        ]);
+
+        $this->patchJson(route('event.update.single.bulk', $event), [
+            'data' => [
+                'name' => 'Umbenannt',
+                'day' => '2026-09-01',
+                'start_time' => '10:00',
+                'end_time' => '12:00',
+                'type' => ['id' => $event->event_type_id],
+                'room' => ['id' => $event->room_id],
+            ],
+        ])
+            ->assertSuccessful()
+            ->assertJsonPath('event.occupancy_option', true);
+
+        $event->refresh();
+        $this->assertSame('Umbenannt', $event->eventName);
+        $this->assertSame('2026-09-01 10:00:00', $event->start_time->format('Y-m-d H:i:s'));
+        // Bearbeiten nimmt die eigene Anfrage nicht an
+        $this->assertTrue((bool) $event->occupancy_option);
+
+        $this->deleteJson(route('event.bulk.multi-edit.delete'), ['eventIds' => [$event->id]])
+            ->assertSuccessful();
+        $this->assertSoftDeleted('events', ['id' => $event->id]);
     }
 
     #[Test]

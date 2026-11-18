@@ -122,6 +122,7 @@ return [
         'new_message' => 'New message regarding room request',
         'room_request_accept' => 'Room request confirmed',
         'room_request_declined' => 'Room request declined',
+        'room_change_request_declined' => 'Change of room booking declined, the event keeps its confirmed booking',
         'deleted' => 'Event cancelled'
     ],
     'ai_assistant' => [

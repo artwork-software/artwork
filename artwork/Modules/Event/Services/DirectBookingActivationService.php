@@ -64,7 +64,9 @@ class DirectBookingActivationService
         foreach ($events as $event) {
             // Spiegelt EventController::acceptEvent ohne Benachrichtigungen: die Person wird
             // über die Warnung beim Aktivieren informiert, nicht pro Termin.
-            Event::query()->whereKey($event->id)->update(['occupancy_option' => false]);
+            Event::query()->whereKey($event->id)->update(
+                ['occupancy_option' => false] + EventChangeApprovalService::CLEARED_APPROVAL
+            );
             app(\Artwork\Modules\Notification\Services\NotificationService::class)
                 ->markOpenRoomRequestsHandled($event->id, 'accepted');
             $this->changeService->saveFromBuilder(

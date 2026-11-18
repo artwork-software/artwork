@@ -34,14 +34,12 @@ const props = defineProps({
 const dropOver = ref(false);
 
 const onDragOver = (event) => {
-    console.log('onDragOver');
     dropOver.value = true;
     isDragging.value = false;
     event.preventDefault();
 };
 
 const dragLeave = () => {
-    console.log('dragLeave');
     dropOver.value = false;
     isDragging.value = true;
 };
@@ -70,11 +68,9 @@ const onDrop = (event) => {
 };
 
 onMounted(() => {
-    console.log('onMounted');
     const listeners = addEventListenerForDraggingStart();
 
     onUnmounted(() => {
-        console.log('onUnmounted');
         removeEventListenerForDraggingStart(listeners);
     });
 });

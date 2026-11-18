@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Crm\Services;
 
+use Artwork\Core\FileHandling\Naming\DownloadFileName;
 use Artwork\Core\FileHandling\StoredFilePath;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
@@ -45,6 +46,29 @@ readonly class CrmPropertyFileService
         }
 
         return $path;
+    }
+
+    /**
+     * Anzeigename einer Eigenschaftsdatei (Originalname beim Upload oder neuer Name beim Umbenennen).
+     * Pfadtrenner und Steuerzeichen fliegen raus; fehlt die Endung der gespeicherten Datei, wird sie
+     * angehängt, damit der Download weiter mit dem passenden Programm aufgeht. Null = kein brauchbarer Name.
+     */
+    public function displayName(mixed $name, string $storedPath): ?string
+    {
+        $name = DownloadFileName::sanitize($name);
+        $name = $name === null ? '' : rtrim($name, '. ');
+
+        if ($name === '') {
+            return null;
+        }
+
+        $extension = strtolower(pathinfo($storedPath, PATHINFO_EXTENSION));
+
+        if ($extension !== '' && strtolower(pathinfo($name, PATHINFO_EXTENSION)) !== $extension) {
+            $name .= '.' . $extension;
+        }
+
+        return $name;
     }
 
     public function delete(mixed $raw): void

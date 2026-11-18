@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Notification\Services;
 
+use Artwork\Modules\Notification\Jobs\SendNotificationMailJob;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification as LaravelNotification;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Artwork\Modules\Event\Models\Event;
@@ -297,11 +299,6 @@ class NotificationService
         $this->positionVerifyRequestType = $positionVerifyRequestType;
 
         return $this;
-    }
-
-    public function getCreatedBy(): ?User
-    {
-        return $this->createdBy;
     }
 
     public function setCreatedBy(?User $createdBy): void
@@ -816,14 +813,29 @@ class NotificationService
     }
 
     /**
-     * Sofort-Mails laufen synchron im Request. Ist der Mailserver nicht
-     * erreichbar, soll nur die Mail ausfallen und gemeldet werden – nicht die Aktion,
-     * die die Benachrichtigung ausgelöst hat (Termin speichern, Raumanfrage …).
+     * Der Eintrag in der Glocke (und weitere Kanäle) entsteht sofort, die Sofort-Mail geht über die Warteschlange
+     * (SendNotificationMailJob): ein langsamer oder nicht erreichbarer Mailserver darf die Aktion, die die
+     * Benachrichtigung ausgelöst hat (Termin speichern, Raumanfrage …), nicht aufhalten. Selbst gequeuete
+     * Benachrichtigungen bleiben, wie sie sind.
      */
     private function sendNotification(User $notifiable, LaravelNotification $notification): void
     {
         try {
-            Notification::send($notifiable, $notification);
+            if ($notification instanceof ShouldQueue || !method_exists($notification, 'via')) {
+                Notification::send($notifiable, $notification);
+
+                return;
+            }
+
+            $channels = (array) $notification->via($notifiable);
+            $immediateChannels = array_values(array_diff($channels, ['mail']));
+            // sendNow() fiele bei leerer Kanalliste auf via() zurück und schickte die Mail doch synchron
+            if ($immediateChannels !== []) {
+                Notification::sendNow($notifiable, $notification, $immediateChannels);
+            }
+            if (in_array('mail', $channels, true)) {
+                SendNotificationMailJob::dispatch($notifiable, $notification);
+            }
         } catch (TransportExceptionInterface $exception) {
             report($exception);
         }

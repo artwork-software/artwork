@@ -274,7 +274,6 @@ import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 import {provide} from "vue";
-import {stopListeningOnPrivateChannel} from "@/Composeables/Listener/echoChannel.js";
 
 export default {
     name: 'CalendarComponent',
@@ -348,8 +347,6 @@ export default {
     },
     beforeUnmount() {
         window.removeEventListener('resize', this.listenToFullscreen);
-        // Nur den eigenen Handler abmelden – der Kanal 'events' kann von anderen Ansichten geteilt sein
-        stopListeningOnPrivateChannel('events', 'OccupancyUpdated', this.occupancyUpdatedHandler);
     },
     data() {
         return {
@@ -441,12 +438,6 @@ export default {
         provide('filterOptions', this.filterOptions);
         provide('user_filters', this.user_filters);
         provide('personalFilters', this.personalFilters);
-        // Handler merken, damit beforeUnmount genau ihn wieder abmelden kann
-        this.occupancyUpdatedHandler = () => {
-            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
-        };
-        Echo.private('events')
-            .listen('OccupancyUpdated', this.occupancyUpdatedHandler);
     },
     watch: {
         events: {

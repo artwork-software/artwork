@@ -453,16 +453,6 @@ readonly class ArtistResidencyService
     }
 
     /**
-     * Ensures the directory exists, creating it if necessary.
-     */
-    private function ensureDirectoryExists(string $directory): void
-    {
-        if ($this->filesystemManager->directoryMissing($directory)) {
-            $this->filesystemManager->makeDirectory($directory);
-        }
-    }
-
-    /**
      * Creates a file path for storage.
      */
     private function createStoragePath(string $filename): string

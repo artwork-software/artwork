@@ -36,11 +36,6 @@ class ShiftServiceProviderRepository extends BaseRepository
         return ShiftServiceProvider::find($modelId);
     }
 
-    public function getCountForShiftIdAndShiftQualificationId(int $shiftId, int $shiftQualificationId): int
-    {
-        return ShiftServiceProvider::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)->count();
-    }
-
     public function findByServiceProviderIdAndShiftId(int $userId, int $shiftId): ?ShiftServiceProvider
     {
         return ShiftServiceProvider::byServiceProviderIdAndShiftId($userId, $shiftId)->first();

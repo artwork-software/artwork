@@ -137,6 +137,7 @@
 </template>
 
 <script setup>
+import { toastValidationErrors } from "@/Helper/appToast";
 
 import CalendarSettingsHeader from "@/Pages/Settings/Components/CalendarSettingsHeader.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
@@ -209,9 +210,7 @@ const postCalendarSettings = () => {
                 visualFeedbackText.value = ''
             }, 3000)
         },
-        onError: () => {
-            console.log('error')
-        }
+        onError: (errors) => toastValidationErrors(errors),
     })
 }
 

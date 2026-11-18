@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 /**
  * Personen fuer die Schichtplanung nachschlagen und ihre Auslastung lesen (ai-shift-planning).
@@ -215,7 +216,10 @@ class AiPeopleService
 
         $rules = $person instanceof User ? $this->shiftRuleService->getActiveRulesForUser($person) : collect();
         $contract = $person instanceof User ? $person->activeWorkContract() : null;
-        $targets = $person instanceof User ? $this->targetMinutesByWeek($person, $weeks) : null;
+        // Sollstunden nur mit eingeschalteter Arbeitszeitberechnung (wie WorkingHourService in der Oberfläche)
+        $targets = $person instanceof User && WorkTimeAccounting::isEnabled()
+            ? $this->targetMinutesByWeek($person, $weeks)
+            : null;
 
         return new AiPersonWorkloadData(
             person: $this->personData($person),
@@ -261,7 +265,9 @@ class AiPeopleService
             Carbon::parse($weekStart->addDays(6)->toDateString())
         ));
         $rules = $person instanceof User ? $this->shiftRuleService->getActiveRulesForUser($person) : collect();
-        $targets = $person instanceof User ? $this->targetMinutesByWeek($person, [$week]) : null;
+        $targets = $person instanceof User && WorkTimeAccounting::isEnabled()
+            ? $this->targetMinutesByWeek($person, [$week])
+            : null;
 
         return $this->remaining([$week], [$week => (int) $planned], $rules, $targets)->weeks[0];
     }

@@ -53,8 +53,7 @@ class BaseNotification extends Notification
             return $channels;
         }
 
-        // Mail zuletzt: schlägt der (synchrone) Versand fehl, ist die Datenbank-Benachrichtigung
-        // schon zugestellt.
+        // Die Mail verschickt NotificationService über die Warteschlange (SendNotificationMailJob)
         if (
             $notificationSetting->getAttribute('enabled_email') &&
             $notificationSetting->getAttribute('frequency') === NotificationFrequencyEnum::IMMEDIATELY

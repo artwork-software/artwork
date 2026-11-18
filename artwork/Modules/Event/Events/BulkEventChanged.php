@@ -72,6 +72,10 @@ class BulkEventChanged implements ShouldBroadcastNow, HasPlanningCompanionBroadc
             'allDay' => $event->allDay,
             'description' => $event->description,
             'is_planning' => $event->is_planning,
+            // Raumanfrage-Kennzeichen und anlegende Person: wer nur anfragen darf, bearbeitet in der Liste
+            // die eigenen Termine
+            'occupancy_option' => (bool) $event->occupancy_option,
+            'created_by_id' => $event->user_id,
             'created_at' => $event->created_at,
             'updated_at' => $event->updated_at,
             'isNew' => $event->created_at->eq($event->updated_at),

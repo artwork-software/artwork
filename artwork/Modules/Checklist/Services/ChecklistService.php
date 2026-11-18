@@ -11,8 +11,6 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Checklist\Repositories\ChecklistRepository;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistTemplateIndexResource;
 use Artwork\Modules\Checklist\Models\ChecklistTemplate;
-use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\User\Models\User;
@@ -50,18 +48,6 @@ readonly class ChecklistService
         }
 
         return $this->checklistRepository->save($checklist);
-    }
-
-    public function getChecklistsWithMyTask(
-        int $userId,
-        ProjectTabService $projectTabService,
-        int $sort
-    ): \Illuminate\Support\Collection {
-        return $this->checklistRepository->getChecklistWhereHasTaskUsersWithFilteredTasks(
-            $userId,
-            $projectTabService,
-            $sort
-        );
     }
 
     public function getPrivateChecklists(int $userId, int $filter): Collection

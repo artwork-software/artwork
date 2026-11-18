@@ -7,22 +7,10 @@ use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Models\InventoryTagGroup;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class InventoryTagManagementService
 {
-
-    public function getGroupsWithTags(): Collection
-    {
-        return InventoryTagGroup::query()
-            ->with(['tags' => function ($q): void {
-                $q->orderBy('position')->orderBy('name');
-            }])
-            ->orderBy('position')
-            ->orderBy('name')
-            ->get();
-    }
 
     public function createGroup(array $data): InventoryTagGroup
     {

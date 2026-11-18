@@ -174,7 +174,7 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
 
         $this->get(route('crm.contacts.property-file.download', ['crmContact' => $contact, 'property' => $property]))
             ->assertOk()
-            ->assertHeader('content-disposition', 'attachment; filename=' . basename($path));
+            ->assertHeader('content-disposition', 'attachment; filename=vertrag.pdf');
 
         $this->post(
             route('crm.contacts.property-file.upload', $contact),

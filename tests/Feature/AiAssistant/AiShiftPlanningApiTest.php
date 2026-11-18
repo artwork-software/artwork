@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\AiAssistant;
 
+use App\Settings\ShiftSettings;
 use Artwork\Modules\AiAssistant\Http\Requests\StoreAiConversationTurnRequest;
 use Artwork\Modules\AiAssistant\Models\AiActionBatch;
 use Artwork\Modules\AiAssistant\Models\AiConversation;
@@ -319,6 +320,23 @@ final class AiShiftPlanningApiTest extends TestCase
             'minutes_remaining' => 1800,
             'limited_by' => 'weeklyMaxHours',
         ], $response->json('remaining.weeks.0'));
+    }
+
+    #[Test]
+    public function the_workload_reports_no_targets_without_work_time_accounting(): void
+    {
+        $person = $this->worker(['weeklyMaxHours' => 40.0]);
+        $settings = app(ShiftSettings::class);
+        $settings->work_time_accounting_enabled = false;
+        $settings->save();
+        $this->actingAsToken($this->planner());
+
+        $response = $this->getJson("/api/v1/ai/people/user/{$person->id}/workload?from=" . self::MONDAY . '&to=2026-11-08')
+            ->assertOk();
+
+        // Wie in der Oberfläche: ohne Arbeitszeitberechnung keine Sollstunden
+        $this->assertNull($response->json('target_minutes_by_week'));
+        $this->assertNotNull($response->json('planned.weeks'));
     }
 
     #[Test]

@@ -11,6 +11,7 @@ class CrmPropertyValue extends Model
         'crm_contact_id',
         'crm_property_id',
         'value',
+        'file_name',
     ];
 
     /**

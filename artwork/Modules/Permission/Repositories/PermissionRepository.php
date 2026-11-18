@@ -35,11 +35,6 @@ class PermissionRepository extends BaseRepository
         return Permission::all()->groupBy('group');
     }
 
-    public function getIdByName(string $name): null|int
-    {
-        return $this->getByName($name)?->id ?? null;
-    }
-
     public function getByName(string $name): PermissionContract|null
     {
         try {

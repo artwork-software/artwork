@@ -33,7 +33,7 @@ $canViewShiftPlan = static fn ($user): bool => $user instanceof User
 // Planungstermine: nur mit Planungskalender-Recht (EventPolicy::viewPlanning, Admins via Gate::before)
 $canViewPlanning = static fn ($user): bool => $user instanceof User && $user->can('viewPlanning', Event::class);
 
-// Reload-Signale ohne Payload (OccupancyUpdated, PushesEventModification: roomId + Datumsbereich)
+// Sammel-Signal OccupancyUpdated (nur Zeitraum, keine Termindaten): offene Kalender laden betroffene Monate nach
 Broadcast::channel('events', function () {
     return Auth::check();
 });

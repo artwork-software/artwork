@@ -328,8 +328,6 @@ readonly class EventService
                     $shiftsQualificationsService,
                 );
                 $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
-
-                SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
             }
         } finally {
             // Gegenstück zu deleteAll: beim Löschen geschlossene Raumanfragen wieder öffnen (Projekt, Serie) – auch
@@ -338,6 +336,12 @@ readonly class EventService
             if ($restoredEventIds !== []) {
                 app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents($restoredEventIds);
             }
+        }
+
+        // Ein Ping für den ganzen Stapel wie in deleteAll (vorher je Termin: beim Wiederherstellen eines
+        // Projekts mit vielen Terminen ebenso viele Aufrufe an den WebSocket-Server)
+        if ($restoredEventIds !== []) {
+            SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
         }
     }
 

@@ -21,6 +21,7 @@
 </template>
 
 <script setup>
+import { toastValidationErrors } from "@/Helper/appToast";
 
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
@@ -47,9 +48,7 @@ const declineRequest = () => {
         onSuccess: () => {
             emit('close');
         },
-        onError: (error) => {
-            console.error('Error declining request:', error);
-        }
+        onError: (errors) => toastValidationErrors(errors),
     });
 }
 </script>

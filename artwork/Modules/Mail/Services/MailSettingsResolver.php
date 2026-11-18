@@ -101,11 +101,6 @@ class MailSettingsResolver
         return $host === null || strcasecmp($host, (string) $this->hostFallback()) === 0;
     }
 
-    public function hasHostOverride(): bool
-    {
-        return $this->override($this->settings->host) !== null;
-    }
-
     /**
      * Woher die SMTP-Anmeldung effektiv kommt — für die Anzeige in den Einstellungen.
      *

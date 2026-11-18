@@ -101,9 +101,4 @@ readonly class CrmPropertyService
 
         $this->repository->delete($property);
     }
-
-    public function assignToTypes(CrmProperty $property, array $typeIds): void
-    {
-        $property->contactTypes()->sync($typeIds);
-    }
 }

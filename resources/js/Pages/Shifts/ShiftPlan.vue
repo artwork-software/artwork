@@ -1170,6 +1170,7 @@ import dayjs from 'dayjs'
 import debounce from 'lodash.debounce'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import {useShiftCalendarListener} from '@/Composeables/Listener/useShiftCalendarListener.js'
+import {useOccupancyUpdates} from '@/Composeables/Listener/useOccupancyUpdates.js'
 import {enrichDays, clearDayPropsCache} from '@/Composeables/calendarDateUtils.js'
 import {provideShiftPlanLookups} from '@/Composeables/useShiftPlanLookups.js'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
@@ -2963,6 +2964,43 @@ function startShiftCalendarListener() {
 }
 
 onMounted(async () => {
+    // Watcher, Listener und Navigations-Guard vor dem ersten await registrieren: nach einem await
+    // ist die Komponenteninstanz nicht mehr aktiv, Watcher würden beim Verlassen nicht gestoppt und
+    // ein bereits verlassener Plan würde router.visit noch nachträglich überschreiben.
+    FULLSCREEN_EVENTS.forEach((eventName) => document.addEventListener(eventName, onFullscreenChange))
+    setupInertiaNavigationGuard()
+
+    // currentDayRef folgt immer currentDayOnView
+    watch(
+        () => currentDayOnView.value,
+        (v) => {
+            currentDayRef.value = v
+        },
+    )
+
+    // Tage aus Props aktualisieren (nur Referenz, kein deep-Watch – schneller)
+    watch(
+        () => props.days,
+        (v) => {
+            const newDays = (v ?? []) as any[]
+            days.value = newDays
+            daysRef.value = newDays
+
+            // falls sich Tage komplett ändern, ggf. currentDay neu setzen
+            currentDayOnView.value = pickInitialCurrentDay(newDays)
+        },
+    )
+
+    // Bei Datums- oder Craft-Filter-Änderung Worker neu laden.
+    // Bewusst KEIN deep-Watcher: der feuerte auch bei identischem Inhalt (neue Array-Identität)
+    // und löste damit unnötige Worker-Reloads aus — Wert-Vergleich über serialisierten Key.
+    watch(
+        () => `${props.dateValue?.[0]}|${props.dateValue?.[1]}|${(props.user_filters?.craft_ids ?? []).join(',')}`,
+        () => {
+            loadShiftPlanWorkers()
+        },
+    )
+
     // Crafts + Workers sofort parallel zum Meta/Batch-Load starten — die drei
     // Endpunkte sind unabhängig; vorher liefen alle vier Requests seriell
     const craftsPromise = axios.get(route('shifts.crafts'))
@@ -2970,7 +3008,15 @@ onMounted(async () => {
         .catch(() => { craftsLoaded.value = [] })
     const workersPromise = loadShiftPlanWorkers()
 
-    await initializeShiftPlan()
+    try {
+        await initializeShiftPlan()
+    } catch (error) {
+        // Fehler-Toast kommt vom globalen axios-Interceptor; Guard und Watcher sind schon registriert,
+        // ein Datums-/Filterwechsel lädt neu
+        console.error('[ShiftPlan] Laden fehlgeschlagen', error)
+        return
+    }
+    if (isShiftPlanUnmounted) return
 
     // Handle highlight query param from list view navigation
     const urlParams = new URLSearchParams(window.location.search);
@@ -3011,6 +3057,7 @@ onMounted(async () => {
     // Crafts + Workers wurden oben bereits parallel gestartet — hier nur noch abwarten
     await craftsPromise
     await workersPromise
+    if (isShiftPlanUnmounted) return
 
     // Dev-only: overflow debug check for visible cells
     if (import.meta.env.DEV && expandDays.value) {
@@ -3033,55 +3080,10 @@ onMounted(async () => {
         }, 500)
     }
 
-    document.addEventListener('fullscreenchange', () => {
-        isFullscreen.value = !!document.fullscreenElement
-    })
-    document.addEventListener('webkitfullscreenchange', () => {
-        isFullscreen.value = !!(document as any).webkitFullscreenElement
-    })
-    document.addEventListener('mozfullscreenchange', () => {
-        isFullscreen.value = !!(document as any).mozFullScreenElement
-    })
-    document.addEventListener('MSFullscreenChange', () => {
-        isFullscreen.value = !!(document as any).msFullscreenElement
-    })
-
-    // currentDayRef folgt immer currentDayOnView
-    watch(
-        () => currentDayOnView.value,
-        (v) => {
-            currentDayRef.value = v
-        },
-    )
-
-    // Tage aus Props aktualisieren (nur Referenz, kein deep-Watch – schneller)
-    watch(
-        () => props.days,
-        (v) => {
-            const newDays = (v ?? []) as any[]
-            days.value = newDays
-            daysRef.value = newDays
-
-            // falls sich Tage komplett ändern, ggf. currentDay neu setzen
-            currentDayOnView.value = pickInitialCurrentDay(newDays)
-        },
-    )
-
-    // Bei Datums- oder Craft-Filter-Änderung Worker neu laden.
-    // Bewusst KEIN deep-Watcher: der feuerte auch bei identischem Inhalt (neue Array-Identität)
-    // und löste damit unnötige Worker-Reloads aus — Wert-Vergleich über serialisierten Key.
-    watch(
-        () => `${props.dateValue?.[0]}|${props.dateValue?.[1]}|${(props.user_filters?.craft_ids ?? []).join(',')}`,
-        () => {
-            loadShiftPlanWorkers()
-        },
-    )
-
     attach()
 
     startShiftCalendarListener()
-
-    setupInertiaNavigationGuard()
+    occupancyUpdates.start()
 
     // wenn nur ein kurzer Hinweis: direkt leeren, Timeout möglichst klein halten
     setTimeout(() => {
@@ -3094,6 +3096,7 @@ onBeforeUnmount(() => {
     isShiftPlanUnmounted = true
     shiftCalendarListener?.dispose()
     shiftCalendarListener = null
+    occupancyUpdates.stop()
     if (userOverviewScrollSaveTimer) clearTimeout(userOverviewScrollSaveTimer)
     if (userOverviewScrollRestoreTimer) clearTimeout(userOverviewScrollRestoreTimer)
     saveUserOverviewScroll()
@@ -3104,7 +3107,9 @@ onBeforeUnmount(() => {
     monthObserver.value?.disconnect()
     monthObserver.value = null
 
-    if (originalVisit.value) {
+    FULLSCREEN_EVENTS.forEach((eventName) => document.removeEventListener(eventName, onFullscreenChange))
+    // Nur zurücksetzen, wenn noch dieser Guard aktiv ist (sonst würde ein fremder Wrapper überschrieben)
+    if (originalVisit.value && router.visit === guardedVisit) {
         router.visit = originalVisit.value
     }
     // Sonst fragte der Browser auf fremden Seiten "Seite verlassen?" (tote Closure mit multiEditMode)
@@ -3435,6 +3440,23 @@ function closeAddShiftModalApply(savedShift: any) {
  * Neu angelegte/verschobene Schicht in einem Raum, der hier nicht geladen ist (z.B. „leere Räume
  * ausblenden"): der Listener kann sie nirgends einfügen — Plan nachladen statt sie still zu verwerfen.
  */
+// Sammel-Signal anderer Personen (Massenlöschen, Wiederherstellen, KI-Stapel, Serien-Turnus): diese Termine
+// kommen nicht über die Raumkanäle. Nur nachladen, wenn der gemeldete Zeitraum den angezeigten berührt, und nicht
+// mitten in einer Mehrfachbearbeitung (die würde sonst verworfen).
+const occupancyUpdates = useOccupancyUpdates(async (range) => {
+    if (isShiftPlanUnmounted || multiEditMode.value) return
+    const shownStart = String(props.dateValue?.[0] ?? '')
+    const shownEnd = String(props.dateValue?.[1] ?? shownStart)
+    if (range && shownStart && (range.end < shownStart || range.start > shownEnd)) return
+    try {
+        await initializeShiftPlan()
+    } catch (error) {
+        console.error('[ShiftPlan] Nachladen nach Belegungsänderung fehlgeschlagen', error)
+        return
+    }
+    if (!isShiftPlanUnmounted) startShiftCalendarListener()
+})
+
 async function reloadIfShiftRoomNotLoaded(savedShift: any) {
     if (savedShift?.removed) return
     const shifts = Array.isArray(savedShift?.shifts) ? savedShift.shifts : [savedShift?.shift]
@@ -3465,11 +3487,20 @@ function shiftPlanBeforeUnload(event: BeforeUnloadEvent) {
     }
 }
 
+const FULLSCREEN_EVENTS = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
+
+function onFullscreenChange() {
+    const doc = document as any
+    isFullscreen.value = !!(document.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement)
+}
+
+let guardedVisit: ((url: string, options?: any) => Promise<void>) | null = null
+
 function setupInertiaNavigationGuard() {
     originalVisit.value = router.visit
     window.onbeforeunload = shiftPlanBeforeUnload
 
-    router.visit = async (url: string, options: any = {}) => {
+    guardedVisit = async (url: string, options: any = {}) => {
         // Standardmäßig Scroll-Position beibehalten, außer explizit überschrieben
         options = {preserveScroll: true, ...options}
         if (multiEditMode.value && userForMultiEdit.value && !preventNextNavigation.value) {
@@ -3485,6 +3516,7 @@ function setupInertiaNavigationGuard() {
             originalVisit.value.call(router, url, options)
         }
     }
+    router.visit = guardedVisit as any
 }
 
 function isWorkerUser(worker: any) {

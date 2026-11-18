@@ -41,7 +41,9 @@ return [
             'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            // Obergrenze für Verbindungsaufbau und Antworten des Mailservers (Sekunden); ohne Wert galt das
+            // PHP-Socket-Timeout von 60 s, das ein Absenden bis zur Zeitüberschreitung aufhalten konnte
+            'timeout' => env('MAIL_TIMEOUT', 15),
         ],
 
         'ses' => [

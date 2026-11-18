@@ -264,11 +264,12 @@ class ExternalSelfEditFieldResolver
     }
 
     /**
-     * Upload-Eigenschaften zeigen nur den Dateinamen, nie den Speicherpfad am Kontakt.
+     * Upload-Eigenschaften zeigen nur den Anzeigenamen der Datei, nie den Speicherpfad am Kontakt.
      */
     private function displayValueOf(CrmProperty $property): ?string
     {
-        $value = $property->values->first()?->value;
+        $propertyValue = $property->values->first();
+        $value = $propertyValue?->value;
 
         if ($property->type !== CrmPropertyTypeEnum::UPLOAD) {
             return $value;
@@ -276,7 +277,11 @@ class ExternalSelfEditFieldResolver
 
         $path = $this->propertyFileService->normalisePath($value);
 
-        return $path !== null ? basename($path) : null;
+        if ($path === null) {
+            return null;
+        }
+
+        return $propertyValue->file_name ?? basename($path);
     }
 
     private function typeSortOrder(CrmProperty $property): int

@@ -35,11 +35,6 @@ readonly class NotificationSettingsPresenter
     ) {
     }
 
-    public function isVisibleFor(NotificationEnum $type, User $user): bool
-    {
-        return in_array($type->value, $this->visibleTypeValuesFor($user), true);
-    }
-
     /**
      * @return array<int, string>
      */

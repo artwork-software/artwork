@@ -187,6 +187,7 @@ use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\Project\Http\Controllers\ProjectContentExportController;
 use Artwork\Modules\Project\Http\Controllers\ProjectPlanExportController;
+use Artwork\Modules\Project\Http\Controllers\ProjectSimilarNamesController;
 use Artwork\Modules\Project\Http\Controllers\ProjectContentExportTemplateController;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
@@ -642,7 +643,9 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::post('/mail/test', [MailSettingsController::class, 'test'])
             ->name('tool.mail.test');
 
-        // KI-ASSISTENT — nur mit KI-Freischaltung (per Konsole), kein GUI-Recht, kein Admin-Bypass
+        // KI-ASSISTENT — KI-Freischaltung (per Konsole, kein Admin-Bypass) UND dasselbe Recht wie alle anderen
+        // Tool-Einstellungen: hausweite Schalter darf nur ändern, wer Tool-Einstellungen ändern darf
+        // (Recht im Controller/Request geprüft: route-'can' liefe wegen der Middleware-Priorität vor der Freischaltung)
         Route::middleware(EnsureUserHasAiAccess::class)->group(function (): void {
             Route::get('/ai-assistant', [AiAssistantSettingsController::class, 'edit'])
                 ->name('tool.ai-assistant');
@@ -887,6 +890,11 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
+    // Hinweis auf gleich- oder ähnlich benannte Projekte/Gruppen im Anlage-Modal (Route vor {project}!)
+    // Feuert beim Tippen (Debounce 400 ms) und vergleicht mit allen Projektnamen: gedrosselt
+    Route::get('/projects/similar-names', ProjectSimilarNamesController::class)
+        ->middleware('throttle:60,1')
+        ->name('projects.similar-names');
 
     // Matrix über alle Produktionen hinweg — braucht das globale Projekt-Leserecht,
     // Team-Mitgliedschaft in einzelnen Projekten reicht nicht (Route vor {project}!)
@@ -2077,13 +2085,6 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->can('can plan shifts');
         Route::post('/bulk-duplicate', [ShiftController::class, 'bulkDuplicate'])
             ->name('shifts.multi.duplicate')
-            ->can('can plan shifts');
-        // „Woche kopieren": Schichten einer KW in bis zu 8 Ziel-KWs (ohne Personen, nicht festgeschrieben)
-        Route::get('/copy-week/preview', [ShiftController::class, 'copyWeekPreview'])
-            ->name('shifts.copy-week.preview')
-            ->can('can plan shifts');
-        Route::post('/copy-week', [ShiftController::class, 'copyWeek'])
-            ->name('shifts.copy-week')
             ->can('can plan shifts');
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');
@@ -3576,6 +3577,10 @@ Route::group(['middleware' => ['auth']], function (): void {
             CrmContactController::class,
             'deletePropertyFile',
         ])->middleware('can:can view crm')->name('crm.contacts.property-file.delete');
+        Route::patch('/contacts/{crmContact}/property-file', [
+            CrmContactController::class,
+            'renamePropertyFile',
+        ])->middleware('can:can view crm')->name('crm.contacts.property-file.rename');
         // Eigenschaftsdateien liegen privat: Download nur hier (Gruppen-Sichtbarkeit im Controller)
         Route::get('/contacts/{crmContact}/property-file/{property}', [
             CrmContactController::class,

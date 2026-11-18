@@ -431,20 +431,28 @@ export default  {
             if (!bool) {
                 return this.answerRequestWithRoomChangeVisible = false;
             }
-            await this.deleteNotification();
-
-            return await axios
-                .put('/events/' + this.requestToAnswerWithRoomChange.id, this.eventData(this.requestToAnswerWithRoomChange))
-                .then(() => this.answerRequestWithRoomChangeVisible = false)
+            // Benachrichtigung erst nach erfolgreicher Änderung entfernen: scheitert der Request, bleibt sie
+            // erhalten (Fehler-Toast kommt vom globalen Interceptor)
+            try {
+                await axios.put('/events/' + this.requestToAnswerWithRoomChange.id, this.eventData(this.requestToAnswerWithRoomChange));
+                await this.deleteNotification();
+            } catch (_) {
+                // Termin unverändert, Benachrichtigung bleibt
+            } finally {
+                this.answerRequestWithRoomChangeVisible = false;
+            }
         },
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
-            await this.deleteNotification();
-
-            return await axios
-                .delete(`/events/${this.eventToDelete.id}`)
-                .then(() => this.deleteComponentVisible = false)
+            try {
+                await axios.delete(`/events/${this.eventToDelete.id}`);
+                await this.deleteNotification();
+            } catch (_) {
+                // Termin nicht gelöscht, Benachrichtigung bleibt
+            } finally {
+                this.deleteComponentVisible = false;
+            }
         },
         async deleteNotification() {
             const notification = this.notificationToDelete

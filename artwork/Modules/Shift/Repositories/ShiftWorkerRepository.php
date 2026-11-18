@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Shift\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
-use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 
@@ -45,11 +44,6 @@ class ShiftWorkerRepository extends BaseRepository
     public function getById(int $modelId): ?ShiftWorker
     {
         return ShiftWorker::find($modelId);
-    }
-
-    public function getCountForShiftIdAndShiftQualificationId(int $shiftId, int $shiftQualificationId): int
-    {
-        return ShiftWorker::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)->count();
     }
 
     public function findByEmployableIdAndShiftId(

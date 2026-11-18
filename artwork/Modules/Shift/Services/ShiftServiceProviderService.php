@@ -4,12 +4,9 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\Shift\Events\ShiftAssigned;
-use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftWorker;
-use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
@@ -17,8 +14,6 @@ use Artwork\Modules\Shift\Repositories\ShiftWorkerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
 use Artwork\Modules\Shift\Services\ShiftWorkerService;
-use Artwork\Modules\User\Models\User;
-use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 
 readonly class ShiftServiceProviderService
@@ -144,35 +139,6 @@ readonly class ShiftServiceProviderService
     }
 
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
-    private function removeServiceProviderFromAllShiftsWithSameUuid(
-        Shift $shift,
-        ServiceProvider $serviceProvider,
-        ShiftCountService $shiftCountService,
-        ChangeService $changeService
-    ): void {
-        foreach ($this->shiftRepository->getShiftsByUuid($shift->shift_uuid) as $shiftByUuid) {
-            if ($shiftByUuid->id === $shift->id) {
-                continue;
-            }
-
-            $shiftServiceProviderPivotByUuid = $this->shiftRepository->getShiftWorkerPivotById(
-                $shiftByUuid,
-                ServiceProvider::class,
-                $serviceProvider->id
-            );
-
-            if ($shiftServiceProviderPivotByUuid instanceof ShiftWorker) {
-                $this->shiftWorkerService->removeFromShift(
-                    $shiftServiceProviderPivotByUuid,
-                    true,
-                    null, // notificationService
-                    null, // vacationConflictService
-                    null, // availabilityConflictService
-                    $changeService
-                );
-            }
-        }
-    }
 
     public function getShiftByUserPivotId(int $usersPivot): Shift
     {
@@ -308,54 +274,5 @@ readonly class ShiftServiceProviderService
             ServiceProvider::class,
             $shiftWorker
         );
-    }
-
-
-    private function logManualRemovalActivity(Shift $shift, ShiftServiceProvider $shiftServiceProvider): void
-    {
-        if (! $shift->is_committed && ! $shift->in_workflow) {
-            return;
-        }
-
-        activity('shift')
-            ->performedOn($shift)
-            ->causedBy($this->auth->user())
-            ->event('removed')
-            ->tap(function ($activity) use ($shift, $shiftServiceProvider): void {
-                $activity->properties = $activity->properties->merge([
-                    'translation_key' => '{0} removed from shift as {1} for {2} ({3})',
-                    'translation_key_placeholder_values' => [
-                        $shiftServiceProvider->serviceProvider->name,
-                        $shiftServiceProvider->shiftQualification->name,
-                        $shift->craft->name,
-                        $shiftServiceProvider->craft_abbreviation,
-                    ],
-                ]);
-            })
-            ->log('Service provider removed from shift');
-    }
-
-    private function logManualAssignmentActivity(Shift $shift, ShiftServiceProvider $shiftServiceProvider): void
-    {
-        if (! $shift->is_committed && ! $shift->in_workflow) {
-            return;
-        }
-
-        activity('shift')
-            ->performedOn($shift)
-            ->causedBy($this->auth->user())
-            ->event('assigned')
-            ->tap(function ($activity) use ($shift, $shiftServiceProvider): void {
-                $activity->properties = $activity->properties->merge([
-                    'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
-                    'translation_key_placeholder_values' => [
-                        $shiftServiceProvider->serviceProvider->name,
-                        $shiftServiceProvider->shiftQualification->name,
-                        $shift->craft->name,
-                        $shiftServiceProvider->craft_abbreviation,
-                    ],
-                ]);
-            })
-            ->log('Service provider assigned to shift');
     }
 }

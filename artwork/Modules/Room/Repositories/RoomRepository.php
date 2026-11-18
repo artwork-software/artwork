@@ -7,7 +7,6 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Room\Models\Room;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as BaseBuilder;
@@ -61,19 +60,6 @@ class RoomRepository extends BaseRepository
             ->get();
     }
 
-
-    public function getUserWhereIsAdmin(int|Room $room, int $userId): Collection
-    {
-        if (!$room instanceof Room) {
-            $room = $this->findOrFail($room);
-        }
-
-        return $room
-            ->users()
-            ->wherePivot('is_admin', true)
-            ->wherePivot('user_id', '=', $userId)
-            ->get();
-    }
 
     public function getRoomCategoryIds(int|Room $room): SupportCollection
     {

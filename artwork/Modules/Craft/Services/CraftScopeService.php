@@ -49,31 +49,6 @@ class CraftScopeService
     }
 
     /**
-     * Angefragte Gewerks-IDs auf die planbare Menge zuschneiden. Leere Anfrage = alle planbaren
-     * Gewerke (Admin: null = ohne Filter). Fremde IDs werden stillschweigend entfernt.
-     *
-     * @param array<int, int>|null $requested
-     * @return array<int, int>|null
-     */
-    public function restrictToPlannable(User $user, ?array $requested): ?array
-    {
-        $allowed = $this->plannableCraftIdsFor($user);
-        $requested = $requested === null || $requested === []
-            ? null
-            : array_values(array_unique(array_map('intval', $requested)));
-
-        if ($allowed === null) {
-            return $requested;
-        }
-
-        if ($requested === null) {
-            return $allowed;
-        }
-
-        return array_values(array_intersect($requested, $allowed));
-    }
-
-    /**
      * IDs aus $requested, die die Person NICHT planen darf (Admin: immer leer).
      *
      * @param array<int, int> $requested

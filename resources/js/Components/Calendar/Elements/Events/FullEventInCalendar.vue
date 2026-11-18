@@ -1200,6 +1200,7 @@ const showAdmissionTime = computed(() =>
 
 // Verkauft/Plätze aus Artwork-Tickets; BaseCalendar stellt sie bereit, andere Kalender nicht.
 const calendarTicketSales = inject('calendarTicketSales', null);
+const calendarRefetchLoadedMonths = inject('calendarRefetchLoadedMonths', null);
 const ticketSales = computed(() =>
     isStartDayCell.value ? calendarTicketSales?.get(props.event.id) ?? null : null
 );
@@ -1582,8 +1583,17 @@ const deleteSeriesEvents = () => {
 };
 
 const confirmDeleteSeriesEvents = () => {
-    // JSON-Endpunkt (kein Inertia-Response); der Kalender lädt über den OccupancyUpdated-Broadcast nach
+    // JSON-Endpunkt (kein Inertia-Response). Für Serien gibt es kein Live-Update je Termin, daher
+    // lädt der Kalender selbst nach; ohne Kalender-Kontext (Schichtplan lädt per axios) die Seite neu laden.
     axios.delete(route("events.series.delete", props.event.id), { data: { scope: "all" } })
+        .then(() => {
+            if (typeof calendarRefetchLoadedMonths === "function") {
+                calendarRefetchLoadedMonths();
+            } else {
+                window.location.reload();
+            }
+        })
+        .catch(() => {})
         .finally(() => {
             showDeleteSeriesModal.value = false;
         });

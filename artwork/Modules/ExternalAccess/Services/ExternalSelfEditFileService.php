@@ -199,16 +199,6 @@ class ExternalSelfEditFileService
         $this->propertyFileService->delete($storedValue);
     }
 
-    /**
-     * Anzeigename der gespeicherten Datei am Kontakt (intern gibt es nur den gespeicherten Pfad).
-     */
-    public function storedFileNameOf(mixed $storedValue): ?string
-    {
-        $path = $this->propertyFileService->normalisePath($storedValue);
-
-        return $path !== null ? basename($path) : null;
-    }
-
     public function normalisePendingPath(mixed $raw): ?string
     {
         if (!is_string($raw) || preg_match(self::PENDING_PATH_PATTERN, $raw) !== 1) {

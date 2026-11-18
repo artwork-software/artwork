@@ -190,8 +190,4 @@ readonly class BudgetManagementAccountService
     }
 
     // restore function
-    public function restoreBudgetManagementAccount(BudgetManagementAccount $budgetManagementAccount): void
-    {
-        $this->budgetManagementAccountRepository->restore($budgetManagementAccount);
-    }
 }

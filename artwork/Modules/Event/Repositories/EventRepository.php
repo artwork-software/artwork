@@ -7,15 +7,12 @@ use Artwork\Core\Database\Models\CanSubstituteBaseModel;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
-use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection as SupportCollection;
@@ -38,159 +35,9 @@ class EventRepository extends BaseRepository
         return $this->event->newModelQuery();
     }
 
-    public function getEventsWhereUserHasShiftsInPeriod(int $userId, CarbonPeriod $carbonPeriod): Collection
-    {
-        return Event::query()
-            ->with(
-                [
-                    'room',
-                    'shifts' => function (HasMany $query) use ($userId): void {
-                        $query->whereRelation('users', 'user_id', $userId);
-                        $query->orderBy('start_date');
-                        $query->orderBy('start');
-                        $query->orderBy('end_date');
-                        $query->orderBy('end');
-                    },
-                    'shifts.craft',
-                    'shifts.users',
-                    'shifts.users.dayServices',
-                    'shifts.freelancer',
-                    'shifts.serviceProvider',
-                    'shifts.shiftsQualifications',
-                ]
-            )
-            ->whereHas(
-                'shifts.users',
-                function (Builder $builder) use ($userId): void {
-                    $builder->where('user_id', $userId);
-                }
-            )
-            ->whereBetween('start_time', [$carbonPeriod->start, $carbonPeriod->end])
-            ->whereBetween('end_time', [$carbonPeriod->start, $carbonPeriod->end])
-            ->orderBy('start_time')
-            ->orderBy('end_time')
-            ->get();
-    }
-
     public function getAll(): Collection
     {
         return Event::all();
-    }
-
-    public function getEventsWhereFreelancerHasShiftsInPeriod(
-        int $freelancerId,
-        CarbonPeriod $carbonPeriod
-    ): Collection {
-        return Event::query()
-            ->with(
-                [
-                    'room',
-                    'shifts' => function (HasMany $query) use ($freelancerId): void {
-                        $query->whereRelation('freelancer', 'freelancer_id', $freelancerId);
-                        $query->orderBy('start_date');
-                        $query->orderBy('start');
-                        $query->orderBy('end_date');
-                        $query->orderBy('end');
-                    },
-                    'shifts.craft',
-                    'shifts.users',
-                    'shifts.users.dayServices',
-                    'shifts.freelancer',
-                    'shifts.serviceProvider',
-                    'shifts.shiftsQualifications',
-                ]
-            )
-            ->whereHas(
-                'shifts.freelancer',
-                function (Builder $builder) use ($freelancerId): void {
-                    $builder->where('freelancer_id', $freelancerId);
-                }
-            )
-            ->whereBetween('start_time', $carbonPeriod)
-            ->whereBetween('end_time', $carbonPeriod)
-            ->orderBy('start_time')
-            ->orderBy('end_time')
-            ->get();
-    }
-
-    public function getEventsWhereServiceProviderHasShiftsInPeriod(
-        int $serviceProviderId,
-        CarbonPeriod $carbonPeriod
-    ): Collection {
-        return Event::query()
-            ->with(
-                [
-                    'room',
-                    'shifts' => function (HasMany $query) use ($serviceProviderId): void {
-                        $query->whereRelation(
-                            'serviceProvider',
-                            'service_provider_id',
-                            $serviceProviderId
-                        );
-                        $query->orderBy('start_date');
-                        $query->orderBy('start');
-                        $query->orderBy('end_date');
-                        $query->orderBy('end');
-                    },
-                    'shifts.craft',
-                    'shifts.users',
-                    'shifts.users.dayServices',
-                    'shifts.freelancer',
-                    'shifts.serviceProvider',
-                    'shifts.shiftsQualifications',
-                ]
-            )
-            ->whereHas(
-                'shifts.serviceProvider',
-                function (Builder $builder) use ($serviceProviderId): void {
-                    $builder->where('service_provider_id', $serviceProviderId);
-                }
-            )
-            ->whereBetween('start_time', $carbonPeriod)
-            ->whereBetween('end_time', $carbonPeriod)
-            ->orderBy('start_time')
-            ->orderBy('end_time')
-            ->get();
-    }
-
-    public function getEventsWhereHasShiftsStartAndEndTimeOverlap(Carbon $startDate, Carbon $endDate): Collection
-    {
-        return $this->getEventsWhereHasShiftsStartAndEndTimeOverlapQuery($startDate, $endDate)->get();
-    }
-
-    public function getEventsWhereHasShiftsStartAndEndTimeOverlapWithUsers(
-        Carbon $startDate,
-        Carbon $endDate
-    ): Collection {
-        $query = $this->getEventsWhereHasShiftsStartAndEndTimeOverlapQuery($startDate, $endDate);
-        $query->with(['shifts.users',
-            'project',
-            'project.managerUsers',
-            'project.status',
-            'shifts.shiftsQualifications'
-        ]);
-        $query->without([
-            'shifts.users.calendar_settings',
-            'shifts.calendarAbo',
-            'shifts.users.shiftCalendarAbo'
-        ]);
-        return $query->get();
-    }
-
-    private function getEventsWhereHasShiftsStartAndEndTimeOverlapQuery(Carbon $startDate, Carbon $endDate): Builder
-    {
-        $query = Event::query();
-        $query->with(['shifts', 'event_type', 'room'])
-//            ->whereHas(
-//                'shifts',
-//                function (Builder $builder): void {
-//                    $builder->whereNotNull('shifts.id')->without('crafts');
-//                }
-//            )
-            ->startAndEndTimeOverlap($startDate, $endDate)
-            ->without(['series']);
-
-        return $query;
     }
 
     public function findById(int $id): ?Event

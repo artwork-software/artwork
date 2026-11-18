@@ -2,6 +2,16 @@
 
 namespace Artwork\Modules\AiAssistant\Services;
 
+use Artwork\Modules\Event\Services\EventCommentService;
+use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\AiAssistant\Support\AiShiftPlanningAccess;
+use Artwork\Modules\AiAssistant\Support\WebGuardScope;
+use Artwork\Modules\Craft\Services\CraftScopeService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Illuminate\Support\Facades\Gate;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Artwork\Modules\AiAssistant\Listeners\AttachActivityOrigin;
 use Artwork\Modules\AiAssistant\Models\AiActionBatch;
 use Artwork\Modules\AiAssistant\Models\AiActionBatchItem;
@@ -136,6 +146,15 @@ class AiActionBatchService
             $conflicts !== [],
             Response::HTTP_CONFLICT,
             'Seit der Ausfuehrung wurden Objekte veraendert: ' . implode(', ', $conflicts)
+        );
+
+        // Die Ruecknahme ist selbst eine Aenderung: die Person braucht dafuer heute dieselben Rechte wie fuer
+        // die Gegenaktion in der Oberflaeche (inzwischen entzogene Rechte gelten auch hier).
+        $forbidden = WebGuardScope::run(fn (): array => $this->itemsNotRevertableBy($user, $batch));
+        abort_if(
+            $forbidden !== [],
+            Response::HTTP_FORBIDDEN,
+            'Fuer die Ruecknahme fehlen Rechte: ' . implode(', ', $forbidden)
         );
 
         /** @var list<Event> $reverted */
@@ -383,8 +402,122 @@ class AiActionBatchService
         $model->forceFill($before)->save();
     }
 
+    /**
+     * Eintraege, deren Gegenaktion die Person in der Oberflaeche nicht ausfuehren duerfte: angelegter Termin
+     * -> loeschen, geaenderter -> bearbeiten, geloeschter -> aus dem Papierkorb holen (Papierkorb-Recht und
+     * Loeschrecht); Schichten und Zuweisungen -> Schichten planen im Gewerk; Abwesenheiten -> verwalten;
+     * Aufgaben/Checklisten -> Checkliste bearbeiten bzw. loeschen.
+     *
+     * @return list<string>
+     */
+    private function itemsNotRevertableBy(User $user, AiActionBatch $batch): array
+    {
+        $forbidden = [];
+
+        foreach ($batch->items as $item) {
+            if (!$this->mayRevertItem($user, $item)) {
+                $forbidden[] = class_basename($item->model_type) . ' #' . $item->model_id;
+            }
+        }
+
+        return $forbidden;
+    }
+
+    private function mayRevertItem(User $user, AiActionBatchItem $item): bool
+    {
+        $gate = Gate::forUser($user);
+
+        if ($item->model_type === ShiftWorker::class) {
+            $shiftId = $item->action === AiActionBatchItem::ACTION_DELETE
+                ? (int) (($item->before_state ?? [])['shift_id'] ?? 0)
+                : (int) (ShiftWorker::query()->find($item->model_id)?->shift_id ?? 0);
+
+            return $this->mayPlanShiftsOf($user, Shift::withTrashed()->find($shiftId));
+        }
+
+        $model = $this->resolve($item);
+        if ($model === null) {
+            // Nichts mehr da, nichts zurueckzunehmen (revertItem ueberspringt es ebenso)
+            return true;
+        }
+
+        return match (true) {
+            $model instanceof Event => match ($item->action) {
+                AiActionBatchItem::ACTION_CREATE => $gate->allows('delete', $model),
+                AiActionBatchItem::ACTION_UPDATE => $gate->allows('update', $model),
+                AiActionBatchItem::ACTION_DELETE => $gate->allows('delete', $model)
+                    && $gate->allows(PermissionEnum::TRASH_ACCESS->value),
+                default => true,
+            },
+            // Vom Termin mitverschobene Schichten gehoeren zur Termin-Aenderung (wie in der Terminliste)
+            $model instanceof Shift => $item->action === AiActionBatchItem::ACTION_UPDATE
+                ? $this->mayMoveShiftWithEvent($user, $model)
+                : $this->mayPlanShiftsOf($user, $model),
+            $model instanceof Vacation => $this->mayManageAbsenceOf($user, $model),
+            $model instanceof Task => $model->checklist !== null && $gate->allows('update', $model->checklist),
+            $model instanceof Checklist => $item->action === AiActionBatchItem::ACTION_CREATE
+                ? $gate->allows('delete', $model)
+                : $gate->allows('update', $model),
+            default => false,
+        };
+    }
+
+    private function mayMoveShiftWithEvent(User $user, Shift $shift): bool
+    {
+        $event = $shift->event_id ? Event::withTrashed()->find($shift->event_id) : null;
+
+        return ($event !== null && Gate::forUser($user)->allows('update', $event))
+            || $this->mayPlanShiftsOf($user, $shift);
+    }
+
+    private function mayManageAbsenceOf(User $user, Vacation $vacation): bool
+    {
+        $class = (string) $vacation->vacationer_type;
+        $person = in_array($class, [User::class, Freelancer::class, ServiceProvider::class], true)
+            ? $class::query()->find((int) $vacation->vacationer_id)
+            : null;
+
+        return $person !== null && AiAbsenceWriteService::mayManage($user, $person);
+    }
+
+    private function mayPlanShiftsOf(User $user, ?Shift $shift): bool
+    {
+        if ($shift === null) {
+            return true;
+        }
+        if (!AiShiftPlanningAccess::mayPlanShifts($user)) {
+            return false;
+        }
+
+        try {
+            app(CraftScopeService::class)->assertCanPlanShifts($user, [$shift]);
+        } catch (HttpExceptionInterface) {
+            return false;
+        }
+
+        return true;
+    }
+
     private function undelete(Model $model): void
     {
+        // Termine wie „aus dem Papierkorb wiederherstellen“: mit Schichten, Abläufen, Kommentaren, wieder
+        // geöffneten Raumanfragen und Live-Update – restore() allein holte nur die Terminzeile zurück
+        if ($model instanceof Event) {
+            if ($model->trashed()) {
+                app(EventService::class)->restore(
+                    $model,
+                    app(ShiftsQualificationsService::class),
+                    app(ChangeService::class),
+                    app(EventCommentService::class),
+                    app(TimelineService::class),
+                    $this->shiftService,
+                    app(SubEventService::class),
+                );
+            }
+
+            return;
+        }
+
         if (in_array(SoftDeletes::class, class_uses_recursive($model), true)) {
             /** @var Model&\Illuminate\Database\Eloquent\SoftDeletes $model */
             $model->restore();

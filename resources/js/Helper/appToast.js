@@ -85,6 +85,19 @@ export function failedRequestMessage(error, fallback = 'Failed to save') {
 }
 
 /**
+ * Inertia-onError ohne Feldanzeige: erste Validierungsmeldung als Fehler-Toast (sonst tat Speichern
+ * bei einem Validierungsfehler sichtbar nichts).
+ *
+ * @param {Record<string, string|string[]>|null|undefined} errors
+ */
+export function toastValidationErrors(errors, fallback = 'Failed to save') {
+    const first = errors && typeof errors === 'object'
+        ? Object.values(errors).flat().find(Boolean)
+        : null
+    showAppToast('error', first || t(fallback))
+}
+
+/**
  * Für axios: nur schreibende Requests melden – Lesezugriffe im Hintergrund (Tooltips,
  * Nachladen) haben eigene Zustände und würden sonst zu viele Meldungen erzeugen.
  * Requests mit `skipErrorToast: true` in der Config zeigen ihren Fehler selbst an;

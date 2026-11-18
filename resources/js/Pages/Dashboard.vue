@@ -416,7 +416,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, onBeforeUnmount, defineOptions, defineAsyncComponent, ref, watch} from 'vue'
+import {computed, defineOptions, defineAsyncComponent, ref, watch} from 'vue'
 import axios from 'axios'
 import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -578,22 +578,6 @@ function findEventTypeById(eventTypeId?: number) {
     return props.eventTypes.find(e => e.id === eventTypeId)
 }
 
-// Echo live updates
-let echoChannel: any = null
-onMounted(() => {
-    // @ts-ignore
-    echoChannel = Echo?.private?.('events')
-    echoChannel?.listen?.('OccupancyUpdated', () => {
-        router.reload({ only: ['rooms', 'calendar', 'days'] })
-    })
-})
-onBeforeUnmount(() => {
-    try {
-        echoChannel?.stopListening?.('OccupancyUpdated')
-        // @ts-ignore
-        Echo?.leave?.('events')
-    } catch {}
-})
 
 const openCalendarWithEventId = (eventForCalendar) => {
 

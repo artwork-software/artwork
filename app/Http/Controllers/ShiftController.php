@@ -25,11 +25,8 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Events\AssignUserToShift;
 use Artwork\Modules\Shift\Events\CreatedShiftInShiftPlan;
 use Artwork\Modules\Shift\Events\DestroyShift;
-use Artwork\Modules\Shift\Rules\IsoWeekExists;
 use Artwork\Modules\Shift\Events\RemoveEntityFormShiftEvent;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
-use Artwork\Modules\Shift\Http\Requests\CopyShiftWeekRequest;
-use Artwork\Modules\Shift\Services\ShiftWeekCopyService;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\LegalBreakCalculator;
@@ -373,7 +370,6 @@ class ShiftController extends Controller
                         $notificationUsers[] = $user->id;
                     }
 
-
                     $vacations = $user
                         ->vacations()
                         ->get();
@@ -649,147 +645,6 @@ class ShiftController extends Controller
 
         // Offene Wochen-/Tagesansichten und Kalender sahen die Duplikate sonst erst nach dem Neuladen
         CreatedShiftsPublisher::publish($duplicatedShifts, false);
-    }
-
-    /**
-     * Vorschau für „Woche kopieren": Anzahl der Quellschichten der KW (optional nach Gewerken/Räumen).
-     */
-    public function copyWeekPreview(
-        Request $request,
-        ShiftWeekCopyService $shiftWeekCopyService,
-        CraftScopeService $craftScopeService
-    ): JsonResponse {
-        $validated = $request->validate([
-            // KW 53 gibt es nur in 53-Wochen-Jahren — sonst würde Carbon still in KW 1 des Folgejahres rollen
-            'source_week' => ['required', 'integer', 'min:1', 'max:53', new IsoWeekExists('source_year')],
-            'source_year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'craft_ids' => ['nullable', 'array', 'max:100'],
-            'craft_ids.*' => ['integer', 'exists:crafts,id'],
-            'room_ids' => ['nullable', 'array', 'max:100'],
-            'room_ids.*' => ['integer', 'exists:rooms,id'],
-        ]);
-
-        // Gewerke auf die planbare Menge der Person zuschneiden (leer = genau diese Menge; Admin = alle)
-        $craftIds = $craftScopeService->restrictToPlannable(
-            $request->user(),
-            array_values(array_map('intval', $validated['craft_ids'] ?? []))
-        );
-        $roomIds = array_values(array_map('intval', $validated['room_ids'] ?? []));
-        [$monday, $sunday] = ShiftWeekCopyService::weekBounds(
-            (int) $validated['source_week'],
-            (int) $validated['source_year']
-        );
-
-        $count = $shiftWeekCopyService->sourceShifts(
-            (int) $validated['source_week'],
-            (int) $validated['source_year'],
-            $craftIds,
-            $roomIds === [] ? null : $roomIds
-        )->count();
-
-        return response()->json([
-            'count' => $count,
-            'week' => (int) $validated['source_week'],
-            'year' => (int) $validated['source_year'],
-            'start' => $monday->format('d.m.Y'),
-            'end' => $sunday->format('d.m.Y'),
-            // Deckel Quellschichten × Zielwochen je Aufruf (Dialog sperrt den Button vorab)
-            'max_operations' => ShiftWeekCopyService::MAX_COPY_OPERATIONS,
-        ]);
-    }
-
-    /**
-     * „Woche kopieren": Schichten der Quell-KW in 1–8 Ziel-KWs neu anlegen (ohne Personen,
-     * nicht festgeschrieben; belegte Zielzeiten werden übersprungen). Je Zielwoche eine Transaktion.
-     */
-    public function copyWeek(
-        CopyShiftWeekRequest $request,
-        ShiftWeekCopyService $shiftWeekCopyService,
-        CraftScopeService $craftScopeService
-    ): JsonResponse {
-        $sourceWeek = (int) $request->input('source_week');
-        $sourceYear = (int) $request->input('source_year');
-
-        // Nur planbare Gewerke der Person kopieren (Admin: alle); fremde IDs fallen stillschweigend weg
-        $sourceShifts = $shiftWeekCopyService->sourceShifts(
-            $sourceWeek,
-            $sourceYear,
-            $craftScopeService->restrictToPlannable($request->user(), $request->craftIds()),
-            $request->roomIds()
-        );
-
-        if ($sourceShifts->isEmpty()) {
-            throw ValidationException::withMessages([
-                'source_week' => __('The source week contains no shifts.'),
-            ]);
-        }
-
-        // Deckel je Aufruf: Quellschichten × Zielwochen (je Kopie mehrere Inserts + Activity-Log)
-        $targets = $request->targets();
-        $operations = $sourceShifts->count() * count($targets);
-        if ($operations > ShiftWeekCopyService::MAX_COPY_OPERATIONS) {
-            throw ValidationException::withMessages([
-                'targets' => __(
-                    'Too many shifts to copy (:count, maximum :max). Please select fewer crafts or target weeks.',
-                    ['count' => $operations, 'max' => ShiftWeekCopyService::MAX_COPY_OPERATIONS]
-                ),
-            ]);
-        }
-
-        $results = [];
-        $createdShiftIds = [];
-        foreach ($targets as $target) {
-            $result = $shiftWeekCopyService->copyToWeek(
-                $sourceShifts,
-                $sourceWeek,
-                $sourceYear,
-                $target['week'],
-                $target['year']
-            );
-            $results[] = $result;
-            $createdShiftIds = array_merge($createdShiftIds, $result['shift_ids']);
-        }
-
-        // Broadcast wie bei der Mehrfachanlage: der Schichtplan-Listener fügt die neuen
-        // Schichten in die Zellen ein und bumpt die Raum-Version (sonst bleiben sie unsichtbar).
-        if ($createdShiftIds !== []) {
-            // Blockweise: bis zu 500 Schichten in einer Nachricht sprengten die Reverb-Nachrichtengröße
-            foreach (array_chunk($createdShiftIds, 50) as $shiftIdChunk) {
-                CreatedShiftsPublisher::publish(Shift::query()->whereIn('id', $shiftIdChunk)->get(), false);
-            }
-        }
-
-        $summaryLines = array_map(
-            static fn (array $result): string => __('CW :week: :created shifts created, :skipped skipped', [
-                'week' => $result['week'],
-                'created' => $result['created'],
-                'skipped' => $result['skipped'],
-            ]),
-            $results
-        );
-        $summary = implode(' · ', $summaryLines);
-
-        // Flash für den globalen Toast nach dem anschließenden Plan-Reload
-        $request->session()->flash('success', $summary);
-
-        return response()->json([
-            'summary' => $summary,
-            'source' => [
-                'week' => $sourceWeek,
-                'year' => $sourceYear,
-                'count' => $sourceShifts->count(),
-            ],
-            'targets' => array_map(
-                static fn (array $result): array => [
-                    'week' => $result['week'],
-                    'year' => $result['year'],
-                    'created' => $result['created'],
-                    'skipped' => $result['skipped'],
-                    'skipped_shifts' => $result['skipped_shifts'],
-                ],
-                $results
-            ),
-        ]);
     }
 
     //phpcs:ignore
@@ -1931,7 +1786,6 @@ class ShiftController extends Controller
         }
     }
 
-
     /**
      * Check for collisions in shifts for given people and time range.
      *
@@ -2123,7 +1977,6 @@ class ShiftController extends Controller
             return response()->json(['error' => 'An unexpected error occurred'], 500);
         }
     }
-
 
     public function storeShiftMultiAdd(
         Request $request,

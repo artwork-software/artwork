@@ -2084,13 +2084,6 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::post('/bulk-duplicate', [ShiftController::class, 'bulkDuplicate'])
             ->name('shifts.multi.duplicate')
             ->can('can plan shifts');
-        // „Woche kopieren": Schichten einer KW in bis zu 8 Ziel-KWs (ohne Personen, nicht festgeschrieben)
-        Route::get('/copy-week/preview', [ShiftController::class, 'copyWeekPreview'])
-            ->name('shifts.copy-week.preview')
-            ->can('can plan shifts');
-        Route::post('/copy-week', [ShiftController::class, 'copyWeek'])
-            ->name('shifts.copy-week')
-            ->can('can plan shifts');
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');
         Route::delete('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'destroy'])

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\AiAssistant\Services;
 
+use Artwork\Modules\Event\Services\EventChangeApprovalService;
 use Artwork\Modules\Event\Services\EventRoomBookingService;
 use Artwork\Modules\AiAssistant\Contracts\ActionGuard;
 use Artwork\Modules\AiAssistant\Contracts\BatchRecorder;
@@ -59,6 +60,7 @@ class AiEventWriteService
         private readonly BatchRecorder $batchRecorder,
         private readonly AiBatchNotifier $notifier,
         private readonly EventRoomBookingService $roomBookingService,
+        private readonly EventChangeApprovalService $changeApprovalService,
     ) {
     }
 
@@ -156,9 +158,14 @@ class AiEventWriteService
             $user,
             $intent,
             self::TOOL_UPDATE,
-            function () use ($event, $changes, $asRoomRequest): array {
+            function () use ($event, $changes, $asRoomRequest, $user): array {
                 $wasOpenRequest = (bool) $event->occupancy_option;
+                $approvalBefore = $this->changeApprovalService->snapshot($event);
                 $this->eventService->updateBulkEvent(collect($this->updatePayload($event, $changes)), $event);
+                // Wie in der Oberfläche: Zeitraum über die bestätigte Belegung hinaus wird zur Raumanfrage
+                if ($this->changeApprovalService->applyAfterChange($user, $event, $approvalBefore)) {
+                    $asRoomRequest = true;
+                }
                 if ($asRoomRequest) {
                     $this->roomBookingService->turnIntoRoomRequests(
                         [(int) $event->id],
@@ -257,7 +264,7 @@ class AiEventWriteService
             $user,
             $intent,
             self::TOOL_UPDATE_BATCH,
-            function () use ($events, $changes, $asRoomRequest): array {
+            function () use ($events, $changes, $asRoomRequest, $user): array {
                 $updated = [];
                 $newRoomRequestIds = [];
                 $alreadyOpenIds = [];
@@ -267,11 +274,17 @@ class AiEventWriteService
                         if ($event->occupancy_option) {
                             $alreadyOpenIds[] = (int) $event->id;
                         }
+                        $approvalBefore = $this->changeApprovalService->snapshot($event);
                         $this->eventService->updateBulkEvent(
                             collect($this->updatePayload($event, $changes[$event->id])),
                             $event
                         );
-                        if ($asRoomRequest[$event->id]) {
+                        $changeBecameRequest = $this->changeApprovalService->applyAfterChange(
+                            $user,
+                            $event,
+                            $approvalBefore
+                        );
+                        if ($asRoomRequest[$event->id] || $changeBecameRequest) {
                             $newRoomRequestIds[] = (int) $event->id;
                         }
                     }

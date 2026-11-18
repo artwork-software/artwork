@@ -17,6 +17,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -65,6 +66,7 @@ class SeriesEventsService
         private readonly EventService $eventService,
         private readonly WorkingHourCacheService $workingHourCacheService,
         private readonly RoomRequestNotificationService $roomRequestNotificationService,
+        private readonly EventChangeApprovalService $changeApprovalService,
     ) {
     }
 
@@ -437,9 +439,8 @@ class SeriesEventsService
      *
      * @param array<string, mixed> $changedFields  Nur die tatsächlich geänderten Felder (Dirty-Subset)
      * @param array<int>|null $propertyIds  null = Eigenschaften nicht anfassen
-     * @param bool $roomChangeRequiresRequest  Der Raumwechsel des bearbeiteten Termins wurde mangels Buchungsrecht
-     *                                         zur Raumanfrage (EventController::updateEvent) – dieselbe Entscheidung
-     *                                         gilt für jedes mitverschobene Geschwister
+     *                                         Zeit- und Raumänderungen ohne Direktbuchrecht prüft je Geschwister
+     *                                         EventChangeApprovalService (wie beim bearbeiteten Termin)
      * @param array<int, int>|null $deferredRoomRequestEventIds  Übergeben (Array): Raumanfrage-Benachrichtigungen
      *                                         nicht sofort senden, sondern die Termin-IDs hier sammeln – der Aufrufer
      *                                         benachrichtigt erst nach einer evtl. folgenden Definitionsänderung,
@@ -454,7 +455,6 @@ class SeriesEventsService
         int $deltaStartMinutes,
         int $deltaEndMinutes,
         ?array $propertyIds,
-        bool $roomChangeRequiresRequest = false,
         ?array &$deferredRoomRequestEventIds = null
     ): int {
         if ($scope === self::SCOPE_SINGLE || !$event->series_id) {
@@ -470,19 +470,14 @@ class SeriesEventsService
         $siblings = $this->siblingsQuery($event, $scope, $cutoff)->orderBy('start_time')->get();
         $updated = 0;
 
+        $actingUser = Auth::user();
         /** @var Event $sibling */
         foreach ($siblings as $sibling) {
+            $siblingBefore = $this->changeApprovalService->snapshot($sibling);
             $sibling->fill($fields);
 
             // Nur Geschwister, deren Raum sich tatsächlich ändert (abweichende Termine können schon dort liegen)
             $siblingRoomChanged = $sibling->isDirty('room_id') && $sibling->room_id !== null;
-            if ($siblingRoomChanged && $roomChangeRequiresRequest) {
-                $sibling->fill([
-                    'occupancy_option' => true,
-                    'declined_room_id' => null,
-                    'accepted' => false,
-                ]);
-            }
 
             if ($hasDelta && !$sibling->is_series_exception) {
                 $oldStart = Carbon::parse($sibling->start_time);
@@ -502,11 +497,19 @@ class SeriesEventsService
             if ($propertyIds !== null) {
                 $sibling->eventProperties()->sync($propertyIds);
             }
+            // Wie beim bearbeiteten Termin: ohne Direktbuchrecht wird ein Raumwechsel oder ein Zeitraum über die
+            // bestätigte Belegung hinaus zur Raumanfrage
+            $siblingBecameRequest = $this->changeApprovalService->evaluate(
+                $actingUser instanceof User ? $actingUser : null,
+                $sibling,
+                $siblingBefore
+            );
             $this->eventService->save($sibling);
 
             // Wie beim Einzeltermin: Raumadmins des neuen Raums erhalten die Anfrage, die des alten Raums
             // verlieren ihre offene Anfrage. Geplante Termine fragen erst beim Umstellen an.
-            if ($siblingRoomChanged && $sibling->occupancy_option && !$sibling->is_planning) {
+            $siblingRequestChanged = $siblingBecameRequest || $siblingRoomChanged;
+            if ($siblingRequestChanged && $sibling->occupancy_option && !$sibling->is_planning) {
                 if ($deferredRoomRequestEventIds !== null) {
                     $deferredRoomRequestEventIds[] = (int) $sibling->id;
                 } else {

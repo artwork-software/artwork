@@ -1653,6 +1653,7 @@
     "Room confirmed": "Room confirmed",
     "Room changed": "Room changed",
     "Room declined": "Room declined",
+    "Room change declined": "Room change declined, back to the confirmed booking",
     "Date/time changed": "Date/time changed",
     "Appointment type changed": "Appointment type changed",
     "Appointment name added": "Appointment name added",
@@ -9979,5 +9980,11 @@
     "Check whether you mean one of them. You can still create it.": "Check whether you mean one of them. You can still create it.",
     "Click again to create it anyway.": "Click again to create it anyway.",
     "Rename file": "Rename file",
-    "Please enter a valid file name.": "Please enter a valid file name."
+    "Please enter a valid file name.": "Please enter a valid file name.",
+    "Change sent as room request": "Change sent as room request",
+    "Request change": "Request change",
+    "The change goes beyond the confirmed booking and was sent as a room request. If it is declined, the event keeps its confirmed booking. You will be notified after it has been reviewed.": "The change goes beyond the confirmed booking and was sent as a room request. If it is declined, the event keeps its confirmed booking. You will be notified after it has been reviewed.",
+    "This change goes beyond the confirmed booking and has to be requested again.": "This change goes beyond the confirmed booking and has to be requested again.",
+    "This event is still being saved. Please wait a moment and reload the calendar.": "This event is still being saved. Please wait a moment and reload the calendar.",
+    "Included for room admins": "Included for room admins"
 }

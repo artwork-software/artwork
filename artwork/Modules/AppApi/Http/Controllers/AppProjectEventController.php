@@ -7,6 +7,7 @@ use Artwork\Modules\AppApi\Http\Requests\AppEventRequest;
 use Artwork\Modules\AppApi\Services\AppSystemComponentService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
+use Artwork\Modules\Event\Services\EventChangeApprovalService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomRequestNotificationService;
@@ -21,6 +22,7 @@ class AppProjectEventController extends Controller
         private readonly AppSystemComponentService $systemComponentService,
         private readonly RoomRequestNotificationService $roomRequestNotificationService,
         private readonly TicketingLock $ticketingLock,
+        private readonly EventChangeApprovalService $changeApprovalService,
     ) {
     }
 
@@ -80,9 +82,10 @@ class AppProjectEventController extends Controller
     }
 
     /**
-     * Room changes follow the web (EventController::update): without the
-     * right to book the new room directly the event becomes a room request
-     * and the room admins are notified. A pending request whose details
+     * Room and time changes follow the web (EventController::update): without
+     * the right to book the room directly, a room change or a period beyond
+     * the confirmed booking makes the event a room request
+     * (EventChangeApprovalService) and the room admins are notified. A pending request whose details
      * changed refreshes the admins' notification. Moving a date that is on
      * sale needs the ticketing confirmation header (TicketingLock, 422).
      */
@@ -92,19 +95,11 @@ class AppProjectEventController extends Controller
         $this->authorize('view', $event);
         $this->authorize('update', $event);
 
-        $attributes = $this->eventAttributes($request);
-        $roomChangeBecameRequest = $this->roomChangeBecomesRequest($request, $event, $attributes['room_id']);
-        if ($roomChangeBecameRequest) {
-            // One save, so a ticketing lock rejects the whole change
-            $attributes = [
-                ...$attributes,
-                'occupancy_option' => true,
-                'declined_room_id' => null,
-                'accepted' => false,
-            ];
-        }
-
-        $event->update($attributes);
+        $approvalBefore = $this->changeApprovalService->snapshot($event);
+        $event->fill($this->eventAttributes($request));
+        // One save, so a ticketing lock rejects the whole change
+        $this->changeApprovalService->evaluate($request->user(), $event, $approvalBefore);
+        $event->save();
         // The policy loaded the OLD room — the request must reach the new room's admins
         if ($event->wasChanged('room_id')) {
             $event->unsetRelation('room');
@@ -117,23 +112,6 @@ class AppProjectEventController extends Controller
         return response()->json([
             'event' => $this->systemComponentService->eventPayload($request->user(), $event),
         ]);
-    }
-
-    /**
-     * Whether a changed room has to become a room request: the person may
-     * not book the new room directly (EventPolicy::book; always true with
-     * "events are always directly bookable").
-     */
-    private function roomChangeBecomesRequest(Request $request, Event $event, mixed $newRoomId): bool
-    {
-        if ($newRoomId === null || (int) $newRoomId === (int) $event->room_id) {
-            return false;
-        }
-
-        $newRoom = Room::query()->find($newRoomId);
-
-        return $newRoom !== null
-            && $request->user()->cannot('book', [Event::class, $newRoom, false, (bool) $event->is_planning]);
     }
 
     /**

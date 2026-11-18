@@ -66,7 +66,15 @@
                             </div>
                         </div>
                         <BaseCheckbox :id="`dep-${department.id}-admin`" v-model="department.is_admin" :label="$t('Room admin')" />
-                        <BaseCheckbox :id="`dep-${department.id}-request`" v-model="department.can_request" :label="$t('Authorized to request')" />
+                        <!-- Raumadmins dürfen ohnehin anfragen (EventPolicy::book): Haken gesetzt und gesperrt, damit niemand einen Unterschied vermutet -->
+                        <BaseCheckbox
+                            :id="`dep-${department.id}-request`"
+                            :model-value="!!department.is_admin || !!department.can_request"
+                            :disabled="!!department.is_admin"
+                            :label="$t('Authorized to request')"
+                            :description="department.is_admin ? $t('Included for room admins') : undefined"
+                            @update:model-value="(value) => (department.can_request = value)"
+                        />
                         <button type="button" class="rounded-full p-1 text-text-subtle hover:bg-surface-sunken hover:text-danger" @click="removeDepartment(department.id)">
                             <span class="sr-only">{{ $t('Remove team from room access') }}</span>
                             <IconCircleX class="h-5 w-5" />
@@ -84,7 +92,15 @@
                             <span class="truncate font-semibold text-text">{{ user.first_name }} {{ user.last_name }}</span>
                         </div>
                         <BaseCheckbox :id="`user-${user.id}-admin`" v-model="user.is_admin" :label="$t('Room admin')" />
-                        <BaseCheckbox :id="`user-${user.id}-request`" v-model="user.can_request" :label="$t('Authorized to request')" />
+                        <!-- Raumadmins dürfen ohnehin anfragen (EventPolicy::book): Haken gesetzt und gesperrt, damit niemand einen Unterschied vermutet -->
+                        <BaseCheckbox
+                            :id="`user-${user.id}-request`"
+                            :model-value="!!user.is_admin || !!user.can_request"
+                            :disabled="!!user.is_admin"
+                            :label="$t('Authorized to request')"
+                            :description="user.is_admin ? $t('Included for room admins') : undefined"
+                            @update:model-value="(value) => (user.can_request = value)"
+                        />
                         <button type="button" class="rounded-full p-1 text-text-subtle hover:bg-surface-sunken hover:text-danger" @click="removeUser(user.id)">
                             <span class="sr-only">{{ $t('Remove user as room admin') }}</span>
                             <IconCircleX class="h-5 w-5" />

@@ -6,7 +6,13 @@
         @close="handleCloseAttempt"
     >
         <div v-if="requestSubmitted" class="space-y-5 rounded-lg border border-success-border bg-success-surface p-5">
-            <div>
+            <div v-if="submittedRequestKind === 'change'">
+                <h3 class="text-base font-semibold text-success">{{ $t('Change sent as room request') }}</h3>
+                <p class="mt-1 text-sm text-success">
+                    {{ $t('The change goes beyond the confirmed booking and was sent as a room request. If it is declined, the event keeps its confirmed booking. You will be notified after it has been reviewed.') }}
+                </p>
+            </div>
+            <div v-else>
                 <h3 class="text-base font-semibold text-success">{{ $t('Room request submitted') }}</h3>
                 <p class="mt-1 text-sm text-success">
                     {{ $t('The event was created as a room request and is not firmly booked yet. You will be notified after it has been reviewed.') }}
@@ -33,6 +39,15 @@
                         height="5"
                         width="5"
                     />
+                    <template v-if="event?.occupancy_option && requestedBy">
+                        <span class="ml-2">{{ $t('Requested by') }}</span>
+                        <UserPopoverTooltip
+                            :user="requestedBy"
+                            :id="`requestedBy-${requestedBy.id}`"
+                            height="5"
+                            width="5"
+                        />
+                    </template>
                 </div>
             </div>
             <!-- EDIT MODE -->
@@ -669,16 +684,20 @@
                             <span v-else-if="planningWithoutCreateRight" class="text-xs text-secondary">
                                 {{ $t('You lack the permission "Plan directly in the planning calendar" to create planned events in this room.') }}
                             </span>
-                            <BaseUIButton
-                                v-else
-                                type="button"
-                                variant="primary"
-                                hide-icon
-                                :disabled="requestDisabled"
-                                @click="updateOrCreateEvent(true)"
-                            >
-                                {{ $t('Request occupancy') }}
-                            </BaseUIButton>
+                            <template v-else>
+                                <span v-if="editNeedsApproval" class="max-w-xs text-xs text-secondary">
+                                    {{ $t('This change goes beyond the confirmed booking and has to be requested again.') }}
+                                </span>
+                                <BaseUIButton
+                                    type="button"
+                                    variant="primary"
+                                    hide-icon
+                                    :disabled="requestDisabled"
+                                    @click="updateOrCreateEvent(true)"
+                                >
+                                    {{ requestButtonText }}
+                                </BaseUIButton>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -937,6 +956,7 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import { can } from 'laravel-permission-to-vuejs'
 import { mayCreateEventIn } from '@/Helper/roomAdminRights.js'
+import { changeNeedsApproval, requestSubmittedKind } from '@/Helper/roomChangeApproval.js'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import TicketingSalesModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue'
@@ -1387,6 +1407,8 @@ function loadFullDescription() {
     descriptionLoadFailed.value = false
     descriptionRequest = null
     initialTiming.value = null
+    approvedBooking.value = null
+    requestedBy.value = null
     if (!props.event?.id) return
 
     const prefilled = description.value
@@ -1399,6 +1421,8 @@ function loadFullDescription() {
             if (typeof data?.can_update === 'boolean') {
                 canEdit.value = data.can_update
             }
+            approvedBooking.value = data?.approved_booking ?? null
+            requestedBy.value = data?.requested_by ?? null
         })
         .catch(() => { descriptionLoadFailed.value = true })
         .finally(() => { descriptionRequest = null })
@@ -1427,6 +1451,13 @@ const initialRoomId = ref(null)
 const showRejections = ref(false)
 const isLoading = ref(false)
 const requestSubmitted = ref(false)
+// 'new' (Termin als Raumanfrage angelegt) | 'change' (Änderung als Raumanfrage) – bestimmt den Text danach
+const submittedRequestKind = ref('new')
+// Aus events.description: bestätigte Belegung (fest gebuchte Termine) und wer die laufende Anfrage gestellt hat
+const approvedBooking = ref(null)
+const requestedBy = ref(null)
+// Kennung je Öffnen des Dialogs: ein erneutes Absenden nach einem Abbruch legt keinen zweiten Termin an
+const clientRequestId = ref(null)
 const quickDurations = [30, 60, 90]
 
 const bookingOptions = [{ name: 'Option 1' }, { name: 'Option 2' }, { name: 'Option 3' }, { name: 'Option 4' }]
@@ -1536,9 +1567,26 @@ const requestDisabled = computed(() => {
     if (!selectedRoom.value || !submit.value || invalidSeries || isLoading.value) return true
     const canRequestGlobal = can('request room occupancy')
     const canRequestRoom = isRequestableForRoom.value
-    if (!canRequestGlobal && !canRequestRoom && !canCreateDirect.value) return true
+    // Bestehende Termine darf speichern, wer sie bearbeiten darf; ob daraus eine Anfrage wird, entscheidet der Server
+    if (!props.event?.id && !canRequestGlobal && !canRequestRoom && !canCreateDirect.value) return true
     if (effectiveIsPlanning.value) return true
     return false
+})
+
+// Fest gebuchter Termin, bearbeitet ohne Direktbuchrecht: über die bestätigte Belegung hinaus wird neu angefragt
+const editNeedsApproval = computed(() => {
+    if (!props.event?.id || props.event?.occupancy_option || effectiveIsPlanning.value) return false
+    return changeNeedsApproval({
+        approvedBooking: approvedBooking.value,
+        roomId: selectedRoom.value?.id,
+        start: formatDate(startDate.value, allDayEvent.value ? '00:00' : startTime.value),
+        end: formatDate(endDate.value, allDayEvent.value ? '23:59' : endTime.value),
+        canBookDirectly: canCreateDirect.value,
+    })
+})
+const requestButtonText = computed(() => {
+    if (!props.event?.id) return $t('Request occupancy')
+    return editNeedsApproval.value ? $t('Request change') : $t('Save')
 })
 
 // --- Watches / Mount
@@ -1732,6 +1780,8 @@ function closeModal(closedOnPurpose = false) {
     seriesImpactConfirmed = false
     showSeriesDeleteModal.value = showSeriesDetachModal.value = showSeriesImpactModal.value = false
     requestSubmitted.value = false
+    submittedRequestKind.value = 'new'
+    clientRequestId.value = newClientRequestId()
     showProjectInfo.value = Boolean(props.project) || (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id)
     creatingProject.value = false
     projectName.value = null
@@ -1994,6 +2044,7 @@ function payload() {
         showProjectPeriodInCalendar: props.calendarProjectPeriod,
         event_properties: (event_properties ?? []).filter(p => p.checked).map(p => p.id),
         isPlanning: props.event ? props.event.isPlanning : props.isPlanning,
+        clientRequestId: props.event?.id ? undefined : clientRequestId.value,
     }
 }
 async function updateOrCreateEvent(isOptionParam = false) {
@@ -2115,6 +2166,8 @@ async function doSaveEvent() {
     // ein späteres erneutes Verschieben im selben Modal den Precheck stumm
     assignmentImpactConfirmed = false
 
+    // Vor dem Speichern festhalten: danach können die Termindaten schon neu geladen sein
+    const predictedRequest = props.event?.id ? editNeedsApproval.value : (isOption.value && !canCreateDirect.value)
     if (!props.requiresAxiosRequests &&
         (props.usedInBulkComponent ||
             (page.props.auth.user.calendar_settings.time_period_project_id === selectedProject.value?.id &&
@@ -2124,7 +2177,7 @@ async function doSaveEvent() {
                 preserveScroll: true,
                 preserveState: (pg) => typeof pg?.component === 'undefined',
                 onSuccess: () => {
-                    handleSuccessfulSave()
+                    handleSuccessfulSave({ predictedRequest })
                 },
                 onError: (resp) => {
                     isLoading.value = false
@@ -2137,7 +2190,7 @@ async function doSaveEvent() {
                 preserveScroll: true,
                 preserveState: (pg) => typeof pg?.component === 'undefined',
                 onSuccess: () => {
-                    handleSuccessfulSave()
+                    handleSuccessfulSave({ predictedRequest })
                 },
                 onError: (resp) => {
                     isLoading.value = false
@@ -2150,29 +2203,49 @@ async function doSaveEvent() {
 
     const definitionChangedOnSave = seriesDefinitionChanged()
     try {
-        if (!props.event?.id) await axios.post('/events', data)
-        else {
-            await axios.put(`/events/${props.event.id}`, data, { headers })
-            // Mitgeänderte Serientermine kommen einzeln per Live-Update; eine Turnus-/Ende-Änderung legt aber Termine
-            // ohne Einzel-Signal in den Papierkorb
-            if (isSeriesEvent.value && seriesScope.value !== 'single' && definitionChangedOnSave) refetchCalendarAfterSeriesChange()
+        if (!props.event?.id) {
+            const { data: created } = await axios.post('/events', data)
+            const createdEvent = created?.data ?? created
+            handleSuccessfulSave({ createdAsRequest: createdEvent?.occupancy_option, predictedRequest })
+            return
         }
-        handleSuccessfulSave()
+        const { data: updated } = await axios.put(`/events/${props.event.id}`, data, { headers })
+        // Mitgeänderte Serientermine kommen einzeln per Live-Update; eine Turnus-/Ende-Änderung legt aber Termine
+        // ohne Einzel-Signal in den Papierkorb
+        if (isSeriesEvent.value && seriesScope.value !== 'single' && definitionChangedOnSave) refetchCalendarAfterSeriesChange()
+        handleSuccessfulSave({ serverState: updated?.room_request, predictedRequest })
     } catch (e) {
         isLoading.value = false
         error.value = e?.response?.data?.errors ?? e
     }
 }
 
-function handleSuccessfulSave() {
+/**
+ * Hinweis „Raumanfrage gestellt“ nur, wenn wirklich eine entstanden ist: vorher kam er nach jedem Speichern ohne
+ * Direktbuchrecht, auch wenn ein bestätigter Termin fest blieb. Ohne Server-Antwort (Inertia-Weg) gilt die Vorhersage.
+ */
+function handleSuccessfulSave({ serverState = null, createdAsRequest = null, predictedRequest = null } = {}) {
     isLoading.value = false
 
-    if (isOption.value && !canCreateDirect.value) {
+    const kind = requestSubmittedKind({
+        isNewEvent: !props.event?.id,
+        serverState,
+        createdAsRequest,
+        predictedRequest: !!predictedRequest,
+    })
+    if (kind) {
+        submittedRequestKind.value = kind
         requestSubmitted.value = true
         return
     }
 
     closeModal(true)
+}
+
+function newClientRequestId() {
+    // crypto.randomUUID fehlt ohne HTTPS und in alten Browsern
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
 }
 async function afterConfirm(confirmed) {
     if (!confirmed) {

@@ -59,6 +59,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property bool $accepted
  * @property bool $is_planning
  * @property string $option_string
+ * @property int|null $approved_room_id Bestätigter Raum, solange er vom aktuellen Stand abweicht
+ * @property Carbon|null $approved_start_time Bestätigter Beginn, solange er vom aktuellen Stand abweicht
+ * @property Carbon|null $approved_end_time Bestätigtes Ende, solange es vom aktuellen Stand abweicht
+ * @property int|null $requested_by_id Person, die die laufende Raumanfrage gestellt hat (leer = Ersteller*in)
+ * @property User|null $requester
  * @property Project|null $project
  * @property Room|null $room
  * @property EventStatus $eventStatus
@@ -141,6 +146,8 @@ class Event extends Model
         'earliest_start_datetime' => 'datetime',
         'latest_end_datetime' => 'datetime',
         'is_planning' => 'boolean',
+        'approved_start_time' => 'datetime',
+        'approved_end_time' => 'datetime',
     ];
 
     protected $appends = [
@@ -166,6 +173,17 @@ class Event extends Model
             $eventService = app()->get(EventService::class);
             $event->earliest_start_datetime = $eventService->getEarliestStartTime($event);
             $event->latest_end_datetime = $eventService->getLatestEndTime($event);
+        });
+
+        // Kopien (Duplizieren, Serien) sind neue Termine: weder eine bestätigte Belegung noch eine laufende
+        // Anfrage des Originals gehen auf sie über
+        static::replicating(function (Event $copy): void {
+            $copy->forceFill([
+                'approved_room_id' => null,
+                'approved_start_time' => null,
+                'approved_end_time' => null,
+                'requested_by_id' => null,
+            ]);
         });
     }
 
@@ -258,6 +276,36 @@ class Event extends Model
             'id',
             'users'
         );
+    }
+
+    /**
+     * Person, die die laufende Raumanfrage gestellt hat, z. B. bei einem Raumwechsel durch jemand anderen.
+     * Leer: die Anfrage stammt von der Person, die den Termin angelegt hat (requestingUser()).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requested_by_id', 'id', 'users');
+    }
+
+    /**
+     * Wer die laufende Raumanfrage gestellt hat: requester, sonst Ersteller*in.
+     */
+    public function requestingUser(): ?User
+    {
+        return $this->requester ?? $this->creator;
+    }
+
+    /**
+     * Ob der Termin eine bestätigte Belegung hat, die vom aktuellen Stand abweicht (Änderungsanfrage oder
+     * innerhalb der Bestätigung verkürzt).
+     */
+    public function hasDeviatingApproval(): bool
+    {
+        return $this->approved_room_id !== null
+            && $this->approved_start_time !== null
+            && $this->approved_end_time !== null;
     }
 
     /**

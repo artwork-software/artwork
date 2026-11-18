@@ -1656,6 +1656,7 @@
     "Room confirmed": "Raum bestätigt",
     "Room changed": "Raum geändert",
     "Room declined": "Raum abgelehnt",
+    "Room change declined": "Raumänderung abgelehnt, zurück zur bestätigten Belegung",
     "Date/time changed": "Datum/Uhrzeit geändert",
     "Appointment type changed": "Termintyp geändert",
     "Appointment name added": "Terminname hinzugefügt",
@@ -9981,5 +9982,11 @@
     "Check whether you mean one of them. You can still create it.": "Prüfe, ob du eines davon meinst. Anlegen kannst du trotzdem.",
     "Click again to create it anyway.": "Klicke noch einmal, um trotzdem anzulegen.",
     "Rename file": "Datei umbenennen",
-    "Please enter a valid file name.": "Bitte gib einen gültigen Dateinamen ein."
+    "Please enter a valid file name.": "Bitte gib einen gültigen Dateinamen ein.",
+    "Change sent as room request": "Änderung angefragt",
+    "Request change": "Änderung anfragen",
+    "The change goes beyond the confirmed booking and was sent as a room request. If it is declined, the event keeps its confirmed booking. You will be notified after it has been reviewed.": "Die Änderung geht über die bestätigte Belegung hinaus und wurde als Raumanfrage gestellt. Wird sie abgelehnt, bleibt es bei der bestätigten Belegung. Du wirst benachrichtigt, sobald sie geprüft wurde.",
+    "This change goes beyond the confirmed booking and has to be requested again.": "Diese Änderung geht über die bestätigte Belegung hinaus und muss neu angefragt werden.",
+    "This event is still being saved. Please wait a moment and reload the calendar.": "Der Termin wird gerade noch gespeichert. Bitte warte einen Moment und lade den Kalender neu.",
+    "Included for room admins": "Als Raumadmin immer enthalten"
 }

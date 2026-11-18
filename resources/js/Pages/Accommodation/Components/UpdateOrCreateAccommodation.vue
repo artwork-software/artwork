@@ -3,31 +3,31 @@
         <form @submit.prevent="updateOrCreateAccommodation">
             <div class="grid gird-cols-1 md:grid-cols-2 gap-4">
                 <div class="col-span-full">
-                    <BaseInput id="name" v-model="accommodationForm.name" label="Accommodation Name" />
+                    <BaseInput id="name" v-model="accommodationForm.name" :error="accommodationForm.errors.name" label="Accommodation Name" />
                 </div>
                 <div class="col-span-full">
-                    <BaseInput id="email" type="email" v-model="accommodationForm.email" label="Email" />
+                    <BaseInput id="email" type="email" v-model="accommodationForm.email" :error="accommodationForm.errors.email" label="Email" />
                 </div>
                 <div class="col-span-full">
-                    <BaseInput id="phone_number" v-model="accommodationForm.phone_number" label="Phone number" />
+                    <BaseInput id="phone_number" v-model="accommodationForm.phone_number" :error="accommodationForm.errors.phone_number" label="Phone number" />
                 </div>
                 <div class="col-span-full">
-                    <BaseInput id="street" v-model="accommodationForm.street" label="Street" />
+                    <BaseInput id="street" v-model="accommodationForm.street" :error="accommodationForm.errors.street" label="Street" />
                 </div>
                 <div class="col-span-1">
-                    <BaseInput id="zip_code" v-model="accommodationForm.zip_code" label="Zip code" />
+                    <BaseInput id="zip_code" v-model="accommodationForm.zip_code" :error="accommodationForm.errors.zip_code" label="Zip code" />
                 </div>
                 <div class="col-span-1">
-                    <BaseInput id="location" v-model="accommodationForm.location" label="Location" />
+                    <BaseInput id="location" v-model="accommodationForm.location" :error="accommodationForm.errors.location" label="Location" />
                 </div>
                 <div class="col-span-full">
                     <BaseTextarea id="note" v-model="accommodationForm.note" label="Note" />
                 </div>
                 <div class="col-span-1">
-                    <BaseInput id="daily_allowance" type="number" :step="0.01" v-model="accommodationForm.daily_allowance" label="Daily allowance" />
+                    <BaseInput id="daily_allowance" type="number" :step="0.01" v-model="accommodationForm.daily_allowance" :error="accommodationForm.errors.daily_allowance" label="Daily allowance" />
                 </div>
                 <div class="col-span-1">
-                    <BaseInput id="breakfast_deduction_per_day" type="number" :step="0.01" v-model="accommodationForm.breakfast_deduction_per_day" label="Deduction per breakfast" />
+                    <BaseInput id="breakfast_deduction_per_day" type="number" :step="0.01" v-model="accommodationForm.breakfast_deduction_per_day" :error="accommodationForm.errors.breakfast_deduction_per_day" label="Deduction per breakfast" />
                 </div>
                 <p class="col-span-full -mt-2 text-xs text-text-muted">{{ $t('Default values for artist residencies in this accommodation. Leave empty to use the general default from the artist residency settings.') }}</p>
             </div>
@@ -337,9 +337,7 @@ const updateAccommodationOnFocusout = () => {
             onSuccess: () => {
                 // Silent success - no notification needed for auto-save
             },
-            onError: () => {
-                console.log('Error auto-saving accommodation');
-            }
+            // Validierungsfehler stehen in accommodationForm.errors und erscheinen an den Feldern
         });
     }
 }
@@ -365,9 +363,7 @@ const updateOrCreateAccommodation = () => {
                 //accommodationForm.reset();
                 emits('close');
             },
-            onError: () => {
-                console.log('Error updating accommodation');
-            }
+            // Validierungsfehler stehen in accommodationForm.errors und erscheinen an den Feldern
         });
     } else {
         accommodationForm.post(route('accommodation.store'), {
@@ -377,9 +373,7 @@ const updateOrCreateAccommodation = () => {
                 //accommodationForm.reset();
                 emits('close');
             },
-            onError: () => {
-                console.log('Error creating accommodation');
-            }
+            // Validierungsfehler stehen in accommodationForm.errors und erscheinen an den Feldern
         });
     }
 }

@@ -7,6 +7,7 @@ use Artwork\Modules\AiAssistant\Settings\AiAssistantSettings;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Concerns\GrantsAiAccess;
 use Tests\Feature\FeatureTestCase;
 
 final class AiAssistantSharedPropsTest extends FeatureTestCase

@@ -12,3 +12,12 @@ storage/framework/sessions/*
 storage/framework/cache/data/*
 .claude
 .ddev
+
+# Interne Notizen im Repo-Root (Audit-Berichte, Angebote, Konzepte) und lokale Arbeitsstände.
+# "*.md" trifft nur die oberste Ebene; README.md und LICENSE.md bleiben im Image.
+*.md
+!README.md
+!LICENSE.md
+docs/security
+output
+public/hot

@@ -3507,6 +3507,8 @@
     "You have selected multiple users. This will create a group chat. You will automatically be included as a member. Please provide a name for the group.": "You have selected multiple users. This will create a group chat. You will automatically be included as a member. Please provide a name for the group.",
     "Rename Group Chat": "Rename Group Chat",
     "Delete Group Chat": "Delete Group Chat",
+    "Leave Group Chat": "Leave Group Chat",
+    "Are you sure you want to leave this group chat? You will no longer see its messages. The chat remains available to the other members.": "Are you sure you want to leave this group chat? You will no longer see its messages. The chat remains available to the other members.",
     "Enter a new name for this group chat": "Enter a new name for this group chat",
     "Group Name": "Group Name",
     "Enter group name": "Enter group name",
@@ -9986,5 +9988,6 @@
     "The change goes beyond the confirmed booking and was sent as a room request. If it is declined, the event keeps its confirmed booking. You will be notified after it has been reviewed.": "The change goes beyond the confirmed booking and was sent as a room request. If it is declined, the event keeps its confirmed booking. You will be notified after it has been reviewed.",
     "This change goes beyond the confirmed booking and has to be requested again.": "This change goes beyond the confirmed booking and has to be requested again.",
     "This event is still being saved. Please wait a moment and reload the calendar.": "This event is still being saved. Please wait a moment and reload the calendar.",
-    "Included for room admins": "Included for room admins"
+    "Included for room admins": "Included for room admins",
+    ":count event stays in the trash because you may not delete it.|:count events stay in the trash because you may not delete them.": ":count event stays in the trash because you may not delete it.|:count events stay in the trash because you may not delete them."
 }

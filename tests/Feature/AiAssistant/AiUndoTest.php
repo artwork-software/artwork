@@ -256,6 +256,35 @@ final class AiUndoTest extends TestCase
     }
 
     #[Test]
+    public function a_parallel_revert_that_loses_the_race_reverts_nothing(): void
+    {
+        // Sicherheits-Audit 18.11.2026, N7: die andere Ruecknahme ist fertig, waehrend diese schon an
+        // der Statuspruefung vorbei ist. In der Transaktion wird der Batch gesperrt neu gelesen.
+        $user = $this->planner();
+        $event = $this->event();
+        $batch = $this->batchFor($user, [
+            ['model' => $event, 'action' => AiActionBatchItem::ACTION_CREATE, 'before_state' => null],
+        ]);
+
+        $raced = false;
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Database\Events\TransactionBeginning::class,
+            function () use (&$raced, $batch): void {
+                if ($raced) {
+                    return;
+                }
+                $raced = true;
+                AiActionBatch::query()->whereKey($batch->id)->update(['status' => AiActionBatch::STATUS_REVERTED]);
+            }
+        );
+
+        $this->actingAs($user)->postJson('/ai/actions/batches/' . $batch->id . '/revert')->assertStatus(422);
+
+        $this->assertTrue($raced);
+        $this->assertSame(1, Event::query()->whereKey($event->id)->count());
+    }
+
+    #[Test]
     public function a_batch_can_only_be_reverted_once(): void
     {
         $user = $this->planner();

@@ -100,11 +100,27 @@ class AiActionService
 
     /**
      * Abschluss in derselben Transaktion wie die Ausfuehrung (W2 §3): Status, Batch, Revocation.
+     *
+     * Der Turn wird hier mit Zeilensperre neu gelesen und sein Status erneut geprueft. Zwei
+     * gleichzeitige Ausfuehrungen derselben Aktion kommen beide an `assertExecutable()` vorbei;
+     * die zweite wartet hier auf die Sperre, sieht danach `executed` und scheitert mit 409, ihre
+     * Transaktion (und damit alles, was sie geschrieben hat) wird vom Aufrufer zurueckgerollt.
      */
     public function complete(User $user, string $actionId, ?string $batchId): void
     {
-        $turn = $this->findOrFail($user, $actionId);
+        $turn = $this->findOrFail($user, $actionId, true);
         $action = $turn->pending_action ?? [];
+
+        abort_if(
+            $turn->status === self::STATUS_EXECUTED,
+            Response::HTTP_CONFLICT,
+            'Diese Aktion wurde bereits ausgefuehrt.'
+        );
+        abort_unless(
+            $turn->status === AiConversationTurn::STATUS_AWAITING_CONFIRMATION,
+            Response::HTTP_UNPROCESSABLE_ENTITY,
+            'Diese Aktion wartet nicht mehr auf eine Bestaetigung.'
+        );
 
         $turn->forceFill([
             'status' => self::STATUS_EXECUTED,
@@ -233,9 +249,15 @@ class AiActionService
         ];
     }
 
-    private function findOrFail(User $user, string $actionId): AiConversationTurn
+    /**
+     * `$lock = true` liest den Turn mit `FOR UPDATE`; nur innerhalb einer Transaktion sinnvoll.
+     */
+    private function findOrFail(User $user, string $actionId, bool $lock = false): AiConversationTurn
     {
-        $turn = AiConversationTurn::query()->with('conversation')->find($actionId);
+        $turn = AiConversationTurn::query()
+            ->with('conversation')
+            ->when($lock, static fn ($query) => $query->lockForUpdate())
+            ->find($actionId);
 
         abort_if($turn === null, Response::HTTP_UNPROCESSABLE_ENTITY, 'Unbekannte Aktion.');
 

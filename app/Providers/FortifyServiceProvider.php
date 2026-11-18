@@ -9,6 +9,7 @@ use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\NeutralPasswordResetLinkRequestResponse;
 use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserSourceRepository;
 use Artwork\Modules\ExternalUserManagement\Service\CredentialLoginService;
+use Artwork\Modules\ExternalUserManagement\Service\LoginAccountKey;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -71,7 +72,8 @@ class FortifyServiceProvider extends ServiceProvider
                 Limit::perMinute(5)->by($email . $request->ip()),
                 // Pro Konto unabhängig von der IP: bremst Password-Spraying über viele Adressen.
                 // Höchstens 15 Minuten Wartezeit, damit ein Angreifer ein Konto nicht lange sperren kann.
-                Limit::perMinutes(15, 10)->by('account|' . Str::lower(trim($email))),
+                // Schlüssel am aufgelösten Konto: Akzentvarianten derselben Adresse teilen sich einen Eimer.
+                Limit::perMinutes(15, 10)->by('account|' . LoginAccountKey::for($email)),
             ];
         });
 

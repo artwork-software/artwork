@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\AiAssistant\Http\Middleware;
 
+use Artwork\Modules\AiAssistant\Services\AiAssistantAccess;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
@@ -12,7 +13,11 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Die KI handelt mit den Rechten der Person – dazu gehören die Modul-Schalter des Hauses
  * (ModuleSettingsMiddleware der Oberfläche, Admins wie dort ausgenommen) und „Arbeitszeitberechnung“.
- * Die Stufen B/C des Assistenten prüft die Token-Ausgabe (AiSessionService, Token-TTL 15 min).
+ *
+ * Davor stehen die Schalter des Assistenten selbst (AiAssistantAccess): Betreiber- und Haus-Schalter für
+ * alle KI-Routen, Stufe B für alles außer der Chat-Historie, Stufe C für Ausführungen (dry_run=false) und
+ * die bestätigte Aktion. Die Token-Ausgabe (AiSessionService) prüft dasselbe, aber ein schon ausgegebenes
+ * Token oder ein Schlüssel mit ai:*-Scope käme sonst nach dem Abschalten weiter durch.
  */
 class EnsureAiHouseSwitches
 {
@@ -41,6 +46,22 @@ class EnsureAiHouseSwitches
         '#^/api/v1/ai/people/[^/]+/\d+/workload$#',
     ];
 
+    /**
+     * Nur lesend zum Dienstplan: Personensuche der Schichtplanung („Schichten planen“) und die
+     * Abwesenheitsliste („Schichtplan sehen“). Das Anlegen einer Abwesenheit (POST /ai/absences) geht in
+     * der Oberfläche auch über die eigene Verfügbarkeit und bleibt deshalb ohne Modulbindung.
+     */
+    private const SHIFT_PLAN_READ_PATTERNS = [
+        '#^/api/v1/ai/people$#',
+        '#^/api/v1/ai/absences$#',
+    ];
+
+    /** Chat-Historie: läuft auch ohne Stufe B. */
+    private const CONVERSATION_PATTERN = '#^/api/v1/ai/conversations(/|$)#';
+
+    /** Die bestätigte Aktion gibt es nur mit Stufe C. */
+    private const ACTION_PATTERN = '#^/api/v1/ai/actions(/|$)#';
+
     /** Stunden-Auswertungen nur mit eingeschalteter Arbeitszeitberechnung. */
     private const WORK_TIME_PATTERNS = [
         '#^/api/v1/ai/work-time(/|$)#',
@@ -49,6 +70,7 @@ class EnsureAiHouseSwitches
 
     public function __construct(
         private readonly ModuleSettingsService $moduleSettingsService,
+        private readonly AiAssistantAccess $access,
     ) {
     }
 
@@ -57,13 +79,15 @@ class EnsureAiHouseSwitches
         $path = rtrim($request->getPathInfo(), '/');
         $user = $request->user();
 
+        $this->assertAssistantSwitches($request, $path);
+
         foreach (self::WORK_TIME_PATTERNS as $pattern) {
             if (preg_match($pattern, $path) === 1) {
                 abort_unless(WorkTimeAccounting::isEnabled(), Response::HTTP_FORBIDDEN, 'Die Arbeitszeitberechnung ist abgeschaltet.');
             }
         }
 
-        $module = self::moduleFor($path);
+        $module = self::moduleFor($path, $request->getMethod());
         if ($module !== null && !$this->moduleSettingsService->isModuleVisible($module)) {
             abort_unless(
                 $user !== null && $user->hasRole(RoleEnum::ARTWORK_ADMIN->value),
@@ -75,11 +99,60 @@ class EnsureAiHouseSwitches
         return $next($request);
     }
 
-    public static function moduleFor(string $path): ?string
+    /**
+     * Betreiber-Schalter (`ai.enabled`), Haus-Schalter und Stufen B/C je Anfrage.
+     */
+    private function assertAssistantSwitches(Request $request, string $path): void
+    {
+        $user = $request->user();
+
+        abort_unless($this->access->allowed($user), Response::HTTP_FORBIDDEN, 'Der KI-Assistent ist abgeschaltet.');
+
+        if (preg_match(self::CONVERSATION_PATTERN, $path) === 1) {
+            return;
+        }
+
+        abort_unless(
+            $this->access->levelBAllowed($user),
+            Response::HTTP_FORBIDDEN,
+            'Die Datenauswertung des KI-Assistenten ist abgeschaltet.'
+        );
+
+        if (preg_match(self::ACTION_PATTERN, $path) === 1 || $this->isExecution($request)) {
+            abort_unless(
+                $this->access->levelCAllowed($user),
+                Response::HTTP_FORBIDDEN,
+                'Aktionen des KI-Assistenten sind abgeschaltet.'
+            );
+        }
+    }
+
+    /**
+     * Ausführung heißt: Schreib-Endpunkt (erkennbar an EnsureAiWriteScope) mit `dry_run=false`. Die Vorschau
+     * schreibt nichts und bleibt wie bisher mit Stufe B möglich.
+     */
+    private function isExecution(Request $request): bool
+    {
+        if ($request->boolean('dry_run', true)) {
+            return false;
+        }
+
+        return in_array(EnsureAiWriteScope::class, $request->route()?->gatherMiddleware() ?? [], true);
+    }
+
+    public static function moduleFor(string $path, string $method = 'GET'): ?string
     {
         foreach (self::SHIFT_PLAN_PATTERNS as $pattern) {
             if (preg_match($pattern, $path) === 1) {
                 return 'shift_plan';
+            }
+        }
+
+        if (in_array(strtoupper($method), ['GET', 'HEAD'], true)) {
+            foreach (self::SHIFT_PLAN_READ_PATTERNS as $pattern) {
+                if (preg_match($pattern, $path) === 1) {
+                    return 'shift_plan';
+                }
             }
         }
 

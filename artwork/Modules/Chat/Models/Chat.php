@@ -5,6 +5,7 @@ namespace Artwork\Modules\Chat\Models;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -65,5 +66,50 @@ class Chat extends Model
     public function getLastMessageAttribute(): ?ChatMessage
     {
         return $this->lastMessage()->first();
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by', 'id', 'creator');
+    }
+
+    /**
+     * Echte Mitgliedschaft. Bewusst keine Policy: über Gate::before käme die Admin-Rolle sonst in
+     * fremde Chats. Entspricht der Prüfung des Broadcast-Kanals chat.{id}.
+     */
+    public function hasMember(?User $user): bool
+    {
+        return $user !== null && $this->users()->where('users.id', $user->id)->exists();
+    }
+
+    /**
+     * Bricht mit 403 ab, wenn die Person kein Mitglied ist. Gilt auch für Admins.
+     */
+    public function abortUnlessMember(?User $user): void
+    {
+        abort_unless($this->hasMember($user), 403);
+    }
+
+    /**
+     * Löschen darf, wer den Chat angelegt hat. Ist niemand (mehr) zuständig, weil die anlegende Person
+     * fehlt, deaktiviert ist oder den Chat verlassen hat, darf jedes Mitglied löschen. So bleibt kein
+     * Chat unlöschbar.
+     */
+    public function canBeDeletedBy(?User $user): bool
+    {
+        if (!$this->hasMember($user)) {
+            return false;
+        }
+
+        if ((int) $this->created_by === $user->id) {
+            return true;
+        }
+
+        $creator = $this->creator;
+
+        return $creator === null || $creator->isDeactivated() || !$this->hasMember($creator);
     }
 }

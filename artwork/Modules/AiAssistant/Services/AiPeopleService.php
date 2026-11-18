@@ -193,11 +193,39 @@ class AiPeopleService
         );
     }
 
+    /**
+     * Stunden einer Person (Plan-, Soll- und Restminuten, Vertrag, Vertragsregeln) sieht, wer
+     * „Stundenkonten einsehen" hat; die eigenen sieht jede Person. Dieselbe Grenze wie in der
+     * Oberflaeche (`WorkingHourService`).
+     */
+    public static function maySeeHoursOf(User $viewer, Model $person): bool
+    {
+        return ($person instanceof User && (int) $person->id === (int) $viewer->id)
+            || AiWorkTimeService::mayViewHours($viewer);
+    }
+
+    /**
+     * Ohne Einsicht in die Stunden der Person (`maySeeHoursOf()`) bleiben nur Person und
+     * Abwesenheiten; Vertrag, Regeln, Plan-, Soll- und Restminuten sind dann leer bzw. `null`.
+     */
     public function workload(
+        User $viewer,
         User|Freelancer|ServiceProvider $person,
         CarbonImmutable $from,
         CarbonImmutable $to
     ): AiPersonWorkloadData {
+        if (!self::maySeeHoursOf($viewer, $person)) {
+            return new AiPersonWorkloadData(
+                person: $this->personData($person),
+                contract: null,
+                rules: [],
+                planned: null,
+                target_minutes_by_week: null,
+                absences: $this->absences($person, $from, $to),
+                remaining: null,
+            );
+        }
+
         $weeks = self::weekKeysBetween($from, $to);
         $months = self::monthKeysBetween($from, $to);
         $perDay = $this->plannedMinutesPerDay($person, $from, $to);
@@ -270,6 +298,17 @@ class AiPeopleService
             : null;
 
         return $this->remaining([$week], [$week => (int) $planned], $rules, $targets)->weeks[0];
+    }
+
+    /**
+     * Wie `weekCapacity()`, aber `null`, wenn die fragende Person die Stunden nicht sehen darf.
+     */
+    public function visibleWeekCapacity(
+        User $viewer,
+        User|Freelancer|ServiceProvider $person,
+        CarbonImmutable $day
+    ): ?AiRemainingWeekData {
+        return self::maySeeHoursOf($viewer, $person) ? $this->weekCapacity($person, $day) : null;
     }
 
     /**

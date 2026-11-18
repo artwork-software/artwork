@@ -3838,6 +3838,9 @@ Route::group(['middleware' => ['auth']], function (): void {
 
         // delete chat-system.delete-chat (delete group chat)
         Route::delete('/delete-chat/{chat}', [ChatController::class, 'destroy'])->name('chat-system.delete-chat');
+
+        // post chat-system.leave-chat (eigene Mitgliedschaft aus einem Gruppenchat entfernen)
+        Route::post('/leave-chat/{chat}', [ChatController::class, 'leave'])->name('chat-system.leave-chat');
     });
 
     // Alt-Resource (EditHolidayModal nutzt holidays.update): gleiche Rechte wie der settings/holiday-Block

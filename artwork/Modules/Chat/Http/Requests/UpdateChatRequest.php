@@ -14,8 +14,8 @@ class UpdateChatRequest extends FormRequest
         $chat = $this->route('chat');
         $user = $this->user();
 
-        // Check if user is a member of the chat
-        if (!$chat->users()->where('users.id', $user->id)->exists()) {
+        // Echte Mitgliedschaft, gilt auch für Admins (keine Policy, kein Gate::before)
+        if (!$chat->hasMember($user)) {
             return false;
         }
 

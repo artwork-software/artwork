@@ -6,6 +6,9 @@
  * - `linkify: false` — nackte URLs werden keine Links.
  * - Link-Filter: nur relative Ziele (`/…`, aber nicht `//…`) werden zu `<a>`; alles andere
  *   erscheint als Text. artwork-ai kann damit nur auf artwork selbst verlinken.
+ * - Keine Bilder: die Bild-Regel ist abgeschaltet. Ein `<img>` wuerde sein Ziel schon beim Rendern
+ *   laden, ohne Klick; ueber die URL koennten so gelesene Daten an fremde Server abfliessen.
+ *   `![alt](ziel)` erscheint deshalb als Text bzw. als gewoehnlicher (gefilterter) Link.
  *
  * Reine Funktionen ohne Vue-Abhaengigkeit, damit sie in tests/Frontend geprueft werden koennen.
  */
@@ -68,6 +71,7 @@ function aiLinkFilter(state) {
 
 const md = new MarkdownIt({ html: false, linkify: false, breaks: true })
 
+md.disable('image')
 md.core.ruler.push('ai_link_filter', aiLinkFilter)
 
 /**

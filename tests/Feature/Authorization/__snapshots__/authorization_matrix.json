@@ -875,6 +875,7 @@
     "POST calendar/export/pdf": "error",
     "POST calendar/export/season-schedule-pdf": "other",
     "POST categories": "forbidden",
+    "POST chat/leave-chat/{chat}": "forbidden",
     "POST chat/send-message/{chat}": "forbidden",
     "POST checklist_templates": "forbidden",
     "POST checklist_templates/{checklistTemplate}/duplicate": "forbidden",

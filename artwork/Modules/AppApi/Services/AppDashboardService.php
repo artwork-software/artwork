@@ -157,12 +157,14 @@ class AppDashboardService
     /**
      * Events of a day in projects whose team the user belongs to (web dashboard `eventsOfDay`).
      * With `$includeOwnShifts`, also events in which the user holds a shift (KI-Tagesuebersicht).
+     * Planning events only for users who may see the planning calendar (`Event::visibleFor()`).
      *
      * @return Builder<Event>
      */
     public function eventsOfDayQuery(User $user, Carbon $day, bool $includeOwnShifts = false): Builder
     {
         return Event::query()
+            ->visibleFor($user)
             ->whereBetween('start_time', [$day->copy()->startOfDay(), $day->copy()->endOfDay()])
             ->where(function (Builder $query) use ($user, $includeOwnShifts): void {
                 $query->whereHas('project.users', function (Builder $members) use ($user): void {

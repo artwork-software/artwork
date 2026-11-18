@@ -1773,6 +1773,17 @@ class UserController extends Controller
             $request->input('source')
         );
 
+        // Wer sich selbst die Admin-Rolle entzieht, darf den Rechte-Tab nicht mehr sehen;
+        // ein Redirect zurück endete sonst auf einer 403-Seite.
+        $revokedOwnAdminRole = $user->is(Auth::user())
+            && in_array(RoleEnum::ARTWORK_ADMIN->value, $rolesBefore, true)
+            && !in_array(RoleEnum::ARTWORK_ADMIN->value, $rolesToGrant, true);
+
+        if ($revokedOwnAdminRole) {
+            return Redirect::route('user.edit.info', $user)
+                ->with('success', __('You are no longer an artwork admin.'));
+        }
+
         return Redirect::back();
     }
 

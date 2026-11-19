@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property User $user
  * @method static Builder|UserFilter shiftFilter()
  * @method static Builder|UserFilter calendarFilter()
+ * @method static Builder|UserFilter projectEventListFilter()
  * @method static Builder|UserFilter planningCalendarFilter()
  * @method static Builder|UserFilter projectShiftFilter()
  * @method static Builder|UserFilter shiftDailyFilter()
@@ -115,5 +116,13 @@ class UserFilter extends CalendarFilter
     public function scopePlanningDailyFilter(Builder $query): Builder
     {
         return $query->where('filter_type', UserFilterTypes::PLANNING_DAILY_FILTER->value);
+    }
+
+    /**
+     * Terminliste im Projekt: eigener Filter, damit Raum-/Typfilter des Kalenders nicht übertragen werden.
+     */
+    public function scopeProjectEventListFilter(Builder $query): Builder
+    {
+        return $query->where('filter_type', UserFilterTypes::PROJECT_EVENT_LIST_FILTER->value);
     }
 }

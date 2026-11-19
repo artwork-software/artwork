@@ -208,7 +208,7 @@ class CrmContactController extends Controller
     public function store(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
-            'crm_contact_type_id' => 'required|exists:crm_contact_types,id',
+            'crm_contact_type_id' => ['required', 'integer', CrmContactType::writableExistsRule()],
             'display_name' => 'required|string|max:255',
             // Kein freier Bildpfad: das Profilbild kommt nur über den Upload-Endpunkt (sonst Verweis
             // auf beliebige Dateien der public-Disk).
@@ -306,7 +306,8 @@ class CrmContactController extends Controller
 
         $this->contactService->destroy($crmContact);
 
-        return redirect()->route('crm.index');
+        // Zurück in die Liste derselben Kontaktart statt auf den ersten Reiter
+        return redirect()->route('crm.index', array_filter(['type' => $crmContact->contactType?->slug]));
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -393,7 +394,9 @@ class CrmContactController extends Controller
             StoredFileName::forUpload($profileImage),
             'public'
         );
+        $previousPath = $crmContact->profile_image;
         $this->contactService->updateProfileImage($crmContact, $path);
+        $this->propertyFileService->deleteProfileImage($previousPath, $crmContact->id);
 
         return redirect()->back();
     }
@@ -413,7 +416,7 @@ class CrmContactController extends Controller
             ],
         ]);
 
-        $propertyId = (int) $request->input('property_id');
+        $propertyId = $this->uploadPropertyId($request);
         $this->authorizePropertyEdits([$propertyId]);
 
         $file = $request->file('file');
@@ -444,7 +447,7 @@ class CrmContactController extends Controller
             'file_name' => 'required|string|max:200',
         ]);
 
-        $propertyId = (int) $request->input('property_id');
+        $propertyId = $this->uploadPropertyId($request);
         $this->authorizePropertyEdits([$propertyId]);
 
         $path = $this->propertyFileService->normalisePath(
@@ -470,7 +473,7 @@ class CrmContactController extends Controller
             'property_id' => 'required|integer|exists:crm_properties,id',
         ]);
 
-        $propertyId = (int) $request->input('property_id');
+        $propertyId = $this->uploadPropertyId($request);
         $this->authorizePropertyEdits([$propertyId]);
 
         $previousPath = $crmContact->propertyValues()->where('crm_property_id', $propertyId)->value('value');
@@ -595,6 +598,22 @@ class CrmContactController extends Controller
         $crmContact->roomTypes()->detach($roomType->id);
 
         return redirect()->back();
+    }
+
+    /**
+     * Die Datei-Endpunkte gelten nur für Upload-Eigenschaften, sonst landete ein Dateipfad in einem Textfeld.
+     */
+    private function uploadPropertyId(Request $request): int
+    {
+        $property = CrmProperty::query()->findOrFail((int) $request->input('property_id'));
+
+        if ($property->type !== CrmPropertyTypeEnum::UPLOAD) {
+            throw ValidationException::withMessages([
+                'property_id' => __('This property does not accept files.'),
+            ]);
+        }
+
+        return (int) $property->id;
     }
 
     private function authorizePropertyEdits(array $propertyIds): void

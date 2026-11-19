@@ -39,7 +39,9 @@ class CrmController extends Controller
             ? $this->contactTypeService->getBySlug($activeTypeSlug) ?? $contactTypes->first()
             : $contactTypes->first();
 
-        $filters = json_decode($request->get('filters', '[]'), true) ?: [];
+        $rawFilters = $request->query('filters');
+        $filters = is_string($rawFilters) ? json_decode($rawFilters, true) : null;
+        $filters = is_array($filters) ? $filters : [];
 
         // Determine which property groups are visible to the current user
         $user = auth()->user();
@@ -67,6 +69,7 @@ class CrmController extends Controller
 
         // Frontend sendet per_page; perPage bleibt als Fallback für alte Aufrufer erhalten
         $perPage = $request->integer('per_page') ?: $request->integer('perPage', 15);
+        $perPage = min(max($perPage, 1), 200);
 
         $contacts = $activeType
             ? $this->contactService->getByType(

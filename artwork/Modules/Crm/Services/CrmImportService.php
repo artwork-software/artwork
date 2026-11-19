@@ -275,7 +275,8 @@ readonly class CrmImportService
         $typeIdToMapping = [];
         foreach ($typeMappings as $tm) {
             $typeIdToMapping[(int) $tm['crm_contact_type_id']] = [
-                'display_name' => (int) $tm['display_name'],
+                // Ohne Namensspalte greift wie beim Einzeltyp-Import Vorname + Nachname
+                'display_name' => isset($tm['display_name']) ? (int) $tm['display_name'] : null,
                 'properties' => $tm['properties'] ?? [],
             ];
         }

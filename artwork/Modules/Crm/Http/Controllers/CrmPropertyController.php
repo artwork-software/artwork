@@ -42,10 +42,15 @@ class CrmPropertyController extends Controller
             'type' => ['required', 'string', Rule::enum(CrmPropertyTypeEnum::class)],
             'select_values' => 'nullable|array',
             'multiselect_display' => ['nullable', 'string', Rule::in(['checkboxes', 'dropdown'])],
-            'tooltip_text' => 'nullable|string',
+            'tooltip_text' => 'nullable|string|max:255',
+            'contact_type_ids' => 'sometimes|array',
+            'contact_type_ids.*' => 'integer|exists:crm_contact_types,id',
         ]);
 
-        $this->service->store($validated);
+        $contactTypeIds = $validated['contact_type_ids'] ?? null;
+        unset($validated['contact_type_ids']);
+
+        $this->service->store($validated, $contactTypeIds);
 
         SafeBroadcast::send(new CrmSettingsChanged());
 
@@ -59,11 +64,20 @@ class CrmPropertyController extends Controller
             'type' => ['sometimes', 'string', Rule::enum(CrmPropertyTypeEnum::class)],
             'select_values' => 'nullable|array',
             'multiselect_display' => ['nullable', 'string', Rule::in(['checkboxes', 'dropdown'])],
-            'tooltip_text' => 'nullable|string',
+            'tooltip_text' => 'nullable|string|max:255',
             'sort_order' => 'sometimes|integer',
+            'contact_type_ids' => 'sometimes|array',
+            'contact_type_ids.*' => 'integer|exists:crm_contact_types,id',
         ]);
 
+        $contactTypeIds = $validated['contact_type_ids'] ?? null;
+        unset($validated['contact_type_ids']);
+
         $this->service->update($crmProperty, $validated);
+
+        if ($contactTypeIds !== null) {
+            $this->service->syncContactTypes($crmProperty, $contactTypeIds);
+        }
 
         SafeBroadcast::send(new CrmSettingsChanged());
 

@@ -9995,5 +9995,13 @@
     "Answer room request": "Raumanfrage beantworten",
     "Confirm event": "Termin zusagen",
     "Room request: click to confirm or decline.": "Raumanfrage: Klicken, um den Termin zuzusagen oder abzusagen.",
-    "Confirming books the room firmly. Declining removes the event from the room; it stays in the calendar as an event without a room.": "Mit der Zusage ist der Raum fest gebucht. Mit der Absage verliert der Termin den Raum; er bleibt als Termin ohne Raum im Kalender."
+    "Confirming books the room firmly. Declining removes the event from the room; it stays in the calendar as an event without a room.": "Mit der Zusage ist der Raum fest gebucht. Mit der Absage verliert der Termin den Raum; er bleibt als Termin ohne Raum im Kalender.",
+    "Show for contact types": "Für Kontakttypen anzeigen",
+    "The property only appears on contacts of the selected contact types.": "Die Eigenschaft erscheint nur bei Kontakten der ausgewählten Kontakttypen.",
+    "Without a contact type the property is not shown on any contact.": "Ohne Kontakttyp wird die Eigenschaft bei keinem Kontakt angezeigt.",
+    "This property does not accept files.": "Diese Eigenschaft nimmt keine Dateien an.",
+    "The type of a file upload property can only be changed while no contact has a value.": "Der Typ lässt sich bei Datei-Eigenschaften nur ändern, solange kein Kontakt einen Wert hat.",
+    "Changes could not be saved. Please check your entries.": "Die Änderungen konnten nicht gespeichert werden. Bitte prüfe deine Eingaben.",
+    "The fields could not be loaded.": "Die Felder konnten nicht geladen werden.",
+    "Deleting the file failed.": "Die Datei konnte nicht gelöscht werden."
 }

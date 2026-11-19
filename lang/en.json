@@ -9993,5 +9993,13 @@
     "Answer room request": "Answer room request",
     "Confirm event": "Confirm event",
     "Room request: click to confirm or decline.": "Room request: click to confirm or decline.",
-    "Confirming books the room firmly. Declining removes the event from the room; it stays in the calendar as an event without a room.": "Confirming books the room firmly. Declining removes the event from the room; it stays in the calendar as an event without a room."
+    "Confirming books the room firmly. Declining removes the event from the room; it stays in the calendar as an event without a room.": "Confirming books the room firmly. Declining removes the event from the room; it stays in the calendar as an event without a room.",
+    "Show for contact types": "Show for contact types",
+    "The property only appears on contacts of the selected contact types.": "The property only appears on contacts of the selected contact types.",
+    "Without a contact type the property is not shown on any contact.": "Without a contact type the property is not shown on any contact.",
+    "This property does not accept files.": "This property does not accept files.",
+    "The type of a file upload property can only be changed while no contact has a value.": "The type of a file upload property can only be changed while no contact has a value.",
+    "Changes could not be saved. Please check your entries.": "Changes could not be saved. Please check your entries.",
+    "The fields could not be loaded.": "The fields could not be loaded.",
+    "Deleting the file failed.": "Deleting the file failed."
 }

@@ -102,7 +102,12 @@ export function useBulkEventsBroadcastUpdater(eventsRef, projectId, options = {}
                         return;
                     }
                     // also avoid overwriting room object completely if incoming room is null/undefined
-                    if (k === 'room' && (event[k] === null || typeof event[k] === 'undefined')) {
+                    // Ausnahme: abgesagte Raumanfrage – der Termin hat danach wirklich keinen Raum mehr
+                    const requestWasDeclined = existing.occupancy_option && event.occupancy_option === false;
+                    if (k === 'room' && typeof event[k] === 'undefined') {
+                        return;
+                    }
+                    if (k === 'room' && event[k] === null && !requestWasDeclined) {
                         return;
                     }
                     merged[k] = event[k];

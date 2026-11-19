@@ -2969,7 +2969,8 @@ class ProjectController extends Controller
         $headerObject->projectGenres     = $project->genres;
         $headerObject->projectSectors    = $project->sectors;
 
-        $headerObject->rooms = Room::listWithEffectiveAdminIds(['id', 'name', 'everyone_can_book']);
+        // user_id: ohne Raumadmins beantwortet die anlegende Person Raumanfragen (EventPolicy::answerRoomRequest)
+        $headerObject->rooms = Room::listWithEffectiveAdminIds(['id', 'name', 'everyone_can_book', 'user_id']);
 
         $headerObject->projectState = $project->state;
 

@@ -9989,5 +9989,9 @@
     "This change goes beyond the confirmed booking and has to be requested again.": "This change goes beyond the confirmed booking and has to be requested again.",
     "This event is still being saved. Please wait a moment and reload the calendar.": "This event is still being saved. Please wait a moment and reload the calendar.",
     "Included for room admins": "Included for room admins",
-    ":count event stays in the trash because you may not delete it.|:count events stay in the trash because you may not delete them.": ":count event stays in the trash because you may not delete it.|:count events stay in the trash because you may not delete them."
+    ":count event stays in the trash because you may not delete it.|:count events stay in the trash because you may not delete them.": ":count event stays in the trash because you may not delete it.|:count events stay in the trash because you may not delete them.",
+    "Answer room request": "Answer room request",
+    "Confirm event": "Confirm event",
+    "Room request: click to confirm or decline.": "Room request: click to confirm or decline.",
+    "Confirming books the room firmly. Declining removes the event from the room; it stays in the calendar as an event without a room.": "Confirming books the room firmly. Declining removes the event from the room; it stays in the calendar as an event without a room."
 }

@@ -2552,7 +2552,7 @@ class EventController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function acceptEvent(Request $request, Event $event): RedirectResponse
+    public function acceptEvent(Request $request, Event $event): RedirectResponse|JsonResponse
     {
         // Schon beantwortet (parallel durch andere Admins)? Dann 409 „bereits beantwortet“ –
         // die Policy hätte vorher mit 403 „nicht erlaubt“ abgelehnt
@@ -2689,7 +2689,7 @@ class EventController extends Controller
 
         SafeBroadcast::send(new EventUpdated($event->fresh(), $event->room_id));
 
-        return Redirect::back();
+        return $this->answeredRoomRequestResponse($request, $event);
     }
 
     /**
@@ -2697,7 +2697,7 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function declineEvent(Request $request, Event $event): RedirectResponse
+    public function declineEvent(Request $request, Event $event): RedirectResponse|JsonResponse
     {
         abort_if($event->room_id === null, 409, 'This room request has already been answered.');
         $this->authorize('declineEvent', $event);
@@ -2976,14 +2976,14 @@ class EventController extends Controller
             $roomId
         ));
 
-        return Redirect::back();
+        return $this->answeredRoomRequestResponse($request, $event);
     }
 
     /**
      * Abgelehnte Änderungsanfrage (Zeitraum über die Bestätigung hinaus oder anderer Raum, siehe
      * EventChangeApprovalService): der Termin kehrt zur bestätigten Belegung zurück und bleibt fest gebucht.
      */
-    private function declineChangeRequest(Request $request, Event $event): RedirectResponse
+    private function declineChangeRequest(Request $request, Event $event): RedirectResponse|JsonResponse
     {
         $requestedRoomId = (int) $event->room_id;
         $requestedRoom = Room::find($requestedRoomId);
@@ -3104,6 +3104,23 @@ class EventController extends Controller
         SafeBroadcast::send(new EventCreated($freshEvent, $approvedRoomId));
         if ($requestedRoom !== null && $requestedRoomId !== $approvedRoomId) {
             SafeBroadcast::send(new EventCreated($freshEvent, $requestedRoomId));
+        }
+
+        return $this->answeredRoomRequestResponse($request, $event);
+    }
+
+    /**
+     * Antwort auf Zusage/Absage. Die Terminliste im Projekt (BulkBody) beantwortet per axios und übernimmt
+     * den Termin aus der Antwort; andere offene Listen erfahren es über den Broadcast. Alle übrigen Aufrufer
+     * (Kalender, Benachrichtigungen) kommen über Inertia und werden zurückgeleitet.
+     */
+    private function answeredRoomRequestResponse(Request $request, Event $event): RedirectResponse|JsonResponse
+    {
+        $freshEvent = $event->fresh();
+        SafeBroadcast::send(new BulkEventChanged($freshEvent, 'updated'));
+
+        if ($request->wantsJson() && !$request->hasHeader('X-Inertia')) {
+            return response()->json(['event' => BulkEventChanged::eventPayload($freshEvent)]);
         }
 
         return Redirect::back();

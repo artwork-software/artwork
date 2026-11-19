@@ -16,12 +16,6 @@
                     <span v-if="typeHint" :class="ticketingSync?.error ? 'text-danger-border' : ''">{{ typeHint }}</span>
                 </template>
                 <template #actions>
-                    <!--
-                    <button v-if="canImport" class="ui-button flex items-center gap-1.5" @click="showExportModal = true">
-                        <component :is="IconDownload" stroke-width="1" class="size-5" />
-                        {{ $t('Export') }}
-                    </button>
-                    -->
                     <button
                         v-if="canInviteExternal"
                         class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium"
@@ -67,6 +61,15 @@
                     >
                         <component :is="IconRefresh" stroke-width="1" class="size-5" />
                         {{ $t('Sync now') }}
+                    </button>
+                    <button
+                        v-if="canImport"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium"
+                        @click="showExportModal = true"
+                    >
+                        <component :is="IconDownload" stroke-width="1" class="size-5" />
+                        {{ $t('Export') }}
                     </button>
                     <template v-if="!isMirroredType">
                         <Link v-if="canImport" :href="route('crm.import')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">

@@ -59,7 +59,8 @@ trait HasCrmFields
         foreach ($fields as $propertyName => $mapping) {
             $value = $this->resolveCrmFieldValue($propertyName);
 
-            $property = CrmProperty::where('name', $propertyName)->first();
+            // Bei gleichnamigen Eigenschaften (Altbestand) gewinnt die Systemeigenschaft
+            $property = CrmProperty::where('name', $propertyName)->orderByDesc('is_system')->orderBy('id')->first();
 
             if (!$property) {
                 continue;

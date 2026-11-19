@@ -38,7 +38,7 @@ class CrmPropertyController extends Controller
     {
         $validated = $request->validate([
             'crm_property_group_id' => 'required|exists:crm_property_groups,id',
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255', Rule::unique('crm_properties', 'name')],
             'type' => ['required', 'string', Rule::enum(CrmPropertyTypeEnum::class)],
             'select_values' => 'nullable|array',
             'multiselect_display' => ['nullable', 'string', Rule::in(['checkboxes', 'dropdown'])],
@@ -60,7 +60,14 @@ class CrmPropertyController extends Controller
     public function update(Request $request, CrmProperty $crmProperty): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
+            // Eindeutig, sobald sich der Name ändert: Import, Filter und der Abgleich mit Nutzer*innen und
+            // Freelancer*innen finden Eigenschaften über ihren Namen. Bestehende Doppelte bleiben bearbeitbar.
+            'name' => array_merge(
+                ['sometimes', 'string', 'max:255'],
+                $request->input('name') === $crmProperty->name
+                    ? []
+                    : [Rule::unique('crm_properties', 'name')->ignore($crmProperty->id)]
+            ),
             'type' => ['sometimes', 'string', Rule::enum(CrmPropertyTypeEnum::class)],
             'select_values' => 'nullable|array',
             'multiselect_display' => ['nullable', 'string', Rule::in(['checkboxes', 'dropdown'])],

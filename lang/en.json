@@ -10001,5 +10001,12 @@
     "The type of a file upload property can only be changed while no contact has a value.": "The type of a file upload property can only be changed while no contact has a value.",
     "Changes could not be saved. Please check your entries.": "Changes could not be saved. Please check your entries.",
     "The fields could not be loaded.": "The fields could not be loaded.",
-    "Deleting the file failed.": "Deleting the file failed."
+    "Deleting the file failed.": "Deleting the file failed.",
+    "This value is not valid.": "This value is not valid.",
+    "Please enter a number.": "Please enter a number.",
+    "Please enter a valid date.": "Please enter a valid date.",
+    "Please choose one of the available options.": "Please choose one of the available options.",
+    "Selected contact": "Selected contact",
+    "component value updated": "Component value updated",
+    "settings updated": "Settings updated"
 }

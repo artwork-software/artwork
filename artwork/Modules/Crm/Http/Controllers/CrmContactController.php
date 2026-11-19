@@ -16,6 +16,7 @@ use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmPropertyFileService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
+use Artwork\Modules\Crm\Support\CrmPropertyValueValidator;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -29,6 +30,7 @@ class CrmContactController extends Controller
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
         private readonly CrmPropertyFileService $propertyFileService,
+        private readonly CrmPropertyValueValidator $propertyValueValidator,
     ) {
     }
 
@@ -219,6 +221,11 @@ class CrmContactController extends Controller
 
         $propertyValues = $validated['property_values'] ?? [];
         $this->authorizePropertyEdits(array_keys($propertyValues));
+        $this->propertyValueValidator->validate(
+            CrmContactType::query()->findOrFail($validated['crm_contact_type_id']),
+            $propertyValues,
+            $this->editablePropertyIds()
+        );
 
         $contact = $this->contactService->store(
             $validated,
@@ -265,6 +272,9 @@ class CrmContactController extends Controller
 
         $propertyValues = $validated['property_values'] ?? [];
         $this->authorizePropertyEdits(array_keys($propertyValues));
+        if ($propertyValues !== [] && $crmContact->contactType !== null) {
+            $this->propertyValueValidator->validate($crmContact->contactType, $propertyValues);
+        }
 
         $this->contactService->update(
             $crmContact,
@@ -616,25 +626,30 @@ class CrmContactController extends Controller
         return (int) $property->id;
     }
 
+    /**
+     * @return array<int, int>
+     */
+    private function editablePropertyIds(): array
+    {
+        $user = auth()->user();
+        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
+        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
+
+        return array_map(
+            'intval',
+            $this->propertyGroupService->getEditablePropertyIds($user->id, $deptIds, $isCrmManager)
+        );
+    }
+
     private function authorizePropertyEdits(array $propertyIds): void
     {
         if (empty($propertyIds)) {
             return;
         }
 
-        $user = auth()->user();
-        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
-        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
-
-        $editablePropertyIds = $this->propertyGroupService->getEditablePropertyIds(
-            $user->id,
-            $deptIds,
-            $isCrmManager
-        );
-
         $forbidden = array_diff(
             array_map('intval', $propertyIds),
-            $editablePropertyIds
+            $this->editablePropertyIds()
         );
 
         if (!empty($forbidden)) {

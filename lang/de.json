@@ -10003,5 +10003,12 @@
     "The type of a file upload property can only be changed while no contact has a value.": "Der Typ lässt sich bei Datei-Eigenschaften nur ändern, solange kein Kontakt einen Wert hat.",
     "Changes could not be saved. Please check your entries.": "Die Änderungen konnten nicht gespeichert werden. Bitte prüfe deine Eingaben.",
     "The fields could not be loaded.": "Die Felder konnten nicht geladen werden.",
-    "Deleting the file failed.": "Die Datei konnte nicht gelöscht werden."
+    "Deleting the file failed.": "Die Datei konnte nicht gelöscht werden.",
+    "This value is not valid.": "Dieser Wert ist ungültig.",
+    "Please enter a number.": "Bitte gib eine Zahl ein.",
+    "Please enter a valid date.": "Bitte gib ein gültiges Datum ein.",
+    "Please choose one of the available options.": "Bitte wähle eine der vorhandenen Optionen.",
+    "Selected contact": "Ausgewählter Kontakt",
+    "component value updated": "Feldwert geändert",
+    "settings updated": "Einstellungen geändert"
 }

@@ -37,7 +37,13 @@
                             </MenuItem>
                         </BaseMenu>
                     </div>
-                    <div class="mt-1 text-sm text-text-muted">{{ room.area?.name }}</div>
+                    <div class="mt-1 text-sm text-text-muted">
+                        <Link v-if="canManageRooms" :href="route('areas.management')" class="hover:text-accent-700 hover:underline"
+                              :title="$t('Rooms & areas')">
+                            {{ room.area?.name ?? $t('Rooms & areas') }}
+                        </Link>
+                        <span v-else>{{ room.area?.name }}</span>
+                    </div>
                     <div class="mt-4 flex flex-wrap gap-2">
                         <span v-if="room.temporary === true" class="inline-flex items-center gap-x-1.5 rounded-full border border-border-subtle bg-white px-3 py-1 text-xs font-medium text-text">
                             <PropertyIcon name="IconClockHour4" class="h-4 w-4" stroke-width="1.5" />
@@ -307,30 +313,13 @@
 </template>
 
 <script>
-import {IconCheck, IconChevronDown, IconChevronRight, IconCircleX, IconCopy, IconDotsVertical, IconEdit, IconFileText, IconMinus, IconPlus, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconChevronRight} from "@tabler/icons-vue";
 
 import AppLayout from '@/Layouts/AppLayout.vue'
-import {
-    Disclosure,
-    DisclosureButton,
-    DisclosurePanel,
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
-} from "@headlessui/vue";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import JetButton from "@/Jetstream/Button.vue";
-import JetInput from "@/Jetstream/Input.vue";
+import {MenuItem} from "@headlessui/vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Link, useForm} from "@inertiajs/vue3";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent.vue";
-import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import RoomAccessModal from "@/Layouts/Components/RoomAccessModal.vue";
 import RoomAttributeEditModal from "@/Layouts/Components/RoomAttributeEditModal.vue";
 import RoomFileUploadModal from "@/Layouts/Components/RoomFileUploadModal.vue";
@@ -342,9 +331,6 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import RoomAddressFields from "@/Pages/Rooms/Components/RoomAddressFields.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
@@ -378,9 +364,6 @@ export default {
         BaseUIButton,
         BaseTextarea,
         BaseCheckbox,
-        DateInputComponent,
-        TextareaComponent,
-        TextInputComponent,
         BaseMenu,
         SuccessModal,
         ConfirmationComponent,
@@ -391,37 +374,10 @@ export default {
         FileDeleteModal,
         RoomDetailCard,
         RoomAccessGroup,
-        NewUserToolTip,
-        IconPlus,
-        IconMinus,
-        Disclosure,
-        DisclosureButton,
-        DisclosurePanel,
-        TeamIconCollection,
         AppLayout,
-        Menu,
-        MenuButton,
         MenuItem,
-        MenuItems,
-        IconX,
-        IconEdit,
-        IconTrash,
-        IconDotsVertical,
-        SvgCollection,
-        IconCircleX,
-        JetButton,
-        JetInput,
         JetInputError,
-        IconCheck,
-        IconChevronDown,
-        IconFileText,
-        IconCopy,
-        IconPlus,
         Link,
-        Listbox,
-        ListboxButton,
-        ListboxOption,
-        ListboxOptions,
         IconChevronRight,
         RoomHistoryComponent,
         BaseInput

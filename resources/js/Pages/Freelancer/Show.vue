@@ -1,54 +1,17 @@
 <template>
     <AppLayout :title="$t('Freelancer') + ' ' + freelancer.first_name + ' ' + freelancer.last_name + ' ' + $t('edit')">
-        <div class="mx-auto max-w-7xl mt-6">
-            <!-- Header -->
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <!-- Avatar / Skeleton -->
-                    <div class="relative">
-                        <div v-if="showSidebar" class="size-16 rounded-full bg-border-subtle animate-pulse" />
-                        <img
-                            v-else
-                            :src="freelancer.profile_photo_url"
-                            :alt="freelancer.first_name"
-                            class="size-16 rounded-full object-cover ring-2 ring-white shadow-sm"
-                        />
-                    </div>
-                    <div>
-                        <div v-if="showSidebar" class="h-5 w-48 rounded bg-border-subtle animate-pulse" />
-                        <h1 v-else class="text-xl font-semibold text-text">
-                            {{ freelancer.first_name }} {{ freelancer.last_name }}
-                        </h1>
-                    </div>
-                </div>
-            </div>
-
-            <div class="w-full my-8">
-                <div class="overflow-x-auto">
-                    <nav class="flex gap-2">
-                        <template v-for="tab in tabs" :key="tab.name">
-                            <button
-                                v-if="tab.has_permission"
-                                @click="changeTab(tab.id)"
-                                :aria-current="tab.current ? 'page' : undefined"
-                                :class="[ tab.current
-                                    ? 'bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-600'
-                                    : 'text-text-muted hover:text-text hover:bg-surface-sunken',
-                                  'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium'
-                                ]"
-                            >
-                                <PropertyIcon v-if="tab?.icon" :name="tab.icon" class="size-4" />
-                                {{ $t(tab.name) }}
-                            </button>
-                        </template>
-                    </nav>
-                </div>
-            </div>
-        </div>
-
-        <div class="mx-auto max-w-7xl my-8">
+        <ExternalWorkerPage
+            :name="freelancer.first_name + ' ' + freelancer.last_name"
+            :photo-url="freelancer.profile_photo_url"
+            :tabs="tabs"
+            default-tab="data"
+            :can-manage="!checkCanEdit"
+            :delete-href="route('freelancer.destroy', { freelancer: freelancer.id })"
+            delete-title="Delete freelancer"
+        >
             <!-- Einsatzplan -->
-            <div v-if="currentTab === 1" class="grid gap-8">
+            <template #plan>
+            <div class="grid gap-8">
                 <UserShiftPlan
                     type="freelancer"
                     :totalPlannedWorkingHours="totalPlannedWorkingHours"
@@ -78,9 +41,11 @@
                     :availabilities="availabilities"
                 />
             </div>
+            </template>
 
             <!-- Persönliche Daten -->
-            <div v-if="currentTab === 2" class="grid gap-6">
+            <template #data>
+            <div class="grid gap-6">
                 <!-- Card: Basic info -->
                 <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-8">
@@ -98,42 +63,45 @@
                                     :src="freelancer.profile_photo_url"
                                     :alt="freelancer.first_name"
                                     @click="selectNewPhoto"
-                                    class="size-20 cursor-pointer rounded-full object-cover ring-2 ring-border-subtle"
+                                    :title="checkCanEdit ? '' : $t('Change profile picture')"
+                                    :class="checkCanEdit ? '' : 'cursor-pointer'"
+                                    class="size-20 rounded-full object-cover ring-2 ring-border-subtle"
                                 />
                             </div>
                         </div>
 
                         <div class="sm:col-span-3">
-                            <TextInputComponent
+                            <BaseInput
                                 id="first_name"
                                 v-model="freelancerData.first_name"
                                 @focusout="saveFreelancer"
                                 :disabled="checkCanEdit"
                                 :readonly="checkCanEdit"
                                 :label="$t('First name')"
-                            />
+                            :maxlength="255"
+                            :error="freelancerData.errors.first_name"
+                        />
                         </div>
                         <div class="sm:col-span-4">
-                            <TextInputComponent
+                            <BaseInput
                                 id="last_name"
                                 v-model="freelancerData.last_name"
                                 @focusout="saveFreelancer"
                                 :disabled="checkCanEdit"
                                 :readonly="checkCanEdit"
                                 :label="$t('Last name')"
-                            />
+                            :maxlength="255"
+                            :error="freelancerData.errors.last_name"
+                        />
                         </div>
                     </div>
 
                     <div class="mt-4">
-                        <VisualFeedback
-                            v-show="showSuccessModal"
-                            :text="$t('The changes have been saved successfully.')"
-                        />
+                        <VisualFeedback :show-save-success="saved" text="The changes have been saved successfully." />
                     </div>
 
                     <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <TextInputComponent
+                        <BaseInput
                             class="sm:col-span-1"
                             id="business"
                             name="business"
@@ -142,9 +110,11 @@
                             :disabled="checkCanEdit"
                             :readonly="checkCanEdit"
                             :label="$t('Company')"
+                            :maxlength="255"
+                            :error="freelancerData.errors.business"
                         />
 
-                        <TextInputComponent
+                        <BaseInput
                             class="sm:col-span-1"
                             id="position"
                             name="position"
@@ -153,9 +123,11 @@
                             :disabled="checkCanEdit"
                             :readonly="checkCanEdit"
                             :label="$t('Position')"
+                            :maxlength="255"
+                            :error="freelancerData.errors.position"
                         />
 
-                        <TextInputComponent
+                        <BaseInput
                             class="sm:col-span-1"
                             id="email"
                             type="email"
@@ -165,60 +137,67 @@
                             :disabled="checkCanEdit"
                             :readonly="checkCanEdit"
                             :label="$t('Email')"
+                            :maxlength="255"
+                            :error="freelancerData.errors.email"
                         />
 
-                        <TextInputComponent
+                        <BaseInput
                             class="sm:col-span-1"
                             id="phone_number"
-                            type="text"
                             name="phone_number"
                             v-model="freelancerData.phone_number"
                             @focusout="saveFreelancer"
                             :disabled="checkCanEdit"
                             :readonly="checkCanEdit"
                             :label="$t('Phone number')"
+                            type="tel"
+                            :maxlength="255"
+                            :error="freelancerData.errors.phone_number"
                         />
 
-                        <TextInputComponent
+                        <BaseInput
                             class="sm:col-span-1"
                             id="street"
-                            type="text"
                             name="street"
                             v-model="freelancerData.street"
                             @focusout="saveFreelancer"
                             :disabled="checkCanEdit"
                             :readonly="checkCanEdit"
                             :label="$t('Street')"
+                            :maxlength="255"
+                            :error="freelancerData.errors.street"
                         />
 
                         <div class="sm:col-span-1" />
 
-                        <TextInputComponent
+                        <BaseInput
                             class="sm:col-span-1"
                             id="zip_code"
-                            type="text"
                             name="zip_code"
                             v-model="freelancerData.zip_code"
                             @focusout="saveFreelancer"
                             :disabled="checkCanEdit"
                             :readonly="checkCanEdit"
                             :label="$t('Zip code')"
+                            :maxlength="255"
+                            :error="freelancerData.errors.zip_code"
                         />
 
-                        <TextInputComponent
+                        <BaseInput
                             class="sm:col-span-1"
                             id="location"
-                            type="text"
                             name="location"
                             v-model="freelancerData.location"
                             @focusout="saveFreelancer"
                             :disabled="checkCanEdit"
                             :readonly="checkCanEdit"
                             :label="$t('Location')"
+                            :maxlength="255"
+                            :error="freelancerData.errors.location"
                         />
 
-                        <TextareaComponent
-                            class="sm:col-span-2"
+                        <div class="sm:col-span-2">
+                            <BaseTextarea
                             id="note"
                             rows="4"
                             name="note"
@@ -227,38 +206,48 @@
                             :disabled="checkCanEdit"
                             :readonly="checkCanEdit"
                             :label="$t('Note')"
+                            :maxlength="500"
+                            show-counter
+                            :error="freelancerData.errors.note"
                         />
+                        </div>
                     </div>
                 </div>
             </div>
+            </template>
 
             <!-- Conditions -->
-            <div v-if="currentTab === 3">
+            <template #terms>
+            <div>
                 <UserTermsTab user_type="freelancer" :user_to_edit="freelancer" />
             </div>
+            </template>
 
             <!-- Work profile -->
-            <div v-if="currentTab === 4">
+            <template #profile>
+            <div>
                 <WorkProfileTab user-type="freelancer" :user="freelancer" :shift-qualifications="shiftQualifications" />
             </div>
-        </div>
+            </template>
+        </ExternalWorkerPage>
     </AppLayout>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, getCurrentInstance } from 'vue'
+import { ref, computed } from 'vue'
 import {router, useForm} from '@inertiajs/vue3'
+import ExternalWorkerPage from '@/Pages/Components/ExternalWorkerPage.vue'
+import { useAutosaveForm } from '@/Composeables/useAutosaveForm.js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import UserTermsTab from '@/Pages/Users/Tabs/UserTermsTab.vue'
 import Availability from '@/Pages/Users/Components/Availability.vue'
 import UserShiftPlan from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue'
 import WorkProfileTab from '@/Pages/Components/WorkProfileTab.vue'
-import TextInputComponent from '@/Components/Inputs/TextInputComponent.vue'
-import TextareaComponent from '@/Components/Inputs/TextareaComponent.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import VisualFeedback from '@/Components/Feedback/VisualFeedback.vue'
 
 import { is, can } from 'laravel-permission-to-vuejs'
-import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     freelancer: Object,
@@ -284,42 +273,19 @@ const props = defineProps({
     crafts: Array,
 })
 
-const { proxy } = getCurrentInstance()
-
 /* UI state */
-const showSuccessModal = ref(false)
-const currentTab = ref(2)
 const photoPreview = ref(null)
 const photoInput = ref(null)
-const showSidebar = ref(false)
+
+const canManage = can('can manage workers') || can('can manage external workers') || is('artwork admin')
 
 /* Tabs */
-const tabs = reactive([
-    {
-        id: 1,
-        name: proxy.$t('Operational plan'),
-        current: false,
-        has_permission: can('can plan shifts') || is('artwork admin'),
-    },
-    {
-        id: 2,
-        name: proxy.$t('Personal data'),
-        current: true,
-        has_permission: true,
-    },
-    {
-        id: 3,
-        name: proxy.$t('Conditions'),
-        current: false,
-        has_permission: can('can manage workers') || can('can manage external workers') || is('artwork admin'),
-    },
-    {
-        id: 4,
-        name: proxy.$t('Work profile'),
-        current: false,
-        has_permission: can('can manage workers') || can('can manage external workers') || is('artwork admin'),
-    },
-])
+const tabs = [
+    { key: 'plan', name: 'Operational plan', visible: can('can plan shifts') || is('artwork admin') },
+    { key: 'data', name: 'Personal data', visible: true },
+    { key: 'terms', name: 'Conditions', visible: canManage },
+    { key: 'profile', name: 'Work profile', visible: canManage },
+]
 
 /* Form */
 const freelancerData = useForm({
@@ -335,39 +301,15 @@ const freelancerData = useForm({
     note: props.freelancer.note,
 })
 
-/* Computed */
-const checkCanEdit = computed(() => !(can('can manage workers') || can('can manage external workers') || is('artwork admin')))
+const { save: saveFreelancer, saved, flashSaved } = useAutosaveForm(
+    freelancerData,
+    () => route('freelancer.update', props.freelancer.id),
+)
 
-/* Lifecycle */
-onMounted(() => {
-    showSidebar.value = true
-    setTimeout(() => (showSidebar.value = false), 800)
-})
-
-/* Methods */
-const changeTab = (id) => {
-    tabs.forEach((t) => (t.current = t.id === id))
-    currentTab.value = id
-}
-
-const openSuccessModal = () => {
-    showSuccessModal.value = true
-    setTimeout(() => closeSuccessModal(), 2000)
-}
-const closeSuccessModal = () => (showSuccessModal.value = false)
-
-const saveFreelancer = () => {
-    if (freelancerData.isDirty) {
-        freelancerData.patch(route('freelancer.update', props.freelancer.id), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => openSuccessModal(),
-        })
-    }
-}
+const checkCanEdit = computed(() => !canManage)
 
 const selectNewPhoto = () => {
-    if (can('can manage workers') || can('can manage external workers') || is('artwork admin')) {
+    if (canManage) {
         photoInput.value?.click()
     }
 }
@@ -388,7 +330,7 @@ const updatePhotoPreview = () => {
         {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => openSuccessModal(),
+            onSuccess: () => flashSaved(),
         }
     )
 }

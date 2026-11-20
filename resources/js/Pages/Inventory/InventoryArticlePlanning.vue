@@ -39,6 +39,32 @@
                         </button>
                     </div>
 
+                    <!-- Springt im sichtbaren Zeitraum zur Heute-Spalte (liegt heute außerhalb, hilft "Heute" im Datumsfeld) -->
+                    <div v-if="todayInRange" class="shrink-0">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-text-muted hover:bg-surface-sunken transition-colors"
+                            @click="scrollToToday"
+                        >
+                            <IconCalendarEvent class="size-4" />
+                            {{ $t('Jump to today') }}
+                        </button>
+                    </div>
+
+                    <!-- Schnellfilter: nur Artikel, die im Zeitraum überbucht sind -->
+                    <div v-if="overbookedIds.size > 0 || onlyOverbooked" class="shrink-0">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] font-medium transition-colors"
+                            :class="onlyOverbooked ? 'border-danger bg-danger text-white' : 'border-danger/40 bg-white/80 text-danger hover:bg-danger/5'"
+                            :aria-pressed="onlyOverbooked"
+                            @click="onlyOverbooked = !onlyOverbooked"
+                        >
+                            <span class="tabular-nums">{{ overbookedIds.size }}</span>
+                            {{ $t('Overbooked') }}
+                        </button>
+                    </div>
+
                     <div class="flex-1"></div>
 
                     <!-- Legend (info icon only; click toggles the same tooltip) -->
@@ -113,6 +139,14 @@
                                 />
                                 {{ $t('Only planned articles') }}
                             </label>
+                            <label class="mt-2 flex items-center gap-2 text-[12px] font-medium text-text-muted cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    v-model="onlyOverbooked"
+                                    class="size-3.5 rounded border-border text-accent-600 focus:ring-accent-600"
+                                />
+                                {{ $t('Only overbooked articles') }}
+                            </label>
 
                             <!-- Ansichtsübergreifend (users-Spalte) — gleiche Einstellung wie in den Kalender-Anzeigeoptionen -->
                             <label class="mt-2 flex items-start gap-2 text-[12px] font-medium text-text-muted cursor-pointer select-none max-w-[260px]">
@@ -172,6 +206,18 @@
 
                         <!-- Body -->
                         <div>
+                            <!-- Leerzustand: Suche oder "Nur geplante Artikel" lässt nichts übrig -->
+                            <div v-if="!(filteredGroupedArticles ?? []).length" class="sticky left-0 w-fit px-4 py-8 text-sm text-text-subtle flex items-center gap-3">
+                                <span>{{ $t('No articles match your search or filters.') }}</span>
+                                <button
+                                    v-if="searchFilter || onlyPlanned || onlyOverbooked"
+                                    type="button"
+                                    class="text-accent-600 hover:text-accent-700 underline underline-offset-2"
+                                    @click="searchFilter = ''; onlyPlanned = false; onlyOverbooked = false"
+                                >
+                                    {{ $t('Reset all filters') }}
+                                </button>
+                            </div>
                             <template v-for="group in filteredGroupedArticles" :key="group.category">
                                 <!-- Category row (toggle) -->
                                 <div class="flex bg-surface-sunken/80 border-t-2 border-border-strong">
@@ -335,7 +381,8 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import { ref, reactive, onMounted, onUnmounted, watch, computed, defineAsyncComponent, provide, nextTick } from "vue";
-import { IconAdjustmentsHorizontal, IconChevronRight, IconInfoCircle } from "@tabler/icons-vue";
+import { IconAdjustmentsHorizontal, IconCalendarEvent, IconChevronRight, IconInfoCircle } from "@tabler/icons-vue";
+import { overbookedArticleIds } from "@/Pages/Inventory/Composables/inventoryListTools.js";
 import debounce from "lodash.debounce";
 import axios from "axios";
 import ArticleRow from "@/Pages/Inventory/Components/Planning/ArticleRow.vue";
@@ -535,6 +582,16 @@ const onlyPlanned = ref(props.planningSettings?.only_planned ?? false);
 // Ansichtsübergreifend (users-Spalte), daher aus auth.user statt den Planning-Settings
 const shareCalendarDate = ref(usePage().props.auth.user.share_calendar_date ?? false);
 const isArticlePlanned = (article) => (issuesByArticle.value[article.id]?.length ?? 0) > 0;
+// Schnellfilter "nur überbuchte" (bewusst nicht gespeichert: ein Blick, kein Dauerzustand)
+const onlyOverbooked = ref(false);
+const overbookedIds = computed(() => overbookedArticleIds(props.availability, props.dates));
+const todayInRange = computed(() => (props.dates ?? []).some((date) => date.date === todayIso));
+// Spaltenbreite 96px (w-24), davor die 220px breite, angeheftete Artikelspalte
+const scrollToToday = () => {
+    const index = (props.dates ?? []).findIndex((date) => date.date === todayIso);
+    if (index < 0 || !gridWrapper.value) return;
+    gridWrapper.value.scrollTo({ left: Math.max(0, index * 96 - 96), behavior: 'smooth' });
+};
 
 // Filtered grouped articles based on debounced search input
 const searchFilteredGroups = computed(() => {
@@ -588,16 +645,20 @@ const searchFilteredGroups = computed(() => {
 // Ref 1.18: apply the "only planned" filter on top of the search result.
 const filteredGroupedArticles = computed(() => {
     const groups = searchFilteredGroups.value;
-    if (!onlyPlanned.value) {
+    if (!onlyPlanned.value && !onlyOverbooked.value) {
         return groups;
     }
 
+    const overbooked = overbookedIds.value;
+    const keep = (article) =>
+        (!onlyPlanned.value || isArticlePlanned(article)) && (!onlyOverbooked.value || overbooked.has(article.id));
+
     const result = [];
     for (const group of groups) {
-        const articles = (group.articles || []).filter(isArticlePlanned);
+        const articles = (group.articles || []).filter(keep);
         const subcategories = (group.subcategories || []).map(sub => ({
             ...sub,
-            articles: (sub.articles || []).filter(isArticlePlanned),
+            articles: (sub.articles || []).filter(keep),
         })).filter(sub => sub.articles.length > 0);
 
         if (articles.length > 0 || subcategories.length > 0) {

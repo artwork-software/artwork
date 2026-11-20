@@ -1,5 +1,5 @@
 <template>
-    <app-layout :title="$t('Project Settings') + ' - ' + title">
+    <app-layout :title="title && title !== $t('Project Settings') ? $t('Project Settings') + ' - ' + title : $t('Project Settings')">
         <div class="artwork-container">
             <ToolbarHeader
                 :icon="IconSettings"

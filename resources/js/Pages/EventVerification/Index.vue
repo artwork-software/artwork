@@ -12,6 +12,12 @@
             <section v-if="canSeeRoomRequests" class="mb-10">
                 <h2 class="text-lg font-lexend font-bold text-text">
                     {{ $t('Room booking requests') }}
+                    <span v-if="roomRequestCount > 0" class="ml-1 text-sm font-normal text-text-subtle tabular-nums">({{ roomRequestCount }})</span>
+                    <button v-if="roomRequestCount > 1" type="button"
+                            class="ml-3 text-sm font-normal text-accent-600 hover:text-accent-700"
+                            @click="selectedRoomRequestIds = toggleAllKeys(selectedRoomRequestIds, allRoomRequestIds)">
+                        {{ allRoomRequestsSelected ? $t('Clear selection') : $t('Select all') }}
+                    </button>
                 </h2>
                 <p class="text-sm text-text-subtle mt-1">
                     <template v-if="roomRequestScope === 'all'">
@@ -32,6 +38,11 @@
                             <BaseCard elevation="raised" class="w-full" v-for="req in requests" :key="req.id">
                                 <div class="p-4">
                                     <div class="flex items-center gap-x-2">
+                                        <SelectionCheckbox
+                                            :checked="selectedRoomRequestIds.includes(req.id)"
+                                            :label="$t('Select {name}', { name: req.name || req.event_type?.name || '' })"
+                                            @toggle="selectedRoomRequestIds = toggleKey(selectedRoomRequestIds, req.id)"
+                                        />
                                         <div
                                             class="w-5 h-5 rounded-full flex-shrink-0"
                                             :style="{ backgroundColor: req.event_type?.hex_code }"
@@ -43,11 +54,15 @@
                                             v-if="req.audience"
                                             src="/Svgs/IconSvgs/icon_public.svg"
                                             class="h-4 w-4"
+                                            :alt="$t('With audience')"
+                                            :title="$t('With audience')"
                                         />
                                         <img
                                             v-if="req.is_loud"
                                             src="/Svgs/IconSvgs/icon_loud.svg"
                                             class="h-4 w-4"
+                                            :alt="$t('It gets loud')"
+                                            :title="$t('It gets loud')"
                                         />
                                     </div>
 
@@ -65,11 +80,13 @@
                                     <div v-if="req.project" class="mt-1 text-xs text-text-subtle font-lexend flex items-center gap-x-1">
                                         <span>{{ $t('assigned to') }}</span>
                                         <Link
-                                            :href="route('projects.tab', { project: req.project.id, projectTab: 1 })"
+                                            v-if="first_project_tab_id"
+                                            :href="route('projects.tab', { project: req.project.id, projectTab: first_project_tab_id })"
                                             class="text-text-subtle font-bold hover:underline"
                                         >
                                             {{ req.project?.name }}
                                         </Link>
+                                        <span v-else class="font-bold">{{ req.project?.name }}</span>
                                     </div>
                                     <p v-else class="mt-1 text-xs text-text-subtle font-lexend">
                                         {{ $t('Not assigned to a project') }}
@@ -136,6 +153,12 @@
             <section v-if="canSeeVerifications">
                 <h2 class="text-lg font-lexend font-bold text-text">
                     {{ $t('Verification requests for planned events') }}
+                    <span v-if="verificationCount > 0" class="ml-1 text-sm font-normal text-text-subtle tabular-nums">({{ verificationCount }})</span>
+                    <button v-if="verificationCount > 1" type="button"
+                            class="ml-3 text-sm font-normal text-accent-600 hover:text-accent-700"
+                            @click="selectedVerificationEventIds = toggleAllKeys(selectedVerificationEventIds, allVerificationEventIds)">
+                        {{ allVerificationsSelected ? $t('Clear selection') : $t('Select all') }}
+                    </button>
                 </h2>
                 <p class="text-sm text-text-subtle mt-1">
                     <template v-if="verificationScope === 'all'">
@@ -157,7 +180,17 @@
                                 v-for="v in verifications"
                                 :key="v.id"
                                 :event-verification="v"
-                            />
+                            >
+                                <template #select>
+                                    <SelectionCheckbox
+                                        v-if="v.event?.id"
+                                        class="mt-0.5"
+                                        :checked="selectedVerificationEventIds.includes(v.event.id)"
+                                        :label="$t('Select {name}', { name: v.event.eventName ?? v.event.project?.name ?? '' })"
+                                        @toggle="selectedVerificationEventIds = toggleKey(selectedVerificationEventIds, v.event.id)"
+                                    />
+                                </template>
+                            </SingleEventVerificationRequest>
                         </div>
                     </div>
                 </div>
@@ -172,6 +205,83 @@
             </div>
         </template>
     </BaseEventVerificationLayout>
+
+    <!-- Leiste der Mehrfachauswahl -->
+    <div v-if="selectedRoomRequestIds.length > 0 || selectedVerificationEventIds.length > 0"
+         class="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
+        <div class="pointer-events-auto flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-surface-inverse py-2.5 pl-4 pr-2 text-sm text-white shadow-lg">
+            <template v-if="selectedRoomRequestIds.length > 0">
+                <span class="text-white/70 tabular-nums">
+                    {{ $t('Room booking requests') }}: {{ $t('{count} selected', { count: selectedRoomRequestIds.length }) }}
+                </span>
+                <button type="button" :class="bulkButtonClass" :disabled="bulkProcessing" @click="bulkConfirm = 'accept'">
+                    <IconCheck class="size-4" />
+                    {{ $t('Commitments') }}
+                </button>
+                <button type="button" :class="bulkDangerButtonClass" :disabled="bulkProcessing" @click="bulkConfirm = 'decline'">
+                    <IconX class="size-4" />
+                    {{ $t('Cancellations') }}
+                </button>
+            </template>
+            <template v-if="selectedVerificationEventIds.length > 0">
+                <span class="text-white/70 tabular-nums">
+                    {{ $t('Verification requests') }}: {{ $t('{count} selected', { count: selectedVerificationEventIds.length }) }}
+                </span>
+                <button type="button" :class="bulkButtonClass" :disabled="bulkProcessing" @click="approveSelectedVerifications">
+                    <IconCheck class="size-4" />
+                    {{ $t('Approve') }}
+                </button>
+                <button type="button" :class="bulkDangerButtonClass" :disabled="bulkProcessing" @click="showBulkReject = true">
+                    <IconX class="size-4" />
+                    {{ $t('Reject') }}
+                </button>
+            </template>
+            <button type="button" class="rounded-lg p-1.5 hover:bg-white/15" :title="$t('Clear selection')" :aria-label="$t('Clear selection')" @click="clearSelection">
+                <IconX class="size-4" />
+            </button>
+        </div>
+    </div>
+
+    <!-- Rückfrage der Sammelantwort auf Raumbelegungsanfragen -->
+    <ArtworkBaseModal
+        v-if="bulkConfirm"
+        :title="bulkConfirm === 'accept' ? 'Confirm room occupancy' : 'Cancel room reservation'"
+        modal-size="sm:max-w-lg"
+        @close="bulkConfirm = null"
+    >
+        <p class="text-sm text-text">
+            {{ bulkConfirm === 'accept'
+                ? $t('Accept the {count} selected room booking requests?', { count: selectedRoomRequestIds.length })
+                : $t('Decline the {count} selected room booking requests?', { count: selectedRoomRequestIds.length }) }}
+        </p>
+        <template #footer>
+            <BaseUIButton label="No, not really" is-cancel-button hide-icon :disabled="bulkProcessing" @click="bulkConfirm = null" />
+            <BaseUIButton
+                :label="bulkConfirm === 'accept' ? 'Commitments' : 'Cancellations'"
+                :variant="bulkConfirm === 'accept' ? 'primary' : 'danger'"
+                :icon="bulkConfirm === 'accept' ? 'IconCheck' : 'IconProgressX'"
+                :processing="bulkProcessing"
+                @click="answerSelectedRoomRequests"
+            />
+        </template>
+    </ArtworkBaseModal>
+
+    <!-- Ablehnungsgrund für mehrere Überprüfungsanfragen -->
+    <ArtworkBaseModal
+        v-if="showBulkReject"
+        title="Reject Request"
+        modal-size="sm:max-w-lg"
+        @close="showBulkReject = false"
+    >
+        <p class="mb-3 text-sm text-text">
+            {{ $t('Reject the {count} selected verification requests? The reason applies to all of them.', { count: selectedVerificationEventIds.length }) }}
+        </p>
+        <BaseTextarea id="bulk_rejection_reason" v-model="bulkRejectionReason" label="Rejection Reason" :maxlength="16000" />
+        <template #footer>
+            <BaseUIButton label="No, not really" is-cancel-button hide-icon :disabled="bulkProcessing" @click="showBulkReject = false" />
+            <BaseUIButton label="Reject Request" variant="danger" icon="IconCircleX" :processing="bulkProcessing" @click="rejectSelectedVerifications" />
+        </template>
+    </ArtworkBaseModal>
 
     <!-- Approve Room Request Modal -->
     <ArtworkBaseModal
@@ -265,7 +375,8 @@
 </template>
 
 <script setup>
-import {computed, onMounted, onUnmounted, ref} from "vue";
+import {computed, onMounted, onUnmounted, ref, watch} from "vue";
+import axios from "axios";
 import {router, Link, useForm, usePage} from "@inertiajs/vue3";
 import {IconCheck, IconX, IconCalendar} from "@tabler/icons-vue";
 import BaseEventVerificationLayout from "@/Pages/EventVerification/BaseEventVerificationLayout.vue";
@@ -276,6 +387,10 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SingleEventVerificationRequest from "@/Pages/EventVerification/Components/SingleEventVerificationRequest.vue";
+import SelectionCheckbox from "@/Pages/Areas/Components/SelectionCheckbox.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import {pruneKeys, selectionState, toggleAllKeys, toggleKey} from "@/Pages/Trash/Composables/trashTools.js";
+import {setIncomingRequestCount} from "@/Composeables/incomingRequestCount.js";
 
 const props = defineProps({
     roomBookingRequests: {
@@ -302,7 +417,82 @@ const props = defineProps({
         type: [String, Array],
         default: () => [],
     },
+    first_project_tab_id: {
+        type: [Number, String],
+        default: null,
+    },
 });
+
+const roomRequestCount = computed(() => Object.values(props.roomBookingRequests)
+    .reduce((sum, group) => sum + group.length, 0));
+const verificationCount = computed(() => Object.values(props.verificationRequests)
+    .reduce((sum, group) => sum + group.length, 0));
+
+// --- Mehrfachauswahl -----------------------------------------------------------------------
+const selectedRoomRequestIds = ref([]);
+const selectedVerificationEventIds = ref([]);
+const bulkProcessing = ref(false);
+const bulkConfirm = ref(null);
+const showBulkReject = ref(false);
+const bulkRejectionReason = ref('');
+const bulkButtonClass = 'inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1 font-semibold hover:bg-white/25 disabled:opacity-50';
+const bulkDangerButtonClass = 'inline-flex items-center gap-1.5 rounded-lg bg-danger px-3 py-1 font-semibold hover:opacity-90 disabled:opacity-50';
+
+const allRoomRequestIds = computed(() => Object.values(props.roomBookingRequests).flat().map((req) => req.id));
+const allVerificationEventIds = computed(() => [...new Set(
+    Object.values(props.verificationRequests).flat().map((v) => v.event?.id).filter(Boolean)
+)]);
+const allRoomRequestsSelected = computed(() => selectionState(selectedRoomRequestIds.value, allRoomRequestIds.value) === 'all');
+const allVerificationsSelected = computed(() => selectionState(selectedVerificationEventIds.value, allVerificationEventIds.value) === 'all');
+
+// beantwortete Anfragen fallen aus der Auswahl; Reiter und Seitenmenü bekommen die aktuelle Zahl
+watch([allRoomRequestIds, allVerificationEventIds], ([roomIds, eventIds]) => {
+    selectedRoomRequestIds.value = pruneKeys(selectedRoomRequestIds.value, roomIds);
+    selectedVerificationEventIds.value = pruneKeys(selectedVerificationEventIds.value, eventIds);
+    setIncomingRequestCount(roomRequestCount.value + verificationCount.value);
+}, { immediate: true });
+
+const clearSelection = () => {
+    selectedRoomRequestIds.value = [];
+    selectedVerificationEventIds.value = [];
+};
+
+const answerSelectedRoomRequests = () => {
+    if (bulkProcessing.value || !bulkConfirm.value) return;
+    bulkProcessing.value = true;
+    router.post(route('events.requests.bulk-answer'), {
+        events: selectedRoomRequestIds.value,
+        action: bulkConfirm.value,
+    }, {
+        preserveScroll: true,
+        onFinish: () => {
+            bulkProcessing.value = false;
+            bulkConfirm.value = null;
+        },
+    });
+};
+
+// Die Sammelrouten der Überprüfung antworten ohne Weiterleitung; danach die Listen neu laden
+// (übersprungene Termine meldet der Server als Hinweis beim Neuladen)
+const answerSelectedVerifications = (routeName, payload) => {
+    if (bulkProcessing.value) return;
+    bulkProcessing.value = true;
+    axios.post(route(routeName), { events: selectedVerificationEventIds.value, ...payload })
+        .then(() => {
+            showBulkReject.value = false;
+            bulkRejectionReason.value = '';
+        })
+        .catch(() => {})
+        .finally(() => {
+            bulkProcessing.value = false;
+            router.reload({ preserveScroll: true });
+        });
+};
+const approveSelectedVerifications = () => answerSelectedVerifications('event-verifications.approved-by-events', {});
+const rejectSelectedVerifications = () => answerSelectedVerifications(
+    'event-verifications.reject-by-events',
+    { rejection_reason: bulkRejectionReason.value },
+);
 
 const hasAnyRoomRequests = computed(() => {
     return Object.keys(props.roomBookingRequests).length > 0 &&
@@ -364,12 +554,15 @@ const declineRequest = () => {
     });
 };
 
-// Listen for real-time updates on room channels
-const subscribedChannels = ref([]);
-
-// Neue/zurückgezogene/erledigte Prüfanfragen (BroadcastToReloadEventVerificationRequests) – der Listener
-// lag nur auf "Gesendet", die Eingangsliste der Prüfenden blieb bis zum Neuladen veraltet
+// Live-Aktualisierung: ein gemeinsamer Hinweis-Kanal für Raumbelegungsanfragen (vorher ein Kanal je Raum,
+// und nur für Räume, die beim Laden schon eine Anfrage hatten) und der eigene Kanal der Prüfanfragen
+const ROOM_REQUEST_CHANNEL = 'room-requests.inbox';
 const verificationChannelName = `event-verification-index.${usePage().props.auth.user.id}`;
+
+const reloadRoomRequests = () => {
+    router.reload({ only: ['roomBookingRequests'], preserveScroll: true });
+};
+// Neue/zurückgezogene/erledigte Prüfanfragen (BroadcastToReloadEventVerificationRequests)
 const reloadVerificationRequests = () => {
     router.reload({ only: ['verificationRequests'], preserveScroll: true });
 };
@@ -377,26 +570,20 @@ const reloadVerificationRequests = () => {
 onMounted(() => {
     window.Echo.private(verificationChannelName)
         .listen('.reload-event-verification-requests', reloadVerificationRequests);
-
-    const roomIds = Object.keys(props.roomBookingRequests);
-    roomIds.forEach(roomId => {
-        const channel = window.Echo.private(`event.room.${roomId}`);
-        channel.listen('.event.created', reloadPage);
-        subscribedChannels.value.push({ roomId, channel });
-    });
+    if (props.canSeeRoomRequests) {
+        window.Echo.private(ROOM_REQUEST_CHANNEL)
+            .listen('.room-requests.changed', reloadRoomRequests);
+    }
 });
 
-function reloadPage() {
-    router.reload({ preserveScroll: true });
-}
-
+// Nur die eigenen Handler abmelden – die Kanäle können auch andere Abonnenten haben
 onUnmounted(() => {
     window.Echo.private(verificationChannelName)
         .stopListening('.reload-event-verification-requests', reloadVerificationRequests);
-    // Nur den eigenen Handler abmelden – Echo.leave schloss den Raumkanal auch für andere Abonnenten
-    subscribedChannels.value.forEach(({ channel }) => {
-        channel.stopListening('.event.created', reloadPage);
-    });
+    if (props.canSeeRoomRequests) {
+        window.Echo.private(ROOM_REQUEST_CHANNEL)
+            .stopListening('.room-requests.changed', reloadRoomRequests);
+    }
 });
 </script>
 

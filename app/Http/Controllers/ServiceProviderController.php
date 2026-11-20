@@ -104,11 +104,11 @@ class ServiceProviderController extends Controller
         $this->authorize('updateWorkProfile', ServiceProvider::class);
         $request->validate([
             'provider_name' => 'required|string|max:255',
-            'email' => 'nullable|email',
-            'phone_number' => 'nullable|string',
-            'street' => 'nullable|string',
-            'zip_code' => 'nullable|string',
-            'location' => 'nullable|string',
+            'email' => 'nullable|email|max:255',
+            'phone_number' => 'nullable|string|max:255',
+            'street' => 'nullable|string|max:255',
+            'zip_code' => 'nullable|string|max:255',
+            'location' => 'nullable|string|max:255',
             // service_providers.note ist varchar(500) – längere Notizen wären ein DB-Fehler (500)
             'note' => 'nullable|string|max:500',
             'type_of_provider' => 'nullable|string',
@@ -250,6 +250,12 @@ class ServiceProviderController extends Controller
     {
         $this->authorize('updateWorkProfile', ServiceProvider::class);
         $serviceProvider->delete();
+
+        // Von der Detailseite aus gelöscht: die gibt es nicht mehr, also zur Liste
+        $showPath = parse_url(route('service_provider.show', $serviceProvider), PHP_URL_PATH);
+        if (parse_url(url()->previous(), PHP_URL_PATH) === $showPath) {
+            return Redirect::route('users');
+        }
 
         return Redirect::back();
     }

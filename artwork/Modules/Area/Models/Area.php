@@ -29,7 +29,12 @@ class Area extends Model
 
     protected $fillable = [
         'name',
-        'color'
+        'color',
+        'position',
+    ];
+
+    protected $casts = [
+        'position' => 'integer',
     ];
 
     /**

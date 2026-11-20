@@ -29,6 +29,8 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftService;
+use Artwork\Modules\Trash\Models\TrashRecord;
+use Artwork\Modules\Trash\Services\TrashInfoService;
 use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
@@ -84,6 +86,10 @@ class PurgeTrashCommand extends Command
             if ($count > 0) {
                 $this->line(sprintf('%s: %d %s', $label, $count, $dryRun ? 'würden gelöscht' : 'gelöscht'));
             }
+        }
+
+        if (!$dryRun) {
+            $this->pruneTrashRecords();
         }
 
         if ($this->failures > 0) {
@@ -220,6 +226,17 @@ class PurgeTrashCommand extends Command
             ],
             'Verwertungsgesellschaften' => [$trashedBefore(CollectingSociety::class), $forceDelete],
         ];
+    }
+
+    /**
+     * "Gelöscht von"-Vermerke, deren Eintrag längst nicht mehr im Papierkorb liegen kann
+     * (z. B. nach "Alle löschen", das ohne Modell-Events löscht).
+     */
+    private function pruneTrashRecords(): void
+    {
+        TrashRecord::query()
+            ->where('updated_at', '<', now()->subDays(TrashInfoService::RETENTION_DAYS * 3))
+            ->delete();
     }
 
     /**

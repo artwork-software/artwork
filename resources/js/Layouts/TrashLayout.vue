@@ -27,6 +27,7 @@
                         v-for="tab in availableTabs"
                         :key="tab.key"
                         type="button"
+                        :aria-current="tab.key === activeKey ? 'page' : undefined"
                         class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition
                                focus:outline-none focus:ring-2 focus:ring-surface-inverse/30"
                         :class="tab.key === activeKey
@@ -35,6 +36,11 @@
                         @click="goTo(tab.href)"
                     >
                         <span class="truncate max-w-[220px]">{{ tab.name }}</span>
+                        <span v-if="counts[tab.key] > 0"
+                              class="rounded-full bg-surface-inverse/10 px-1.5 text-xs font-medium tabular-nums text-text"
+                              :aria-label="counts[tab.key] === 1 ? $t('1 entry') : $t('{count} entries', { count: counts[tab.key] })">
+                            {{ counts[tab.key] }}
+                        </span>
 
                         <IconCheck v-if="tab.key === activeKey" class="h-4 w-4" />
                     </button>
@@ -44,15 +50,16 @@
         </div>
 
         <!-- Content -->
-        <div class="py-12">
+        <div class="py-6">
             <slot />
         </div>
     </div>
 </template>
 
 <script setup>
-import { computed } from "vue"
-import { Head, usePage } from "@inertiajs/vue3"
+import { computed, onMounted, onUnmounted, ref } from "vue"
+import axios from "axios"
+import { Head, router, usePage } from "@inertiajs/vue3"
 import { IconCheck, IconTrash } from "@tabler/icons-vue"
 import { getCurrentInstance } from "vue"
 import {can, is} from "laravel-permission-to-vuejs"
@@ -65,7 +72,8 @@ const instance = getCurrentInstance()
 const proxy = instance?.proxy
 const { canAny } = usePermission(page.props)
 
-const activeKey = computed(() => page.component)
+// der Budget-Tab rendert eine Seite außerhalb von Trash/
+const activeKey = computed(() => page.component === "BudgetSettingsTemplates/TrashIndex" ? "Trash/Budget" : page.component)
 
 const tabsMap = computed(() => {
     return {
@@ -78,7 +86,7 @@ const tabsMap = computed(() => {
         },
         "Trash/Areas": {
             key: "Trash/Areas",
-            name: proxy?.$t ? proxy.$t("Areas") : "Areas",
+            name: proxy?.$t ? proxy.$t("Areas ") : "Areas",
             href: route("areas.trashed"),
             available: can('can access trash') || is('artwork admin'),
         },
@@ -147,6 +155,29 @@ const tabsMap = computed(() => {
         },
     }
 })
+
+// Zahl der Einträge je Tab; nach jeder Aktion im Papierkorb neu geholt
+const counts = ref({})
+let countRequest = 0
+
+const loadCounts = () => {
+    const request = ++countRequest
+    axios.get(route('trash.counts'), { skipErrorToast: true })
+        .then((response) => {
+            // eine ältere Antwort darf eine neuere nicht überschreiben
+            if (request === countRequest) {
+                counts.value = response.data?.counts ?? {}
+            }
+        })
+        .catch(() => {})
+}
+
+let removeSuccessListener = null
+onMounted(() => {
+    loadCounts()
+    removeSuccessListener = router.on('success', loadCounts)
+})
+onUnmounted(() => removeSuccessListener?.())
 
 const availableTabs = computed(() =>
     Object.values(tabsMap.value).filter((t) => !!t.available)

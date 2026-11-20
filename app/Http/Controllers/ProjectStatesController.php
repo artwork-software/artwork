@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Project\Models\ProjectState;
 use Illuminate\Http\RedirectResponse;
+use Artwork\Core\Validation\MasterDataName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -11,6 +12,8 @@ class ProjectStatesController extends Controller
 {
     public function store(Request $request): void
     {
+        MasterDataName::validate($request);
+
         ProjectState::create([
             'name' => $request->name,
             'color' => $request->color,
@@ -41,6 +44,8 @@ class ProjectStatesController extends Controller
 
     public function update(Request $request, ProjectState $projectStates): void
     {
+        MasterDataName::validate($request, updating: true);
+
         $projectStates->update($request->only(['name', 'color', 'is_planning']));
     }
 }

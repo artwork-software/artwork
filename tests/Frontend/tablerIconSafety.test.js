@@ -51,3 +51,20 @@ test('scripts, handlers and foreign content are dropped', () => {
 
     assert.deepEqual(shapes, [{ tag: 'path', attrs: { d: 'M1 1' } }])
 })
+
+test('legacy export names still stored in the database resolve to an existing icon file', async () => {
+    const fs = await import('node:fs');
+    const {LEGACY_ALIASES, toSlug: resolveSlug} = await import('../../resources/js/Composeables/tablerIconNames.js');
+    const outline = new URL('../../node_modules/@tabler/icons/icons/outline/', import.meta.url);
+    const filled = new URL('../../node_modules/@tabler/icons/icons/filled/', import.meta.url);
+
+    assert.equal(resolveSlug('Icon123'), 'number-123');
+    assert.ok(Object.keys(LEGACY_ALIASES).length > 0);
+    for (const [name, slug] of Object.entries(LEGACY_ALIASES)) {
+        assert.equal(resolveSlug(name), slug, name);
+        const exists = slug.endsWith('-filled')
+            ? fs.existsSync(new URL(slug.replace(/-filled$/, '') + '.svg', filled))
+            : fs.existsSync(new URL(slug + '.svg', outline));
+        assert.ok(exists, `${name} -> ${slug}`);
+    }
+});

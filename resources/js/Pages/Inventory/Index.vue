@@ -53,8 +53,8 @@
                                 :classes-button="bandIconButtonClasses"
                                 @click="showProductBasketModal = true"
                             />
-                            <span class="absolute -top-2 -right-2 size-5 rounded-full bg-accent-50 ring-1 ring-accent-200 text-accent-600 text-xs flex items-center justify-center pointer-events-none">
-                                {{ productBaskets?.basket_articles?.length ?? 0 }}
+                            <span v-if="basketArticleCount > 0" class="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-accent-50 ring-1 ring-accent-200 text-accent-600 text-xs tabular-nums flex items-center justify-center pointer-events-none">
+                                {{ basketArticleCount }}
                             </span>
                         </div>
 
@@ -65,6 +65,24 @@
                             icon="IconBasket"
                             on-band
                         />
+
+                        <!-- Menge je Klick im Warenkorb-Modus -->
+                        <div
+                            v-if="enableAddArticleToBasket"
+                            class="w-20"
+                            v-tooltip.bottom="{ value: $t('Quantity added to the basket per click.'), class: 'aw-tooltip', appendTo: 'body' }"
+                        >
+                            <BaseInput
+                                id="basketAddQuantity"
+                                v-model="basketAddQuantity"
+                                type="number"
+                                min="1"
+                                is-small
+                                :aria-label="$t('Quantity per click')"
+                                input-classes="bg-white/10! border-white/16! text-text-inverse! placeholder:text-text-inverse-muted!"
+                                @focusout="basketAddQuantity = sanitizeBasketQuantity(basketAddQuantity)"
+                            />
+                        </div>
 
                         <InventoryLayoutSwitchComponent :grid-layout="gridLayout" on-band @update:gridLayout="updateGridLayout" />
 
@@ -131,10 +149,51 @@
                     <div class="mb-3" v-if="props.currentCategory?.id">
                         <InventoryBreadcrumbComponent :current-category="props.currentCategory" :current-sub-category="props.currentSubCategory" :link-query="persistentLinkQuery"/>
                     </div>
+                    <!-- Trefferzahl, Auswahl der Seite, Sortierung und Export -->
+                    <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <label v-if="canSelectArticles && props.articles.data.length > 0" class="inline-flex items-center gap-2 text-xs text-text-muted cursor-pointer select-none">
+                            <input type="checkbox"
+                                   class="h-4 w-4 shrink-0 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
+                                   :checked="allOnPageSelected"
+                                   :indeterminate.prop="selectedCount > 0 && !allOnPageSelected"
+                                   @change="selectPage($event.target.checked)"/>
+                            {{ $t('Select all on this page') }}
+                        </label>
+                        <span class="text-sm text-text-muted tabular-nums" aria-live="polite">
+                            {{ hitCount.filtered
+                                ? $t('{count} of {total} articles', { count: hitCount.total, total: hitCount.all })
+                                : $t('{count} articles', { count: hitCount.total }) }}
+                        </span>
+                        <div class="grow"></div>
+                        <div class="w-60" v-tooltip.top="{ value: $t('Sort by'), class: 'aw-tooltip', appendTo: 'body' }">
+                            <ArtworkBaseListbox
+                                :model-value="selectedSort"
+                                @update:model-value="onSortChange"
+                                :items="sortOptions"
+                                by="id"
+                                option-label="name"
+                                is-small
+                            />
+                        </div>
+                        <BaseUIButton
+                            type="button"
+                            variant="secondary"
+                            icon="IconFileSpreadsheet"
+                            label="Excel-Export"
+                            use-translation
+                            :disabled="props.articles.data.length === 0"
+                            @click="exportArticles(false)"
+                        />
+                    </div>
                     <div v-if="props.articles.data.length > 0">
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4 items-stretch" v-if="gridLayout">
-                            <div v-for="item in props.articles.data">
-                                <div class="relative">
+                            <div v-for="item in props.articles.data" :key="item.id">
+                                <div class="relative h-full rounded-lg" :class="selectedIds[item.id] ? 'ring-2 ring-accent-600' : ''">
+                                    <input v-if="canSelectArticles" type="checkbox"
+                                           class="absolute top-2 left-2 z-20 h-4 w-4 shrink-0 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
+                                           :checked="selectedIds[item.id] === true"
+                                           :aria-label="$t('Select')"
+                                           @change="toggleSelection(item.id, $event.target.checked)"/>
                                     <div v-if="enableAddArticleToBasket" class="absolute inset-0 bg-text-subtle/30 rounded-lg opacity-0 hover:opacity-100 duration-200 cursor-pointer">
                                         <div class="flex items-center justify-center h-full w-full">
                                             <div class="relative">
@@ -248,6 +307,9 @@
                                                         :find-basket-for-article="findBasketForArticle"
                                                         :hide-image="hideArticleImages"
                                                         :active-status="activeStatus"
+                                                        :selectable="canSelectArticles"
+                                                        :selected="selectedIds[item.id] === true"
+                                                        @toggle-select="toggleSelection(item.id, $event)"
                                                     />
                                                 </tr>
                                             </template>
@@ -293,6 +355,33 @@
                 :manufacturers="props.manufacturers"
             />
 
+            <InventoryBulkBar
+                :count="selectedCount"
+                :processing="bulkDeleting"
+                :can-edit="canEditArticles"
+                :can-delete="canDeleteArticles"
+                @edit="bulkEditMode = $event"
+                @export="exportArticles(true)"
+                @delete="showBulkDeleteModal = true"
+                @clear="selectedIds = {}"
+            />
+            <InventoryBulkEditModal
+                v-if="bulkEditMode"
+                :mode="bulkEditMode"
+                :article-ids="selectedArticleIds"
+                :categories="props.categories"
+                :tags="props.tags"
+                @close="bulkEditMode = null"
+                @done="onBulkEditDone"
+            />
+            <ConfirmDeleteModal
+                v-if="showBulkDeleteModal"
+                :title="$t('Delete articles')"
+                :description="$t('Do you really want to move the {count} selected articles to the trash? Reservations in future material issues stay attached to them.', { count: selectedCount })"
+                @closed="showBulkDeleteModal = false"
+                @delete="bulkDelete"
+            />
+
             <ProductBasketModal
                 v-if="showProductBasketModal"
                 @close="closeModalProductBasket"
@@ -330,15 +419,13 @@
 <script setup>
 
 import AppLayout from "@/Layouts/AppLayout.vue";
-import {Link, router, usePage} from "@inertiajs/vue3"
+import {router, usePage} from "@inertiajs/vue3"
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import InventorySidebarComponent from "@/Pages/Inventory/LayoutComponents/InventorySidebarComponent.vue";
 import InventoryBreadcrumbComponent from "@/Pages/Inventory/LayoutComponents/InventoryBreadcrumbComponent.vue";
 import InventoryEmptyProductsAlertComponent
     from "@/Pages/Inventory/LayoutComponents/InventoryEmptyProductsAlertComponent.vue";
 import InventorySingleArticleInGrid from "@/Pages/Inventory/GridComponents/InventorySingleArticleInGrid.vue";
-import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
-import {Switch} from "@headlessui/vue";
 import {computed, nextTick, ref, watch, provide, defineAsyncComponent} from "vue";
 import debounce from "lodash.debounce";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
@@ -348,14 +435,11 @@ import InventoryActiveFilterChips from "@/Pages/Inventory/LayoutComponents/Inven
 import {INVENTORY_FILTER_RELOAD_PROPS, useInventoryFilters} from "@/Pages/Inventory/Composables/useInventoryFilters.js";
 import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/InventoryLayoutSwitchComponent.vue";
 import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import {IconBarcode, IconIdBadge, IconLayoutGrid, IconLayoutList} from "@tabler/icons-vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {can} from "laravel-permission-to-vuejs";
 import {usePermission} from "@/Composeables/Permission.js";
-import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import ProductBasketModal from "@/Pages/Inventory/ProductBasket/Components/ProductBasketModal.vue";
@@ -363,6 +447,18 @@ import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useInventoryPropertyDisplay} from "@/Composeables/InventoryPropertyDisplay.js";
+import InventoryBulkBar from "@/Pages/Inventory/LayoutComponents/InventoryBulkBar.vue";
+import InventoryBulkEditModal from "@/Pages/Inventory/LayoutComponents/InventoryBulkEditModal.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import axios from "axios";
+import {allIssuesSelected, togglePageSelection} from "@/Pages/IssueOfMaterial/Components/issueListTools.js";
+import {
+    INVENTORY_SORT_OPTIONS,
+    findInventorySortOption,
+    inventoryExportQuery,
+    inventoryHitCount,
+    sanitizeBasketQuantity,
+} from "@/Pages/Inventory/Composables/inventoryListTools.js";
 
 const $t = useTranslation()
 const { getArticlePropertyDefinitions } = useInventoryPropertyDisplay()
@@ -482,13 +578,100 @@ const BAND_LISTBOX_BUTTON_CLASS =
 const gridLayout = ref(props.inventoryGridLayout)
 const hideArticleImages = ref(props.inventoryHideImages)
 const enableAddArticleToBasket = ref(false)
+const basketAddQuantity = ref(1)
 const showProductBasketModal = ref(false)
 const showIssueOfMaterialModal = ref(false)
 const internOrExternIssue = ref(false)
 const showAddEditArticleModal = ref(false);
 const showDisplaySettingsModal = ref(false);
 
-const { resetAllFilters } = useInventoryFilters()
+const { resetAllFilters, appliedFilters, appliedTagIds, activePresetId } = useInventoryFilters()
+
+/**
+ * Sortierung der Übersicht (lebt wie Suche und Status in der URL).
+ */
+const sortOptions = computed(() => INVENTORY_SORT_OPTIONS.map((option) => ({ ...option, name: $t(option.name) })))
+const currentSort = ref({
+    sort: usePage().props?.urlParameters?.sort ?? null,
+    direction: usePage().props?.urlParameters?.direction ?? null,
+})
+const selectedSort = computed(() => {
+    const option = findInventorySortOption(currentSort.value.sort, currentSort.value.direction)
+    return sortOptions.value.find((candidate) => candidate.id === option.id)
+})
+const onSortChange = (option) => {
+    currentSort.value = { sort: option?.sort ?? null, direction: option?.direction ?? null }
+    router.reload({
+        data: { sort: currentSort.value.sort, direction: currentSort.value.direction, page: 1 },
+        preserveScroll: true,
+        only: INVENTORY_FILTER_RELOAD_PROPS,
+    })
+}
+
+// "23 von 138 Artikeln", sobald Suche, Filter, Status oder Kategorie die Liste einschränken
+const hitCount = computed(() => inventoryHitCount(props.articles?.total, props.articlesCount))
+
+/**
+ * Mehrfachauswahl mit Sammelaktionen. Die Auswahl bleibt über Seiten- und Filterwechsel erhalten.
+ */
+const canEditArticles = computed(() => can('inventory.create_edit') || hasAdminRole())
+const canDeleteArticles = computed(() => can('inventory.delete') || hasAdminRole())
+const canSelectArticles = computed(() => canEditArticles.value || canDeleteArticles.value)
+const selectedIds = ref({})
+const selectedArticleIds = computed(() => Object.keys(selectedIds.value).map(Number))
+const selectedCount = computed(() => selectedArticleIds.value.length)
+const allOnPageSelected = computed(() => allIssuesSelected(props.articles?.data, selectedIds.value))
+const toggleSelection = (id, checked) => {
+    if (checked) {
+        selectedIds.value[id] = true
+    } else {
+        delete selectedIds.value[id]
+    }
+}
+const selectPage = (checked) => {
+    selectedIds.value = togglePageSelection(props.articles?.data, selectedIds.value, checked)
+}
+
+const reloadAfterBulkChange = () => {
+    selectedIds.value = {}
+    router.reload({ only: [...INVENTORY_FILTER_RELOAD_PROPS, 'articlesCount'], preserveScroll: true })
+}
+
+const bulkEditMode = ref(null)
+const onBulkEditDone = () => {
+    bulkEditMode.value = null
+    reloadAfterBulkChange()
+}
+
+const showBulkDeleteModal = ref(false)
+const bulkDeleting = ref(false)
+const bulkDelete = () => {
+    if (bulkDeleting.value) return
+    bulkDeleting.value = true
+    showBulkDeleteModal.value = false
+    axios.post(route('inventory-management.articles.bulk-delete'), { ids: selectedArticleIds.value })
+        .then(reloadAfterBulkChange)
+        .finally(() => {
+            bulkDeleting.value = false
+        })
+}
+
+// Excel-Export: gefilterte Liste oder nur die Auswahl
+const exportArticles = (onlySelection) => {
+    window.location.href = route('inventory.articles.export', inventoryExportQuery({
+        selectedIds: onlySelection ? selectedArticleIds.value : [],
+        categoryId: props.currentCategory?.id ?? null,
+        subCategoryId: props.currentSubCategory?.id ?? null,
+        search: searchArticleInput.value,
+        searchPropertyId: searchPropertyId.value,
+        statusId: props.activeStatusId,
+        filters: appliedFilters.value,
+        tagIds: appliedTagIds.value,
+        presetId: activePresetId.value,
+        sort: currentSort.value.sort,
+        direction: currentSort.value.direction,
+    }))
+}
 
 // Aktiver Status-Schnellfilter inkl. Name/Farbe (aus countsByStatus) — steuert
 // die zusätzliche Statusmengen-Spalte (Liste) bzw. -Zeile (Raster).
@@ -538,6 +721,10 @@ const persistentLinkQuery = computed(() => {
     if (props.activeStatusId) query.status_id = props.activeStatusId
     if ((searchArticleInput.value ?? '').trim() !== '') query.search = searchArticleInput.value
     if (searchPropertyId.value) query.search_property_id = searchPropertyId.value
+    if (currentSort.value.sort) {
+        query.sort = currentSort.value.sort
+        query.direction = currentSort.value.direction
+    }
     return query
 })
 
@@ -550,6 +737,8 @@ const debouncedSearch = debounce(() => {
         data: {
             search: searchArticleInput.value,
             search_property_id: searchPropertyId.value,
+            // neue Suche beginnt auf Seite 1, sonst bleibt die Liste auf einer hinteren Seite leer
+            page: 1,
         },
         preserveScroll: true,
         only: INVENTORY_FILTER_RELOAD_PROPS,
@@ -575,7 +764,7 @@ const clearSearchLocal = () => {
 const onClearSearchChip = () => {
     clearSearchLocal()
     router.reload({
-        data: { search: '', search_property_id: null },
+        data: { search: '', search_property_id: null, page: 1 },
         preserveScroll: true,
         only: INVENTORY_FILTER_RELOAD_PROPS,
     })
@@ -617,21 +806,6 @@ const updateHideArticleImages = (value) => {
 }
 
 
-const allPropertiesFromArticles = computed(() => {
-    const properties = [];
-
-    // get all properties from articles and remove duplicates
-    props.articles.data.forEach((article) => {
-        article.properties.forEach((property) => {
-            if (!properties.find((p) => p.id === property.id)) {
-                properties.push(property)
-            }
-        })
-    })
-
-    return properties;
-})
-
 // Stable, global property order (by id) so union columns keep a consistent order
 // across every subcategory of a category. Unknown properties are appended.
 const propertyOrderIndex = computed(() => {
@@ -648,7 +822,7 @@ const groupedArticles = computed(() => {
 
     props.articles.data.forEach((article) => {
         const categoryId = article.category?.id || 'no-category'
-        const categoryName = article.category?.name || $t('Without Subcategory')
+        const categoryName = article.category?.name || $t('Without Category')
         const subCategoryId = article.sub_category?.id || 'no-subcategory'
         const subCategoryName = article.sub_category?.name || $t('Without Subcategory')
 
@@ -719,14 +893,15 @@ const addArticleToBasket = (articleId) => {
     // add article to basket
     router.post(route('inventory.basket.add'), {
         article_id: articleId,
-        quantity: 1
+        quantity: sanitizeBasketQuantity(basketAddQuantity.value)
     }, {
         preserveScroll: true,
-        onSuccess: () => {
-            // optionally show a success message or update UI
-        }
+        // Seitenzustand behalten: der Warenkorb-Modus bleibt an, mehrere Artikel lassen sich nacheinander anklicken
+        preserveState: true,
     })
 }
+
+const basketArticleCount = computed(() => props.productBaskets?.basket_articles?.length ?? 0)
 
 const findBasketForArticle = (articleId) => {
     if (!props.productBaskets || !props.productBaskets.basket_articles) {

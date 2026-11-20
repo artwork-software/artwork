@@ -41,22 +41,42 @@
                         :no-margin-top="true"
                         ref="projectSearchInput"
                         label="Search project or artist"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        autocomplete="off"
+                        :aria-expanded="projectSearchResults.length > 0"
+                        :aria-controls="projectResultKeys.listId"
+                        :aria-activedescendant="projectResultKeys.activeOptionId.value"
+                        @keydown="projectResultKeys.onKeydown"
                         is-small
                     />
                     <div v-if="projectSearchResults.length > 0"
-                         class="absolute translate-y-1 bg-surface-inverse truncate sm:text-sm min-w-64 rounded-lg shadow-overlay z-50">
-                        <div v-for="(project, index) in projectSearchResults"
+                         :id="projectResultKeys.listId"
+                         role="listbox"
+                         :aria-label="$t('Projects')"
+                         class="absolute translate-y-1 bg-surface-inverse sm:text-sm min-w-64 max-w-[90vw] max-h-[60vh] overflow-y-auto rounded-lg shadow-overlay z-50">
+                        <button v-for="(project, index) in projectSearchResults"
                              :key="index"
+                             type="button"
+                             :id="projectResultKeys.optionId(index)"
+                             role="option"
+                             :aria-selected="projectResultKeys.activeIndex.value === index"
+                             @mousemove="projectResultKeys.activeIndex.value = index"
                              @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
-                             class="p-4 text-sm font-bold text-text-inverse border-l-4 hover:border-l-success border-l-transparent cursor-pointer flex flex-col">
-                            <div>{{ project.name }}</div>
-                            <div v-if="project.first_event_date && project.last_event_date" class="text-white/70 text-xs font-normal">
+                             class="w-full p-4 text-left text-sm font-bold text-text-inverse border-l-4 hover:border-l-success focus-visible:border-l-success focus-visible:outline-none border-l-transparent cursor-pointer flex flex-col"
+                             :class="projectResultKeys.activeIndex.value === index ? '!border-l-success bg-white/10' : ''">
+                            <div class="truncate">{{ project.name }}</div>
+                            <div v-if="project.first_event_date && project.last_event_date" class="truncate text-white/70 text-xs font-normal">
                                 {{ $t('Project period') }}: {{ project.first_event_date.split(' ')[0] }} - {{ project.last_event_date.split(' ')[0] }}
                             </div>
-                            <div v-if="project.artists" class="text-white/70 text-xs font-normal">
+                            <div v-if="project.artists" class="truncate text-white/70 text-xs font-normal">
                                 {{ $t('Artist') }}: {{ project.artists }}
                             </div>
-                        </div>
+                        </button>
+                    </div>
+                    <div v-else-if="projectSearchDone"
+                         class="absolute translate-y-1 rounded-lg bg-surface-inverse p-4 text-sm text-white/80 shadow-overlay z-50 min-w-64">
+                        {{ $t('No projects found') }}
                     </div>
                 </div>
                 <div v-if="!project && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0" class=" text-sm">
@@ -176,23 +196,6 @@
                         v-if="!atAGlance && !isFullscreen"
                         classesButton="ui-button"
                     />
-
-                    <!--<IndividualCalendarFilterComponent
-                        class=""
-                        :filter-options="filterOptions"
-                        :personal-filters="personalFilters"
-                        :at-a-glance="atAGlance"
-                        :type="project ? 'project' : 'individual'"
-                        :user_filters="user_filters"
-                        :extern-updated="externUpdate"/>-->
-
-                    <!--<ToolTipComponent
-                        icon="IconFilter"
-                        icon-size="h-7 w-7"
-                        direction="bottom"
-                        :tooltip-text="$t('Filter')"
-                        @click="showCalendarFilterModal = true"
-                    />-->
 
                     <FunctionBarFilter
                         :user_filters="user_filters"
@@ -324,6 +327,8 @@
 </template>
 
 <script setup>
+import {createLatestSearch} from "@/Composeables/latestSearch.js";
+import {useResultListKeys} from "@/Composeables/useResultListKeys.js";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import { toYmd } from "@/Helper/IsoWeek.js";
 import {computed, inject, nextTick, ref, unref, watch} from "vue";
@@ -639,23 +644,38 @@ const jumpToCurrentMonth = () => {
 }
 
 
-watch(() => projectSearch.value, (searchValue) => {
-    if (searchValue.length === 0) {
+// Projektsuche: Tipp-Pause abwarten, nur die Antwort auf die letzte Eingabe zählt (createLatestSearch)
+const projectSearchDone = ref(false);
+const searchProjects = createLatestSearch({
+    fetch: (query) => axios.get(route('projects.search'), { params: {query}, skipErrorToast: true })
+        .then((response) => response.data),
+    onResults: (results) => {
+        projectSearchResults.value = results;
+        projectSearchDone.value = true;
+        emits.call(this, 'searchingForProject', true);
+    },
+    onClear: () => {
         projectSearchResults.value = [];
         emits.call(this, 'searchingForProject', false);
-        return;
-    }
-    axios.get(
-        route('projects.search'),
-        {
-            params: {query: searchValue}
-        }
-    ).then(
-        (response) => {
-            projectSearchResults.value = response.data;
-            emits.call(this, 'searchingForProject', true);
-        }
-    );
+    },
+});
+
+// Pfeiltasten, Enter und Escape im Suchfeld
+const projectResultKeys = useResultListKeys({
+    results: projectSearchResults,
+    ready: projectSearchDone,
+    onSelect: (project) => toggleProjectTimePeriodAndRedirect(project.id, true),
+    onClose: () => {
+        projectSearchResults.value = [];
+        projectSearchDone.value = false;
+        emits.call(this, 'searchingForProject', false);
+    },
+    idPrefix: 'calendarProjectSearch',
+});
+
+watch(() => projectSearch.value, (searchValue) => {
+    projectSearchDone.value = false;
+    searchProjects(searchValue);
 });
 
 watch(() => activeCalSettings.value?.use_project_time_period, (newValue) => {

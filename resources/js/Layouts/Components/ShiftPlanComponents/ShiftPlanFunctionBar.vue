@@ -99,21 +99,41 @@
                         ref="projectSearchInput"
                         is-small
                         label="Search project or artist"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        autocomplete="off"
+                        :aria-expanded="projectSearchResults.length > 0"
+                        :aria-controls="projectResultKeys.listId"
+                        :aria-activedescendant="projectResultKeys.activeOptionId.value"
+                        @keydown="projectResultKeys.onKeydown"
                     />
                     <div v-if="projectSearchResults.length > 0"
-                         class="absolute translate-y-1 bg-surface-inverse truncate sm:text-sm min-w-48 rounded-lg z-50">
-                        <div v-for="(project, index) in projectSearchResults"
+                         :id="projectResultKeys.listId"
+                         role="listbox"
+                         :aria-label="$t('Projects')"
+                         class="absolute translate-y-1 bg-surface-inverse sm:text-sm min-w-48 max-w-[90vw] max-h-[60vh] overflow-y-auto rounded-lg z-50">
+                        <button v-for="(project, index) in projectSearchResults"
                              :key="index"
+                             type="button"
+                             :id="projectResultKeys.optionId(index)"
+                             role="option"
+                             :aria-selected="projectResultKeys.activeIndex.value === index"
+                             @mousemove="projectResultKeys.activeIndex.value = index"
                              @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
-                             class="p-4 text-sm/5 font-bold text-white border-l-4 hover:border-l-success border-l-surface-inverse cursor-pointer flex flex-col">
-                            <div>{{ project.name }}</div>
-                            <div v-if="project.first_event_date && project.last_event_date" class="text-text-subtle text-xs font-normal">
+                             class="w-full p-4 text-left text-sm/5 font-bold text-white border-l-4 hover:border-l-success focus-visible:border-l-success focus-visible:outline-none border-l-surface-inverse cursor-pointer flex flex-col"
+                             :class="projectResultKeys.activeIndex.value === index ? '!border-l-success bg-white/10' : ''">
+                            <div class="truncate">{{ project.name }}</div>
+                            <div v-if="project.first_event_date && project.last_event_date" class="truncate text-text-subtle text-xs font-normal">
                                 {{ $t('Project period') }}: {{ project.first_event_date.split(' ')[0] }} - {{ project.last_event_date.split(' ')[0] }}
                             </div>
-                            <div v-if="project.artists" class="text-text-subtle text-xs font-normal">
+                            <div v-if="project.artists" class="truncate text-text-subtle text-xs font-normal">
                                 {{ $t('Artist') }}: {{ project.artists }}
                             </div>
-                        </div>
+                        </button>
+                    </div>
+                    <div v-else-if="projectSearchDone"
+                         class="absolute translate-y-1 rounded-lg bg-surface-inverse p-4 text-sm text-white/80 z-50 min-w-48">
+                        {{ $t('No projects found') }}
                     </div>
                 </div>
 
@@ -338,6 +358,8 @@
 </template>
 
 <script setup>
+import {createLatestSearch} from "@/Composeables/latestSearch.js";
+import {useResultListKeys} from "@/Composeables/useResultListKeys.js";
 import {
     Menu,
     MenuButton,
@@ -721,21 +743,36 @@ const commitAllShifts = () => {
 };
 
 // Watchers
-watch(projectSearch, (searchValue) => {
-    if (searchValue.length === 0) {
+// Projektsuche: Tipp-Pause abwarten, nur die Antwort auf die letzte Eingabe zählt (vorher ein Request je
+// Tastendruck; eine langsame ältere Antwort konnte die neuere überschreiben)
+const projectSearchDone = ref(false);
+const searchProjects = createLatestSearch({
+    fetch: (query) => axios.get(route('projects.search'), { params: {query}, skipErrorToast: true })
+        .then((response) => response.data),
+    onResults: (results) => {
+        projectSearchResults.value = results;
+        projectSearchDone.value = true;
+    },
+    onClear: () => {
         projectSearchResults.value = [];
-        return;
-    }
-    axios.get(
-        route('projects.search'),
-        {
-            params: {query: searchValue}
-        }
-    ).then(
-        (response) => {
-            projectSearchResults.value = response.data;
-        }
-    );
+    },
+});
+
+// Pfeiltasten, Enter und Escape im Suchfeld
+const projectResultKeys = useResultListKeys({
+    results: projectSearchResults,
+    ready: projectSearchDone,
+    onSelect: (project) => toggleProjectTimePeriodAndRedirect(project.id, true),
+    onClose: () => {
+        projectSearchResults.value = [];
+        projectSearchDone.value = false;
+    },
+    idPrefix: 'shiftPlanProjectSearch',
+});
+
+watch(projectSearch, (searchValue) => {
+    projectSearchDone.value = false;
+    searchProjects(searchValue);
 });
 
 watch(() => activeSettings.value?.use_project_time_period, (newValue) => {

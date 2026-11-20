@@ -1,6 +1,10 @@
 <template>
     <div class="flex w-full mb-5 gap-2">
-        <button class="bg-text-subtle rounded-lg flex relative w-6" @click="showSection = !showSection">
+        <button type="button" class="bg-text-subtle rounded-lg flex relative w-6"
+                :title="showSection ? $t('Collapse') : $t('Expand')"
+                :aria-expanded="showSection"
+                :aria-label="(showSection ? $t('Collapse') : $t('Expand')) + ': ' + name"
+                @click="showSection = !showSection">
             <IconChevronUp v-if="showSection" class="h-6 w-6 text-white my-auto"></IconChevronUp>
             <IconChevronDown v-else class="h-6 w-6 text-white my-auto"></IconChevronDown>
         </button>
@@ -8,8 +12,9 @@
             <div :class="showSection ? 'mt-10 mb-5': 'my-10'" class="flex justify-between w-full">
                 <div class="flex font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text ">
                     {{ name }}
-                    <div v-if="!showSection && displayUnreadCount > 0"
-                         class="ml-4 flex font-semibold items-center p-1  border   text-xs/[18px] text-text-subtle rounded-lg">
+                    <!-- Zahl der neuen Benachrichtigungen immer zeigen, nicht nur im eingeklappten Zustand -->
+                    <div v-if="displayUnreadCount > 0"
+                         class="ml-3 flex h-6 min-w-6 items-center justify-center self-center rounded-full bg-accent-600 px-2 text-xs font-semibold tabular-nums text-white">
                         {{ displayUnreadCount }}
                     </div>
                 </div>

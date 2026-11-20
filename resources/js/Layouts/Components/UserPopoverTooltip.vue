@@ -1,6 +1,6 @@
 <template>
     <Popover v-slot="{ open }" class="!ring-0 flex items-center justify-center">
-        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0" @click="calculatePopoverPosition">
+        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0" :aria-label="buttonLabel" @click="calculatePopoverPosition">
             <template v-if="useSlotInsteadOfIcon">
                 <slot/>
             </template>
@@ -145,6 +145,13 @@ export default {
         }
     },
     computed: {
+        // Name des Knopfs für Screenreader: das Bild allein sagt nicht, wessen Infokarte sich öffnet
+        buttonLabel() {
+            const user = this.user ?? {};
+
+            // schlanke Einträge (z. B. Dienstleister im Dienstplan) bringen den Namen erst mit den Details mit
+            return this.displayName || user.full_name || user.display_name || this.$t('Show details');
+        },
         isDeactivated() {
             return this.isUserEntity && isUserDeactivated(this.resolvedUser);
         },

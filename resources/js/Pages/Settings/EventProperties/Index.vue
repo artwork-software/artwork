@@ -20,6 +20,10 @@
                     <BasePageTitle title="Event properties"
                                       description="Manage the event properties here."/>
                 </div>
+                <p v-if="event_properties.length === 0"
+                   class="rounded-xl border border-dashed border-border-subtle bg-surface-sunken/40 p-4 text-sm text-text-subtle">
+                    {{ $t('No event properties yet. Create the first one with the button at the top.') }}
+                </p>
                 <ul role="list" class="flex flex-col gap-y-3">
                     <li v-for="(eventProperty) in event_properties"
                         :key="eventProperty.id"
@@ -32,27 +36,11 @@
                             <p class="text-lg/[21px] font-semibold text-text">{{ eventProperty.name }}</p>
                         </div>
                         <div class="flex items-center">
-                            <BaseMenu>
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#"
-                                       @click="eventPropertyToEdit = eventProperty; showEventPropertyModal = true;"
-                                       :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconEdit
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                            aria-hidden="true"/>
-                                        {{ $t('Edit event property') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#"
-                                       @click="eventPropertyToDelete = eventProperty; showDeleteEventPropertyModal = true;"
-                                       :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconTrash
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                            aria-hidden="true"/>
-                                        {{ $t('Delete event property') }}
-                                    </a>
-                                </MenuItem>
+                            <BaseMenu has-no-offset white-menu-background>
+                                <BaseMenuItem title="Edit event property" :icon="IconEdit" white-menu-background
+                                              @click="eventPropertyToEdit = eventProperty; showEventPropertyModal = true;" />
+                                <BaseMenuItem title="Delete event property" :icon="IconTrash" white-menu-background
+                                              @click="eventPropertyToDelete = eventProperty; showDeleteEventPropertyModal = true;" />
                             </BaseMenu>
                         </div>
                     </li>
@@ -76,17 +64,14 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
-import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {MenuItem} from "@headlessui/vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {ref} from "vue";
 import EventPropertyModal from "@/Pages/Settings/EventProperties/EventPropertyModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import {provide} from "vue";
-import IconSelector from "@/Components/Icon/IconSelector.vue";
 import {IconCirclePlus, IconEdit, IconTrash} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
@@ -116,6 +101,7 @@ const props = defineProps({
                 preserveScroll: true,
                 onFinish: () => {
                     showDeleteEventPropertyModal.value = false
+                    eventPropertyToDelete.value = null
                 }
             }
         );

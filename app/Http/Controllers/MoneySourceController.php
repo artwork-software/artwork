@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\MoneySource\Exports\MoneySourceListExport;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\ColumnCell;
@@ -38,6 +40,12 @@ use Psr\Log\LoggerInterface;
 
 class MoneySourceController extends Controller
 {
+    /**
+     * Wie viele der jüngsten Verlaufseinträge die Übersicht je Quelle lädt, um die letzte anzeigbare
+     * Änderung zu finden (automatische Attribut-Logs ohne Anzeigeform werden übersprungen).
+     */
+    private const INDEX_HISTORY_LOOKBACK = 10;
+
     public function __construct(
         private readonly NotificationService $notificationService,
         private readonly ChangeService $changeService
@@ -48,7 +56,15 @@ class MoneySourceController extends Controller
     {
         // Verursacher gesammelt laden (vorher ein User je Aktivität) und nur mit Avatar-Feldern ausliefern;
         // die rohen activities liest die Seite nicht und gehen nicht mehr mit.
-        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks', 'activities.causer'])->get();
+        // Die Übersicht zeigt nur die letzte Änderung: je Quelle reichen die jüngsten Einträge statt des
+        // kompletten Verlaufs (der steht auf der Detailseite).
+        $moneySources = MoneySource::with([
+            'users',
+            'categories',
+            'moneySourceTasks',
+            'activities' => static fn ($query) => $query->latest()->limit(self::INDEX_HISTORY_LOOKBACK),
+            'activities.causer',
+        ])->get();
 
         foreach ($moneySources as $moneySource) {
             $moneySource->sumOfPositions = $moneySourceCalculationService->getPositionSumOfOneMoneySource($moneySource);
@@ -56,7 +72,7 @@ class MoneySourceController extends Controller
                 ->pluck('causer')
                 ->filter(fn ($causer): bool => $causer instanceof User)
                 ->each(fn (User $causer) => $causer->setVisible(User::AVATAR_FIELDS));
-            $moneySource->history = $this->changeService->historyForFrontend($moneySource);
+            $moneySource->history = array_slice($this->changeService->historyForFrontend($moneySource), 0, 1);
             $moneySource->unsetRelation('activities');
         }
 
@@ -69,6 +85,33 @@ class MoneySourceController extends Controller
             //is set if index is called due to redirect response of store method
             'recentlyCreatedMoneySourceId' => session('recentlyCreatedMoneySourceId')
         ]);
+    }
+
+    /**
+     * Excel-Export der Übersicht. Mit `ids` werden nur die genannten Quellen in dieser Reihenfolge
+     * exportiert (Stand der gefilterten und sortierten Liste), sonst alle nach Namen.
+     */
+    public function export(
+        Request $request,
+        MoneySourceCalculationService $moneySourceCalculationService
+    ): BinaryFileResponse {
+        $validated = $request->validate([
+            'ids' => ['sometimes', 'array'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $query = MoneySource::with(['categories', 'moneySourceTasks']);
+        if (array_key_exists('ids', $validated)) {
+            $order = array_flip(array_map(intval(...), $validated['ids']));
+            $moneySources = $query->whereIn('id', array_keys($order))->get()
+                ->sortBy(static fn (MoneySource $moneySource): int => $order[$moneySource->id])
+                ->values();
+        } else {
+            $moneySources = $query->orderBy('name')->get();
+        }
+
+        return (new MoneySourceListExport($moneySources, $moneySourceCalculationService))
+            ->download(Str::slug(__('Sources of funding')) . '-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function showSettings(): Response|ResponseFactory
@@ -720,7 +763,9 @@ class MoneySourceController extends Controller
             $pinnedByUsers = [];
         }
         if (in_array($user->id, $pinnedByUsers)) {
-            $pinnedByUsers = array_diff($pinnedByUsers, [$user->id]);
+            // array_values: array_diff behält die Schlüssel, aus [5, 7] würde sonst {"1": 7} – das
+            // Frontend erwartet eine Liste und zeigte die Quelle bei den übrigen Personen als nicht angepinnt.
+            $pinnedByUsers = array_values(array_diff($pinnedByUsers, [$user->id]));
         } else {
             $pinnedByUsers[] = $user->id;
         }

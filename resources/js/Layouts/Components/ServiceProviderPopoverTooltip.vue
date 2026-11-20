@@ -1,6 +1,6 @@
 <template>
     <Popover v-slot="{ open }" class="!ring-0 flex items-center justify-center">
-        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0" @click="calculatePopoverPosition">
+        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0" :aria-label="provider?.provider_name || $t('Show details')" @click="calculatePopoverPosition">
             <template v-if="useSlotInsteadOfIcon">
                 <slot/>
             </template>

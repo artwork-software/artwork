@@ -351,9 +351,11 @@ class CrmContactController extends Controller
             ->when($search !== '', fn ($query) => $query->where('display_name', 'like', '%' . $search . '%'))
             ->orderBy('display_name')
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn (CrmContact $contact) => [
+            ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedContacts->getCollection());
+        $trashedContacts->through(fn (CrmContact $contact) => [
                 'id' => $contact->id,
+                'trash' => $trashInfo[$contact->id] ?? null,
                 'display_name' => $contact->display_name,
                 'profile_photo_url' => $contact->profile_photo_url,
                 'deleted_at' => $contact->deleted_at?->format('d.m.Y H:i'),

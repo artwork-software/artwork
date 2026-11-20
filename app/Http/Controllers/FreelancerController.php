@@ -135,16 +135,17 @@ class FreelancerController extends Controller
     {
         $this->authorize('updateWorkProfile', Freelancer::class);
         $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'email' => 'nullable|email',
-            'position' => 'nullable|string',
-            'business' => 'nullable|string',
-            'phone_number' => 'nullable|string',
-            'street' => 'nullable|string',
-            'zip_code' => 'nullable|string',
-            'location' => 'nullable|string',
-            'note' => 'nullable|string',
+            // Spaltenlängen: längere Eingaben wären sonst ein Datenbankfehler (500)
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'position' => 'nullable|string|max:255',
+            'business' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:255',
+            'street' => 'nullable|string|max:255',
+            'zip_code' => 'nullable|string|max:255',
+            'location' => 'nullable|string|max:255',
+            'note' => 'nullable|string|max:500',
         ]);
 
         $freelancer->update($request->only([
@@ -296,6 +297,12 @@ class FreelancerController extends Controller
     {
         $this->authorize('updateWorkProfile', Freelancer::class);
         $freelancer->delete();
+
+        // Von der Detailseite aus gelöscht: die gibt es nicht mehr, also zur Liste
+        $showPath = parse_url(route('freelancer.show', $freelancer), PHP_URL_PATH);
+        if (parse_url(url()->previous(), PHP_URL_PATH) === $showPath) {
+            return Redirect::route('users');
+        }
 
         return Redirect::back();
     }

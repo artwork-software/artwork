@@ -40,46 +40,102 @@
                 </BaseMenu>
             </div>
         </div>
-        <div class="w-full sticky z-40 flex flex-row-reverse gap-x-4 py-4 items-center bg-surface-canvas" :style="{ top: 'calc(var(--project-header-height, 126px))' }">
-            <BaseUIButton v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
-                label="New column"
-                use-translation
-                is-add-button
-            />
-
-            <BaseUIButton v-if="!table.is_template" @click="downloadBudgetExport(project.id)"
-                          label="Excel-Export"
-                          use-translation
-                          icon="IconFileAnalytics"
-            />
-
-            <div v-if="!table.is_template">
-                <BaseUIButton
-                    v-if="!hideProjectHeader"
-                    @click="$emit('changeProjectHeaderVisualisation',true)"
-                    label=""
-                    use-translation
-                    icon="IconArrowsDiagonal"
-                />
-                <BaseUIButton
-                    v-else
-                    @click="$emit('changeProjectHeaderVisualisation',false)"
-                    label=""
-                    use-translation
-                    icon="IconZoomOut"
-                />
+        <div class="w-full sticky z-40 flex justify-end items-center h-16 bg-surface-canvas" :style="{ top: 'calc(var(--project-header-height, 126px))' }">
+            <!-- Kennzahlen der budgetrelevanten Spalte: ohne bis zum Tabellenende zu scrollen -->
+            <div v-if="budgetKpi" class="sticky left-0 lg:left-20 mr-auto hidden min-[1200px]:flex items-center gap-x-5 pl-2 pr-6">
+                <div v-for="kpi in budgetKpi.items" :key="kpi.label" class="leading-tight">
+                    <div class="text-[10px] font-semibold uppercase tracking-wider text-text-subtle">{{ $t(kpi.label) }}</div>
+                    <div class="text-sm font-semibold tabular-nums" :class="kpi.value < 0 ? 'text-danger' : 'text-text'">
+                        {{ toCurrencyString(kpi.value) }}
+                    </div>
+                </div>
+                <div class="hidden 2xl:block max-w-40 truncate rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] text-text-muted"
+                     :title="$t('Budget-relevant column tooltip')">
+                    {{ budgetKpi.columnName }}
+                </div>
             </div>
-
-            <div class="flex items-center gap-x-2" v-if="!table.is_template">
-                <SwitchIconTooltip
-                    v-model="userExcludeCommentedBudgetItems"
-                    :tooltip-text="$t('Excluded items hidden')"
-                    size="md"
-                    :icon="IconEyeX"
+            <!-- sticky right: die Tabelle ist oft breiter als das Fenster, die Aktionen bleiben trotzdem im Sichtbereich -->
+            <div class="sticky right-14 flex flex-row-reverse gap-x-4 items-center">
+                <BaseUIButton v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
+                    label="New column"
+                    use-translation
+                    is-add-button
                 />
-                <span class="pl-1" :class="[userExcludeCommentedBudgetItems ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle', 'text-sm']">
-                        {{ $t('Excluded items hidden') }}
-                    </span>
+
+                <BaseUIButton v-if="!table.is_template" @click="downloadBudgetExport(project.id)"
+                              label="Excel-Export"
+                              use-translation
+                              icon="IconFileAnalytics"
+                />
+
+                <div v-if="!table.is_template">
+                    <BaseUIButton
+                        v-if="!hideProjectHeader"
+                        @click="$emit('changeProjectHeaderVisualisation',true)"
+                        label=""
+                        :title="$t('Hide project header')"
+                        :aria-label="$t('Hide project header')"
+                        icon="IconArrowsDiagonal"
+                    />
+                    <BaseUIButton
+                        v-else
+                        @click="$emit('changeProjectHeaderVisualisation',false)"
+                        label=""
+                        :title="$t('Show project header')"
+                        :aria-label="$t('Show project header')"
+                        icon="IconArrowsDiagonalMinimize2"
+                    />
+                </div>
+
+                <BaseUIButton
+                    v-if="(table.main_positions?.length ?? 0) > 0"
+                    @click="setAllPositionsClosed(!allMainPositionsClosed)"
+                    label=""
+                    :title="allMainPositionsClosed ? $t('Expand all') : $t('Collapse all')"
+                    :aria-label="allMainPositionsClosed ? $t('Expand all') : $t('Collapse all')"
+                    :icon="allMainPositionsClosed ? 'IconChevronsDown' : 'IconChevronsUp'"
+                />
+
+                <div class="flex items-center gap-x-2" v-if="!table.is_template">
+                    <SwitchIconTooltip
+                        v-model="userExcludeCommentedBudgetItems"
+                        :tooltip-text="$t('Excluded items hidden')"
+                        size="md"
+                        :icon="IconEyeX"
+                    />
+                    <span class="pl-1 hidden 2xl:inline" :class="[userExcludeCommentedBudgetItems ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle', 'text-sm']">
+                            {{ $t('Excluded items hidden') }}
+                        </span>
+                </div>
+
+                <!-- Suche in der Tabelle: Enter springt zum nächsten Treffer, Umschalt+Enter zurück -->
+                <div class="flex items-center gap-x-1">
+                    <BaseInput
+                        id="budget-table-search"
+                        v-model="searchTerm"
+                        label="Search"
+                        :show-label="false"
+                        :placeholder="$t('Search')"
+                        class="w-36 2xl:w-48"
+                        autocomplete="off"
+                        @keydown="onSearchKeydown"
+                    />
+                    <template v-if="searchTerm.trim() !== ''">
+                        <span class="w-12 text-center text-xs tabular-nums" :class="searchMatches.length === 0 ? 'text-danger' : 'text-text-muted'">
+                            {{ searchMatches.length === 0 ? '0' : (searchIndex + 1) + '/' + searchMatches.length }}
+                        </span>
+                        <button type="button" class="rounded p-1 text-text-muted hover:bg-surface-sunken disabled:opacity-40"
+                                :disabled="searchMatches.length === 0" :title="$t('Previous')" :aria-label="$t('Previous')"
+                                @click="goToSearchMatch(-1)">
+                            <PropertyIcon name="IconChevronUp" class="h-4 w-4"/>
+                        </button>
+                        <button type="button" class="rounded p-1 text-text-muted hover:bg-surface-sunken disabled:opacity-40"
+                                :disabled="searchMatches.length === 0" :title="$t('Next')" :aria-label="$t('Next')"
+                                @click="goToSearchMatch(1)">
+                            <PropertyIcon name="IconChevronDown" class="h-4 w-4"/>
+                        </button>
+                    </template>
+                </div>
             </div>
         </div>
 
@@ -87,13 +143,23 @@
         <div class="w-full flex sticky bg-[#CECDD8] z-30" :style="{ top: 'calc(var(--project-header-height, 126px) + 64px)' }">
             <table class="w-full flex ml-8 py-5">
                 <thead>
-                <tr class="relative">
-                    <th v-for="(column,index) in computedSortedColumns"
-                        :key="column.id"
-                        v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                        :class="index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72' : 'w-48'">
+                <draggable
+                    v-model="localColumns"
+                    item-key="id"
+                    tag="tr"
+                    class="relative"
+                    handle=".column-drag-handle"
+                    ghost-class="opacity-40"
+                    :disabled="!canEditColumns"
+                    :move="canMoveColumn"
+                    @end="persistColumnOrder"
+                >
+                    <template #item="{ element: column, index }">
+                    <th v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
+                        :class="[index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72 sticky left-0 lg:left-20 z-10 bg-[#CECDD8]' : 'w-48', pendingDeleteKeys['column:' + column.id] ? 'opacity-40 pointer-events-none' : '']">
                         <div class="flex items-center group" :key="column.id"
                              :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
+
                             <!-- KTO/KST-Überschriften zentriert über der Spalte -->
                             <div :class="index <= 1 ? 'flex-1 text-center' : ''">
                                 <div>
@@ -231,23 +297,31 @@
                                     </span>
 
                                 </div>
-                                <div @click="column.clicked = !column.clicked" class="h-5 font-lexend text-xs w-full max-w-max"
-                                     :class="index <= 1 ? 'mx-auto' : ''"
-                                     v-if="!column.clicked">
-                                    {{ column.name ?? 'no name' }}
+                                <div v-if="editingColumnId !== column.id"
+                                     class="h-5 font-lexend text-xs w-full max-w-max"
+                                     :class="[index <= 1 ? 'mx-auto' : '', canEditColumns ? 'cursor-text rounded px-1 hover:bg-white/40' : '']"
+                                     :title="canEditColumns ? $t('Rename') : null"
+                                     @click="startColumnNameEdit(column)">
+                                    {{ column.name || $t('No name') }}
                                 </div>
                                 <div v-else>
                                     <input
-                                        :class="index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72' : 'w-48'"
-                                        class="text-sm/5 font-semibold text-text h-5 pr-1 mr-1 flex rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600 focus:outline-none"
+                                        ref="columnNameInput"
+                                        :class="index === 2 ? 'w-64' : 'w-40'"
+                                        class="text-sm/5 font-semibold text-text h-6 flex rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600 focus:outline-none"
+                                        :style="index > 2 ? 'text-align: right' : ''"
                                         type="text"
-                                        v-model="column.name"
-                                        @keyup.enter="$event.target.blur()"
-                                        @keyup.esc="column.name = editedColumnNameOriginalValue ?? column.name; column.clicked = false"
-                                        @focus="editedColumnNameOriginalValue = column.name"
-                                        @focusout="updateColumnName(column); column.clicked = !column.clicked">
+                                        v-model="editedColumnName"
+                                        @keydown.enter.prevent="$event.target.blur()"
+                                        @keydown.esc.prevent="editingColumnId = null"
+                                        @blur="saveColumnName(column)">
                                 </div>
                             </div>
+                            <span v-if="canEditColumns && isMovableColumn(column, index)"
+                                  class="column-drag-handle invisible group-hover:visible ml-1 cursor-grab text-white hover:text-text"
+                                  :title="$t('Move column')">
+                                <PropertyIcon name="IconGripVertical" class="h-4 w-4" aria-hidden="true"/>
+                            </span>
                             <BaseMenu
                                 dots-color="text-white"
                                 has-no-offset
@@ -307,7 +381,7 @@
                                     v-show="index > 2"
                                     v-if="column.commented === 1"
                                     :title="$t('Include column')"
-                                    icon="IconLockOpen"
+                                    icon="IconParenthesesOff"
                                     white-menu-background
                                     @click="updateColumnCommented(column.id, false)"
                                 />
@@ -316,7 +390,7 @@
                                     v-show="index > 2"
                                     v-else
                                     :title="$t('Exclude column')"
-                                    icon="IconLock"
+                                    icon="IconParentheses"
                                     white-menu-background
                                     @click="updateColumnCommented(column.id, true)"
                                 />
@@ -334,8 +408,8 @@
 
                         </div>
                     </th>
-
-                </tr>
+                    </template>
+                </draggable>
                 </thead>
             </table>
         </div>
@@ -346,11 +420,11 @@
         <div class="w-full flex mb-6">
             <div class="flex flex-wrap w-full bg-surface border-2 border-border">
                 <div class="w-full flex">
-                    <div class="bg-surface ml-5 w-full" v-if="costsOpened">
+                    <div class="bg-surface ml-5 w-full">
                         <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-[97%]'" class="flex justify-between my-10">
                             <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text flex">
                                 {{ $t('Expenses') }}
-                                <button class="w-6" @click="costsOpened = !costsOpened">
+                                <button type="button" class="w-6" :title="costsOpened ? $t('Collapse') : $t('Expand')" :aria-expanded="costsOpened" @click="toggleSection('cost')">
                                     <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="costsOpened"
                                                    class="h-6 w-6 text-text my-auto"/>
                                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
@@ -386,7 +460,7 @@
                                     :title="$t('Reset')"
                                     icon="IconRestore"
                                     white-menu-background
-                                    @click="resetBudgetTable"
+                                    @click="openResetConfirmation"
                                 />
 
                                 <BaseMenuItem
@@ -407,15 +481,16 @@
                             </BaseMenu>
                         </div>
                         <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
-                             v-if="this.$can('edit budget templates') || !table.is_template"
-                             class="group w-[97%]  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
-                            <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
+                             v-if="costsOpened && (this.$can('edit budget templates') || !table.is_template)"
+                             class="group relative w-[97%]  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600 before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']">
+                            <div class="group-hover:flex hidden items-center gap-x-1 -mt-3 h-6 pl-3 pr-1 rounded-full bg-accent-600 text-white text-xs font-semibold uppercase shadow-md relative z-20 whitespace-nowrap">
                                 {{ $t('Main position') }}
                                 <PropertyIcon name="IconCirclePlus"
-                                    class="h-6 w-6 ml-12  bg-accent-600 rounded-full" />
+                                    class="h-4 w-4"/>
                             </div>
                         </div>
                         <draggable
+                            v-if="costsOpened"
                             v-model="localCostMainPositions"
                             item-key="id"
                             handle=".main-position-drag-handle"
@@ -455,7 +530,7 @@
                             <tr class=" text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
-                                <td class="w-72 my-2">{{ $t('SUM') }}</td>
+                                <td class="w-72 py-2 bg-surface sticky left-0 lg:left-20 z-10">{{ $t('SUM') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in valueColumns"
                                     :key="column.id"
@@ -496,7 +571,7 @@
                             <tr class=" text-sm/5 font-bold text-text-subtle flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
-                                <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
+                                <td class="w-72 py-2 bg-surface sticky left-0 lg:left-20 z-10">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in valueColumns"
                                     :key="column.id"
@@ -518,30 +593,21 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="ml-5 w-full " v-else>
-                        <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-10 flex">
-                            {{ $t('Expenses') }}
-                            <button class="w-6" @click="costsOpened = !costsOpened">
-                                <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="costsOpened"
-                                                   class="h-6 w-6 text-text my-auto"/>
-                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
-                            </button>
-                        </div>
-                    </div>
                 </div>
                 <!-- Divider -->
                 <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12"/>
                 <div class="w-full flex">
-                    <div class="ml-5 w-full " v-if="earningsOpened">
+                    <div class="ml-5 w-full ">
                         <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-10 flex">
                             {{ $t('Revenue') }}
-                            <button class="w-6" @click="earningsOpened = !earningsOpened">
+                            <button type="button" class="w-6" :title="earningsOpened ? $t('Collapse') : $t('Expand')" :aria-expanded="earningsOpened" @click="toggleSection('earning')">
                                 <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="earningsOpened"
                                                class="h-6 w-6 text-text my-auto"/>
                                 <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
                             </button>
                         </div>
-        <draggable
+                        <draggable
+                            v-if="earningsOpened"
                             v-model="localEarningMainPositions"
                             item-key="id"
                             handle=".main-position-drag-handle"
@@ -581,7 +647,7 @@
                             <tr class=" text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
-                                <td class="w-72 my-2">{{ $t('SUM') }}</td>
+                                <td class="w-72 py-2 bg-surface sticky left-0 lg:left-20 z-10">{{ $t('SUM') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in valueColumns"
                                     :key="column.id"
@@ -623,7 +689,7 @@
                             <tr class=" text-sm/5 font-bold text-text-subtle flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
-                                <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
+                                <td class="w-72 py-2 bg-surface sticky left-0 lg:left-20 z-10">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in valueColumns"
                                     :key="column.id"
@@ -645,19 +711,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <!-- View if not opened Event -->
-                    <div class="ml-5 w-full " v-else>
-                        <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-10 flex">
-                            {{ $t('Revenue') }}
-                            <button class="w-6"
-                                    @click="earningsOpened = !earningsOpened">
-                                <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="earningsOpened"
-                                               class="h-6 w-6 text-text my-auto"/>
-                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else
-                                                 class="h-6 w-6 text-text my-auto"/>
-                            </button>
-                        </div>
-                    </div>
                 </div>
                 <!-- Divider -->
                 <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12"/>
@@ -666,7 +719,7 @@
                     <tr class=" items-center text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                         <td class="w-48"></td>
                         <td class="w-48"></td>
-                        <td class="w-72 my-2">{{ $t('Revenue') }} - {{ $t('Expenses') }}</td>
+                        <td class="w-72 py-2 bg-surface sticky left-0 lg:left-20 z-10">{{ $t('Revenue') }} - {{ $t('Expenses') }}</td>
                         <td class="flex items-center w-48"
                             v-for="column in valueColumns"
                             :key="column.id"
@@ -680,6 +733,33 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+    <!-- Schwebende Leiste: Auswahl-Summe und "Rückgängig" nach dem Löschen -->
+    <div v-if="selectionSummary.count > 0 || pendingDeletes.length > 0"
+         class="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex flex-col items-center gap-y-2 px-4">
+        <div v-for="pending in pendingDeletes" :key="pending.key"
+             class="pointer-events-auto relative flex items-center gap-x-4 overflow-hidden rounded-xl bg-surface-inverse py-2.5 pl-4 pr-2 text-sm text-white shadow-lg">
+            <PropertyIcon name="IconTrash" class="h-4 w-4 shrink-0 opacity-70"/>
+            <span class="max-w-xs truncate">{{ pending.label }}</span>
+            <button type="button"
+                    class="rounded-lg bg-white/15 px-3 py-1 text-sm font-semibold hover:bg-white/25"
+                    @click="undoPendingDelete(pending.key)">
+                {{ $t('Undo') }}
+            </button>
+            <span class="budget-undo-progress absolute inset-x-0 bottom-0 h-0.5 origin-left bg-white/60"
+                  :style="{ animationDuration: undoDelayMs + 'ms' }"/>
+        </div>
+        <div v-if="selectionSummary.count > 0"
+             class="pointer-events-auto flex items-center gap-x-5 rounded-xl bg-surface-inverse py-2.5 pl-4 pr-2 text-sm text-white shadow-lg">
+            <span class="text-white/70">{{ $t('{count} cells selected', {count: selectionSummary.count}) }}</span>
+            <span>{{ $t('Sum') }} <span class="ml-1 font-semibold tabular-nums">{{ toCurrencyString(selectionSummary.sum) }}</span></span>
+            <span>{{ $t('Average') }} <span class="ml-1 font-semibold tabular-nums">{{ toCurrencyString(selectionSummary.average) }}</span></span>
+            <button type="button" class="rounded-lg p-1.5 hover:bg-white/15"
+                    :title="$t('Clear selection')" :aria-label="$t('Clear selection')"
+                    @click="clearSelection">
+                <PropertyIcon name="IconX" class="h-4 w-4"/>
+            </button>
         </div>
     </div>
     <NotificationToast
@@ -770,7 +850,7 @@
     />
     <confirmation-component
         v-if="showDeleteModal"
-        :confirm="$t('Delete')"
+        :confirm="resetWanted ? $t('Reset') : $t('Delete')"
         :titel="this.confirmationTitle"
         :description="this.confirmationDescription"
         @closed="afterConfirm"
@@ -834,11 +914,28 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import VerifiedRequestModal from "@/Layouts/Components/VerifiedRequestModal.vue";
 import draggable from 'vuedraggable';
 import NotificationToast from "@/Artwork/Feedback/NotificationToast.vue";
+import {nextTick} from "vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import {findBudgetSearchMatches, summarizeBudgetSelection} from "@/Layouts/Components/Budget/budgetTableTools.js";
+import {
+    budgetCellSelection,
+    budgetPendingDeletes,
+    budgetSearchState,
+    clearBudgetCellSelection,
+    resetBudgetSearchState
+} from "@/Layouts/Components/Budget/budgetTableState.js";
+import {setBudgetEntryClosed} from "@/Layouts/Components/Budget/budgetCollapseState.js";
+import {
+    isBudgetEntryClosed,
+    setAllBudgetEntriesClosed,
+    toggleBudgetEntryClosed
+} from "@/Layouts/Components/Budget/budgetCollapseState.js";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, CurrencyFloatToStringFormatter],
     components: {
+        BaseInput,
         draggable,
         NotificationToast,
         BaseMenuItem,
@@ -872,8 +969,6 @@ export default {
             orderSavedToastVisible: false,
             showSumDetailModal: false,
             showBudgetAccessModal: false,
-            costsOpened: true,
-            earningsOpened: true,
             hoveredBorder: null,
             showAddColumnModal: false,
             showCellDetailModal: false,
@@ -953,7 +1048,14 @@ export default {
             sageNotAssignedDataToDelete: null,
             localCostMainPositions: [],
             localEarningMainPositions: [],
-            editedColumnNameOriginalValue: null
+            editingColumnId: null,
+            editedColumnName: '',
+            localColumns: [],
+            searchTerm: '',
+            searchIndex: 0,
+            // {key, label, url, heading, description, timer}
+            pendingDeletes: [],
+            undoDelayMs: 6000
         }
     },
     props: [
@@ -1065,6 +1167,51 @@ export default {
                 this.table.main_positions[0].sub_positions.length === 1 &&
                 this.table.main_positions[0].sub_positions[0].sub_position_rows.length === 1
         },
+        /**
+         * Ausgaben, Einnahmen und Ergebnis der budgetrelevanten Spalte fuer die Kopfleiste.
+         */
+        budgetKpi() {
+            const column = this.computedSortedColumns.find(c => c.relevant_for_project_groups);
+            if (!column) {
+                return null;
+            }
+            const costs = this.summaryTotals.costSums[column.id] ?? 0;
+            const earnings = this.summaryTotals.earningSums[column.id] ?? 0;
+            return {
+                columnName: column.name || column.subName,
+                items: [
+                    {label: 'Expenses', value: costs},
+                    {label: 'Revenue', value: earnings},
+                    {label: 'Result', value: earnings - costs},
+                ],
+            };
+        },
+        searchMatches() {
+            return findBudgetSearchMatches(this.table.main_positions, this.searchTerm);
+        },
+        selectionSummary() {
+            if (Object.keys(budgetCellSelection.ids).length === 0) {
+                return {count: 0, sum: 0, average: 0};
+            }
+            return summarizeBudgetSelection(this.table.main_positions, budgetCellSelection.ids);
+        },
+        pendingDeleteKeys() {
+            return budgetPendingDeletes.keys;
+        },
+        costsOpened() {
+            return !isBudgetEntryClosed('section', this.table?.id, 'cost');
+        },
+        earningsOpened() {
+            return !isBudgetEntryClosed('section', this.table?.id, 'earning');
+        },
+        allMainPositionsClosed() {
+            const mainPositions = this.table.main_positions ?? [];
+            return mainPositions.length > 0
+                && mainPositions.every(mainPosition => isBudgetEntryClosed('main', this.table.id, mainPosition.id));
+        },
+        canEditColumns() {
+            return this.hasBudgetAccess() || this.$can('edit budget templates');
+        },
         canReorderPositions() {
             return this.hasBudgetAccess() || this.$can('edit budget templates');
         },
@@ -1088,6 +1235,32 @@ export default {
                 this.localEarningMainPositions = positions.filter(mp => mp.type === 'BUDGET_TYPE_EARNING');
             },
             immediate: true,
+        },
+        // Kopie fuer das Verschieben per Drag & Drop; nicht deep, Aenderungen kommen als neue
+        // Objekte aus dem Refetch.
+        'table.columns': {
+            handler() {
+                this.localColumns = [...this.computedSortedColumns];
+            },
+            immediate: true,
+        },
+        searchMatches(matches) {
+            const keys = {};
+            matches.forEach(match => {
+                keys[`${match.type}:${match.id}`] = true;
+            });
+            budgetSearchState.matchedKeys = keys;
+            if (this.searchIndex >= matches.length) {
+                this.searchIndex = 0;
+            }
+            const active = matches[this.searchIndex];
+            budgetSearchState.activeKey = active ? `${active.type}:${active.id}` : null;
+        },
+        searchTerm() {
+            // Beim Tippen zum ersten Treffer springen, aber nicht bei jedem Tastendruck
+            this.searchIndex = 0;
+            window.clearTimeout(this._searchJumpTimer);
+            this._searchJumpTimer = window.setTimeout(() => this.goToSearchMatch(0), 300);
         },
         // oeffnet das Modal automatisch, wenn das Backend ein selectedSumDetail liefert
         selectedSumDetail: {
@@ -1138,7 +1311,162 @@ export default {
             }
         },
     },
+    mounted() {
+        this._onBudgetKeydown = (event) => {
+            if (event.key === 'Escape' && Object.keys(budgetCellSelection.ids).length > 0) {
+                clearBudgetCellSelection();
+            }
+        };
+        // Tab wird geschlossen: ausstehende Loeschungen noch absenden
+        this._onBudgetPageHide = () => this.flushPendingDeletes();
+        window.addEventListener('keydown', this._onBudgetKeydown);
+        window.addEventListener('pagehide', this._onBudgetPageHide);
+    },
+    beforeUnmount() {
+        window.removeEventListener('keydown', this._onBudgetKeydown);
+        window.removeEventListener('pagehide', this._onBudgetPageHide);
+        window.clearTimeout(this._searchJumpTimer);
+        this.flushPendingDeletes();
+        clearBudgetCellSelection();
+        resetBudgetSearchState();
+    },
     methods: {
+        clearSelection() {
+            clearBudgetCellSelection();
+        },
+        onSearchKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                window.clearTimeout(this._searchJumpTimer);
+                this.goToSearchMatch(event.shiftKey ? -1 : 1);
+            } else if (event.key === 'Escape') {
+                this.searchTerm = '';
+            }
+        },
+        /**
+         * Springt zum naechsten/vorherigen Treffer (delta 0 = aktueller) und klappt die
+         * Abschnitte und Positionen auf, in denen er liegt.
+         */
+        goToSearchMatch(delta) {
+            const matches = this.searchMatches;
+            if (matches.length === 0) {
+                return;
+            }
+            this.searchIndex = (this.searchIndex + delta + matches.length) % matches.length;
+            const match = matches[this.searchIndex];
+            budgetSearchState.activeKey = `${match.type}:${match.id}`;
+
+            setBudgetEntryClosed('section', this.table.id, match.section, false);
+            if (match.type !== 'main') {
+                setBudgetEntryClosed('main', this.table.id, match.mainPositionId, false);
+            }
+            if (match.type === 'row') {
+                setBudgetEntryClosed('sub', this.table.id, match.subPositionId, false);
+            }
+
+            nextTick(() => {
+                const element = document.getElementById(`budget-${match.type}-${match.id}`);
+                if (!element) {
+                    return;
+                }
+                // Nur senkrecht scrollen: scrollIntoView wuerde die breite Tabelle auch quer verschieben
+                const top = element.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2;
+                window.scrollTo({top: Math.max(0, top), behavior: 'smooth'});
+            });
+        },
+        isMovableColumn(column, index) {
+            return index > 2 && column.type !== 'sage' && column.type !== 'subprojects_column_for_group';
+        },
+        canMoveColumn(event) {
+            return this.isMovableColumn(event.draggedContext.element, event.draggedContext.index)
+                && this.isMovableColumn(event.relatedContext.element, event.relatedContext.index);
+        },
+        persistColumnOrder(event) {
+            if (event.oldIndex === event.newIndex) {
+                return;
+            }
+            router.patch(
+                route('project.budget.column.reorder'),
+                {
+                    table_id: this.table.id,
+                    column_ids: this.localColumns
+                        .filter((column, index) => this.isMovableColumn(column, index))
+                        .map(column => column.id),
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        this.handleBudgetUpdated();
+                        this.showOrderSavedToast();
+                    },
+                    onError: () => {
+                        this.localColumns = [...this.computedSortedColumns];
+                    },
+                }
+            );
+        },
+        /**
+         * Loeschen mit Bedenkzeit: der Eintrag wird ausgegraut und erst nach Ablauf wirklich
+         * geloescht. Bis dahin laesst sich das Loeschen in der Leiste unten zuruecknehmen.
+         */
+        scheduleDelete(key, label, url, heading, description) {
+            if (this.pendingDeletes.some(pending => pending.key === key)) {
+                return;
+            }
+            budgetPendingDeletes.keys[key] = true;
+            this.pendingDeletes.push({
+                key,
+                label,
+                url,
+                heading,
+                description,
+                timer: window.setTimeout(() => this.executePendingDelete(key), this.undoDelayMs),
+            });
+        },
+        takePendingDelete(key) {
+            const index = this.pendingDeletes.findIndex(pending => pending.key === key);
+            if (index === -1) {
+                return null;
+            }
+            const [pending] = this.pendingDeletes.splice(index, 1);
+            window.clearTimeout(pending.timer);
+            return pending;
+        },
+        undoPendingDelete(key) {
+            if (this.takePendingDelete(key)) {
+                delete budgetPendingDeletes.keys[key];
+            }
+        },
+        executePendingDelete(key) {
+            const pending = this.takePendingDelete(key);
+            if (!pending) {
+                return;
+            }
+            axios.delete(pending.url, {skipErrorToast: true}).then(({data}) => {
+                this.$emit('budget-updated');
+                this.successHeading = pending.heading;
+                this.successDescription = data?.message ?? pending.description;
+                this.showSuccessModal = true;
+            }).catch(() => {
+                this.openErrorModal(
+                    this.$t('An error has occurred'),
+                    this.$t('The entry could not be deleted. Please try again.')
+                );
+            }).finally(() => {
+                // Erst nach dem Neuladen wieder einblenden, sonst blitzt der geloeschte Eintrag kurz auf
+                window.setTimeout(() => {
+                    delete budgetPendingDeletes.keys[key];
+                }, 1500);
+            });
+        },
+        flushPendingDeletes() {
+            [...this.pendingDeletes].forEach((pending) => {
+                this.takePendingDelete(pending.key);
+                delete budgetPendingDeletes.keys[pending.key];
+                axios.delete(pending.url, {skipErrorToast: true}).catch(() => {});
+            });
+        },
         persistMainPositionOrder(type) {
             const list = type === 'BUDGET_TYPE_COST' ? this.localCostMainPositions : this.localEarningMainPositions;
             if (!list || list.length === 0) return;
@@ -1159,6 +1487,46 @@ export default {
                     },
                 }
             );
+        },
+        toggleSection(section) {
+            toggleBudgetEntryClosed('section', this.table?.id, section);
+        },
+        setAllPositionsClosed(closed) {
+            const mainPositions = this.table.main_positions ?? [];
+            setAllBudgetEntriesClosed('main', this.table.id, mainPositions.map(mp => mp.id), closed);
+            if (!closed) {
+                // "Alle aufklappen" oeffnet auch die Unterpositionen, sonst bleibt die Tabelle halb zu
+                setAllBudgetEntriesClosed(
+                    'sub',
+                    this.table.id,
+                    mainPositions.flatMap(mp => (mp.sub_positions ?? []).map(sp => sp.id)),
+                    false
+                );
+            }
+        },
+        startColumnNameEdit(column) {
+            if (!this.canEditColumns) {
+                return;
+            }
+            this.editedColumnName = column.name ?? '';
+            this.editingColumnId = column.id;
+            nextTick(() => {
+                const input = this.$refs.columnNameInput;
+                (Array.isArray(input) ? input[0] : input)?.select();
+            });
+        },
+        saveColumnName(column) {
+            if (this.editingColumnId !== column.id) {
+                return;
+            }
+            this.editingColumnId = null;
+            const name = this.editedColumnName.trim();
+            // Leerer oder unveraenderter Name: nichts speichern (spart Request + Neuladen)
+            if (name === '' || name === column.name) {
+                return;
+            }
+            column.name = name;
+            this.updateColumnName(column);
         },
         showOrderSavedToast() {
             // Toast erneut auslösen, auch wenn er gerade noch sichtbar ist.
@@ -1431,7 +1799,7 @@ export default {
                     this.showSumDetailModal = true;
                 }
             } catch (error) {
-                console.error('Error loading budget sum details:', error);
+                this.openSumDetailLoadError();
             }
         },
         async openSubPositionSumDetailModal(subPosition, column, type) {
@@ -1455,7 +1823,7 @@ export default {
                     this.showSumDetailModal = true;
                 }
             } catch (error) {
-                console.error('Error loading sub position sum details:', error);
+                this.openSumDetailLoadError();
             }
         },
         async openMainPositionSumDetailModal(mainPosition, column, type) {
@@ -1476,8 +1844,14 @@ export default {
                     this.showSumDetailModal = true;
                 }
             } catch (error) {
-                console.error('Error loading main position sum details:', error);
+                this.openSumDetailLoadError();
             }
+        },
+        openSumDetailLoadError() {
+            this.openErrorModal(
+                this.$t('An error has occurred'),
+                this.$t('The details could not be loaded. Please try again.')
+            );
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;
@@ -1615,50 +1989,43 @@ export default {
         },
         deletePosition() {
             if (this.columnToDelete !== null) {
-                router.delete(route('project.budget.column.delete', this.columnToDelete.id), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => this.$emit('budget-updated')
-                });
-                this.successHeading = this.$t('Column deleted');
-                this.successDescription = this.$t('Column successfully deleted', [this.columnToDelete.name]);
+                this.scheduleDelete(
+                    'column:' + this.columnToDelete.id,
+                    this.$t('Column deleted') + (this.columnToDelete.name ? ': ' + this.columnToDelete.name : ''),
+                    route('project.budget.column.delete', this.columnToDelete.id),
+                    this.$t('Column deleted'),
+                    this.$t('Column successfully deleted', [this.columnToDelete.name])
+                );
             } else if (this.mainPositionToDelete !== null) {
-                router.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => this.$emit('budget-updated')
-                })
-                this.successHeading = this.$t('Main position deleted');
-                this.successDescription = this.$t('Main position successfully deleted', [this.mainPositionToDelete.name]);
+                this.scheduleDelete(
+                    'main:' + this.mainPositionToDelete.id,
+                    this.$t('Main position deleted') + (this.mainPositionToDelete.name ? ': ' + this.mainPositionToDelete.name : ''),
+                    route('project.budget.main-position.delete', this.mainPositionToDelete.id),
+                    this.$t('Main position deleted'),
+                    this.$t('Main position successfully deleted', [this.mainPositionToDelete.name])
+                );
             } else if (this.subPositionToDelete !== null) {
-                router.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => this.$emit('budget-updated')
-                })
-                this.successHeading = this.$t('Sub-item deleted');
-                this.successDescription = this.$t('Sub-item successfully deleted', [this.subPositionToDelete.name]);
-            } else {
-                router.delete(`/project/budget/sub-position-row/${this.rowToDelete.id}`, {
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => this.$emit('budget-updated')
-                });
-                this.successHeading = this.$t('Row deleted');
-                this.successDescription = this.$t('Line successfully deleted');
+                this.scheduleDelete(
+                    'sub:' + this.subPositionToDelete.id,
+                    this.$t('Sub-item deleted') + (this.subPositionToDelete.name ? ': ' + this.subPositionToDelete.name : ''),
+                    route('project.budget.sub-position.delete', this.subPositionToDelete.id),
+                    this.$t('Sub-item deleted'),
+                    this.$t('Sub-item successfully deleted', [this.subPositionToDelete.name])
+                );
+            } else if (this.rowToDelete !== null) {
+                this.scheduleDelete(
+                    'row:' + this.rowToDelete.id,
+                    this.$t('Row deleted'),
+                    route('project.budget.sub-position-row.delete', this.rowToDelete.id),
+                    this.$t('Row deleted'),
+                    this.$t('Line successfully deleted')
+                );
             }
-            this.showDeleteModal = false;
-            this.showSuccessModal = true;
-
-            setTimeout(() => this.closeSuccessModal(), 2000)
-        },
-        closeSuccessModal() {
             this.mainPositionToDelete = null;
             this.subPositionToDelete = null;
             this.columnToDelete = null;
-            this.showSuccessModal = false;
-            this.successHeading = "";
-            this.successDescription = "";
+            this.rowToDelete = null;
+            this.showDeleteModal = false;
         },
         closeVerifiedModal(deleteAll = false) {
             this.showVerifiedModal = false;
@@ -1804,6 +2171,21 @@ export default {
 </script>
 
 <style scoped>
+.budget-undo-progress {
+    animation-name: budget-undo-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+@keyframes budget-undo-progress {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}
+
 .whiteColumn {
     background-color: #FCFCFBFF;
 }

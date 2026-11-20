@@ -62,7 +62,9 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
+use Artwork\Modules\Event\Services\RoomRequestInboxNotifier;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -2552,6 +2554,57 @@ class EventController extends Controller
     /**
      * @throws AuthorizationException
      */
+    /**
+     * Mehrere offene Raumbelegungsanfragen auf einmal zusagen oder absagen. Jede Anfrage läuft durch
+     * denselben Weg wie die einzelne Antwort (Rechte, Benachrichtigungen, Verlauf); was die Person nicht
+     * beantworten darf oder was inzwischen beantwortet ist, wird übersprungen und gemeldet.
+     */
+    public function answerRoomRequests(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'events' => ['required', 'array', 'min:1', 'max:200'],
+            'events.*' => ['integer'],
+            'action' => ['required', Rule::in(['accept', 'decline'])],
+        ]);
+
+        $answered = 0;
+        $skipped = count(array_unique($validated['events']));
+        $events = Event::query()->whereIn('id', $validated['events'])->get();
+        foreach ($events as $event) {
+            try {
+                // nur offene Anfragen: declineEvent würde auch bestätigte Belegungen absagen
+                abort_if(!$event->occupancy_option || $event->is_planning, 409);
+                $validated['action'] === 'accept'
+                    ? $this->acceptEvent($request, $event)
+                    : $this->declineEvent($request, $event);
+                $answered++;
+                $skipped--;
+            } catch (AuthorizationException | HttpExceptionInterface) {
+                continue;
+            }
+        }
+
+        if ($skipped > 0) {
+            session()->flash('error', trans_choice(
+                '{1} One request was skipped: it has already been answered or you may not answer it.|'
+                . '[2,*] :count requests were skipped: they have already been answered or you may not answer them.',
+                $skipped,
+                ['count' => $skipped]
+            ));
+        }
+        if ($answered > 0) {
+            session()->flash('success', trans_choice(
+                $validated['action'] === 'accept'
+                    ? '{1} One room request has been accepted.|[2,*] :count room requests have been accepted.'
+                    : '{1} One room request has been declined.|[2,*] :count room requests have been declined.',
+                $answered,
+                ['count' => $answered]
+            ));
+        }
+
+        return Redirect::back();
+    }
+
     public function acceptEvent(Request $request, Event $event): RedirectResponse|JsonResponse
     {
         // Schon beantwortet (parallel durch andere Admins)? Dann 409 „bereits beantwortet“ –
@@ -3118,6 +3171,8 @@ class EventController extends Controller
     {
         $freshEvent = $event->fresh();
         SafeBroadcast::send(new BulkEventChanged($freshEvent, 'updated'));
+        // Antworten laufen per Query Builder, der Beobachter sieht sie nicht
+        app(RoomRequestInboxNotifier::class)->notify();
 
         if ($request->wantsJson() && !$request->hasHeader('X-Inertia')) {
             return response()->json(['event' => BulkEventChanged::eventPayload($freshEvent)]);
@@ -3364,9 +3419,11 @@ class EventController extends Controller
             })
             ->orderByDesc('deleted_at')
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn ($event) => [
+            ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedEvents->getCollection());
+        $trashedEvents->through(fn ($event) => [
                 'id' => $event->id,
+                'trash' => $trashInfo[$event->id] ?? null,
                 'name' => $event->eventName,
                 'project' => $event->project,
                 'event_type' => $event->event_type,

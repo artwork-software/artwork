@@ -8,7 +8,13 @@
         <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-accent-500/0 transition-all duration-200 group-hover:bg-accent-500/70"></span>
 
         <!-- Name + Notes -->
-        <div class="col-span-3">
+        <div class="col-span-3 flex items-start gap-2">
+            <input type="checkbox"
+                   class="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
+                   :checked="selected"
+                   :aria-label="$t('Select')"
+                   @change="$emit('toggle-select', $event.target.checked)"/>
+            <div class="min-w-0">
             <button class="text-left text-accent-600 hover:text-accent-700 hover:underline underline-offset-2" @click="showIssueOfMaterialModal = true">
                 {{ issueOfMaterial.name }}
             </button>
@@ -37,21 +43,31 @@
                     {{ issueOfMaterial.articles.length }} {{ issueOfMaterial.articles.length === 1 ? $t('article') : $t('articles') }}
                 </span>
             </div>
+        
+            </div>
         </div>
 
         <!-- Zeitraum -->
-        <div class="col-span-2 text-xs cursor-pointer text-text-muted" @click="showIssueOfMaterialDetailModal = true">
+        <div class="col-span-2 text-xs cursor-pointer text-text-muted hover:text-text" :title="$t('View details')" @click="showIssueOfMaterialDetailModal = true">
             {{ issueOfMaterial.start_date_time }} – {{ issueOfMaterial.end_date_time }}
         </div>
 
         <!-- Raum -->
-        <div class="col-span-1 text-xs text-text-muted">
-            {{ issueOfMaterial.room?.name ?? '—' }}
+        <div class="col-span-1 min-w-0 truncate text-xs text-text-muted" :title="issueOfMaterial.room?.name ?? null">
+            <Link v-if="issueOfMaterial.room?.id" :href="route('rooms.show', issueOfMaterial.room.id)" class="hover:text-accent-700 hover:underline">
+                {{ issueOfMaterial.room.name }}
+            </Link>
+            <template v-else>—</template>
         </div>
 
         <!-- Projekt -->
-        <div class="col-span-2 text-xs text-text-muted">
-            {{ issueOfMaterial.project?.name ?? '—' }}
+        <div class="col-span-2 min-w-0 text-xs text-text-muted break-words" :title="issueOfMaterial.project?.name ?? null">
+            <Link v-if="issueOfMaterial.project?.id && firstProjectTabId"
+                  :href="route('projects.tab', { project: issueOfMaterial.project.id, projectTab: firstProjectTabId })"
+                  class="hover:text-accent-700 hover:underline">
+                {{ issueOfMaterial.project.name }}
+            </Link>
+            <template v-else>{{ issueOfMaterial.project?.name ?? '—' }}</template>
         </div>
 
         <!-- Files -->
@@ -91,11 +107,12 @@
       </span>
 
             <div class="flex items-center gap-2">
-                <button class="cursor-pointer" :title="$t('Print')" @click="printInternal()">
+                <button type="button" class="cursor-pointer" :title="$t('Print')" :aria-label="$t('Print')" @click="printInternal()">
                     <component :is="IconPrinter" class="size-5" stroke-width="1.5" />
                 </button>
 
                 <BaseMenu white-menu-background has-no-offset menu-width="w-fit">
+                    <BaseMenuItem white-menu-background :title="$t('View details')" :icon="IconEye" @click="showIssueOfMaterialDetailModal = true" />
                     <BaseMenuItem white-menu-background :title="$t('Edit')" :icon="IconEdit" @click="showIssueOfMaterialModal = true" />
                     <BaseMenuItem
                         white-menu-background
@@ -150,9 +167,9 @@ import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.v
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import DetailModalInternMaterialModal from "@/Pages/IssueOfMaterial/Components/DetailModalInternMaterialModal.vue";
 import IssuePdfPreviewModal from "@/Pages/IssueOfMaterial/Components/IssuePdfPreviewModal.vue";
-import { IconAlertTriangle, IconCheck, IconEdit, IconPrinter, IconTrash } from "@tabler/icons-vue";
+import { IconAlertTriangle, IconCheck, IconEdit, IconEye, IconPrinter, IconTrash } from "@tabler/icons-vue";
 import { computed, ref } from "vue";
-import { router, usePage } from "@inertiajs/vue3";
+import { Link, router, usePage } from "@inertiajs/vue3";
 
 const props = defineProps({
     issueOfMaterial: {
@@ -175,8 +192,12 @@ const props = defineProps({
             special_items: []
         })
     },
-    detailedArticle: { type: Object, default: () => ({}) }
+    detailedArticle: { type: Object, default: () => ({}) },
+    selected: { type: Boolean, default: false },
+    firstProjectTabId: { type: [Number, String], default: null }
 });
+
+defineEmits(['toggle-select']);
 
 const showIssueOfMaterialModal = ref(false);
 const showIssueOfMaterialConfirmDeleteModal = ref(false);

@@ -1,5 +1,5 @@
 <template>
-    <app-layout :title="$t('Sources of funding') + (title ? ' - ' + title : '')">
+    <app-layout :title="$t('Sources of funding') + (title && title !== $t('Sources of funding') ? ' - ' + title : '')">
         <div class="artwork-container">
             <ToolbarHeader
                 :icon="IconCurrencyDollar"

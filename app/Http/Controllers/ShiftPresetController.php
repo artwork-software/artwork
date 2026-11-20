@@ -64,6 +64,9 @@ class ShiftPresetController extends Controller
 
     public function storeEmpty(Request $request): void
     {
+        // ohne Namen (auch nur Leerzeichen) scheiterte das Anlegen mit einem Datenbankfehler (500)
+        $request->validate(['name' => ['required', 'filled', 'string', 'max:255']]);
+
         $this->shiftPresetService->createFromRequest($request);
     }
 

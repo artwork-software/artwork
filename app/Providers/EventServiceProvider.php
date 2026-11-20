@@ -55,6 +55,14 @@ class EventServiceProvider extends ServiceProvider
      *
      * @return void
      */
+    public function register(): void
+    {
+        parent::register();
+
+        // je Request ein Sammelhinweis (siehe RoomRequestInboxNotifier)
+        $this->app->scoped(\Artwork\Modules\Event\Services\RoomRequestInboxNotifier::class);
+    }
+
     public function boot(): void
     {
         $budgetObserver = BudgetModelObserver::class;
@@ -79,6 +87,14 @@ class EventServiceProvider extends ServiceProvider
         \Artwork\Modules\Event\Models\Event::observe(
             \Artwork\Modules\Project\Observers\ProjectDayAssignmentEventObserver::class
         );
+
+        // Seite "Eingehende Anfragen": Raumbelegungsanfragen live halten
+        \Artwork\Modules\Event\Models\Event::observe(
+            \Artwork\Modules\Event\Observers\RoomRequestInboxObserver::class
+        );
+
+        // Papierkorb: wer hat gelöscht
+        app(\Artwork\Modules\Trash\Services\TrashRecorder::class)->register($this->app['events']);
     }
 
     /**

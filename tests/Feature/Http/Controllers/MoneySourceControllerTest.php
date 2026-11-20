@@ -6,8 +6,11 @@ use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\MoneySource\Exports\MoneySourceListExport;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceTask;
+use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
+use Artwork\Modules\User\Models\User;
 use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -31,6 +34,79 @@ final class MoneySourceControllerTest extends FeatureTestCase
         $changeBy = (array) $row['history'][0]['change_by'];
         $this->assertSame($admin->id, $changeBy['id']);
         $this->assertArrayNotHasKey('email', $changeBy);
+    }
+
+    #[Test]
+    public function money_sources_index_ships_only_the_latest_history_entry(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $source = MoneySource::factory()->create();
+        foreach (['Erste Änderung', 'Zweite Änderung', 'Dritte Änderung'] as $offset => $translationKey) {
+            $activity = activity()->performedOn($source)->causedBy($admin)->withProperties([
+                ['translationKey' => $translationKey, 'type' => 'public_changes'],
+            ])->log('updated');
+            $activity->forceFill(['created_at' => now()->subMinutes(10 - $offset)])->save();
+        }
+
+        $sources = collect($this->get(route('money_sources.index'))->assertOk()->viewData('page')['props']['moneySources']);
+        $row = (array) $sources->firstWhere('id', $source->id);
+
+        $this->assertCount(1, $row['history']);
+        $this->assertSame('Dritte Änderung', $row['history'][0]['changes'][0]['translationKey']);
+    }
+
+    #[Test]
+    public function export_lists_the_requested_sources_in_the_given_order(): void
+    {
+        $this->actingAsAdmin();
+        $group = MoneySource::factory()->create(['name' => 'Spielzeit', 'is_group' => true, 'amount' => 0]);
+        $first = MoneySource::factory()->create([
+            'name' => 'Stiftung',
+            'is_group' => false,
+            'amount' => 1000,
+            'group_id' => $group->id,
+            'source_name' => 'Stadt',
+            'funding_start_date' => '2026-01-01',
+            'funding_end_date' => '2026-12-31',
+        ]);
+        $second = MoneySource::factory()->create(['name' => 'Sponsor', 'is_group' => false, 'amount' => 500]);
+        MoneySource::factory()->create(['name' => 'Nicht exportiert', 'is_group' => false]);
+        MoneySourceTask::factory()->create(['money_source_id' => $first->id, 'done' => false]);
+        MoneySourceTask::factory()->create(['money_source_id' => $first->id, 'done' => true]);
+
+        $export = new MoneySourceListExport(
+            MoneySource::with(['categories', 'moneySourceTasks'])
+                ->whereIn('id', [$second->id, $first->id])
+                ->get()
+                ->sortBy(fn (MoneySource $source): int => array_search($source->id, [$second->id, $first->id], true))
+                ->values(),
+            app(MoneySourceCalculationService::class)
+        );
+        $rows = $export->array();
+
+        $this->assertCount(count($export->headings()), $rows[0]);
+        $this->assertSame(['Sponsor', 'Stiftung'], array_column($rows, 0));
+        $this->assertSame('Spielzeit', $rows[1][2]);
+        $this->assertSame('Stadt', $rows[1][3]);
+        $this->assertSame(1000.0, $rows[1][4]);
+        $this->assertSame(1000.0, $rows[1][6]);
+        $this->assertSame('01.01.2026', $rows[1][7]);
+        $this->assertSame('31.12.2026', $rows[1][8]);
+        $this->assertSame(1, $rows[1][12]);
+        $this->assertNull($rows[0][2]);
+    }
+
+    #[Test]
+    public function export_route_downloads_a_spreadsheet_and_requires_permission(): void
+    {
+        $this->actingAsAdmin();
+        $source = MoneySource::factory()->create();
+
+        $response = $this->get(route('money_sources.export', ['ids' => [$source->id]]))->assertOk();
+        $this->assertStringContainsString('.xlsx', (string) $response->headers->get('content-disposition'));
+
+        $this->actingAs(User::factory()->create());
+        $this->get(route('money_sources.export'))->assertForbidden();
     }
 
     #[Test]
@@ -187,6 +263,24 @@ final class MoneySourceControllerTest extends FeatureTestCase
         $response = $this->post(route('money_sources.pin', $source));
 
         $response->assertRedirect();
+    }
+
+    #[Test]
+    public function unpinning_keeps_the_pins_of_other_users_as_a_list(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $source = MoneySource::factory()->create(['pinned_by_users' => [$admin->id, 999001, 999002]]);
+
+        $this->post(route('money_sources.pin', $source))->assertRedirect();
+
+        // Roh aus der Datenbank: eine JSON-Liste, kein Objekt mit Schlüsseln
+        $this->assertSame(
+            '[999001,999002]',
+            str_replace(' ', '', (string) $source->fresh()->getRawOriginal('pinned_by_users'))
+        );
+
+        $this->post(route('money_sources.pin', $source))->assertRedirect();
+        $this->assertSame([999001, 999002, $admin->id], $source->fresh()->pinned_by_users);
     }
 
     #[Test]

@@ -206,6 +206,11 @@
                                                         aria-hidden="true"
                                                     />
                                                     <span class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(subMenu.name) }}</span>
+                                                    <span v-if="badgeOf(subMenu) > 0"
+                                                          class="rounded-full bg-accent-500 px-1.5 text-[11px] font-semibold tabular-nums text-white"
+                                                          :aria-label="$t('{count} open requests', { count: badgeOf(subMenu) })">
+                                                        {{ badgeOf(subMenu) }}
+                                                    </span>
                                                 </Link>
                                             </li>
                                         </ul>
@@ -214,11 +219,14 @@
                                     <div
                                         v-else
                                         :class="[
-                                        'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                        'relative w-full group flex items-center rounded-lg h-10 select-none transition-colors',
                                         'justify-center px-0',
                                         item.current ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/10 hover:text-white'
                                       ]"
                                     >
+                                        <span v-if="item.subMenus.some((subMenu) => subMenu.has_permission && badgeOf(subMenu) > 0)"
+                                              class="pointer-events-none absolute right-1.5 top-1.5 size-2 rounded-full bg-accent-500"
+                                              aria-hidden="true" />
                                         <BaseMenu
                                             stroke-width="1.5"
                                             text-with-margin-left
@@ -392,6 +400,8 @@
                                         <PopoverButton
                                             class="group flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                                             :class="isFullSideBar ? 'justify-start' : 'justify-center px-3'"
+                                            :aria-label="isFullSideBar ? undefined : $t('Your account')"
+                                            :title="isFullSideBar ? undefined : $t('Your account')"
                                         >
                                             <div class="relative">
                                                 <img
@@ -553,6 +563,7 @@ import {
     IconUsers, IconX
 } from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { incomingRequestCount, loadIncomingRequestCount } from '@/Composeables/incomingRequestCount.js'
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 const { locale } = useI18n();
 
@@ -579,6 +590,12 @@ const moduleIsVisible = (module) => {
 const canViewInventory = () => {
     return is('artwork admin') || can('inventory.view | inventory.create_edit | inventory.delete | inventory.disposition')
 }
+
+// Zahl offener eingehender Anfragen am Menüpunkt; höchstens einmal je Minute nachgeladen
+if (usePage().props.canSeeIncomingRequests) {
+    loadIncomingRequestCount()
+}
+const badgeOf = (subMenu) => subMenu.badge === 'incomingRequests' ? incomingRequestCount.value : 0
 
 const getVisibleSubMenus = (item) => {
     if (!item?.subMenus?.length) {
@@ -649,6 +666,7 @@ const navigation = ref([
                 icon: 'IconCalendarCheck',
                 current: route().current('event-verifications.index') || route().current('event-verifications.sent'),
                 has_permission: usePage().props.canSeeEventVerifications,
+                badge: 'incomingRequests',
             },
         ]
     },

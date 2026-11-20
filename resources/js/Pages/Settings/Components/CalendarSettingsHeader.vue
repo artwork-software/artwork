@@ -1,5 +1,5 @@
 <template>
-    <app-layout :title="$t('Calendar Settings') + ' - ' + title">
+    <app-layout :title="title && title !== $t('Calendar Settings') ? $t('Calendar Settings') + ' - ' + title : $t('Calendar Settings')">
         <div class="artwork-container">
             <ToolbarHeader
                 :icon="IconCalendar"

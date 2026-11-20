@@ -7,12 +7,35 @@ use Artwork\Modules\Room\Models\RoomRoomAttributeMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 
 class RoomAttributeController extends Controller
 {
-    public function store(Request $request): void
+    public function store(Request $request): RedirectResponse
     {
-        RoomAttribute::create(['name' => $request->get('name')]);
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('room_attributes', 'name')],
+        ]);
+
+        RoomAttribute::create(['name' => $validated['name']]);
+
+        return Redirect::back();
+    }
+
+    public function update(Request $request, RoomAttribute $roomAttribute): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('room_attributes', 'name')->ignore($roomAttribute->id),
+            ],
+        ]);
+
+        $roomAttribute->update(['name' => $validated['name']]);
+
+        return Redirect::back();
     }
 
     public function destroy(RoomAttribute $roomAttribute): RedirectResponse

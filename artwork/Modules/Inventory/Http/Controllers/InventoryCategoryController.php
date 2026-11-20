@@ -3,6 +3,8 @@
 namespace Artwork\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Inventory\Exports\InventoryArticleListExport;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryCategoryRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryCategoryRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class InventoryCategoryController extends Controller
 {
@@ -129,6 +132,9 @@ class InventoryCategoryController extends Controller
             $resolved['tag_ids'],
             $statusId,
             $searchPropertyId,
+            null,
+            request()->string('sort')->toString() ?: null,
+            request()->string('direction')->toString() ?: null,
         );
 
         $articles->appends([
@@ -137,6 +143,8 @@ class InventoryCategoryController extends Controller
             'filter_preset_id' => $resolved['filter_preset_id'],
             'status_id' => $statusId,
             'search_property_id' => $searchPropertyId,
+            'sort' => request('sort'),
+            'direction' => request('direction'),
         ]);
 
         $categories = $this->categoryService->getAllWithRelations($filteredArticleIds);
@@ -200,6 +208,66 @@ class InventoryCategoryController extends Controller
             'appliedTagIds' => $resolved['tag_ids'],
             'activeFilterPresetId' => $resolved['filter_preset_id'],
         ]);
+    }
+
+    /**
+     * Excel-Export der Artikelübersicht: dieselben Filter, dieselbe Suche und Sortierung wie die
+     * Liste, wahlweise eingeschränkt auf ausgewählte Artikel (`ids`).
+     *
+     * @throws \JsonException
+     */
+    public function export(GeneralSettings $generalSettings): BinaryFileResponse
+    {
+        $idsInput = request()->input('ids', '');
+        $ids = is_array($idsInput)
+            ? $idsInput
+            : (is_string($idsInput) && $idsInput !== '' ? explode(',', $idsInput) : []);
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        $sort = request()->string('sort')->toString() ?: null;
+        $direction = request()->string('direction')->toString() ?: null;
+
+        if ($ids !== []) {
+            // Eine Auswahl gilt unabhängig von Filtern. Der Filter-Resolver bleibt außen vor, weil er
+            // mitgeschickte Filter als neuen Filterstand der Person speichert.
+            $articles = $this->articleService->getArticlesForExport(
+                null,
+                null,
+                null,
+                [],
+                [],
+                null,
+                null,
+                $sort,
+                $direction,
+                $ids
+            );
+        } else {
+            $category = request()->integer('category_id')
+                ? InventoryCategory::query()->findOrFail(request()->integer('category_id'))
+                : null;
+            $subCategory = request()->integer('sub_category_id')
+                ? InventorySubCategory::query()->findOrFail(request()->integer('sub_category_id'))
+                : null;
+            $resolved = $this->filterResolver->resolve($category?->id, $subCategory?->id);
+
+            $articles = $this->articleService->getArticlesForExport(
+                $category,
+                $subCategory,
+                request('search'),
+                $resolved['filters'],
+                $resolved['tag_ids'],
+                request()->integer('status_id') ?: null,
+                request()->integer('search_property_id') ?: null,
+                $sort,
+                $direction
+            );
+        }
+
+        return (new InventoryArticleListExport(
+            $articles,
+            InventoryArticleStatus::query()->orderBy('order')->get(),
+            (string) $generalSettings->inventory_number_prefix
+        ))->download('inventar-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function store(StoreInventoryCategoryRequest $request): void

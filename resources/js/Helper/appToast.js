@@ -23,7 +23,12 @@ export function t(key) {
     return translate(key)
 }
 
-export function showAppToast(type, message) {
+/**
+ * @param {'success'|'error'} type
+ * @param {string} message
+ * @param {{label: string, href: string}|null} action optionaler Link in der Meldung
+ */
+export function showAppToast(type, message, action = null) {
     if (!message) {
         return
     }
@@ -33,7 +38,7 @@ export function showAppToast(type, message) {
         return
     }
     lastToast = {key, at: now}
-    listeners.forEach((listener) => listener(type, message))
+    listeners.forEach((listener) => listener(type, message, action))
 }
 
 export function onAppToast(listener) {

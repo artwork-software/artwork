@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Core\Validation\MasterDataName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -17,6 +18,8 @@ class CurrencyController extends Controller
      */
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
+        MasterDataName::validate($request);
+
         Currency::create([
             'name' => $request->get('name'),
             'color' => $request->color
@@ -63,6 +66,8 @@ class CurrencyController extends Controller
 
     public function update(Request $request, Currency $currency): \Illuminate\Http\RedirectResponse
     {
+        MasterDataName::validate($request, updating: true);
+
         $currency->update($request->only(['name', 'color']));
 
         return Redirect::back();

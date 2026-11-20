@@ -62,7 +62,7 @@
             <div class="text-right">
                 <div class="flex items-center justify-end gap-2 text-xs">
                     <!-- Open / deadline -->
-                    <template v-if="!localTaskDone">
+                    <template v-if="!localTaskDone && task.formatted_dates?.deadline">
                         <IconCalendar class="h-6 w-6" :class="isOverdue ? 'text-danger' : 'text-text-subtle'" />
                         <span
                             class="rounded-md px-1.5 py-0.5 text-sm font-semibold"
@@ -73,7 +73,7 @@
                     </template>
 
                     <!-- Done / done_at -->
-                    <template v-else>
+                    <template v-else-if="localTaskDone">
                         <div class="flex flex-wrap items-center">
                             <div class="flex">
                             <UserPopoverTooltip

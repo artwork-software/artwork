@@ -129,6 +129,14 @@ final class ContractControllerTest extends FeatureTestCase
         $this->assertStringStartsWith('inline;', (string) $response->headers->get('content-disposition'));
         $this->assertSame('nosniff', $response->headers->get('x-content-type-options'));
 
+        // alte Datei mit HTML-Inhalt unter PDF-Namen: der Typ folgt der Endung, nie dem Inhalt
+        Storage::put('contracts/getarnt.pdf', '<html><script>alert(1)</script></html>');
+        $disguised = Contract::factory()->create(['basename' => 'getarnt.pdf', 'name' => 'getarnt.pdf']);
+        $this->assertSame(
+            'application/pdf',
+            $this->get(route('contracts.preview', $disguised))->assertOk()->headers->get('content-type')
+        );
+
         $this->get(route('contracts.preview', $html))->assertStatus(415);
         $this->get(route('contracts.preview', $missing))->assertNotFound();
 

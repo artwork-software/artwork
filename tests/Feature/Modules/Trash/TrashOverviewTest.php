@@ -205,4 +205,57 @@ final class TrashOverviewTest extends TestCase
         $this->assertSame(0, TrashInfoService::daysLeft($deletedAt, Carbon::parse('2026-12-01 10:00:00')));
         $this->assertSame(0, TrashInfoService::daysLeft($deletedAt, Carbon::parse('2026-12-24 10:00:00')));
     }
+
+    #[Test]
+    public function rooms_trashed_with_their_area_get_the_same_deleted_by_note(): void
+    {
+        $user = $this->actingAsUserWith(PermissionEnum::TRASH_ACCESS->value);
+        $area = Area::factory()->create();
+        $room = Room::factory()->create(['area_id' => $area->id]);
+
+        $area->delete();
+
+        $this->assertSoftDeleted($room);
+        $this->assertDatabaseHas('trash_records', [
+            'subject_type' => $room->getMorphClass(),
+            'subject_id' => $room->id,
+            'user_id' => $user->id,
+        ]);
+
+        $area->restore();
+
+        $this->assertDatabaseMissing('trash_records', [
+            'subject_type' => $room->getMorphClass(),
+            'subject_id' => $room->id,
+        ]);
+    }
+
+    #[Test]
+    public function the_daily_cleanup_keeps_notes_of_entries_that_are_still_in_the_trash(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::TRASH_ACCESS->value);
+        $stillTrashed = Genre::create(['name' => 'Bleibt im Papierkorb']);
+        $stillTrashed->delete();
+        $gone = Genre::create(['name' => 'Ist weg']);
+        $gone->delete();
+        $old = now()->subDays(TrashInfoService::RETENTION_DAYS * 3 + 1);
+        TrashRecord::query()->where('subject_type', $gone->getMorphClass())
+            ->whereIn('subject_id', [$stillTrashed->id, $gone->id])
+            ->update(['updated_at' => $old]);
+        // ohne Modell-Events gelöscht, wie bei "Alle löschen"
+        Genre::withTrashed()->whereKey($gone->id)->forceDelete();
+        // frisch gelöscht, damit die Bereinigung den Eintrag selbst noch nicht entfernt
+        Genre::withTrashed()->whereKey($stillTrashed->id)->update(['deleted_at' => now()]);
+
+        $this->artisan('artwork:purge-trash')->run();
+
+        $this->assertDatabaseHas('trash_records', [
+            'subject_type' => $stillTrashed->getMorphClass(),
+            'subject_id' => $stillTrashed->id,
+        ]);
+        $this->assertDatabaseMissing('trash_records', [
+            'subject_type' => $gone->getMorphClass(),
+            'subject_id' => $gone->id,
+        ]);
+    }
 }

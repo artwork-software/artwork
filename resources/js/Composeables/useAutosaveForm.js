@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue'
-import { changedFields, outdatedErrorFields } from '@/Composeables/urlTab.js'
+import { changedFields, outdatedErrorFields } from './urlTab.js'
 
 /**
  * Speichert ein Inertia-Formular beim Verlassen eines Feldes (PATCH) und hält die Fehlermeldungen
@@ -35,8 +35,13 @@ export function useAutosaveForm(form, url) {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
-                // gespeicherten Stand als Ausgangswert merken, sonst speichert jedes Verlassen eines Feldes erneut
-                form.defaults()
+                // Nur den gesendeten Stand als gespeichert merken. Was während der Anfrage getippt wurde,
+                // bleibt ungespeichert und geht gleich hinterher (vorher galt es fälschlich als gespeichert).
+                form.defaults(sent)
+                if (form.isDirty) {
+                    save()
+                    return
+                }
                 flashSaved()
             },
             // wurde ein Feld während der Anfrage schon korrigiert, gilt seine Meldung nicht mehr

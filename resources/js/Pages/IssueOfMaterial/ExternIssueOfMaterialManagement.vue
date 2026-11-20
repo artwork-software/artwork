@@ -230,6 +230,7 @@ import { computed, provide, ref, watch } from "vue";
 import { can, is } from "laravel-permission-to-vuejs";
 import {IconAlertTriangle, IconCirclePlus, IconFilter, IconFilterOff, IconMenu4, IconX} from "@tabler/icons-vue";
 import axios from "axios";
+import {toastValidationFailure} from "@/Helper/appToast";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import IssueSortHeader from "@/Pages/IssueOfMaterial/Components/IssueSortHeader.vue";
 import IssueBulkBar from "@/Pages/IssueOfMaterial/Components/IssueBulkBar.vue";
@@ -371,6 +372,7 @@ const bulkDelete = () => {
             selectedIds.value = {};
             router.reload({ only: ['issues'] });
         })
+        .catch(toastValidationFailure)
         .finally(() => {
             bulkDeleting.value = false;
         });

@@ -22,6 +22,7 @@ use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Auth\AuthManager;
@@ -207,7 +208,8 @@ class InternalIssueController extends Controller
         abort_unless($issues->count() === count($validated['ids']), 404);
         $issues->each(fn (InternalIssue $issue) => $this->authorize('delete', $issue));
 
-        $issues->each(fn (InternalIssue $issue) => $this->internalIssueService->delete($issue));
+        // alles oder nichts: scheitert eine Ausgabe, bleibt keine gelöscht
+        DB::transaction(fn () => $issues->each(fn (InternalIssue $issue) => $this->internalIssueService->delete($issue)));
 
         return response()->json(['deleted' => $issues->count()]);
     }

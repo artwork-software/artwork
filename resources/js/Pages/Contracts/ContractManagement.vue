@@ -379,6 +379,7 @@ import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue"
 import axios from 'axios'
+import { failedRequestMessage, showAppToast, toastValidationFailure } from '@/Helper/appToast'
 import { displayedAccessUsersOf } from '@/Helper/sharedAccess.js'
 
 export default {
@@ -754,6 +755,7 @@ export default {
                     this.selectedIds = {};
                     router.reload({ only: ['contracts'] });
                 })
+                .catch(toastValidationFailure)
                 .finally(() => {
                     this.bulkDeleting = false;
                 });
@@ -788,6 +790,11 @@ export default {
                     this.selectedContract = data.contract;
                     this.showContractEditModal = contract.id;
                 })
+                // Lesezugriffe meldet der globale Hinweis nicht: ohne das hier tat der Klick sichtbar nichts
+                .catch((error) => showAppToast(
+                    'error',
+                    failedRequestMessage(error, 'The action could not be completed. Please try again.')
+                ))
                 .finally(() => {
                     this.loadingContractId = null;
                 });

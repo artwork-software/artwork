@@ -2581,6 +2581,10 @@ class EventController extends Controller
                 $skipped--;
             } catch (AuthorizationException | HttpExceptionInterface) {
                 continue;
+            } catch (Throwable $exception) {
+                // ein unerwarteter Fehler bei einer Anfrage darf die übrigen nicht ohne Rückmeldung lassen
+                report($exception);
+                continue;
             }
         }
 

@@ -54,6 +54,18 @@ final class InventoryArticleListFeaturesTest extends TestCase
     }
 
     #[Test]
+    public function array_values_for_sort_and_search_do_not_break_list_or_export(): void
+    {
+        $query = ['sort' => ['x'], 'direction' => ['y'], 'search' => ['z']];
+
+        $this->actingAsAdmin();
+
+        $this->get(route('inventory.category.show', ['inventoryCategory' => $this->category->id] + $query))
+            ->assertOk();
+        $this->get(route('inventory.articles.export', $query))->assertOk();
+    }
+
+    #[Test]
     public function the_list_sorts_by_allowed_columns_and_ignores_unknown_ones(): void
     {
         $this->actingAsUserWith(PermissionEnum::INVENTORY_VIEW->value);

@@ -1,7 +1,8 @@
 <template>
     <!-- Gemeinsames Gerüst aller Papierkorb-Tabs: Kopfzeile, einheitliche Zeilen mit Löschinformationen,
          Mehrfachauswahl, Blättern und die Rückfragen. Der Inhalt einer Zeile kommt aus dem Standard-Slot. -->
-    <div class="w-full">
+    <!-- Während eine Sammelaktion läuft, ist die Liste gesperrt: sonst liefen Einzelaktionen dazwischen -->
+    <div class="w-full" :class="processing ? 'pointer-events-none opacity-60' : ''" :inert="processing" :aria-busy="processing">
     <TrashSearchAndActions
         :property-name="propertyName"
         :total="total"
@@ -61,7 +62,7 @@
         <div class="pointer-events-auto flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-surface-inverse py-2.5 pl-4 pr-2 text-sm text-white shadow-lg">
             <span class="text-white/70 tabular-nums" aria-live="polite">
                 {{ processing
-                    ? $t('{done} of {count} processed', { done: progress, count: selectedKeys.length })
+                    ? $t('{done} of {count} processed', { done: progress, count: progressTotal })
                     : $t('{count} selected', { count: selectedKeys.length }) }}
             </span>
             <button type="button"
@@ -157,6 +158,7 @@ const pageKeys = computed(() => items.value.map((item) => props.keyOf(item)))
 const selectedKeys = ref([])
 const processing = ref(false)
 const progress = ref(0)
+const progressTotal = ref(0)
 const showConfirmBulkDelete = ref(false)
 const showConfirmDeleteAll = ref(false)
 
@@ -211,6 +213,7 @@ const runBulk = async (action) => {
 
     processing.value = true
     progress.value = 0
+    progressTotal.value = targets.length
     const processedKeys = targets.map((item) => props.keyOf(item))
     let rejected = 0
     for (const item of targets) {
@@ -226,7 +229,19 @@ const runBulk = async (action) => {
         onFinish: () => {
             processing.value = false
             reportBulk(action, processedKeys, rejected)
+            leaveEmptyPage()
         },
+    })
+}
+
+// Ist die letzte Seite nach einer Sammelaktion leer, auf die jetzt letzte Seite wechseln
+const leaveEmptyPage = () => {
+    const paginator = props.paginator
+    if (!paginator || paginator.data?.length > 0 || !(paginator.current_page > 1)) return
+
+    router.reload({
+        data: { page: Math.max(1, Math.min(paginator.current_page - 1, paginator.last_page ?? 1)) },
+        preserveScroll: true,
     })
 }
 

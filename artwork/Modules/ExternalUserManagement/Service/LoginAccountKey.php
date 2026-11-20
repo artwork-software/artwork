@@ -15,8 +15,10 @@ use Normalizer;
 class LoginAccountKey
 {
     /**
-     * Liefert "id:<User-ID>", sobald die Eingabe in der Datenbank ein Konto trifft, sonst die
-     * normalisierte Eingabe (unbekannte Adressen zählen wie bisher je Schreibweise).
+     * Liefert "id:<User-ID>", sobald die Eingabe in der Datenbank ein Konto trifft, sonst
+     * "mail:<normalisierte Eingabe>" (unbekannte Adressen zählen wie bisher je Schreibweise).
+     * Die Präfixe halten beide Fälle auseinander: wer "id:5" als Adresse eingibt, zählt sonst auf
+     * das Konto 5 und könnte fremde Konten aussperren, ohne deren Adresse zu kennen.
      */
     public static function for(string $email): string
     {
@@ -32,7 +34,7 @@ class LoginAccountKey
             false
         );
 
-        return $userId !== null ? 'id:' . $userId : $normalized;
+        return $userId !== null ? 'id:' . $userId : 'mail:' . $normalized;
     }
 
     /**

@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import debounce from 'lodash.debounce'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
@@ -60,4 +60,6 @@ const reload = debounce(() => {
 }, 400)
 
 watch(search, () => props.searchable && reload())
+// sonst lädt eine späte Suche nach dem Wechsel des Reiters auf der neuen Seite
+onBeforeUnmount(() => reload.cancel())
 </script>

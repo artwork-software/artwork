@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Core;
 
+use Sentry\ExceptionDataBag;
 use Artwork\Core\Sentry\SentryEventScrubber;
 use PHPUnit\Framework\Attributes\Test;
 use Sentry\Breadcrumb;
@@ -181,5 +182,24 @@ final class SentryEventScrubberTest extends UnitTestCase
 
         $this->assertSame('/external/login/[Filtered]', $scrubbed?->getTransaction());
         $this->assertSame('https://artwork.test/external/login/[Filtered]', $scrubbed?->getRequest()['url']);
+    }
+
+    #[Test]
+    public function tokens_are_removed_from_exception_texts_and_messages(): void
+    {
+        $token = str_repeat('Ab1', 21) . 'x';
+        $event = Event::createEvent();
+        $event->setExceptions([
+            new ExceptionDataBag(new \RuntimeException("GET https://artwork.test/external/login/$token failed")),
+        ]);
+        $event->setMessage("Aufruf von /setup?token=$token", [], "Aufruf von /setup?token=$token");
+
+        $scrubbed = SentryEventScrubber::beforeSend($event);
+
+        $this->assertNotNull($scrubbed);
+        $this->assertStringNotContainsString($token, $scrubbed->getExceptions()[0]->getValue());
+        $this->assertStringContainsString('/external/login/[Filtered]', $scrubbed->getExceptions()[0]->getValue());
+        $this->assertStringNotContainsString($token, (string) $scrubbed->getMessage());
+        $this->assertStringNotContainsString($token, (string) $scrubbed->getMessageFormatted());
     }
 }

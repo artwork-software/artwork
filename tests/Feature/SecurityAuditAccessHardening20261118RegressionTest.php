@@ -65,7 +65,7 @@ final class SecurityAuditAccessHardening20261118RegressionTest extends FeatureTe
         $this->assertSame('account|id:' . $user->id, $keyFor('  ' . Str::upper($local) . '@Haus.Example '));
 
         // Unbekannte Adressen zählen wie bisher über die normalisierte Eingabe
-        $this->assertSame('account|niemand@haus.example', $keyFor(' Niemand@Haus.example'));
+        $this->assertSame('account|mail:niemand@haus.example', $keyFor(' Niemand@Haus.example'));
         $this->assertSame('account|', $keyFor(''));
     }
 
@@ -83,7 +83,7 @@ final class SecurityAuditAccessHardening20261118RegressionTest extends FeatureTe
         $this->assertSame($expected, $keyFor($local . '@haus.example'));
         $this->assertSame($expected, $keyFor('à' . substr($local, 1) . '@HAUS.example'));
         $this->assertSame(
-            'app-login:account:' . hash('sha256', 'niemand@haus.example'),
+            'app-login:account:' . hash('sha256', 'mail:niemand@haus.example'),
             $keyFor('Niemand@haus.example')
         );
     }
@@ -251,5 +251,18 @@ final class SecurityAuditAccessHardening20261118RegressionTest extends FeatureTe
 
         $nginx = (string) file_get_contents(base_path('dockerfiles/nginx.conf'));
         $this->assertMatchesRegularExpression('/^\s*ssl_protocols TLSv1\.2 TLSv1\.3;/m', $nginx);
+    }
+
+    #[Test]
+    public function an_unknown_login_input_never_shares_the_throttle_key_of_an_account(): void
+    {
+        $user = $this->localUser('schluessel-' . Str::lower(Str::random(6)) . '@haus.example');
+
+        $accountKey = LoginAccountKey::for($user->email);
+
+        $this->assertSame('id:' . $user->id, $accountKey);
+        // wer die Kontonummer als "Adresse" eingibt, darf nicht auf das fremde Konto zählen
+        $this->assertNotSame($accountKey, LoginAccountKey::for('id:' . $user->id));
+        $this->assertSame('mail:niemand@haus.example', LoginAccountKey::for(' Niemand@haus.example '));
     }
 }

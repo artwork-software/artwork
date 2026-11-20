@@ -175,7 +175,17 @@ class ContractController extends Controller
         $path = 'contracts/' . $contract->basename;
         abort_unless(Storage::exists($path), 404);
 
+        // Typ aus der geprüften Endung, nicht aus dem Dateiinhalt: eine alte Datei mit HTML-Inhalt
+        // unter einem PDF-Namen darf nie als HTML ausgeliefert werden
+        $extension = strtolower(pathinfo((string) $contract->basename, PATHINFO_EXTENSION));
+        $contentType = match ($extension) {
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg' => 'image/jpeg',
+            default => 'image/' . $extension,
+        };
+
         return Storage::response($path, $contract->name, [
+            'Content-Type' => $contentType,
             'Content-Disposition' => 'inline; filename="' . addcslashes((string) $contract->name, '"\\') . '"',
             'X-Content-Type-Options' => 'nosniff',
         ]);

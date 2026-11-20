@@ -53,7 +53,7 @@ class InventoryCategoryController extends Controller
         $resolved = $this->filterResolver->resolve($inventoryCategory?->id, $inventorySubCategory?->id);
         $statusId = request()->integer('status_id') ?: null;
         $searchPropertyId = request()->integer('search_property_id') ?: null;
-        $search = request('search');
+        $search = $this->stringInput('search');
 
         // Ist überhaupt ein Filter/eine Suche aktiv? Nur dann blenden wir leere
         // Kategorien aus – ohne Filter bleibt die vollständige Sidebar erhalten.
@@ -133,8 +133,8 @@ class InventoryCategoryController extends Controller
             $statusId,
             $searchPropertyId,
             null,
-            request()->string('sort')->toString() ?: null,
-            request()->string('direction')->toString() ?: null,
+            $this->stringInput('sort'),
+            $this->stringInput('direction'),
         );
 
         $articles->appends([
@@ -143,8 +143,8 @@ class InventoryCategoryController extends Controller
             'filter_preset_id' => $resolved['filter_preset_id'],
             'status_id' => $statusId,
             'search_property_id' => $searchPropertyId,
-            'sort' => request('sort'),
-            'direction' => request('direction'),
+            'sort' => $this->stringInput('sort'),
+            'direction' => $this->stringInput('direction'),
         ]);
 
         $categories = $this->categoryService->getAllWithRelations($filteredArticleIds);
@@ -180,7 +180,7 @@ class InventoryCategoryController extends Controller
             'countsByStatus' => fn () => $this->articleService->getCountsByStatusAggregated(
                 $inventoryCategory,
                 $inventorySubCategory,
-                request('search'),
+                $this->stringInput('search'),
                 $resolved['filters'],
                 $resolved['tag_ids'],
                 $searchPropertyId,
@@ -218,13 +218,16 @@ class InventoryCategoryController extends Controller
      */
     public function export(GeneralSettings $generalSettings): BinaryFileResponse
     {
+        // Obergrenze der Auswahl; die ganze Liste geht ohne `ids` über die Filter
+        abort_if(is_array(request()->input('ids')) && count(request()->input('ids')) > 2000, 422);
+
         $idsInput = request()->input('ids', '');
         $ids = is_array($idsInput)
             ? $idsInput
             : (is_string($idsInput) && $idsInput !== '' ? explode(',', $idsInput) : []);
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
-        $sort = request()->string('sort')->toString() ?: null;
-        $direction = request()->string('direction')->toString() ?: null;
+        $sort = $this->stringInput('sort');
+        $direction = $this->stringInput('direction');
 
         if ($ids !== []) {
             // Eine Auswahl gilt unabhängig von Filtern. Der Filter-Resolver bleibt außen vor, weil er
@@ -253,7 +256,7 @@ class InventoryCategoryController extends Controller
             $articles = $this->articleService->getArticlesForExport(
                 $category,
                 $subCategory,
-                request('search'),
+                $this->stringInput('search'),
                 $resolved['filters'],
                 $resolved['tag_ids'],
                 request()->integer('status_id') ?: null,
@@ -391,5 +394,15 @@ class InventoryCategoryController extends Controller
         auth()->user()->update([
             'inventory_hide_images' => $validated['inventory_hide_images']
         ]);
+    }
+
+    /**
+     * Text-Parameter der Adresse; ein Feld (`sort[]=x`) zählt als nicht gesetzt statt einen Fehler auszulösen.
+     */
+    private function stringInput(string $key): ?string
+    {
+        $value = request()->input($key);
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 }

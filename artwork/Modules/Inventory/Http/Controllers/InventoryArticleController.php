@@ -149,7 +149,10 @@ class InventoryArticleController extends Controller
     public function bulkDestroy(Request $request): JsonResponse
     {
         $articles = $this->selectedArticles($request);
-        $articles->each(fn (InventoryArticle $article) => $this->inventoryArticleService->delete($article));
+        // alles oder nichts: scheitert ein Artikel, bleibt keiner gelöscht
+        DB::transaction(
+            fn () => $articles->each(fn (InventoryArticle $article) => $this->inventoryArticleService->delete($article))
+        );
 
         return response()->json(['deleted' => $articles->count()]);
     }

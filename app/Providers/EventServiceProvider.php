@@ -93,6 +93,20 @@ class EventServiceProvider extends ServiceProvider
             \Artwork\Modules\Event\Observers\RoomRequestInboxObserver::class
         );
 
+        // In Jobs und Befehlen gibt es kein Request-Ende: ein zurückgehaltener Hinweis geht hier raus
+        $this->app['events']->listen(
+            [
+                \Illuminate\Queue\Events\JobProcessed::class,
+                \Illuminate\Queue\Events\JobFailed::class,
+                \Illuminate\Console\Events\CommandFinished::class,
+            ],
+            static function (): void {
+                if (app()->resolved(\Artwork\Modules\Event\Services\RoomRequestInboxNotifier::class)) {
+                    app(\Artwork\Modules\Event\Services\RoomRequestInboxNotifier::class)->flush();
+                }
+            }
+        );
+
         // Papierkorb: wer hat gelöscht
         app(\Artwork\Modules\Trash\Services\TrashRecorder::class)->register($this->app['events']);
     }

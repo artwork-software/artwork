@@ -16,6 +16,9 @@ use Illuminate\Validation\ValidationException;
  */
 final class CrmPropertyValueValidator
 {
+    /** Die Spalte fasst 64 KB; längere Texte endeten als Datenbankfehler. */
+    public const MAX_LENGTH = 20000;
+
     /**
      * @param array<int|string, mixed> $propertyValues {propertyId: wert}
      * @param array<int, int>|null $requireFilledAmong Beim Anlegen: Eigenschaften, deren Pflicht-Kennzeichen auch
@@ -41,6 +44,17 @@ final class CrmPropertyValueValidator
             $property = $typeProperties->get((int) $propertyId) ?? $otherProperties->get((int) $propertyId);
 
             if ($property === null || $property->type === CrmPropertyTypeEnum::UPLOAD) {
+                continue;
+            }
+
+            // Felder statt eines Werts (property_values[5][]=x) galten sonst als "leer" und wurden gespeichert
+            if ($property->type !== CrmPropertyTypeEnum::MULTISELECT && $value !== null && !is_scalar($value)) {
+                $errors['property_values.' . $propertyId] = __('This value is not valid.');
+                continue;
+            }
+
+            if (is_string($value) && mb_strlen($value) > self::MAX_LENGTH) {
+                $errors['property_values.' . $propertyId] = __('This value is too long.');
                 continue;
             }
 

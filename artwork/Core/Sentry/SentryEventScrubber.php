@@ -5,6 +5,7 @@ namespace Artwork\Core\Sentry;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
+use Throwable;
 
 /**
  * before_send-Hook (config/sentry.php): Passwörter und 2FA-Codes dürfen nie mit dem Request-Body an
@@ -55,13 +56,20 @@ class SentryEventScrubber
 
     public static function beforeSend(Event $event, ?EventHint $hint = null): ?Event
     {
-        $request = $event->getRequest();
-        if (array_key_exists('data', $request)) {
-            $request['data'] = self::scrub($request['data']);
-        }
+        try {
+            $request = $event->getRequest();
+            if (array_key_exists('data', $request)) {
+                $request['data'] = self::scrub($request['data']);
+            }
 
-        $event->setRequest(self::scrubUrls($request));
-        self::scrubEventUrls($event);
+            $event->setRequest(self::scrubUrls($request));
+            self::scrubEventUrls($event);
+        } catch (Throwable) {
+            // Der Hook darf die Fehlermeldung nie verhindern. Was nicht bereinigt werden konnte,
+            // geht nicht raus: Request und Breadcrumbs fallen weg, der Fehler selbst bleibt.
+            $event->setRequest([]);
+            $event->setBreadcrumb([]);
+        }
 
         return $event;
     }
@@ -81,9 +89,10 @@ class SentryEventScrubber
      */
     public static function scrubUrl(string $value): string
     {
-        $value = (string) preg_replace(self::TOKEN_PATH_PATTERN, '$1' . self::FILTERED, $value);
+        // preg_replace liefert bei einem PCRE-Fehler null: dann lieber den ganzen Wert verwerfen
+        $value = preg_replace(self::TOKEN_PATH_PATTERN, '$1' . self::FILTERED, $value) ?? self::FILTERED;
 
-        return (string) preg_replace(self::TOKEN_QUERY_PATTERN, '$1$2' . self::FILTERED, $value);
+        return preg_replace(self::TOKEN_QUERY_PATTERN, '$1$2' . self::FILTERED, $value) ?? self::FILTERED;
     }
 
     /**
@@ -107,13 +116,28 @@ class SentryEventScrubber
 
     /**
      * Alle Stellen eines Events außerhalb des Request-Blocks, an denen URLs landen: Transaktionsname,
-     * Tags, Extra, Kontexte (Trace-Daten), Breadcrumbs und Spans.
+     * Fehlertexte (z. B. HTTP-Client-Fehler mit signierter URL), Tags, Extra, Kontexte (Trace-Daten),
+     * Breadcrumbs und Spans.
      */
     private static function scrubEventUrls(Event $event): void
     {
         $transaction = $event->getTransaction();
         if ($transaction !== null) {
             $event->setTransaction(self::scrubUrl($transaction));
+        }
+
+        foreach ($event->getExceptions() as $exception) {
+            $exception->setValue(self::scrubUrl($exception->getValue()));
+        }
+
+        $message = $event->getMessage();
+        if ($message !== null) {
+            $formatted = $event->getMessageFormatted();
+            $event->setMessage(
+                self::scrubUrl($message),
+                self::scrubUrls($event->getMessageParams()),
+                $formatted === null ? null : self::scrubUrl($formatted)
+            );
         }
 
         $event->setTags(self::scrubUrls($event->getTags()));

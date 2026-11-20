@@ -10,7 +10,8 @@ use Throwable;
 /**
  * Meldet der Seite "Eingehende Anfragen", dass sich Raumbelegungsanfragen geändert haben: höchstens
  * ein Hinweis je Request, gesendet nach der Antwort (eine Serie mit 100 Terminen löst einen Hinweis aus).
- * In Befehlen und Jobs gibt es kein Request-Ende; dort höchstens ein Hinweis je Sekunde.
+ * In Befehlen und Jobs gibt es kein Request-Ende; dort höchstens ein Hinweis je Sekunde, und ein
+ * zurückgehaltener Hinweis geht am Ende des Jobs oder Befehls raus (flush, siehe EventServiceProvider).
  */
 class RoomRequestInboxNotifier
 {
@@ -27,6 +28,8 @@ class RoomRequestInboxNotifier
         if ($this->app->runningInConsole() && !$this->app->runningUnitTests()) {
             if (microtime(true) - $this->lastSentAt >= 1.0) {
                 $this->send();
+            } else {
+                $this->pending = true;
             }
 
             return;
@@ -43,8 +46,19 @@ class RoomRequestInboxNotifier
         });
     }
 
+    /**
+     * Sendet einen zurückgehaltenen Hinweis. Wird am Ende von Jobs und Befehlen aufgerufen.
+     */
+    public function flush(): void
+    {
+        if ($this->pending && $this->app->runningInConsole() && !$this->app->runningUnitTests()) {
+            $this->send();
+        }
+    }
+
     private function send(): void
     {
+        $this->pending = false;
         $this->lastSentAt = microtime(true);
         // Nach der Antwort darf nichts mehr werfen
         try {

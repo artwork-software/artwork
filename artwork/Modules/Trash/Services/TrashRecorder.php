@@ -74,8 +74,38 @@ class TrashRecorder
                 ['subject_type' => $model->getMorphClass(), 'subject_id' => $model->getKey()],
                 ['user_id' => $userId]
             );
+            $this->recordRoomsOfArea($model, $userId);
         } catch (Throwable $exception) {
             report($exception);
+        }
+    }
+
+    /**
+     * Ein Areal nimmt seine Räume ohne Modell-Events mit in den Papierkorb. Damit sie dort nicht
+     * ohne "Gelöscht von" stehen, bekommen sie denselben Vermerk, sofern sie noch keinen haben.
+     */
+    private function recordRoomsOfArea(Model $model, int|string $userId): void
+    {
+        if (!$model instanceof Area) {
+            return;
+        }
+
+        $roomType = (new Room())->getMorphClass();
+        $now = now();
+        $rows = Room::onlyTrashed()
+            ->where('area_id', $model->getKey())
+            ->pluck('id')
+            ->map(static fn (int $roomId): array => [
+                'subject_type' => $roomType,
+                'subject_id' => $roomId,
+                'user_id' => $userId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])
+            ->all();
+
+        if ($rows !== []) {
+            TrashRecord::query()->insertOrIgnore($rows);
         }
     }
 

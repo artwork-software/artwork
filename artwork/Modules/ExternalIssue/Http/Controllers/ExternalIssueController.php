@@ -23,6 +23,7 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -249,7 +250,8 @@ class ExternalIssueController extends Controller
         abort_unless($issues->count() === count($validated['ids']), 404);
         $issues->each(fn (ExternalIssue $issue) => $this->authorize('delete', $issue));
 
-        $issues->each(fn (ExternalIssue $issue) => $this->externalIssueService->delete($issue));
+        // alles oder nichts: scheitert eine Ausgabe, bleibt keine gelöscht
+        DB::transaction(fn () => $issues->each(fn (ExternalIssue $issue) => $this->externalIssueService->delete($issue)));
 
         return response()->json(['deleted' => $issues->count()]);
     }

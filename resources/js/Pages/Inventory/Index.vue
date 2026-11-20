@@ -451,6 +451,7 @@ import InventoryBulkBar from "@/Pages/Inventory/LayoutComponents/InventoryBulkBa
 import InventoryBulkEditModal from "@/Pages/Inventory/LayoutComponents/InventoryBulkEditModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import axios from "axios";
+import {toastValidationFailure} from "@/Helper/appToast";
 import {allIssuesSelected, togglePageSelection} from "@/Pages/IssueOfMaterial/Components/issueListTools.js";
 import {
     INVENTORY_SORT_OPTIONS,
@@ -651,6 +652,7 @@ const bulkDelete = () => {
     showBulkDeleteModal.value = false
     axios.post(route('inventory-management.articles.bulk-delete'), { ids: selectedArticleIds.value })
         .then(reloadAfterBulkChange)
+        .catch(toastValidationFailure)
         .finally(() => {
             bulkDeleting.value = false
         })

@@ -170,6 +170,8 @@ class AiActionBatchService
             // Referenz der inneren Closure zeigte dann auf die Kopie.
             function () use ($batch, &$reverted): AiActionBatch {
                 return DB::transaction(function () use ($batch, &$reverted): AiActionBatch {
+                    $this->lockForRevert($batch);
+
                     foreach ($batch->items as $item) {
                         $model = $this->revertItem($item);
 
@@ -202,6 +204,22 @@ class AiActionBatchService
         $this->notifier->notify($user, AiBatchNotifier::ACTION_REVERTED, $reverted);
 
         return $result;
+    }
+
+    /**
+     * Sperrt die Batch-Zeile fuer die Dauer der Ruecknahme und prueft den Status erneut. Von zwei
+     * gleichzeitigen Ruecknahmen wartet die zweite hier, sieht danach `reverted` und bricht ab,
+     * bevor sie etwas zuruecknimmt.
+     */
+    private function lockForRevert(AiActionBatch $batch): void
+    {
+        $current = AiActionBatch::query()->whereKey($batch->getKey())->lockForUpdate()->first();
+
+        abort_unless(
+            $current !== null && $current->status === AiActionBatch::STATUS_EXECUTED,
+            Response::HTTP_UNPROCESSABLE_ENTITY,
+            'Diese Aktion wurde bereits zurueckgenommen.'
+        );
     }
 
     /**

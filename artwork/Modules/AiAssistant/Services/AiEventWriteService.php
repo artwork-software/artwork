@@ -114,7 +114,7 @@ class AiEventWriteService
                 return $events;
             },
             fn (array $events): array => array_map(
-                fn (Event $event): AiWriteItemData => $this->itemFor($event, 'create', $conflicts),
+                fn (Event $event): AiWriteItemData => $this->itemFor($event, 'create', $conflicts, $user),
                 $events
             ),
             static fn (array $events): array => array_map(
@@ -181,7 +181,7 @@ class AiEventWriteService
                     'update',
                     array_merge(
                         $conflicts,
-                        $this->collisionConflicts($updated),
+                        $this->collisionConflicts($updated, $user),
                         $this->shiftHints($updated, $originalEndDay)
                     )
                 ),
@@ -303,7 +303,7 @@ class AiEventWriteService
                     $before[$event->id]['label'],
                     array_merge(
                         $conflicts[$event->id],
-                        $this->collisionConflicts($event),
+                        $this->collisionConflicts($event, $user),
                         $this->shiftMoveHints($event, $shiftStates)
                     )
                 ),
@@ -910,9 +910,14 @@ class AiEventWriteService
      * Raumkollisionen ueber denselben Dienst wie die Oberflaeche; der Termin selbst ist
      * ausgenommen.
      *
+     * Dass der Raum belegt ist, ist ein Faktum und wird immer gemeldet. ID und Name des
+     * kollidierenden Termins gehen aber nur raus, wenn die fragende Person ihn sehen darf
+     * (`Event::visibleFor()`, also Planungstermine nur mit Planungskalender-Recht); sonst bleibt
+     * `event` leer, wie bei `AiRoomConflictService::eventData()`.
+     *
      * @return list<AiWriteConflictData>
      */
-    private function collisionConflicts(Event $event): array
+    private function collisionConflicts(Event $event, ?User $viewer): array
     {
         if ($event->room_id === null || $event->start_time === null || $event->end_time === null) {
             return [];
@@ -924,13 +929,25 @@ class AiEventWriteService
             'roomId' => $event->room_id,
         ]);
 
+        $collisions = $this->collisionService->getCollision($request, $event)->get();
+        $visibleIds = $collisions->isEmpty()
+            ? []
+            : Event::query()
+                ->visibleFor($viewer)
+                ->whereKey($collisions->modelKeys())
+                ->pluck('id')
+                ->map(static fn ($id): int => (int) $id)
+                ->all();
+
         $conflicts = [];
 
-        foreach ($this->collisionService->getCollision($request, $event)->get() as $collision) {
+        foreach ($collisions as $collision) {
             $conflicts[] = new AiWriteConflictData(
                 AiWriteConflictData::ROOM_COLLISION,
                 'Der Raum ist in dieser Zeit bereits belegt.',
-                AiRefData::make($collision->id, AiText::truncate($collision->eventName ?: $collision->name))
+                in_array((int) $collision->getKey(), $visibleIds, true)
+                    ? AiRefData::make($collision->id, AiText::truncate($collision->eventName ?: $collision->name))
+                    : null
             );
         }
 
@@ -960,10 +977,10 @@ class AiEventWriteService
     /**
      * @param list<AiWriteConflictData> $conflicts
      */
-    private function itemFor(Event $event, string $action, array $conflicts): AiWriteItemData
+    private function itemFor(Event $event, string $action, array $conflicts, ?User $viewer = null): AiWriteItemData
     {
         $timezone = (string) config('app.timezone');
-        $collisions = $action === 'create' ? $this->collisionConflicts($event) : [];
+        $collisions = $action === 'create' ? $this->collisionConflicts($event, $viewer) : [];
 
         return new AiWriteItemData(
             action: $action,

@@ -44,7 +44,8 @@ export function isRoomAdminOf(rooms, roomId, userId) {
 /**
  * Darf die Person Raumanfragen in diesem Raum zusagen/absagen? Spiegel von EventPolicy::answerRoomRequest:
  * Admins und "create events without request" überall, sonst Raumadmins (inkl. Team). Ohne Raumadmins
- * entscheidet der Server (Fallback auf die Person, die den Raum angelegt hat).
+ * antwortet die Person, die den Raum angelegt hat (`user_id`); liefert die Seite sie nicht mit, entscheidet
+ * der Server.
  *
  * @param {{rooms: Array<object>|Record<string, object>|null|undefined, roomId: number|null|undefined,
  *          userId: number|null|undefined, isAdmin: boolean, canBookWithoutRequest: boolean}} context
@@ -55,7 +56,15 @@ export function mayAnswerRoomRequestIn({rooms, roomId, userId, isAdmin, canBookW
         return true;
     }
 
-    return roomAdminIds(findRoom(rooms, roomId)).length === 0 || isRoomAdminOf(rooms, roomId, userId);
+    const room = findRoom(rooms, roomId);
+    if (roomAdminIds(room).length > 0) {
+        return isRoomAdminOf(rooms, roomId, userId);
+    }
+    if (room && room.user_id !== undefined) {
+        return userId !== null && userId !== undefined && Number(room.user_id) === Number(userId);
+    }
+
+    return true;
 }
 
 /**

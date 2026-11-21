@@ -215,8 +215,9 @@ class ExternalAccessService
 
     /**
      * Einladung aus dem Projekt-Tab: Der Zugang hängt nur an der E-Mail (plus optionalem Namen). Es wird
-     * kein CRM-Kontakt angelegt und kein CRM-Zugang vergeben; ein bestehender Zugang wird wiederverwendet
-     * (bei Widerruf reaktiviert), ohne seinen CRM-Zugang zu verlängern.
+     * kein CRM-Kontakt angelegt und kein CRM-Zugang vergeben; ein bestehender Zugang wird wiederverwendet,
+     * ohne seinen CRM-Zugang zu verlängern. Ein widerrufener Zugang wird reaktiviert, behält aber nur
+     * die Freigaben der neuen Einladung.
      */
     private function findOrCreateTabOnlyAccess(InviteExternalCommand $command, string $email): ExternalAccess
     {
@@ -225,6 +226,11 @@ class ExternalAccessService
             $attributes = [];
             if ($existing->revoked_at !== null) {
                 $attributes['revoked_at'] = null;
+                $this->endScopesGrantedBeforeRevocation($existing);
+                // Eine Tab-Einladung vergibt keine Selbstpflege, eine widerrufene lebt deshalb nicht wieder auf
+                if ($existing->crm_access_expires_at?->isFuture()) {
+                    $attributes['crm_access_expires_at'] = now();
+                }
             }
             if ($command->name !== null && trim((string) $existing->name) === '') {
                 $attributes['name'] = $command->name;
@@ -281,17 +287,21 @@ class ExternalAccessService
         $newExpiry = $this->resolveCrmAccessExpiry($command);
 
         $attributes = [];
+        $wasRevoked = $existing->revoked_at !== null;
 
+        // Nach einem Widerruf zählt nur die neue Laufzeit, sonst die längere von beiden
         if (
-            $existing->crm_access_expires_at === null
+            $wasRevoked
+            || $existing->crm_access_expires_at === null
             || $existing->crm_access_expires_at->lt($newExpiry)
         ) {
             $attributes['crm_access_expires_at'] = $newExpiry;
             $attributes['crm_expiry_reminder_sent_at'] = null;
         }
 
-        if ($existing->revoked_at !== null) {
+        if ($wasRevoked) {
             $attributes['revoked_at'] = null;
+            $this->endScopesGrantedBeforeRevocation($existing);
             $this->logger->info('Reactivating previously revoked ExternalAccess', [
                 'external_access_id' => $existing->id,
             ]);
@@ -307,6 +317,18 @@ class ExternalAccessService
         ]);
 
         return $existing;
+    }
+
+    /**
+     * Neueinladung eines widerrufenen Zugangs: Die vor dem Widerruf vergebenen Tab-Freigaben enden,
+     * damit nur gilt, was die neue Einladung vergibt. Sonst höbe jede Einladung an dieselbe Adresse
+     * den Widerruf vollständig auf. Das Reaktivieren in der Verwaltung stellt weiterhin alles wieder her.
+     */
+    private function endScopesGrantedBeforeRevocation(ExternalAccess $existing): void
+    {
+        $existing->scopes()
+            ->where('valid_to', '>', now())
+            ->update(['valid_to' => now()]);
     }
 
     private function createFullSet(InviteExternalCommand $command, string $email): ExternalAccess

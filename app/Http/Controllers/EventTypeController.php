@@ -19,8 +19,14 @@ class EventTypeController extends Controller
 {
     public function index(): Response|ResponseFactory
     {
+        $eventTypes = EventType::query()->with('verifiers')->withCount('events')->get();
+
         return inertia('Settings/EventSettings', [
-            'event_types' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
+            // events_count: Hinweis vor dem Löschen, wie viele Termine auf den Standard-Typ umgehängt werden
+            'event_types' => $eventTypes->map(static fn (EventType $eventType): array => [
+                ...(new EventTypeResource($eventType))->resolve(),
+                'events_count' => (int) $eventType->events_count,
+            ])->all(),
         ]);
     }
 

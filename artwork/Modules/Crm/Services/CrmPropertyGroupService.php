@@ -14,6 +14,7 @@ readonly class CrmPropertyGroupService
 {
     public function __construct(
         private CrmPropertyGroupRepository $repository,
+        private CrmPropertyFileService $fileService,
     ) {
     }
 
@@ -54,7 +55,13 @@ readonly class CrmPropertyGroupService
             throw new CrmSettingLockedException(__('Groups containing system properties cannot be deleted.'));
         }
 
-        $this->repository->delete($group);
+        // Eigenschaften und Werte verschwinden per FK-Cascade; ihre Dateien würden sonst liegen bleiben.
+        $files = $this->fileService->collectPathsOfProperties($group->properties()->pluck('id')->all());
+
+        DB::transaction(function () use ($group, $files): void {
+            $this->repository->delete($group);
+            DB::afterCommit(fn () => $this->fileService->deleteMany($files));
+        });
     }
 
     public function annotateEditPermissions(

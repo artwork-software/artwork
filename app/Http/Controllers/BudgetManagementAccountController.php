@@ -39,6 +39,8 @@ class BudgetManagementAccountController extends Controller
             ->orderBy('account_number')
             ->paginate($perPage)
             ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedAccounts->getCollection());
+        $trashedAccounts->through(static fn ($model) => $model->setAttribute('trash', $trashInfo[$model->id] ?? null));
 
         return Inertia::render(
             'Trash/BudgetManagementAccount',

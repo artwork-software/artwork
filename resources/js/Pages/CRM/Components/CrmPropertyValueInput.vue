@@ -26,7 +26,7 @@
                 @update:model-value="$emit('update:value', $event)"
                 :label="innerLabel"
                 :disabled="disabled"
-                @focusout="$emit('update:value', $event.target.value)"
+                @focusout="emitIfChanged($event.target.value)"
             />
         </template>
 
@@ -152,7 +152,7 @@
                         <BaseInput
                             :id="`prop_${property.id}_file_name`"
                             v-model="renameValue"
-                            label="File name"
+                            :label="$t('File name')"
                             class="min-w-0 flex-1"
                             :error="renameError"
                             @keydown.enter.prevent="saveRename"
@@ -199,7 +199,9 @@
                         v-if="contactId"
                         type="button"
                         class="rounded-md p-1 text-text-subtle hover:text-danger"
-                        @click="deleteFile"
+                        :aria-label="$t('Delete file')"
+                        :title="$t('Delete file')"
+                        @click="showDeleteFileModal = true"
                         :disabled="deleting"
                     >
                         <component :is="IconTrash" class="h-4 w-4" />
@@ -222,10 +224,20 @@
                             ref="fileInput"
                             type="file"
                             class="hidden"
+                            :accept="acceptedFileTypes"
                             @change="uploadFile"
                         />
                     </button>
+                    <p v-if="uploadError" class="mt-1 text-xs text-danger">{{ uploadError }}</p>
                 </div>
+
+                <ConfirmDeleteModal
+                    v-if="showDeleteFileModal"
+                    :title="$t('Delete file')"
+                    :description="$t('Are you sure you want to delete this file?')"
+                    @close="showDeleteFileModal = false"
+                    @delete="deleteFile"
+                />
             </div>
         </template>
 
@@ -251,6 +263,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
+import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import { IconCheck, IconFile, IconPencil, IconTrash, IconUpload, IconX } from '@tabler/icons-vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 
@@ -281,6 +294,13 @@ const showExternalLabel = computed(() => !['checkbox', 'upload'].includes(props.
 const innerLabel = computed(() =>
     props.uniformLabel ? '' : $t(props.property.name) + (props.required ? ' *' : '')
 )
+
+// Fokusverlust ohne Änderung löst kein Speichern aus (sonst ein Request pro durchgetabbtem Feld)
+const emitIfChanged = (value) => {
+    if (String(value ?? '') !== String(props.value ?? '')) {
+        emit('update:value', value)
+    }
+}
 
 // -- Select type helpers --
 const selectOptions = computed(() => {
@@ -325,6 +345,10 @@ const onMultiselectListboxChange = (options) => {
 // -- Upload type helpers --
 const uploading = ref(false)
 const deleting = ref(false)
+const uploadError = ref('')
+const showDeleteFileModal = ref(false)
+// Gegenstück zu CrmPropertyFileService::ALLOWED_EXTENSIONS
+const acceptedFileTypes = '.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt'
 
 const displayFileName = computed(() => {
     if (!props.value) return ''
@@ -383,6 +407,7 @@ const uploadFile = (event) => {
     if (!file || !props.contactId) return
 
     uploading.value = true
+    uploadError.value = ''
     router.post(route('crm.contacts.property-file.upload', props.contactId), {
         property_id: props.property.id,
         file: file,
@@ -390,6 +415,9 @@ const uploadFile = (event) => {
         preserveState: true,
         preserveScroll: true,
         forceFormData: true,
+        onError: (errors) => {
+            uploadError.value = errors.file ?? errors.property_id ?? $t('Upload failed')
+        },
         onFinish: () => {
             uploading.value = false
             event.target.value = ''
@@ -398,13 +426,16 @@ const uploadFile = (event) => {
 }
 
 const deleteFile = () => {
+    showDeleteFileModal.value = false
     if (!props.contactId) return
 
     deleting.value = true
+    uploadError.value = ''
     router.delete(route('crm.contacts.property-file.delete', props.contactId), {
         data: { property_id: props.property.id },
         preserveState: true,
         preserveScroll: true,
+        onError: (errors) => { uploadError.value = errors.property_id ?? $t('Deleting the file failed.') },
         onFinish: () => { deleting.value = false },
     })
 }

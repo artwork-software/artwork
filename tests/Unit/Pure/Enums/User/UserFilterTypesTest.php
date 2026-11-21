@@ -57,9 +57,15 @@ final class UserFilterTypesTest extends UnitTestCase
     }
 
     #[Test]
-    public function it_has_eight_cases(): void
+    public function it_has_project_event_list_filter_case(): void
     {
-        $this->assertCount(8, UserFilterTypes::cases());
+        $this->assertSame('project_event_list_filter', UserFilterTypes::PROJECT_EVENT_LIST_FILTER->value);
+    }
+
+    #[Test]
+    public function it_has_nine_cases(): void
+    {
+        $this->assertCount(9, UserFilterTypes::cases());
     }
 
     #[Test]

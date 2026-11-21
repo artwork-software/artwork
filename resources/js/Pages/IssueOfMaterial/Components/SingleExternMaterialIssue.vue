@@ -7,7 +7,13 @@
         <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-accent-500/0 transition-all duration-200 group-hover:bg-accent-500/70"></span>
 
         <!-- Name -->
-        <div class="col-span-3">
+        <div class="col-span-3 flex items-start gap-2">
+            <input type="checkbox"
+                   class="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
+                   :checked="selected"
+                   :aria-label="$t('Select')"
+                   @change="$emit('toggle-select', $event.target.checked)"/>
+            <div class="min-w-0">
             <button class="text-left text-accent-600 hover:text-accent-700 hover:underline underline-offset-2"
                     @click="showIssueOfMaterialModal = true">
                 {{ externMaterialIssue.name }}
@@ -37,6 +43,8 @@
                     {{ externMaterialIssue.articles.length }} {{ externMaterialIssue.articles.length === 1 ? $t('article') : $t('articles') }}
                 </span>
             </div>
+        
+            </div>
         </div>
 
         <!-- Materialwert -->
@@ -45,7 +53,7 @@
         </div>
 
         <!-- Zeitraum -->
-        <div class="col-span-2 text-xs text-text-muted cursor-pointer" @click="showIssueOfMaterialDetailModal = true">
+        <div class="col-span-2 text-xs text-text-muted cursor-pointer hover:text-text" :title="$t('View details')" @click="showIssueOfMaterialDetailModal = true">
             {{ externMaterialIssue.issue_date_formatted }} – {{ externMaterialIssue.return_date_formatted }}
         </div>
 
@@ -55,8 +63,14 @@
         </div>
 
         <!-- External name -->
-        <div class="col-span-2 text-xs text-text-muted">
-            {{ externMaterialIssue.external_name || '—' }}
+        <div class="col-span-2 min-w-0 text-xs text-text-muted">
+            <div class="truncate" :title="externMaterialIssue.external_name || null">{{ externMaterialIssue.external_name || '—' }}</div>
+            <Link v-if="externMaterialIssue.project?.id && firstProjectTabId"
+                  :href="route('projects.tab', { project: externMaterialIssue.project.id, projectTab: firstProjectTabId })"
+                  class="mt-0.5 block truncate text-[11px] text-text-subtle hover:text-accent-700 hover:underline"
+                  :title="externMaterialIssue.project.name">
+                {{ externMaterialIssue.project.name }}
+            </Link>
         </div>
 
         <!-- Files -->
@@ -75,8 +89,8 @@
         </div>
 
         <!-- Status + Aktionen -->
-        <div class="col-span-1 flex items-center justify-end gap-2">
-      <span v-if="externMaterialIssue.return_status === 'returned'"
+        <div class="col-span-1 flex flex-wrap items-center justify-end gap-2">
+      <span v-if="isReturned"
             class="inline-flex items-center gap-1 rounded-md border border-success-border bg-success-surface px-1.5 py-0.5 text-[11px] text-success">
         <component :is="IconCheck" class="size-3.5" />
         {{ $t('Returned') }}
@@ -93,22 +107,26 @@
         <component :is="IconAlertTriangle" class="size-3.5" />
         {{ $t('Not returned') }}
       </span>
+      <!-- Weder zurück noch überfällig: läuft noch -->
+      <span v-else
+            class="inline-flex items-center gap-1 rounded-md border border-border-subtle bg-surface-sunken px-1.5 py-0.5 text-[11px] text-text-muted">
+        {{ $t('Issued') }}
+      </span>
+      <!-- Sonderartikel nur melden, wenn noch welche offen sind: ein zusätzliches „Erledigt“ neben
+           „Rückgabe offen“ widersprach sich -->
       <span v-if="!externMaterialIssue?.special_items_done && externMaterialIssue?.special_items?.length"
             class="inline-flex items-center gap-1 rounded-md border border-danger-border bg-danger-surface px-1.5 py-0.5 text-[11px] text-danger">
         <component :is="IconAlertTriangle" class="size-3.5" />
-        {{ $t('Open') }}
-      </span>
-            <span v-else class="inline-flex items-center gap-1 rounded-md border border-success-border bg-success-surface px-1.5 py-0.5 text-[11px] text-success">
-        <component :is="IconCheck" class="size-3.5" />
-        {{ $t('Completed') }}
+        {{ $t('Special items open') }}
       </span>
 
             <div class="flex items-center gap-2">
-                <button class="cursor-pointer" :title="$t('Print')" @click="printExternal()">
+                <button type="button" class="cursor-pointer" :title="$t('Print')" :aria-label="$t('Print')" @click="printExternal()">
                     <component :is="IconPrinter" class="size-5" stroke-width="1.5" />
                 </button>
 
                 <BaseMenu white-menu-background has-no-offset menu-width="w-fit">
+                    <BaseMenuItem white-menu-background :title="$t('View details')" :icon="IconEye" @click="showIssueOfMaterialDetailModal = true" />
                     <BaseMenuItem white-menu-background :title="$t('Edit')" :icon="IconEdit" @click="showIssueOfMaterialModal = true" />
                     <BaseMenuItem white-menu-background :title="$t('Enter return')" :icon="IconReceiptRefund" @click="showEnterExternalIssueReturnModal = true" v-if="!externMaterialIssue.received_by && canEnterReturn" />
                     <BaseMenuItem white-menu-background :title="$t('Special items closed')" :icon="IconCheck" @click="setSpecialItemsDone" v-if="checkIfStatusOrHasAnySpecialItem" />
@@ -168,9 +186,9 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EnterExternalIssueReturnModal from "@/Pages/IssueOfMaterial/Components/EnterExternalIssueReturnModal.vue";
 import IssuePdfPreviewModal from "@/Pages/IssueOfMaterial/Components/IssuePdfPreviewModal.vue";
 import ExternalMaterialIssueDetailModal from "@/Pages/IssueOfMaterial/Components/ExternalMaterialIssueDetailModal.vue";
-import { IconAlertTriangle, IconCheck, IconEdit, IconPrinter, IconReceiptRefund, IconTrash } from "@tabler/icons-vue";
+import { IconAlertTriangle, IconCheck, IconEdit, IconEye, IconPrinter, IconReceiptRefund, IconTrash } from "@tabler/icons-vue";
 import { computed, onMounted, ref } from "vue";
-import { router, usePage } from "@inertiajs/vue3";
+import { Link, router, usePage } from "@inertiajs/vue3";
 import { usePermission } from "@/Composeables/Permission.js";
 
 const props = defineProps({
@@ -194,8 +212,12 @@ const props = defineProps({
             received_by: null
         })
     },
-    detailedArticle: Object
+    detailedArticle: Object,
+    selected: { type: Boolean, default: false },
+    firstProjectTabId: { type: [Number, String], default: null }
 });
+
+defineEmits(['toggle-select']);
 
 const showIssueOfMaterialModal = ref(false);
 const showIssueOfMaterialConfirmDeleteModal = ref(false);
@@ -245,6 +267,16 @@ const checkIfStatusOrHasAnySpecialItem = computed(() => {
     const hasSpecialItems = props.externMaterialIssue?.special_items?.length > 0;
     const isIncomplete = !props.externMaterialIssue?.special_items_done;
     return hasSpecialItems && isIncomplete;
+});
+
+// Zurückgegeben: ausdrücklicher Status oder eine eingetragene annehmende Person (ältere Rückgaben
+// haben keinen Status, wurden aber angenommen)
+const isReturned = computed(() => {
+    // counts_as_returned: Backend-Regel (ExternalIssue), dieselbe wie Verfügbarkeit und Filter
+    if (typeof props.externMaterialIssue.counts_as_returned === 'boolean') {
+        return props.externMaterialIssue.counts_as_returned;
+    }
+    return props.externMaterialIssue.return_status === 'returned' || Boolean(props.externMaterialIssue.received_by);
 });
 
 const isOverdue = computed(() => {

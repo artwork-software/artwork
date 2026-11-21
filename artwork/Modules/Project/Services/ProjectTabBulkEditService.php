@@ -23,7 +23,11 @@ class ProjectTabBulkEditService
     {
         $user = $user ?? $this->userService->getAuthUser();
         $userBulkSortId = (int) ($user?->getAttribute('bulk_sort_id') ?? 0);
-        $userCalendarFilter = $user?->userFilters()->calendarFilter()->first();
+        // Eigener Filter der Terminliste: Raum-/Typfilter des Kalenders sollen sich nicht übertragen
+        $userCalendarFilter = $user?->userFilters()->firstOrCreate(
+            ['filter_type' => UserFilterTypes::PROJECT_EVENT_LIST_FILTER->value],
+            ['start_date' => null, 'end_date' => null]
+        );
 
         // Events-Query mit Filtern
         $eventsQuery = $project->events()
@@ -114,7 +118,7 @@ class ProjectTabBulkEditService
             'user_filters' => $userCalendarFilter,
             'personalFilters' => $this->filterService->getPersonalFilter(
                 $user,
-                UserFilterTypes::CALENDAR_FILTER->value
+                UserFilterTypes::PROJECT_EVENT_LIST_FILTER->value
             ),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
         ];

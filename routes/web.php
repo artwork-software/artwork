@@ -156,6 +156,7 @@ use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\IndividualTimes\Http\Controllers\IndividualTimeSeriesController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftTrashController;
+use Artwork\Modules\Trash\Http\Controllers\TrashController;
 use Artwork\Modules\IndividualTimes\Http\Controllers\IndividualTimeSubjectsSearchController;
 use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
 use Artwork\Modules\Inventory\Http\Controllers\MaterialIssueLogController;
@@ -692,6 +693,8 @@ Route::group(['middleware' => ['auth']], function (): void {
 
     Route::group(['middleware' => ['can:view edit add money_sources']], function (): void {
         Route::get('/money_sources', [MoneySourceController::class, 'index'])->name('money_sources.index');
+        // vor {moneySource}, sonst fängt die Detail-Route "export" ab
+        Route::get('/money_sources/export', [MoneySourceController::class, 'export'])->name('money_sources.export');
         Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
     });
 
@@ -984,6 +987,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/events/{event}/project-assignment-impact', [ProjectDayAssignmentController::class, 'rescheduleImpact'])
         ->name('events.project-assignment-impact')
         ->can('can view shift plan');
+    Route::get('/trash/counts', [TrashController::class, 'counts'])->name('trash.counts');
     Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])
         ->middleware('can:can access trash')->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
@@ -1260,9 +1264,9 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->name('project.settings.artist_residencies');
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::patch('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
-    Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     Route::patch('/categories/{category}/restore', [CategoryController::class, 'restore'])
-        ->middleware('can:change project settings');
+        ->middleware('can:change project settings')->name('categories.restore');
     Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDelete'])
         ->middleware('can:change project settings')->name('categories.force');
     Route::patch('/project/create/settings', [ProjectController::class, 'updateSettings'])
@@ -1275,18 +1279,18 @@ Route::group(['middleware' => ['auth']], function (): void {
     //Genres
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
     Route::patch('/genres/{genre}', [GenreController::class, 'update'])->name('genres.update');
-    Route::delete('/genres/{genre}', [GenreController::class, 'destroy']);
+    Route::delete('/genres/{genre}', [GenreController::class, 'destroy'])->name('genres.destroy');
     Route::patch('/genres/{genre}/restore', [GenreController::class, 'restore'])
-        ->middleware('can:change project settings');
+        ->middleware('can:change project settings')->name('genres.restore');
     Route::delete('/genres/{id}/force', [GenreController::class, 'forceDelete'])
         ->middleware('can:change project settings')->name('genres.force');
 
     //Sectors
     Route::post('/sectors', [SectorController::class, 'store'])->name('sectors.store');
     Route::patch('/sectors/{sector}', [SectorController::class, 'update'])->name('sectors.update');
-    Route::delete('/sectors/{sector}', [SectorController::class, 'destroy']);
+    Route::delete('/sectors/{sector}', [SectorController::class, 'destroy'])->name('sectors.destroy');
     Route::patch('/sectors/{sector}/restore', [SectorController::class, 'restore'])
-        ->middleware('can:change project settings');
+        ->middleware('can:change project settings')->name('sectors.restore');
     Route::delete('/sectors/{id}/force', [SectorController::class, 'forceDelete'])
         ->middleware('can:change project settings')->name('sectors.force');
 
@@ -1307,6 +1311,7 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/trashedAreas', [AreaController::class, 'getTrashed'])
         ->middleware('can:can access trash')->name('areas.trashed');
     Route::post('/areas', [AreaController::class, 'store'])->name('areas.store');
+    Route::post('/areas/order', [AreaController::class, 'updateOrder'])->name('areas.order');
     Route::post('/areas/{area}/duplicate', [AreaController::class, 'duplicate'])->name('areas.duplicate');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
 
@@ -1321,6 +1326,10 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::post('/rooms/order/new', [RoomController::class, 'updateOrderNew'])->name('rooms.order.new');
 
     //Rooms
+    // Liste und Sammelaktionen - müssen vor /rooms/{room} stehen!
+    Route::get('/rooms/export', [RoomController::class, 'export'])->name('rooms.export');
+    Route::post('/rooms/bulk-update', [RoomController::class, 'bulkUpdate'])->name('rooms.bulk-update');
+    Route::post('/rooms/bulk-delete', [RoomController::class, 'bulkDestroy'])->name('rooms.bulk-delete');
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
     Route::get('/trashedRooms', [RoomController::class, 'getTrashed'])
         ->middleware('can:can access trash')->name('rooms.trashed');
@@ -1348,6 +1357,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::post('/rooms/categories', [RoomCategoryController::class, 'store'])
         ->can('create', \Artwork\Modules\Room\Models\Room::class)
         ->name('room_categories.store');
+    Route::patch('/rooms/categories/{roomCategory}', [RoomCategoryController::class, 'update'])
+        ->can('create', \Artwork\Modules\Room\Models\Room::class)
+        ->name('room_categories.update');
     Route::delete('/rooms/categories/{roomCategory}', [RoomCategoryController::class, 'destroy'])
         ->can('create', \Artwork\Modules\Room\Models\Room::class)
         ->name('room_categories.destroy');
@@ -1356,6 +1368,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::post('/rooms/attributes', [RoomAttributeController::class, 'store'])
         ->can('create', \Artwork\Modules\Room\Models\Room::class)
         ->name('room_attribute.store');
+    Route::patch('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'update'])
+        ->can('create', \Artwork\Modules\Room\Models\Room::class)
+        ->name('room_attribute.update');
     Route::delete('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'destroy'])
         ->can('create', \Artwork\Modules\Room\Models\Room::class)
         ->name('room_attribute.destroy');
@@ -1495,6 +1510,8 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->name('events.delete.by.notification');
     Route::delete('/events/{event}/shifts', [EventController::class, 'destroyShifts'])->name('events.shifts.delete');
 
+    Route::post('/event/requests/bulk-answer', [EventController::class, 'answerRoomRequests'])
+        ->name('events.requests.bulk-answer');
     Route::put('/event/requests/{event}/accept', [EventController::class, 'acceptEvent'])->name('events.accept');
     Route::put('/event/requests/{event}/decline', [EventController::class, 'declineEvent'])->name('events.decline');
     Route::delete('/events/{event}/series', [
@@ -1788,6 +1805,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::get('/contracts/view', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
+    Route::get('/contracts/{contract}/details', [ContractController::class, 'details'])->name('contracts.details');
+    Route::get('/contracts/{contract}/preview', [ContractController::class, 'preview'])->name('contracts.preview');
+    Route::post('/contracts/bulk-delete', [ContractController::class, 'bulkDestroy'])->name('contracts.bulk-delete');
     Route::get('/contracts/export/excel', [ContractController::class, 'export'])->name('contracts.export');
     Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy'])->name('contract.delete');
@@ -2137,6 +2157,8 @@ Route::group(['middleware' => ['auth']], function (): void {
                 ->name('project.budget.main-position.reorder');
             Route::patch('/sub-position/reorder', [ProjectController::class, 'reorderSubPositions'])
                 ->name('project.budget.sub-position.reorder');
+            Route::patch('/column/reorder', [ProjectController::class, 'reorderColumns'])
+                ->name('project.budget.column.reorder');
 
             // drop sage data
             Route::post('/drop/sage', [ProjectController::class, 'dropSageData'])
@@ -3324,6 +3346,22 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->middleware('can:view-inventory')
             ->name('inventory.sub.category.show');
 
+        // Excel-Export der gefilterten Artikelübersicht
+        Route::get('/articles/export', [
+            \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
+            'export',
+        ])
+            ->middleware('can:view-inventory')
+            ->name('inventory.articles.export');
+
+        // Sammelaktionen der Artikelübersicht
+        Route::post('/articles/bulk-update', [InventoryArticleController::class, 'bulkUpdate'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
+            ->name('inventory-management.articles.bulk-update');
+        Route::post('/articles/bulk-delete', [InventoryArticleController::class, 'bulkDestroy'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
+            ->name('inventory-management.articles.bulk-delete');
+
         // post inventory-management.articles.store
         Route::post('/articles/store', [InventoryArticleController::class, 'store'])
             ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
@@ -3838,6 +3876,9 @@ Route::group(['middleware' => ['auth']], function (): void {
 
         // delete chat-system.delete-chat (delete group chat)
         Route::delete('/delete-chat/{chat}', [ChatController::class, 'destroy'])->name('chat-system.delete-chat');
+
+        // post chat-system.leave-chat (eigene Mitgliedschaft aus einem Gruppenchat entfernen)
+        Route::post('/leave-chat/{chat}', [ChatController::class, 'leave'])->name('chat-system.leave-chat');
     });
 
     // Alt-Resource (EditHolidayModal nutzt holidays.update): gleiche Rechte wie der settings/holiday-Block
@@ -3940,6 +3981,9 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::get('/sent', [EventVerificationController::class, 'sent'])
             ->name('event-verifications.sent');
 
+        Route::get('/open-count', [EventVerificationController::class, 'openCount'])
+            ->name('event-verifications.open-count');
+
         Route::get('/requests', function () {
             return redirect()->route('event-verifications.index');
         })->name('event-verifications.requests');
@@ -4031,6 +4075,10 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::get('/', 'index')->name('issue-of-material.index');
         // Muss vor der {internalIssue}-Wildcard stehen
         Route::get('/search/for-copy', 'searchForCopy')->name('issue-of-material.search-for-copy');
+        // vor {internalIssue}, sonst fängt die Detail-Route diese Pfade ab
+        Route::get('/export', 'export')->name('issue-of-material.export');
+        Route::get('/print-many', 'printMany')->name('issue-of-material.print-many');
+        Route::post('/bulk-delete', 'bulkDestroy')->name('issue-of-material.bulk-delete');
         Route::get('/{internalIssue}', 'show')->name('issue-of-material.show');
         Route::post('/store', 'store')->name('issue-of-material.store');
         Route::match(['patch', 'post'], '/{internalIssue}/update', 'update')->name('issue-of-material.update');
@@ -4046,6 +4094,9 @@ Route::group(['middleware' => ['auth']], function (): void {
     Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('extern-issue-of-material.index');
         Route::get('/search/for-copy', 'searchForCopy')->name('extern-issue-of-material.search-for-copy');
+        Route::get('/export', 'export')->name('extern-issue-of-material.export');
+        Route::get('/print-many', 'printMany')->name('extern-issue-of-material.print-many');
+        Route::post('/bulk-delete', 'bulkDestroy')->name('extern-issue-of-material.bulk-delete');
         Route::post('/store', 'store')->name('extern-issue-of-material.store');
         Route::match(['patch', 'post'], '/{externalIssue}/update', 'update')->name('extern-issue-of-material.update');
         Route::delete('/{externalIssue}/destroy', 'destroy')->name('extern-issue-of-material.destroy');

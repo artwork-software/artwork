@@ -44,5 +44,5 @@ test('rows without edit right keep the width of the actions column', () => {
 
 test('a saved row takes over the room request flag from the response', () => {
     assert.match(bulkSingleEvent, /event\.occupancy_option = !!savedEvent\.occupancy_option;/);
-    assert.match(bulkSingleEvent, /v-if="event\.occupancy_option && !event\.is_planning"/);
+    assert.match(bulkSingleEvent, /v-else-if="event\.occupancy_option && !event\.is_planning"/);
 });

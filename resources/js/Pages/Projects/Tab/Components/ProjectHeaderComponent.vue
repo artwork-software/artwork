@@ -19,9 +19,13 @@
         </transition>
 
         <!-- ===== STICKY PROJECT NAVIGATOR ===== -->
-        <div ref="stickyHeaderEl" class="sticky top-0 z-40 w-full inset-x-0 ">
+        <!-- Der Platzhalter hält die Höhe im Seitenfluss, der Kopf selbst ist fixiert: so bleibt er
+             auch stehen, wenn ein Tab (z. B. das Budget) breiter ist als das Fenster und quer scrollt. -->
+        <div class="w-full" :style="{ height: `${headerHeight}px` }">
             <!-- Glassy background layer -->
-            <div class="bg-white/80 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-border-subtle/70">
+            <div ref="stickyHeaderEl"
+                 v-show="!projectHeaderVisibility.hidden"
+                 class="fixed top-0 right-0 left-0 lg:left-20 z-40 print:static bg-white/80 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-border-subtle/70">
                 <div class="artwork-anchored-page py-3">
                     <div class="flex items-center justify-between gap-3">
                         <!-- Left: Switcher trigger -->
@@ -371,7 +375,8 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
+import { projectHeaderVisibility } from "@/Pages/Projects/Tab/Components/projectHeaderVisibility.js";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
@@ -406,6 +411,7 @@ const page = usePage();
 
 const stickyHeaderEl = ref(null);
 const headerHeight = ref(0);
+watch(() => projectHeaderVisibility.hidden, () => nextTick(() => updateHeaderHeight()));
 let headerResizeObserver = null;
 
 const updateHeaderHeight = () => {

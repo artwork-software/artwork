@@ -2,14 +2,20 @@
 
 namespace Artwork\Core\Sentry;
 
+use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
+use Throwable;
 
 /**
  * before_send-Hook (config/sentry.php): Passwörter und 2FA-Codes dürfen nie mit dem Request-Body an
  * Sentry gehen – der Body wird unabhängig von send_default_pii mitgeschickt. Gilt für alle Requests
  * (Web-Login, Passwort ändern, App-Login …). Statisch, damit config:cache die Konfiguration
  * serialisieren kann.
+ *
+ * Außerdem verlassen gültige Tokens aus URLs die Anwendung nicht: Magic-Link, Einladung,
+ * Passwort-Reset, Ersteinrichtung und Kalender-Abo stehen sonst in request.url, im Query-String,
+ * im Referer, im Transaktionsnamen, in Breadcrumbs und Spans.
  */
 class SentryEventScrubber
 {
@@ -33,17 +39,138 @@ class SentryEventScrubber
         'plaintexttoken',
     ];
 
+    /**
+     * Pfadabschnitte, deren nächstes Segment ein gültiges Token ist: Magic-Link der Externen,
+     * Passwort-Reset mit Token im Pfad und die Kalender-Abo-Feeds. Routen-Platzhalter ("{token}")
+     * und die internen Verwaltungsrouten der Abos ("create", "12/update", "12/renew") bleiben lesbar.
+     */
+    private const TOKEN_PATH_PATTERN = '#(/external/login/|/reset-password/|/calendar/abo/)'
+        . '(?!\{|create(?:[/?\#\s]|$)|\d+/(?:update|renew)(?:[/?\#\s]|$))[^/?\#\s"\'<>]+#i';
+
+    /**
+     * Query-Parameter mit Token-Charakter: Einladung, Passwort-Reset, Ersteinrichtung und die
+     * Signatur signierter Links.
+     */
+    private const TOKEN_QUERY_PATTERN = '#(^|[?&;])((?:token|access_token|refresh_token|signature|code|'
+        . 'recovery_code|password|secret|client_secret|api_key)=)[^&\#\s"\'<>]*#i';
+
     public static function beforeSend(Event $event, ?EventHint $hint = null): ?Event
     {
-        $request = $event->getRequest();
-        if (!array_key_exists('data', $request)) {
-            return $event;
+        try {
+            $request = $event->getRequest();
+            if (array_key_exists('data', $request)) {
+                $request['data'] = self::scrub($request['data']);
+            }
+
+            $event->setRequest(self::scrubUrls($request));
+            self::scrubEventUrls($event);
+        } catch (Throwable) {
+            // Der Hook darf die Fehlermeldung nie verhindern. Was nicht bereinigt werden konnte,
+            // geht nicht raus: Request und Breadcrumbs fallen weg, der Fehler selbst bleibt.
+            $event->setRequest([]);
+            $event->setBreadcrumb([]);
         }
 
-        $request['data'] = self::scrub($request['data']);
-        $event->setRequest($request);
-
         return $event;
+    }
+
+    /**
+     * before_send_transaction-Hook: Performance-Transaktionen tragen dieselben URLs (Name, Request,
+     * Trace-Kontext, Spans) und durchlaufen before_send nicht.
+     */
+    public static function beforeSendTransaction(Event $event, ?EventHint $hint = null): ?Event
+    {
+        return self::beforeSend($event, $hint);
+    }
+
+    /**
+     * Entfernt Tokens aus einer URL, einem Pfad oder einem Query-String. Der Rest bleibt erhalten,
+     * damit der Fehler in Sentry weiter der Route zugeordnet werden kann.
+     */
+    public static function scrubUrl(string $value): string
+    {
+        // preg_replace liefert bei einem PCRE-Fehler null: dann lieber den ganzen Wert verwerfen
+        $value = preg_replace(self::TOKEN_PATH_PATTERN, '$1' . self::FILTERED, $value) ?? self::FILTERED;
+
+        return preg_replace(self::TOKEN_QUERY_PATTERN, '$1$2' . self::FILTERED, $value) ?? self::FILTERED;
+    }
+
+    /**
+     * Wendet scrubUrl auf alle Zeichenketten einer verschachtelten Struktur an (Header wie Referer,
+     * Breadcrumb-Daten, Span-Daten).
+     */
+    public static function scrubUrls(mixed $data): mixed
+    {
+        if (is_string($data)) {
+            return self::scrubUrl($data);
+        }
+
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = self::scrubUrls($value);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Alle Stellen eines Events außerhalb des Request-Blocks, an denen URLs landen: Transaktionsname,
+     * Fehlertexte (z. B. HTTP-Client-Fehler mit signierter URL), Tags, Extra, Kontexte (Trace-Daten),
+     * Breadcrumbs und Spans.
+     */
+    private static function scrubEventUrls(Event $event): void
+    {
+        $transaction = $event->getTransaction();
+        if ($transaction !== null) {
+            $event->setTransaction(self::scrubUrl($transaction));
+        }
+
+        foreach ($event->getExceptions() as $exception) {
+            $exception->setValue(self::scrubUrl($exception->getValue()));
+        }
+
+        $message = $event->getMessage();
+        if ($message !== null) {
+            $formatted = $event->getMessageFormatted();
+            $event->setMessage(
+                self::scrubUrl($message),
+                self::scrubUrls($event->getMessageParams()),
+                $formatted === null ? null : self::scrubUrl($formatted)
+            );
+        }
+
+        $event->setTags(self::scrubUrls($event->getTags()));
+        $event->setExtra(self::scrubUrls($event->getExtra()));
+
+        foreach ($event->getContexts() as $name => $context) {
+            $event->setContext($name, self::scrubUrls($context));
+        }
+
+        $event->setBreadcrumb(array_map(self::scrubBreadcrumb(...), $event->getBreadcrumbs()));
+
+        foreach ($event->getSpans() as $span) {
+            $description = $span->getDescription();
+            if ($description !== null) {
+                $span->setDescription(self::scrubUrl($description));
+            }
+
+            $span->setData(self::scrubUrls($span->getData()));
+        }
+    }
+
+    private static function scrubBreadcrumb(Breadcrumb $breadcrumb): Breadcrumb
+    {
+        $message = $breadcrumb->getMessage();
+        if ($message !== null) {
+            $breadcrumb = $breadcrumb->withMessage(self::scrubUrl($message));
+        }
+
+        foreach ($breadcrumb->getMetadata() as $name => $value) {
+            $breadcrumb = $breadcrumb->withMetadata((string) $name, self::scrubUrls($value));
+        }
+
+        return $breadcrumb;
     }
 
     public static function scrub(mixed $data): mixed

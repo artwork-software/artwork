@@ -18,11 +18,15 @@ class AppProjectFileController extends Controller
      * without the API token: the `signed` middleware protects the link, and the
      * user id signed into it lets the download re-check ProjectFilePolicy::view
      * (rights or the share list may have changed since the link was issued).
+     * A deactivated account loses the download as well, even while the link is still valid.
      */
     public function __invoke(Request $request, ProjectFile $projectFile): StreamedResponse
     {
         $user = User::query()->find($request->integer('user'));
-        abort_if($user === null || Gate::forUser($user)->denies('view', $projectFile), 403);
+        abort_if(
+            $user === null || $user->isDeactivated() || Gate::forUser($user)->denies('view', $projectFile),
+            403
+        );
 
         $path = $projectFile->storagePath();
         abort_unless(Storage::exists($path), 404);

@@ -75,8 +75,12 @@
                 :columns="cols"
                 row-key="id"
                 v-model:page="page"
-                empty-title="Keine Personen"
-                empty-message="No entries available"
+                :page-size="visibleUsers.length > 50 ? 50 : null"
+                :empty-title="user_query ? 'No people match your search.' : 'Keine Personen'"
+                :empty-message="user_query ? '' : 'No entries available'"
+                :show-reset-button="Boolean(user_query)"
+                reset-label="Reset search"
+                @reset="user_query = ''"
             >
 
                 <!-- Name (Avatar + Name + Email) -->
@@ -447,7 +451,8 @@ const applyFiltersAndSort = () => {
             auth_provider_filter: authProviderFilter.value || undefined,
             saveFilterAndSort: 1,
         },
-        { preserveState: true }
+        // replace: nicht jeder Suchschritt soll einen Eintrag im Browser-Verlauf erzeugen
+        { preserveState: true, preserveScroll: true, replace: true }
     )
 }
 
@@ -469,7 +474,8 @@ const resetSort = () => {
     applyFiltersAndSort()
 }
 
-const reloadUsersDebounced = debounce(() => applyFiltersAndSort(), 1000)
+// 350 ms statt 1 s: die Suche wirkte träge, weil nach dem Tippen eine Sekunde lang nichts geschah
+const reloadUsersDebounced = debounce(() => applyFiltersAndSort(), 350)
 
 watch(user_query, () => {
     reloadUsersDebounced()
@@ -485,5 +491,9 @@ const cols = ref<TableColumn[]>([
 ])
 
 const page = ref(1)
+// Neue Trefferliste oder Wechsel zu den deaktivierten Accounts: wieder auf Seite 1
+watch(visibleUsers, () => {
+    page.value = 1
+})
 
 </script>

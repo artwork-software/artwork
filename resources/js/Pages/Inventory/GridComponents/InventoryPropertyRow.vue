@@ -1,6 +1,6 @@
 <template>
     <div class="py-2 font-lexend" :class="stacked ? '' : 'flex items-center justify-between gap-4'">
-        <div class="text-text-subtle shrink-0">
+        <div class="text-text-subtle" :class="isCompactValue ? 'min-w-0' : 'shrink-0'">
             {{ property.name }}
         </div>
         <div class="min-w-0" :class="stacked ? 'mt-0.5 text-text' : 'text-right'">
@@ -26,8 +26,7 @@
             <span
                 v-else
                 ref="valueEl"
-                class="break-words whitespace-pre-line"
-                :class="stacked ? 'line-clamp-3' : ''"
+                :class="[stacked ? 'line-clamp-3' : '', isCompactValue ? 'whitespace-nowrap' : 'break-words whitespace-pre-line']"
                 @mouseenter="onEnter"
                 @mouseleave="hide"
             >
@@ -74,6 +73,11 @@ const displayedText = computed(() => {
 const STACK_THRESHOLD = 24
 const stacked = computed(
     () => displayedText.value.length > STACK_THRESHOLD || displayedText.value.includes('\n')
+)
+
+// Kurze Werte ohne Leerzeichen (Datum, Zahl) nie mitten im Wert umbrechen: lieber die Bezeichnung
+const isCompactValue = computed(
+    () => !stacked.value && displayedText.value.length > 0 && displayedText.value.length <= 16 && !/\s/.test(displayedText.value)
 )
 
 const valueEl = ref(null)

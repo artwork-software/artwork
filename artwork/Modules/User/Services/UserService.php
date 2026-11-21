@@ -327,12 +327,16 @@ class UserService
      * Inventar-Artikelplanung). Wird genutzt, wenn der User "Zeitraum in
      * allen Ansichten teilen" aktiviert hat.
      * PROJECT_SHIFT_FILTER bleibt außen vor — der Projekt-Schichten-Tab folgt
-     * dem Projektzeitraum und nicht der globalen Navigation.
+     * dem Projektzeitraum und nicht der globalen Navigation. Ebenso
+     * PROJECT_EVENT_LIST_FILTER: die Terminliste im Projekt hat keinen Zeitraum.
      */
     public function syncSharedCalendarFilterDates(User $user, string $startDate, string $endDate): void
     {
         foreach (UserFilterTypes::cases() as $filterType) {
-            if ($filterType === UserFilterTypes::PROJECT_SHIFT_FILTER) {
+            if (
+                $filterType === UserFilterTypes::PROJECT_SHIFT_FILTER
+                || $filterType === UserFilterTypes::PROJECT_EVENT_LIST_FILTER
+            ) {
                 continue;
             }
 

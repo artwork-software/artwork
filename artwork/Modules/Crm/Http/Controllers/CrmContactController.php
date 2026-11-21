@@ -16,6 +16,7 @@ use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmPropertyFileService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
+use Artwork\Modules\Crm\Support\CrmPropertyValueValidator;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -29,6 +30,7 @@ class CrmContactController extends Controller
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
         private readonly CrmPropertyFileService $propertyFileService,
+        private readonly CrmPropertyValueValidator $propertyValueValidator,
     ) {
     }
 
@@ -208,7 +210,7 @@ class CrmContactController extends Controller
     public function store(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
-            'crm_contact_type_id' => 'required|exists:crm_contact_types,id',
+            'crm_contact_type_id' => ['required', 'integer', CrmContactType::writableExistsRule()],
             'display_name' => 'required|string|max:255',
             // Kein freier Bildpfad: das Profilbild kommt nur über den Upload-Endpunkt (sonst Verweis
             // auf beliebige Dateien der public-Disk).
@@ -219,6 +221,11 @@ class CrmContactController extends Controller
 
         $propertyValues = $validated['property_values'] ?? [];
         $this->authorizePropertyEdits(array_keys($propertyValues));
+        $this->propertyValueValidator->validate(
+            CrmContactType::query()->findOrFail($validated['crm_contact_type_id']),
+            $propertyValues,
+            $this->editablePropertyIds()
+        );
 
         $contact = $this->contactService->store(
             $validated,
@@ -265,6 +272,9 @@ class CrmContactController extends Controller
 
         $propertyValues = $validated['property_values'] ?? [];
         $this->authorizePropertyEdits(array_keys($propertyValues));
+        if ($propertyValues !== [] && $crmContact->contactType !== null) {
+            $this->propertyValueValidator->validate($crmContact->contactType, $propertyValues);
+        }
 
         $this->contactService->update(
             $crmContact,
@@ -306,7 +316,8 @@ class CrmContactController extends Controller
 
         $this->contactService->destroy($crmContact);
 
-        return redirect()->route('crm.index');
+        // Zurück in die Liste derselben Kontaktart statt auf den ersten Reiter
+        return redirect()->route('crm.index', array_filter(['type' => $crmContact->contactType?->slug]));
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -340,9 +351,11 @@ class CrmContactController extends Controller
             ->when($search !== '', fn ($query) => $query->where('display_name', 'like', '%' . $search . '%'))
             ->orderBy('display_name')
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn (CrmContact $contact) => [
+            ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedContacts->getCollection());
+        $trashedContacts->through(fn (CrmContact $contact) => [
                 'id' => $contact->id,
+                'trash' => $trashInfo[$contact->id] ?? null,
                 'display_name' => $contact->display_name,
                 'profile_photo_url' => $contact->profile_photo_url,
                 'deleted_at' => $contact->deleted_at?->format('d.m.Y H:i'),
@@ -393,7 +406,9 @@ class CrmContactController extends Controller
             StoredFileName::forUpload($profileImage),
             'public'
         );
+        $previousPath = $crmContact->profile_image;
         $this->contactService->updateProfileImage($crmContact, $path);
+        $this->propertyFileService->deleteProfileImage($previousPath, $crmContact->id);
 
         return redirect()->back();
     }
@@ -413,7 +428,7 @@ class CrmContactController extends Controller
             ],
         ]);
 
-        $propertyId = (int) $request->input('property_id');
+        $propertyId = $this->uploadPropertyId($request);
         $this->authorizePropertyEdits([$propertyId]);
 
         $file = $request->file('file');
@@ -444,7 +459,7 @@ class CrmContactController extends Controller
             'file_name' => 'required|string|max:200',
         ]);
 
-        $propertyId = (int) $request->input('property_id');
+        $propertyId = $this->uploadPropertyId($request);
         $this->authorizePropertyEdits([$propertyId]);
 
         $path = $this->propertyFileService->normalisePath(
@@ -470,7 +485,7 @@ class CrmContactController extends Controller
             'property_id' => 'required|integer|exists:crm_properties,id',
         ]);
 
-        $propertyId = (int) $request->input('property_id');
+        $propertyId = $this->uploadPropertyId($request);
         $this->authorizePropertyEdits([$propertyId]);
 
         $previousPath = $crmContact->propertyValues()->where('crm_property_id', $propertyId)->value('value');
@@ -597,25 +612,46 @@ class CrmContactController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * Die Datei-Endpunkte gelten nur für Upload-Eigenschaften, sonst landete ein Dateipfad in einem Textfeld.
+     */
+    private function uploadPropertyId(Request $request): int
+    {
+        $property = CrmProperty::query()->findOrFail((int) $request->input('property_id'));
+
+        if ($property->type !== CrmPropertyTypeEnum::UPLOAD) {
+            throw ValidationException::withMessages([
+                'property_id' => __('This property does not accept files.'),
+            ]);
+        }
+
+        return (int) $property->id;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function editablePropertyIds(): array
+    {
+        $user = auth()->user();
+        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
+        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
+
+        return array_map(
+            'intval',
+            $this->propertyGroupService->getEditablePropertyIds($user->id, $deptIds, $isCrmManager)
+        );
+    }
+
     private function authorizePropertyEdits(array $propertyIds): void
     {
         if (empty($propertyIds)) {
             return;
         }
 
-        $user = auth()->user();
-        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
-        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
-
-        $editablePropertyIds = $this->propertyGroupService->getEditablePropertyIds(
-            $user->id,
-            $deptIds,
-            $isCrmManager
-        );
-
         $forbidden = array_diff(
             array_map('intval', $propertyIds),
-            $editablePropertyIds
+            $this->editablePropertyIds()
         );
 
         if (!empty($forbidden)) {

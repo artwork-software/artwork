@@ -69,6 +69,7 @@ final class AiAccessPermissionTest extends FeatureTestCase
     #[DataProvider('gatedRoutes')]
     public function token_owner_with_the_permission_passes_the_gate(string $url, string $scope): void
     {
+        $this->enableAiAssistant();
         Passport::actingAs(User::factory()->withAiAccess()->create(), [$scope]);
 
         $this->getJson($url)->assertOk();

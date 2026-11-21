@@ -84,6 +84,10 @@
                 </div>
             </Transition>
 
+            <div v-if="saveError" class="mb-4 rounded-md bg-danger-surface p-3" role="alert">
+                <p class="text-sm font-medium text-danger">{{ saveError }}</p>
+            </div>
+
             <!-- Header -->
             <div class="flex items-center gap-6 mb-8">
                 <div class="size-20 shrink-0 relative group/avatar">
@@ -103,9 +107,13 @@
                         v-else
                         v-model="editableDisplayName"
                         type="text"
-                        class="text-2xl font-bold text-text border-b-2 border-accent-600 bg-transparent outline-none px-0 py-0.5 w-full max-w-md"
+                        class="text-2xl font-bold text-text border-b-2 bg-transparent outline-none px-0 py-0.5 w-full max-w-md"
+                        :class="displayNameError ? 'border-danger' : 'border-accent-600'"
                         :placeholder="$t('Name')"
+                        :aria-label="$t('Name')"
+                        @input="displayNameError = ''"
                     />
+                    <p v-if="editing && displayNameError" class="mt-1 text-sm text-danger">{{ displayNameError }}</p>
                     <span class="inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium mt-1"
                           :style="contact.contact_type?.color
                               ? { backgroundColor: contact.contact_type.color + '15', color: contact.contact_type.color }
@@ -220,6 +228,7 @@
                     :contact="contact"
                     :editing="editing && !isReadOnly && group.can_edit"
                     :errors="validationErrors"
+                    :pending-values="pendingPropertyValues"
                     @update-value="updatePropertyValue"
                     @clear-error="(id) => delete validationErrors[id]"
                 />
@@ -452,7 +461,11 @@ const validateRequiredFields = () => {
         for (const prop of group.properties) {
             if (!prop.pivot?.is_required) continue
             const value = getPropertyValue(prop.id)
-            if (!value || (typeof value === 'string' && value.trim() === '')) {
+            // Checkbox: '0' (Haken wieder entfernt) ist wie ein leeres Feld
+            const isEmpty = prop.type === 'checkbox'
+                ? value !== '1'
+                : (!value || (typeof value === 'string' && value.trim() === ''))
+            if (isEmpty) {
                 errors[prop.id] = $t('This is a mandatory field.')
             }
         }
@@ -460,37 +473,37 @@ const validateRequiredFields = () => {
     return errors
 }
 
+const displayNameError = ref('')
+const saveError = ref('')
+
 const toggleEditing = () => {
-    if (editing.value) {
-        const errors = validateRequiredFields()
-        if (Object.keys(errors).length > 0) {
-            validationErrors.value = errors
-            return
-        }
-        validationErrors.value = {}
-
-        // Ausstehende (debounced) Wertänderungen sofort speichern
-        debouncedFlush.cancel()
-        flushPropertyUpdates()
-
-        // Save display_name if changed
-        const trimmedName = editableDisplayName.value.trim()
-        if (trimmedName && trimmedName !== props.contact.display_name) {
-            router.patch(route('crm.contacts.update', props.contact.id), {
-                display_name: trimmedName,
-            }, {
-                preserveState: true,
-                preserveScroll: true,
-            })
-        }
-
-        editing.value = false
-        showSuccess($t('Changes saved'))
-    } else {
+    if (!editing.value) {
         editableDisplayName.value = props.contact.display_name ?? ''
         validationErrors.value = {}
+        displayNameError.value = ''
+        saveError.value = ''
         editing.value = true
+        return
     }
+
+    const errors = validateRequiredFields()
+    const trimmedName = editableDisplayName.value.trim()
+    displayNameError.value = trimmedName === '' ? $t('Please enter a name.') : ''
+    if (Object.keys(errors).length > 0 || displayNameError.value) {
+        validationErrors.value = errors
+        return
+    }
+    validationErrors.value = {}
+
+    // Name und ausstehende Werte in EINEM Request: zwei parallele Inertia-Aufrufe brechen sich gegenseitig ab
+    debouncedFlush.cancel()
+    saveContact(
+        trimmedName !== props.contact.display_name ? { display_name: trimmedName } : {},
+        () => {
+            editing.value = false
+            showSuccess($t('Changes saved'))
+        }
+    )
 }
 
 const isReadOnly = computed(() => isMirroredContactType(props.contact.contact_type?.slug))
@@ -534,18 +547,46 @@ const visibleGroups = computed(() => {
 // einen PATCH zu feuern (Request-Flut + Race-Conditions).
 const pendingPropertyValues = ref({})
 
-const flushPropertyUpdates = () => {
+// Ausstehende Werte bleiben bis zur Bestätigung des Servers erhalten: Schlägt das Speichern fehl oder wird
+// der Request von einem neueren abgelöst, gehen sie mit dem nächsten Versuch erneut mit.
+const saveContact = (extra = {}, onSaved = null) => {
     const values = { ...pendingPropertyValues.value }
-    pendingPropertyValues.value = {}
-    if (Object.keys(values).length === 0) return
+    const payload = { ...extra }
+    if (Object.keys(values).length > 0) {
+        payload.property_values = values
+    }
+    if (Object.keys(payload).length === 0) {
+        onSaved?.()
+        return
+    }
 
-    router.patch(route('crm.contacts.update', props.contact.id), {
-        property_values: values,
-    }, {
+    router.patch(route('crm.contacts.update', props.contact.id), payload, {
         preserveState: true,
         preserveScroll: true,
+        onSuccess: () => {
+            saveError.value = ''
+            for (const [propertyId, value] of Object.entries(values)) {
+                // Inzwischen weitergetippt? Dann bleibt der neuere Wert ausstehend.
+                if (pendingPropertyValues.value[propertyId] === value) {
+                    delete pendingPropertyValues.value[propertyId]
+                }
+            }
+            onSaved?.()
+        },
+        onError: (errors) => {
+            const fieldErrors = {}
+            for (const [key, message] of Object.entries(errors ?? {})) {
+                const match = key.match(/^property_values\.(\d+)$/)
+                if (match) fieldErrors[match[1]] = message
+            }
+            validationErrors.value = { ...validationErrors.value, ...fieldErrors }
+            displayNameError.value = errors?.display_name ?? ''
+            saveError.value = $t('Changes could not be saved. Please check your entries.')
+        },
     })
 }
+
+const flushPropertyUpdates = () => saveContact()
 
 const debouncedFlush = debounce(flushPropertyUpdates, 600)
 

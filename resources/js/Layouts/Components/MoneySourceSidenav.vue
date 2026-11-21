@@ -9,6 +9,8 @@
                     class="inline-flex items-center justify-center size-7 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                     @click="openEditUsersModal"
                     type="button"
+                    :title="$t('Edit')"
+                    :aria-label="$t('Edit')"
                 >
                     <IconEdit class="size-4" />
                 </button>
@@ -62,6 +64,8 @@
                     class="inline-flex items-center justify-center size-7 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                     @click="openMoneySourceCategoriesModal"
                     type="button"
+                    :title="$t('Edit')"
+                    :aria-label="$t('Edit')"
                 >
                     <IconEdit class="size-4" />
                 </button>
@@ -93,6 +97,8 @@
                     class="inline-flex items-center justify-center size-7 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                     @click="openLinkProjectsModal"
                     type="button"
+                    :title="$t('Edit')"
+                    :aria-label="$t('Edit')"
                 >
                     <IconEdit class="size-4" />
                 </button>
@@ -154,10 +160,12 @@
                         :key="file.id || file.name"
                         class="group flex items-center gap-2 rounded-xl border border-border-subtle bg-white px-3 py-2 hover:bg-surface-sunken"
                     >
+                        <!-- Herunterladen darf jede Person, die die Quelle sehen darf (MoneySourcePolicy::view) -->
                         <button
-                            v-if="canManage"
                             class="text-text-muted hover:text-text"
                             type="button"
+                            :title="$t('Download')"
+                            :aria-label="$t('Download')"
                             @click="downloadMoneySourceFile(file)"
                         >
                             <IconDownload class="size-4" />
@@ -177,6 +185,8 @@
                             v-if="canManage"
                             class="ml-auto text-danger"
                             type="button"
+                            :title="$t('Delete')"
+                            :aria-label="$t('Delete')"
                             @click="openFileDeleteModal(file)"
                         >
                             <IconCircleX class="size-4" />
@@ -196,8 +206,10 @@
                     class="inline-flex items-center justify-center size-7 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                     @click="openAddMoneySourceTask"
                     type="button"
+                    :title="$t('New task')"
+                    :aria-label="$t('New task')"
                 >
-                    <IconEdit class="size-4" />
+                    <IconPlus class="size-4" />
                 </button>
             </header>
 
@@ -312,7 +324,7 @@ import EditMoneySourceUsersModal from '@/Layouts/Components/EditMoneySourceUsers
 import { is, can } from 'laravel-permission-to-vuejs'
 
 // Icons (Tabler)
-import { IconChevronDown, IconUpload, IconDownload, IconCircleX, IconEdit } from '@tabler/icons-vue'
+import { IconChevronDown, IconUpload, IconDownload, IconCircleX, IconEdit, IconPlus } from '@tabler/icons-vue'
 import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
 
 const instanceFormat = useInstanceFormat();

@@ -6,6 +6,7 @@
                 <button
                     class="cursor-pointer"
                     type="button"
+                    :aria-label="ariaLabel"
                     :class="classes"
                     :disabled="disabled"
                 >
@@ -23,6 +24,7 @@
                 <button
                     class="cursor-pointer"
                     type="button"
+                    :aria-label="ariaLabel"
                     :class="classes"
                     :disabled="disabled"
                 >
@@ -39,6 +41,7 @@
                 <button
                     class="cursor-pointer"
                     type="button"
+                    :aria-label="ariaLabel"
                     :class="classes"
                     :disabled="disabled"
                 >
@@ -55,6 +58,7 @@
                 <button
                     class="cursor-pointer"
                     type="button"
+                    :aria-label="ariaLabel"
                     :class="classes"
                     :disabled="disabled"
                 >
@@ -74,6 +78,7 @@
             v-else
             class="cursor-pointer"
             type="button"
+            :aria-label="ariaLabel"
             :class="[classes, classesButton]"
             :disabled="disabled"
         >
@@ -139,6 +144,9 @@ const finalIconColorClass = computed(() => {
  * Einheitliches Binding für PrimeVue Tooltip.
  * 'position' bleibt als Fallback gesetzt, falls du mal ohne Modifier verwendest.
  */
+// Name des Knopfs für Screenreader: der Tooltip-Text ohne Markup (reine Symbol-Knöpfe hatten keinen Namen)
+const ariaLabel = computed(() => props.tooltipText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || undefined)
+
 const tooltipBinding = computed(() => ({
     value: props.tooltipText,
     disabled: props.noTooltip,

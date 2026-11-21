@@ -106,6 +106,13 @@ class CrmContact extends Model
                 DB::afterCommit(static fn () => app(ProjectArtistService::class)->refresh($artistProjectIds));
             }
 
+            $profileImage = $contact->getRawOriginal('profile_image');
+            if ($profileImage !== null) {
+                DB::afterCommit(
+                    static fn () => app(CrmPropertyFileService::class)->deleteProfileImage($profileImage, $contact->id)
+                );
+            }
+
             $paths = $contact->propertyFilePathsToDelete;
             $contact->propertyFilePathsToDelete = [];
 

@@ -70,6 +70,41 @@ final class AppDashboardTest extends TestCase
     }
 
     #[Test]
+    public function dashboardShowsPlanningEventsOnlyWithThePlanningCalendarRight(): void
+    {
+        // Sicherheits-Audit 18.11.2026, N5
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id);
+        $fixed = Event::factory()->create([
+            'project_id' => $project->id,
+            'start_time' => now()->setTime(10, 0),
+            'end_time' => now()->setTime(12, 0),
+        ]);
+        $planning = Event::factory()->create([
+            'project_id' => $project->id,
+            'is_planning' => true,
+            'start_time' => now()->setTime(14, 0),
+            'end_time' => now()->setTime(16, 0),
+        ]);
+
+        Passport::actingAs($user, ['app']);
+        $this->assertSame(
+            [$fixed->id],
+            array_column($this->getJson(route('app.v1.dashboard'))->assertOk()->json('events_today'), 'id')
+        );
+
+        $user->givePermissionTo(
+            \Spatie\Permission\Models\Permission::findOrCreate(PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value, 'web')
+        );
+        Passport::actingAs($user->fresh(), ['app']);
+        $this->assertEqualsCanonicalizing(
+            [$fixed->id, $planning->id],
+            array_column($this->getJson(route('app.v1.dashboard'))->assertOk()->json('events_today'), 'id')
+        );
+    }
+
+    #[Test]
     public function dashboardShowsTodaysShiftsOnlyWithTheShiftPlanRights(): void
     {
         $user = User::factory()->create();

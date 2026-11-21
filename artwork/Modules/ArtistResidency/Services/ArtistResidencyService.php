@@ -12,7 +12,12 @@ use Artwork\Modules\ArtistResidency\Repositories\ArtistRepository;
 use Artwork\Modules\ArtistResidency\Repositories\ArtistResidencyRepository;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContactType;
+use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
+use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Services\CrmContactService;
+use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
+use Artwork\Modules\Crm\Support\CrmPropertyValueValidator;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
 use Barryvdh\Snappy\PdfWrapper;
@@ -41,6 +46,8 @@ readonly class ArtistResidencyService
         protected ArtistResidencyRepository $residencies,
         protected ArtistRepository $artists,
         private CrmContactService $crmContactService,
+        private CrmPropertyGroupService $crmPropertyGroupService,
+        private CrmPropertyValueValidator $crmPropertyValueValidator,
     ) {
     }
 
@@ -188,14 +195,51 @@ readonly class ArtistResidencyService
             && empty(trim((string)($artistInput['name'] ?? '')));
     }
 
-    /** Speichert CRM-Property-Werte ueber den CrmContactService (schreibt ins Source-Model zurueck) */
+    /**
+     * Speichert CRM-Property-Werte ueber den CrmContactService (schreibt ins Source-Model zurueck).
+     *
+     * Die Kontakt-ID kommt aus dem Request. Geschrieben wird deshalb nur in Kontakte vom Typ
+     * Künstler*in: Bei gespiegelten Kontakten (Nutzer*innen, Freelancer, Dienstleister) würde der
+     * Wert sonst in deren Stammdaten landen, etwa als neue E-Mail-Adresse eines fremden Kontos.
+     * Es gelten dieselben Regeln wie im CRM: nur Eigenschaften, die die Person bearbeiten darf,
+     * keine Datei-Eigenschaften, Werte passend zum Typ der Eigenschaft.
+     */
     private function saveCrmPropertyValues(int $contactId, array $propertyValues): void
     {
         $contact = $this->crmContactService->findById($contactId);
 
-        if (!$contact) {
+        if (!$contact || $contact->contactType?->slug !== CrmSystemContactTypeEnum::ARTIST->value) {
             return;
         }
+
+        $user = $this->authManager->user();
+        if ($user === null) {
+            return;
+        }
+
+        $editableIds = array_map('intval', $this->crmPropertyGroupService->getEditablePropertyIds(
+            $user->id,
+            $user->departments?->pluck('id')->toArray() ?? [],
+            $user->can(PermissionEnum::CRM_MANAGER->value)
+        ));
+        $uploadIds = CrmProperty::query()
+            ->whereKey(array_keys($propertyValues))
+            ->where('type', CrmPropertyTypeEnum::UPLOAD)
+            ->pluck('id')
+            ->all();
+
+        $propertyValues = array_filter(
+            $propertyValues,
+            static fn (int|string $propertyId): bool => in_array((int) $propertyId, $editableIds, true)
+                && !in_array((int) $propertyId, $uploadIds, true),
+            ARRAY_FILTER_USE_KEY
+        );
+
+        if ($propertyValues === []) {
+            return;
+        }
+
+        $this->crmPropertyValueValidator->validate($contact->contactType, $propertyValues);
 
         foreach ($propertyValues as $propId => $value) {
             $this->crmContactService->savePropertyValue(

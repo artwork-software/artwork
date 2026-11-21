@@ -11,6 +11,7 @@ use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Sector\Models\Sector;
 use Illuminate\Http\RedirectResponse;
+use Artwork\Core\Validation\MasterDataName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
@@ -48,12 +49,52 @@ class CategoryController extends Controller
                 'color' => $sector->color,
                 'projects' => $sector->projects
             ]),
-            'contractTypes' => ContractType::select(['id', 'name', 'color'])->get(),
-            'companyTypes' => CompanyType::select(['id', 'name', 'color'])->get(),
-            'currencies' => Currency::select(['id', 'name', 'color'])->get(),
-            'states' => ProjectState::select(['id', 'name', 'color', 'is_planning'])->get(),
+            // usage_count: wie viele Verträge bzw. Projekte den Eintrag verwenden (Hinweis vor dem Löschen)
+            'contractTypes' => $this->withUsageCount(
+                ContractType::select(['id', 'name', 'color'])->get(),
+                'contracts',
+                'contract_type_id'
+            ),
+            'companyTypes' => $this->withUsageCount(
+                CompanyType::select(['id', 'name', 'color'])->get(),
+                'contracts',
+                'company_type_id'
+            ),
+            'currencies' => $this->withUsageCount(
+                Currency::select(['id', 'name', 'color'])->get(),
+                'contracts',
+                'currency_id'
+            ),
+            'states' => $this->withUsageCount(
+                ProjectState::select(['id', 'name', 'color', 'is_planning'])->get(),
+                'projects',
+                'state'
+            ),
             'createSettings' => app(ProjectCreateSettings::class),
         ]);
+    }
+
+    /**
+     * Hängt jedem Eintrag die Zahl der nicht gelöschten Zeilen an, die auf ihn zeigen. Eine Abfrage je Liste.
+     *
+     * @param \Illuminate\Support\Collection<int, \Illuminate\Database\Eloquent\Model> $items
+     * @return \Illuminate\Support\Collection<int, \Illuminate\Database\Eloquent\Model>
+     */
+    private function withUsageCount(
+        \Illuminate\Support\Collection $items,
+        string $table,
+        string $foreignKey
+    ): \Illuminate\Support\Collection {
+        $counts = \Illuminate\Support\Facades\DB::table($table)
+            ->whereNull('deleted_at')
+            ->whereIn($foreignKey, $items->pluck('id'))
+            ->groupBy($foreignKey)
+            ->selectRaw($foreignKey . ' as item_id, count(*) as usage_count')
+            ->pluck('usage_count', 'item_id');
+
+        return $items->each(
+            static fn ($item) => $item->setAttribute('usage_count', (int) ($counts[$item->id] ?? 0))
+        );
     }
 
     public function artistResidencySettings(): Response|ResponseFactory
@@ -72,6 +113,8 @@ class CategoryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        MasterDataName::validate($request);
+
         Category::create([
             'name' => $request->name,
             'color' => $request->color
@@ -81,6 +124,8 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category): RedirectResponse
     {
+        MasterDataName::validate($request, updating: true);
+
         $category->update($request->only(['name', 'color']));
 
         return Redirect::back();

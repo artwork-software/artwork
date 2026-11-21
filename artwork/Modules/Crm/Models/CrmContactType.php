@@ -2,11 +2,14 @@
 
 namespace Artwork\Modules\Crm\Models;
 
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 
 class CrmContactType extends Model
 {
@@ -27,6 +30,17 @@ class CrmContactType extends Model
         'is_system' => 'boolean',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Validierungsregel für Typen, in denen Kontakte angelegt oder importiert werden dürfen: nicht gelöscht
+     * und nicht gespiegelt (gespiegelte Kontakte entstehen nur über ihre Quelle und wären im CRM unlöschbar).
+     */
+    public static function writableExistsRule(): Exists
+    {
+        return Rule::exists('crm_contact_types', 'id')
+            ->whereNull('deleted_at')
+            ->whereNotIn('slug', CrmSystemContactTypeEnum::mirroredSlugs());
+    }
 
     /**
      * @return HasMany<CrmContact, $this>

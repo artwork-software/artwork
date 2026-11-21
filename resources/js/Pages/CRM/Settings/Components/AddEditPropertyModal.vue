@@ -17,7 +17,7 @@
                 :placeholder="$t('Please select')"
             />
             <p v-if="form.errors.type" class="mt-1 text-xs text-danger">{{ form.errors.type }}</p>
-            <BaseInput id="prop_tooltip" v-model="form.tooltip_text" :label="$t('Tooltip text')" />
+            <BaseInput id="prop_tooltip" v-model="form.tooltip_text" :label="$t('Tooltip text')" :error="form.errors.tooltip_text" />
 
             <!-- Mehrfachauswahl: Darstellung -->
             <div v-if="form.type === 'multiselect'" class="space-y-1">
@@ -58,6 +58,29 @@
                 </button>
             </div>
 
+            <!-- Kontakttypen: nur dort erscheint die Eigenschaft auf der Kontaktseite -->
+            <div v-if="contactTypes.length" class="space-y-2">
+                <label class="componentLabel">{{ $t('Show for contact types') }}</label>
+                <p class="text-xs text-text-subtle">
+                    {{ $t('The property only appears on contacts of the selected contact types.') }}
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                    <BaseCheckbox
+                        v-for="type in contactTypes"
+                        :key="type.id"
+                        :id="`prop_contact_type_${type.id}`"
+                        :model-value="form.contact_type_ids.includes(type.id)"
+                        :label="$t(type.name)"
+                        :disabled="isContactTypeLocked(type)"
+                        @update:model-value="(checked) => toggleContactType(type.id, checked)"
+                    />
+                </div>
+                <p v-if="!form.contact_type_ids.length" class="text-xs text-warning">
+                    {{ $t('Without a contact type the property is not shown on any contact.') }}
+                </p>
+                <p v-if="form.errors.contact_type_ids" class="text-xs text-danger">{{ form.errors.contact_type_ids }}</p>
+            </div>
+
             <div class="flex justify-end gap-3 mt-6">
                 <BaseUIButton variant="secondary" hide-icon @click="$emit('close')">{{ $t('Cancel') }}</BaseUIButton>
                 <BaseUIButton variant="primary" hide-icon @click="submit" :disabled="form.processing">
@@ -74,6 +97,7 @@ import { useForm } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
 import BaseSortableList from '@/Artwork/Inputs/BaseSortableList.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import { IconX, IconCirclePlus } from '@tabler/icons-vue'
@@ -81,6 +105,9 @@ import { IconX, IconCirclePlus } from '@tabler/icons-vue'
 const props = defineProps({
     property: { type: Object, default: null },
     groupId: { type: Number, required: true },
+    contactTypes: { type: Array, default: () => [] },
+    // Kontakttypen, die die Gruppe bereits nutzen: Vorauswahl für eine neue Eigenschaft
+    groupContactTypeIds: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['close'])
@@ -104,7 +131,20 @@ const form = useForm({
     tooltip_text: props.property?.tooltip_text ?? '',
     select_values: props.property?.select_values ?? [],
     multiselect_display: props.property?.multiselect_display ?? 'checkboxes',
+    contact_type_ids: props.property
+        ? (props.property.contact_types ?? []).map((type) => type.id)
+        : [...props.groupContactTypeIds],
 })
+
+// Systemeigenschaften bleiben an Systemtypen hängen (Gegenstück zu CrmPropertyService::syncContactTypes)
+const isContactTypeLocked = (type) =>
+    !!props.property?.is_system && !!type.is_system && form.contact_type_ids.includes(type.id)
+
+const toggleContactType = (typeId, checked) => {
+    form.contact_type_ids = checked
+        ? [...new Set([...form.contact_type_ids, typeId])]
+        : form.contact_type_ids.filter((id) => id !== typeId)
+}
 
 const multiselectDisplayOptions = [
     { id: 'checkboxes', name: 'Checkboxes' },

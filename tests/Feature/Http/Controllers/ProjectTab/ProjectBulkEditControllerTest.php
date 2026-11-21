@@ -5,6 +5,7 @@ namespace Tests\Feature\Http\Controllers\ProjectTab;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -70,5 +71,73 @@ final class ProjectBulkEditControllerTest extends FeatureTestCase
         $this->assertSame($creator->id, $event['created_by']['id']);
         $this->assertSame($creator->first_name, $event['created_by']['first_name']);
         $this->assertStringNotContainsString('creator-bulk@example.test', json_encode($event));
+    }
+
+    #[Test]
+    public function calendar_room_filter_does_not_apply_to_project_event_list(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $calendarRoom = Room::factory()->create();
+        $otherRoom = Room::factory()->create();
+        Event::factory()->create(['project_id' => $project->id, 'room_id' => $calendarRoom->id]);
+        Event::factory()->create(['project_id' => $project->id, 'room_id' => $otherRoom->id]);
+
+        $admin->userFilters()->create([
+            'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
+            'room_ids' => [$calendarRoom->id],
+        ]);
+
+        $response = $this->getJson(route('projects.tabs.bulk-edit', $project))->assertOk();
+
+        $this->assertCount(2, $response->json('events'));
+        $this->assertSame(UserFilterTypes::PROJECT_EVENT_LIST_FILTER->value, $response->json('user_filters.filter_type'));
+        $this->assertNull($response->json('user_filters.room_ids'));
+    }
+
+    #[Test]
+    public function project_event_list_uses_its_own_room_filter(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $listRoom = Room::factory()->create();
+        $otherRoom = Room::factory()->create();
+        Event::factory()->create(['project_id' => $project->id, 'room_id' => $listRoom->id]);
+        Event::factory()->create(['project_id' => $project->id, 'room_id' => $otherRoom->id]);
+
+        $this->patch(route('update.user.calendar.filter', $admin), [
+            'filter_type' => UserFilterTypes::PROJECT_EVENT_LIST_FILTER->value,
+            'room_ids' => [$listRoom->id],
+        ])->assertSessionHasNoErrors();
+
+        $events = $this->getJson(route('projects.tabs.bulk-edit', $project))->assertOk()->json('events');
+
+        $this->assertCount(1, $events);
+        $this->assertSame($listRoom->id, $events[0]['room_id']);
+        $this->assertNull(
+            $admin->userFilters()->calendarFilter()->first()?->room_ids,
+            'Der Kalenderfilter darf durch den Terminlisten-Filter nicht verändert werden'
+        );
+    }
+
+    #[Test]
+    public function saved_filter_templates_are_separated_between_calendar_and_event_list(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $admin->userFilterTemplates()->create([
+            'name' => 'Kalender-Vorlage',
+            'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
+        ]);
+        $admin->userFilterTemplates()->create([
+            'name' => 'Terminlisten-Vorlage',
+            'filter_type' => UserFilterTypes::PROJECT_EVENT_LIST_FILTER->value,
+        ]);
+
+        $names = collect($this->getJson(route('projects.tabs.bulk-edit', $project))->json('personalFilters'))
+            ->pluck('name')
+            ->all();
+
+        $this->assertSame(['Terminlisten-Vorlage'], $names);
     }
 }

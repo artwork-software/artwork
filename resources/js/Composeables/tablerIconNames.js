@@ -64,6 +64,73 @@ export const ALIASES = {
 }
 
 /**
+ * Aeltere Export-Namen, die @tabler/icons-vue nur noch als Alias fuehrt (z. B. "Icon123" fuer
+ * "IconNumber123"). Sie stehen noch in der Datenbank (gespeicherte Icons von Tagesdiensten,
+ * Gruppen ...), haben aber keine eigene SVG-Datei: ohne diese Liste lief der Abruf ins Leere
+ * und das Icon blieb unsichtbar. Bewusst getrennt von ALIASES, damit die Pruefung des
+ * Sync-Skripts unveraendert bleibt.
+ */
+export const LEGACY_ALIASES = {
+    Icon123: 'number-123',
+    Icon12Hours: 'hours-12',
+    Icon24Hours: 'hours-24',
+    Icon2fa: 'auth-2fa',
+    Icon360: 'view-360-arrow',
+    Icon360View: 'view-360-number',
+    Icon3dCubeSphere: 'cube-3d-sphere',
+    Icon3dCubeSphereOff: 'cube-3d-sphere-off',
+    Icon3dRotate: 'rotate-3d',
+    IconBoxSeam: 'package',
+    IconBrandAdobePremier: 'brand-adobe-premiere',
+    IconCircle0: 'circle-number-0',
+    IconCircle1: 'circle-number-1',
+    IconCircle2: 'circle-number-2',
+    IconCircle3: 'circle-number-3',
+    IconCircle4: 'circle-number-4',
+    IconCircle5: 'circle-number-5',
+    IconCircle6: 'circle-number-6',
+    IconCircle7: 'circle-number-7',
+    IconCircle8: 'circle-number-8',
+    IconCircle9: 'circle-number-9',
+    IconCircleDashedLetterLetterV: 'circle-dashed-letter-v',
+    IconCodeAsterix: 'code-asterisk',
+    IconDiscount2: 'rosette-discount',
+    IconDiscount2Off: 'rosette-discount-off',
+    IconDiscountCheck: 'rosette-discount-check',
+    IconDiscountCheckFilled: 'rosette-discount-check-filled',
+    IconHandRock: 'hand-love-you',
+    IconHexagon0: 'hexagon-number-0',
+    IconHexagon1: 'hexagon-number-1',
+    IconHexagon2: 'hexagon-number-2',
+    IconHexagon3: 'hexagon-number-3',
+    IconHexagon4: 'hexagon-number-4',
+    IconHexagon5: 'hexagon-number-5',
+    IconHexagon6: 'hexagon-number-6',
+    IconHexagon7: 'hexagon-number-7',
+    IconHexagon8: 'hexagon-number-8',
+    IconHexagon9: 'hexagon-number-9',
+    IconKering: 'kerning',
+    IconMessageCircle2: 'message-circle',
+    IconMessageCircle2Filled: 'message-circle-filled',
+    IconMoodSuprised: 'mood-surprised',
+    IconSeeding: 'seedling',
+    IconSeedingFilled: 'seedling-filled',
+    IconSeedingOff: 'seedling-off',
+    IconShiJumping: 'ski-jumping',
+    IconSortDeacendingSmallBig: 'sort-descending-small-big',
+    IconSquare0: 'square-number-0',
+    IconSquare1: 'square-number-1',
+    IconSquare2: 'square-number-2',
+    IconSquare3: 'square-number-3',
+    IconSquare4: 'square-number-4',
+    IconSquare5: 'square-number-5',
+    IconSquare6: 'square-number-6',
+    IconSquare7: 'square-number-7',
+    IconSquare8: 'square-number-8',
+    IconSquare9: 'square-number-9',
+}
+
+/**
  * Der mechanische Teil der Namensaufloesung. Getrennt exportiert, damit das Sync-Skript
  * exakt dieselbe Regel anwenden kann, wenn es die ALIASES-Liste gegenprueft.
  */
@@ -90,7 +157,7 @@ export function toSlug(input) {
     // ("Home2") — letzteres hat die frueher hier verwendete Aufloesung ebenfalls akzeptiert.
     if (/^[A-Z]/.test(s)) {
         const name = /^Icon[A-Z0-9]/.test(s) ? s : `Icon${s}`
-        return safeSlug(ALIASES[name] ?? slugFromExportName(name))
+        return safeSlug(ALIASES[name] ?? LEGACY_ALIASES[name] ?? slugFromExportName(name))
     }
 
     // Bereits ein Slug, ggf. mit "icon-"-Prefix

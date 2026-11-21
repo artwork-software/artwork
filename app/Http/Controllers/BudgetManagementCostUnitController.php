@@ -39,6 +39,8 @@ class BudgetManagementCostUnitController extends Controller
             ->orderBy('cost_unit_number')
             ->paginate($perPage)
             ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedCostUnits->getCollection());
+        $trashedCostUnits->through(static fn ($model) => $model->setAttribute('trash', $trashInfo[$model->id] ?? null));
 
         return Inertia::render(
             'Trash/BudgetManagementCostUnit',

@@ -142,7 +142,9 @@ async function submit() {
         if (e.response?.status === 422 && e.response.data?.errors) {
             const serverErrors = {};
             for (const [key, messages] of Object.entries(e.response.data.errors)) {
-                serverErrors[key] = Array.isArray(messages) ? messages[0] : messages;
+                // Feldfehler kommen als "property_values.<id>", das Template liest errors[<id>]
+                const fieldKey = key.startsWith('property_values.') ? key.slice('property_values.'.length) : key;
+                serverErrors[fieldKey] = Array.isArray(messages) ? messages[0] : messages;
             }
             errors.value = serverErrors;
         } else {

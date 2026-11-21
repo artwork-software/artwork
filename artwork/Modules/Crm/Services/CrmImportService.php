@@ -275,7 +275,8 @@ readonly class CrmImportService
         $typeIdToMapping = [];
         foreach ($typeMappings as $tm) {
             $typeIdToMapping[(int) $tm['crm_contact_type_id']] = [
-                'display_name' => (int) $tm['display_name'],
+                // Ohne Namensspalte greift wie beim Einzeltyp-Import Vorname + Nachname
+                'display_name' => isset($tm['display_name']) ? (int) $tm['display_name'] : null,
                 'properties' => $tm['properties'] ?? [],
             ];
         }
@@ -680,17 +681,13 @@ readonly class CrmImportService
                 ? false
                 : $value,
 
-            CrmPropertyTypeEnum::NUMBER => is_numeric($value) ? $value : false,
+            CrmPropertyTypeEnum::NUMBER => $this->castNumber($value),
 
             CrmPropertyTypeEnum::DATE => CrmImportDateParser::parse($value),
 
-            CrmPropertyTypeEnum::CHECKBOX => in_array(
-                mb_strtolower($value),
-                ['1', 'true', 'yes', 'ja', 'x'],
-                true,
-            ) ? '1' : '0',
+            CrmPropertyTypeEnum::CHECKBOX => $this->castCheckbox($value),
 
-            CrmPropertyTypeEnum::SELECT => in_array($value, $property->select_values ?? [], true)
+            CrmPropertyTypeEnum::SELECT => in_array($value, CrmPropertyValueFormat::options($property), true)
                 ? $value
                 : false,
 
@@ -699,5 +696,37 @@ readonly class CrmImportService
 
             CrmPropertyTypeEnum::UPLOAD => false,
         };
+    }
+
+    /**
+     * Zahlen auch in deutscher Schreibweise: "12,5" und "1.234,56".
+     */
+    private function castNumber(string $value): string|false
+    {
+        $value = trim($value);
+
+        if (preg_match('/^-?\d{1,3}(\.\d{3})+,\d+$/', $value) === 1) {
+            $value = str_replace('.', '', $value);
+        }
+        if (preg_match('/^-?\d+,\d+$/', $value) === 1) {
+            $value = str_replace(',', '.', $value);
+        }
+
+        return is_numeric($value) ? $value : false;
+    }
+
+    /**
+     * Nur eindeutige Ja-/Nein-Angaben; alles andere (Tippfehler) wird wie bei den übrigen Typen abgewiesen
+     * statt still als "Nein" gespeichert.
+     */
+    private function castCheckbox(string $value): string|false
+    {
+        $value = mb_strtolower(trim($value));
+
+        if (in_array($value, ['1', 'true', 'yes', 'ja', 'x', 'wahr', 'y', 'j'], true)) {
+            return '1';
+        }
+
+        return in_array($value, ['0', 'false', 'no', 'nein', 'falsch', 'n', '-'], true) ? '0' : false;
     }
 }

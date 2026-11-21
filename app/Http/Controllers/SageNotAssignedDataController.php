@@ -48,6 +48,8 @@ class SageNotAssignedDataController extends Controller
             ->orderByDesc('deleted_at')
             ->paginate($perPage)
             ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($sageNotAssignedDataTrashed->getCollection());
+        $sageNotAssignedDataTrashed->through(static fn ($model) => $model->setAttribute('trash', $trashInfo[$model->id] ?? null));
 
         return Inertia::render(
             'Trash/SageNotAssignedData',

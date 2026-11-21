@@ -62,7 +62,9 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
+use Artwork\Modules\Event\Services\RoomRequestInboxNotifier;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -1402,8 +1404,10 @@ class EventController extends Controller
             ->get();
 
         // get user events from Projects in which the user is currently working
+        // Planungstermine nur mit Planungskalender-Recht, wie an den übrigen Lesepfaden
         $userEvents = Event::where('start_time', '>=', Carbon::now()->startOfDay())
             ->where('start_time', '<=', Carbon::now()->endOfDay())
+            ->visiblePlanningFor($user)
             ->whereHas(
                 'project',
                 function (Builder $query): void {
@@ -1861,6 +1865,9 @@ class EventController extends Controller
             $request->has('isOption') &&
             !$request->booleanValue('isOption');
 
+        // Vor der Änderung bestimmen: nur wer die Raumanfrage beantworten darf, schreibt als Raumverwaltung
+        $commentsAsRoomAdministration = $request->user()->can('answerRoomRequest', $event);
+
         if ($shouldAcceptRoomRequest) {
             $this->authorize('answerRoomRequest', $event);
         }
@@ -1913,9 +1920,12 @@ class EventController extends Controller
                 $event->comments()->create([
                     'user_id' => Auth::id(),
                     'comment' => $request->adminComment,
-                    'is_admin_comment' => true
+                    'is_admin_comment' => $commentsAsRoomAdministration
                 ]);
+            }
 
+            // Die „Nachricht der Raumverwaltung“ geht nur raus, wenn sie auch von dort kommt
+            if (!empty($request->adminComment) && $commentsAsRoomAdministration) {
                 $this->notificationService->setIcon('blue');
                 $this->notificationService->setPriority(1);
                 $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
@@ -2544,7 +2554,62 @@ class EventController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function acceptEvent(Request $request, Event $event): RedirectResponse
+    /**
+     * Mehrere offene Raumbelegungsanfragen auf einmal zusagen oder absagen. Jede Anfrage läuft durch
+     * denselben Weg wie die einzelne Antwort (Rechte, Benachrichtigungen, Verlauf); was die Person nicht
+     * beantworten darf oder was inzwischen beantwortet ist, wird übersprungen und gemeldet.
+     */
+    public function answerRoomRequests(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'events' => ['required', 'array', 'min:1', 'max:200'],
+            'events.*' => ['integer'],
+            'action' => ['required', Rule::in(['accept', 'decline'])],
+        ]);
+
+        $answered = 0;
+        $skipped = count(array_unique($validated['events']));
+        $events = Event::query()->whereIn('id', $validated['events'])->get();
+        foreach ($events as $event) {
+            try {
+                // nur offene Anfragen: declineEvent würde auch bestätigte Belegungen absagen
+                abort_if(!$event->occupancy_option || $event->is_planning, 409);
+                $validated['action'] === 'accept'
+                    ? $this->acceptEvent($request, $event)
+                    : $this->declineEvent($request, $event);
+                $answered++;
+                $skipped--;
+            } catch (AuthorizationException | HttpExceptionInterface) {
+                continue;
+            } catch (Throwable $exception) {
+                // ein unerwarteter Fehler bei einer Anfrage darf die übrigen nicht ohne Rückmeldung lassen
+                report($exception);
+                continue;
+            }
+        }
+
+        if ($skipped > 0) {
+            session()->flash('error', trans_choice(
+                '{1} One request was skipped: it has already been answered or you may not answer it.|'
+                . '[2,*] :count requests were skipped: they have already been answered or you may not answer them.',
+                $skipped,
+                ['count' => $skipped]
+            ));
+        }
+        if ($answered > 0) {
+            session()->flash('success', trans_choice(
+                $validated['action'] === 'accept'
+                    ? '{1} One room request has been accepted.|[2,*] :count room requests have been accepted.'
+                    : '{1} One room request has been declined.|[2,*] :count room requests have been declined.',
+                $answered,
+                ['count' => $answered]
+            ));
+        }
+
+        return Redirect::back();
+    }
+
+    public function acceptEvent(Request $request, Event $event): RedirectResponse|JsonResponse
     {
         // Schon beantwortet (parallel durch andere Admins)? Dann 409 „bereits beantwortet“ –
         // die Policy hätte vorher mit 403 „nicht erlaubt“ abgelehnt
@@ -2681,7 +2746,7 @@ class EventController extends Controller
 
         SafeBroadcast::send(new EventUpdated($event->fresh(), $event->room_id));
 
-        return Redirect::back();
+        return $this->answeredRoomRequestResponse($request, $event);
     }
 
     /**
@@ -2689,7 +2754,7 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function declineEvent(Request $request, Event $event): RedirectResponse
+    public function declineEvent(Request $request, Event $event): RedirectResponse|JsonResponse
     {
         abort_if($event->room_id === null, 409, 'This room request has already been answered.');
         $this->authorize('declineEvent', $event);
@@ -2968,14 +3033,14 @@ class EventController extends Controller
             $roomId
         ));
 
-        return Redirect::back();
+        return $this->answeredRoomRequestResponse($request, $event);
     }
 
     /**
      * Abgelehnte Änderungsanfrage (Zeitraum über die Bestätigung hinaus oder anderer Raum, siehe
      * EventChangeApprovalService): der Termin kehrt zur bestätigten Belegung zurück und bleibt fest gebucht.
      */
-    private function declineChangeRequest(Request $request, Event $event): RedirectResponse
+    private function declineChangeRequest(Request $request, Event $event): RedirectResponse|JsonResponse
     {
         $requestedRoomId = (int) $event->room_id;
         $requestedRoom = Room::find($requestedRoomId);
@@ -3096,6 +3161,25 @@ class EventController extends Controller
         SafeBroadcast::send(new EventCreated($freshEvent, $approvedRoomId));
         if ($requestedRoom !== null && $requestedRoomId !== $approvedRoomId) {
             SafeBroadcast::send(new EventCreated($freshEvent, $requestedRoomId));
+        }
+
+        return $this->answeredRoomRequestResponse($request, $event);
+    }
+
+    /**
+     * Antwort auf Zusage/Absage. Die Terminliste im Projekt (BulkBody) beantwortet per axios und übernimmt
+     * den Termin aus der Antwort; andere offene Listen erfahren es über den Broadcast. Alle übrigen Aufrufer
+     * (Kalender, Benachrichtigungen) kommen über Inertia und werden zurückgeleitet.
+     */
+    private function answeredRoomRequestResponse(Request $request, Event $event): RedirectResponse|JsonResponse
+    {
+        $freshEvent = $event->fresh();
+        SafeBroadcast::send(new BulkEventChanged($freshEvent, 'updated'));
+        // Antworten laufen per Query Builder, der Beobachter sieht sie nicht
+        app(RoomRequestInboxNotifier::class)->notify();
+
+        if ($request->wantsJson() && !$request->hasHeader('X-Inertia')) {
+            return response()->json(['event' => BulkEventChanged::eventPayload($freshEvent)]);
         }
 
         return Redirect::back();
@@ -3339,9 +3423,11 @@ class EventController extends Controller
             })
             ->orderByDesc('deleted_at')
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn ($event) => [
+            ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedEvents->getCollection());
+        $trashedEvents->through(fn ($event) => [
                 'id' => $event->id,
+                'trash' => $trashInfo[$event->id] ?? null,
                 'name' => $event->eventName,
                 'project' => $event->project,
                 'event_type' => $event->event_type,
@@ -3791,14 +3877,32 @@ class EventController extends Controller
         SubEventService $subEventService,
         NotificationService $notificationService
     ): RedirectResponse {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $trashedEvents = Event::onlyTrashed()->get();
+        // Wie beim einzelnen endgültigen Löschen: nur Termine, die die Person löschen darf
+        $deletableEvents = $trashedEvents->filter(
+            static fn (Event $event): bool => $user->can('delete', $event)
+        );
+
         $this->eventService->forceDeleteAll(
-            Event::onlyTrashed()->get(),
+            $deletableEvents,
             $eventCommentService,
             $timelineService,
             $shiftService,
             $subEventService,
             $notificationService
         );
+
+        $remaining = $trashedEvents->count() - $deletableEvents->count();
+        if ($remaining > 0) {
+            session()->flash('error', trans_choice(
+                ':count event stays in the trash because you may not delete it.|'
+                    . ':count events stay in the trash because you may not delete them.',
+                $remaining,
+                ['count' => $remaining]
+            ));
+        }
 
         return Redirect::route('events.trashed');
     }

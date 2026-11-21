@@ -2,7 +2,8 @@
     <div>
         <div class="text-sm" v-if="project.project_period">
             <span class="font-bold">
-                {{ project.project_period.first_event_date }} – {{ project.project_period.last_event_date }}
+                <!-- Eintägige Projekte: ein Datum statt "15.03. – 15.03." -->
+                {{ project.project_period.first_event_date }}<template v-if="project.project_period.last_event_date && project.project_period.last_event_date !== project.project_period.first_event_date"> – {{ project.project_period.last_event_date }}</template>
             </span>
         </div>
         <div v-else class="text-sm text-text-subtle">

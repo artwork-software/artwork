@@ -29,11 +29,6 @@
                                 'Deleting a category or property removes its assignments from all rooms.',
                             ]"
                         />
-                        <div v-if="showInvalidNameErrorText" class="text-danger text-sm mt-4">
-                            {{
-                                $t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')
-                            }}
-                        </div>
                         <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 my-10">
 
                             <!-- Raumkategorien -->
@@ -61,15 +56,17 @@
                                             id="roomCategory"
                                             v-model="roomCategoryInput"
                                             :label="$t('Enter room category')"
+                                            :error="roomCategoryError"
+                                            @update:model-value="roomCategoryError = ''"
                                             v-on:keyup.enter="addRoomCategory"
                                         />
                                     </div>
                                     <div class="flex items-center h-full ml-2">
                                         <button
-                                            :class="[roomCategoryInput === '' ? 'bg-text-subtle cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-700 focus:outline-none', 'rounded-full ml-1 inline-flex items-center p-2 border border-transparent shadow-sm text-white transition']"
+                                            :class="[!roomCategoryInput.trim() ? 'bg-text-subtle cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-700 focus:outline-none', 'rounded-full ml-1 inline-flex items-center p-2 border border-transparent shadow-sm text-white transition']"
                                             @click="addRoomCategory"
-                                            :disabled="!roomCategoryInput"
-                                            :aria-disabled="!roomCategoryInput"
+                                            :disabled="!roomCategoryInput.trim()"
+                                            :aria-disabled="!roomCategoryInput.trim()"
                                             :title="$t('Add category')"
                                         >
                                             <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-4 w-4"/>
@@ -89,12 +86,23 @@
         <!-- kleiner Farbdot -->
         <span class="inline-block h-2 w-2 rounded-full bg-accent-700/80"></span>
         <span class="truncate max-w-[14rem]">{{ category.name }}</span>
+        <span class="rounded-full bg-surface-sunken px-1.5 py-0.5 text-[11px] leading-none tabular-nums text-text-subtle"
+              :title="$t('Used by {count} rooms', {count: categoryUsage[category.id] ?? 0})">{{ categoryUsage[category.id] ?? 0 }}</span>
         <button
             type="button"
-            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken/70 transition"
+            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface-sunken/70 transition"
+            @click="openRenameModal('category', category)"
+            :title="$t('Rename')"
+            :aria-label="$t('Rename')"
+        >
+          <PropertyIcon name="IconPencil" stroke-width="1.5" class="h-4 w-4"/>
+        </button>
+        <button
+            type="button"
+            class="inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken/70 transition"
             @click="this.showRoomCategoryDeleteModal(category)"
             :title="$t('Remove')"
-            aria-label="Remove category"
+            :aria-label="$t('Remove')"
         >
           <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4"/>
         </button>
@@ -127,15 +135,17 @@
                                             id="roomAttribute"
                                             v-model="roomAttributeInput"
                                             :label="$t('Enter room property')"
+                                            :error="roomAttributeError"
+                                            @update:model-value="roomAttributeError = ''"
                                             v-on:keyup.enter="addRoomAttribute"
                                         />
                                     </div>
                                     <div class="flex items-center ml-2 h-full">
                                         <button
-                                            :class="[roomAttributeInput === '' ? 'bg-text-subtle cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-700 focus:outline-none', 'rounded-full ml-1 inline-flex items-center p-2 border border-transparent shadow-sm text-white transition']"
+                                            :class="[!roomAttributeInput.trim() ? 'bg-text-subtle cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-700 focus:outline-none', 'rounded-full ml-1 inline-flex items-center p-2 border border-transparent shadow-sm text-white transition']"
                                             @click="addRoomAttribute"
-                                            :disabled="!roomAttributeInput"
-                                            :aria-disabled="!roomAttributeInput"
+                                            :disabled="!roomAttributeInput.trim()"
+                                            :aria-disabled="!roomAttributeInput.trim()"
                                             :title="$t('Add property')"
                                         >
                                             <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-4 w-4" />
@@ -154,12 +164,23 @@
       >
         <span class="inline-block h-2 w-2 rounded-full bg-accent-500/80"></span>
         <span class="truncate max-w-[14rem]">{{ attribute.name }}</span>
+        <span class="rounded-full bg-surface-sunken px-1.5 py-0.5 text-[11px] leading-none tabular-nums text-text-subtle"
+              :title="$t('Used by {count} rooms', {count: attributeUsage[attribute.id] ?? 0})">{{ attributeUsage[attribute.id] ?? 0 }}</span>
         <button
             type="button"
-            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken/70 transition"
+            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface-sunken/70 transition"
+            @click="openRenameModal('attribute', attribute)"
+            :title="$t('Rename')"
+            :aria-label="$t('Rename')"
+        >
+          <PropertyIcon name="IconPencil" stroke-width="1.5" class="h-4 w-4"/>
+        </button>
+        <button
+            type="button"
+            class="inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken/70 transition"
             @click="this.showRoomAttributeDeleteModal(attribute)"
             :title="$t('Remove')"
-            aria-label="Remove attribute"
+            :aria-label="$t('Remove')"
         >
           <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4"/>
         </button>
@@ -173,17 +194,40 @@
                             <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">{{ $t('Areas ') }}</h2>
                         </div>
                         <div class="flex w-full justify-between mt-6">
-                            <div class="flex">
-                                <div>
-                                    <BaseUIButton @click="openAddAreaModal()" :label="$t('Add area')" is-add-button />
-                                </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <BaseUIButton @click="openAddAreaModal()" :label="$t('Add area')" is-add-button />
+                                <BaseUIButton
+                                    v-if="areas.length > 1"
+                                    variant="secondary"
+                                    hide-icon
+                                    :label="allAreasAreOpen ? $t('Collapse all') : $t('Expand all')"
+                                    :disabled="hasActiveRoomFilters"
+                                    @click="toggleAllAreas"
+                                />
+                                <BaseUIButton
+                                    v-if="areas.some((area) => area.rooms?.length)"
+                                    variant="secondary"
+                                    icon="IconFileSpreadsheet"
+                                    :label="$t('Export')"
+                                    :title="hasActiveRoomFilters ? $t('Exports the rooms currently shown.') : $t('Exports all rooms.')"
+                                    @click="exportRooms(hasActiveRoomFilters ? visibleRoomIds : [])"
+                                />
                             </div>
-                            <BaseFilter only-icon white-background :has-active-filters="hasActiveRoomFilters">
+                            <div class="flex items-end gap-3">
+                                <div class="w-64">
+                                    <BaseInput
+                                        id="roomSearch"
+                                        v-model="roomSearch"
+                                        :label="$t('Search rooms')"
+                                        is-small
+                                    />
+                                </div>
+                            <BaseFilter only-icon white-background :has-active-filters="hasActivePropertyFilters">
                                 <div class="p-3 space-y-5">
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm font-semibold text-text">{{ $t('Filter rooms') }}</span>
                                         <button type="button"
-                                                v-if="hasActiveRoomFilters"
+                                                v-if="hasActivePropertyFilters"
                                                 class="text-xs text-accent-600 hover:text-accent-700"
                                                 @click="resetRoomFilter">
                                             {{ $t('Reset filters') }}
@@ -205,12 +249,20 @@
                                     />
                                 </div>
                             </BaseFilter>
+                            </div>
                         </div>
                     <div class="flex w-full flex-wrap mt-8">
                         <!-- Modernisierte Liste: Bereiche & Räume -->
-                        <div v-if="hasActiveRoomFilters && filteredAreas.every(area => area.rooms.length === 0)"
+                        <div v-if="hasActiveRoomFilters && filteredAreas.length === 0"
+                             class="w-full my-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/40 p-4 text-sm text-text-subtle">
+                            <span>{{ $t('No rooms found') }}</span>
+                            <button type="button" class="text-accent-600 hover:text-accent-700" @click="resetRoomFilter">
+                                {{ $t('Reset filters') }}
+                            </button>
+                        </div>
+                        <div v-else-if="areas.length === 0"
                              class="w-full my-4 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/40 p-4 text-sm text-text-subtle">
-                            {{ $t('No rooms found') }}
+                            {{ $t('No areas yet. Create an area first, then add rooms to it.') }}
                         </div>
                         <div
                             v-for="area in filteredAreas"
@@ -222,11 +274,11 @@
                                     variant="primary"
                                     hide-icon
                                     @click="changeAreaStatus(area)"
-                                    :aria-expanded="this.opened_areas.includes(area.id)"
+                                    :aria-expanded="isAreaOpen(area)"
                                     :aria-controls="`area-panel-${area.id}`"
                                 >
                                     <PropertyIcon name="IconChevronUp"
-                                        v-if="this.opened_areas.includes(area.id)"
+                                        v-if="isAreaOpen(area)"
                                         class="h-5 w-5"
                                         stroke-width="1.5"
                                     />
@@ -236,11 +288,18 @@
                                         stroke-width="1.5"
                                     />
                                     <span class="sr-only">
-                                        {{ this.opened_areas.includes(area.id) ? $t('Collapse') : $t('Expand') }}
+                                        {{ isAreaOpen(area) ? $t('Collapse') : $t('Expand') }}
                                     </span>
                                 </BaseUIButton>
 
                                 <div class="flex min-w-0 items-center gap-3">
+                                    <SelectionCheckbox
+                                        v-if="area.rooms?.length"
+                                        :checked="areaSelectionState(area) === 'all'"
+                                        :indeterminate="areaSelectionState(area) === 'some'"
+                                        :label="$t('Select all rooms of this area')"
+                                        @toggle="toggleAreaSelection(area)"
+                                    />
                                     <span class="inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-border"
                                           :style="{ backgroundColor: area.color ?? '#000000' }"
                                           :title="$t('Color')"></span>
@@ -265,7 +324,7 @@
                                         <span class="tabular-nums">
                                           {{ area.rooms?.filter(r => !r.temporary).length || 0 }}
                                         </span>
-                                        <span class="opacity-80">{{ $t('Rooms') }}</span>
+                                        <span class="opacity-80">{{ (area.rooms?.filter(r => !r.temporary).length || 0) === 1 ? $t('Room') : $t('Rooms') }}</span>
                                       </span>
 
                                         <!-- Temporary -->
@@ -302,7 +361,7 @@
                                                       @click="openEditAreaModal(area)"/>
                                         <BaseMenuItem :icon="IconCopy" title="Duplicate" white-menu-background
                                                       @click="duplicateArea(area)"/>
-                                        <BaseMenuItem :icon="IconRecycle" title="Remove all rooms" white-menu-background
+                                        <BaseMenuItem v-if="area.rooms?.length" :icon="IconRecycle" title="Remove all rooms" white-menu-background
                                                       @click="openDeleteAllRoomsModal(area)"/>
                                         <BaseMenuItem :icon="IconTrash" title="In the recycle bin" white-menu-background
                                                       @click="openSoftDeleteAreaModal(area)"/>
@@ -313,7 +372,7 @@
                             <!-- Inhalt (ein-/ausklappbar) -->
                             <Transition name="accordion">
                                 <div
-                                    v-if="this.opened_areas.includes(area.id)"
+                                    v-if="isAreaOpen(area)"
                                     :id="`area-panel-${area.id}`"
                                     class="px-5 pb-5"
                                 >
@@ -336,7 +395,7 @@
                                             {{ $t('No rooms yet') }}.
                                         </div>
 
-                                        <div v-else v-for="element in area.rooms">
+                                        <div v-else v-for="element in area.rooms" :key="element.id">
                                                 <div v-show="!element.temporary" class="relative group mt-3">
                                                     <div
                                                         class="relative rounded-2xl border border-border-subtle bg-white/90 p-4 pl-5 shadow-sm ring-1 ring-transparent transition hover:border-text-inverse/30 hover:shadow-md focus-within:ring-2 focus-within:ring-text-inverse/30"
@@ -345,6 +404,11 @@
                                                             <!-- Titel & Meta -->
                                                             <div class="min-w-0">
                                                                 <div class="flex items-center gap-2">
+                                                                    <SelectionCheckbox
+                                                                        :checked="selectedRoomIds.includes(element.id)"
+                                                                        :label="$t('Select room')"
+                                                                        @toggle="toggleRoomSelection(element.id)"
+                                                                    />
                                                                     <span class="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-border"
                                                                           :style="{ backgroundColor: element.color ?? area.color ?? '#000000' }"
                                                                           :title="element.color ? $t('Color') : $t('Inherit color from area')"></span>
@@ -362,16 +426,31 @@
                                                                         <PropertyIcon name="IconCalendar" class="h-3.5 w-3.5"
                                                                                       stroke-width="1.5"/>
                                                                         {{
-                                                                            $t('created on { created_at } by', {'created_at': element.created_at})
+                                                                            element.created_by ? $t('created on { created_at } by', {'created_at': element.created_at}) : element.created_at
                                                                         }}
                                                                     </span>
                                                                     <UserPopoverTooltip
+                                                                        v-if="element.created_by"
                                                                         :user="element.created_by"
                                                                         lazy-load
                                                                         :id="element.created_by.id + '-room-' + element.id"
                                                                         height="5"
                                                                         width="5"
                                                                     />
+                                                                    <span v-if="roomRowFacts(element).capacity" class="inline-flex items-center gap-1" :title="$t('Capacity')">
+                                                                        <PropertyIcon name="IconArmchair" class="h-3.5 w-3.5" stroke-width="1.5"/>
+                                                                        {{ roomRowFacts(element).capacity }}
+                                                                    </span>
+                                                                    <span v-for="categoryName in roomRowFacts(element).categories" :key="categoryName"
+                                                                          class="rounded-full border border-border-subtle bg-surface-sunken px-2 py-0.5">
+                                                                        {{ categoryName }}
+                                                                    </span>
+                                                                    <span v-if="roomRowFacts(element).hiddenFromCalendars"
+                                                                          class="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-warning"
+                                                                          :title="$t('If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.')">
+                                                                        <PropertyIcon name="IconCalendarOff" class="h-3.5 w-3.5" stroke-width="1.5"/>
+                                                                        {{ $t('Not relevant for disposition') }}
+                                                                    </span>
                                                                 </div>
                                                             </div>
 
@@ -382,7 +461,8 @@
                                                                     type="button"
                                                                     class="inline-flex items-center rounded-lg p-1.5 text-text-subtle hover:bg-surface-sunken hover:text-text focus-visible:visible focus:outline-none focus:ring-2 focus:ring-border"
                                                                     @click="openEditRoomModal(element, area)"
-                                                                    aria-label="Edit"
+                                                                    :title="$t('Edit')"
+                                                                    :aria-label="$t('Edit')"
                                                                 >
                                                                     <PropertyIcon name="IconEdit" class="h-4.5 w-4.5" stroke-width="1.75"/>
                                                                 </button>
@@ -390,7 +470,8 @@
                                                                     type="button"
                                                                     class="inline-flex items-center rounded-lg p-1.5 text-text-subtle hover:bg-surface-sunken hover:text-text focus-visible:visible focus:outline-none focus:ring-2 focus:ring-border"
                                                                     @click="duplicateRoom(element)"
-                                                                    aria-label="Duplicate"
+                                                                    :title="$t('Duplicate')"
+                                                                    :aria-label="$t('Duplicate')"
                                                                 >
                                                                     <PropertyIcon name="IconCopy" class="h-4.5 w-4.5" stroke-width="1.75"/>
                                                                 </button>
@@ -440,6 +521,7 @@
                                         <Transition name="fade">
                                             <div v-show="showTemporaryRooms.includes(area.id)">
                                                 <div v-for="element in area.rooms.filter(r => r.temporary)"
+                                                    :key="element.id"
                                                     class="mt-2"
                                                 >
                                                         <div class="relative group mt-3">
@@ -453,7 +535,11 @@
                                                                     <!-- Titel & Meta -->
                                                                     <div class="min-w-0">
                                                                         <div class="flex items-center gap-2">
-
+                                                                            <SelectionCheckbox
+                                                                                :checked="selectedRoomIds.includes(element.id)"
+                                                                                :label="$t('Select room')"
+                                                                                @toggle="toggleRoomSelection(element.id)"
+                                                                            />
                                                                             <Link
                                                                                 :href="route('rooms.show', { room: element.id })"
                                                                                 class="text-sm/5 font-semibold text-text block truncate hover:underline decoration-warning"
@@ -505,10 +591,11 @@
                                                                                        class="h-3.5 w-3.5"
                                                                                        stroke-width="1.5"/>
                                                                             {{
-                                                                                  $t('created on { created_at } by', {'created_at': element.created_at})
+                                                                                  element.created_by ? $t('created on { created_at } by', {'created_at': element.created_at}) : element.created_at
                                                                               }}
                                                                           </span>
                                                                             <UserPopoverTooltip
+                                                                                v-if="element.created_by"
                                                                                 :user="element.created_by"
                                                                                 lazy-load
                                                                                 :id="element.created_by.id + '-room-' + element.id"
@@ -525,7 +612,8 @@
                                                                             type="button"
                                                                             class="inline-flex items-center rounded-lg p-1.5 text-warning hover:bg-warning-surface hover:text-warning focus-visible:visible focus:outline-none focus:ring-2 focus:ring-warning-border"
                                                                             @click="openEditRoomModal(element, area)"
-                                                                            aria-label="Edit"
+                                                                            :title="$t('Edit')"
+                                                                            :aria-label="$t('Edit')"
                                                                         >
                                                                             <PropertyIcon name="IconEdit" class="h-4.5 w-4.5"
                                                                                       stroke-width="1.75"/>
@@ -534,7 +622,8 @@
                                                                             type="button"
                                                                             class="inline-flex items-center rounded-lg p-1.5 text-warning hover:bg-warning-surface hover:text-warning focus-visible:visible focus:outline-none focus:ring-2 focus:ring-warning-border"
                                                                             @click="duplicateRoom(element)"
-                                                                            aria-label="Duplicate"
+                                                                            :title="$t('Duplicate')"
+                                                                            :aria-label="$t('Duplicate')"
                                                                         >
                                                                             <PropertyIcon name="IconCopy" class="h-4.5 w-4.5"
                                                                                       stroke-width="1.75"/>
@@ -782,6 +871,20 @@
                 required
                 :error="editRoomForm.errors.name"
             />
+            <div v-if="areas.length > 1">
+                <ArtworkBaseListbox
+                    v-model="editRoomArea"
+                    :items="areaOptions"
+                    by="id"
+                    option-label="name"
+                    label="Room area"
+                    show-color-indicator
+                />
+                <p v-if="editRoomForm.errors.area_id" class="mt-1 text-xs text-danger" role="alert">{{ editRoomForm.errors.area_id }}</p>
+                <p v-else-if="editRoomArea?.id !== editRoomOriginalAreaId" class="mt-1 text-xs text-text-muted">
+                    {{ $t('The room moves to this area when you save. Events, access rights and its place in the calendar order stay as they are.') }}
+                </p>
+            </div>
             <BaseTextarea
                 id="editRoomDescription"
                 v-model="editRoomForm.description"
@@ -928,14 +1031,70 @@
     <ConfirmationComponent v-if="roomCategoryDeleteModalVisible"
                            :confirm="$t('Delete room category')"
                            :titel="$t('Delete room category')"
-                           :description="$t('Are you sure you want to delete the room category? This irrevocably deletes all room assignments to this room category.')"
+                           :description="$t('Are you sure you want to delete the room category? This irrevocably deletes all room assignments to this room category.') + ' ' + $t('Used by {count} rooms', {count: categoryUsage[roomCategoryToDelete?.id] ?? 0}) + '.'"
                            @closed="afterDeleteRoomCategoryConfirm"/>
     <!-- Delete Room Attribute Modal -->
     <ConfirmationComponent v-if="roomAttributeDeleteModalVisible"
                            :confirm="$t('Delete room property')"
                            :titel="$t('Delete room property')"
-                           :description="$t('Are you sure you want to delete the room property? This irrevocably deletes all room assignments for this room property.')"
+                           :description="$t('Are you sure you want to delete the room property? This irrevocably deletes all room assignments for this room property.') + ' ' + $t('Used by {count} rooms', {count: attributeUsage[roomAttributeToDelete?.id] ?? 0}) + '.'"
                            @closed="afterDeleteRoomAttributeConfirm"/>
+    <!-- Kategorie oder Eigenschaft umbenennen -->
+    <ArtworkBaseModal
+        v-if="renameTarget"
+        :title="renameTarget.kind === 'category' ? $t('Rename room category') : $t('Rename room property')"
+        :description="$t('The assignments to rooms are kept.')"
+        modal-size="sm:max-w-lg"
+        @close="closeRenameModal"
+    >
+        <form id="renamePropertyForm" @submit.prevent="submitRename">
+            <BaseInput
+                id="renamePropertyName"
+                v-model="renameForm.name"
+                label="Name"
+                required
+                autofocus
+                :error="renameForm.errors.name"
+                @update:model-value="renameForm.clearErrors()"
+            />
+        </form>
+        <template #footer>
+            <BaseUIButton label="Cancel" is-cancel-button hide-icon :disabled="renameForm.processing" @click="closeRenameModal"/>
+            <BaseUIButton
+                type="submit"
+                form="renamePropertyForm"
+                label="Save"
+                variant="primary"
+                icon="IconDeviceFloppy"
+                :processing="renameForm.processing"
+                :disabled="renameForm.processing || renameForm.name.trim() === ''"
+            />
+        </template>
+    </ArtworkBaseModal>
+    <!-- Mehrfachauswahl -->
+    <RoomBulkBar
+        :count="selectedRoomIds.length"
+        :processing="bulkDeleting"
+        @edit="bulkEditMode = $event"
+        @export="exportRooms(selectedRoomIds)"
+        @delete="showBulkDeleteModal = true"
+        @clear="selectedRoomIds = []"
+    />
+    <RoomBulkEditModal
+        v-if="bulkEditMode"
+        :mode="bulkEditMode"
+        :room-ids="selectedRoomIds"
+        :categories="room_categories"
+        :attributes="room_attributes"
+        :areas="areaOptions"
+        @close="bulkEditMode = null"
+        @done="onBulkEditDone"
+    />
+    <ConfirmationComponent v-if="showBulkDeleteModal"
+                           :confirm="$t('In the recycle bin')"
+                           :titel="$t('Rooms in the recycle bin')"
+                           :description="$t('Are you sure you want to put the {count} selected rooms in the recycle bin?', {count: selectedRoomIds.length})"
+                           @closed="afterBulkDeleteConfirm"/>
 </template>
 
 <script>
@@ -962,10 +1121,31 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import RoomPropertyCheckboxGroup from "@/Pages/Areas/Components/RoomPropertyCheckboxGroup.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import RoomBulkBar from "@/Pages/Areas/Components/RoomBulkBar.vue";
+import RoomBulkEditModal from "@/Pages/Areas/Components/RoomBulkEditModal.vue";
+import SelectionCheckbox from "@/Pages/Areas/Components/SelectionCheckbox.vue";
+import axios from "axios";
+import {
+    allAreasOpened,
+    filterAreas,
+    hasActiveRoomCriteria,
+    nameAlreadyExists,
+    pruneSelection,
+    roomIdsOf,
+    roomRowFacts,
+    selectionState,
+    toggleRoomIds,
+    usageCounts,
+} from "@/Pages/Areas/Composables/areaListTools.js";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        ArtworkBaseListbox,
+        RoomBulkBar,
+        RoomBulkEditModal,
+        SelectionCheckbox,
         RoomAddressFields,
         SettingsGuideBanner,
         PropertyIcon,
@@ -1009,6 +1189,9 @@ export default defineComponent({
             showEditRoomModal: false,
             roomFilterCategoryIds: [],
             roomFilterAttributeIds: [],
+            roomSearch: '',
+            roomCategoryError: '',
+            roomAttributeError: '',
             newAreaForm: useForm({
                 name: ''
             }),
@@ -1060,12 +1243,25 @@ export default defineComponent({
                 color: '#000000',
                 rooms: [],
             }),
-            showInvalidNameErrorText: false,
             roomCategoryDeleteModalVisible: false,
             roomCategoryToDelete: null,
             roomAttributeDeleteModalVisible: false,
             roomAttributeToDelete: null,
+            editRoomArea: null,
+            editRoomOriginalAreaId: null,
+            renameTarget: null,
+            renameForm: useForm({name: ''}),
+            selectedRoomIds: [],
+            bulkEditMode: null,
+            showBulkDeleteModal: false,
+            bulkDeleting: false,
         }
+    },
+    watch: {
+        // Räume, die es nicht mehr gibt, fallen aus der Auswahl
+        areas() {
+            this.selectedRoomIds = pruneSelection(this.selectedRoomIds, this.areas);
+        },
     },
     computed: {
         roomDeleteDescriptionText() {
@@ -1095,19 +1291,38 @@ export default defineComponent({
             // ein Raum kann nicht sein eigener Nebenraum sein
             return this.adjoiningRoomItems.filter((room) => room.id !== this.editRoomForm.id);
         },
-        hasActiveRoomFilters() {
+        roomCriteria() {
+            return {
+                search: this.roomSearch,
+                categoryIds: this.roomFilterCategoryIds,
+                attributeIds: this.roomFilterAttributeIds,
+            };
+        },
+        hasActivePropertyFilters() {
             return this.roomFilterCategoryIds.length > 0 || this.roomFilterAttributeIds.length > 0;
         },
+        // Suche oder Filter aktiv: Areale ohne Treffer fallen weg, die übrigen stehen aufgeklappt
+        hasActiveRoomFilters() {
+            return hasActiveRoomCriteria(this.roomCriteria);
+        },
         filteredAreas() {
-            if (!this.hasActiveRoomFilters) {
-                return this.areas;
-            }
-
-            return this.areas.map((area) => ({
-                ...area,
-                rooms: area.rooms.filter((room) => this.roomMatchesFilter(room))
-            }));
-        }
+            return filterAreas(this.areas, this.roomCriteria);
+        },
+        allAreasAreOpen() {
+            return allAreasOpened(this.areas, this.opened_areas);
+        },
+        areaOptions() {
+            return this.areas.map((area) => ({id: area.id, name: area.name, color: area.color}));
+        },
+        categoryUsage() {
+            return usageCounts(this.areas, 'room_categories');
+        },
+        attributeUsage() {
+            return usageCounts(this.areas, 'room_attributes');
+        },
+        visibleRoomIds() {
+            return roomIdsOf(this.filteredAreas);
+        },
     },
     methods: {
         IconTrash,
@@ -1116,6 +1331,90 @@ export default defineComponent({
         IconEdit,
         IconClock,
         IconLayoutGrid,
+        roomRowFacts,
+        isAreaOpen(area) {
+            return this.hasActiveRoomFilters || this.opened_areas.includes(area.id);
+        },
+        toggleAllAreas() {
+            router.patch(
+                `/users/${this.$page.props.auth.user.id}/areas`,
+                {opened_areas: this.allAreasAreOpen ? [] : this.areas.map((area) => area.id)},
+                {preserveScroll: true, preserveState: true}
+            );
+        },
+        toggleRoomSelection(roomId) {
+            this.selectedRoomIds = toggleRoomIds(this.selectedRoomIds, [roomId]);
+        },
+        // bei aktiver Suche oder aktivem Filter gilt "alle" für die angezeigten Räume des Areals
+        areaSelectionState(area) {
+            return selectionState(this.selectedRoomIds, roomIdsOf([area]));
+        },
+        toggleAreaSelection(area) {
+            this.selectedRoomIds = toggleRoomIds(this.selectedRoomIds, roomIdsOf([area]));
+        },
+        exportRooms(roomIds = []) {
+            window.location.href = route('rooms.export', roomIds.length ? {ids: roomIds.join(',')} : {});
+        },
+        reloadRooms(onSuccess = null) {
+            router.reload({only: ['areas'], preserveScroll: true, onSuccess: () => onSuccess?.()});
+        },
+        onBulkEditDone() {
+            this.bulkEditMode = null;
+            this.reloadRooms();
+        },
+        afterBulkDeleteConfirm(confirmed) {
+            this.showBulkDeleteModal = false;
+            if (confirmed) {
+                this.bulkDeleteRooms(
+                    [...this.selectedRoomIds],
+                    this.$t('The rooms have been successfully moved to the trash.')
+                );
+            }
+        },
+        // ein Request für alle Räume; die Erfolgsmeldung kommt erst nach der Bestätigung des Servers
+        bulkDeleteRooms(roomIds, successDescription) {
+            if (this.bulkDeleting || roomIds.length === 0) {
+                return;
+            }
+            this.bulkDeleting = true;
+            axios.post(route('rooms.bulk-delete'), {ids: roomIds})
+                .then(() => this.reloadRooms(() => this.showSuccess(this.$t('Rooms in the recycle bin'), successDescription)))
+                .catch(() => this.reloadRooms())
+                .finally(() => this.bulkDeleting = false);
+        },
+        openRenameModal(kind, item) {
+            this.renameTarget = {kind, id: item.id};
+            this.renameForm.name = item.name;
+            this.renameForm.clearErrors();
+        },
+        closeRenameModal() {
+            this.renameTarget = null;
+            this.renameForm.reset();
+            this.renameForm.clearErrors();
+        },
+        submitRename() {
+            const isCategory = this.renameTarget.kind === 'category';
+            const name = this.renameForm.name.trim();
+            const others = (isCategory ? this.room_categories : this.room_attributes)
+                .filter((item) => item.id !== this.renameTarget.id);
+            if (nameAlreadyExists(others, name)) {
+                this.renameForm.setError('name', this.$t('This name already exists.'));
+                return;
+            }
+            this.renameForm.name = name;
+            this.renameForm.patch(
+                isCategory
+                    ? route('room_categories.update', {roomCategory: this.renameTarget.id})
+                    : route('room_attribute.update', {roomAttribute: this.renameTarget.id}),
+                {preserveScroll: true, onSuccess: () => this.closeRenameModal()}
+            );
+        },
+        showSuccess(heading, description) {
+            this.successHeading = heading;
+            this.successDescription = description;
+            this.showSuccessModal = true;
+            setTimeout(() => this.closeSuccessModal(), 2000);
+        },
         afterSoftDeleteAllRoomsConfirm(confirmed) {
             if (confirmed) {
                 this.softDeleteAllRooms()
@@ -1143,7 +1442,7 @@ export default defineComponent({
         },
         afterDeleteRoomCategoryConfirm(confirmed) {
             if (confirmed) {
-                router.delete(route('room_categories.destroy', {roomCategory: this.roomCategoryToDelete.id}));
+                router.delete(route('room_categories.destroy', {roomCategory: this.roomCategoryToDelete.id}), {preserveScroll: true});
                 this.roomCategoryToDelete = null;
             }
             this.roomCategoryDeleteModalVisible = false;
@@ -1154,50 +1453,48 @@ export default defineComponent({
         },
         afterDeleteRoomAttributeConfirm(confirmed) {
             if (confirmed) {
-                router.delete(route('room_attribute.destroy', {roomAttribute: this.roomAttributeToDelete.id}));
+                router.delete(route('room_attribute.destroy', {roomAttribute: this.roomAttributeToDelete.id}), {preserveScroll: true});
                 this.roomAttributeToDelete = null;
             }
             this.roomAttributeDeleteModalVisible = false;
         },
-        checkNameRegex(name) {
-            //Leerzeichen am Anfang und am Ende des Strings sind nicht erlaubt, aber innerhalb des Strings
-            const regex = /^(?!\s)(?:(?!\s+$)\s|\S+\s*\S*)*(?<!\s)$/;
-            return regex.test(name);
-        },
         addRoomCategory() {
-            if (this.checkNameRegex(this.roomCategoryInput)) {
-                this.showInvalidNameErrorText = false;
-                router.post(
-                    route('room_categories.store'),
-                    {
-                        name: this.roomCategoryInput
-                    },
-                    {
-                        onSuccess: () => this.roomCategoryInput = ''
-                    }
-                );
-            } else {
-                this.showInvalidNameErrorText = true;
+            const name = this.roomCategoryInput.trim();
+            if (name === '') {
+                return;
             }
-        },
-        deleteRoomAttribute(attribute) {
-            router.delete(route('room_attribute.destroy', {roomAttribute: attribute.id}));
+            if (nameAlreadyExists(this.room_categories, name)) {
+                this.roomCategoryError = this.$t('This name already exists.');
+                return;
+            }
+            router.post(route('room_categories.store'), {name}, {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    this.roomCategoryInput = '';
+                    this.roomCategoryError = '';
+                },
+                onError: (errors) => this.roomCategoryError = errors.name ?? '',
+            });
         },
         addRoomAttribute() {
-            if (this.checkNameRegex(this.roomAttributeInput)) {
-                this.showInvalidNameErrorText = false;
-                router.post(
-                    route('room_attribute.store'),
-                    {
-                        name: this.roomAttributeInput
-                    },
-                    {
-                        onSuccess: () => this.roomAttributeInput = ''
-                    }
-                );
-            } else {
-                this.showInvalidNameErrorText = true;
+            const name = this.roomAttributeInput.trim();
+            if (name === '') {
+                return;
             }
+            if (nameAlreadyExists(this.room_attributes, name)) {
+                this.roomAttributeError = this.$t('This name already exists.');
+                return;
+            }
+            router.post(route('room_attribute.store'), {name}, {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    this.roomAttributeInput = '';
+                    this.roomAttributeError = '';
+                },
+                onError: (errors) => this.roomAttributeError = errors.name ?? '',
+            });
         },
         changeAreaStatus(area) {
             if (!this.opened_areas.includes(area.id)) {
@@ -1233,17 +1530,10 @@ export default defineComponent({
                 onSuccess: () => this.closeAddAreaModal(),
             });
         },
-        roomMatchesFilter(room) {
-            const matchesCategories = this.roomFilterCategoryIds.length === 0
-                || room.room_categories?.some((category) => this.roomFilterCategoryIds.includes(category.id));
-            const matchesAttributes = this.roomFilterAttributeIds.length === 0
-                || room.room_attributes?.some((attribute) => this.roomFilterAttributeIds.includes(attribute.id));
-
-            return matchesCategories && matchesAttributes;
-        },
         resetRoomFilter() {
             this.roomFilterCategoryIds = [];
             this.roomFilterAttributeIds = [];
+            this.roomSearch = '';
         },
         addRoom() {
             this.newRoomForm.post(
@@ -1285,10 +1575,10 @@ export default defineComponent({
             });
         },
         duplicateArea(area) {
-            router.post(`/areas/${area.id}/duplicate`);
+            router.post(`/areas/${area.id}/duplicate`, {}, {preserveScroll: true});
         },
         duplicateRoom(room) {
-            router.post(`/rooms/${room.id}/duplicate`);
+            router.post(`/rooms/${room.id}/duplicate`, {}, {preserveScroll: true});
         },
         openSoftDeleteAreaModal(area) {
             this.areaToSoftDelete = area;
@@ -1299,12 +1589,15 @@ export default defineComponent({
             this.areaToSoftDelete = null;
         },
         softDeleteArea() {
-            router.delete(`/areas/${this.areaToSoftDelete.id}`);
+            // Erfolgsmeldung erst, wenn der Server das Löschen bestätigt hat
+            router.delete(`/areas/${this.areaToSoftDelete.id}`, {
+                preserveScroll: true,
+                onSuccess: () => this.showSuccess(
+                    this.$t('Area in the recycle bin'),
+                    this.$t('The area and all associated rooms have been successfully trashed.')
+                ),
+            });
             this.closeSoftDeleteAreaModal()
-            this.successHeading = this.$t('Area in the recycle bin')
-            this.successDescription = this.$t('The area and all associated rooms have been successfully trashed.')
-            this.showSuccessModal = true;
-            setTimeout(() => this.closeSuccessModal(), 2000)
         },
         openDeleteAllRoomsModal(area) {
             this.areaToDeleteRoomsFrom = area;
@@ -1321,24 +1614,9 @@ export default defineComponent({
             this.successDescription = "";
         },
         softDeleteAllRooms() {
-            // Nacheinander löschen: parallele Inertia-Besuche brechen sich gegenseitig ab
             const roomIds = (this.areaToDeleteRoomsFrom?.rooms ?? []).map((room) => room.id);
             this.closeDeleteAllRoomsModal();
-            const deleteNext = () => {
-                const roomId = roomIds.shift();
-                if (roomId === undefined) {
-                    this.successHeading = this.$t('Room in the recycle bin')
-                    this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
-                    this.showSuccessModal = true;
-                    setTimeout(() => this.closeSuccessModal(), 2000)
-                    return;
-                }
-                router.delete(`/rooms/${roomId}`, {
-                    preserveScroll: true,
-                    onFinish: deleteNext,
-                });
-            };
-            deleteNext();
+            this.bulkDeleteRooms(roomIds, this.$t('The rooms have been successfully moved to the trash.'));
         },
         openEditRoomModal(room, area = null) {
             this.editRoomForm.id = room.id;
@@ -1346,6 +1624,8 @@ export default defineComponent({
             this.editRoomForm.color = room.color;
             this.editRoomInheritColor = !room.color;
             this.editRoomAreaColor = area?.color ?? '#000000';
+            this.editRoomArea = this.areaOptions.find((option) => option.id === area?.id) ?? null;
+            this.editRoomOriginalAreaId = area?.id ?? null;
             this.editRoomForm.description = room.description ?? '';
             this.editRoomForm.start_date = room.start_date;
             this.editRoomForm.end_date = room.end_date;
@@ -1377,12 +1657,14 @@ export default defineComponent({
             this.roomToSoftDelete = null;
         },
         softDeleteRoom() {
-            router.delete(`/rooms/${this.roomToSoftDelete.id}`, {preserveScroll: true});
+            router.delete(`/rooms/${this.roomToSoftDelete.id}`, {
+                preserveScroll: true,
+                onSuccess: () => this.showSuccess(
+                    this.$t('Room in the recycle bin'),
+                    this.$t('The room has been successfully moved to the trash.')
+                ),
+            });
             this.closeSoftDeleteRoomModal();
-            this.successHeading = this.$t('Room in the recycle bin')
-            this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
-            this.showSuccessModal = true;
-            setTimeout(() => this.closeSuccessModal(), 2000);
         },
         switchVisibility(areaId) {
             if (this.showTemporaryRooms.includes(areaId)) {
@@ -1398,6 +1680,14 @@ export default defineComponent({
             if (this.editRoomForm.capacity === '') {
                 this.editRoomForm.capacity = null;
             }
+
+            // Areal nur mitschicken, wenn es gewechselt wurde
+            this.editRoomForm.transform((data) => {
+                const {area_id: _unused, ...rest} = data;
+                return this.editRoomArea?.id && this.editRoomArea.id !== this.editRoomOriginalAreaId
+                    ? {...rest, area_id: this.editRoomArea.id}
+                    : rest;
+            });
 
             if (this.editRoomInheritColor) {
                 // null = Farbe des Areals erben

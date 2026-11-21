@@ -74,7 +74,13 @@ class ShiftTrashService
         // Besetzung je Schicht in EINER Abfrage zählen (statt einer Zählabfrage pro Zeile)
         $workerCounts = $this->workerCountsDeletedWithShifts($paginator->getCollection());
 
-        return $paginator->through(fn (Shift $shift): array => $this->present($shift, $workerCounts[$shift->id] ?? 0));
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)
+            ->forModels($paginator->getCollection());
+
+        return $paginator->through(fn (Shift $shift): array => [
+            ...$this->present($shift, $workerCounts[$shift->id] ?? 0),
+            'trash' => $trashInfo[$shift->id] ?? null,
+        ]);
     }
 
     /**

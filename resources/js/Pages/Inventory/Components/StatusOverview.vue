@@ -66,7 +66,7 @@ const activeStyle = (item: { color?: string, index: number }) => {
 const toggleStatus = (id: string | null) => {
     const newId = (id !== null && String(props.activeStatusId) === id) ? null : id
     router.reload({
-        data: { status_id: newId },
+        data: { status_id: newId, page: 1 },
         preserveScroll: true,
         // Sidebar & Chips hängen an hasActiveFilter/categories -> mitladen,
         // sonst zeigen sie nach einem Status-Toggle veraltete Zustände.

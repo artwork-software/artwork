@@ -6,8 +6,8 @@
                 <ToolbarHeader
                     band
                     :icon="IconUsersGroup"
-                    :title="$t('Departments')"
-                    :description="`${totalDepartments} ${$t('Departments')}`"
+                    :title="$t('Teams')"
+                    :description="`${totalDepartments} ${$t('Teams')}`"
                     v-model="department_query"
                     :search-enabled="true"
                     :search-label="$t('Search for teams')"
@@ -360,7 +360,7 @@ function onPageChange({ page: newPage, pageSize }: { page: number; pageSize: num
 
 /* ---------- Spalten ---------- */
 const cols = ref<TableColumn[]>([
-    { key: 'department', label: 'Department' },
+    { key: 'department', label: 'Team' },
     { key: 'members', label: 'Members', width: '260px' },
 ])
 

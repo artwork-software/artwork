@@ -25,8 +25,11 @@
                 <div v-if="loadBudgetError" class="text-danger text-sm">
                     {{ loadBudgetError }}
                 </div>
-                <div v-else-if="isLoadingBudget" class="text-text-subtle text-sm">
-                    {{ $t('Loading data...') }}
+                <div v-else-if="isLoadingBudget" class="animate-pulse space-y-3" role="status" :aria-label="$t('Loading data...')">
+                    <div class="h-16 rounded-lg bg-surface-sunken"></div>
+                    <div class="h-10 rounded-lg bg-surface-sunken"></div>
+                    <div v-for="row in 5" :key="row" class="h-12 rounded bg-surface-sunken/70"></div>
+                    <div class="h-10 rounded-lg bg-surface-sunken"></div>
                 </div>
                 <div v-else class="text-text-subtle text-sm">
                     {{ $t('No budget data available.') }}
@@ -40,6 +43,7 @@
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 import {usePage} from "@inertiajs/vue3";
 import axios from 'axios';
+import { projectHeaderVisibility } from "@/Pages/Projects/Tab/Components/projectHeaderVisibility.js";
 import { stopListeningOnPrivateChannel } from "@/Composeables/Listener/echoChannel.js";
 
 export default{
@@ -86,6 +90,7 @@ export default{
         this.initBudgetBroadcast();
     },
     beforeUnmount() {
+        projectHeaderVisibility.hidden = false;
         this.destroyBudgetBroadcast();
     },
     methods: {
@@ -184,6 +189,7 @@ export default{
 
         changeProjectHeaderVisualisation(boolean) {
             this.hideProjectHeader = boolean;
+            projectHeaderVisibility.hidden = boolean;
         },
         handleBudgetUpdated() {
             // Force reload budget data after deletion

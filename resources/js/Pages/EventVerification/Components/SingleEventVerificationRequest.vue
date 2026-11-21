@@ -1,6 +1,8 @@
 <template>
     <BaseCard elevation="raised" class="w-full">
         <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
+            <!-- Auswahlkästchen der Mehrfachauswahl -->
+            <slot name="select" />
             <div class="p-1 rounded-lg w-1" :class="statuses[eventVerification.status]"></div>
             <div class="w-full">
                 <p class="text-sm font-lexend font-semibold text-text" :style="{color: eventVerification?.event?.event_type?.hex_code}">
@@ -66,48 +68,6 @@
             </div>
         </div>
     </BaseCard>
-    <!--<td class="py-4 pr-3 pl-4 text-sm font-medium whitespace-nowrap text-text sm:pl-3">
-        <div>
-            <div class="flex items-start gap-x-1">
-                <component is="IconCalendar" class="size-6 text-text-subtle hover:text-accent-600 duration-200 ease-in-out cursor-pointer" @click="openPlanningCalendarWithEventId" aria-hidden="true" />
-                <p class="text-sm/6 font-semibold text-text">{{ eventVerification?.event?.eventName }}</p>
-            </div>
-            <p class="mt-1 flex items-center gap-x-1 text-[10px] text-text-subtle">
-                <span class="font-lexend font-bold">{{ $t('Start') }}:</span>
-                <span class="font-lexend">{{ eventVerification?.event?.start_time }}</span>
-                <span class="font-lexend font-bold">{{ $t('End') }}:</span>
-                <span class="font-lexend">{{ eventVerification?.event?.end_time }}</span>
-                <span class="font-lexend font-bold">{{ $t('Room') }}:</span>
-                <span class="font-lexend">{{ eventVerification?.event?.room?.name }}</span>
-            </p>
-        </div>
-    </td>
-    <td class="px-3 py-4 text-sm whitespace-nowrap text-text-subtle">{{ eventVerification.created_at }}</td>
-    <td class="px-3 py-4 text-sm whitespace-nowrap text-text-subtle">
-        <div class="flex items-center gap-x-2">
-            <UserPopoverTooltip :user="eventVerification.requester" height="7" width="7" />
-            <span class="font-lexend font-bold">
-                {{ eventVerification.requester.full_name }}
-            </span>
-        </div>
-    </td>
-    <td class="px-3 py-4 text-sm whitespace-nowrap text-text-subtle">
-        <div class="flex items-center justify-center gap-x-2">
-            <div>
-                <BaseUIButton variant="primary" hide-icon @click="approveRequest" v-if="eventVerification.status === 'pending'" class="!bg-success hover:!bg-success capitalize text-xs font-lexend">
-                    <component is="IconCheckbox" class="size-4" aria-hidden="true" />
-                </BaseUIButton>
-            </div>
-            <div>
-                <BaseUIButton variant="primary" hide-icon @click="showRejectEventVerificationRequestModal = true" v-if="eventVerification.status === 'pending'" class="!bg-danger hover:!bg-danger capitalize text-xs font-lexend">
-                    <component is="IconBan" class="size-4" aria-hidden="true" />
-                </BaseUIButton>
-            </div>
-        </div>
-
-        <p v-if="eventVerification.status !== 'pending'" :class="[statuses[eventVerification.status], 'mt-0.5 rounded-md px-1.5 py-0.5 text-xs text-center font-medium whitespace-nowrap ring-1 ring-inset']" class="first-letter:capitalize">{{ $t(eventVerification.status) }}</p>
-    </td>-->
-
     <RejectEventVerificationRequestModal
         v-if="showRejectEventVerificationRequestModal"
         :event-verification="eventVerification"

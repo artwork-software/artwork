@@ -30,8 +30,7 @@ final class CrmPropertyValueValidator
         CrmContactType $contactType,
         array $propertyValues,
         ?array $requireFilledAmong = null
-    ): void
-    {
+    ): void {
         $typeProperties = $contactType->properties()->get()->keyBy('id');
         // Eigenschaften außerhalb des Typs (Altbestand) werden nur auf ihr Format geprüft
         $otherProperties = CrmProperty::query()
@@ -59,7 +58,7 @@ final class CrmPropertyValueValidator
             }
 
             if ($this->isEmpty($property, $value)) {
-                if ($property->pivot?->is_required) {
+                if ($property->getRelationValue('pivot')?->is_required) {
                     $errors['property_values.' . $propertyId] = __('This is a mandatory field.');
                 }
                 continue;
@@ -74,7 +73,7 @@ final class CrmPropertyValueValidator
         foreach ($requireFilledAmong ?? [] as $propertyId) {
             $property = $typeProperties->get((int) $propertyId);
             $isMissing = $property !== null
-                && $property->pivot->is_required
+                && $property->getRelationValue('pivot')?->is_required
                 && $property->type !== CrmPropertyTypeEnum::UPLOAD
                 && !array_key_exists($property->id, $propertyValues);
 

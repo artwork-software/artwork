@@ -313,7 +313,7 @@ const currentArticleIdsCsv = computed(() =>
 const filterIssueByArticleIds = () => {
     router.reload({
         preserveState: true, preserveScroll: true,
-        data: {article_ids: currentArticleIdsCsv.value || undefined},
+        data: {article_ids: currentArticleIdsCsv.value || undefined, page: 1},
         only: ['issues', 'articlesInFilter'], replace: true
     });
 };
@@ -335,7 +335,8 @@ const filters = ref({
 });
 
 // Sortierung (Spaltenköpfe): aufsteigend, absteigend, zurück zur Standardreihenfolge
-const sorting = ref({sort: initial.sort ?? null, direction: initial.direction ?? null});
+// ohne Parameter ist urlParameters ein leeres Array: initial.sort wäre dann dessen eingebaute Methode sort()
+const sorting = ref({sort: typeof initial.sort === 'string' ? initial.sort : null, direction: initial.direction ?? null});
 const sortBy = (key) => {
     sorting.value = nextIssueSort(sorting.value, key);
     applyFilters();
@@ -366,7 +367,8 @@ const applyFilters = () => {
     router.reload({
         preserveState: true,
         preserveScroll: true,
-        data: {...cleared, ...query},
+        // geänderte Filter oder Sortierung beginnen wieder auf Seite 1
+        data: {...cleared, ...query, page: 1},
         replace: true,
         only: ['issues', 'articlesInFilter']
     });

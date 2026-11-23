@@ -3231,6 +3231,7 @@ class ProjectController extends Controller
                 admins: $room->effectiveAdminIds(),
                 everyone_can_book: $room->everyone_can_book,
                 requestable_by: $room->effectiveRequestableByIds(),
+                user_id: $room->user_id,
             ));
 
             $dateValue = [

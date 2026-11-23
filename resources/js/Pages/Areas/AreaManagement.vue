@@ -1262,6 +1262,13 @@ export default defineComponent({
         areas() {
             this.selectedRoomIds = pruneSelection(this.selectedRoomIds, this.areas);
         },
+        // Suche oder Filter blenden Räume aus: Sammelaktionen dürfen nur treffen, was noch zu sehen ist
+        filteredAreas(filteredAreas) {
+            const pruned = pruneSelection(this.selectedRoomIds, filteredAreas);
+            if (pruned.length !== this.selectedRoomIds.length) {
+                this.selectedRoomIds = pruned;
+            }
+        },
     },
     computed: {
         roomDeleteDescriptionText() {

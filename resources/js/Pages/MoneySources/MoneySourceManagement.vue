@@ -929,7 +929,8 @@ try {
     // unlesbarer Stand: mit Standardwerten starten
 }
 watch(
-    [moneySource_query, moneySourceFilter, categoryFilters, openTasksFilter, timeSpanFilterActive, sortType, sortOrder, collapsedGroups],
+    [moneySource_query, moneySourceFilter, categoryFilters, openTasksFilter, timeSpanFilterActive, timeSpanFilterStart,
+        timeSpanFilterEnd, sortType, sortOrder, collapsedGroups],
     () => {
         safeSetItem(LIST_STATE_KEY, JSON.stringify({
             query: moneySource_query.value,

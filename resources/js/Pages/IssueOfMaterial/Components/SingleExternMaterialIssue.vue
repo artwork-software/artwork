@@ -8,7 +8,8 @@
 
         <!-- Name -->
         <div class="col-span-3 flex items-start gap-2">
-            <input type="checkbox"
+            <input v-if="selectable"
+                   type="checkbox"
                    class="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
                    :checked="selected"
                    :aria-label="$t('Select')"
@@ -213,6 +214,8 @@ const props = defineProps({
         })
     },
     detailedArticle: Object,
+    // Auswahlkästchen nur auf der Listenseite mit Sammelleiste, nicht im Projekt-Tab
+    selectable: { type: Boolean, default: false },
     selected: { type: Boolean, default: false },
     firstProjectTabId: { type: [Number, String], default: null }
 });

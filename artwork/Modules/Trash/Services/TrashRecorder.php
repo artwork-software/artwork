@@ -94,6 +94,8 @@ class TrashRecorder
         $now = now();
         $rows = Room::onlyTrashed()
             ->where('area_id', $model->getKey())
+            // nur die Räume dieses Löschvorgangs: früher gelöschte Räume gehören nicht dieser Person
+            ->where('deleted_at', '>=', $now->copy()->subMinute())
             ->pluck('id')
             ->map(static fn (int $roomId): array => [
                 'subject_type' => $roomType,

@@ -32,6 +32,9 @@ final class RoomDTOTest extends TestCase
         $dto = new RoomDTO(1, 'Room');
         $this->assertFalse($dto->has_events);
         $this->assertFalse($dto->everyone_can_book);
+        $this->assertNull($dto->user_id);
+        // Ersteller:in des Raums: ohne Raumadmins beantwortet sie die Raumanfragen (Frontend-Spiegel der Policy)
+        $this->assertSame(7, (new RoomDTO(1, 'Room', user_id: 7))->toArray()['user_id']);
     }
 
     #[Test]

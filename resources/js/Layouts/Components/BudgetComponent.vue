@@ -1375,7 +1375,8 @@ export default {
             });
         },
         isMovableColumn(column, index) {
-            return index > 2 && column.type !== 'sage' && column.type !== 'subprojects_column_for_group';
+            // ohne Spalte (Ziehen auf den Rand der Liste) gibt es kein gültiges Ziel
+            return !!column && index > 2 && column.type !== 'sage' && column.type !== 'subprojects_column_for_group';
         },
         canMoveColumn(event) {
             return this.isMovableColumn(event.draggedContext.element, event.draggedContext.index)

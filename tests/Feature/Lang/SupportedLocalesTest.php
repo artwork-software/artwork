@@ -25,15 +25,20 @@ final class SupportedLocalesTest extends FeatureTestCase
     }
 
     #[Test]
-    public function german_and_english_are_supported_with_their_own_names(): void
+    public function the_configured_languages_are_supported_with_their_own_names(): void
     {
-        $this->assertSame(['de', 'en'], SupportedLocales::codes());
+        $this->assertSame(['de', 'en', 'nl'], SupportedLocales::codes());
         $this->assertSame(
-            [['code' => 'de', 'name' => 'Deutsch'], ['code' => 'en', 'name' => 'English']],
+            [
+                ['code' => 'de', 'name' => 'Deutsch'],
+                ['code' => 'en', 'name' => 'English'],
+                ['code' => 'nl', 'name' => 'Nederlands'],
+            ],
             SupportedLocales::toFrontend()
         );
         $this->assertTrue(SupportedLocales::isSupported('de'));
-        $this->assertFalse(SupportedLocales::isSupported('nl'));
+        $this->assertTrue(SupportedLocales::isSupported('nl'));
+        $this->assertFalse(SupportedLocales::isSupported('fr'));
         $this->assertFalse(SupportedLocales::isSupported(null));
     }
 
@@ -85,7 +90,7 @@ final class SupportedLocalesTest extends FeatureTestCase
     #[Test]
     public function an_unconfigured_language_falls_back_to_the_app_locale(): void
     {
-        $user = $this->actingAsAdmin(User::factory()->create(['language' => 'nl']));
+        $user = $this->actingAsAdmin(User::factory()->create(['language' => 'fr']));
 
         $this->assertNull($user->preferredLocale());
 

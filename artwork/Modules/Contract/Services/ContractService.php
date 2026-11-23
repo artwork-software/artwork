@@ -189,7 +189,7 @@ class ContractService
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setProjectId($project->id);
+            $this->notificationService->setProjectId($project?->id);
             $this->notificationService
                 ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);

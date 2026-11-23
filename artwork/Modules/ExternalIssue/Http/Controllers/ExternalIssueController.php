@@ -48,7 +48,7 @@ class ExternalIssueController extends Controller
     {
         $this->authorize('viewAny', ExternalIssue::class);
 
-        $q = trim((string) request()->input('q', ''));
+        $q = trim($this->stringParameter('q') ?? '');
         $excludeId = (int) request()->input('exclude_id', 0);
 
         $issues = ExternalIssue::query()
@@ -72,7 +72,7 @@ class ExternalIssueController extends Controller
     {
         $this->authorize('viewAny', ExternalIssue::class);
 
-        $entitiesPerPage = request()?->integer('entitiesPerPage', 10);
+        $entitiesPerPage = min(max(request()->integer('entitiesPerPage', 10), 1), 100);
         $articleIds = $this->requestedIds('article_ids');
 
         $issuesQuery = $this->filteredIssuesQuery()->with([
@@ -99,6 +99,10 @@ class ExternalIssueController extends Controller
         }
 
         $issues = $issuesQuery->paginate($entitiesPerPage, ['*'], 'page', $page);
+        // Seite hinter dem Ende (etwa nach dem Löschen der letzten Einträge): letzte vorhandene Seite zeigen
+        if ($issues->isEmpty() && $issues->total() > 0 && $issues->currentPage() > $issues->lastPage()) {
+            $issues = $issuesQuery->paginate($entitiesPerPage, ['*'], 'page', $issues->lastPage());
+        }
 
         $this->inventoryUserFilterShareService->getFilterDataForUser($this->auth->user());
 
@@ -164,15 +168,15 @@ class ExternalIssueController extends Controller
     {
         $articleIds = $this->requestedIds('article_ids');
         $selectedIds = $this->requestedIds('ids');
-        $dateFrom = request()->input('date_from');
-        $dateTo   = request()->input('date_to');
+        $dateFrom = $this->stringParameter('date_from');
+        $dateTo   = $this->stringParameter('date_to');
         $issuedBy    = request()->filled('issued_by_id')    ? (int) request()->input('issued_by_id')    : null;
         $receivedBy  = request()->filled('received_by_id')  ? (int) request()->input('received_by_id')  : null;
         $projectId   = request()->filled('project_id')      ? (int) request()->input('project_id')      : null;
         // "Nur überfällige" (alter Parameter, auch im Deep-Link der Erinnerung) = Rückgabe-Filter "overdue"
         $returnState = request()->boolean('overdue_only') ? 'overdue' : request()->input('return_state');
         $returnState = in_array($returnState, self::RETURN_STATES, true) ? $returnState : null;
-        $q = trim((string) request()->input('q', ''));
+        $q = trim($this->stringParameter('q') ?? '');
         $sort = in_array(request()->input('sort'), self::SORTABLE_COLUMNS, true) ? request()->input('sort') : null;
         $direction = request()->input('direction') === 'desc' ? 'desc' : 'asc';
         $today = now()->toDateString();
@@ -262,7 +266,8 @@ class ExternalIssueController extends Controller
         $this->authorize('create', [ExternalIssue::class, $request->integer('project_id') ?: null]);
 
         $issue = $this->externalIssueService->store($request->validated(), $request->file('files', []));
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     public function update(
@@ -277,7 +282,8 @@ class ExternalIssueController extends Controller
             $request->file('files', [])
         );
 
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     public function destroy(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
@@ -286,7 +292,8 @@ class ExternalIssueController extends Controller
 
         $this->externalIssueService->delete($externalIssue);
 
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     /**
@@ -342,7 +349,8 @@ class ExternalIssueController extends Controller
 
         $externalIssue->update(['special_items_done' => true]);
 
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     /**
@@ -461,5 +469,15 @@ class ExternalIssueController extends Controller
             ->deleteFile($externalIssueFile);
 
         return response()->json(['message' => 'File deleted successfully'], 200);
+    }
+
+    /**
+     * Abfrage-Parameter nur als Text: Felder (?q[]=x) führten sonst zu einem Fehler statt zu "kein Filter".
+     */
+    private function stringParameter(string $key): ?string
+    {
+        $value = request()->input($key);
+
+        return is_string($value) ? $value : null;
     }
 }

@@ -162,6 +162,28 @@ final class ContractControllerTest extends FeatureTestCase
         $this->assertNotNull(Contract::find($kept->id));
     }
 
+    /**
+     * Ein Vertrag, dessen Projekt im Papierkorb liegt, hat für die Benachrichtigung kein Projekt mehr:
+     * die Sammellöschung darf daran nicht mittendrin abbrechen.
+     */
+    #[Test]
+    public function bulk_delete_handles_shared_contracts_whose_project_is_trashed(): void
+    {
+        $project = Project::factory()->create();
+        $first = Contract::factory()->create();
+        $orphaned = Contract::factory()->create(['project_id' => $project->id]);
+        $orphaned->accessingUsers()->attach(User::factory()->create()->id);
+        $last = Contract::factory()->create();
+        $project->delete();
+        $this->actingAsAdmin();
+
+        $this->postJson(route('contracts.bulk-delete'), ['ids' => [$first->id, $orphaned->id, $last->id]])
+            ->assertOk()
+            ->assertExactJson(['deleted' => 3]);
+
+        $this->assertSame(0, Contract::query()->whereKey([$first->id, $orphaned->id, $last->id])->count());
+    }
+
     #[Test]
     public function bulk_delete_deletes_nothing_when_one_contract_is_not_accessible(): void
     {

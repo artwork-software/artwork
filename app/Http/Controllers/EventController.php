@@ -389,6 +389,7 @@ class EventController extends Controller
             admins: $room->effectiveAdminIds(),
             everyone_can_book: $room->everyone_can_book,
             requestable_by: $room->effectiveRequestableByIds(),
+            user_id: $room->user_id,
         ));
 
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
@@ -677,6 +678,7 @@ class EventController extends Controller
             admins: $room->effectiveAdminIds(),
             everyone_can_book: $room->everyone_can_book,
             requestable_by: $room->effectiveRequestableByIds(),
+            user_id: $room->user_id,
         ));
 
         $dateValue = [
@@ -2572,6 +2574,8 @@ class EventController extends Controller
         $events = Event::query()->whereIn('id', $validated['events'])->get();
         foreach ($events as $event) {
             try {
+                // der Dienst ist ein Singleton: Schlüssel und Bezüge der vorigen Anfrage dürfen nicht mitwandern
+                $this->notificationService->clearNotificationData();
                 // nur offene Anfragen: declineEvent würde auch bestätigte Belegungen absagen
                 abort_if(!$event->occupancy_option || $event->is_planning, 409);
                 $validated['action'] === 'accept'
@@ -3879,7 +3883,8 @@ class EventController extends Controller
     ): RedirectResponse {
         /** @var User $user */
         $user = $this->authManager->user();
-        $trashedEvents = Event::onlyTrashed()->get();
+        // Projekt, Raum und Ersteller:in vorab laden: die Rechteprüfung liest sie je Termin
+        $trashedEvents = Event::onlyTrashed()->with(['project', 'room', 'creator'])->get();
         // Wie beim einzelnen endgültigen Löschen: nur Termine, die die Person löschen darf
         $deletableEvents = $trashedEvents->filter(
             static fn (Event $event): bool => $user->can('delete', $event)
@@ -4736,6 +4741,8 @@ class EventController extends Controller
         return new JsonResponse([
             'description' => $event->description,
             'can_update' => $this->authManager->user()?->can('update', $event) ?? false,
+            // schaltet den Papierkorb-Knopf im Dialog nach derselben Policy wie das Löschen
+            'can_delete' => $this->authManager->user()?->can('delete', $event) ?? false,
             // Wer die laufende Anfrage gestellt hat, wenn es nicht die Person ist, die den Termin angelegt hat
             'requested_by' => $requester !== null && (int) $requester->id !== (int) $event->user_id ? [
                 'id' => $requester->id,

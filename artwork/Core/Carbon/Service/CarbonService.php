@@ -70,7 +70,8 @@ class CarbonService
     {
         return match ($locale) {
             'de' => self::GERMAN_DATE_FORMAT,
-            'en' => self::INTERNATIONAL_DATE_FORMAT,
+            // jede weitere Sprache (etwa nl) bekommt das internationale Format statt eines UnhandledMatchError
+            default => self::INTERNATIONAL_DATE_FORMAT,
         };
     }
 

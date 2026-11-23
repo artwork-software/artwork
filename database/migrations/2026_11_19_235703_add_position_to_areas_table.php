@@ -12,9 +12,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('areas', function (Blueprint $table): void {
-            $table->unsignedInteger('position')->default(0)->after('color');
-        });
+        // wiederholbar, falls ein früherer Lauf nach dem Anlegen der Spalte abgebrochen ist
+        if (!Schema::hasColumn('areas', 'position')) {
+            Schema::table('areas', function (Blueprint $table): void {
+                $table->unsignedInteger('position')->default(0)->after('color');
+            });
+        }
 
         DB::table('areas')->update(['position' => DB::raw('id')]);
     }

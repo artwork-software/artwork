@@ -336,7 +336,10 @@ class RoomController extends Controller
                     $subQuery->where('name', 'like', '%' . $search . '%')
                         ->orWhereHas(
                             'area',
-                            fn ($area) => $area->withTrashed()->where('name', 'like', '%' . $search . '%')
+                            // auch Areale im Papierkorb (entspricht withTrashed())
+                            fn ($area) => $area
+                                ->withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class)
+                                ->where('name', 'like', '%' . $search . '%')
                         );
                 });
             })

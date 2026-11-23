@@ -45,7 +45,7 @@ class InternalIssueController extends Controller
     {
         $this->authorize('viewAny', InternalIssue::class);
 
-        $entitiesPerPage = (int) request()->input('entitiesPerPage', 10);
+        $entitiesPerPage = min(max(request()->integer('entitiesPerPage', 10), 1), 100);
         $articleIds = $this->requestedIds('article_ids');
 
         $issuesQuery = $this->filteredIssuesQuery()
@@ -136,12 +136,12 @@ class InternalIssueController extends Controller
      */
     private function filteredIssuesQuery(): Builder
     {
-        $q = trim((string) request()->input('q', ''));
+        $q = trim($this->stringParameter('q') ?? '');
         $articleIds = $this->requestedIds('article_ids');
         $responsibleUserIds = $this->requestedIds('responsible_user_ids');
         $selectedIds = $this->requestedIds('ids');
-        $dateFrom  = request()->input('date_from'); // Y-m-d
-        $dateTo    = request()->input('date_to');   // Y-m-d
+        $dateFrom  = $this->stringParameter('date_from'); // Y-m-d
+        $dateTo    = $this->stringParameter('date_to');   // Y-m-d
         $projectId = (int) request()->input('project_id', 0);
         $roomId    = (int) request()->input('room_id', 0);
         $sort = in_array(request()->input('sort'), self::SORTABLE_COLUMNS, true) ? request()->input('sort') : null;
@@ -271,7 +271,7 @@ class InternalIssueController extends Controller
     {
         $this->authorize('viewAny', InternalIssue::class);
 
-        $q = trim((string) request()->input('q', ''));
+        $q = trim($this->stringParameter('q') ?? '');
         $excludeId = (int) request()->input('exclude_id', 0);
 
         $issues = InternalIssue::query()
@@ -435,5 +435,15 @@ class InternalIssueController extends Controller
         $internalIssue->update(['special_items_done' => true]);
 
         return redirect()->back();
+    }
+
+    /**
+     * Abfrage-Parameter nur als Text: Felder (?q[]=x) führten sonst zu einem Fehler statt zu "kein Filter".
+     */
+    private function stringParameter(string $key): ?string
+    {
+        $value = request()->input($key);
+
+        return is_string($value) ? $value : null;
     }
 }

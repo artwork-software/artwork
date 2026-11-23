@@ -3881,7 +3881,8 @@ class EventController extends Controller
     ): RedirectResponse {
         /** @var User $user */
         $user = $this->authManager->user();
-        $trashedEvents = Event::onlyTrashed()->get();
+        // Projekt, Raum und Ersteller:in vorab laden: die Rechteprüfung liest sie je Termin
+        $trashedEvents = Event::onlyTrashed()->with(['project', 'room', 'creator'])->get();
         // Wie beim einzelnen endgültigen Löschen: nur Termine, die die Person löschen darf
         $deletableEvents = $trashedEvents->filter(
             static fn (Event $event): bool => $user->can('delete', $event)

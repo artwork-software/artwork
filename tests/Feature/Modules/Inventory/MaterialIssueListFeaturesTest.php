@@ -60,6 +60,23 @@ final class MaterialIssueListFeaturesTest extends TestCase
     }
 
     /**
+     * Felder statt Text und unsinnige Seitengrößen in der Adresse führen nicht zu einem Fehler.
+     */
+    #[Test]
+    public function lists_and_exports_tolerate_array_parameters_and_odd_page_sizes(): void
+    {
+        $this->internalIssue('Intern A');
+        $this->externalIssue('Extern A');
+
+        foreach (['issue-of-material', 'extern-issue-of-material'] as $prefix) {
+            $this->get(route($prefix . '.index', ['q' => ['x'], 'date_from' => ['x'], 'date_to' => ['y']]))
+                ->assertOk();
+            $this->get(route($prefix . '.index', ['entitiesPerPage' => -5]))->assertOk();
+            $this->get(route($prefix . '.export', ['q' => ['x'], 'date_from' => ['x']]))->assertOk();
+        }
+    }
+
+    /**
      * Nach dem Löschen der letzten Einträge einer Seite zeigt die Adresse hinter das Ende:
      * die Liste fällt auf die letzte vorhandene Seite zurück statt leer zu bleiben.
      */

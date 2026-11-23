@@ -127,7 +127,7 @@ class CrmController extends Controller
             'externalAccessStatus' => $this->resolveExternalAccessStatus($crmContact),
             'linkedProjects' => $linkedProjects,
             'firstProjectTabId' => $linkedProjects->isNotEmpty()
-                ? $projectTabService->getDefaultOrFirstProjectTab()->getAttribute('id')
+                ? $projectTabService->getDefaultOrFirstProjectTabId()
                 : null,
             'sourceProfileUrl' => $this->resolveSourceProfileUrl($crmContact),
             'accommodationUrl' => $this->resolveAccommodationUrl($crmContact),

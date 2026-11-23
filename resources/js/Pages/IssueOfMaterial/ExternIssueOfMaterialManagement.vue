@@ -174,6 +174,7 @@
                         :key="issueOfMaterial.id"
                         :extern-material-issue="issueOfMaterial"
                         :detailed-article="detailedArticle"
+                        selectable
                         :selected="selectedIds[issueOfMaterial.id] === true"
                         :first-project-tab-id="first_project_tab_id"
                         @toggle-select="toggleSelected(issueOfMaterial.id, $event)"
@@ -303,7 +304,8 @@ const returnStateOptions = [
 ];
 
 // Sortierung (Spaltenköpfe): aufsteigend, absteigend, zurück zur Standardreihenfolge
-const sorting = ref({ sort: initial.sort ?? null, direction: initial.direction ?? null });
+// ohne Parameter ist urlParameters ein leeres Array: initial.sort wäre dann dessen eingebaute Methode sort()
+const sorting = ref({ sort: typeof initial.sort === 'string' ? initial.sort : null, direction: initial.direction ?? null });
 const sortBy = (key) => {
     sorting.value = nextIssueSort(sorting.value, key);
     applyFilters();

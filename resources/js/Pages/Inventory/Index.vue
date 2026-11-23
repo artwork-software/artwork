@@ -593,7 +593,8 @@ const { resetAllFilters, appliedFilters, appliedTagIds, activePresetId } = useIn
  */
 const sortOptions = computed(() => INVENTORY_SORT_OPTIONS.map((option) => ({ ...option, name: $t(option.name) })))
 const currentSort = ref({
-    sort: usePage().props?.urlParameters?.sort ?? null,
+    // ohne Parameter ist urlParameters ein leeres Array: .sort wäre dann dessen eingebaute Methode
+    sort: typeof usePage().props?.urlParameters?.sort === 'string' ? usePage().props.urlParameters.sort : null,
     direction: usePage().props?.urlParameters?.direction ?? null,
 })
 const selectedSort = computed(() => {

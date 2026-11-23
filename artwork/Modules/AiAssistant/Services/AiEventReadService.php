@@ -118,7 +118,8 @@ class AiEventReadService
             $occupancy[$roomId] ??= [];
         }
 
-        $slots = $this->finder->find($occupancy, $from, $to, $minHours, $weekdays, $dayWindow);
+        $all = $this->finder->find($occupancy, $from, $to, $minHours, $weekdays, $dayWindow, PHP_INT_MAX);
+        $slots = array_slice($all, 0, FreeSlotFinder::MAX_SLOTS);
         $timezone = (string) config('app.timezone');
 
         return new AiFreeSlotListData(
@@ -134,6 +135,8 @@ class AiEventReadService
             period: AiPeriodData::fromDates($from, $to),
             day_window: new AiDayWindowData($dayWindow['from'], $dayWindow['to']),
             min_hours: $minHours,
+            total: count($all),
+            truncated: count($all) > count($slots),
         );
     }
 

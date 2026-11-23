@@ -24,10 +24,12 @@ class AiExportController extends Controller
             404
         );
 
+        $format = $export->format();
+
         return response()->download(
             $files->path($export->storagePath()),
-            AiExportService::filename($export->title),
-            ['Content-Type' => 'application/pdf']
+            AiExportService::filename($export->title, $format),
+            ['Content-Type' => AiExportService::MIME_TYPES[$format]]
         );
     }
 }

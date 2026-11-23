@@ -635,6 +635,100 @@
                 }
             }
         },
+        "/api/v1/ai/rooms/available": {
+            "get": {
+                "operationId": "v1.ai.rooms.available",
+                "summary": "Alle freien Raeume zu einem Zeitfenster (core-ai-aggregates, Entgrenzen P1)",
+                "tags": [
+                    "AiEventApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "at",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "duration_minutes",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 15,
+                            "maximum": 1440
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "room_category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "area_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 500
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiAvailableRoomListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiAvailableRoomListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/api/v1/ai/events/batch": {
             "post": {
                 "operationId": "v1.ai.events.batch.store",
@@ -1323,6 +1417,103 @@
                 }
             }
         },
+        "/api/v1/ai/people/{type}/{id}/shifts": {
+            "get": {
+                "operationId": "v1.ai.people.shifts",
+                "summary": "Schichten einer Person im Zeitraum (core-ai-aggregates). Die eigenen gehen immer, fremde nur mit\n„Schichtplan einsehen\" wie die Oberflaeche",
+                "tags": [
+                    "AiPeopleApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 2000
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiPersonShiftListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiPersonShiftListData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/api/v1/ai/projects": {
             "get": {
                 "operationId": "v1.ai.projects.index",
@@ -1445,6 +1636,110 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AiProjectListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/projects/budget-ranking": {
+            "get": {
+                "operationId": "v1.ai.projects.budget-ranking",
+                "summary": "Projekte nach Einnahmen, Kosten oder Ergebnis einer Budgetspalte (core-ai-aggregates). Projekte ohne\nBudgetrecht erscheinen nur als Zaehler",
+                "tags": [
+                    "AiProjectApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 1,
+                            "maxLength": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "earnings",
+                                "costs",
+                                "result",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "asc",
+                                "desc",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 500
+                        }
+                    },
+                    {
+                        "name": "state_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "include_groups",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiBudgetRankingData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiBudgetRankingData"
                                 }
                             }
                         }
@@ -3831,6 +4126,76 @@
                 ],
                 "title": "AiAvailabilityListData"
             },
+            "AiAvailableRoomData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "area": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "requires_request": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "id",
+                    "categories",
+                    "requires_request"
+                ],
+                "title": "AiAvailableRoomData"
+            },
+            "AiAvailableRoomListData": {
+                "type": "object",
+                "properties": {
+                    "window": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "rooms": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiAvailableRoomData"
+                        }
+                    },
+                    "total_free": {
+                        "type": "integer"
+                    },
+                    "total_rooms": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "window",
+                    "rooms",
+                    "total_free",
+                    "total_rooms",
+                    "truncated"
+                ],
+                "title": "AiAvailableRoomListData"
+            },
             "AiBudgetActualData": {
                 "type": "object",
                 "properties": {
@@ -3964,6 +4329,124 @@
                     "is_group"
                 ],
                 "title": "AiBudgetProjectData"
+            },
+            "AiBudgetRankingData": {
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sort": {
+                        "type": "string"
+                    },
+                    "direction": {
+                        "type": "string"
+                    },
+                    "projects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiBudgetRankingEntryData"
+                        }
+                    },
+                    "without_budget": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiRefData"
+                        }
+                    },
+                    "without_period_column": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiBudgetRankingMissingColumnData"
+                        }
+                    },
+                    "without_access": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "sort",
+                    "direction",
+                    "projects",
+                    "without_budget",
+                    "without_period_column",
+                    "without_access",
+                    "total",
+                    "truncated"
+                ],
+                "title": "AiBudgetRankingData"
+            },
+            "AiBudgetRankingEntryData": {
+                "type": "object",
+                "properties": {
+                    "project": {
+                        "$ref": "#/components/schemas/AiBudgetProjectData"
+                    },
+                    "column": {
+                        "$ref": "#/components/schemas/AiBudgetColumnData"
+                    },
+                    "earnings": {
+                        "type": "string"
+                    },
+                    "costs": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "string"
+                    },
+                    "actual": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiBudgetActualData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "project",
+                    "column",
+                    "earnings",
+                    "costs",
+                    "result"
+                ],
+                "title": "AiBudgetRankingEntryData"
+            },
+            "AiBudgetRankingMissingColumnData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "columns": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "columns"
+                ],
+                "title": "AiBudgetRankingMissingColumnData"
             },
             "AiBudgetSummaryData": {
                 "type": "object",
@@ -4283,6 +4766,9 @@
                     },
                     "level_c_enabled": {
                         "type": "boolean"
+                    },
+                    "web_enabled": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -4290,7 +4776,8 @@
                     "roles",
                     "house",
                     "permissions_summary",
-                    "level_c_enabled"
+                    "level_c_enabled",
+                    "web_enabled"
                 ],
                 "title": "AiContextData"
             },
@@ -5426,6 +5913,12 @@
                     },
                     "expires_at": {
                         "type": "string"
+                    },
+                    "format": {
+                        "type": "string"
+                    },
+                    "mime_type": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -5433,7 +5926,9 @@
                     "url",
                     "filename",
                     "row_count",
-                    "expires_at"
+                    "expires_at",
+                    "format",
+                    "mime_type"
                 ],
                 "title": "AiExportData"
             },
@@ -5478,13 +5973,21 @@
                     },
                     "min_hours": {
                         "type": "number"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
                     "data",
                     "period",
                     "day_window",
-                    "min_hours"
+                    "min_hours",
+                    "total",
+                    "truncated"
                 ],
                 "title": "AiFreeSlotListData"
             },
@@ -6030,6 +6533,127 @@
                     "name"
                 ],
                 "title": "AiPersonRefData"
+            },
+            "AiPersonShiftData": {
+                "type": "object",
+                "properties": {
+                    "shift_id": {
+                        "type": "integer"
+                    },
+                    "start": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "minutes": {
+                        "type": "integer"
+                    },
+                    "break_minutes": {
+                        "type": "integer"
+                    },
+                    "craft": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "qualification": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "event": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "project": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "room": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "committed": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "shift_id",
+                    "minutes",
+                    "break_minutes",
+                    "committed"
+                ],
+                "title": "AiPersonShiftData"
+            },
+            "AiPersonShiftListData": {
+                "type": "object",
+                "properties": {
+                    "person": {
+                        "$ref": "#/components/schemas/AiPersonRefData"
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "shifts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiPersonShiftData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "total_minutes": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "person",
+                    "period",
+                    "shifts",
+                    "total",
+                    "total_minutes",
+                    "truncated"
+                ],
+                "title": "AiPersonShiftListData"
             },
             "AiPersonWorkloadData": {
                 "type": "object",
@@ -9021,7 +9645,7 @@
             },
             "StoreAiExportRequest": {
                 "type": "object",
-                "description": "POST /api/v1/ai/exports (core-ai-event-stats-exports): eine Tabelle als PDF.\n\nDie Zeilen kommen aus Werkzeugergebnissen, die artwork-ai bereits gelesen hat — der Endpunkt liest\nselbst keine Daten und braucht deshalb nur `ai:read`. Zellen sind Text, Zahl oder leer.",
+                "description": "POST /api/v1/ai/exports (core-ai-event-stats-exports): eine Tabelle als PDF, XLSX oder CSV\n(`format`, Default `pdf`; core-ai-export-formats).\n\nDie Zeilen kommen aus Werkzeugergebnissen, die artwork-ai bereits gelesen hat — der Endpunkt liest\nselbst keine Daten und braucht deshalb nur `ai:read`. Zellen sind Text, Zahl oder leer.",
                 "properties": {
                     "title": {
                         "type": "string",
@@ -9059,6 +9683,18 @@
                             }
                         },
                         "maxItems": 2000
+                    },
+                    "format": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "pdf",
+                            "xlsx",
+                            "csv",
+                            null
+                        ]
                     }
                 },
                 "required": [

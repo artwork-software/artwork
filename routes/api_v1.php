@@ -80,6 +80,10 @@ Route::middleware(['auth:api', EnsureAiAccessPermission::class, EnsureAiHouseSwi
         Route::get('/ai/projects', [AiProjectApiController::class, 'index'])
             ->name('api.v1.ai.projects.index');
 
+        // Vor /ai/projects/{project}, sonst faengt die Platzhalter-Route den Pfad (core-ai-aggregates).
+        Route::get('/ai/projects/budget-ranking', [AiProjectApiController::class, 'budgetRanking'])
+            ->name('api.v1.ai.projects.budget-ranking');
+
         Route::get('/ai/projects/{project}', [AiProjectApiController::class, 'show'])
             ->whereNumber('project')
             ->name('api.v1.ai.projects.show');
@@ -103,6 +107,10 @@ Route::middleware(['auth:api', EnsureAiAccessPermission::class, EnsureAiHouseSwi
 
         Route::get('/ai/rooms/free-slots', [AiEventApiController::class, 'freeSlots'])
             ->name('api.v1.ai.rooms.free-slots');
+
+        // Alle freien Raeume zu einem Zeitpunkt (core-ai-aggregates); blockiert wie oben durch alle Termine.
+        Route::get('/ai/rooms/available', [AiEventApiController::class, 'availableRooms'])
+            ->name('api.v1.ai.rooms.available');
 
         // Eigener Einsatzplan: kein Parameter fuer fremde Personen (B1 §6). Der Dienstplan-
         // Ausschnitt verlangt zusaetzlich das Recht "Schichtplan einsehen" wie die Oberflaeche.
@@ -135,6 +143,12 @@ Route::middleware(['auth:api', EnsureAiAccessPermission::class, EnsureAiHouseSwi
             ->whereIn('type', AiPeopleService::TYPES)
             ->whereNumber('id')
             ->name('api.v1.ai.people.workload');
+
+        // Schichten einer Person (core-ai-aggregates): eigene immer, fremde mit „Schichtplan einsehen".
+        Route::get('/ai/people/{type}/{id}/shifts', [AiPeopleApiController::class, 'shifts'])
+            ->whereIn('type', AiPeopleService::TYPES)
+            ->whereNumber('id')
+            ->name('api.v1.ai.people.shifts');
 
         Route::post('/ai/shift-plan/suggest', [AiShiftPlanningApiController::class, 'suggest'])
             ->name('api.v1.ai.shift-plan.suggest');

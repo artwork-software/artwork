@@ -36,7 +36,7 @@ return [
 
     'list_limit' => 50,
 
-    'max_range_days' => 180,
+    'max_range_days' => 366,
 
     // Termine je create_events-Aufruf ueber alle Raeume (core-ai-series-rooms): 3 Raeume x 20 Werktage
     // passen, eine Jahresserie nicht.

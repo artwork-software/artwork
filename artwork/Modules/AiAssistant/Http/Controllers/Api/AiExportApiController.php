@@ -10,7 +10,8 @@ use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * PDF-Export einer Tabelle fuer artwork-ai (core-ai-event-stats-exports).
+ * Export einer Tabelle als PDF, XLSX oder CSV fuer artwork-ai (core-ai-event-stats-exports,
+ * core-ai-export-formats).
  */
 class AiExportApiController extends Controller
 {
@@ -35,6 +36,7 @@ class AiExportApiController extends Controller
             $request->validated('note'),
             $request->columns(),
             $request->rows(),
+            $request->exportFormat(),
         );
     }
 }

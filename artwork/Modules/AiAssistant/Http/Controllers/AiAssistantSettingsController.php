@@ -33,6 +33,7 @@ class AiAssistantSettingsController extends Controller
                 'enabled' => $this->settings->enabled,
                 'level_b_enabled' => $this->settings->level_b_enabled,
                 'level_c_enabled' => $this->settings->level_c_enabled,
+                'web_enabled' => $this->settings->web_enabled,
                 'transcript_retention_days' => $this->settings->transcript_retention_days,
             ],
             // Kill-Switch des Betreibers. Steht er auf false, laeuft nichts, egal was hier gespeichert
@@ -47,14 +48,18 @@ class AiAssistantSettingsController extends Controller
 
         $previousEnabled = $this->settings->enabled;
         $previousLevelC = $this->settings->level_c_enabled;
+        $previousWeb = $this->settings->web_enabled;
 
         $this->settings->enabled = (bool) $validated['enabled'];
         $this->settings->level_b_enabled = (bool) $validated['level_b_enabled'];
         $this->settings->level_c_enabled = (bool) $validated['level_c_enabled'];
+        $this->settings->web_enabled = array_key_exists('web_enabled', $validated)
+            ? (bool) $validated['web_enabled']
+            : $this->settings->web_enabled && $this->settings->level_b_enabled;
         $this->settings->transcript_retention_days = (int) $validated['transcript_retention_days'];
         $this->settings->save();
 
-        $this->logIfReleaseChanged($request, $previousEnabled, $previousLevelC);
+        $this->logIfReleaseChanged($request, $previousEnabled, $previousLevelC, $previousWeb);
 
         return back()->with('success', __('The settings were saved.'));
     }
@@ -66,7 +71,8 @@ class AiAssistantSettingsController extends Controller
     private function logIfReleaseChanged(
         UpdateAiAssistantSettingsRequest $request,
         bool $previousEnabled,
-        bool $previousLevelC
+        bool $previousLevelC,
+        bool $previousWeb
     ): void {
         $changes = [];
 
@@ -76,6 +82,11 @@ class AiAssistantSettingsController extends Controller
 
         if ($previousLevelC !== $this->settings->level_c_enabled) {
             $changes['level_c_enabled'] = ['from' => $previousLevelC, 'to' => $this->settings->level_c_enabled];
+        }
+
+        // Web-Recherche schickt Suchbegriffe nach aussen (ai-web-research) — wie die Freigaben nachvollziehbar
+        if ($previousWeb !== $this->settings->web_enabled) {
+            $changes['web_enabled'] = ['from' => $previousWeb, 'to' => $this->settings->web_enabled];
         }
 
         if ($changes === []) {

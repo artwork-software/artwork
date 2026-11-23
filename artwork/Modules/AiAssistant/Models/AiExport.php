@@ -42,6 +42,14 @@ class AiExport extends Model
         return $this->belongsTo(User::class);
     }
 
+    /** pdf, xlsx oder csv — aus der Dateiendung, Altbestand ist PDF (core-ai-export-formats). */
+    public function format(): string
+    {
+        $extension = strtolower(pathinfo((string) $this->file, PATHINFO_EXTENSION));
+
+        return in_array($extension, ['xlsx', 'csv'], true) ? $extension : 'pdf';
+    }
+
     public function storagePath(): string
     {
         return self::DIRECTORY . '/' . $this->file;

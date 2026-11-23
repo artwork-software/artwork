@@ -169,7 +169,11 @@ final class AiEventStatsExportsApiTest extends TestCase
         $this->actingAsToken(User::factory()->create());
         $this->getJson('/api/v1/ai/events/stats?from=2026-01-01&to=2026-03-31')->assertStatus(422);
         $this->getJson('/api/v1/ai/events/stats?from=2026-01-01&to=2026-03-31&group_by=person')->assertStatus(422);
-        $this->getJson('/api/v1/ai/events/stats?from=2026-01-01&to=2026-12-31&group_by=project')->assertStatus(422);
+        // Laenger als ai.max_range_days (core-ai-aggregates: 366 statt 180)
+        $to = \Carbon\CarbonImmutable::parse('2026-01-01')
+            ->addDays((int) config('ai.max_range_days') + 1)
+            ->toDateString();
+        $this->getJson("/api/v1/ai/events/stats?from=2026-01-01&to={$to}&group_by=project")->assertStatus(422);
     }
 
     // --- Export ----------------------------------------------------------------------------

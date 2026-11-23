@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { attachmentFrom } from '../../resources/js/Components/AiAssistant/aiAttachment.js';
+import { attachmentFrom, attachmentIcon } from '../../resources/js/Components/AiAssistant/aiAttachment.js';
 import { renderAiMarkdown } from '../../resources/js/Components/AiAssistant/aiMarkdown.js';
 
 // core-ki-bar-attachment / Protokoll 1.2: Downloads aus artwork-ai nur als relative URL der Instanz.
@@ -11,6 +11,22 @@ test('a pdf attachment with a relative url is accepted', () => {
         attachmentFrom({ url: '/ai/exports/0199a1b2', filename: 'Projekte Q1.pdf', title: 'Projekte Q1', mime: 'application/pdf' }),
         { url: '/ai/exports/0199a1b2', filename: 'Projekte Q1.pdf', title: 'Projekte Q1', mime: 'application/pdf' },
     );
+});
+
+// core-ai-export-formats / Protokoll 1.3: auch Excel und CSV
+test('xlsx and csv attachments are accepted with their own icon and fallback name', () => {
+    const xlsx = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    assert.deepEqual(
+        attachmentFrom({ url: '/ai/exports/2', filename: 'Rangliste 2026.xlsx', title: 'Rangliste 2026', mime: xlsx }),
+        { url: '/ai/exports/2', filename: 'Rangliste 2026.xlsx', title: 'Rangliste 2026', mime: xlsx },
+    );
+    assert.equal(attachmentFrom({ url: '/ai/exports/3', filename: '', title: '', mime: 'text/csv' }).filename, 'export.csv');
+    assert.equal(attachmentFrom({ url: '/ai/exports/4', filename: '', title: '', mime: xlsx }).filename, 'export.xlsx');
+
+    assert.equal(attachmentIcon('application/pdf'), 'IconFileTypePdf');
+    assert.equal(attachmentIcon(xlsx), 'IconFileTypeXls');
+    assert.equal(attachmentIcon('text/csv'), 'IconFileTypeCsv');
 });
 
 test('absolute, protocol-relative and script urls are dropped', () => {

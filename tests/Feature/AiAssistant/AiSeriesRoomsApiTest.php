@@ -41,6 +41,8 @@ final class AiSeriesRoomsApiTest extends TestCase
         $client = app(ClientRepository::class)
             ->createPersonalAccessGrantClient('PAT client', config('auth.guards.api.provider'));
 
+        // Betreiber-Schalter wie GrantsAiAccess::enableAiAssistant(); sonst haengt der Test an AI_ENABLED der Umgebung
+        config(['ai.enabled' => true]);
         AiAssistantSettings::fake([
             'enabled' => true,
             'level_b_enabled' => true,

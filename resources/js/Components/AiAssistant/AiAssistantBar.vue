@@ -140,6 +140,7 @@
                                             :url="attachment.url"
                                             :filename="attachment.filename"
                                             :title="attachment.title"
+                                            :mime="attachment.mime"
                                         />
 
                                         <p v-if="turn.status === 'cancelled'" class="text-xs text-text-subtle">

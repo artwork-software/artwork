@@ -14,8 +14,11 @@ use Carbon\CarbonImmutable;
  */
 final class FreeSlotFinder
 {
-    /** Konzept B1 §5: hoechstens 20 Slots, laengste zuerst. */
-    public const MAX_SLOTS = 20;
+    /**
+     * Konzept B1 §5: laengste zuerst. Seit core-ai-aggregates 200 statt 20 — bei 34 Raeumen und einem Tag
+     * fehlten sonst freie Raeume; ueber der Grenze meldet `/ai/rooms/free-slots` `truncated`.
+     */
+    public const MAX_SLOTS = 200;
 
     /**
      * @param array<int, list<array{start: CarbonImmutable, end: CarbonImmutable}>> $occupancyByRoom

@@ -3,10 +3,13 @@
 namespace Artwork\Modules\AiAssistant\Http\Requests;
 
 use Illuminate\Contracts\Validation\Validator;
+use Artwork\Modules\AiAssistant\Services\AiExportService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
- * POST /api/v1/ai/exports (core-ai-event-stats-exports): eine Tabelle als PDF.
+ * POST /api/v1/ai/exports (core-ai-event-stats-exports): eine Tabelle als PDF, XLSX oder CSV
+ * (`format`, Default `pdf`; core-ai-export-formats).
  *
  * Die Zeilen kommen aus Werkzeugergebnissen, die artwork-ai bereits gelesen hat — der Endpunkt liest
  * selbst keine Daten und braucht deshalb nur `ai:read`. Zellen sind Text, Zahl oder leer.
@@ -33,6 +36,7 @@ class StoreAiExportRequest extends FormRequest
             'columns.*' => ['required', 'string', 'max:80'],
             'rows' => ['present', 'array', 'max:' . (int) config('ai.export_max_rows')],
             'rows.*' => ['array'],
+            'format' => ['nullable', 'string', Rule::in(AiExportService::FORMATS)],
         ];
     }
 
@@ -89,6 +93,11 @@ class StoreAiExportRequest extends FormRequest
             ),
             (array) $this->validated('rows')
         ));
+    }
+
+    public function exportFormat(): string
+    {
+        return (string) ($this->validated('format') ?? 'pdf');
     }
 
     /**

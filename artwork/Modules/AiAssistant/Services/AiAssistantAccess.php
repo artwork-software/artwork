@@ -47,6 +47,12 @@ class AiAssistantAccess
         return $this->allowed($user) && $this->settings->level_b_enabled;
     }
 
+    /** Web-Recherche (ai-web-research): Stufe B plus Hausschalter. */
+    public function webAllowed(?User $user): bool
+    {
+        return $this->levelBAllowed($user) && $this->settings->web_enabled;
+    }
+
     /** Stufe C — Aktionen. Setzt Stufe B voraus (erzwungen im FormRequest der Einstellungen). */
     public function levelCAllowed(?User $user): bool
     {

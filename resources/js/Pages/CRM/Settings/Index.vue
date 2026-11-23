@@ -143,6 +143,13 @@
                                             <component :is="IconGripVertical" class="drag-handle h-4 w-4 text-text-subtle hover:text-text-muted" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'" />
                                             <span class="text-sm">{{ property.name }}</span>
                                             <span class="text-xs text-text-subtle bg-surface-sunken rounded px-2 py-0.5">{{ $t(propertyTypeLabels[property.type] ?? property.type) }}</span>
+                                            <span
+                                                v-if="!(property.contact_types?.length)"
+                                                class="inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-xs font-medium text-warning"
+                                                :title="$t('Without a contact type the property is not shown on any contact.')"
+                                            >
+                                                {{ $t('Not assigned to any contact type yet') }}
+                                            </span>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <button v-if="!property.is_system" @click="editingProperty = property; activeGroupForProperty = group; showPropertyModal = true" class="text-text-subtle hover:text-text-muted">
@@ -258,6 +265,8 @@
             v-if="showPropertyModal"
             :property="editingProperty"
             :group-id="activeGroupForProperty?.id"
+            :contact-types="localContactTypes"
+            :group-contact-type-ids="activeGroupForProperty ? typesUsingGroup(activeGroupForProperty).map(type => type.id) : []"
             @close="showPropertyModal = false; editingProperty = null; activeGroupForProperty = null"
         />
 

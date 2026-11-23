@@ -123,7 +123,8 @@
         <ArtworkBaseModal v-if="revokeOpen" :title="$t('Revoke access')" :description="''" @close="revokeOpen = false">
             <div class="mt-4 space-y-3">
                 <label class="componentLabel">{{ $t('Reason for revoke') }}</label>
-                <textarea v-model="revokeReason" rows="3" class="block w-full rounded-lg border-border text-sm" />
+                <BaseTextarea id="revoke_reason" v-model="revokeReason" :rows="3" label="" />
+                <p v-if="dialogError" class="text-sm text-danger">{{ dialogError }}</p>
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <BaseUIButton variant="secondary" hide-icon @click="revokeOpen = false">{{ $t('Cancel') }}</BaseUIButton>
@@ -135,7 +136,8 @@
         <ArtworkBaseModal v-if="extendCrmOpen" :title="$t('Extend')" :description="''" @close="extendCrmOpen = false">
             <div class="mt-4 space-y-3">
                 <label class="componentLabel">{{ $t('New expiry date') }}</label>
-                <input type="date" v-model="extendCrmDate" class="block w-full rounded-lg border-border text-sm" />
+                <BaseInput id="extend_crm_date" type="date" v-model="extendCrmDate" label="" no-margin-top />
+                <p v-if="dialogError" class="text-sm text-danger">{{ dialogError }}</p>
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <BaseUIButton variant="secondary" hide-icon @click="extendCrmOpen = false">{{ $t('Cancel') }}</BaseUIButton>
@@ -147,7 +149,8 @@
         <ArtworkBaseModal v-if="extendScopeOpen" :title="$t('Extend')" :description="''" @close="extendScopeOpen = false">
             <div class="mt-4 space-y-3">
                 <label class="componentLabel">{{ $t('New expiry date') }}</label>
-                <input type="date" v-model="extendScopeDate" class="block w-full rounded-lg border-border text-sm" />
+                <BaseInput id="extend_scope_date" type="date" v-model="extendScopeDate" label="" no-margin-top />
+                <p v-if="dialogError" class="text-sm text-danger">{{ dialogError }}</p>
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <BaseUIButton variant="secondary" hide-icon @click="extendScopeOpen = false">{{ $t('Cancel') }}</BaseUIButton>
@@ -158,23 +161,62 @@
         <!-- Relink dialog -->
         <ArtworkBaseModal v-if="relinkOpen" :title="$t('Re-link to another contact')" :description="''" @close="relinkOpen = false">
             <div class="mt-4 space-y-3">
-                <label class="componentLabel">{{ $t('Search contact to link to') }}</label>
-                <input type="number" v-model="relinkContactId" :placeholder="$t('CRM contact ID')" class="block w-full rounded-lg border-border text-sm" />
+                <!-- Gewählter Kontakt -->
+                <div v-if="relinkContact" class="flex items-center justify-between gap-3 rounded-lg border border-border-subtle px-3 py-2">
+                    <div class="min-w-0">
+                        <div class="text-xs text-text-subtle">{{ $t('Selected contact') }}</div>
+                        <div class="truncate text-sm font-medium text-text">
+                            {{ relinkContact.display_name }}
+                            <span v-if="relinkContact.contact_type" class="font-normal text-text-subtle">· {{ $t(relinkContact.contact_type.name) }}</span>
+                        </div>
+                    </div>
+                    <button type="button" class="text-sm text-accent-600 hover:underline shrink-0" @click="relinkContact = null">
+                        {{ $t('Change') }}
+                    </button>
+                </div>
+
+                <!-- Suche nach Name statt Eingabe einer Kontakt-ID -->
+                <template v-else>
+                    <BaseInput id="relink_search" v-model="relinkSearch" :label="$t('Search contact to link to')" />
+                    <div class="max-h-56 overflow-y-auto">
+                        <p v-if="relinkSearching" class="py-3 text-center text-sm text-text-subtle">{{ $t('Searching...') }}</p>
+                        <p v-else-if="relinkSearched && !relinkResults.length" class="py-3 text-center text-sm text-text-subtle">
+                            {{ $t('No contacts found.') }}
+                        </p>
+                        <div v-else class="divide-y divide-border-subtle">
+                            <button
+                                v-for="contact in relinkResults"
+                                :key="contact.id"
+                                type="button"
+                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-surface-sunken"
+                                @click="relinkContact = contact"
+                            >
+                                <span class="truncate text-sm font-medium text-text">{{ contact.display_name }}</span>
+                                <span v-if="contact.contact_type" class="shrink-0 text-xs text-text-subtle">{{ $t(contact.contact_type.name) }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+                <p v-if="dialogError" class="text-sm text-danger">{{ dialogError }}</p>
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <BaseUIButton variant="secondary" hide-icon @click="relinkOpen = false">{{ $t('Cancel') }}</BaseUIButton>
-                <BaseUIButton variant="primary" hide-icon :disabled="!relinkContactId" @click="relink">{{ $t('Confirm re-linking') }}</BaseUIButton>
+                <BaseUIButton variant="primary" hide-icon :disabled="!relinkContact" @click="relink">{{ $t('Confirm re-linking') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
     </AppLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import axios from 'axios'
+import debounce from 'lodash.debounce'
 import { router, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import StatusBadge from './Components/StatusBadge.vue'
 
@@ -197,9 +239,56 @@ const extendScopeOpen = ref(false)
 const extendScopeDate = ref('')
 const scopeBeingEdited = ref(null)
 const relinkOpen = ref(false)
-const relinkContactId = ref('')
+const relinkContact = ref(null)
+const relinkSearch = ref('')
+const relinkResults = ref([])
+const relinkSearching = ref(false)
+const relinkSearched = ref(false)
+let relinkSearchRequest = 0
 
-const opts = { preserveScroll: true }
+// Fehler der Dialog-Aktionen (Server-Validierung); vorher blieb der Dialog kommentarlos offen
+const dialogError = ref('')
+const opts = {
+    preserveScroll: true,
+    onBefore: () => { dialogError.value = '' },
+    onError: (errors) => { dialogError.value = Object.values(errors ?? {})[0] ?? $t('Failed to save') },
+}
+
+watch([revokeOpen, extendCrmOpen, extendScopeOpen, relinkOpen], () => { dialogError.value = '' })
+
+watch(relinkOpen, (open) => {
+    if (!open) return
+    relinkContact.value = null
+    relinkSearch.value = ''
+    relinkResults.value = []
+    relinkSearched.value = false
+})
+
+const searchRelinkContacts = debounce(async (term) => {
+    const requestId = ++relinkSearchRequest
+    if (term.trim().length < 2) {
+        relinkResults.value = []
+        relinkSearched.value = false
+        relinkSearching.value = false
+        return
+    }
+    relinkSearching.value = true
+    try {
+        const { data } = await axios.get(route('crm.contacts.search'), { params: { search: term.trim() } })
+        if (requestId !== relinkSearchRequest) return
+        // Der aktuell verknüpfte Kontakt ist kein sinnvolles Ziel
+        relinkResults.value = (data ?? []).filter((contact) => contact.id !== (props.access.crm_contact?.id ?? props.access.crm_contact_id))
+        relinkSearched.value = true
+    } catch {
+        if (requestId !== relinkSearchRequest) return
+        relinkResults.value = []
+        relinkSearched.value = true
+    } finally {
+        if (requestId === relinkSearchRequest) relinkSearching.value = false
+    }
+}, 300)
+
+watch(relinkSearch, (term) => searchRelinkContacts(term ?? ''))
 
 function resolveStatus() {
     if (props.access.revoked_at) return 'revoked'
@@ -256,7 +345,7 @@ function endScope(scope) {
 }
 
 function relink() {
-    router.post(route('crm.external-access.relink', props.access.id), { new_crm_contact_id: relinkContactId.value }, {
+    router.post(route('crm.external-access.relink', props.access.id), { new_crm_contact_id: relinkContact.value.id }, {
         ...opts, onSuccess: () => { relinkOpen.value = false },
     })
 }

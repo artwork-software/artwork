@@ -24,4 +24,13 @@ class DepartmentUpdated implements ShouldBroadcast
     {
         return new PrivateChannel('departments');
     }
+
+    /**
+     * Fester Name statt Klassenname: Echo setzte vor 'DepartmentUpdated' den Namensraum App\Events,
+     * der Listener der Teamverwaltung kam deshalb nie an.
+     */
+    public function broadcastAs(): string
+    {
+        return 'departments.updated';
+    }
 }

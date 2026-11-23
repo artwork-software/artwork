@@ -93,6 +93,8 @@ class InventoryArticleController extends Controller
             ->orderBy('name')
             ->paginate($perPage)
             ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedArticles->getCollection());
+        $trashedArticles->through(static fn ($model) => $model->setAttribute('trash', $trashInfo[$model->id] ?? null));
 
         return Inertia::render('Trash/InventoryArticles', [
             'trashedArticles' => $trashedArticles
@@ -138,6 +140,113 @@ class InventoryArticleController extends Controller
     {
         $this->authorizeTagAccess($inventoryArticle);
         $this->inventoryArticleService->delete($inventoryArticle);
+    }
+
+    /**
+     * Verschiebt mehrere Artikel in den Papierkorb. Ist einer davon über eingeschränkte Tags
+     * geschützt oder unbekannt, wird keiner gelöscht.
+     */
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $articles = $this->selectedArticles($request);
+        // alles oder nichts: scheitert ein Artikel, bleibt keiner gelöscht
+        DB::transaction(
+            fn () => $articles->each(fn (InventoryArticle $article) => $this->inventoryArticleService->delete($article))
+        );
+
+        return response()->json(['deleted' => $articles->count()]);
+    }
+
+    /**
+     * Sammeländerung für mehrere Artikel: Kategorie/Unterkategorie setzen oder Tags hinzufügen bzw.
+     * entfernen. Alles oder nichts: scheitert die Prüfung für einen Artikel, bleibt alles unverändert.
+     */
+    public function bulkUpdate(Request $request): JsonResponse
+    {
+        $articles = $this->selectedArticles($request);
+
+        $validated = $request->validate([
+            'action' => ['required', 'in:category,add_tags,remove_tags'],
+            'inventory_category_id' => ['required_if:action,category', 'integer', 'exists:inventory_categories,id'],
+            'inventory_sub_category_id' => ['nullable', 'integer', 'exists:inventory_sub_categories,id'],
+            'tag_ids' => ['required_unless:action,category', 'array', 'min:1'],
+            'tag_ids.*' => ['integer', 'distinct', 'exists:inventory_tags,id'],
+        ]);
+
+        if ($validated['action'] === 'category') {
+            $subCategoryId = $validated['inventory_sub_category_id'] ?? null;
+            if (
+                $subCategoryId !== null
+                && !InventorySubCategory::query()
+                    ->whereKey($subCategoryId)
+                    ->where('inventory_category_id', $validated['inventory_category_id'])
+                    ->exists()
+            ) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'inventory_sub_category_id' => [__('The subcategory does not belong to the selected category.')],
+                ]);
+            }
+
+            DB::transaction(static function () use ($articles, $validated, $subCategoryId): void {
+                $articles->each(static fn (InventoryArticle $article) => $article->update([
+                    'inventory_category_id' => $validated['inventory_category_id'],
+                    'inventory_sub_category_id' => $subCategoryId,
+                ]));
+            });
+
+            return response()->json(['updated' => $articles->count()]);
+        }
+
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $tags = \Artwork\Modules\Inventory\Models\InventoryTag::query()
+            ->with(['allowedUsers:id', 'allowedDepartments:id'])
+            ->whereIn('id', $validated['tag_ids'])
+            ->get();
+        if (!$user->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value)) {
+            $tagPermissions = app(\Artwork\Modules\Inventory\Services\InventoryTagPermissionService::class);
+            abort_unless(
+                $tags->every(static fn ($tag): bool => $tagPermissions->userCanEditTag($user, $tag)),
+                403,
+                __('You are not allowed to use one or more selected tags.')
+            );
+        }
+
+        $tagIds = $tags->pluck('id')->all();
+        DB::transaction(static function () use ($articles, $validated, $tagIds): void {
+            $articles->each(static function (InventoryArticle $article) use ($validated, $tagIds): void {
+                if ($validated['action'] === 'add_tags') {
+                    $article->tags()->syncWithoutDetaching($tagIds);
+                } else {
+                    $article->tags()->detach($tagIds);
+                }
+            });
+        });
+
+        return response()->json(['updated' => $articles->count()]);
+    }
+
+    /**
+     * Auswahl einer Sammelaktion: alle Artikel müssen existieren und dürfen nicht über
+     * eingeschränkte Tags gesperrt sein.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, InventoryArticle>
+     */
+    private function selectedArticles(Request $request): \Illuminate\Database\Eloquent\Collection
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:200'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $articles = InventoryArticle::query()
+            ->with(['tags.allowedUsers:id', 'tags.allowedDepartments:id'])
+            ->whereIn('id', $validated['ids'])
+            ->get();
+        abort_unless($articles->count() === count($validated['ids']), 404);
+        $articles->each(fn (InventoryArticle $article) => $this->authorizeTagAccess($article));
+
+        return $articles;
     }
 
     /**

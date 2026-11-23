@@ -13,6 +13,7 @@ use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Event\Services\EventVerificationService;
+use Artwork\Modules\Event\Services\IncomingRequestService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -22,6 +23,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -44,6 +46,7 @@ class EventVerificationController extends Controller
         private readonly AuthManager $authManager,
         private readonly ProjectTabService $projectTabService,
         private readonly UserService $userService,
+        private readonly IncomingRequestService $incomingRequestService,
     ) {
     }
 
@@ -61,38 +64,26 @@ class EventVerificationController extends Controller
         /** @var User $user */
         $user = $this->authManager->user();
         $isAdmin = $user->hasRole('artwork admin');
-        $hasGlobalCreate = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
-
         // --- Section 1: Room booking requests ---
-        $canSeeRoomRequests = $isAdmin || $hasGlobalCreate;
-        $adminRoomIds = collect();
+        $seesAllRoomRequests = $this->incomingRequestService->seesAllRoomRequests($user);
         $roomRequestScopeNames = [];
-
-        if (!$canSeeRoomRequests) {
-            // Raumadmin direkt oder über ein Team
-            $adminRoomIds = Room::query()->administeredBy($user->id)->pluck('id');
-            $canSeeRoomRequests = $adminRoomIds->isNotEmpty();
-        }
+        $roomRequestQuery = $this->incomingRequestService->openRoomRequestsQuery($user);
+        $canSeeRoomRequests = $roomRequestQuery !== null;
 
         $roomBookingRequests = collect();
-        if ($canSeeRoomRequests) {
-            // Anfragen zu geplanten Terminen erreichen die Raumadmins erst,
-            // wenn der Termin auf einen "richtigen" Termin umgestellt wurde
-            $query = Event::where('occupancy_option', true)
-                ->where('is_planning', false)
-                ->whereNotNull('room_id')
-                ->with(['room', 'event_type', 'project', 'creator'])
-                ->orderBy('start_time');
-
-            if (!$isAdmin && !$hasGlobalCreate) {
-                $query->whereIn('room_id', $adminRoomIds);
-                $roomRequestScopeNames = Room::whereIn('id', $adminRoomIds)
+        if ($roomRequestQuery !== null) {
+            if (!$seesAllRoomRequests) {
+                $roomRequestScopeNames = Room::whereIn('id', $this->incomingRequestService->administeredRoomIds($user))
                     ->pluck('name')
                     ->toArray();
             }
 
-            $roomBookingRequests = EventShowResource::collection($query->get())
-                ->resolve();
+            $roomBookingRequests = EventShowResource::collection(
+                $roomRequestQuery
+                    ->with(['room', 'event_type', 'project', 'creator'])
+                    ->orderBy('start_time')
+                    ->get()
+            )->resolve();
             $roomBookingRequests = collect($roomBookingRequests)->groupBy(fn ($e) => $e['room']['id'] ?? 0);
         }
 
@@ -122,10 +113,26 @@ class EventVerificationController extends Controller
         return Inertia::render('EventVerification/Index', [
             'roomBookingRequests' => $roomBookingRequests,
             'canSeeRoomRequests' => $canSeeRoomRequests,
-            'roomRequestScope' => ($isAdmin || $hasGlobalCreate) ? 'all' : $roomRequestScopeNames,
+            'roomRequestScope' => $seesAllRoomRequests ? 'all' : $roomRequestScopeNames,
             'verificationRequests' => $verificationRequests,
             'canSeeVerifications' => $canSeeVerifications,
             'verificationScope' => $isAdmin ? 'all' : $verificationScopeNames,
+            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTabId(),
+        ]);
+    }
+
+    /**
+     * Zahl der offenen eingehenden Anfragen für Reiter und Seitenmenü.
+     */
+    public function openCount(): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        return response()->json([
+            'count' => $this->eventSettingsService->alwaysDirectBooking()
+                ? 0
+                : $this->incomingRequestService->openCount($user),
         ]);
     }
 
@@ -304,8 +311,9 @@ class EventVerificationController extends Controller
 
     private function validatedRejectionReason(Request $request): string
     {
+        // TEXT fasst 65.535 Byte; 16.000 Zeichen passen auch bei 4-Byte-Zeichen sicher hinein
         return (string) ($request->validate([
-            'rejection_reason' => ['nullable', 'string', 'max:65000'],
+            'rejection_reason' => ['nullable', 'string', 'max:16000'],
         ])['rejection_reason'] ?? '');
     }
 

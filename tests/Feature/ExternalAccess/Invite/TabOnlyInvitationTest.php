@@ -6,6 +6,7 @@ use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\ExternalAccess\Enums\ExternalAccessType;
 use Artwork\Modules\ExternalAccess\Enums\InviteSource;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
+use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
@@ -78,6 +79,60 @@ final class TabOnlyInvitationTest extends TestCase
 
         $this->assertSame(1, ExternalAccess::query()->where('email', 'wieder@example.test')->count());
         $this->assertSame(2, ExternalAccess::query()->where('email', 'wieder@example.test')->firstOrFail()->scopes()->count());
+    }
+
+    #[Test]
+    public function inviting_a_revoked_access_again_grants_only_the_new_tab(): void
+    {
+        Notification::fake();
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $oldTab = ProjectTab::factory()->create();
+        $newTab = ProjectTab::factory()->create();
+        $contact = CrmContact::factory()->create();
+
+        $access = ExternalAccess::factory()->create([
+            'email' => 'widerrufen@example.test',
+            'crm_contact_id' => $contact->id,
+            'crm_access_expires_at' => now()->addYear(),
+            'revoked_at' => now()->subDay(),
+        ]);
+        $oldScope = ExternalAccessScope::factory()->create([
+            'external_access_id' => $access->id,
+            'project_tab_id' => $oldTab->id,
+            'valid_to' => now()->addMonths(3),
+        ]);
+
+        $this->postJson(route('crm.externals.invitations.store'), $this->tabPayload($project, $newTab, [
+            'email' => 'widerrufen@example.test',
+        ]))->assertCreated();
+
+        $access->refresh();
+        $this->assertNull($access->revoked_at);
+        $this->assertFalse($oldScope->fresh()->valid_to->isFuture());
+        $this->assertTrue($access->scopes()->where('project_tab_id', $newTab->id)->firstOrFail()->valid_to->isFuture());
+        $this->assertFalse($access->isCrmAccessActive());
+    }
+
+    #[Test]
+    public function inviting_an_active_access_again_keeps_its_running_tabs(): void
+    {
+        Notification::fake();
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $newTab = ProjectTab::factory()->create();
+
+        $access = ExternalAccess::factory()->create(['email' => 'aktiv@example.test', 'revoked_at' => null]);
+        $runningScope = ExternalAccessScope::factory()->create([
+            'external_access_id' => $access->id,
+            'valid_to' => now()->addMonths(3),
+        ]);
+
+        $this->postJson(route('crm.externals.invitations.store'), $this->tabPayload($project, $newTab, [
+            'email' => 'aktiv@example.test',
+        ]))->assertCreated();
+
+        $this->assertTrue($runningScope->fresh()->valid_to->isFuture());
     }
 
     #[Test]

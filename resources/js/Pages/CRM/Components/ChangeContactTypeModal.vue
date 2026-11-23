@@ -22,7 +22,7 @@
                 </p>
                 <ul class="mt-2 space-y-0.5">
                     <li v-for="entry in lostValues" :key="entry.id" class="text-sm text-danger">
-                        <span class="font-medium">{{ entry.name }}:</span> {{ entry.value }}
+                        <span class="font-medium">{{ $t(entry.name) }}:</span> {{ entry.value }}
                     </li>
                 </ul>
             </div>
@@ -46,6 +46,7 @@ import { router } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { isMirroredContactType } from '@/Pages/CRM/mirroredContactTypes.js'
 
@@ -69,6 +70,19 @@ const processing = ref(false)
 
 // Werte, deren Eigenschaft dem neuen Typ nicht zugewiesen ist — sie werden beim
 // Wechsel serverseitig gelöscht.
+// Lesbar statt Rohwert: Dateiname statt Speicherpfad, Liste statt JSON, Ja/Nein, deutsches Datum
+const readableValue = (propertyValue) => {
+    const type = propertyValue.property?.type
+    const value = propertyValue.value
+    if (type === 'upload') return propertyValue.file_name || String(value).split('/').pop()
+    if (type === 'checkbox') return value === '1' ? $t('Yes') : $t('No')
+    if (type === 'date') {
+        const [year, month, day] = String(value).slice(0, 10).split('-')
+        return year && month && day ? `${day}.${month}.${year}` : value
+    }
+    return crmPropertyDisplayText(value, type)
+}
+
 const lostValues = computed(() => {
     if (!selectedType.value) return []
     const keptIds = new Set((selectedType.value.properties ?? []).map(p => p.id))
@@ -78,7 +92,7 @@ const lostValues = computed(() => {
         .map(v => ({
             id: v.id,
             name: v.property?.name ?? `#${v.crm_property_id}`,
-            value: v.value,
+            value: readableValue(v),
         }))
 })
 

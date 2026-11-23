@@ -54,10 +54,20 @@ readonly class EventStatusService
         $settings->save();
 
         if ($request->boolean('enable_status')) {
-            $eventsWithoutStatus = Event::whereNull('event_status_id')->get();
-            $eventsWithoutStatus->each(function ($event): void {
-                $event->update(['event_status_id' => 1]);
-            });
+            // Standardstatus, sonst der erste: fest "1" scheiterte am Fremdschlüssel, wenn Status 1 gelöscht ist
+            $statusIdForEventsWithoutStatus = EventStatus::query()
+                ->orderByDesc('default')
+                ->orderBy('order')
+                ->value('id');
+
+            if ($statusIdForEventsWithoutStatus !== null) {
+                // eachById: each() blättert per Offset und überspringt Termine, weil die Schleife die Filterspalte ändert
+                Event::whereNull('event_status_id')->eachById(function (Event $event) use (
+                    $statusIdForEventsWithoutStatus
+                ): void {
+                    $event->update(['event_status_id' => $statusIdForEventsWithoutStatus]);
+                });
+            }
         } else {
             // Statusfarbe in allen Einstellungszeilen abschalten (Kalender und Planungskalender, je auch Tagesansicht)
             UserCalendarSettings::query()->update(['use_event_status_color' => false]);

@@ -256,7 +256,7 @@ final class SecurityAuditDataExposureRegressionTest extends FeatureTestCase
     {
         $login = RateLimiter::limiter('login')(Request::create('/login', 'POST', ['email' => 'Max@Example.com']));
         $this->assertCount(2, $login);
-        $this->assertSame('account|max@example.com', $login[1]->key);
+        $this->assertSame('account|mail:max@example.com', $login[1]->key);
         $this->assertSame(10, $login[1]->maxAttempts);
 
         $discover = RateLimiter::limiter('app-discover')(Request::create('/api/app/v1/auth/discover', 'POST'));

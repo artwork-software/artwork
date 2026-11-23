@@ -35,7 +35,7 @@
                                    <p class="text-lg/[21px] font-semibold text-text">{{ eventType.name }}</p>
                                    <div class="ml-2 text-lg/[21px] font-semibold text-text">({{eventType.abbreviation}})</div>
                                </div>
-                               <div class="flex mt-2 divide-x space-x-2">
+                               <div class="mt-2 flex flex-wrap gap-x-2 divide-x divide-border-subtle">
                                    <div class="text-xs/[18px] text-text-subtle">
                                        {{
                                            eventType.project_mandatory ? $t('Project assignment mandatory') : $t('Project assignment optional')
@@ -167,7 +167,7 @@ export default {
             if (!this.eventTypeToDelete) {
                 return;
             }
-            this.$inertia.delete(`../event_types/${this.eventTypeToDelete.id}`, {
+            this.$inertia.delete(route('event_types.destroy', this.eventTypeToDelete.id), {
                 onSuccess: () => {
                     this.closeDeleteEventTypeModal();
                 }

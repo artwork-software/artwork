@@ -124,6 +124,7 @@ return [
         'new_message' => 'Neue Nachricht zu Raumanfrage',
         'room_request_accept' => 'Raumanfrage bestätigt',
         'room_request_declined' => 'Raumanfrage abgesagt',
+        'room_change_request_declined' => 'Änderung der Raumbelegung abgelehnt, der Termin bleibt wie bestätigt',
         'deleted' => 'Termin abgesagt'
     ],
     'ai_assistant' => [

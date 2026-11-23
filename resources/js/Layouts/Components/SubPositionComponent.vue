@@ -1,26 +1,35 @@
 <template>
-    <th class="bg-border text-xs/[15px] text-text w-full">
+    <th class="bg-border text-xs/[15px] text-text w-full"
+        :id="'budget-sub-' + subPosition.id"
+        :class="pendingDeleteKeys['sub:' + subPosition.id] ? 'opacity-40 pointer-events-none' : ''">
         <div class="flex" @mouseover="showMenu = 'subPosition' + subPosition.id" @mouseout="showMenu = null">
-            <div class="pl-2 text-xs/[15px] text-text w-full flex items-center h-10" v-if="!subPosition.clicked">
-                <div @click="subPosition.clicked = !subPosition.clicked">
+            <div class="w-full flex">
+            <div class="pl-2 text-xs/[15px] text-text flex items-center h-10 sticky left-0 lg:left-20">
+                <input v-if="isEditingName"
+                       ref="nameInput"
+                       class="w-72 max-w-full text-xs/[15px] text-text bg-white rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600 focus:outline-none"
+                       type="text" v-model="editedName"
+                       @keydown.enter.prevent="$event.target.blur()"
+                       @keydown.esc.prevent="cancelNameEdit"
+                       @blur="saveName">
+                <div v-else-if="canEditStructure"
+                     class="cursor-text rounded px-1 -ml-1 hover:bg-black/10"
+                     :class="[subPosition.name ? '' : 'italic text-text-subtle', searchHighlightClass('sub:' + subPosition.id)]"
+                     :title="$t('Rename')"
+                     @click="startNameEdit">
+                    {{ subPosition.name || $t('No name') }}
+                </div>
+                <div v-else class="rounded px-1 -ml-1" :class="searchHighlightClass('sub:' + subPosition.id)">
                     {{ subPosition.name }}
                 </div>
-                <button class="my-auto w-6 ml-3" @click="openCloseMainPosition">
-                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-text my-auto"/>
+                <button type="button" class="my-auto w-6 ml-3"
+                        :title="isClosed ? $t('Expand') : $t('Collapse')"
+                        :aria-expanded="!isClosed"
+                        @click="openCloseSubPosition">
+                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!isClosed" class="h-6 w-6 text-text my-auto"/>
                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
                 </button>
             </div>
-            <div v-else class="flex w-full">
-                <input class="my-2 ml-1 text-xs/[15px] text-text rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600"
-                       type="text" v-model="subPosition.name"
-                       @keyup.enter="$event.target.blur()"
-                       @keyup.esc="subPosition.name = editedNameOriginalValue ?? subPosition.name; subPosition.clicked = false"
-                       @focus="editedNameOriginalValue = subPosition.name"
-                       @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
-                <button class="my-auto w-6 ml-3" @click="subPosition.closed = !subPosition.closed">
-                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-text my-auto"/>
-                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
-                </button>
             </div>
             <div class="flex items-center justify-end">
                 <div class="flex flex-wrap w-8">
@@ -69,12 +78,12 @@
                 </div>
             </div>
         </div>
-        <table class="w-full" v-if="!subPosition.closed">
+        <table class="w-full">
             <tbody class="bg-surface w-full">
-            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
+            <SageDataDropElement v-if="!isClosed && $page.props.sageApiEnabled" :row="null" :tableId="table.id"
                                  :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
             <draggable
-                v-if="subPosition.sub_position_rows?.length > 0"
+                v-if="!isClosed && subPosition.sub_position_rows?.length > 0"
                 v-model="subPosition.sub_position_rows"
                 item-key="id"
                 tag="div"
@@ -86,14 +95,18 @@
                 <template #item="{ element: row, index: rowIndex }">
                     <div>
                         <tr v-show="!(row.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                            :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-accent-600' : '']"
+                            :id="'budget-row-' + row.id"
+                            :class="[hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-accent-600' : '', rowStateClass(row)]"
                             @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
                             class="bg-surface flex justify-between items-center border border-border-subtle group">
                             <div class="flex items-center">
                                 <td v-for="(cell,index) in row.cells"
                                     :key="cell.id"
                                     v-show="!(cell.column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                                    :class="[index <= 1 ? 'w-48' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
+                                    :class="[index <= 1 ? 'w-48' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', index === 2 ? stickyPositionCellClass(cell) : '', selectedCellIds[cell.id] ? 'outline-2 -outline-offset-2 outline-accent-600' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']"
+                                    class="group/cell"
+                                    @mousedown.capture="onCellMouseDownCapture($event, cell, index)"
+                                    @click.capture="onCellClickCapture($event, cell, index)">
                                     <div
                                         v-if="index === 0 && canReorderSubPositionRows"
                                         class="sub-position-row-drag-handle absolute left-0 top-1/2 -translate-y-1/2 cursor-grab text-text-subtle hover:text-primaryText"
@@ -360,7 +373,7 @@
                             </div>
                             <PropertyIcon name="IconCirclePlus" stroke-width="1.5" v-if="index > 2 "
                                             @click="openCellDetailModal(cell)"
-                                            class="hidden group-hover:block h-6 w-6 absolute -mt-10 ml-4 z-50 cursor-pointer text-white bg-accent-600 rounded-full"/>
+                                            class="hidden group-hover/cell:block h-6 w-6 absolute -mt-10 ml-4 z-50 cursor-pointer text-white bg-accent-600 rounded-full"/>
                         </td>
                     </div>
                             <BaseMenu
@@ -373,7 +386,7 @@
                                 <BaseMenuItem
                                     v-if="row.commented === false"
                                     :title="$t('Exclude')"
-                                    icon="IconLock"
+                                    icon="IconParentheses"
                                     white-menu-background
                                     @click="updateRowCommented(row.id, true)"
                                 />
@@ -381,7 +394,7 @@
                                 <BaseMenuItem
                                     v-else
                                     :title="$t('Include positions')"
-                                    icon="IconLockOpen"
+                                    icon="IconParenthesesOff"
                                     white-menu-background
                                     @click="updateRowCommented(row.id, false)"
                                 />
@@ -408,32 +421,32 @@
                                              :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
                         <div @click="addRowToSubPosition(subPosition, row)"
                              v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
-                             class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-accent-600 hover:border-t-2 hover:border-accent-600">
-                            <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
+                             class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-accent-600 hover:border-t-2 hover:border-accent-600 before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']">
+                            <div class="group-hover:flex hidden items-center gap-x-1 -mt-3 h-6 pl-3 pr-1 rounded-full bg-accent-600 text-white text-xs font-semibold uppercase shadow-md relative z-20 whitespace-nowrap">
                                 {{ $t('Row') }}
                                 <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
-                                                class="h-6 w-6 ml-2 text-white bg-accent-600 rounded-full"/>
+                                                class="h-4 w-4"/>
                             </div>
                         </div>
                     </div>
                 </template>
             </draggable>
 
-            <div v-if="!(subPosition.sub_position_rows?.length > 0) && (this.hasBudgetAccess || this.$can('edit budget templates'))"
+            <div v-if="!isClosed && !(subPosition.sub_position_rows?.length > 0) && canEditStructure"
                  @click="addRowToSubPosition(subPosition)"
-                 class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
-                <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
+                 class="group relative  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600 before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']">
+                <div class="group-hover:flex hidden items-center gap-x-1 -mt-3 h-6 pl-3 pr-1 rounded-full bg-accent-600 text-white text-xs font-semibold uppercase shadow-md relative z-20 whitespace-nowrap">
                     {{ $t('Row') }}
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
-                                    class="h-6 w-6 ml-2 text-white bg-accent-600 rounded-full"/>
+                                    class="h-4 w-4"/>
                 </div>
             </div>
-            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
+            <SageDataDropElement v-if="!isClosed && $page.props.sageApiEnabled" :row="null" :tableId="table.id"
                                  :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
             <tr class=" text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                 <td class="w-48"></td>
                 <td class="w-48"></td>
-                <td class="w-72 my-2">{{ $t('SUM') }}</td>
+                <td class="w-72 py-2 bg-surface sticky left-0 lg:left-20 z-10">{{ $t('SUM') }}</td>
                 <td v-if="subPosition.sub_position_rows?.length > 0" class="flex items-center w-48"
                     v-for="column in valueColumns"
                     :key="column.id"
@@ -474,11 +487,11 @@
         </table>
         <div @click="addSubPosition(mainPosition.id, subPosition)"
              v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
-             class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
-            <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
+             class="group relative  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600 before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']">
+            <div class="group-hover:flex hidden items-center gap-x-1 -mt-3 h-6 pl-3 pr-1 rounded-full bg-accent-600 text-white text-xs font-semibold uppercase shadow-md relative z-20 whitespace-nowrap">
                 {{ $t('Sub position') }}
                 <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
-                                class="h-6 w-6 ml-12 text-white bg-accent-600 rounded-full"/>
+                                class="h-4 w-4"/>
             </div>
         </div>
     </th>
@@ -498,7 +511,6 @@
     />
 </template>
 <script>
-import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import {useForm, usePage} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {nextTick} from "vue";
@@ -515,6 +527,13 @@ import draggable from 'vuedraggable';
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {budgetCellFocus} from "@/Layouts/Components/Budget/budgetCellFocus.js";
 import axios from "axios";
+import {isBudgetEntryClosed, toggleBudgetEntryClosed} from "@/Layouts/Components/Budget/budgetCollapseState.js";
+import {budgetCellRange} from "@/Layouts/Components/Budget/budgetTableTools.js";
+import {
+    budgetCellSelection,
+    budgetPendingDeletes,
+    budgetSearchState
+} from "@/Layouts/Components/Budget/budgetTableState.js";
 
 export default {
     mixins: [Permissions, CurrencyFloatToStringFormatter],
@@ -593,7 +612,8 @@ export default {
             dataToDisplayInRelevantDataModal: null,
             showRelevantBudgetDataSumModal: false,
             savingCellIds: {},
-            editedNameOriginalValue: null,
+            isEditingName: false,
+            editedName: '',
             truncEls: {},
             isTruncated: {},
         }
@@ -628,14 +648,23 @@ export default {
             return (this.columns ?? []).slice(3);
         },
 
-        closedSubPositionsStorageKey() {
-            // pro Tabelle getrennt, sonst kollidieren die Zustaende zwischen Projekten
-            return `closedSubPositions:${this.table?.id}`;
+        isClosed() {
+            return isBudgetEntryClosed('sub', this.table?.id, this.subPosition.id);
+        },
+
+        selectedCellIds() {
+            return budgetCellSelection.ids;
+        },
+
+        pendingDeleteKeys() {
+            return budgetPendingDeletes.keys;
+        },
+
+        canEditStructure() {
+            return this.hasBudgetAccess || this.$can('edit budget templates');
         },
     },
     mounted() {
-        this.checkIfSubPositionClosed();
-
         this._onResize = () => {
             Object.keys(this.truncEls || {}).forEach((id) => this.updateTruncation(id));
         };
@@ -643,11 +672,6 @@ export default {
     },
     beforeUnmount() {
         window.removeEventListener("resize", this._onResize);
-    },
-    watch: {
-        'subPosition.id'() {
-            this.checkIfSubPositionClosed();
-        },
     },
     methods: {
         setTruncEl(id, el) {
@@ -838,34 +862,29 @@ export default {
                 }
             )
         },
-        readClosedSubPositions() {
-            try {
-                const stored = JSON.parse(safeGetItem(this.closedSubPositionsStorageKey));
-                return Array.isArray(stored) ? stored : [];
-            } catch (e) {
-                return [];
-            }
+        openCloseSubPosition() {
+            toggleBudgetEntryClosed('sub', this.table?.id, this.subPosition.id);
         },
-        checkIfSubPositionClosed() {
-            const closedSubPositions = this.readClosedSubPositions();
-            const entry = closedSubPositions.find((subPosition) => subPosition.id === this.subPosition.id);
-            if (entry) {
-                this.subPosition.closed = entry.closed;
-            }
+        startNameEdit() {
+            this.editedName = this.subPosition.name ?? '';
+            this.isEditingName = true;
+            nextTick(() => this.$refs.nameInput?.select());
         },
-        openCloseMainPosition() {
-            this.subPosition.closed = !this.subPosition.closed;
-            const closedSubPositions = this.readClosedSubPositions();
-            const entry = closedSubPositions.find((subPosition) => subPosition.id === this.subPosition.id);
-            if (entry) {
-                entry.closed = this.subPosition.closed;
-            } else {
-                closedSubPositions.push({
-                    id: this.subPosition.id,
-                    closed: this.subPosition.closed
-                });
+        cancelNameEdit() {
+            this.isEditingName = false;
+        },
+        saveName() {
+            if (!this.isEditingName) {
+                return;
             }
-            safeSetItem(this.closedSubPositionsStorageKey, JSON.stringify(closedSubPositions));
+            this.isEditingName = false;
+            const name = this.editedName.trim();
+            // Leerer oder unveraenderter Name: nichts speichern (spart Request + Neuladen)
+            if (name === '' || name === this.subPosition.name) {
+                return;
+            }
+            this.subPosition.name = name;
+            this.updateSubPositionName(this.subPosition);
         },
         duplicateSubpostion(subPositionId) {
             this.$inertia.post(route('project.budget.sub-position.duplicate', subPositionId), {}, {
@@ -942,7 +961,7 @@ export default {
                 sub_position_id: subPosition.id,
                 positionBefore: row ? row.position : -1
             }, {
-                preserveState: false,
+                preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => this.$emit('budget-updated')
             });
@@ -1112,6 +1131,69 @@ export default {
             }
             return null;
         },
+        searchHighlightClass(key) {
+            if (budgetSearchState.activeKey === key) {
+                return 'bg-warning text-text';
+            }
+            return budgetSearchState.matchedKeys[key] ? 'bg-warning/40' : '';
+        },
+        rowStateClass(row) {
+            const key = 'row:' + row.id;
+            if (budgetPendingDeletes.keys[key]) {
+                return 'opacity-40 line-through pointer-events-none';
+            }
+            if (budgetSearchState.activeKey === key) {
+                return 'outline-2 -outline-offset-2 outline-warning relative z-10';
+            }
+            return budgetSearchState.matchedKeys[key] ? 'outline-1 -outline-offset-1 outline-warning/70' : '';
+        },
+        /**
+         * Auswahl-Summe: Strg/Cmd-Klick waehlt einzelne Wertzellen, Umschalt-Klick den Bereich
+         * ab der zuletzt angeklickten Zelle. Laeuft in der Capture-Phase, damit der Klick nicht
+         * zusaetzlich die Zelle zum Bearbeiten oeffnet.
+         */
+        isSelectionClick(event, cell, index) {
+            return index > 2 && !cell.clicked && (event.shiftKey || event.metaKey || event.ctrlKey);
+        },
+        onCellMouseDownCapture(event, cell, index) {
+            if (this.isSelectionClick(event, cell, index)) {
+                // verhindert Textmarkierung und den Fokuswechsel einer gerade bearbeiteten Zelle
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+        onCellClickCapture(event, cell, index) {
+            if (!this.isSelectionClick(event, cell, index)) {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (event.shiftKey && budgetCellSelection.anchorId !== null) {
+                budgetCellRange(
+                    this.subPosition.sub_position_rows,
+                    budgetCellSelection.anchorId,
+                    cell.id,
+                    (candidate, candidateIndex) => candidateIndex > 2
+                ).forEach((id) => {
+                    budgetCellSelection.ids[id] = true;
+                });
+                return;
+            }
+
+            if (budgetCellSelection.ids[cell.id]) {
+                delete budgetCellSelection.ids[cell.id];
+            } else {
+                budgetCellSelection.ids[cell.id] = true;
+            }
+            budgetCellSelection.anchorId = cell.id;
+        },
+        stickyPositionCellClass(cell) {
+            // Die Spalte "Position" bleibt beim Querscrollen stehen und braucht dafuer einen
+            // deckenden Hintergrund (farbige Spalten bringen ihn ueber checkCellColor mit).
+            const hasOwnColor = cell.column.color && cell.column.color !== 'whiteColumn';
+            return 'sticky left-0 lg:left-20 z-10' + (hasOwnColor ? '' : ' bg-surface');
+        },
         storeFocus(cellId) {
             budgetCellFocus.nextCellId = cellId;
         },
@@ -1184,7 +1266,7 @@ export default {
                 positionBefore: subPositionBefore.position
             }, {
                 preserveScroll: true,
-                preserveState: false,
+                preserveState: true,
                 onSuccess: () => this.$emit('budget-updated')
             });
         },

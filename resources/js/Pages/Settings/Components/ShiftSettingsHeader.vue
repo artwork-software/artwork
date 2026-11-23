@@ -1,5 +1,5 @@
 <template>
-    <app-layout :title="$t('Shift Settings') + ' - ' + title">
+    <app-layout :title="title && title !== $t('Shift Settings') ? $t('Shift Settings') + ' - ' + title : $t('Shift Settings')">
         <div class="artwork-container">
             <ToolbarHeader
                 :icon="IconSettings"

@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\Event\Models;
 
+use Artwork\Modules\AiAssistant\Support\WebGuardScope;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Event\Services\EventChangeApprovalService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Models\EventComment;
 use Artwork\Modules\Event\Models\EventProperty;
@@ -58,6 +60,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property bool $accepted
  * @property bool $is_planning
  * @property string $option_string
+ * @property int|null $approved_room_id Bestätigter Raum, solange er vom aktuellen Stand abweicht
+ * @property Carbon|null $approved_start_time Bestätigter Beginn, solange er vom aktuellen Stand abweicht
+ * @property Carbon|null $approved_end_time Bestätigtes Ende, solange es vom aktuellen Stand abweicht
+ * @property int|null $requested_by_id Person, die die laufende Raumanfrage gestellt hat (leer = Ersteller*in)
+ * @property User|null $requester
  * @property Project|null $project
  * @property Room|null $room
  * @property EventStatus $eventStatus
@@ -140,6 +147,8 @@ class Event extends Model
         'earliest_start_datetime' => 'datetime',
         'latest_end_datetime' => 'datetime',
         'is_planning' => 'boolean',
+        'approved_start_time' => 'datetime',
+        'approved_end_time' => 'datetime',
     ];
 
     protected $appends = [
@@ -165,6 +174,28 @@ class Event extends Model
             $eventService = app()->get(EventService::class);
             $event->earliest_start_datetime = $eventService->getEarliestStartTime($event);
             $event->latest_end_datetime = $eventService->getLatestEndTime($event);
+
+            // Geplante Termine und Termine ohne Raum haben keine bestätigte Belegung (sonst buchte das spätere
+            // Wiedereinsetzen des Raums ohne Anfrage fest). Nur mit geladenen Spalten: ein teilweise geladenes
+            // Modell darf dabei nichts leeren
+            $attributes = $event->getAttributes();
+            if (
+                (array_key_exists('is_planning', $attributes) && $event->is_planning)
+                || (array_key_exists('room_id', $attributes) && $event->room_id === null)
+            ) {
+                $event->forceFill(EventChangeApprovalService::CLEARED_APPROVAL);
+            }
+        });
+
+        // Kopien (Duplizieren, Serien) sind neue Termine: weder eine bestätigte Belegung noch eine laufende
+        // Anfrage des Originals gehen auf sie über
+        static::replicating(function (Event $copy): void {
+            $copy->forceFill([
+                'approved_room_id' => null,
+                'approved_start_time' => null,
+                'approved_end_time' => null,
+                'requested_by_id' => null,
+            ]);
         });
     }
 
@@ -257,6 +288,36 @@ class Event extends Model
             'id',
             'users'
         );
+    }
+
+    /**
+     * Person, die die laufende Raumanfrage gestellt hat, z. B. bei einem Raumwechsel durch jemand anderen.
+     * Leer: die Anfrage stammt von der Person, die den Termin angelegt hat (requestingUser()).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requested_by_id', 'id', 'users');
+    }
+
+    /**
+     * Wer die laufende Raumanfrage gestellt hat: requester, sonst Ersteller*in.
+     */
+    public function requestingUser(): ?User
+    {
+        return $this->requester ?? $this->creator;
+    }
+
+    /**
+     * Ob der Termin eine bestätigte Belegung hat, die vom aktuellen Stand abweicht (Änderungsanfrage oder
+     * innerhalb der Bestätigung verkürzt).
+     */
+    public function hasDeviatingApproval(): bool
+    {
+        return $this->approved_room_id !== null
+            && $this->approved_start_time !== null
+            && $this->approved_end_time !== null;
     }
 
     /**
@@ -655,12 +716,19 @@ class Event extends Model
      * `/calendar/view`) haengt an keinem Recht, und
      * `CalendarService::filterEvents():252` filtert ausschliesslich nach den Kalendereinstellungen
      * der Person (Raeume, Bereiche, Termintypen, Publikum, laut/leise) — nie nach Rechten.
-     * Deshalb liefert der Scope fuer jede angemeldete Person alles und ohne Benutzer nichts.
-     * Er existiert trotzdem als eigene Methode, damit die Aggregations-Endpunkte (B1) genau eine
-     * Stelle haben, an der sich die Regel aendern laesst, wenn die Oberflaeche sie bekommt.
+     * Deshalb liefert der Scope fuer jede angemeldete Person alle festen Termine und ohne Benutzer nichts.
+     * Planungstermine nur mit Planungskalender-Recht (EventPolicy::viewPlanning, wie der Planungskalender
+     * und die Raumkanaele); Admins ueber Gate::before. Die Pruefung laeuft im web-Guard, weil Spatie-Rechte
+     * unter dem api-Guard (KI-Token) sonst immer false liefern.
      */
     public function scopeVisibleFor(Builder $builder, ?User $user): Builder
     {
-        return $user instanceof User ? $builder : $builder->whereRaw('1 = 0');
+        if (!$user instanceof User) {
+            return $builder->whereRaw('1 = 0');
+        }
+
+        $mayViewPlanning = WebGuardScope::run(static fn (): bool => $user->can('viewPlanning', self::class));
+
+        return $mayViewPlanning ? $builder : $builder->where($builder->qualifyColumn('is_planning'), false);
     }
 }

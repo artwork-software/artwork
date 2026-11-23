@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\AiAssistant\Services;
 
+use Artwork\Modules\Event\Services\EventChangeApprovalService;
+use Artwork\Modules\Event\Services\EventRoomBookingService;
 use Artwork\Modules\AiAssistant\Contracts\ActionGuard;
 use Artwork\Modules\AiAssistant\Contracts\BatchRecorder;
 use Artwork\Modules\AiAssistant\DTOs\AiRefData;
@@ -57,6 +59,8 @@ class AiEventWriteService
         private readonly ActionGuard $actionGuard,
         private readonly BatchRecorder $batchRecorder,
         private readonly AiBatchNotifier $notifier,
+        private readonly EventRoomBookingService $roomBookingService,
+        private readonly EventChangeApprovalService $changeApprovalService,
     ) {
     }
 
@@ -155,6 +159,8 @@ class AiEventWriteService
         abort_if($event === null, Response::HTTP_NOT_FOUND);
 
         $conflicts = $this->policyConflicts($user, $event, 'update');
+        // Raumwechsel mit denselben Raumrechten wie die Terminliste: fest, als Raumanfrage oder gar nicht
+        $asRoomRequest = $this->roomChangeMode($user, $event, $changes['room_id'] ?? null, $conflicts);
         $this->assertEndDayNotBeforeStart($event, $changes);
         $this->assertExecutable($user, $intent, self::TOOL_UPDATE, $conflicts);
         $originalEndDay = CarbonImmutable::parse($event->end_time)->toDateString();
@@ -169,8 +175,20 @@ class AiEventWriteService
             $user,
             $intent,
             self::TOOL_UPDATE,
-            function () use ($event, $changes): array {
+            function () use ($event, $changes, $asRoomRequest, $user): array {
+                $wasOpenRequest = (bool) $event->occupancy_option;
+                $approvalBefore = $this->changeApprovalService->snapshot($event);
                 $this->eventService->updateBulkEvent(collect($this->updatePayload($event, $changes)), $event);
+                // Wie in der Oberfläche: Zeitraum über die bestätigte Belegung hinaus wird zur Raumanfrage
+                if ($this->changeApprovalService->applyAfterChange($user, $event, $approvalBefore)) {
+                    $asRoomRequest = true;
+                }
+                if ($asRoomRequest) {
+                    $this->roomBookingService->turnIntoRoomRequests(
+                        [(int) $event->id],
+                        $wasOpenRequest ? [(int) $event->id] : []
+                    );
+                }
 
                 return [$event->refresh()];
             },
@@ -180,7 +198,7 @@ class AiEventWriteService
                     'update',
                     array_merge(
                         $conflicts,
-                        $this->collisionConflicts($updated),
+                        $this->collisionConflicts($updated, $user),
                         $this->shiftHints($updated, $originalEndDay)
                     )
                 ),
@@ -237,8 +255,10 @@ class AiEventWriteService
         $changes = [];
         $before = [];
 
+        $asRoomRequest = [];
         foreach ($events as $event) {
             $conflicts[$event->id] = $this->policyConflicts($user, $event, 'update');
+            $asRoomRequest[$event->id] = $this->roomChangeMode($user, $event, $roomId, $conflicts[$event->id]);
             $changes[$event->id] = $this->movedChanges($event, $shiftMinutes, $moveToDay, $roomId);
             $before[$event->id] = [
                 'state' => $event->getRawOriginal(),
@@ -261,16 +281,34 @@ class AiEventWriteService
             $user,
             $intent,
             self::TOOL_UPDATE_BATCH,
-            function () use ($events, $changes): array {
+            function () use ($events, $changes, $asRoomRequest, $user): array {
                 $updated = [];
+                $newRoomRequestIds = [];
+                $alreadyOpenIds = [];
 
                 foreach ($events as $event) {
                     if ($changes[$event->id] !== null) {
+                        if ($event->occupancy_option) {
+                            $alreadyOpenIds[] = (int) $event->id;
+                        }
+                        $approvalBefore = $this->changeApprovalService->snapshot($event);
                         $this->eventService->updateBulkEvent(
                             collect($this->updatePayload($event, $changes[$event->id])),
                             $event
                         );
+                        $changeBecameRequest = $this->changeApprovalService->applyAfterChange(
+                            $user,
+                            $event,
+                            $approvalBefore
+                        );
+                        if ($asRoomRequest[$event->id] || $changeBecameRequest) {
+                            $newRoomRequestIds[] = (int) $event->id;
+                        }
                     }
+                }
+                $this->roomBookingService->turnIntoRoomRequests($newRoomRequestIds, $alreadyOpenIds);
+
+                foreach ($events as $event) {
                     $updated[] = $event->refresh();
                 }
 
@@ -282,7 +320,7 @@ class AiEventWriteService
                     $before[$event->id]['label'],
                     array_merge(
                         $conflicts[$event->id],
-                        $this->collisionConflicts($event),
+                        $this->collisionConflicts($event, $user),
                         $this->shiftMoveHints($event, $shiftStates)
                     )
                 ),
@@ -853,12 +891,50 @@ class AiEventWriteService
     }
 
     /**
+     * Raumwechsel wie in der Terminliste der Oberflaeche (EventRoomBookingService): mit Buchungsrecht im
+     * Zielraum fest, mit Anfragerecht als Raumanfrage, sonst ein Konflikt, der die Aktion sperrt. Die KI
+     * handelt mit den Rechten der Person, nie mit mehr.
+     *
+     * @param list<AiWriteConflictData> $conflicts
+     * @return bool true = der Termin wird im Zielraum zur Raumanfrage
+     */
+    private function roomChangeMode(User $user, Event $event, mixed $targetRoomId, array &$conflicts): bool
+    {
+        if ($targetRoomId === null || (int) $targetRoomId === (int) $event->room_id) {
+            return false;
+        }
+
+        $room = Room::query()->find((int) $targetRoomId);
+        abort_if($room === null, Response::HTTP_NOT_FOUND);
+
+        $asRoomRequest = WebGuardScope::run(
+            fn (): ?bool => $this->roomBookingService->roomRequestRequired($user, (bool) $event->is_planning, $room)
+        );
+        if ($asRoomRequest === null) {
+            $conflicts[] = new AiWriteConflictData(
+                AiWriteConflictData::MISSING_PERMISSION,
+                'Diese Person darf im Zielraum weder fest buchen noch eine Raumbelegung anfragen.',
+                AiRefData::make($event->id, AiText::truncate($event->eventName ?: $event->name))
+            );
+
+            return false;
+        }
+
+        return $asRoomRequest;
+    }
+
+    /**
      * Raumkollisionen ueber denselben Dienst wie die Oberflaeche; der Termin selbst ist
      * ausgenommen.
      *
+     * Dass der Raum belegt ist, ist ein Faktum und wird immer gemeldet. ID und Name des
+     * kollidierenden Termins gehen aber nur raus, wenn die fragende Person ihn sehen darf
+     * (`Event::visibleFor()`, also Planungstermine nur mit Planungskalender-Recht); sonst bleibt
+     * `event` leer, wie bei `AiRoomConflictService::eventData()`.
+     *
      * @return list<AiWriteConflictData>
      */
-    private function collisionConflicts(Event $event): array
+    private function collisionConflicts(Event $event, ?User $viewer): array
     {
         if ($event->room_id === null || $event->start_time === null || $event->end_time === null) {
             return [];
@@ -870,13 +946,25 @@ class AiEventWriteService
             'roomId' => $event->room_id,
         ]);
 
+        $collisions = $this->collisionService->getCollision($request, $event)->get();
+        $visibleIds = $collisions->isEmpty()
+            ? []
+            : Event::query()
+                ->visibleFor($viewer)
+                ->whereKey($collisions->modelKeys())
+                ->pluck('id')
+                ->map(static fn ($id): int => (int) $id)
+                ->all();
+
         $conflicts = [];
 
-        foreach ($this->collisionService->getCollision($request, $event)->get() as $collision) {
+        foreach ($collisions as $collision) {
             $conflicts[] = new AiWriteConflictData(
                 AiWriteConflictData::ROOM_COLLISION,
                 'Der Raum ist in dieser Zeit bereits belegt.',
-                AiRefData::make($collision->id, AiText::truncate($collision->eventName ?: $collision->name))
+                in_array((int) $collision->getKey(), $visibleIds, true)
+                    ? AiRefData::make($collision->id, AiText::truncate($collision->eventName ?: $collision->name))
+                    : null
             );
         }
 
@@ -906,10 +994,10 @@ class AiEventWriteService
     /**
      * @param list<AiWriteConflictData> $conflicts
      */
-    private function itemFor(Event $event, string $action, array $conflicts): AiWriteItemData
+    private function itemFor(Event $event, string $action, array $conflicts, ?User $viewer = null): AiWriteItemData
     {
         $timezone = (string) config('app.timezone');
-        $collisions = $action === 'create' ? $this->collisionConflicts($event) : [];
+        $collisions = $action === 'create' ? $this->collisionConflicts($event, $viewer) : [];
 
         return new AiWriteItemData(
             action: $action,

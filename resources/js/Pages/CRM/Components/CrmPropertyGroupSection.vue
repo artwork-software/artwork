@@ -23,6 +23,7 @@
                         <CrmPropertyValueInput
                             :property="property"
                             :value="getPropertyValue(property.id)"
+                            :file-name="getPropertyFileName(property.id)"
                             :contact-id="contact.id"
                             :required="!!property.pivot?.is_required"
                             :error="errors[property.id] || ''"
@@ -55,7 +56,7 @@
                                 <template v-else-if="property.type === 'upload' && getPropertyValue(property.id)">
                                     <a :href="route('crm.contacts.property-file.download', { crmContact: contact.id, property: property.id })" target="_blank" download class="inline-flex items-center gap-1.5 text-accent-700 hover:underline">
                                         <component :is="IconFile" class="h-4 w-4" />
-                                        {{ getPropertyValue(property.id).split('/').pop() }}
+                                        {{ getPropertyFileName(property.id) || getPropertyValue(property.id).split('/').pop() }}
                                     </a>
                                 </template>
                                 <template v-else-if="property.type === 'date' && getPropertyValue(property.id)">
@@ -76,7 +77,7 @@
 <script setup>
 import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
 import { isSafeHttpUrl } from '@/Helper/SafeUrl.js'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import CrmPropertyValueInput from '@/Pages/CRM/Components/CrmPropertyValueInput.vue'
@@ -87,25 +88,40 @@ const props = defineProps({
     contact: { type: Object, required: true },
     editing: { type: Boolean, default: false },
     errors: { type: Object, default: () => ({}) },
+    // Noch nicht gespeicherte Eingaben der Kontaktseite; haben Vorrang vor dem Serverstand
+    pendingValues: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['update-value', 'clear-error'])
 
 const expanded = ref(true)
 
+// Fehler in einer eingeklappten Gruppe wären unsichtbar
+watch(() => props.errors, (errors) => {
+    if (props.group.properties.some((property) => errors?.[property.id])) {
+        expanded.value = true
+    }
+}, { deep: true })
+
 const formatDate = (value) => {
     if (!value) return '-'
-    const date = new Date(value)
-    if (isNaN(date.getTime())) return value
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    return `${day}.${month}.${year}`
+    // Ohne Date-Objekt: "YYYY-MM-DD" würde als UTC gelesen und westlich davon einen Tag zurückspringen
+    const [year, month, day] = String(value).slice(0, 10).split('-')
+    return year && month && day ? `${day}.${month}.${year}` : value
 }
 
 const getPropertyValue = (propertyId) => {
+    if (propertyId in props.pendingValues) {
+        return props.pendingValues[propertyId] ?? ''
+    }
     const pv = props.contact.property_values?.find(v => v.crm_property_id === propertyId)
     return pv?.value ?? ''
+}
+
+// Upload: Anzeigename der Datei (Originalname bzw. umbenannt), null bei Altbestand
+const getPropertyFileName = (propertyId) => {
+    const pv = props.contact.property_values?.find(v => v.crm_property_id === propertyId)
+    return pv?.file_name ?? null
 }
 
 const onUpdateValue = (propertyId, value) => {

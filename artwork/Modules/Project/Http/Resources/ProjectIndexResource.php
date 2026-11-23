@@ -5,7 +5,7 @@ namespace Artwork\Modules\Project\Http\Resources;
 use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
-use Artwork\Modules\User\Http\Resources\UserIndexResource;
+use Artwork\Modules\User\Http\Resources\UserSearchResultResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\MissingValue;
 use Illuminate\Support\Facades\Auth;
@@ -37,7 +37,8 @@ class ProjectIndexResource extends JsonResource
             'number_of_participants' => $this->number_of_participants,
             'cost_center' => $this->costCenter,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
-            'users' => UserIndexResource::collection($this->users)->resolve(),
+            // ohne Schichtliste: der Projekt-Papierkorb zeigt nur Profilbilder der Mitglieder
+            'users' => UserSearchResultResource::collection($this->users)->resolve(),
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
             'events' => $this->deleted_at ? new MissingValue() : $this->events,

@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Core\Localization\SupportedLocales;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Chat\Models\Chat;
@@ -497,7 +498,7 @@ class User extends Model implements
     {
         $language = $this->getAttribute('language');
 
-        return in_array($language, config('app.supported_locales', ['de', 'en']), true) ? $language : null;
+        return SupportedLocales::isSupported($language) ? $language : null;
     }
 
     public function sendPasswordResetNotification($token): void
@@ -1270,25 +1271,6 @@ class User extends Model implements
             ->get();
     }
 
-    /**
-     * @deprecated Use getActiveShiftRules() instead
-     */
-    public function getActiveWorkflowRules()
-    {
-        return $this->getActiveShiftRules();
-    }
-
-    public function getPlannedWorkingHours(Carbon $date): float
-    {
-        return $this->shifts()
-            ->whereDate('start_time', $date)
-            ->get()
-            ->sum(function ($shift) {
-                $start = Carbon::parse($shift->start_time);
-                $end = Carbon::parse($shift->end_time);
-                return $end->diffInHours($start);
-            });
-    }
     /**
      * Exclude the placeholder "Deleted user" from Scout indexing. Deaktivierte Accounts fallen ebenfalls
      * heraus – damit tauchen sie in keiner Personensuche (Team, Schicht, Aufgaben, Chat …) mehr auf.

@@ -130,4 +130,75 @@ final class BudgetReorderTest extends FeatureTestCase
             ],
         ])->assertSessionHasErrors('updates');
     }
+
+    #[Test]
+    public function value_columns_are_reordered_and_relettered_while_fixed_columns_stay(): void
+    {
+        $table = $this->createTableWithBudgetUser();
+        $columns = $table->columns()->orderBy('position')->get();
+        $first = $columns[3];
+        $second = Column::factory()->create(['table_id' => $table->id, 'position' => 4, 'type' => 'empty']);
+        $third = Column::factory()->create(['table_id' => $table->id, 'position' => 5, 'type' => 'empty']);
+        $sage = Column::factory()->create(['table_id' => $table->id, 'position' => 6, 'type' => 'sage']);
+
+        $this->patch(route('project.budget.column.reorder'), [
+            'table_id' => $table->id,
+            'column_ids' => [$third->id, $first->id, $second->id],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('columns', ['id' => $third->id, 'position' => 3, 'subName' => 'A']);
+        $this->assertDatabaseHas('columns', ['id' => $first->id, 'position' => 4, 'subName' => 'B']);
+        $this->assertDatabaseHas('columns', ['id' => $second->id, 'position' => 5, 'subName' => 'C']);
+        $this->assertDatabaseHas('columns', ['id' => $sage->id, 'position' => 6]);
+        foreach ([0, 1, 2] as $index) {
+            $this->assertDatabaseHas('columns', ['id' => $columns[$index]->id, 'position' => $index]);
+        }
+    }
+
+    #[Test]
+    public function column_reorder_rejects_fixed_foreign_or_incomplete_column_lists(): void
+    {
+        $table = $this->createTableWithBudgetUser();
+        $columns = $table->columns()->orderBy('position')->get();
+        $second = Column::factory()->create(['table_id' => $table->id, 'position' => 4, 'type' => 'empty']);
+        $foreign = Column::factory()->create(['position' => 3, 'type' => 'empty']);
+
+        // feste Spalte (Position) in der Liste
+        $this->patch(route('project.budget.column.reorder'), [
+            'table_id' => $table->id,
+            'column_ids' => [$columns[2]->id, $columns[3]->id, $second->id],
+        ])->assertStatus(422);
+
+        // Spalte einer fremden Tabelle
+        $this->patch(route('project.budget.column.reorder'), [
+            'table_id' => $table->id,
+            'column_ids' => [$second->id, $foreign->id],
+        ])->assertStatus(422);
+
+        // unvollständige Liste
+        $this->patch(route('project.budget.column.reorder'), [
+            'table_id' => $table->id,
+            'column_ids' => [$second->id],
+        ])->assertStatus(422);
+
+        $this->assertDatabaseHas('columns', ['id' => $columns[3]->id, 'position' => 3]);
+        $this->assertDatabaseHas('columns', ['id' => $second->id, 'position' => 4]);
+    }
+
+    #[Test]
+    public function column_reorder_requires_budget_access(): void
+    {
+        $table = $this->createTableWithBudgetUser();
+        $columns = $table->columns()->orderBy('position')->get();
+        $second = Column::factory()->create(['table_id' => $table->id, 'position' => 4, 'type' => 'empty']);
+
+        $this->actingAs(User::factory()->create());
+
+        $this->patch(route('project.budget.column.reorder'), [
+            'table_id' => $table->id,
+            'column_ids' => [$second->id, $columns[3]->id],
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('columns', ['id' => $second->id, 'position' => 4]);
+    }
 }

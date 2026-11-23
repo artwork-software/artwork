@@ -22,7 +22,7 @@
                 <p class="font-lexend text-sm font-semibold text-text">{{ selected.holderName }}</p>
                 <p class="text-xs text-text-subtle">
                     {{ selected.name }} · <span class="font-mono">{{ selected.code }}</span> ·
-                    {{ $t('{count} uses left', { count: selected.usesLeft }, selected.usesLeft) }}
+                    {{ selected.usesLeft === null ? $t('Unlimited') : $t('{count} uses left', { count: selected.usesLeft }, selected.usesLeft) }}
                 </p>
             </div>
 
@@ -103,7 +103,7 @@
                                 {{ pass.name }}
                                 <BaseChip v-if="pass.subscription" variant="accent" class="ml-1">{{ $t('Subscription') }}</BaseChip>
                                 · <span class="font-mono">{{ pass.code }}</span>
-                                · {{ $t('{count} uses left', { count: pass.usesLeft }, pass.usesLeft) }}
+                                · {{ pass.usesLeft === null ? $t('Unlimited') : $t('{count} uses left', { count: pass.usesLeft }, pass.usesLeft) }}
                             </p>
                         </div>
                         <BaseChip v-if="pass.block" variant="warning" class="shrink-0">{{ blockLabel[pass.block] }}</BaseChip>

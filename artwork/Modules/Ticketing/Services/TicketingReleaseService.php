@@ -36,7 +36,8 @@ class TicketingReleaseService
     /**
      * @param Collection<int, Event> $targets
      * @param array{
-     *     classes: list<array{zone_key: string|null, name: string, price_cents: int, quota: int}>,
+     *     capacity: int|null,
+     *     classes: list<array{zone_key: string|null, name: string, price_cents: int, quota: int|null}>,
      *     description: string|null,
      *     reductions: list<array{id: string, offered: bool}>,
      * } $draft
@@ -107,6 +108,7 @@ class TicketingReleaseService
                 ['event_id' => $target->id],
                 [
                     'classes' => $this->classesFor($target),
+                    'capacity' => self::ownCapacity($target->ticketingRelease, $this->venueOf($target)),
                     'venue_id' => $this->venueIdOf($target),
                     'state' => TicketingEventRelease::STATE_RELEASED,
                     'tickets_date_id' => $pushed[$target->id],
@@ -276,16 +278,19 @@ class TicketingReleaseService
     /**
      * Die Preisklassen eines Termins in der Spielstätte, in der er jetzt liegt: die eigenen, solange sie
      * für sie gesetzt sind, sonst die Vorgabe der Spielstätte. Nach einem Raumwechsel behalten Zonen, die
-     * beide Räume kennen, ihren Preis; eigene Klassen bleiben nur in einem Raum ohne Saalplan.
+     * beide Räume kennen, ihren Preis; eigene Klassen bleiben nur in einem Raum ohne Saalplan. Ein Saalplan
+     * verkauft immer seine Zonen mit ihren Stühlen, gesetzt wird dort nur der Preis.
      *
      * @param array<string, mixed>|null $venue die Spielstätte aus tickets, null bei nicht abgeglichenem Raum
-     * @return list<array{zone_key: string|null, name: string, price_cents: int, quota: int}>
+     * @return list<array{zone_key: string|null, name: string, price_cents: int, quota: int|null}>
      */
     public static function fittedClasses(?TicketingEventRelease $release, ?array $venue): array
     {
         $classes = $release?->classes ?? [];
 
-        if ($venue === null || ($classes !== [] && !self::pricedElsewhere($release, $venue))) {
+        $seated = (bool) ($venue['seated'] ?? false);
+
+        if ($venue === null || (!$seated && $classes !== [] && !self::pricedElsewhere($release, $venue))) {
             return $classes;
         }
 
@@ -297,7 +302,7 @@ class TicketingReleaseService
             'quota' => (int) ($zone['capacity'] ?? 0),
         ], $venue['zones'] ?? []);
 
-        if ($venue['seated'] ?? false) {
+        if ($seated) {
             return $fitted;
         }
 
@@ -305,6 +310,41 @@ class TicketingReleaseService
             $classes,
             static fn (array $class): bool => $class['zone_key'] === null,
         ))];
+    }
+
+    /**
+     * Die Plätze eines Termins über alle Preisklassen: die gesetzte Zahl, sonst die Summe der Klassen.
+     *
+     * @param array<string, mixed>|null $venue
+     */
+    public static function capacityOf(?TicketingEventRelease $release, ?array $venue): int
+    {
+        return self::ownCapacity($release, $venue)
+            ?? (int) array_sum(array_column(self::fittedClasses($release, $venue), 'quota'));
+    }
+
+    /**
+     * Die gesetzten Plätze gesamt; null heißt, jede Klasse verkauft genau ihre Plätze. Ein Saalplan verkauft
+     * immer seine Stühle. Nach einem Raumwechsel teilen sich Klassen ohne eigene Zahl die Plätze des neuen
+     * Raums.
+     *
+     * @param array<string, mixed>|null $venue
+     */
+    public static function ownCapacity(?TicketingEventRelease $release, ?array $venue): ?int
+    {
+        if ($release?->capacity === null || ($venue['seated'] ?? false)) {
+            return null;
+        }
+
+        if (!self::pricedElsewhere($release, $venue)) {
+            return $release->capacity;
+        }
+
+        $classes = collect(self::fittedClasses($release, $venue));
+
+        return $classes->contains(static fn (array $class): bool => $class['quota'] === null)
+            ? (int) $classes->whereNotNull('zone_key')->sum('quota')
+            : null;
     }
 
     /**
@@ -423,12 +463,12 @@ class TicketingReleaseService
             'doorsAt' => $event->admission_time
                 ? $event->start_time->copy()->setTimeFromTimeString($event->admission_time)->toIso8601String()
                 : null,
-            'capacity' => (int) array_sum(array_column($classes, 'quota')),
+            'capacity' => self::capacityOf($release, $this->venueOf($event)),
             'categories' => array_map(static fn (array $class): array => [
                 'zoneKey' => $class['zone_key'],
                 'name' => $class['name'],
                 'priceCents' => (int) $class['price_cents'],
-                'quota' => (int) $class['quota'],
+                'quota' => $class['quota'],
             ], $classes),
             'description' => $release?->description,
             'reductions' => array_map(static fn (array $reduction): array => [
@@ -438,7 +478,7 @@ class TicketingReleaseService
         ]);
     }
 
-    /** @return list<array{zone_key: string|null, name: string, price_cents: int, quota: int}> */
+    /** @return list<array{zone_key: string|null, name: string, price_cents: int, quota: int|null}> */
     private function classesFor(Event $event): array
     {
         return self::fittedClasses($event->ticketingRelease, $this->venueOf($event));

@@ -7,9 +7,10 @@ use Artwork\Modules\Change\Changes\Room\MemberChange;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
+use Artwork\Modules\Room\Exports\RoomListExport;
 use Artwork\Modules\Room\Http\Requests\UpdateRoomUserRequest;
-use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomBulkService;
 use Artwork\Modules\Room\Services\RoomChangeService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Room\Services\RoomFrontendModelService;
@@ -17,10 +18,14 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -37,6 +42,7 @@ class RoomController extends Controller
         private readonly UserService $userService,
         private readonly MemberChange $memberChange,
         private readonly ChangeService $changeService,
+        private readonly RoomBulkService $roomBulkService,
     ) {
     }
 
@@ -99,7 +105,8 @@ class RoomController extends Controller
         $this->authorize('viewAny', Room::class);
 
         return inertia('Rooms/RoomReorderManagement', [
-            'rooms' => Room::orderBy('position')->orderBy('id')->get()
+            'rooms' => Room::with('area:id,name,color')->orderBy('position')->orderBy('id')->get(),
+            'areas' => Area::query()->orderBy('position')->orderBy('id')->get(['id', 'name', 'color']),
         ]);
     }
 
@@ -107,7 +114,13 @@ class RoomController extends Controller
     {
         $this->authorize('viewAny', Room::class);
 
-        foreach ($request->rooms as $room) {
+        $validated = $request->validate([
+            'rooms' => ['required', 'array'],
+            'rooms.*.id' => ['required', 'integer'],
+            'rooms.*.position' => ['required', 'integer', 'min:0'],
+        ]);
+
+        foreach ($validated['rooms'] as $room) {
             Room::findOrFail($room['id'])->update(['position' => $room['position']]);
         }
 
@@ -199,7 +212,18 @@ class RoomController extends Controller
     ): RedirectResponse {
         $this->authorize('update', $room);
 
-        $request->validate($this->roomFieldRules($request, false, $room));
+        $request->validate(array_merge($this->roomFieldRules($request, false, $room), [
+            'area_id' => ['sometimes', 'integer', Rule::exists('areas', 'id')->whereNull('deleted_at')],
+        ]));
+
+        // Verschieben in ein anderes Areal ändert die Raumstruktur des Hauses: nur mit Raumverwaltung,
+        // nicht schon als Admin des einzelnen Raums
+        $targetArea = $request->filled('area_id') && $request->integer('area_id') !== (int) $room->area_id
+            ? Area::query()->findOrFail($request->integer('area_id'))
+            : null;
+        if ($targetArea !== null) {
+            $this->authorize('create', Room::class);
+        }
 
         $roomReplicate = $room->replicate();
         $roomReplicate->admins = $room->users()->wherePivot('is_admin', true)->get();
@@ -227,6 +251,9 @@ class RoomController extends Controller
             $attributes['end_date'] = null;
         }
         $room->update($attributes);
+        if ($targetArea !== null) {
+            $this->roomBulkService->moveRoom($room, $targetArea);
+        }
 
         if (!is_null($request->room_admins) && !is_null($request->requestable_by)) {
             $room_admins_ids = [];
@@ -301,28 +328,33 @@ class RoomController extends Controller
         $search = trim((string) $request->input('search', ''));
         $perPage = (int) $request->input('entitiesPerPage', 25);
 
-        // Group trashed rooms by area, paginating at area granularity. Only areas that
-        // actually contain (matching) trashed rooms are returned. The search matches
-        // room names; areas without a matching trashed room are excluded.
-        $trashedRooms = Area::withTrashed()
-            ->whereHas(
-                'trashedRooms',
-                fn ($query) => $query->when($search !== '', fn ($q) => $q->where('name', 'like', '%' . $search . '%'))
-            )
-            ->with([
-                'trashedRooms' => fn ($query) => $query->when(
-                    $search !== '',
-                    fn ($q) => $q->where('name', 'like', '%' . $search . '%')
-                ),
-            ])
+        // Eine Zeile je Raum; die Suche trifft Raum- und Arealnamen
+        $trashedRooms = Room::onlyTrashed()
+            ->with(['area' => fn ($query) => $query->withTrashed()->select(['id', 'name', 'deleted_at'])])
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($subQuery) use ($search): void {
+                    $subQuery->where('name', 'like', '%' . $search . '%')
+                        ->orWhereHas(
+                            'area',
+                            fn ($area) => $area->withTrashed()->where('name', 'like', '%' . $search . '%')
+                        );
+                });
+            })
+            ->orderByDesc('deleted_at')
             ->orderBy('name')
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn ($area) => [
-                'id' => $area->id,
-                'name' => $area->name,
-                'rooms' => RoomIndexWithoutEventsResource::collection($area->trashedRooms)->resolve(),
-            ]);
+            ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedRooms->getCollection());
+        $trashedRooms->through(fn (Room $room) => [
+            'id' => $room->id,
+            'name' => $room->name,
+            'temporary' => (bool) $room->temporary,
+            'start_date' => $room->temporary ? $room->start_date?->format('d.m.Y') : null,
+            'end_date' => $room->temporary ? $room->end_date?->format('d.m.Y') : null,
+            'area_name' => $room->area?->name,
+            'area_trashed' => $room->area === null || $room->area->trashed(),
+            'trash' => $trashInfo[$room->id] ?? null,
+        ]);
 
         return inertia('Trash/Rooms', [
             'trashed_rooms' => $trashedRooms
@@ -336,6 +368,101 @@ class RoomController extends Controller
         $room->delete();
 
         return Redirect::route('areas.management');
+    }
+
+    /**
+     * Mehrere Räume in einem Request in den Papierkorb legen. Alles oder nichts.
+     */
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $this->authorize('delete', Room::class);
+
+        return response()->json([
+            'deleted' => $this->roomBulkService->moveToTrash($this->selectedRooms($request)),
+        ]);
+    }
+
+    /**
+     * Sammeländerung für mehrere Räume: Kategorien oder Eigenschaften zuweisen bzw. entfernen
+     * oder in ein anderes Areal verschieben. Alles oder nichts.
+     */
+    public function bulkUpdate(Request $request): JsonResponse
+    {
+        $this->authorize('create', Room::class);
+
+        $rooms = $this->selectedRooms($request);
+        $validated = $request->validate([
+            'action' => ['required', 'in:add_categories,remove_categories,add_attributes,remove_attributes,move'],
+            'category_ids' => ['required_if:action,add_categories,remove_categories', 'array', 'min:1'],
+            'category_ids.*' => ['integer', 'distinct', 'exists:room_categories,id'],
+            'attribute_ids' => ['required_if:action,add_attributes,remove_attributes', 'array', 'min:1'],
+            'attribute_ids.*' => ['integer', 'distinct', 'exists:room_attributes,id'],
+            'area_id' => [
+                'required_if:action,move',
+                'integer',
+                Rule::exists('areas', 'id')->whereNull('deleted_at'),
+            ],
+        ]);
+
+        match ($validated['action']) {
+            'add_categories' => $this->roomBulkService->changeCategories($rooms, $validated['category_ids'], true),
+            'remove_categories' => $this->roomBulkService->changeCategories($rooms, $validated['category_ids'], false),
+            'add_attributes' => $this->roomBulkService->changeAttributes($rooms, $validated['attribute_ids'], true),
+            'remove_attributes' => $this->roomBulkService->changeAttributes(
+                $rooms,
+                $validated['attribute_ids'],
+                false
+            ),
+            'move' => $this->roomBulkService->moveToArea($rooms, Area::query()->findOrFail($validated['area_id'])),
+        };
+
+        return response()->json(['updated' => $rooms->count()]);
+    }
+
+    /**
+     * Raumliste als Excel. Mit "ids" (kommagetrennt) nur diese Räume, sonst alle.
+     */
+    public function export(Request $request): BinaryFileResponse
+    {
+        $this->authorize('viewAny', Room::class);
+
+        $ids = array_values(array_unique(array_filter(array_map(
+            'intval',
+            explode(',', (string) $request->query('ids', ''))
+        ))));
+
+        $rooms = Room::query()
+            ->select('rooms.*')
+            ->join('areas', 'areas.id', '=', 'rooms.area_id')
+            ->whereNull('areas.deleted_at')
+            ->when($ids !== [], static fn ($query) => $query->whereIn('rooms.id', $ids))
+            ->with(['area:id,name', 'categories', 'attributes', 'adminDepartments:id,name'])
+            ->with(['adjoining_rooms' => static fn ($query) => $query->without(['admins', 'creator'])])
+            ->orderBy('areas.position')
+            ->orderBy('areas.id')
+            ->orderBy('rooms.position')
+            ->orderBy('rooms.id')
+            ->get();
+
+        return (new RoomListExport($rooms))->download(
+            __('Rooms') . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * @return EloquentCollection<int, Room>
+     */
+    private function selectedRooms(Request $request): EloquentCollection
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:500'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $rooms = Room::query()->whereIn('id', $validated['ids'])->get();
+        abort_unless($rooms->count() === count($validated['ids']), 404);
+
+        return $rooms;
     }
 
     public function forceDelete(int $id): RedirectResponse

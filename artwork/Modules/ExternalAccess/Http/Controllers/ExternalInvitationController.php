@@ -58,13 +58,15 @@ class ExternalInvitationController extends Controller
     /**
      * Vorbelegung des Einladungsdialogs für einen bestehenden CRM-Kontakt: hinterlegte E-Mail,
      * Kontaktart und bereits vorhandene Zugänge (mit freigegebenen Tabs), damit die einladende
-     * Person sieht, wohin die Mail geht und was schon freigegeben ist.
+     * Person sieht, wohin die Mail geht und was schon freigegeben ist. Der Dialog öffnet sich mit
+     * festem Kontakt nur auf der Kontaktseite, deshalb gilt hier zusätzlich deren Recht „can view crm“.
      */
     public function inviteInfo(CrmContact $crmContact): JsonResponse
     {
         abort_unless(
             $this->settingsResolver->isEnabled()
-            && request()->user()?->can(PermissionEnum::INVITE_EXTERNAL->value),
+            && request()->user()?->can(PermissionEnum::INVITE_EXTERNAL->value)
+            && request()->user()?->can(PermissionEnum::CRM_VIEW->value),
             403,
         );
 

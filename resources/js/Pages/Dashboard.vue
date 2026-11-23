@@ -14,7 +14,7 @@
 
                         <div class="min-w-0">
                             <h1 class="font-lexend text-xl lg:text-2xl font-semibold tracking-tight text-text">
-                                {{ $t('Good day') }}, {{ user.full_name }}
+                                {{ $t(greetingKey) }}, {{ user.full_name }}
                             </h1>
                             <p class="text-xs text-text-muted mt-0.5">
                                 {{ formattedToday }} · {{ $t('Everything important at a glance') }}
@@ -72,6 +72,7 @@
                     :value="eventsCountToday"
                     icon="IconCalendarMonth"
                     :trend="$t('All scheduled appointments today.')"
+                    :href="route('events')"
                     inverse
                 />
                 <KpiTile
@@ -79,18 +80,21 @@
                     :value="shiftsCountToday"
                     icon="IconCalendarUser"
                     :trend="$t('Your shifts at a glance.')"
+                    :href="canViewShifts ? route('shifts.plan') : ''"
                 />
                 <KpiTile
                     :label="$t('Notifications today')"
                     :value="notificationsCountToday"
                     icon="IconBell"
                     :trend="$t('Current notices & news.')"
+                    :href="route('notifications.index')"
                 />
                 <KpiTile
                     :label="$t('Open tasks')"
                     :value="openTasksCount"
                     icon="IconListCheck"
                     :trend="$t('The next due to-dos.')"
+                    :href="route('tasks.own')"
                 />
             </section>
 
@@ -106,9 +110,9 @@
                                 title="Today's appointments"
                                 description="Quick overview of all appointments of the day"
                             />
-                            <a :href="route('events')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1 whitespace-nowrap">
+                            <Link :href="route('events')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1 whitespace-nowrap">
                                 <PropertyIcon name="IconCalendarMonth" class="size-4" /> {{ $t('to calendar') }}
-                            </a>
+                            </Link>
                         </div>
 
                         <div v-if="eventsSorted.length" class="p-4 space-y-3">
@@ -182,9 +186,9 @@
                                 title="Shifts today"
                                 description="Your shifts today"
                             />
-                            <a v-if="canViewShifts" :href="route('shifts.plan')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1 whitespace-nowrap">
+                            <Link v-if="canViewShifts" :href="route('shifts.plan')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1 whitespace-nowrap">
                                 <PropertyIcon name="IconCalendarUser" class="size-4" /> {{ $t('to the shift plan') }}
-                            </a>
+                            </Link>
                         </div>
                         <!-- Tagesdienste des Users: ein Balken pro Dienst (Icon + Name in Dienstfarbe) -->
                         <div v-if="dayServicesOfDay.length" class="p-4 pb-0 space-y-2">
@@ -344,9 +348,9 @@
                         </div>
 
                         <div class="px-4 pb-4">
-                            <a :href="route('notifications.index')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1">
+                            <Link :href="route('notifications.index')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1">
                                 <PropertyIcon name="IconBell" class="size-4" /> {{ $t('Go to the notifications') }}
-                            </a>
+                            </Link>
                         </div>
                     </BaseCard>
 
@@ -358,9 +362,9 @@
                                 title="Next tasks"
                                 description="Your open to-dos"
                             />
-                            <a :href="route('tasks.own')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1 whitespace-nowrap">
+                            <Link :href="route('tasks.own')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1 whitespace-nowrap">
                                 <PropertyIcon name="IconListCheck" class="size-4" /> {{ $t('To the task overview') }}
-                            </a>
+                            </Link>
                         </div>
 
                         <div v-if="tasks?.length" class="p-4 space-y-3">
@@ -416,7 +420,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, onBeforeUnmount, defineOptions, defineAsyncComponent, ref, watch} from 'vue'
+import {computed, defineOptions, defineAsyncComponent, ref, watch} from 'vue'
 import axios from 'axios'
 import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -462,6 +466,12 @@ const page = usePage()
 const user = computed(() => page.props.auth.user)
 
 const doneTaskForm = useForm({ done: false })
+// Begrüßung nach Tageszeit
+const greetingKey = computed(() => {
+    const hour = new Date().getHours()
+    if (hour < 11) return 'Good morning'
+    return hour < 18 ? 'Good day' : 'Good evening'
+})
 const canViewShifts = computed(() => can('can view shift plan') || is('artwork admin'))
 
 const dayServicesOfDay = computed(() => props.users_day_services_of_day ?? [])
@@ -578,22 +588,6 @@ function findEventTypeById(eventTypeId?: number) {
     return props.eventTypes.find(e => e.id === eventTypeId)
 }
 
-// Echo live updates
-let echoChannel: any = null
-onMounted(() => {
-    // @ts-ignore
-    echoChannel = Echo?.private?.('events')
-    echoChannel?.listen?.('OccupancyUpdated', () => {
-        router.reload({ only: ['rooms', 'calendar', 'days'] })
-    })
-})
-onBeforeUnmount(() => {
-    try {
-        echoChannel?.stopListening?.('OccupancyUpdated')
-        // @ts-ignore
-        Echo?.leave?.('events')
-    } catch {}
-})
 
 const openCalendarWithEventId = (eventForCalendar) => {
 

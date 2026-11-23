@@ -21,14 +21,6 @@ class ShiftRuleViolationRepository extends BaseRepository
         return ShiftRuleViolation::query();
     }
 
-    public function getActiveWithRelations(): Collection
-    {
-        return ShiftRuleViolation::with(['shiftRule', 'user', 'shift', 'createdByUser'])
-            ->where('status', 'active')
-            ->orderBy('violation_date', 'desc')
-            ->get();
-    }
-
     /**
      * Relationen der Verstoßliste/-exporte: nur die Spalten, die Anzeige und Export lesen.
      *

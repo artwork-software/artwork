@@ -13,7 +13,7 @@
         />
 
         <!-- Suche -->
-        <div class="my-3">
+        <div v-if="!isBasketEmpty" class="my-3">
             <BaseInput
                 v-model="searchQuery"
                 type="search"
@@ -46,7 +46,9 @@
 
         <!-- Leerer Zustand -->
         <div v-else-if="!articlesFlat.length" class="text-sm text-text-subtle py-6 text-center">
-            {{ $t ? $t('No articles found') : 'No articles found' }}
+            {{ isBasketEmpty
+                ? $t('Your product basket is empty. Switch on the basket toggle in the overview and click articles to add them.')
+                : $t('No articles found') }}
         </div>
 
         <!-- Artikelliste -->
@@ -129,7 +131,7 @@
                 :disabled="false"
             />
 
-            <BaseUIButton @click="closeModal(true)" label="Create Material Issue" use-translation type="submit" />
+            <BaseUIButton @click="closeModal(true)" label="Create Material Issue" use-translation type="submit" :disabled="isLoadingBaskets || isBasketEmpty" />
         </div>
     </ArtworkBaseModal>
 </template>
@@ -189,6 +191,9 @@ const selectTab = (tab) => {
 const currentBasketObj = computed(() =>
     baskets.value.find((b) => b.id === currentBasket.value) || null
 );
+
+// Leerer Warenkorb (unabhängig von der Suche): keine Suche, keine Materialausgabe
+const isBasketEmpty = computed(() => (currentBasketObj.value?.basket_articles ?? []).length === 0);
 
 const getMainImageInImage = (article) => {
     const images = article.images || [];

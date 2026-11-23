@@ -15,7 +15,10 @@ class UpdatePermissionPresetRequest extends FormRequest
     {
         return [
             'name' => [
+                // ohne required/max endete ein leerer oder zu langer Name nur in einer allgemeinen Fehlermeldung
+                'required',
                 'string',
+                'max:255',
                 //ignore given PermissionPreset-Model, should only determine if another preset has the same name
                 Rule::unique('permission_presets')->ignore($this->route('permission_preset')->id)
             ],

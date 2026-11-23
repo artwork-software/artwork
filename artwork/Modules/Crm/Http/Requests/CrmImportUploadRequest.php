@@ -4,6 +4,7 @@ namespace Artwork\Modules\Crm\Http\Requests;
 
 use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Crm\Models\CrmContactType;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CrmImportUploadRequest extends FormRequest
@@ -22,7 +23,7 @@ class CrmImportUploadRequest extends FormRequest
                 'required_unless:use_type_column,true',
                 'nullable',
                 'integer',
-                'exists:crm_contact_types,id',
+                CrmContactType::writableExistsRule(),
             ],
         ];
     }

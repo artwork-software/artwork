@@ -26,7 +26,7 @@
                 @update:model-value="$emit('update:value', $event)"
                 :label="innerLabel"
                 :disabled="disabled"
-                @focusout="$emit('update:value', $event.target.value)"
+                @focusout="emitIfChanged($event.target.value)"
             />
         </template>
 
@@ -146,18 +146,62 @@
             <div>
                 <label class="block text-sm font-medium text-text-muted mb-1">{{ $t(property.name) }}<span v-if="required" class="text-danger ml-0.5">*</span></label>
 
+                <!-- Existing file: rename inline -->
+                <div v-if="value && renaming" class="mb-2 rounded-lg border border-border-subtle bg-white px-3 py-2">
+                    <div class="flex items-end gap-2">
+                        <BaseInput
+                            :id="`prop_${property.id}_file_name`"
+                            v-model="renameValue"
+                            :label="$t('File name')"
+                            class="min-w-0 flex-1"
+                            :error="renameError"
+                            @keydown.enter.prevent="saveRename"
+                            @keydown.esc.prevent="cancelRename"
+                        />
+                        <button
+                            type="button"
+                            class="mb-1 rounded-md p-1 text-text-subtle hover:text-success"
+                            :disabled="savingRename"
+                            :aria-label="$t('Save')"
+                            @click="saveRename"
+                        >
+                            <component :is="IconCheck" class="h-4 w-4" />
+                        </button>
+                        <button
+                            type="button"
+                            class="mb-1 rounded-md p-1 text-text-subtle hover:text-danger"
+                            :aria-label="$t('Cancel')"
+                            @click="cancelRename"
+                        >
+                            <component :is="IconX" class="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Existing file -->
-                <div v-if="value" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2 mb-2">
+                <div v-else-if="value" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2 mb-2">
                     <component :is="IconFile" class="h-5 w-5 text-text-subtle shrink-0" />
-                    <a v-if="fileDownloadUrl" :href="fileDownloadUrl" target="_blank" download class="min-w-0 flex-1 truncate text-sm font-medium text-accent-700 hover:underline">
-                        {{ fileName }}
+                    <a v-if="fileDownloadUrl" :href="fileDownloadUrl" target="_blank" download class="min-w-0 flex-1 truncate text-sm font-medium text-accent-700 hover:underline" :title="displayFileName">
+                        {{ displayFileName }}
                     </a>
-                    <span v-else class="min-w-0 flex-1 truncate text-sm font-medium text-text">{{ fileName }}</span>
+                    <span v-else class="min-w-0 flex-1 truncate text-sm font-medium text-text" :title="displayFileName">{{ displayFileName }}</span>
+                    <button
+                        v-if="contactId"
+                        type="button"
+                        class="rounded-md p-1 text-text-subtle hover:text-accent-700"
+                        :aria-label="$t('Rename file')"
+                        :title="$t('Rename file')"
+                        @click="startRename"
+                    >
+                        <component :is="IconPencil" class="h-4 w-4" />
+                    </button>
                     <button
                         v-if="contactId"
                         type="button"
                         class="rounded-md p-1 text-text-subtle hover:text-danger"
-                        @click="deleteFile"
+                        :aria-label="$t('Delete file')"
+                        :title="$t('Delete file')"
+                        @click="showDeleteFileModal = true"
                         :disabled="deleting"
                     >
                         <component :is="IconTrash" class="h-4 w-4" />
@@ -180,10 +224,20 @@
                             ref="fileInput"
                             type="file"
                             class="hidden"
+                            :accept="acceptedFileTypes"
                             @change="uploadFile"
                         />
                     </button>
+                    <p v-if="uploadError" class="mt-1 text-xs text-danger">{{ uploadError }}</p>
                 </div>
+
+                <ConfirmDeleteModal
+                    v-if="showDeleteFileModal"
+                    :title="$t('Delete file')"
+                    :description="$t('Are you sure you want to delete this file?')"
+                    @close="showDeleteFileModal = false"
+                    @delete="deleteFile"
+                />
             </div>
         </template>
 
@@ -209,7 +263,8 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconFile, IconTrash, IconUpload, IconX } from '@tabler/icons-vue'
+import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
+import { IconCheck, IconFile, IconPencil, IconTrash, IconUpload, IconX } from '@tabler/icons-vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const $t = useTranslation()
@@ -217,6 +272,8 @@ const $t = useTranslation()
 const props = defineProps({
     property: { type: Object, required: true },
     value: { type: [String, Number], default: '' },
+    // Upload: Anzeigename der Datei (Originalname bzw. umbenannt); fehlt er, wird der Speichername gezeigt
+    fileName: { type: String, default: null },
     contactId: { type: Number, default: null },
     required: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false },
@@ -237,6 +294,13 @@ const showExternalLabel = computed(() => !['checkbox', 'upload'].includes(props.
 const innerLabel = computed(() =>
     props.uniformLabel ? '' : $t(props.property.name) + (props.required ? ' *' : '')
 )
+
+// Fokusverlust ohne Änderung löst kein Speichern aus (sonst ein Request pro durchgetabbtem Feld)
+const emitIfChanged = (value) => {
+    if (String(value ?? '') !== String(props.value ?? '')) {
+        emit('update:value', value)
+    }
+}
 
 // -- Select type helpers --
 const selectOptions = computed(() => {
@@ -281,11 +345,57 @@ const onMultiselectListboxChange = (options) => {
 // -- Upload type helpers --
 const uploading = ref(false)
 const deleting = ref(false)
+const uploadError = ref('')
+const showDeleteFileModal = ref(false)
+// Gegenstück zu CrmPropertyFileService::ALLOWED_EXTENSIONS
+const acceptedFileTypes = '.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt'
 
-const fileName = computed(() => {
+const displayFileName = computed(() => {
     if (!props.value) return ''
-    return props.value.split('/').pop()
+    return props.fileName || String(props.value).split('/').pop()
 })
+
+const renaming = ref(false)
+const renameValue = ref('')
+const renameError = ref('')
+const savingRename = ref(false)
+
+const startRename = () => {
+    renameValue.value = displayFileName.value
+    renameError.value = ''
+    renaming.value = true
+}
+
+const cancelRename = () => {
+    renaming.value = false
+    renameError.value = ''
+}
+
+const saveRename = () => {
+    if (!props.contactId || savingRename.value) return
+
+    const name = renameValue.value.trim()
+    if (name === '') {
+        renameError.value = $t('Please enter a valid file name.')
+        return
+    }
+    if (name === displayFileName.value) {
+        cancelRename()
+        return
+    }
+
+    savingRename.value = true
+    router.patch(route('crm.contacts.property-file.rename', props.contactId), {
+        property_id: props.property.id,
+        file_name: name,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => { renaming.value = false },
+        onError: (errors) => { renameError.value = errors.file_name ?? errors.property_id ?? '' },
+        onFinish: () => { savingRename.value = false },
+    })
+}
 
 const fileDownloadUrl = computed(() => {
     if (!props.value || !props.contactId) return null
@@ -297,6 +407,7 @@ const uploadFile = (event) => {
     if (!file || !props.contactId) return
 
     uploading.value = true
+    uploadError.value = ''
     router.post(route('crm.contacts.property-file.upload', props.contactId), {
         property_id: props.property.id,
         file: file,
@@ -304,6 +415,9 @@ const uploadFile = (event) => {
         preserveState: true,
         preserveScroll: true,
         forceFormData: true,
+        onError: (errors) => {
+            uploadError.value = errors.file ?? errors.property_id ?? $t('Upload failed')
+        },
         onFinish: () => {
             uploading.value = false
             event.target.value = ''
@@ -312,13 +426,16 @@ const uploadFile = (event) => {
 }
 
 const deleteFile = () => {
+    showDeleteFileModal.value = false
     if (!props.contactId) return
 
     deleting.value = true
+    uploadError.value = ''
     router.delete(route('crm.contacts.property-file.delete', props.contactId), {
         data: { property_id: props.property.id },
         preserveState: true,
         preserveScroll: true,
+        onError: (errors) => { uploadError.value = errors.property_id ?? $t('Deleting the file failed.') },
         onFinish: () => { deleting.value = false },
     })
 }

@@ -5,6 +5,8 @@
                 :id="id"
                 v-model="article_search_query"
                 :label="label || 'Search for an article...'"
+                :show-label="!compact"
+                :placeholder="compact ? $t(label || 'Search for an article...') : ''"
             />
         </div>
         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -42,6 +44,8 @@ type Article = {
 const props = defineProps<{
     label?: string;
     id?: string;
+    /** Für Filterzeilen: ohne Beschriftung über dem Feld, der Text steht als Platzhalter im Feld */
+    compact?: boolean;
 }>();
 const emit = defineEmits(['article-selected']);
 

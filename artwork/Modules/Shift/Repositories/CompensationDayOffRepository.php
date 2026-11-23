@@ -37,19 +37,6 @@ class CompensationDayOffRepository extends BaseRepository
             ->get();
     }
 
-    public function getGrantedForDateRange(array $userIds, string $start, string $end): Collection
-    {
-        return CompensationDayOff::whereIn('user_id', $userIds)
-            ->whereNotNull('granted_date')
-            ->whereBetween('granted_date', [$start, $end])
-            ->with([
-                'violation:id,shift_rule_id',
-                'violation.shiftRule:id,name',
-                'grantedByUser:id,first_name,last_name',
-            ])
-            ->get();
-    }
-
     /**
      * Filter des Ersatzfrei-Dashboards: craft_id, user_id, deadline_from, deadline_to (Y-m-d).
      * Der Status (offen/gewährt/überfällig) wird über die jeweilige Listenmethode abgebildet.
@@ -207,15 +194,6 @@ class CompensationDayOffRepository extends BaseRepository
             ->select(['id', 'first_name', 'last_name'])
             ->orderBy('last_name')
             ->orderBy('first_name')
-            ->get();
-    }
-
-    public function getGrantedHalvesForUserOnDate(int $userId, string $date): Collection
-    {
-        return CompensationDayOff::where('user_id', $userId)
-            ->granted()
-            ->where('value', '<', 1.0)
-            ->whereDate('granted_date', $date)
             ->get();
     }
 

@@ -77,6 +77,16 @@ class CrmContactRepository
 
             $property = CrmProperty::find($propId);
 
+            // Checkbox "Nein": auch Kontakte, bei denen der Haken nie gesetzt wurde (kein Wert gespeichert)
+            $isUnchecked = !is_array($filterValue) && (string) $filterValue === '0';
+            if ($property?->type === CrmPropertyTypeEnum::CHECKBOX && $isUnchecked) {
+                $query->whereDoesntHave('propertyValues', function ($q) use ($propId): void {
+                    $q->where('crm_property_id', $propId)->where('value', '1');
+                });
+
+                continue;
+            }
+
             $query->whereHas('propertyValues', function ($q) use ($propId, $filterValue, $property): void {
                 $q->where('crm_property_id', $propId);
 

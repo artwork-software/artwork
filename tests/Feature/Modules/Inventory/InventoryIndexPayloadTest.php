@@ -72,4 +72,31 @@ final class InventoryIndexPayloadTest extends FeatureTestCase
                 $this->assertSame(1, $node['articles_count']);
             });
     }
+
+    #[Test]
+    public function a_page_behind_the_last_one_falls_back_to_the_last_page(): void
+    {
+        $this->actingAsAdmin();
+        $category = InventoryCategory::factory()->create();
+        $subCategory = InventorySubCategory::factory()->create(['inventory_category_id' => $category->id]);
+        InventoryArticle::factory()->count(3)->create([
+            'inventory_category_id' => $category->id,
+            'inventory_sub_category_id' => $subCategory->id,
+        ]);
+
+        $this->get(route('inventory.index', ['entitiesPerPage' => 2, 'page' => 9]))
+            ->assertOk()
+            ->assertInertia(function (AssertableInertia $page): void {
+                $articles = $page->toArray()['props']['articles'];
+                $this->assertSame(2, $articles['current_page']);
+                $this->assertCount(1, $articles['data']);
+                $this->assertSame(3, $articles['total']);
+            });
+
+        $this->get(route('inventory.index', ['entitiesPerPage' => 2, 'page' => 9, 'search' => 'gibt-es-nicht-xyz']))
+            ->assertOk()
+            ->assertInertia(function (AssertableInertia $page): void {
+                $this->assertCount(0, $page->toArray()['props']['articles']['data']);
+            });
+    }
 }

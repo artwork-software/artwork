@@ -19,8 +19,14 @@ class EventTypeController extends Controller
 {
     public function index(): Response|ResponseFactory
     {
+        $eventTypes = EventType::query()->with('verifiers')->withCount('events')->get();
+
         return inertia('Settings/EventSettings', [
-            'event_types' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
+            // events_count: Hinweis vor dem Löschen, wie viele Termine auf den Standard-Typ umgehängt werden
+            'event_types' => $eventTypes->map(static fn (EventType $eventType): array => [
+                ...(new EventTypeResource($eventType))->resolve(),
+                'events_count' => (int) $eventType->events_count,
+            ])->all(),
         ]);
     }
 
@@ -36,13 +42,6 @@ class EventTypeController extends Controller
     {
         $eventTypeService->save($this->setProperties(new EventType(), $request));
         return Redirect::back();
-    }
-
-    public function show(EventType $eventType): Response|ResponseFactory
-    {
-        return inertia('Events/EventType', [
-            'event_type' => new EventTypeResource($eventType),
-        ]);
     }
 
     public function update(
@@ -70,7 +69,7 @@ class EventTypeController extends Controller
         return Redirect::route('event_types.management');
     }
 
-    public function destroy(EventType $eventType)
+    public function destroy(EventType $eventType): RedirectResponse
     {
         if ($eventType->getAttribute('id') === 1) {
             return Redirect::back();
@@ -91,8 +90,11 @@ class EventTypeController extends Controller
                 $eventType->delete();
             });
             return Redirect::route('event_types.management');
-        } catch (\Exception $e) {
-            return $e;
+        } catch (\Throwable $throwable) {
+            // vorher wurde das Exception-Objekt selbst als Antwort zurückgegeben
+            report($throwable);
+
+            return Redirect::back()->with('error', __('The event type could not be deleted.'));
         }
     }
 

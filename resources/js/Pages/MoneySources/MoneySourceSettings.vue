@@ -36,12 +36,15 @@
                     </div>
                 </div>
 
+                <p v-if="moneySourceCategories.length === 0" class="mt-5 text-sm text-text-subtle">
+                    {{ $t('No source categories yet.') }}
+                </p>
                 <div class="mr-10 mt-5 flex flex-wrap">
                     <span v-for="(category,index) in moneySourceCategories"
                           class="rounded-full items-center font-medium 
                         border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                         {{ category.name }}
-                        <button type="button" @click="this.showCategoryDeleteModal(category)">
+                        <button type="button" :aria-label="$t('Delete source category')" :title="$t('Delete source category')" @click="this.showCategoryDeleteModal(category)">
                             <PropertyIcon name="IconX"  stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                         </button>
                     </span>

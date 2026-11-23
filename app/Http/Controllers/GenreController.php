@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Genre\Models\Genre;
 use Illuminate\Http\RedirectResponse;
+use Artwork\Core\Validation\MasterDataName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -16,6 +17,8 @@ class GenreController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        MasterDataName::validate($request);
+
         Genre::create([
             'name' => $request->name,
             'color' => $request->color
@@ -32,6 +35,8 @@ class GenreController extends Controller
      */
     public function update(Request $request, Genre $genre): RedirectResponse
     {
+        MasterDataName::validate($request, updating: true);
+
         $genre->update($request->only(['name', 'color']));
 
         return Redirect::back();

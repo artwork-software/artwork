@@ -73,6 +73,7 @@
 </template>
 
 <script setup>
+import { toastValidationErrors } from "@/Helper/appToast";
 
 import {useForm} from "@inertiajs/vue3";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
@@ -139,9 +140,7 @@ const createOrUpdateContact = () => {
                 contactForm.reset();
                 emits('close');
             },
-            onError: () => {
-                console.log('Error updating contact');
-            }
+            onError: (errors) => toastValidationErrors(errors),
         });
     } else {
         contactForm.post(route('contact.store', {model: props.model, modelId: props.modelId}), {
@@ -151,9 +150,7 @@ const createOrUpdateContact = () => {
                 contactForm.reset();
                 emits('close');
             },
-            onError: () => {
-                console.log('Error creating contact');
-            }
+            onError: (errors) => toastValidationErrors(errors),
         });
     }
 }

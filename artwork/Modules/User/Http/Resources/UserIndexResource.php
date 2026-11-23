@@ -21,11 +21,13 @@ class UserIndexResource extends JsonResource
     {
         $viewer = $request->user();
         // Schichten anderer Personen (Termin, Raum, Zeiten) nur mit Dienstplan-Sicht, wie im Dienstplan selbst.
-        $mayViewShifts = $viewer instanceof User
+        $mayViewShifts = $this->includesShifts()
+            && $viewer instanceof User
             && ($viewer->id === $this->id || UserPolicy::canViewForeignRoster($viewer));
 
         return [
-            'resource' => class_basename($this),
+            // fester Name: Suchtreffer (Unterklasse) behalten die bisherige Payload-Form
+            'resource' => 'UserIndexResource',
             'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
@@ -59,5 +61,14 @@ class UserIndexResource extends JsonResource
             'type' => $this->getTypeAttribute(),
             'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
         ];
+    }
+
+    /**
+     * Schichtliste mitliefern? Suchtreffer (UserSearchResultResource) brauchen sie nicht; sonst lud jede
+     * Personensuche alle Schichten der bis zu 25 Treffer samt Termin, Raum und Gewerk nach.
+     */
+    protected function includesShifts(): bool
+    {
+        return true;
     }
 }

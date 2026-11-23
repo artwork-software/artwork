@@ -39,6 +39,8 @@ class BudgetManagementCostUnitController extends Controller
             ->orderBy('cost_unit_number')
             ->paginate($perPage)
             ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedCostUnits->getCollection());
+        $trashedCostUnits->through(static fn ($model) => $model->setAttribute('trash', $trashInfo[$model->id] ?? null));
 
         return Inertia::render(
             'Trash/BudgetManagementCostUnit',
@@ -113,6 +115,9 @@ class BudgetManagementCostUnitController extends Controller
         ProjectService $projectService,
         ColumnCellService $columnCellService
     ): RedirectResponse {
+        // Papierkorb-Route: aktive Einträge nicht am Papierkorb vorbei endgültig löschen
+        abort_unless($budgetManagementCostUnit->trashed(), 404);
+
         $this->budgetManagementCostUnitService->forceDelete(
             $budgetManagementCostUnit,
             $projectService,

@@ -1,174 +1,78 @@
 <template>
-    <TrashSearchAndActions
+    <TrashTab
+        :paginator="trashed_events"
         property-name="trashed_events"
-        :total="trashed_events.total"
-        @delete-all="showConfirmDeleteAll = true"
-    />
-    <div v-for="event in trashed_events.data" :key="event.id"
-         class="flex w-full bg-white my-2 border border-border-subtle">
-        <div class="flex mt-2 w-full ml-4 flex-wrap p-4">
-            <div class="flex justify-between w-full">
-                <div class="my-auto">
-                    <p class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text" v-if="!event.name">
-                        {{ event.project?.name || this.$t('Event without name') }}
-                    </p>
-
-                    <div v-else class="flex w-full items-center justify-between">
-                        <div class="mr-12 font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">
-                            {{ event.name }}
-                        </div>
-                        <div v-if="event.project" class="mt-1.5 flex">
-                            {{ $t('assigned to')}}:
-                            <a v-if="event.project?.id"
-                               :href="route('projects.tab', {project: event.project.id, projectTab: this.first_project_calendar_tab_id})"
-                               class="ml-3 text-md flex font-bold font-lexend text-text">
-                                {{ event.project.name }}
-                            </a>
-                        </div>
-                    </div>
-                    <p class="text-sm/5 font-bold text-text-subtle subpixel-antialiased mt-2">
-                        {{ event.start }} - {{ event.end }}
-                        <span v-if="event.series_id" class="ml-2 inline-flex items-center gap-1 rounded-full border border-border-subtle px-2 py-0.5 text-[11px] font-medium text-text-subtle">
-                            <IconRepeat class="size-3" />
-                            {{ $t('Part of a series') }}
-                        </span>
-                    </p>
-                    <div class="text-sm leading-6 font-lexend text-text-subtle mt-2 flex items-center">
-                        <div>
-                            <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : event.event_type.hex_code }" />
-                        </div>
-                        <p class="ml-1">{{ event.event_type.name }}</p>
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <BaseMenu>
-                        <MenuItem v-slot="{ active }">
-                            <Link as="button" method="patch"
-                                  :href="route('events.restore', { id: event.id })"
-                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' :
-                                          'text-text-subtle',
-                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                <IconRefresh
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                    aria-hidden="true"/>
-                                {{ $t('Restore') }}
-                            </Link>
-                        </MenuItem>
-                        <MenuItem v-if="event.series_id" v-slot="{ active }">
-                            <button type="button"
-                                    @click="restoreSeries(event.series_id)"
-                                    :title="$t('All events of this series are restored from the trash.')"
-                                    :class="[active ? 'bg-text-inverse/10 text-accent-700' :
-                                          'text-text-subtle',
-                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                <IconRepeat
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                    aria-hidden="true"/>
-                                {{ $t('Restore series') }}
-                            </button>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <Link as="button" method="delete"
-                                  :href="route('events.force', { id: event.id })"
-                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' :
-                                          'text-text-subtle',
-                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                <IconTrash
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                    aria-hidden="true"/>
-                                {{ $t('Delete permanently')}}
-                            </Link>
-                        </MenuItem>
-                    </BaseMenu>
-                </div>
+        :force-all-href="route('events.force.all')"
+        :restore-href="(event) => route('events.restore', { id: event.id })"
+        :force-href="(event) => route('events.force', { id: event.id })"
+        :name-of="(event) => event.name || event.project?.name || $t('Event without name')"
+        :open-href="projectHref"
+    >
+        <template #leading="{ item: event }">
+            <div class="w-1.5 shrink-0 self-stretch rounded-full" :style="{ backgroundColor: event.event_type?.hex_code ?? '#a3a3a3' }" />
+        </template>
+        <template #default="{ item: event }">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span class="truncate font-medium text-text">{{ event.name || event.project?.name || $t('Event without name') }}</span>
+                <span v-if="event.series_id"
+                      class="inline-flex items-center gap-1 rounded-full border border-border-subtle px-2 py-0.5 text-[11px] font-medium text-text-subtle">
+                    <IconRepeat class="size-3" />
+                    {{ $t('Part of a series') }}
+                </span>
             </div>
-        </div>
-    </div>
-
-    <BasePaginator
-        v-if="trashed_events.total > 0"
-        :entities="trashed_events"
-        property-name="trashed_events"
-        class="mt-6"
-    />
-
-    <ConfirmDeleteModal
-        v-if="showConfirmDeleteAll"
-        :title="$t('Delete all')"
-        :description="$t('Are you sure you want to permanently delete all items in the recycle bin for this category?')"
-        @closed="showConfirmDeleteAll = false"
-        @delete="forceDeleteAll"
-    />
+            <div class="mt-0.5 truncate text-sm text-text-muted">
+                <span>{{ event.start }} – {{ event.end }}</span>
+                <template v-if="event.event_type?.name">
+                    <span class="text-text-subtle"> · </span>
+                    <span>{{ event.event_type.name }}</span>
+                </template>
+                <template v-if="event.room_name">
+                    <span class="text-text-subtle"> · </span>
+                    <span>{{ event.room_name }}</span>
+                </template>
+                <template v-if="event.name && event.project">
+                    <span class="text-text-subtle"> · </span>
+                    <a v-if="projectHref(event)" :href="projectHref(event)" class="text-accent-600 hover:text-accent-700">{{ event.project.name }}</a>
+                    <span v-else>{{ event.project.name }}</span>
+                </template>
+            </div>
+        </template>
+        <template #menu="{ item: event }">
+            <BaseMenuItem v-if="event.series_id" :icon="IconRepeat" title="Restore series" white-menu-background
+                          @click="restoreSeries(event.series_id)" />
+        </template>
+    </TrashTab>
 </template>
 
 <script>
-import {IconChevronDown, IconChevronUp, IconDotsVertical, IconRefresh, IconRepeat, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
-import axios from "axios";
-import AppLayout from "@/Layouts/AppLayout.vue";
-import TrashLayout from "@/Layouts/TrashLayout.vue";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Link} from "@inertiajs/vue3";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import TrashSearchAndActions from "@/Pages/Trash/Components/TrashSearchAndActions.vue";
-import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
+import AppLayout from '@/Layouts/AppLayout.vue'
+import TrashLayout from '@/Layouts/TrashLayout.vue'
 
 export default {
-    name: "Events",
     layout: [AppLayout, TrashLayout],
-    props: ['trashed_events', 'first_project_calendar_tab_id'],
-    components: {
-        BaseMenu,
-        BasePaginator,
-        TrashSearchAndActions,
-        ConfirmDeleteModal,
-        Input,
-        IconX,
-        IconSearch,
-        IconChevronDown,
-        IconChevronUp,
-        Menu,
-        MenuButton,
-        IconDotsVertical,
-        MenuItems,
-        MenuItem,
-        IconRefresh,
-        IconRepeat,
-        IconTrash,
-        Link
-    },
-    data() {
-        return {
-            showTemporaryEvents: [],
-            showConfirmDeleteAll: false,
-        }
-    },
-    methods: {
-        switchVisibility(eventId) {
-            if (this.showTemporaryEvents.includes(eventId)) {
-                this.showTemporaryEvents.splice(this.showTemporaryEvents.indexOf(eventId), 1);
-            } else {
-                this.showTemporaryEvents.push(eventId);
-            }
-        },
-        restoreSeries(seriesId) {
-            // JSON-Endpunkt; danach Liste neu laden
-            axios.patch(route('events.series.restore', { series: seriesId }))
-                .then(() => this.$inertia.reload({ only: ['trashed_events'] }))
-                .catch((e) => console.error('series-restore:failed', e));
-        },
-        forceDeleteAll() {
-            this.$inertia.delete(route('events.force.all'), {
-                onSuccess: () => {
-                    this.showConfirmDeleteAll = false;
-                }
-            });
-        },
-    }
 }
 </script>
 
-<style scoped>
+<script setup>
+import TrashTab from '@/Pages/Trash/Components/TrashTab.vue'
+import axios from 'axios'
+import { router } from '@inertiajs/vue3'
+import { IconRepeat } from '@tabler/icons-vue'
+import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
 
-</style>
+const props = defineProps({
+    trashed_events: { type: Object, required: true },
+    first_project_calendar_tab_id: { type: Number, default: null },
+})
+
+// gelöschte Projekte haben keine Seite, auf die der Link zeigen könnte
+const projectHref = (event) => event.project?.id && !event.project.deleted_at && props.first_project_calendar_tab_id
+    ? route('projects.tab', { project: event.project.id, projectTab: props.first_project_calendar_tab_id })
+    : null
+
+const restoreSeries = (seriesId) => {
+    // JSON-Endpunkt; danach Liste neu laden
+    axios.patch(route('events.series.restore', { series: seriesId }))
+        .then(() => router.reload({ only: ['trashed_events'] }))
+}
+</script>

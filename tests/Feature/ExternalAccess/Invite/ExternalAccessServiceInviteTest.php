@@ -15,6 +15,7 @@ use Artwork\Modules\ExternalAccess\Exceptions\ConfidentialMandatoryFieldsMissing
 use Artwork\Modules\ExternalAccess\Exceptions\InternalUserEmailConflictException;
 use Artwork\Modules\ExternalAccess\Exceptions\UnsupportedContactTypeException;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
+use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\ExternalAccess\Models\ExternalInvitation;
 use Artwork\Modules\ExternalAccess\Models\ExternalLoginToken;
 use Artwork\Modules\ExternalAccess\Notifications\ExternalInvitationNotification;
@@ -243,6 +244,34 @@ final class ExternalAccessServiceInviteTest extends TestCase
 
         $this->assertSame($external->id, $result->id);
         $this->assertNull($result->fresh()->revoked_at);
+    }
+
+    #[Test]
+    public function reinviting_a_revoked_access_ends_old_tabs_and_takes_the_new_crm_expiry(): void
+    {
+        Notification::fake();
+        $type = $this->contactType('freelancer');
+
+        $external = ExternalAccess::factory()->create([
+            'email' => 'revoked-scopes@example.test',
+            'crm_access_expires_at' => CarbonImmutable::now()->addYears(10),
+            'revoked_at' => now()->subDay(),
+        ]);
+        $oldScope = ExternalAccessScope::factory()->create([
+            'external_access_id' => $external->id,
+            'valid_to' => now()->addMonths(3),
+        ]);
+
+        $this->service()->invite($this->command([
+            'email' => 'revoked-scopes@example.test',
+            'crmContactTypeId' => $type->id,
+        ]));
+
+        $external->refresh();
+        $this->assertNull($external->revoked_at);
+        $this->assertFalse($oldScope->fresh()->valid_to->isFuture());
+        $this->assertTrue($external->crm_access_expires_at->isFuture());
+        $this->assertTrue($external->crm_access_expires_at->lt(CarbonImmutable::now()->addYears(9)));
     }
 
     #[Test]

@@ -15,6 +15,7 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -137,10 +138,10 @@ readonly class EventService
         app(ShiftDeletionService::class)->deleteMany($event->shifts);
         $subEventService->deleteSubEvents($event->subEvents);
 
-        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
         $notificationService->markOpenRoomRequestsHandled($event->id, 'deleted', $this->deletingUser());
 
+        // Live-Update über den Raumkanal (offene Kalender entfernen die Kachel)
         if ($event->room_id) {
             SafeBroadcast::send(new RemoveEvent($event, $event->room_id));
         }
@@ -215,15 +216,14 @@ readonly class EventService
                 $this->deletingUser()
             );
         }
-        $eventsDeleted = $deletedEventIds !== [];
-
-        // Broadcast once after the whole batch instead of per event. OccupancyUpdated is a
-        // generic, payload-less ping that just makes open calendars refetch their visible
-        // range, so a single broadcast already updates all clients live. Firing it per event
-        // meant thousands of redundant broadcasts and was a main cause of timeouts when
-        // deleting projects with very many events.
-        if ($eventsDeleted) {
-            SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
+        // Ein Sammel-Signal für den ganzen Stapel statt RemoveEvent je Termin (beim Löschen von Projekten mit
+        // sehr vielen Terminen waren das Tausende Broadcasts): offene Kalender laden die sichtbaren Monate im
+        // Zeitraum der gelöschten Termine neu
+        if ($deletedEventIds !== []) {
+            SafeBroadcast::send(
+                OccupancyUpdated::forEvents(collect($events)->whereIn('id', $deletedEventIds)),
+                toOthers: true
+            );
         }
     }
 
@@ -257,7 +257,8 @@ readonly class EventService
         // Beim Löschen wurde die offene Raumanfrage geschlossen – wiederhergestellt ist sie wieder offen
         app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents([(int) $event->id]);
 
-        SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
+        // Live-Update über den Raumkanal: offene Kalender zeigen den Termin wieder an
+        SafeBroadcast::send(new EventCreated($event->fresh()->load(['event_type', 'project']), $event->room_id));
     }
 
     public function forceDeleteAll(
@@ -328,8 +329,6 @@ readonly class EventService
                     $shiftsQualificationsService,
                 );
                 $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
-
-                SafeBroadcast::send(new OccupancyUpdated(), toOthers: true);
             }
         } finally {
             // Gegenstück zu deleteAll: beim Löschen geschlossene Raumanfragen wieder öffnen (Projekt, Serie) – auch
@@ -338,6 +337,15 @@ readonly class EventService
             if ($restoredEventIds !== []) {
                 app(RoomRequestNotificationService::class)->reopenRoomRequestsOfRestoredEvents($restoredEventIds);
             }
+        }
+
+        // Ein Ping für den ganzen Stapel wie in deleteAll (vorher je Termin: beim Wiederherstellen eines
+        // Projekts mit vielen Terminen ebenso viele Aufrufe an den WebSocket-Server)
+        if ($restoredEventIds !== []) {
+            SafeBroadcast::send(
+                OccupancyUpdated::forEvents(collect($events)->whereIn('id', $restoredEventIds)),
+                toOthers: true
+            );
         }
     }
 
@@ -1524,38 +1532,6 @@ readonly class EventService
         return $series->toDefinitionArray();
     }
 
-    public function mapRoomsToContent(Collection $rooms, $startDate, $endDate, bool $withShifts = true): array
-    {
-        return $rooms->map(function ($room) use ($withShifts, $startDate, $endDate) {
-            $content = $this->initializeContentArray($startDate, $endDate);
-
-            if ($withShifts) {
-                $shifts = $room->shifts;
-                foreach ($shifts as $shift) {
-                    $shiftDate = Carbon::parse($shift->start_date)->format('d.m.Y');
-                    if (isset($content[$shiftDate])) {
-                        $content[$shiftDate]['shifts'][] = $shift;
-                    }
-                }
-            }
-            foreach ($room->events as $event) {
-                $eventDate = Carbon::parse($event['startTime'])->format('d.m.Y');
-                if (isset($content[$eventDate])) {
-                    $content[$eventDate]['events'][] = $event;
-                }
-            }
-
-            return [
-                'roomId' => $room->id,
-                'roomName' => $room->name,
-                // Raum-/Areal-Farbe wie in MapRoomsToContentForCalendar/ShiftCalendarService
-                // durchreichen — sonst bleibt die Raumleiste im Projekt-Tab-Kalender farblos
-                'roomColor' => $room->getEffectiveColor(),
-                'content' => $content,
-            ];
-        })->toArray();
-    }
-
     public function mapRoomsToContentForCalendar(Collection $rooms, $startDate, $endDate)
     {
         return $rooms->map(function ($room) use ($startDate, $endDate) {
@@ -2033,34 +2009,6 @@ readonly class EventService
     }
 
 
-    public function createSeriesEvent(
-        $startDate,
-        $endDate,
-        $request,
-        $series,
-        $projectId,
-        $user,
-    ): Model|Event {
-        $event = new Event();
-
-        $event->name = $request->title;
-        $event->eventName = $request->eventName;
-        $event->description = $request->description;
-        $event->start_time = $startDate;
-        $event->end_time = $endDate;
-        $event->occupancy_option = $request->isOption;
-        $event->audience = $request->audience;
-        $event->is_loud = $request->isLoud;
-        $event->event_type_id = $request->eventTypeId;
-        $event->room_id = $request->roomId;
-        $event->project_id = $projectId ?: null;
-        $event->is_series = true;
-        $event->series_id = $series->id;
-        $event->allDay = $request->allDay;
-        $event->creator()->associate($user);
-        return $this->eventRepository->save($event);
-    }
-
     public function save(Event $event): Event|Model
     {
         $originalStartTime = $event->getOriginal('start_time');
@@ -2223,6 +2171,7 @@ readonly class EventService
         array $event,
         ?Project $project,
         int $userId,
+        bool $asRoomRequest = false,
     ): Event {
 
         // Handle null or missing day input by using current date as fallback
@@ -2271,6 +2220,8 @@ readonly class EventService
             'event_type_id' => $event['type']['id'],
             'room_id' => $event['room']['id'],
             'is_planning' => $event['is_planning'] ?? false,
+            // Entscheidet der Aufrufer anhand der Rechte im Raum, nie der Client
+            'occupancy_option' => $asRoomRequest,
         ];
 
         /** @var Event $createdEvent */

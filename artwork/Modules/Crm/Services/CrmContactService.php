@@ -2,7 +2,10 @@
 
 namespace Artwork\Modules\Crm\Services;
 
+use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Accommodation\Models\Accommodation;
+use Artwork\Modules\ArtistResidency\Models\Artist;
+use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
@@ -77,11 +80,14 @@ readonly class CrmContactService
 
         $this->savePropertyValues($contact, $propertyValues);
 
-        // Unterkünfte werden im CRM gepflegt: der neue Name gilt auch für den Unterkunfts-Datensatz,
-        // sonst setzte der Abgleich unten den Kontakt auf den alten Namen zurück.
+        // Unterkünfte, Künstler*innen und Hersteller werden im CRM gepflegt: der neue Name gilt auch für den
+        // verknüpften Datensatz, sonst setzte der Abgleich unten den Kontakt auf den alten Namen zurück.
         $entity = $contact->getSourceEntity();
-        if ($entity instanceof Accommodation && !empty($data['display_name'])) {
-            $entity->update(['name' => $data['display_name']]);
+        $isNamedInCrm = $entity instanceof Accommodation
+            || $entity instanceof Artist
+            || $entity instanceof Manufacturer;
+        if ($isNamedInCrm && !empty($data['display_name'])) {
+            $entity->forceFill(['name' => $data['display_name']])->save();
         }
 
         // Sync display_name from source entity if available
@@ -104,9 +110,18 @@ readonly class CrmContactService
         \Illuminate\Support\Facades\DB::transaction(function () use ($contact, $newType): void {
             $keptPropertyIds = $newType->properties()->pluck('crm_properties.id')->toArray();
 
+            $droppedPropertyIds = $contact->propertyValues()
+                ->whereNotIn('crm_property_id', $keptPropertyIds)
+                ->pluck('crm_property_id')
+                ->all();
+            $fileService = app(CrmPropertyFileService::class);
+            $droppedFiles = $fileService->collectPathsOfProperties($droppedPropertyIds, (int) $contact->id);
+
             $contact->propertyValues()
                 ->whereNotIn('crm_property_id', $keptPropertyIds)
                 ->delete();
+
+            \Illuminate\Support\Facades\DB::afterCommit(static fn () => $fileService->deleteMany($droppedFiles));
 
             $this->contactRepository->update($contact, ['crm_contact_type_id' => $newType->id]);
             $contact->setRelation('contactType', $newType);
@@ -187,6 +202,26 @@ readonly class CrmContactService
         $this->writeBackToSource($contact, $propertyId, $value);
     }
 
+    /**
+     * Upload-Eigenschaft setzen oder leeren: Pfad auf der Disk plus Anzeigename der Datei.
+     */
+    public function savePropertyFile(CrmContact $contact, int $propertyId, ?string $path, ?string $fileName): void
+    {
+        $this->propertyValueRepository->updateOrCreateFile($contact->id, $propertyId, $path, $fileName);
+
+        $this->writeBackToSource($contact, $propertyId, $path);
+    }
+
+    /**
+     * Nur der Anzeigename ändert sich; die Datei behält ihren Hash-Namen auf der Disk.
+     */
+    public function renamePropertyFile(CrmContact $contact, int $propertyId, string $fileName): void
+    {
+        $contact->propertyValues()
+            ->where('crm_property_id', $propertyId)
+            ->update(['file_name' => $fileName]);
+    }
+
     private function writeBackToSource(CrmContact $contact, int $propertyId, ?string $value): void
     {
         $entity = $contact->getSourceEntity();
@@ -226,6 +261,11 @@ readonly class CrmContactService
         $properties = CrmProperty::query()->whereKey(array_keys($propertyValues))->get()->keyBy('id');
 
         foreach ($propertyValues as $propertyId => $value) {
+            // Dateien kommen nur über die Upload-Endpunkte, nie als frei gesetzter Pfad
+            if ($properties->get((int) $propertyId)?->type === CrmPropertyTypeEnum::UPLOAD) {
+                continue;
+            }
+
             $this->savePropertyValue(
                 $contact,
                 (int) $propertyId,

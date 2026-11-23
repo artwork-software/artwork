@@ -33,7 +33,7 @@ $canViewShiftPlan = static fn ($user): bool => $user instanceof User
 // Planungstermine: nur mit Planungskalender-Recht (EventPolicy::viewPlanning, Admins via Gate::before)
 $canViewPlanning = static fn ($user): bool => $user instanceof User && $user->can('viewPlanning', Event::class);
 
-// Reload-Signale ohne Payload (OccupancyUpdated, PushesEventModification: roomId + Datumsbereich)
+// Sammel-Signal OccupancyUpdated (nur Zeitraum, keine Termindaten): offene Kalender laden betroffene Monate nach
 Broadcast::channel('events', function () {
     return Auth::check();
 });
@@ -123,6 +123,11 @@ Broadcast::channel('users.status', function () {
 
 Broadcast::channel('user-status', function () {
     return Auth::check();
+});
+
+// Hinweis ohne Inhalt für die Seite "Eingehende Anfragen"; welche Anfragen jemand sieht, entscheidet die Seite
+Broadcast::channel(\Artwork\Modules\Event\Events\RoomRequestsChanged::CHANNEL, function ($user) {
+    return $user instanceof User;
 });
 
 // Termin-DTOs. Der Kalender steht jedem angemeldeten Nutzer offen und eine raumbezogene Sichtbarkeit

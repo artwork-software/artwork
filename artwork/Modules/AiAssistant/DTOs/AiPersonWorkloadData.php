@@ -10,6 +10,10 @@ use Spatie\LaravelData\Data;
  * Wochen und Monate sind die **vollstaendigen** ISO-Wochen bzw. Kalendermonate, die der Zeitraum
  * beruehrt — eine Grenze „pro Woche" laesst sich nur gegen die ganze Woche pruefen.
  * `target_minutes_by_week` ist bei Freelancern und Dienstleistern `null`.
+ *
+ * Darf die fragende Person die Stunden der Person nicht sehen (fremde Person ohne
+ * „Stundenkonten einsehen"), sind `contract`, `planned`, `target_minutes_by_week` und `remaining`
+ * `null` und `rules` leer. Abwesenheiten bleiben.
  */
 class AiPersonWorkloadData extends Data
 {
@@ -22,10 +26,10 @@ class AiPersonWorkloadData extends Data
         public AiPersonData $person,
         public ?AiContractRefData $contract,
         public array $rules,
-        public AiPlannedMinutesData $planned,
+        public ?AiPlannedMinutesData $planned,
         public ?array $target_minutes_by_week,
         public array $absences,
-        public AiRemainingData $remaining,
+        public ?AiRemainingData $remaining,
     ) {
     }
 }

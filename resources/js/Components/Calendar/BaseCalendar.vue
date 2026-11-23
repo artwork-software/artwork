@@ -432,6 +432,7 @@ import {IconAlertTriangle} from "@tabler/icons-vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
+import {monthKeyInRange, useOccupancyUpdates} from "@/Composeables/Listener/useOccupancyUpdates.js";
 import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import {can} from "laravel-permission-to-vuejs";
@@ -561,6 +562,9 @@ provide('calendarMultiEdit', multiEdit);
 // damit eine Antwort nur die Kacheln der betroffenen Termine neu rendert.
 const ticketSales = reactive(new Map());
 provide('calendarTicketSales', ticketSales);
+// Serien-Löschungen senden kein Live-Update je Termin: Kacheln/Modals stoßen darüber das eigene Neuladen an
+// (das Sammel-Signal geht nur an die anderen offenen Kalender)
+provide('calendarRefetchLoadedMonths', () => refetchLoadedMonths());
 const isFullscreen = ref(false);
 const showMultiEditModal = ref(false);
 const editEvents = ref([]);
@@ -1228,6 +1232,7 @@ onMounted(async () => {
         subscribePlanningChannels: canSeePlannedEvents.value,
     });
     shiftCalendarListener.init();
+    occupancyUpdates.start();
     initMonthObserver();
     if (focusedMonthKey.value && !loadedMonths.value.has(focusedMonthKey.value)) {
         const idx = monthIndexByKey.value.get(focusedMonthKey.value)!;
@@ -1235,6 +1240,8 @@ onMounted(async () => {
         const targets = windowKeysAround(idx, 1);
         cancelAllExcept(targets);
         await Promise.allSettled(targets.map(k => loadMonth(k, epoch)));
+        // Unmount bricht die Loads ab: dann keine Listener mehr an die tote Instanz hängen
+        if (isCalendarUnmounted) return;
     }
 
 
@@ -1262,6 +1269,7 @@ onBeforeUnmount(() => {
     isCalendarUnmounted = true;
     shiftCalendarListener?.dispose();
     shiftCalendarListener = null;
+    occupancyUpdates.stop();
     calendarRef.value?.removeEventListener('wheel', handleWheelZoom);
     if (monthObserver) monthObserver.disconnect();
     monthObserver = null;
@@ -1782,6 +1790,30 @@ async function refetchMonthForDay(day: any, targetDate: string | null = null) {
         return loadMonth(monthKey, epoch);
     }));
 }
+
+// Termin-Änderungen ohne Live-Update je Termin (Serie löschen/beenden/Turnus, Massenlöschen, Wiederherstellen,
+// KI-Stapel): betroffene geladene Monate neu holen – die um den Fokus sofort, die übrigen als veraltet markieren
+// (lädt der Hintergrund-Prefetch nach). Ohne Zeitraum alle geladenen Monate.
+async function refetchLoadedMonths(range: { start: string; end: string } | null = null) {
+    const affectedKeys = [...new Set([...loadedMonths.value, ...loadingMonths.value])]
+        .filter((key) => monthKeyInRange(key, range));
+    if (!affectedKeys.length) return;
+    const focusIdx = focusedMonthKey.value ? monthIndexByKey.value.get(focusedMonthKey.value) : undefined;
+    const focusWindow = new Set(focusIdx == null ? [] : windowKeysAround(focusIdx, 1));
+    for (const key of affectedKeys) {
+        abortInflightMonth(key);
+        loadedMonths.value.delete(key);
+        failedMonths.value.delete(key);
+    }
+    const epoch = ++currentEpoch;
+    await Promise.allSettled(affectedKeys.filter((key) => focusWindow.has(key)).map((key) => loadMonth(key, epoch)));
+    if (epoch === currentEpoch) scheduleBackgroundPrefetch();
+}
+
+// Sammel-Signal anderer Personen (OccupancyUpdated): nur Monate im gemeldeten Zeitraum nachladen
+const occupancyUpdates = useOccupancyUpdates((range) => {
+    if (!isCalendarUnmounted) void refetchLoadedMonths(range);
+});
 
 // When multi-edit is enabled, clicking an event toggles its selection
 const onEventClick = (evt: any, e?: MouseEvent) => {

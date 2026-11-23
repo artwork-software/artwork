@@ -220,22 +220,32 @@ class BiComponentSettingsController extends Controller
 
     public function update(Request $request, Component $component): RedirectResponse
     {
+        // Über die BI-Einstellungen nur BI-Felder bearbeiten, keine beliebigen Tab-Komponenten
+        abort_unless((bool) $component->is_bi_field, 404);
+
+        // Personen/Teams vor dem Detach prüfen: ein kaputter Eintrag ließ sonst alle Zuordnungen verschwinden
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'data' => ['nullable', 'array'],
             'permission_type' => ['nullable', 'string'],
+            'users' => ['nullable', 'array'],
+            'users.*.user_id' => ['required', 'integer', 'exists:users,id'],
+            'users.*.can_write' => ['present', 'nullable', 'boolean'],
+            'departments' => ['nullable', 'array'],
+            'departments.*.department_id' => ['required', 'integer', 'exists:departments,id'],
+            'departments.*.can_write' => ['present', 'nullable', 'boolean'],
         ]);
 
         // Mehrfachauswahl am DropDown umschalten: Werte umwandeln bzw. Ausschalten bei Mehrfachwerten verhindern
         app(ComponentSelectionModeService::class)->applyChange($component, $request->input('data'));
 
         $component->users()->detach();
-        foreach ($request->get('users', []) as $user) {
+        foreach ($request->input('users') ?? [] as $user) {
             $component->users()->attach($user['user_id'], ['can_write' => $user['can_write']]);
         }
 
         $component->departments()->detach();
-        foreach ($request->get('departments', []) as $department) {
+        foreach ($request->input('departments') ?? [] as $department) {
             $component->departments()->attach($department['department_id'], ['can_write' => $department['can_write']]);
         }
 
@@ -248,8 +258,13 @@ class BiComponentSettingsController extends Controller
 
     public function destroy(Component $component): RedirectResponse
     {
+        abort_unless((bool) $component->is_bi_field, 404);
+
         $component->users()->detach();
         $component->departments()->detach();
+        // Druck-Layouts und Ordner verweisen ohne ON DELETE CASCADE auf das Feld; sonst scheitert das Löschen
+        $component->componentInPrintLayouts()->delete();
+        $component->componentInDisclosures()->delete();
 
         if ($component->projectValue) {
             $component->projectValue->delete();
@@ -270,7 +285,7 @@ class BiComponentSettingsController extends Controller
         ]);
 
         foreach ($request->ordered_ids as $index => $id) {
-            Component::where('id', $id)->update(['bi_order' => $index + 1]);
+            Component::isBiField()->where('id', $id)->update(['bi_order' => $index + 1]);
         }
 
         $this->clearCaches();

@@ -45,6 +45,9 @@ final class AiEventWriteApiTest extends TestCase
         $client = app(ClientRepository::class)
             ->createPersonalAccessGrantClient('PAT client', config('auth.guards.api.provider'));
 
+        // Betreiber-Schalter: die KI-Routen pruefen ihn bei jeder Anfrage (EnsureAiHouseSwitches).
+        config(['ai.enabled' => true]);
+
         // Der Herkunfts-Listener erkennt KI-Tokens an der Client-ID aus dem JWT — fuer den Test
         // gilt der Personal-Access-Client als KI-Client (core-via-activity-log).
         AiAssistantSettings::fake([
@@ -258,6 +261,63 @@ final class AiEventWriteApiTest extends TestCase
     }
 
     #[Test]
+    public function the_preview_names_no_planning_event_the_user_may_not_see(): void
+    {
+        // Sicherheits-Audit 18.11.2026, M8: belegt ja, aber ohne ID und Name des Planungstermins
+        $planning = $this->existingEvent('2026-09-14 19:30:00', '2026-09-14 21:30:00');
+        $planning->forceFill(['is_planning' => true, 'eventName' => 'Geheime Planung'])->save();
+        $this->actingAsToken($this->planner(), [AiScopes::READ]);
+
+        $response = $this->postJson('/api/v1/ai/events/batch', $this->seriesPayload())->assertOk();
+
+        $conflict = $response->json('items.0.conflicts.0');
+        $this->assertSame(AiWriteConflictData::ROOM_COLLISION, $conflict['type']);
+        $this->assertNull($conflict['event']);
+        $this->assertSame(1, $response->json('summary.with_conflicts'));
+        $this->assertStringNotContainsString('Geheime Planung', $response->getContent());
+    }
+
+    #[Test]
+    public function the_preview_names_a_planning_collision_for_users_with_the_planning_calendar(): void
+    {
+        $planning = $this->existingEvent('2026-09-14 19:30:00', '2026-09-14 21:30:00');
+        $planning->forceFill(['is_planning' => true, 'eventName' => 'Geheime Planung'])->save();
+        $this->actingAsToken($this->userWith([
+            PermissionEnum::PROJECT_VIEW->value,
+            PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value,
+            PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value,
+        ]));
+
+        $response = $this->postJson('/api/v1/ai/events/batch', $this->seriesPayload())->assertOk();
+
+        $this->assertSame($planning->id, $response->json('items.0.conflicts.0.event.id'));
+        $this->assertSame('Geheime Planung', $response->json('items.0.conflicts.0.event.name'));
+    }
+
+    #[Test]
+    public function moving_an_event_onto_a_hidden_planning_event_names_nothing(): void
+    {
+        $planning = $this->existingEvent('2026-09-15 10:00:00', '2026-09-15 12:00:00');
+        $planning->forceFill(['is_planning' => true, 'eventName' => 'Geheime Planung'])->save();
+        $own = $this->existingEvent('2026-09-14 10:00:00', '2026-09-14 12:00:00');
+        $this->actingAsToken($this->planner(), [AiScopes::READ]);
+
+        $response = $this->patchJson('/api/v1/ai/events/' . $own->id, [
+            'day' => '2026-09-15',
+            'start_time' => '10:30',
+            'end_time' => '11:30',
+        ])->assertOk();
+
+        $collisions = array_values(array_filter(
+            $response->json('items.0.conflicts'),
+            static fn (array $conflict): bool => $conflict['type'] === AiWriteConflictData::ROOM_COLLISION
+        ));
+        $this->assertCount(1, $collisions);
+        $this->assertNull($collisions[0]['event']);
+        $this->assertStringNotContainsString('Geheime Planung', $response->getContent());
+    }
+
+    #[Test]
     public function the_preview_reports_a_missing_permission(): void
     {
         $this->actingAsToken($this->userWith([PermissionEnum::PROJECT_VIEW->value]));
@@ -381,6 +441,98 @@ final class AiEventWriteApiTest extends TestCase
         ])->assertOk();
 
         $this->assertSame('20:00:00', $event->fresh()->start_time->format('H:i:s'));
+    }
+
+    // --- Raumwechsel mit den Raumrechten der Person (wie die Terminliste der Oberflaeche) ------------
+
+    private function ownEventIn(User $creator): Event
+    {
+        return Event::factory()->create([
+            'room_id' => $this->room->id,
+            'project_id' => $this->project->id,
+            'event_type_id' => $this->eventType->id,
+            'user_id' => $creator->id,
+            'start_time' => '2026-09-14 19:00:00',
+            'end_time' => '2026-09-14 21:00:00',
+            'occupancy_option' => false,
+        ]);
+    }
+
+    #[Test]
+    public function moving_an_event_into_a_room_one_may_only_request_turns_it_into_a_room_request(): void
+    {
+        $this->fakeActionGuard();
+        $requester = $this->userWith([PermissionEnum::EVENT_REQUEST->value]);
+        $event = $this->ownEventIn($requester);
+        $targetRoom = Room::factory()->create();
+        $this->actingAsToken($requester);
+
+        $this->patchJson('/api/v1/ai/events/' . $event->id, [
+            'room_id' => $targetRoom->id,
+            'dry_run' => false,
+            'action_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $event = $event->fresh();
+        $this->assertSame($targetRoom->id, $event->room_id);
+        $this->assertTrue((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function moving_an_event_into_a_room_without_any_right_there_is_blocked(): void
+    {
+        $creator = $this->userWith([]);
+        $event = $this->ownEventIn($creator);
+        $targetRoom = Room::factory()->create();
+        $this->actingAsToken($creator);
+
+        $payload = $this->patchJson('/api/v1/ai/events/' . $event->id, ['room_id' => $targetRoom->id])
+            ->assertOk()
+            ->json();
+
+        $types = array_column($payload['items'][0]['conflicts'], 'type');
+        $this->assertContains(AiWriteConflictData::MISSING_PERMISSION, $types);
+        $this->assertSame($this->room->id, $event->fresh()->room_id);
+    }
+
+    #[Test]
+    public function moving_several_events_applies_the_room_rights_to_each_event(): void
+    {
+        $this->fakeActionGuard();
+        $requester = $this->userWith([PermissionEnum::EVENT_REQUEST->value]);
+        $event = $this->ownEventIn($requester);
+        $targetRoom = Room::factory()->create();
+        $this->actingAsToken($requester);
+
+        $this->patchJson('/api/v1/ai/events/batch', [
+            'event_ids' => [$event->id],
+            'room_id' => $targetRoom->id,
+            'dry_run' => false,
+            'action_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $event = $event->fresh();
+        $this->assertSame($targetRoom->id, $event->room_id);
+        $this->assertTrue((bool) $event->occupancy_option);
+    }
+
+    #[Test]
+    public function a_planner_who_may_book_directly_keeps_the_moved_event_booked(): void
+    {
+        $this->fakeActionGuard();
+        $event = $this->existingEvent('2026-09-14 19:00:00', '2026-09-14 21:00:00');
+        $targetRoom = Room::factory()->create();
+        $this->actingAsToken($this->planner());
+
+        $this->patchJson('/api/v1/ai/events/' . $event->id, [
+            'room_id' => $targetRoom->id,
+            'dry_run' => false,
+            'action_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $event = $event->fresh();
+        $this->assertSame($targetRoom->id, $event->room_id);
+        $this->assertFalse((bool) $event->occupancy_option);
     }
 
     // --- Ganztaegig (core-api-lookups) --------------------------------------------------------

@@ -22,8 +22,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\ValidationException;
-use Inertia\Response;
-use Inertia\ResponseFactory;
 use Artwork\Modules\Shift\Support\SafeBroadcast;
 
 class ChecklistController extends Controller
@@ -36,11 +34,6 @@ class ChecklistController extends Controller
         private readonly ProjectComponentVisibilityService $visibilityService
     ) {
         $this->authorizeResource(Checklist::class);
-    }
-
-    public function create(): Response|ResponseFactory
-    {
-        return inertia('Checklists/Create');
     }
 
     /**

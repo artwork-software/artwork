@@ -9,8 +9,6 @@ use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\Models\DayRemark;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
-use Artwork\Modules\Calendar\DTO\RoomDTO;
-use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -22,19 +20,14 @@ use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserShiftPlanDailySettings;
 use Artwork\Modules\User\Models\UserShiftPlanSettings;
-use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as SupportCollection;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 readonly class CalendarDataService
 {
@@ -46,73 +39,6 @@ readonly class CalendarDataService
         private ProjectService $projectService,
         private HolidayService $holidayService,
     ) {
-    }
-
-    public function createCalendarData(
-        $startDate,
-        $endDate,
-        $calendarFilter,
-        User $user,
-        $project = null,
-        $room = null
-    ): array {
-
-        // Create the calendar period
-        $period = $this->createCalendarPeriodDto($startDate, $endDate, $user, true);
-
-        // Create calendar period for event collection
-        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
-
-        // Get filtered rooms
-        $rooms = [];
-        if ($room) {
-            // If specific room is provided, use only that room
-            $rooms = [$room];
-        } else {
-            // Get filtered rooms based on calendar filter
-            $filteredRooms = $this->roomRepository->getFilteredRoomsBy(
-                $calendarFilter->room_ids,
-                $calendarFilter->room_attribute_ids,
-                $calendarFilter->area_ids,
-                $calendarFilter->room_category_ids
-            );
-            $rooms = $filteredRooms->all();
-        }
-
-        // Collect events for rooms
-        $roomsWithEvents = $this->eventCollectionService->collectEventsForRooms(
-            $rooms,
-            $calendarPeriod,
-            $calendarFilter
-        )->toArray();
-
-        // Get events without room
-        $eventsWithoutRoom = $this->eventCollectionService->getEventsWithoutRoom(
-            $project
-        )->toArray();
-
-        // Get filter options and personal filters
-        $filterOptions = $this->filterService->getCalendarFilterDefinitions();
-        $personalFilters = $this->filterService->getPersonalFilter();
-
-        // convert  $period dto to array
-        $period = array_map(fn($d) => is_array($d) ? $d : (array)$d, $period);
-
-
-        return [
-            'days' => $period,
-            'dateValue' => [
-                'start' => $startDate->format('Y-m-d'),
-                'end' => $endDate->format('Y-m-d')
-            ],
-            'calendarType' => $room ? 'room' : 'calendar',
-            'selectedDate' => $startDate->format('Y-m-d'),
-            'roomsWithEvents' => $roomsWithEvents,
-            'eventsWithoutRoom' => $eventsWithoutRoom,
-            'filterOptions' => $filterOptions,
-            'personalFilters' => $personalFilters,
-            'user_filters' => $calendarFilter
-        ];
     }
 
     public function createCalendarPeriodDto(
@@ -432,14 +358,6 @@ readonly class CalendarDataService
                 ? $latestEvent->getAttribute('end_time')->copy()->endOfDay()
                 : $today->copy()->endOfDay(),
         ];
-    }
-
-    private function datesOverlap(?Carbon $start1, ?Carbon $end1, ?Carbon $start2, ?Carbon $end2): bool
-    {
-        if ($start1 === null || $end1 === null || $start2 === null || $end2 === null) {
-            return true;
-        }
-        return $start1 <= $end2 && $start2 <= $end1;
     }
 
     /**

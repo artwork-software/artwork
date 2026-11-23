@@ -56,12 +56,4 @@ class ShiftRepository extends BaseRepository
             ->eventIdInArray($projectEventIds)
             ->get();
     }
-
-    public function getShiftsBetweenDates(
-        Carbon $eventStartDay,
-        Carbon $eventEndDay,
-        array $with = []
-    ): Collection {
-        return Shift::eventStartDayAndEventEndDayBetween($eventStartDay, $eventEndDay)->with($with)->get();
-    }
 }

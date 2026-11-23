@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Crm\Services;
 
+use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
@@ -190,16 +191,31 @@ readonly class CrmDuplicateService
             $primaryValues = $primary->propertyValues()->get()->keyBy('crm_property_id');
 
             foreach ($duplicates as $duplicate) {
-                foreach ($duplicate->propertyValues()->get() as $value) {
+                foreach ($duplicate->propertyValues()->with('property')->get() as $value) {
                     $existing = $primaryValues->get($value->crm_property_id);
                     $hasValue = $existing !== null && trim((string) $existing->value) !== '';
 
                     if (!$hasValue && trim((string) $value->value) !== '') {
-                        $this->contactService->savePropertyValue(
-                            $primary,
-                            $value->crm_property_id,
-                            $value->value
-                        );
+                        if ($value->property?->type === CrmPropertyTypeEnum::UPLOAD) {
+                            $this->contactService->savePropertyFile(
+                                $primary,
+                                $value->crm_property_id,
+                                $value->value,
+                                $value->file_name
+                            );
+                            $primaryValues->put($value->crm_property_id, clone $value);
+                            // Die Datei gehört jetzt dem Hauptkontakt: Bliebe der Pfad am Duplikat stehen,
+                            // löschte das Leeren des Papierkorbs sie mit.
+                            $value->update(['value' => null, 'file_name' => null]);
+
+                            continue;
+                        } else {
+                            $this->contactService->savePropertyValue(
+                                $primary,
+                                $value->crm_property_id,
+                                $value->value
+                            );
+                        }
                         $primaryValues->put($value->crm_property_id, $value);
                     }
                 }

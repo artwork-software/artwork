@@ -23,7 +23,12 @@ export function t(key) {
     return translate(key)
 }
 
-export function showAppToast(type, message) {
+/**
+ * @param {'success'|'error'} type
+ * @param {string} message
+ * @param {{label: string, href: string}|null} action optionaler Link in der Meldung
+ */
+export function showAppToast(type, message, action = null) {
     if (!message) {
         return
     }
@@ -33,7 +38,7 @@ export function showAppToast(type, message) {
         return
     }
     lastToast = {key, at: now}
-    listeners.forEach((listener) => listener(type, message))
+    listeners.forEach((listener) => listener(type, message, action))
 }
 
 export function onAppToast(listener) {
@@ -82,6 +87,30 @@ export function failedRequestMessage(error, fallback = 'Failed to save') {
     }
     const requestMessage = error?.isAxiosError ? messageForFailedRequest(error?.response?.status) : null
     return t(requestMessage ?? fallback)
+}
+
+/**
+ * Für axios-Aufrufe ohne eigenes Formular: zeigt den Validierungsfehler (422) als Meldung. Netzwerk,
+ * 403, 404 und 5xx meldet schon der globale Hinweis; ein 422 blieb sonst ohne jede Rückmeldung
+ * (z. B. Sammellöschen mit mehr Einträgen als erlaubt).
+ */
+export function toastValidationFailure(error) {
+    if (error?.response?.status === 422) {
+        showAppToast('error', failedRequestMessage(error))
+    }
+}
+
+/**
+ * Inertia-onError ohne Feldanzeige: erste Validierungsmeldung als Fehler-Toast (sonst tat Speichern
+ * bei einem Validierungsfehler sichtbar nichts).
+ *
+ * @param {Record<string, string|string[]>|null|undefined} errors
+ */
+export function toastValidationErrors(errors, fallback = 'Failed to save') {
+    const first = errors && typeof errors === 'object'
+        ? Object.values(errors).flat().find(Boolean)
+        : null
+    showAppToast('error', first || t(fallback))
 }
 
 /**

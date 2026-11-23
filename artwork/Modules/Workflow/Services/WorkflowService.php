@@ -76,7 +76,11 @@ class WorkflowService
             return false;
         }
 
-        $toPlace = $transitionConfig['to'];
+        // Altbestand ohne gültiges Ziel ablehnen statt mit einem 500er abzubrechen
+        $toPlace = $transitionConfig['to'] ?? null;
+        if (!is_string($toPlace) || $toPlace === '') {
+            return false;
+        }
 
         // Execute actions before transition
         $this->executeActions($instance, $transitionConfig['actions'] ?? []);
@@ -153,6 +157,18 @@ class WorkflowService
         $placeNames = collect($config['places'])->pluck('name')->toArray();
         if (!in_array($config['initial_place'], $placeNames)) {
             throw new InvalidWorkflowConfigException('Initial place not found in places');
+        }
+
+        // Jede Transition braucht einen Namen und ein bekanntes Ziel, sonst scheitert sie erst beim Ausführen
+        foreach ($config['transitions'] as $transition) {
+            if (!is_array($transition) || !is_string($transition['name'] ?? null) || $transition['name'] === '') {
+                throw new InvalidWorkflowConfigException('Every transition needs a name');
+            }
+            if (!is_string($transition['to'] ?? null) || !in_array($transition['to'], $placeNames, true)) {
+                throw new InvalidWorkflowConfigException(
+                    "Transition {$transition['name']} must lead to a known place"
+                );
+            }
         }
     }
 }

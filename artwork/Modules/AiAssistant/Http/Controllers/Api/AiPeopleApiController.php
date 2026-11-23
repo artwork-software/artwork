@@ -15,7 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Personen und Auslastung fuer die Schichtplanung (ai-shift-planning, Core 1 und 2).
  *
- * Beides nur mit „Schichten planen" (Gate `plan-shifts`, hier mit Guard `web` geprueft).
+ * Beides nur mit „Schichten planen" (Gate `plan-shifts`, hier mit Guard `web` geprueft). Stunden
+ * anderer Personen liefert die Auslastung nur mit „Stundenkonten einsehen".
  */
 class AiPeopleApiController extends Controller
 {
@@ -34,7 +35,12 @@ class AiPeopleApiController extends Controller
     {
         $this->authorizePlanning($request->user());
 
-        return $this->service->workload($this->service->find($type, $id), $request->from(), $request->to());
+        return $this->service->workload(
+            $request->user(),
+            $this->service->find($type, $id),
+            $request->from(),
+            $request->to()
+        );
     }
 
     private function authorizePlanning(?User $user): void

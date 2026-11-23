@@ -26,7 +26,7 @@ final class RoomAttributeControllerTest extends FeatureTestCase
             'name' => 'Stage Lighting',
         ]);
 
-        $response->assertSuccessful();
+        $response->assertRedirect()->assertSessionHasNoErrors();
         $this->assertDatabaseHas('room_attributes', [
             'name' => 'Stage Lighting',
         ]);
@@ -71,7 +71,7 @@ final class RoomAttributeControllerTest extends FeatureTestCase
             'name' => 'Room Manager Attr',
         ]);
 
-        $response->assertSuccessful();
+        $response->assertRedirect()->assertSessionHasNoErrors();
         $this->assertDatabaseHas('room_attributes', [
             'name' => 'Room Manager Attr',
         ]);

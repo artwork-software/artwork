@@ -19,6 +19,15 @@
                 classes="!items-center"
             />
         </div>
+        <!-- Nur Anfragerecht: Anlegen geht, die Termine entstehen als Raumanfragen -->
+        <div v-else-if="canOnlyRequestRooms && canEditComponent" class="mb-4 w-full">
+            <AlertComponent
+                :text="$t('Events you create here are submitted as room requests and are not firmly booked until they have been accepted. You can edit your own events in this list.')"
+                type="info"
+                show-icon icon-size="h-5 w-5"
+                classes="!items-center"
+            />
+        </div>
         <!-- Function Bar: der Sticky-Wrapper muss vollbreit und opak sein — die Pille selbst
              ist schmaler als der darunter klebende Spaltenkopf, sonst scrollen die Zeilen
              links/rechts neben ihr sichtbar durch. -->
@@ -58,7 +67,7 @@
                         :planning="isPlanningEvent"
                         @update:planning="isPlanningEvent = $event"
                         :disabled="!hasCreateEventsPermission"
-                        v-if="hasCreateEventsPermission && canEditComponent"
+                        v-if="hasCreateEventsPermission && canEditComponent && !canOnlyRequestRooms"
                     />
                 </div>
 
@@ -66,7 +75,7 @@
                     :user_filters="usePage().props.user_filters"
                     :personal-filters="usePage().props.personalFilters"
                     :filter-options="usePage().props.filterOptions"
-                    :filter-type="'calendar_filter'"
+                    :filter-type="'project_event_list_filter'"
                 />
 
                 <ToolTipComponent
@@ -195,6 +204,19 @@
                                 {{ $t('Planned Event') }}
                             </span>
                         </div>
+
+                        <!-- Room request -->
+                        <div v-if="showRoomRequestLegend" class="flex items-center gap-2" role="listitem">
+                            <span
+                                aria-hidden="true"
+                                class="flex size-4 items-center justify-center rounded-full bg-warning text-white"
+                            >
+                                <IconHourglassEmpty class="size-3" stroke-width="2"/>
+                            </span>
+                            <span class="uppercase tracking-wide font-medium">
+                                {{ $t('Room request') }}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <!-- Modal: kein w-max — die virtualisierten Zeilen sind absolut positioniert und
@@ -249,7 +271,8 @@
                             <!-- Single Event -->
                             <div v-else-if="item.kind === 'event'" :id="item.eventIndex" class="mx-1 pb-2">
                                 <BulkSingleEvent
-                                    :can-edit-component="canEditComponent && hasCreateEventsPermission"
+                                    :can-edit-component="canEditComponent && canEditEventRow(item.event)"
+                                    :reserve-actions-space="canEditComponent && hasCreateEventsPermission"
                                     :rooms="rooms"
                                     :event_types="eventTypes"
                                     :time-array="timeArray"
@@ -263,7 +286,7 @@
                                     @create-copy-by-event-with-data="createCopyByEventWithData"
                                     :event-statuses="eventStatuses"
                                     :multi-edit="multiEdit"
-                                    :has-permission="hasCreateEventsPermission"
+                                    :has-permission="canEditEventRow(item.event)"
                                     :last-edit-event-ids="lastEditEventIds"
                                     :show-end-date="showEndDate"
                                 />
@@ -460,6 +483,7 @@ import {
     IconLoader2,
     IconCircuitCapacitorPolarized,
     IconFileExport,
+    IconHourglassEmpty,
     IconNote
 } from "@tabler/icons-vue";
 import BulkHeader from "@/Pages/Projects/Components/BulkComponents/BulkHeader.vue";
@@ -520,7 +544,13 @@ const emits = defineEmits(['closed']);
 
 let showEvents = ref(true);
 // "Termine immer direkt buchbar": "Raumbelegungen anfragen" schließt dann Bulk-Anlage ein (Backend: authorizeBulkEventCreation)
-const hasCreateEventsPermission = ref(can('create events without request') || can('can edit planning calendar') || hasAdminRole() || (!!usePage().props.event_direct_booking_only && can('request room occupancy')));
+const canCreateEventsDirectly = can('create events without request') || can('can edit planning calendar') || hasAdminRole() || (!!usePage().props.event_direct_booking_only && can('request room occupancy'));
+// Nur "Raumbelegungen anfragen": Anlegen erzeugt Raumanfragen, bearbeitbar sind die eigenen Termine
+// (Backend: authorizeBulkEventCreationOrRoomRequest, EventPolicy::update)
+const canOnlyRequestRooms = !canCreateEventsDirectly && can('request room occupancy');
+const hasCreateEventsPermission = ref(canCreateEventsDirectly || canOnlyRequestRooms);
+const canEditEventRow = (event) => canCreateEventsDirectly
+    || (canOnlyRequestRooms && (!event?.id || event.created_by_id === usePage().props.auth.user.id));
 const roomCollisions = ref([]);
 const timeArray = ref(true);
 
@@ -529,11 +559,14 @@ const showEndDateStorageKey = computed(() => `bulk_show_end_date_user_${usePage(
 const showEndDate = ref(safeGetItem(showEndDateStorageKey.value) === 'true');
 
 const isPlanningEvent = ref((() => {
+    // Geplante Termine kennen keine Raumanfrage
+    if (canOnlyRequestRooms) return false;
     const storedValue = safeGetItem(`isPlanningEvent_${props.project.id}`);
     return storedValue !== null ? storedValue === 'true' : (props.project?.state?.is_planning || false);
 })());
 
 const invalidEvents = ref([]);
+const showRoomRequestLegend = computed(() => canOnlyRequestRooms || events.value.some(e => e.occupancy_option));
 const multiEdit = ref(false);
 const eventIdsForMultiEdit = ref([]);
 const showMultiEditModal = ref(false);
@@ -731,6 +764,8 @@ const mapPayloadToBulkRow = (payload) => ({
     description: payload.description ?? '',
     isNew: false,
     is_planning: payload.is_planning ?? false,
+    occupancy_option: !!payload.occupancy_option,
+    created_by_id: payload.created_by_id ?? null,
     is_series: payload.is_series || false,
     series_id: payload.series_id || null,
     eventProperties: payload.eventProperties || payload.event_properties || [],
@@ -1428,6 +1463,8 @@ async function fetchBulkEditData() {
                     description: event.description,
                     isNew: false,
                     is_planning: event.is_planning,
+                    occupancy_option: !!event.occupancy_option,
+                    created_by_id: event.created_by?.id ?? event.user_id ?? null,
                     is_series: event.is_series || false,
                     series_id: event.series_id || null,
                     eventProperties: event.eventProperties || event.event_properties || [],

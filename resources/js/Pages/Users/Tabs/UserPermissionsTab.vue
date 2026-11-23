@@ -111,6 +111,25 @@
             </template>
         </ArtworkBaseModal>
 
+        <!-- Rückfrage: Admin-Rolle entziehen (beim eigenen Konto deutlicher, man sperrt sich aus) -->
+        <ArtworkBaseModal
+            v-if="confirmRevokeAdmin"
+            :title="revokingOwnAdminRole ? 'Remove your own admin role?' : 'Remove artwork admin role?'"
+            modal-size="sm:max-w-lg"
+            @close="confirmRevokeAdmin = false"
+        >
+            <p v-if="revokingOwnAdminRole" class="text-sm text-text">
+                {{ $t('You are removing your own admin role. You will immediately lose access to the permission settings and cannot undo this yourself. Only another artwork admin can give the role back to you.') }}
+            </p>
+            <p v-else class="text-sm text-text-muted">
+                {{ $t('{name} will then only have the individual permissions set below. Access to settings and other areas that require admin rights will be lost.', { name: fullName }) }}
+            </p>
+            <template #footer>
+                <BaseUIButton label="Cancel" is-cancel-button hide-icon @click="confirmRevokeAdmin = false" />
+                <BaseUIButton variant="danger" hide-icon label="Remove admin role" @click="revokeAdmin" />
+            </template>
+        </ArtworkBaseModal>
+
         <ArtworkBaseModal v-if="deletingUser" title="Delete user" modal-size="sm:max-w-lg" @close="closeDeleteUserModal">
             <p class="text-sm text-text">
                 {{ $t('Are you sure you want to delete {last_name}, {first_name} from the system?', { last_name: user_to_edit.last_name, first_name: user_to_edit.first_name }) }}
@@ -137,11 +156,12 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import PermissionCatalogEditor from '@/Artwork/Permissions/PermissionCatalogEditor.vue'
+import { adminToggleConfirmation } from '@/Helper/adminRoleToggle.js'
 
 const props = defineProps({
     user_to_edit: { type: Object, required: true },
@@ -157,6 +177,8 @@ const isAdmin = ref((props.user_to_edit.roles || []).includes('artwork admin'))
 const deletingUser = ref(false)
 const deletingUserProcessing = ref(false)
 const confirmAdmin = ref(false)
+const confirmRevokeAdmin = ref(false)
+const revokingOwnAdminRole = ref(false)
 const historyOpen = ref(false)
 const saveState = ref('idle')
 const savedAt = ref('')
@@ -197,8 +219,13 @@ function persist(source = null) {
         {
             preserveScroll: true,
             preserveState: true,
-            only: ['user_to_edit', 'permission_history', 'catalog'],
-            onSuccess: () => {
+            // flash mitladen: lehnt der Server ab (z. B. letzter Admin), kommt die Meldung sonst nie an
+            only: ['user_to_edit', 'permission_history', 'catalog', 'flash'],
+            onSuccess: (page) => {
+                if (page.props.flash?.error) {
+                    saveState.value = 'error'
+                    return
+                }
                 const now = new Date()
                 savedAt.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
                 saveState.value = 'saved'
@@ -210,14 +237,24 @@ function persist(source = null) {
 const savePermissions = () => persist()
 
 function onAdminToggle(event) {
-    const checked = event.target.checked
-    if (checked) {
-        // Vergabe braucht eine Rückfrage; die Checkbox bleibt bis zur Bestätigung aus
-        event.target.checked = false
+    const confirmation = adminToggleConfirmation({
+        checked: event.target.checked,
+        targetUserId: props.user_to_edit.id,
+        authUserId: usePage().props.auth?.user?.id,
+    })
+    // Vergeben und Entziehen brauchen eine Rückfrage; die Checkbox behält bis zur Bestätigung ihren Stand
+    event.target.checked = isAdmin.value
+    if (confirmation === 'grant') {
         confirmAdmin.value = true
         return
     }
+    revokingOwnAdminRole.value = confirmation === 'revoke-self'
+    confirmRevokeAdmin.value = true
+}
+
+function revokeAdmin() {
     isAdmin.value = false
+    confirmRevokeAdmin.value = false
     persist('admin')
 }
 

@@ -105,7 +105,8 @@ class GeneralSettingsService
 
     public function updateWarningMultipleAssignmentsFromRequest(Request $request): void
     {
-        $this->generalSettings->warn_multiple_assignments = $request->get('warn_multiple_assignments');
+        // boolean(): fehlender Wert warf einen TypeError (500), "false" als Text wurde zu true
+        $this->generalSettings->warn_multiple_assignments = $request->boolean('warn_multiple_assignments');
         $this->generalSettings->save();
     }
 
@@ -118,10 +119,16 @@ class GeneralSettingsService
 
     public function updateInventoryDisplaySettings(Request $request): void
     {
+        // Ohne Validierung führte ein Array als Präfix zu einem 500er und "false" als Text zu true
+        $validated = $request->validate([
+            'inventory_show_inventory_number_as_name' => ['nullable', 'boolean'],
+            'inventory_number_prefix' => ['nullable', 'string', 'max:255'],
+        ]);
+
         $this->generalSettings->inventory_show_inventory_number_as_name =
-            (bool) $request->get('inventory_show_inventory_number_as_name');
+            (bool) ($validated['inventory_show_inventory_number_as_name'] ?? false);
         $this->generalSettings->inventory_number_prefix =
-            (string) $request->get('inventory_number_prefix', '');
+            (string) ($validated['inventory_number_prefix'] ?? '');
         $this->generalSettings->save();
     }
 

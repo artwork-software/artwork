@@ -16,14 +16,8 @@
             </section>
 
             <section v-if="!subscription" :class="sectionClass">
-                <h3 :class="headingClass">{{ $t('Price and uses') }}</h3>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <BaseInput id="pass-price" v-model="draft.price" type="number" min="0" step="0.01" label="Price in euros" required :error="form.errors.price" />
-                    <div>
-                        <BaseInput id="pass-uses" v-model="draft.uses" type="number" min="1" max="1000" label="Uses" required :disabled="sold" :error="form.errors.uses" />
-                        <p class="mt-1 text-xs text-text-subtle">{{ $t('One use = one ticket, reduced by the value below.') }}</p>
-                    </div>
-                </div>
+                <h3 :class="headingClass">{{ $t('Price') }}</h3>
+                <BaseInput id="pass-price" v-model="draft.price" type="number" min="0" step="0.01" label="Price in euros" required :error="form.errors.price" class="sm:w-1/2" />
             </section>
 
             <template v-else>
@@ -72,30 +66,59 @@
                     </div>
                     <p v-if="sold" class="text-xs text-text-subtle">{{ $t('New prices apply to new subscriptions; running ones keep theirs.') }}</p>
                 </section>
-
-                <section :class="sectionClass">
-                    <h3 :class="headingClass">{{ $t('Uses') }}</h3>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <BaseInput id="pass-uses" v-model="draft.uses" type="number" min="1" max="1000" required :disabled="sold" :error="form.errors.uses"
-                                   :label="draft.usesWindow === 'month' ? 'Uses per month' : 'Uses over the term'" />
-                        <div>
-                            <span :class="labelClass">{{ $t('Uses count') }}</span>
-                            <ChoiceSegments v-model="draft.usesWindow" :disabled="sold" :label="$t('Uses count')"
-                                            :options="[{ value: 'month', label: $t('per month') }, { value: 'term', label: $t('over the whole term'), disabled: draft.termMode === 'open' }]" />
-                        </div>
-                        <div v-if="draft.usesWindow === 'month'">
-                            <BaseInput id="pass-rollover" v-model="draft.rolloverMax" type="number" min="0" max="100" label="Carried into the next month" :disabled="sold" :error="form.errors.rolloverMax" />
-                            <p class="mt-1 text-xs text-text-subtle">{{ $t('How many unused uses move on. 0: none.') }}</p>
-                        </div>
-                    </div>
-                </section>
             </template>
 
             <section :class="sectionClass">
-                <h3 :class="headingClass">{{ $t('What one use is worth in the checkout') }}</h3>
+                <h3 :class="headingClass">{{ $t('Uses') }}</h3>
+                <div class="grid gap-2" role="radiogroup" :aria-label="$t('Uses')">
+                    <div v-for="mode in usesModes" :key="mode.value" class="rounded-lg border transition-colors"
+                         :class="[usesMode === mode.value ? 'border-accent-600 bg-accent-50' : 'border-border-subtle bg-surface', { 'opacity-60': mode.disabled }]">
+                        <label class="flex items-start gap-2.5 px-3 py-2.5" :class="sold || mode.disabled ? 'cursor-not-allowed' : 'cursor-pointer'">
+                            <input type="radio" name="pass-uses-mode" class="mt-0.5 size-3.5 text-accent-600 focus:ring-accent-500" :value="mode.value"
+                                   :checked="usesMode === mode.value" :disabled="sold || mode.disabled" @change="chooseUses(mode.value)">
+                            <span class="grid gap-0.5">
+                                <span class="font-medium text-text">{{ mode.label }}</span>
+                                <span class="text-xs text-text-subtle">{{ mode.hint }}</span>
+                            </span>
+                        </label>
+                        <div v-if="usesMode === mode.value && mode.unit" class="flex flex-col gap-3 pb-3 pl-9 pr-3">
+                            <div class="flex items-center gap-2">
+                                <BaseInput id="pass-uses" v-model="draft.uses" type="number" min="1" max="1000" :label="mode.unit" :show-label="false"
+                                           required :disabled="sold" :error="form.errors.uses" is-small class="!w-24" />
+                                <span class="text-text-muted">{{ mode.unit }}</span>
+                            </div>
+                            <div v-if="mode.value === 'month'">
+                                <div class="flex items-center gap-2">
+                                    <BaseInput id="pass-rollover" v-model="draft.rolloverMax" type="number" min="0" max="100" label="Carried into the next month"
+                                               :show-label="false" :disabled="sold" :error="form.errors.rolloverMax" is-small class="!w-24" />
+                                    <span class="text-text-muted">{{ $t('unused ones carried into the next month') }}</span>
+                                </div>
+                                <p class="mt-1 text-xs text-text-subtle">{{ $t('0: whatever is not used in the month lapses.') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <span :class="labelClass">{{ $t('At most') }}</span>
+                    <div class="flex items-center gap-2">
+                        <BaseInput id="pass-max-period" v-model="draft.maxUsesPerPeriod" type="number" min="1" max="100" label="At most" :show-label="false"
+                                   :disabled="sold" :error="form.errors.maxUsesPerPeriod" is-small class="!w-24" />
+                        <ChoiceSegments v-model="draft.limitPeriod" :disabled="sold" :label="$t('Period')" :options="limitPeriods" />
+                    </div>
+                    <p class="mt-1 text-xs text-text-subtle">{{ $t('Optional. Weeks run Monday to Sunday. A booking counts on the day of the performance, a stamp on the day it is given.') }}</p>
+                </div>
+                <div v-if="draft.unlimited && noPace" class="flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
+                    <IconAlertTriangle class="mt-0.5 size-4 shrink-0 text-warning" />
+                    <span>{{ $t('Without a limit the pass can be used any number of times, even for several dates on the same day. Best set one, e.g. 1 per week.') }}</span>
+                </div>
+                <p class="text-xs text-text-subtle">{{ $t('One use = one ticket, reduced by the value below.') }}</p>
+            </section>
+
+            <section :class="sectionClass">
+                <h3 :class="headingClass">{{ $t('Discount per use') }}</h3>
                 <div>
                     <div class="flex flex-wrap items-end gap-4">
-                        <ChoiceSegments v-model="draft.discountKind" :disabled="sold" :label="$t('What one use is worth in the checkout')"
+                        <ChoiceSegments v-model="draft.discountKind" :disabled="sold" :label="$t('Discount per use')"
                                         :options="[{ value: 'percent', label: $t('Percent of the ticket') }, { value: 'fixed', label: $t('Fixed amount') }]" />
                         <div class="w-44">
                             <BaseInput v-if="draft.discountKind === 'percent'" id="pass-percent" v-model="draft.discountPercent" type="number" min="1" max="100"
@@ -126,15 +149,6 @@
                     <div>
                         <BaseInput id="pass-max-event" v-model="draft.maxUsesPerEvent" type="number" min="1" max="1000" label="At most per event" :disabled="sold" :error="form.errors.maxUsesPerEvent" />
                         <p class="mt-1 text-xs text-text-subtle">{{ $t('Across all orders of this pass. Empty: no limit.') }}</p>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <div class="flex items-end gap-2">
-                            <BaseInput id="pass-max-period" v-model="draft.maxUsesPerPeriod" type="number" min="1" max="100" label="At most per period" class="!w-40"
-                                       :disabled="sold" :error="form.errors.maxUsesPerPeriod" />
-                            <ChoiceSegments v-model="draft.limitPeriod" :disabled="sold" :label="$t('Period')"
-                                            :options="[{ value: 'day', label: $t('per day') }, { value: 'week', label: $t('per week') }, { value: 'month', label: $t('per month') }]" />
-                        </div>
-                        <p class="mt-1 text-xs text-text-subtle">{{ $t('Calendar day, week (Mon–Sun) or month. A booking counts on the day of the performance, a stamp on the day it is given. Empty: no limit.') }}</p>
                     </div>
                 </div>
             </section>
@@ -219,6 +233,7 @@
 import { computed, reactive } from 'vue'
 import { Link, useForm } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
+import { IconAlertTriangle } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
@@ -278,6 +293,51 @@ const termModes = [
     { value: 'months', label: t('Fixed term'), hint: t('A number of months from the purchase.') },
     { value: 'season', label: t('Season to a date'), hint: t('Ends on a fixed day; later buyers pay only the whole months until then.') },
 ]
+
+const usesMode = computed(() => (draft.unlimited ? 'unlimited' : subscription.value ? draft.usesWindow : 'count'))
+
+const usesModes = computed(() => {
+    const unlimited = { value: 'unlimited', label: t('Unlimited'), unit: null,
+        hint: subscription.value ? t('Any number of times, like a flat rate.') : t('Any number of times, e.g. a season pass.') }
+
+    if (!subscription.value) {
+        return [{ value: 'count', label: t('Fixed number'), hint: t('E.g. a 10-visit pass.'), unit: t('uses') }, unlimited]
+    }
+
+    const open = draft.termMode === 'open'
+    return [
+        { value: 'month', label: t('New every month'), hint: t('A fixed number per month, e.g. 2 performances.'), unit: t('uses per month') },
+        { value: 'term', label: t('For the whole term'), unit: t('uses in total'), disabled: open,
+            hint: open ? t('Only with a fixed term.') : t('One allowance for the whole term, used whenever the holder likes.') },
+        unlimited,
+    ]
+})
+
+const noPace = computed(() => String(draft.maxUsesPerPeriod ?? '').trim() === '')
+
+/* A month's allowance already caps the month; a type that has the month anyway keeps seeing it. */
+const limitPeriods = computed(() => [
+    { value: 'day', label: t('per day') },
+    { value: 'week', label: t('per week') },
+    ...(usesMode.value !== 'month' || draft.limitPeriod === 'month' ? [{ value: 'month', label: t('per month') }] : []),
+])
+
+function chooseUses(mode) {
+    draft.unlimited = mode === 'unlimited'
+    if (mode === 'month' || mode === 'term') {
+        draft.usesWindow = mode
+    }
+
+    if (!noPace.value) {
+        return
+    }
+    if (mode === 'unlimited') {
+        draft.maxUsesPerPeriod = '1'
+        draft.limitPeriod = 'week'
+    } else if (mode === 'month' && draft.limitPeriod === 'month') {
+        draft.limitPeriod = 'week'
+    }
+}
 
 /** Open-ended has no term to spread uses over. */
 function onTermMode() {

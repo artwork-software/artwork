@@ -57,7 +57,8 @@
                             </div>
 
                             <button
-                                class="inline-flex items-center gap-1 text-accent-700 hover:text-accent-700"
+                                type="button"
+                                class="inline-flex items-center gap-1 text-accent-700 hover:underline"
                                 @click="openMoneySourceHistoryModal"
                             >
                                 <IconChevronRight class="h-3 w-3" />
@@ -85,7 +86,12 @@
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <Link :href="route('money_sources.index')"
+                              class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-text-muted hover:bg-surface-sunken hover:text-text">
+                            <IconChevronLeft class="h-3.5 w-3.5" />
+                            {{ $t('Sources of funding') }}
+                        </Link>
                         <!-- Bedingungen spiegeln MoneySourcePolicy (update / create / delete) -->
                         <BaseMenu v-if="canManage || canDuplicate || canDelete" has-no-offset white-menu-background>
                             <BaseMenuItem v-if="canManage" white-menu-background title="Edit" :icon="IconEdit"  @click="openEditMoneySourceModal" />
@@ -124,7 +130,8 @@
                     <div class="mt-3">
                         <div class="h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
                             <div
-                                class="h-2 rounded-full bg-success"
+                                class="h-2 rounded-full"
+                                :class="utilizationPct >= 100 || moneySource.amount_available < 0 ? 'bg-danger' : utilizationPct >= 80 ? 'bg-warning' : 'bg-success'"
                                 :style="{ width: utilizationPct + '%' }"
                             />
                         </div>
@@ -149,6 +156,39 @@
                     </p>
                     <p class="mt-2 text-sm text-text-subtle" v-else>—</p>
                 </div>
+            </section>
+
+            <!-- Verlauf des verfügbaren Betrags -->
+            <section v-if="timelineChart" class="mt-6 rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <div>
+                        <h2 class="text-base font-semibold">{{ $t('Development of the available amount') }}</h2>
+                        <p class="text-xs text-text-subtle">{{ $t('By date of the linked positions') }}</p>
+                    </div>
+                    <p class="text-xs text-text-muted tabular-nums">
+                        {{ timelineChart.firstDate }}<template v-if="timelineChart.lastDate !== timelineChart.firstDate"> – {{ timelineChart.lastDate }}</template>
+                    </p>
+                </div>
+                <div class="mt-4 flex gap-3">
+                    <div class="flex w-28 shrink-0 flex-col justify-between py-1 text-right text-[11px] tabular-nums text-text-subtle">
+                        <span>{{ toCurrency(timelineChart.max) }}</span>
+                        <span>{{ toCurrency(timelineChart.min) }}</span>
+                    </div>
+                    <svg class="h-40 min-w-0 flex-1" viewBox="0 0 600 160" preserveAspectRatio="none" role="img"
+                         :aria-label="$t('Development of the available amount')">
+                        <line v-if="timelineChart.zeroY !== null" x1="0" x2="600" :y1="timelineChart.zeroY" :y2="timelineChart.zeroY"
+                              class="stroke-danger" stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
+                        <path :d="timelineChart.area" class="fill-accent-600/10"/>
+                        <path :d="timelineChart.line" fill="none" class="stroke-accent-600" stroke-width="2"
+                              stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+                    </svg>
+                </div>
+                <ul class="mt-3 flex flex-wrap gap-x-5 gap-y-1 pl-[7.75rem] text-[11px] text-text-muted">
+                    <li v-for="point in timelineChart.points" :key="point.time" class="tabular-nums">
+                        {{ point.date }}:
+                        <span class="font-semibold" :class="point.remaining < 0 ? 'text-danger' : 'text-text'">{{ toCurrency(point.remaining) }}</span>
+                    </li>
+                </ul>
             </section>
 
             <!-- Linked Positions -->
@@ -334,7 +374,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import EditMoneySourceComponent from '@/Layouts/Components/EditMoneySourceComponent.vue'
 import BaseSidenav from '@/Layouts/Components/BaseSidenav.vue'
@@ -346,6 +386,7 @@ import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headless
 
 // Icons
 import {
+    IconChevronLeft,
     IconChevronRight,
     IconChevronDown,
     IconEdit,
@@ -359,6 +400,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+import { buildRemainingTimeline } from "@/Pages/MoneySources/moneySourceListTools.js";
 
 const instanceFormat = useInstanceFormat();
 
@@ -463,6 +505,46 @@ const positionSumsPerProject = computed<Record<number, number>>(() => {
     return sums
 })
 
+/** Verlauf des verfügbaren Betrags als Stufenlinie (über alle Positionen, unabhängig vom Projektfilter) */
+const timelineChart = computed(() => {
+    const startAmount = Number(props.moneySource?.amount) || 0
+    const points = buildRemainingTimeline(startAmount, allPositions.value)
+    if (points.length === 0) return null
+
+    const width = 600
+    const height = 160
+    const padding = 6
+    const values = [startAmount, ...points.map(point => point.remaining)]
+    const max = Math.max(...values)
+    const min = Math.min(...values, 0)
+    const range = max - min || 1
+    const firstTime = points[0].time
+    const span = points[points.length - 1].time - firstTime
+    // Der Startwert bekommt links etwas Platz, damit auch ein einzelner Tag als Stufe sichtbar ist
+    const lead = width * 0.08
+    const x = (time: number) => span === 0 ? lead + (width - lead) / 2 : lead + ((time - firstTime) / span) * (width - lead)
+    const y = (value: number) => padding + (1 - (value - min) / range) * (height - 2 * padding)
+
+    let line = `M 0 ${y(startAmount)}`
+    let previous = startAmount
+    points.forEach((point) => {
+        line += ` L ${x(point.time)} ${y(previous)} L ${x(point.time)} ${y(point.remaining)}`
+        previous = point.remaining
+    })
+    line += ` L ${width} ${y(previous)}`
+
+    return {
+        line,
+        area: `${line} L ${width} ${height} L 0 ${height} Z`,
+        points: points.slice(-8),
+        max,
+        min,
+        zeroY: min < 0 ? y(0) : null,
+        firstDate: points[0].date,
+        lastDate: points[points.length - 1].date,
+    }
+})
+
 function projectNameById(id: number) {
     const list = props.linkedProjects ?? []
     return list.find(p => p.id === id)?.name ?? `#${id}`
@@ -488,9 +570,7 @@ function openEditMoneySourceModal() { showEditMoneySourceModal.value = true }
 function onEditMoneySourceModalClose() { showEditMoneySourceModal.value = false }
 
 function duplicateMoneySource(ms: any) {
-    // Inertia-Post auf deinen bestehenden Endpoint
-    // @ts-ignore
-    window?.Inertia?.post?.(`/money_sources/${ms.id}/duplicate`)
+    router.post(route('money_sources.duplicate', { moneySource: ms.id }))
 }
 
 function openDeleteSourceModal(ms: any) {
@@ -498,8 +578,7 @@ function openDeleteSourceModal(ms: any) {
     showDeleteSourceModal.value = true
 }
 function deleteMoneySource(ms: any) {
-    // @ts-ignore
-    window?.Inertia?.delete?.(`/money_sources/${ms.id}`)
+    router.delete(route('money_sources.destroy', { moneySource: ms.id }))
     showDeleteSourceModal.value = false
 }
 function afterConfirm(confirm: boolean) {

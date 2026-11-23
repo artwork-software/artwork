@@ -10,6 +10,6 @@ class AreaRepository extends BaseRepository
 {
     public function getAll(): Collection
     {
-        return Area::all();
+        return Area::query()->orderBy('position')->orderBy('id')->get();
     }
 }

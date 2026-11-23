@@ -6,6 +6,7 @@ use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Http\Controllers\Controller;
 use Spatie\Activitylog\Models\Activity;
 use Artwork\Core\Http\Requests\SearchRequest;
+use Artwork\Core\Localization\SupportedLocales;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -50,7 +51,7 @@ use Artwork\Modules\User\Enums\UserSortEnum;
 use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Http\Requests\MembersManagementRequest;
 use Artwork\Modules\User\Http\Resources\MinimalUserIndexResource;
-use Artwork\Modules\User\Http\Resources\UserIndexResource;
+use Artwork\Modules\User\Http\Resources\UserSearchResultResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\WorkTime\Models\OvertimePayout;
 use Artwork\Modules\WorkTime\Http\Requests\RebookWorkTimeRequest;
@@ -128,9 +129,10 @@ class UserController extends Controller
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->limit(self::PROFILE_SEARCH_LIMIT)
+            ->with('departments')
             ->get();
 
-        return UserIndexResource::collection($users)->resolve();
+        return UserSearchResultResource::collection($users)->resolve();
     }
 
 
@@ -1557,64 +1559,6 @@ class UserController extends Controller
         );
     }
 
-    /**
-     * @param User $user
-     * @param $month
-     * @return array<string, mixed>
-     */
-    private function getAvailabilityData(User $user, $month = null): array
-    {
-        $vacationDays = $user->vacations()->orderBy('date', 'ASC')->get();
-
-        $currentMonth = Carbon::now()->startOfMonth();
-
-        if ($month) {
-            $currentMonth = Carbon::parse($month)->startOfMonth();
-        }
-
-        $startDate = $currentMonth->copy()->startOfWeek();
-        $endDate = $currentMonth->copy()->endOfMonth()->endOfWeek();
-
-        $calendarData = [];
-        $currentDate = $startDate->copy();
-
-        while ($currentDate <= $endDate) {
-            $onVacation = false;
-            $weekNumber = $currentDate->weekOfYear;
-            $day = $currentDate->day;
-            foreach ($vacationDays as $vacationDay) {
-                if ($currentDate->isSameDay($vacationDay->date)) {
-                    $onVacation = true;
-                }
-            }
-
-            if (!isset($calendarData[$weekNumber])) {
-                $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
-            }
-
-            $notInMonth = !$currentDate->isSameMonth($currentMonth);
-
-            $calendarData[$weekNumber]['days'][] = [
-                'day' => $day,
-                'notInMonth' => $notInMonth,
-                'onVacation' => $onVacation,
-                'day_formatted' => $currentDate->format('Y-m-d'),
-            ];
-
-            $currentDate->addDay();
-        }
-
-        $dateToShow = [
-            $currentMonth->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('MMMM YYYY'),
-            $currentMonth->copy()->startOfMonth()->toDate()
-        ];
-
-        return [
-            'calendarData' => array_values($calendarData),
-            'dateToShow' => $dateToShow
-        ];
-    }
-
     public function updateUserDetails(
         Request $request,
         User $user,
@@ -1626,6 +1570,11 @@ class UserController extends Controller
         $actorIsAdmin = $actor->hasRole(RoleEnum::ARTWORK_ADMIN->value);
 
         $this->authorizeProfileEdit($user);
+
+        // Nur Sprachen aus app.supported_locales, sonst landete ein beliebiger Code in users.language
+        $request->validate([
+            'language' => ['sometimes', 'nullable', 'string', Rule::in(SupportedLocales::codes())],
+        ]);
 
         // Nicht-Admins dürfen fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
         if (!$isSelf && !$actorIsAdmin) {
@@ -1823,6 +1772,17 @@ class UserController extends Controller
             $rolesToGrant,
             $request->input('source')
         );
+
+        // Wer sich selbst die Admin-Rolle entzieht, darf den Rechte-Tab nicht mehr sehen;
+        // ein Redirect zurück endete sonst auf einer 403-Seite.
+        $revokedOwnAdminRole = $user->is(Auth::user())
+            && in_array(RoleEnum::ARTWORK_ADMIN->value, $rolesBefore, true)
+            && !in_array(RoleEnum::ARTWORK_ADMIN->value, $rolesToGrant, true);
+
+        if ($revokedOwnAdminRole) {
+            return Redirect::route('user.edit.info', $user)
+                ->with('success', __('You are no longer an artwork admin.'));
+        }
 
         return Redirect::back();
     }
@@ -2355,8 +2315,8 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only([
-            'checklist_style'
+        $user->update($request->validate([
+            'checklist_style' => ['required', 'string', 'in:list,kanban'],
         ]));
     }
 
@@ -2377,7 +2337,9 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('at_a_glance'));
+        $user->update($request->validate([
+            'at_a_glance' => ['required', 'boolean'],
+        ]));
     }
 
     public function updateShiftPlanZoomFactor(User $user, Request $request): void
@@ -2397,7 +2359,10 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('bulk_sort_id'));
+        // Sortierungen 0 bis 3 der Bulk-Ansicht
+        $user->update($request->validate([
+            'bulk_sort_id' => ['required', 'integer', 'between:0,3'],
+        ]));
     }
 
     public function updateDailyView(User $user, Request $request): void
@@ -2465,7 +2430,9 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('show_description_in_bulk'));
+        $user->update($request->validate([
+            'show_description_in_bulk' => ['required', 'boolean'],
+        ]));
     }
 
     public function updateShiftPeriodOnStartDateChange(User $user, Request $request): void
@@ -2575,14 +2542,18 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('compact_mode'));
+        $user->update($request->validate([
+            'compact_mode' => ['required', 'boolean'],
+        ]));
     }
 
     public function toggleShowProjectTeamNames(User $user, Request $request): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('show_project_team_names'));
+        $user->update($request->validate([
+            'show_project_team_names' => ['required', 'boolean'],
+        ]));
     }
 
     public function updateShowCrafts(User $user, Request $request): void
@@ -2612,14 +2583,21 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('show_qualifications'));
+        $request->validate([
+            'show_qualifications' => ['present', 'array'],
+            'show_qualifications.*' => ['integer'],
+        ]);
+
+        $user->update(['show_qualifications' => array_values($request->input('show_qualifications'))]);
     }
 
     public function calendarGoToStepper(User $user, Request $request): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('goto_mode'));
+        $user->update($request->validate([
+            'goto_mode' => ['required', 'string', 'in:day,week,month'],
+        ]));
     }
 
     /**
@@ -2677,7 +2655,12 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('drawer_height'));
+        // Beim Ziehen können Pixelwerte mit Nachkommastellen ankommen; die Spalte ist ganzzahlig
+        $validated = $request->validate([
+            'drawer_height' => ['required', 'numeric', 'min:0', 'max:10000'],
+        ]);
+
+        $user->update(['drawer_height' => (int) round((float) $validated['drawer_height'])]);
     }
 
     public function updateChecklistFilter(User $user, Request $request): void
@@ -2785,7 +2768,12 @@ class UserController extends Controller
     {
         $this->authorize('updateOwnPreferences', $user);
 
-        $user->update($request->only('opened_crafts'));
+        $request->validate([
+            'opened_crafts' => ['present', 'array'],
+            'opened_crafts.*' => ['integer'],
+        ]);
+
+        $user->update(['opened_crafts' => array_values($request->input('opened_crafts'))]);
     }
 
     public function updateSortWorkersByQualification(User $user, Request $request): void

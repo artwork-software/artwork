@@ -290,6 +290,12 @@ class ProjectTabController extends Controller
 
     public function updateComponentOrder(ProjectTab $projectTab, Request $request): void
     {
+        // Ohne Liste lief foreach auf null und endete in einem 500er
+        $request->validate([
+            'components' => ['required', 'array'],
+            'components.*.id' => ['required', 'integer'],
+        ]);
+
         $order = 1;
         foreach ($request->input('components') as $component) {
             ComponentInTab::where('id', $component['id'])->where('project_tab_id', $projectTab->id)->update([
@@ -303,6 +309,7 @@ class ProjectTabController extends Controller
 
     public function addComponent(ProjectTab $projectTab, Request $request): void
     {
+        $this->validateComponentPlacement($request);
 
         $order = $request->input('order');
         ComponentInTab::where('project_tab_id', $projectTab->id)->where('order', '>=', $order)->increment('order');
@@ -391,6 +398,12 @@ class ProjectTabController extends Controller
 
     public function addComponentWithScopes(ProjectTab $projectTab, Request $request): void
     {
+        $this->validateComponentPlacement($request);
+        $request->validate([
+            'scope' => ['nullable', 'array'],
+            'scope.*' => ['integer'],
+        ]);
+
         $order = $request->input('order');
         ComponentInTab::where('project_tab_id', $projectTab->id)->where('order', '>=', $order)->increment('order');
         $projectTab->components()->create([
@@ -412,6 +425,8 @@ class ProjectTabController extends Controller
 
     public function updateComponentNote(ComponentInTab $componentInTab, Request $request): void
     {
+        $request->validate(['note' => ['nullable', 'string', 'max:65535']]);
+
         $componentInTab->update($request->only('note'));
 
         $this->clearTabSettingsCache();
@@ -419,6 +434,12 @@ class ProjectTabController extends Controller
 
     public function updateComponentScope(ComponentInTab $componentInTab, Request $request): void
     {
+        // Das Frontend erwartet eine Liste von Tab-IDs, ein Text als Scope brach die Einstellungsseite
+        $request->validate([
+            'scope' => ['nullable', 'array'],
+            'scope.*' => ['integer'],
+        ]);
+
         $componentInTab->update([
             'scope' => $request->input('scope', []),
         ]);
@@ -555,6 +576,17 @@ class ProjectTabController extends Controller
         DisclosureComponents::query()->find($request->integer('id'))?->delete();
 
         $this->clearTabSettingsCache();
+    }
+
+    /**
+     * Fehlende oder unbekannte Komponenten liefen bisher als 500er in die Datenbank.
+     */
+    private function validateComponentPlacement(Request $request): void
+    {
+        $request->validate([
+            'component_id' => ['required', 'integer', 'exists:components,id'],
+            'order' => ['required', 'integer', 'min:1'],
+        ]);
     }
 
     /**

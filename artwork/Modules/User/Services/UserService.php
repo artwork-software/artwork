@@ -9,8 +9,6 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Craft\Services\CraftService;
-use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
-use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -22,23 +20,17 @@ use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\User\DTOs\UserShiftPlanPageDto;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Events\UserUpdated;
-use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Repositories\UserRepository;
-use Artwork\Modules\User\Models\UserCalendarFilter;
-use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Services\UserProjectManagementSettingService;
-use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\User\Models\UserWorkerShiftPlanFilter;
 use Carbon\Carbon;
-use Illuminate\Auth\AuthManager;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Psr\Container\ContainerExceptionInterface;
@@ -183,11 +175,6 @@ class UserService
         return $this->userRepository->findUser($id);
     }
 
-    public function getAuthUserCrafts(): Collection
-    {
-        return $this->getAuthUser()->assignedCrafts;
-    }
-
     /**
      * Payload-Diät: rooms, projects, shiftQualifications, wholeWeekDatePeriod, eventsWithTotalPlannedWorkingHours
      * und user_to_edit_whole_week_date_period_vacations werden nicht mehr geladen (Frontend liest sie nicht).
@@ -317,11 +304,6 @@ class UserService
         return $this->userRepository->getUserAvailabilitiesByMonthOrderedByDateAsc($user, $monthDate);
     }
 
-    public function getUserShiftsOrderedByStartAscending(int|User $user, bool $committedOnly = false): Collection
-    {
-        return $this->userRepository->getShiftsOrderedByStartAscending($user, $committedOnly);
-    }
-
     public function shouldHideUncommittedShiftsInOwnRoster(User $rosterOwner): bool
     {
         $currentUser = $this->statefulGuard->user();
@@ -345,12 +327,16 @@ class UserService
      * Inventar-Artikelplanung). Wird genutzt, wenn der User "Zeitraum in
      * allen Ansichten teilen" aktiviert hat.
      * PROJECT_SHIFT_FILTER bleibt außen vor — der Projekt-Schichten-Tab folgt
-     * dem Projektzeitraum und nicht der globalen Navigation.
+     * dem Projektzeitraum und nicht der globalen Navigation. Ebenso
+     * PROJECT_EVENT_LIST_FILTER: die Terminliste im Projekt hat keinen Zeitraum.
      */
     public function syncSharedCalendarFilterDates(User $user, string $startDate, string $endDate): void
     {
         foreach (UserFilterTypes::cases() as $filterType) {
-            if ($filterType === UserFilterTypes::PROJECT_SHIFT_FILTER) {
+            if (
+                $filterType === UserFilterTypes::PROJECT_SHIFT_FILTER
+                || $filterType === UserFilterTypes::PROJECT_EVENT_LIST_FILTER
+            ) {
                 continue;
             }
 
@@ -448,25 +434,6 @@ class UserService
         $endDate = $userCalendarFilter->end_date
             ? Carbon::parse($userCalendarFilter->end_date)->endOfDay()
             : now()->addWeeks()->endOfDay();
-
-        return [$startDate, $endDate];
-    }
-
-    /**
-     * @return array<int, Carbon>
-     */
-    public function getUserShiftCalendarFilterDatesOrDefault(User $user): array
-    {
-        $userShiftCalendarFilter = $user->userFilters()->shiftFilter()->first();
-
-        $hasUserShiftCalendarFilterDates = !is_null($userShiftCalendarFilter?->start_date) &&
-            !is_null($userShiftCalendarFilter?->end_date);
-        $startDate = $hasUserShiftCalendarFilterDates ?
-            Carbon::create($userShiftCalendarFilter->start_date)->startOfDay() :
-            Carbon::now()->startOfDay();
-        $endDate = $hasUserShiftCalendarFilterDates ?
-            Carbon::create($userShiftCalendarFilter->end_date)->endOfDay() :
-            Carbon::now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];
     }

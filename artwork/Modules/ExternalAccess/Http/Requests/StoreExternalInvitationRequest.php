@@ -21,10 +21,23 @@ use Illuminate\Validation\Rule;
 
 class StoreExternalInvitationRequest extends FormRequest
 {
+    /**
+     * Einen bestehenden CRM-Kontakt bietet die Oberfläche nur auf der Kontaktseite an, und die setzt
+     * „can view crm“ voraus. Ohne dieses Recht ließe sich sonst die eigene Adresse an einen fremden
+     * Kontakt hängen und dessen Daten über den externen Zugang lesen.
+     */
     public function authorize(): bool
     {
-        return app(ExternalAccessSettingsResolver::class)->isEnabled()
-            && $this->user()?->can(PermissionEnum::INVITE_EXTERNAL->value) === true;
+        $user = $this->user();
+
+        if (
+            !app(ExternalAccessSettingsResolver::class)->isEnabled()
+            || $user?->can(PermissionEnum::INVITE_EXTERNAL->value) !== true
+        ) {
+            return false;
+        }
+
+        return !$this->filled('crm_contact_id') || $user->can(PermissionEnum::CRM_VIEW->value);
     }
 
     /**

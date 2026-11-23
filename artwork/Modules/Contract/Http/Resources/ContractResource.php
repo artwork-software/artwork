@@ -97,7 +97,10 @@ class ContractResource extends JsonResource
                 'name' => $department->name,
                 'svg_name' => $department->svg_name,
             ]),
-            'tasks' => Task::where('contract_id', $this->id)->get(),
+            // In der Übersicht vorab geladen (sonst eine Abfrage je Vertrag)
+            'tasks' => $this->resource->relationLoaded('tasks')
+                ? $this->resource->tasks
+                : Task::where('contract_id', $this->id)->get(),
             'comments' => CommentResource::collection($this->comments)->resolve()
         ];
     }

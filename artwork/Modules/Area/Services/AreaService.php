@@ -32,7 +32,25 @@ class AreaService
     {
         $area = new Area();
         $area->fill($request->only('name', 'color'));
+        $area->position = $this->nextPosition();
         return $this->areaRepository->save($area);
+    }
+
+    /**
+     * Speichert die Reihenfolge der Areale in der übergebenen Reihenfolge der IDs.
+     *
+     * @param array<int, int> $areaIds
+     */
+    public function saveOrder(array $areaIds): void
+    {
+        foreach (array_values($areaIds) as $index => $areaId) {
+            Area::query()->whereKey($areaId)->update(['position' => $index + 1]);
+        }
+    }
+
+    private function nextPosition(): int
+    {
+        return (int) Area::withTrashed()->max('position') + 1;
     }
 
     public function delete(Area $area): bool
@@ -44,6 +62,7 @@ class AreaService
     {
         $new_area = $area->replicate();
         $new_area->name = __('(Copy)') . ' ' . $area->name;
+        $new_area->position = $this->nextPosition();
 
         $this->areaRepository->save($new_area);
 

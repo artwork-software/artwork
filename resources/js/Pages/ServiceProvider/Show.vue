@@ -1,33 +1,16 @@
 <template>
     <AppLayout :title="serviceProvider.provider_name + ' ' + $t('edit')">
-        <div class="mt-5 mx-auto container pb-20">
-            <div>
-                <div class="flex justify-between items-center">
-                    <div class="group block flex-shrink-0">
-                        <div class="flex items-center">
-                            <div>
-                                <img class="inline-block h-16 w-16 rounded-full object-cover" :src="serviceProvider.profile_photo_url" alt="" />
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
-                                    {{ serviceProvider.provider_name }}
-                                </h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="my-10">
-                    <div class="hidden sm:block">
-                        <div class="">
-                            <nav class="-mb-px flex space-x-8 uppercase text-xs/[15px] text-text" aria-label="Tabs">
-                                <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-accent-600 text-accent-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div v-if="currentTab === 1">
+        <ExternalWorkerPage
+            :name="serviceProvider.provider_name ?? ''"
+            :photo-url="serviceProvider.profile_photo_url"
+            :tabs="tabs"
+            default-tab="data"
+            :can-manage="!checkCanEdit"
+            :delete-href="route('service_provider.destroy', { serviceProvider: serviceProvider.id })"
+            delete-title="Delete service provider"
+        >
+                <template #plan>
+                <div>
                     <UserShiftPlan type="service_provider"
                                    :total-planned-working-hours="totalPlannedWorkingHours"
                                    :crafts="crafts"
@@ -42,11 +25,16 @@
                                    :firstProjectShiftTabId="firstProjectShiftTabId"
                                    :user-to-edit-id="serviceProvider.id"/>
                 </div>
-                <div v-if="currentTab === 2">
+                </template>
+                <template #terms>
+                <div>
                     <UserTermsTab user_type="service_provider" :user_to_edit="serviceProvider"></UserTermsTab>
                 </div>
+                </template>
                 <!-- Persönliche Daten -->
-                <div v-if="currentTab === 3">
+                <template #data>
+                <div>
+                    <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                     <!-- Profilbild, Name, Nachname -->
                     <div class="grid grid-cols-1 sm:grid-cols-8 gap-4">
                         <div class="col-span-1">
@@ -59,7 +47,7 @@
 
                             <!-- Current Profile Photo -->
                             <div v-show="! photoPreview" class="mt-2">
-                                <img :src="serviceProvider.profile_photo_url" :alt="serviceProvider.provider_name" @click="selectNewPhoto" class="rounded-full h-20 w-20 object-cover cursor-pointer">
+                                <img :src="serviceProvider.profile_photo_url" :alt="serviceProvider.provider_name" @click="selectNewPhoto" :title="checkCanEdit ? '' : $t('Change profile picture')" class="rounded-full h-20 w-20 object-cover" :class="checkCanEdit ? '' : 'cursor-pointer'">
                             </div>
 
                             <!-- New Profile Photo Preview -->
@@ -73,41 +61,42 @@
                         </div>
                         <div class="col-span-7">
                             <div>
-                                <BaseInput v-model="providerData.provider_name" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Company name')" />
+                                <BaseInput v-model="providerData.provider_name" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="provider_name" id="provider_name" :maxlength="255" :error="providerData.errors.provider_name" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Company name')" />
                             </div>
                         </div>
                     </div>
 
                     <div class="max-w-lg">
-                        <VisualFeedback :show-save-success="showSavedSuccess"/>
+                        <VisualFeedback :show-save-success="saved" text="The changes have been saved successfully." />
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Street')" />
+                            <BaseInput type="text" :maxlength="255" :error="providerData.errors.street" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Street')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.zip_code" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Zip code')" />
+                            <BaseInput type="text" :maxlength="255" :error="providerData.errors.zip_code" v-model="providerData.zip_code" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Zip code')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.location" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Location')" />
+                            <BaseInput type="text" :maxlength="255" :error="providerData.errors.location" v-model="providerData.location" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Location')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.email" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Email')" />
+                            <BaseInput type="email" :maxlength="255" :error="providerData.errors.email" v-model="providerData.email" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Email')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Phone number')" />
+                            <BaseInput type="tel" :maxlength="255" :error="providerData.errors.phone_number" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Phone number')" />
                         </div>
                         <div class="col-span-full">
-                            <BaseTextarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :label="$t('Note')" :maxlength="500" show-counter :class="checkCanEdit ? 'bg-border-subtle' : ''" />
+                            <BaseTextarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :label="$t('Note')" :maxlength="500" show-counter :error="providerData.errors.note" :class="checkCanEdit ? 'bg-border-subtle' : ''" />
                         </div>
+                    </div>
                     </div>
 
                     <div class="mt-10">
                         <div>
                             <div class="flex items-center justify-between mb-5">
                                 <PageTitle :title="$t('Contacts')" :description="$t('You can view and edit all Service Provider contacts here')" />
-                                <BaseUIButton size="sm" variant="primary" type="button" hide-icon @click="showCreateOrUpdateContactModal = true">
+                                <BaseUIButton v-if="!checkCanEdit" size="sm" variant="primary" type="button" hide-icon @click="showCreateOrUpdateContactModal = true">
                                     {{ $t('Add Contact') }}
                                 </BaseUIButton>
                             </div>
@@ -128,16 +117,16 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="currentTab === 4">
+                </template>
+                <template #profile>
+                <div>
                     <WorkProfileTab user-type="serviceProvider"
                                     :user="serviceProvider"
                                     :shift-qualifications="shiftQualifications"
                     />
                 </div>
-            </div>
-        </div>
-
-        <SuccessModal v-if="showSuccessModal" @closed="showSuccessModal = false" :title="$t('Service provider successfully processed')" :description="$t('The changes have been saved successfully.')" button="Ok" />
+                </template>
+        </ExternalWorkerPage>
 
         <GeneralCreateOrUpdateContactModal
             model="provider"
@@ -151,172 +140,93 @@
 </template>
 
 
-<script>
-import {IconCirclePlus, IconDotsVertical, IconEdit, IconTrash} from "@tabler/icons-vue";
-import {defineComponent} from 'vue'
-import AppLayout from "@/Layouts/AppLayout.vue";
-import {router, useForm, usePage} from "@inertiajs/vue3";
-import Permissions from "@/Mixins/Permissions.vue";
-import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
-import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
-import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
-import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
-import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
-import PageTitle from "@/Artwork/Titles/PageTitle.vue";
-import ArtworkSingleContact from "@/Artwork/Contact/ArtworkSingleContact.vue";
-import GeneralCreateOrUpdateContactModal from "@/Components/Modals/GeneralCreateOrUpdateContactModal.vue";
+<script setup>
+import { computed, ref } from 'vue'
+import { router, useForm } from '@inertiajs/vue3'
+import { can, is } from 'laravel-permission-to-vuejs'
+import AppLayout from '@/Layouts/AppLayout.vue'
+import ExternalWorkerPage from '@/Pages/Components/ExternalWorkerPage.vue'
+import { useAutosaveForm } from '@/Composeables/useAutosaveForm.js'
+import UserTermsTab from '@/Pages/Users/Tabs/UserTermsTab.vue'
+import UserShiftPlan from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue'
+import WorkProfileTab from '@/Pages/Components/WorkProfileTab.vue'
+import VisualFeedback from '@/Components/Feedback/VisualFeedback.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
+import PageTitle from '@/Artwork/Titles/PageTitle.vue'
+import ArtworkSingleContact from '@/Artwork/Contact/ArtworkSingleContact.vue'
+import GeneralCreateOrUpdateContactModal from '@/Components/Modals/GeneralCreateOrUpdateContactModal.vue'
 
-export default defineComponent({
-    name: "Show",
-    mixins: [Permissions],
-    components: {
-        GeneralCreateOrUpdateContactModal,
-        ArtworkSingleContact, PageTitle, BaseAlertComponent, BaseUIButton,
-        BaseTextarea,
-        BaseInput,
-        VisualFeedback,
-        TextareaComponent,
-        SuccessModal,
-        WorkProfileTab,
-        BaseSidenav,
-        UserShiftPlan,
-        UserTermsTab,
-        IconEdit,
-        IconDotsVertical,
-        IconTrash,
-        AppLayout,
-        IconCirclePlus
-    },
-    props: [
-        'serviceProvider',
-        'dateValue',
-        'wholeWeekDatePeriod',
-        'eventsWithTotalPlannedWorkingHours',
-        'rooms',
-        'eventTypes',
-        'projects',
-        'totalPlannedWorkingHours',
-        'shiftQualifications',
-        'firstProjectShiftTabId',
-        'daysWithData',
-        'crafts'
-    ],
-    mounted() {
-        this.showSidebar = true;
-        setTimeout(() => {
-            this.showSidebar = false;
-        }, 1000)
-    },
-    data(){
-        return {
-            showSuccessModal: false,
-            tabs: [
-                { id: 1, name: this.$t('Operational plan'), href: '#', current: false, has_permission: this.$can('can plan shifts') || this.hasAdminRole() },
-                { id: 2, name: this.$t('Conditions'), href: '#', current: false, has_permission: this.$can('can manage workers') || this.$can('can manage external workers') || this.hasAdminRole() },
-                { id: 3, name: this.$t('Company data'), href: '#', current: true, has_permission: true },
-                { id: 4, name: this.$t('Work profile'), href: '#', current: false, has_permission: this.$can('can manage workers') || this.$can('can manage external workers') || this.hasAdminRole() },
-            ],
-            currentTab: 3,
-            providerData: useForm({
-                input: 'Dienstleister (extern)',
-                provider_name: this.serviceProvider.provider_name,
-                email: this.serviceProvider.email,
-                phone_number: this.serviceProvider.phone_number,
-                street: this.serviceProvider.street,
-                zip_code: this.serviceProvider.zip_code,
-                location: this.serviceProvider.location,
-                note: this.serviceProvider.note,
-                type_of_provider: this.serviceProvider.type_of_provider,
-            }),
-            types: ['work', 'housing'],
-            photoPreview: null,
-            showSidebar: false,
-            showSavedSuccess: false,
-            showCreateOrUpdateContactModal: false
-        }
-    },
-    computed: {
-        checkCanEdit(){
-            return !(this.$can('can manage workers') || this.$can('can manage external workers') || this.hasAdminRole());
-        },
-    },
-    methods: {
-        usePage,
-        addContact(){
-            router.post(route('service-provider.contact.store', this.serviceProvider.id), {
-            }, {
-                preserveState: true, preserveScroll: true
-            })
-        },
-        changeTab(tabId){
-            this.tabs.forEach((tab) => {
-                tab.current = tab.id === tabId;
-                this.currentTab = tabId;
-            })
-        },
-        saveProvider(){
-            if (this.providerData.isDirty) {
-                this.providerData.patch(route('service_provider.update', this.serviceProvider.id), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.showSavedSuccess = true
-                        setTimeout(() => {
-                            this.showSavedSuccess = false
-                        }, 3000)
-                    }
-                })
-            }
-        },
-        openSuccessModal() {
-            this.showSuccessModal = true;
-            setTimeout(() => this.closeSuccessModal(), 2000)
-        },
-        closeSuccessModal() {
-            this.showSuccessModal = false;
-        },
-        selectNewPhoto(){
-            if( this.$can('can manage workers') || this.$can('can manage external workers') || this.hasAdminRole()){
-                this.$refs.photoInput.click();
-            }
-        },
-        updatePhotoPreview(){
-            const photo = this.$refs.photoInput.files[0];
-
-
-            if (! photo) return;
-
-            const reader = new FileReader();
-
-            reader.onload = (e) => {
-                this.photoPreview = e.target.result;
-            };
-
-            reader.readAsDataURL(photo);
-
-            router.post(route('service_provider.change.profile-image', this.serviceProvider.id),{
-                profileImage: photo,
-            }, {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    this.showSavedSuccess = true
-                    setTimeout(() => {
-                        this.showSavedSuccess = false
-                    }, 3000)
-                }
-            })
-        },
-    }
+const props = defineProps({
+    serviceProvider: Object,
+    dateValue: Array,
+    wholeWeekDatePeriod: Array,
+    eventsWithTotalPlannedWorkingHours: Array,
+    rooms: Array,
+    eventTypes: Array,
+    projects: Array,
+    totalPlannedWorkingHours: [String, Number],
+    shiftQualifications: Array,
+    firstProjectShiftTabId: [String, Number],
+    daysWithData: Object,
+    crafts: Array,
 })
+
+const canManage = can('can manage workers') || can('can manage external workers') || is('artwork admin')
+const checkCanEdit = computed(() => !canManage)
+
+const tabs = [
+    { key: 'plan', name: 'Operational plan', visible: can('can plan shifts') || is('artwork admin') },
+    { key: 'terms', name: 'Conditions', visible: canManage },
+    { key: 'data', name: 'Company data', visible: true },
+    { key: 'profile', name: 'Work profile', visible: canManage },
+]
+
+const providerData = useForm({
+    input: 'Dienstleister (extern)',
+    provider_name: props.serviceProvider.provider_name,
+    email: props.serviceProvider.email,
+    phone_number: props.serviceProvider.phone_number,
+    street: props.serviceProvider.street,
+    zip_code: props.serviceProvider.zip_code,
+    location: props.serviceProvider.location,
+    note: props.serviceProvider.note,
+    type_of_provider: props.serviceProvider.type_of_provider,
+})
+
+const { save: saveProvider, saved, flashSaved } = useAutosaveForm(
+    providerData,
+    () => route('service_provider.update', props.serviceProvider.id),
+)
+
+const photoInput = ref(null)
+const photoPreview = ref(null)
+const showCreateOrUpdateContactModal = ref(false)
+
+const selectNewPhoto = () => {
+    if (canManage) {
+        photoInput.value?.click()
+    }
+}
+
+const updatePhotoPreview = () => {
+    const photo = photoInput.value?.files?.[0]
+    if (!photo) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+        photoPreview.value = e.target.result
+    }
+    reader.readAsDataURL(photo)
+
+    router.post(route('service_provider.change.profile-image', props.serviceProvider.id), {
+        profileImage: photo,
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => flashSaved(),
+    })
+}
 </script>
-
-<style scoped>
-
-</style>

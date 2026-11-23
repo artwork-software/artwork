@@ -301,6 +301,33 @@ final class AiScenariosApiTest extends TestCase
     }
 
     #[Test]
+    public function the_day_overview_lists_planning_events_only_with_the_planning_calendar_right(): void
+    {
+        // Sicherheits-Audit 18.11.2026, N5
+        $user = User::factory()->create();
+        $this->project->users()->attach($user);
+        $this->makeEvent('Feste Probe', self::DAY . ' 14:00:00', self::DAY . ' 16:00:00');
+        $this->makeEvent('Geheime Planung', self::DAY . ' 10:00:00', self::DAY . ' 12:00:00')
+            ->forceFill(['is_planning' => true])->save();
+        $this->actingAsToken($user);
+
+        $response = $this->getJson('/api/v1/ai/day-overview?date=' . self::DAY)->assertOk();
+        $names = array_column($response->json('events.data'), 'name');
+
+        $this->assertContains('Feste Probe', $names);
+        $this->assertNotContains('Geheime Planung', $names);
+        $this->assertSame(count($names), $response->json('events.total'));
+
+        $user->givePermissionTo(Permission::findOrCreate(PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value, 'web'));
+        $this->actingAsToken($user->fresh());
+
+        $this->assertContains(
+            'Geheime Planung',
+            array_column($this->getJson('/api/v1/ai/day-overview?date=' . self::DAY)->json('events.data'), 'name')
+        );
+    }
+
+    #[Test]
     public function planners_see_open_shifts_absences_and_room_conflicts_of_the_day(): void
     {
         $this->shift(self::DAY, '08:00', '16:00', 2);

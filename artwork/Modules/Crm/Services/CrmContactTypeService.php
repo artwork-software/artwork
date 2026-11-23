@@ -96,7 +96,8 @@ readonly class CrmContactTypeService
 
         // Verhindert verwaiste/unsichtbare Kontakte: ein Typ mit zugeordneten Kontakten
         // darf nicht (soft-)gelöscht werden, sonst verschwinden die Kontakte aus der UI.
-        if ($type->contacts()->exists()) {
+        // Auch Kontakte im Papierkorb zählen: nach dem Wiederherstellen hingen sie sonst an keinem Typ.
+        if ($type->contacts()->withTrashed()->exists()) {
             throw new CrmSettingLockedException(__('Contact types with assigned contacts cannot be deleted.'));
         }
 

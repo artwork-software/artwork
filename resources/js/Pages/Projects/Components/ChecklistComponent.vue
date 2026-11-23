@@ -75,7 +75,7 @@
 
                             <!-- Reset button -->
                             <button @click="resetFilters" type="button" class="inline-flex items-center gap-2 rounded-xl border border-border-subtle px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-sunken">
-                                <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 4h16M4 12h16M4 20h16"/></svg>
+                                <IconFilterOff class="size-3.5" stroke-width="1.5" />
                                 {{ $t('Reset') }}
                             </button>
                         </div>
@@ -104,12 +104,12 @@
                     <!-- Sort + View -->
                     <div class="flex items-center gap-2">
                         <!-- Sort -->
-                        <div class="relative">
-                            <button @click="sortOpen = !sortOpen" type="button" class="inline-flex items-center gap-2 rounded-xl border border-border-subtle px-3 py-2 text-xs hover:bg-surface-sunken">
+                        <div class="relative" ref="sortMenuEl">
+                            <button @click="sortOpen = !sortOpen" type="button" :aria-expanded="sortOpen" class="inline-flex items-center gap-2 rounded-xl border border-border-subtle px-3 py-2 text-xs hover:bg-surface-sunken">
                                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M3 7h14M3 12h10M3 17h6"/></svg>
                                 {{ sortLabel }}
                             </button>
-                            <div v-if="sortOpen" @click.outside="sortOpen=false" class="absolute right-0 mt-2 w-64 rounded-xl border border-border-subtle bg-white shadow-lg p-1 z-10">
+                            <div v-if="sortOpen" class="absolute right-0 mt-2 w-64 rounded-xl border border-border-subtle bg-white shadow-lg p-1 z-10">
                                 <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-surface-sunken" @click="sortTo(1)">{{ $t('Project timeframe ascending') }} <IconCheck v-if="currentSort===1" class="inline size-4 ml-1" /></button>
                                 <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-surface-sunken" @click="sortTo(2)">{{ $t('Project timeframe descending') }} <IconCheck v-if="currentSort===2" class="inline size-4 ml-1" /></button>
                                 <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-surface-sunken" @click="currentSort=3; sortOpen=false">{{ $t('List name ascending') }} <IconCheck v-if="currentSort===3" class="inline size-4 ml-1" /></button>
@@ -233,7 +233,7 @@ import axios from 'axios';
 import ChecklistKanbanView from "@/Components/Checklist/ChecklistKanbanView.vue";
 import ChecklistListView from "@/Components/Checklist/ChecklistListView.vue";
 import ChecklistFunctionBar from "@/Components/Checklist/ChecklistFunctionBar.vue";
-import {IconCheck, IconSearch, IconX} from "@tabler/icons-vue";
+import {IconCheck, IconFilterOff, IconSearch, IconX} from "@tabler/icons-vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
@@ -288,6 +288,18 @@ const projectCanWriteIds = computed(() => {
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const sortOpen = ref(false);
+const sortMenuEl = ref(null);
+// Sortier-Menü schließt bei Klick daneben und mit Escape ("@click.outside" gibt es in Vue nicht)
+function closeSortMenuOnOutsideClick(event) {
+    if (sortOpen.value && sortMenuEl.value && !sortMenuEl.value.contains(event.target)) {
+        sortOpen.value = false;
+    }
+}
+function closeSortMenuOnEscape(event) {
+    if (event.key === 'Escape') {
+        sortOpen.value = false;
+    }
+}
 const filterSaved = ref(false);
 
 const sortLabel = computed(() => {
@@ -569,6 +581,8 @@ const handleChecklistUpdated = () => {
 
 onMounted(() => {
     syncOpenedChecklists();
+    document.addEventListener('click', closeSortMenuOnOutsideClick);
+    document.addEventListener('keydown', closeSortMenuOnEscape);
 
     if (props.project?.id) {
         echoChannel = 'project.' + props.project.id;
@@ -578,6 +592,8 @@ onMounted(() => {
 
 // Nur den eigenen Handler abmelden – Echo.leave entfernte alle Listener des geteilten Projektkanals
 onUnmounted(() => {
+    document.removeEventListener('click', closeSortMenuOnOutsideClick);
+    document.removeEventListener('keydown', closeSortMenuOnEscape);
     if (echoChannel) {
         stopListeningOnPrivateChannel(echoChannel, '.checklist.updated', handleChecklistUpdated);
         echoChannel = null;

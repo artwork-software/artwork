@@ -167,9 +167,49 @@ final class AiUndoTest extends TestCase
     }
 
     #[Test]
-    public function reverting_a_deletion_restores_the_events(): void
+    public function reverting_a_deletion_without_trash_access_is_forbidden(): void
     {
         $user = $this->planner();
+        $event = $this->event();
+        $before = $event->getRawOriginal();
+        $event->delete();
+
+        $batch = $this->batchFor($user, [
+            ['model' => $event, 'action' => AiActionBatchItem::ACTION_DELETE, 'before_state' => $before],
+        ]);
+
+        $this->actingAs($user)->postJson('/ai/actions/batches/' . $batch->id . '/revert')->assertForbidden();
+
+        $this->assertSame(0, Event::query()->whereKey($event->id)->count());
+        $this->assertSame(AiActionBatch::STATUS_EXECUTED, $batch->fresh()->status);
+    }
+
+    #[Test]
+    public function a_right_revoked_after_the_execution_also_blocks_the_undo(): void
+    {
+        $user = $this->planner();
+        $event = $this->event();
+        $before = $event->getRawOriginal();
+        $event->forceFill(['eventName' => 'Geaendert'])->save();
+        $batch = $this->batchFor($user, [
+            ['model' => $event, 'action' => AiActionBatchItem::ACTION_UPDATE, 'before_state' => $before],
+        ]);
+
+        // Die Person darf den Termin inzwischen nicht mehr bearbeiten: dann auch nicht ueber die KI-Ruecknahme
+        $user->revokePermissionTo(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($user->fresh())->postJson('/ai/actions/batches/' . $batch->id . '/revert')->assertForbidden();
+
+        $this->assertSame('Geaendert', $event->fresh()->eventName);
+    }
+
+    #[Test]
+    public function reverting_a_deletion_restores_the_events(): void
+    {
+        // Wie „aus dem Papierkorb wiederherstellen“ in der Oberflaeche: Loesch- und Papierkorb-Recht
+        $user = $this->planner();
+        $user->givePermissionTo(Permission::findOrCreate(PermissionEnum::TRASH_ACCESS->value, 'web'));
         $event = $this->event();
         $before = $event->getRawOriginal();
         $event->delete();
@@ -212,6 +252,35 @@ final class AiUndoTest extends TestCase
             ->postJson('/ai/actions/batches/' . $batch->id . '/revert')
             ->assertStatus(422);
 
+        $this->assertSame(1, Event::query()->whereKey($event->id)->count());
+    }
+
+    #[Test]
+    public function a_parallel_revert_that_loses_the_race_reverts_nothing(): void
+    {
+        // Sicherheits-Audit 18.11.2026, N7: die andere Ruecknahme ist fertig, waehrend diese schon an
+        // der Statuspruefung vorbei ist. In der Transaktion wird der Batch gesperrt neu gelesen.
+        $user = $this->planner();
+        $event = $this->event();
+        $batch = $this->batchFor($user, [
+            ['model' => $event, 'action' => AiActionBatchItem::ACTION_CREATE, 'before_state' => null],
+        ]);
+
+        $raced = false;
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Database\Events\TransactionBeginning::class,
+            function () use (&$raced, $batch): void {
+                if ($raced) {
+                    return;
+                }
+                $raced = true;
+                AiActionBatch::query()->whereKey($batch->id)->update(['status' => AiActionBatch::STATUS_REVERTED]);
+            }
+        );
+
+        $this->actingAs($user)->postJson('/ai/actions/batches/' . $batch->id . '/revert')->assertStatus(422);
+
+        $this->assertTrue($raced);
         $this->assertSame(1, Event::query()->whereKey($event->id)->count());
     }
 

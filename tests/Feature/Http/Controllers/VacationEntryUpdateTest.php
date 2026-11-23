@@ -7,6 +7,7 @@ use Artwork\Modules\Availability\Models\AvailabilitySeries;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\VacationSeries;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -212,5 +213,104 @@ final class VacationEntryUpdateTest extends FeatureTestCase
             ->assertRedirect();
 
         $this->assertDatabaseMissing('availability_series', ['id' => $series->id]);
+    }
+
+    /**
+     * Status-Einträge trugen früher den Status als Kommentar; das Bearbeiten-Formular übernimmt ihn. Beim
+     * Umstellen auf „Verfügbar“ darf er nicht als Kommentar der Verfügbarkeit im Dienstplan landen.
+     */
+    #[Test]
+    public function switching_a_status_entry_to_availability_drops_the_status_comment(): void
+    {
+        $user = User::factory()->create();
+        $vacation = Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-08-03',
+            'full_day' => true,
+            'is_series' => false,
+            'series_id' => null,
+            'type' => 'FREE_WORK',
+        ]);
+
+        $this->actingAs($user)
+            ->patch(route('update.vacation.entry', $vacation), [
+                'date' => '2026-08-03',
+                'type' => 'available',
+                'full_day' => true,
+                'is_series' => false,
+                'comment' => 'FREE_WORK',
+            ])
+            ->assertRedirect();
+
+        $availability = $user->availabilities()->whereDate('date', '2026-08-03')->sole();
+        $this->assertNull($availability->comment);
+    }
+
+    #[Test]
+    public function switching_to_availability_keeps_a_real_comment(): void
+    {
+        $user = User::factory()->create();
+        $vacation = Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-08-03',
+            'full_day' => true,
+            'is_series' => false,
+            'series_id' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->patch(route('update.vacation.entry', $vacation), [
+                'date' => '2026-08-03',
+                'type' => 'available',
+                'full_day' => true,
+                'is_series' => false,
+                'comment' => 'Nur vormittags',
+            ])
+            ->assertRedirect();
+
+        $availability = $user->availabilities()->whereDate('date', '2026-08-03')->sole();
+        $this->assertSame('Nur vormittags', $availability->comment);
+    }
+
+    #[Test]
+    public function availability_does_not_store_a_bare_status_as_comment(): void
+    {
+        $availability = Availability::factory()->create(['comment' => ' NOT_AVAILABLE ']);
+
+        $this->assertNull($availability->refresh()->comment);
+
+        $availability->update(['comment' => 'FREE_WORK am Abend']);
+        $this->assertSame('FREE_WORK am Abend', $availability->refresh()->comment);
+    }
+
+    #[Test]
+    public function migration_removes_status_comments_from_availabilities_and_vacations(): void
+    {
+        $user = User::factory()->create();
+        $legacyAvailability = Availability::factory()->create([
+            'available_type' => User::class,
+            'available_id' => $user->id,
+        ]);
+        $realAvailability = Availability::factory()->create([
+            'available_type' => User::class,
+            'available_id' => $user->id,
+            'comment' => 'Ab 14 Uhr',
+        ]);
+        $paddedVacation = Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+        ]);
+        // Alt-Daten am Model vorbei schreiben, das solche Kommentare inzwischen verwirft
+        DB::table('availabilities')->where('id', $legacyAvailability->id)->update(['comment' => 'FREE_WORK']);
+        DB::table('vacations')->where('id', $paddedVacation->id)->update(['comment' => 'NOT_AVAILABLE ']);
+
+        (require base_path('database/migrations/2026_11_16_164233_clear_status_type_comments_on_availabilities.php'))
+            ->up();
+
+        $this->assertNull($legacyAvailability->refresh()->comment);
+        $this->assertNull($paddedVacation->refresh()->comment);
+        $this->assertSame('Ab 14 Uhr', $realAvailability->refresh()->comment);
     }
 }

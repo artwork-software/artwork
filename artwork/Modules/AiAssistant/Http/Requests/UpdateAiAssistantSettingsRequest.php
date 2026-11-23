@@ -3,14 +3,23 @@
 namespace Artwork\Modules\AiAssistant\Http\Requests;
 
 use Artwork\Modules\AiAssistant\Services\AiAssistantAccess;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateAiAssistantSettingsRequest extends FormRequest
 {
+    /**
+     * Hausweite KI-Schalter: KI-Freischaltung der Person und das Recht, Tool-Einstellungen zu ändern
+     * (wie bei allen anderen Tool-Einstellungen; Admins über Gate::before).
+     */
     public function authorize(): bool
     {
-        return app(AiAssistantAccess::class)->visibleTo($this->user());
+        $user = $this->user();
+
+        return app(AiAssistantAccess::class)->visibleTo($user)
+            && $user !== null
+            && $user->can(PermissionEnum::SETTINGS_UPDATE->value);
     }
 
     /**

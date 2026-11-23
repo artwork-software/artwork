@@ -53,6 +53,7 @@ class EnsureUserCanAccessProjectBudget
         'column_id' => Column::class,
         'columnId' => Column::class,
         'first_column_id' => Column::class,
+        'second_column_id' => Column::class,
         'cell_id' => ColumnCell::class,
         'selectedCell' => ColumnCell::class,
         'sub_position_id' => SubPosition::class,
@@ -274,7 +275,10 @@ class EnsureUserCanAccessProjectBudget
         // 1b) Prüfanfragen senden die Position als "id"
         $routeModelClass = self::ROUTE_ID_MODEL_MAP[$request->route()?->getName()] ?? null;
         // Wie der Controller als Integer lesen – sonst träfe "5.9" hier nichts, dort aber Position 5.
-        if ($routeModelClass !== null && $request->filled('id') && !is_array($request->input('id'))) {
+        if ($routeModelClass !== null) {
+            $this->abortIfNotScalar($request->input('id'));
+        }
+        if ($routeModelClass !== null && $request->filled('id')) {
             $projectId = $this->resolveFromModelId($routeModelClass, $request->integer('id'));
             if ($projectId !== null) {
                 $projectIds[] = $projectId;
@@ -283,20 +287,23 @@ class EnsureUserCanAccessProjectBudget
 
         // 2) Direkte project_id im Request (z. B. Vorlage in Projekt importieren)
         $directProjectId = $request->input('project_id');
-        if ($directProjectId !== null && !is_array($directProjectId)) {
+        $this->abortIfNotScalar($directProjectId);
+        if ($directProjectId !== null) {
             $projectIds[] = (int) $directProjectId;
         }
 
         // 2b) Vorlage aus fremdem Projekt kopieren: das Quellprojekt braucht ebenfalls Budgetzugriff
         $templateProjectId = $request->input('template_project_id');
-        if ($templateProjectId !== null && !is_array($templateProjectId)) {
+        $this->abortIfNotScalar($templateProjectId);
+        if ($templateProjectId !== null) {
             $projectIds[] = (int) $templateProjectId;
         }
 
         // 3) Ids im Body/Query (table_id, column_id, cell_id, ...)
         foreach (self::INPUT_KEY_MODEL_MAP as $key => $modelClass) {
             $id = $request->input($key);
-            if ($id === null || is_array($id)) {
+            $this->abortIfNotScalar($id);
+            if ($id === null) {
                 continue;
             }
 
@@ -372,6 +379,16 @@ class EnsureUserCanAccessProjectBudget
         }
 
         return array_values(array_unique($projectIds));
+    }
+
+    /**
+     * Bekannte Id-Schlüssel müssen skalar sein. Eine Id als Array würde hier keinem Projekt zugeordnet,
+     * der Query Builder im Controller nähme aber deren erstes Element: so ließe sich mit einer eigenen
+     * project_id ein fremdes Objekt an der Prüfung vorbeischleusen.
+     */
+    private function abortIfNotScalar(mixed $id): void
+    {
+        abort_if($id !== null && !is_scalar($id), 422);
     }
 
     /**

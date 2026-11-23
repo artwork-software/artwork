@@ -97,7 +97,27 @@
             </div>
 
             <!-- Room -->
-            <div :style="getColumnSize(4)">
+            <div :style="getColumnSize(4)" class="relative">
+                <!-- Raumanfrage: noch nicht fest gebucht. Absolut positioniert, die Zeilenhöhe bleibt gleich. -->
+                <!-- Wer die Anfrage beantworten darf, öffnet per Klick den Dialog zum Zusagen/Absagen -->
+                <button
+                    v-if="canAnswerRoomRequest"
+                    type="button"
+                    v-tooltip.top="answerRoomRequestTooltipBinding"
+                    class="absolute -top-1.5 -right-1.5 z-10 flex size-4 cursor-pointer items-center justify-center rounded-full bg-warning text-white ring-warning/40 transition hover:ring-4 focus-visible:ring-4 focus:outline-none print:hidden"
+                    @click.stop="showAnswerRoomRequestModal = true"
+                >
+                    <IconHourglassEmpty class="size-3" stroke-width="2" aria-hidden="true"/>
+                    <span class="sr-only">{{ $t('Answer room request') }}</span>
+                </button>
+                <span
+                    v-else-if="event.occupancy_option && !event.is_planning"
+                    v-tooltip.top="roomRequestTooltipBinding"
+                    class="absolute -top-1.5 -right-1.5 z-10 flex size-4 items-center justify-center rounded-full bg-warning text-white"
+                >
+                    <IconHourglassEmpty class="size-3" stroke-width="2" aria-hidden="true"/>
+                    <span class="sr-only">{{ $t('Room request') }}</span>
+                </span>
                 <ArtworkBaseListbox
                     v-model="event.room"
                     :items="sortedRooms"
@@ -313,22 +333,29 @@
                             @click="showEditSeriesModal = true"
                         />
                         <BaseMenuItem
-                            v-if="event.id && (can('create events without request') || hasAdminRole())"
+                            v-if="canAnswerRoomRequest"
                             white-menu-background
-                            :icon="IconDeviceFloppy"
-                            title="Save timeline as preset"
-                            @click="openSaveTimelinePresetModal"
+                            :icon="IconCheck"
+                            title="Confirm event"
+                            @click="answerRoomRequest({accepted: true})"
                         />
                         <BaseMenuItem
-                            v-if="event.id"
+                            v-if="canAnswerRoomRequest"
                             white-menu-background
-                            :icon="IconFileImport"
-                            title="Import timeline preset"
-                            @click="showSearchTimelinePresetModal = true"
+                            :icon="IconX"
+                            title="Decline event"
+                            @click="showAnswerRoomRequestModal = true"
                         />
                     </BaseMenu>
                 </div>
             </div>
+            <!-- Zeile ohne Bearbeitungsrecht: gleiche Breite frei halten, sonst verrutschen die Spalten -->
+            <div
+                v-else-if="reserveActionsSpace"
+                class="col-span-1 print:hidden shrink-0"
+                :class="isInModal ? 'w-16' : 'w-56'"
+                aria-hidden="true"
+            ></div>
         </div>
 
         <!-- Inline description row -->
@@ -390,16 +417,12 @@
             @close="showEditSeriesModal = false"
         />
 
-        <CreateTimelinePresetFormEvent
-            v-if="showCreateTimelinePresetModal"
+        <BulkRoomRequestAnswerModal
+            v-if="showAnswerRoomRequestModal"
             :event="event"
-            @close="showCreateTimelinePresetModal = false"
-        />
-
-        <SearchTimelinePresetModal
-            v-if="showSearchTimelinePresetModal"
-            :event="event"
-            @close="showSearchTimelinePresetModal = false"
+            :processing="isAnsweringRoomRequest"
+            @answer="answerRoomRequest"
+            @close="showAnswerRoomRequestModal = false"
         />
     </div>
 </template>
@@ -409,8 +432,8 @@
 import {
     IconCheck,
     IconChevronDown,
-    IconCircleCheckFilled, IconCopy, IconDeviceFloppy, IconEdit, IconFileImport, IconNote,
-    IconCirclePlus, IconRepeat, IconTrash,
+    IconCircleCheckFilled, IconCopy, IconEdit, IconNote,
+    IconCirclePlus, IconHourglassEmpty, IconRepeat, IconTrash, IconX,
 } from "@tabler/icons-vue";
 import {
     Listbox,
@@ -419,6 +442,7 @@ import {
     ListboxOptions,
 } from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
+import {mayAnswerRoomRequestIn} from "@/Helper/roomAdminRights.js";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {computed, defineAsyncComponent, inject, nextTick, onMounted, ref, watch} from "vue";
@@ -440,17 +464,9 @@ import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSer
 import {usePermission} from "@/Composeables/Permission.js";
 import {useTranslation} from "@/Composeables/Translation.js";
 
-const CreateTimelinePresetFormEvent = defineAsyncComponent({
-    loader: () => import('@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue'),
-    delay: 200,
-    timeout: 5000
-})
-
-const SearchTimelinePresetModal = defineAsyncComponent({
-    loader: () => import('@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue'),
-    delay: 200,
-    timeout: 5000
-})
+const BulkRoomRequestAnswerModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/BulkComponents/BulkRoomRequestAnswerModal.vue'),
+});
 
 const focusRegistry  = inject('focusRegistry');      // { id, type }
 const storeFocus     = inject('storeFocusGlobal');
@@ -472,6 +488,8 @@ const props = defineProps({
     eventStatuses: { type: Object, required: true },
     multiEdit: { type: Boolean, required: false, default: false },
     hasPermission: { type: Boolean, required: false, default: true },
+    // Platz der Aktionsspalte auch ohne Bearbeitungsrecht frei halten (Liste mit nur teilweise bearbeitbaren Zeilen)
+    reserveActionsSpace: { type: Boolean, required: false, default: false },
     lastEditEventIds: { type: Array, required: false, default: () => [] },
     showEndDate: { type: Boolean, required: false, default: false },
 });
@@ -504,8 +522,8 @@ const event_properties = inject('event_properties');
 const showDeleteEventConfirmModal = ref(false);
 const showDeleteSeriesModal = ref(false);
 const showEditSeriesModal = ref(false);
-const showCreateTimelinePresetModal = ref(false);
-const showSearchTimelinePresetModal = ref(false);
+const showAnswerRoomRequestModal = ref(false);
+const isAnsweringRoomRequest = ref(false);
 
 // Inline description
 const showDescriptionInBulk = inject('showDescriptionInBulk', ref(false));
@@ -555,6 +573,21 @@ const formatFullDate = (iso) => {
     const d = parseISODateToUTCMidnight(iso);
     if (!d) return '';
     return `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}`;
+};
+
+const roomRequestTooltipBinding = computed(() => ({
+    value: $t('Room request: this event is not firmly booked until the request has been accepted.'),
+    appendTo: 'body',
+    class: 'aw-tooltip'
+}));
+
+// Antwort des Speicherns übernehmen: Markierung "zuletzt bearbeitet" und Raumanfrage-Kennzeichen
+// (ein Raumwechsel ohne Buchungsrecht macht den Termin zur Raumanfrage)
+const applySavedEvent = (event, savedEvent) => {
+    markRowEdited(event.id, savedEvent?.updated_at);
+    if (savedEvent && 'occupancy_option' in savedEvent) {
+        event.occupancy_option = !!savedEvent.occupancy_option;
+    }
 };
 
 const endChipTooltipBinding = computed(() => ({
@@ -647,7 +680,7 @@ const saveDescription = async () => {
         const {data} = await axios.patch(route('event.update.description', event.id), {
             description: draft
         });
-        markRowEdited(event.id, data?.event?.updated_at);
+        applySavedEvent(event, data?.event);
     } catch {
         // Fehlermeldung zeigt der axios-Interceptor; Entwurf nicht verlieren, Feld wieder öffnen
         event.description = previousDescription;
@@ -655,16 +688,67 @@ const saveDescription = async () => {
     }
 };
 
-const openSaveTimelinePresetModal = async () => {
+// Offene Raumanfrage, die die angemeldete Person beantworten darf (EventPolicy::answerRoomRequest).
+// Unabhängig vom Bearbeitungsrecht der Zeile: Raumadmins ohne Buchungsrecht antworten über das Symbol.
+const canAnswerRoomRequest = computed(() => !!props.event.id
+    && !!props.event.occupancy_option
+    && !props.event.is_planning
+    && !!props.event.room?.id
+    && !props.isInModal
+    && mayAnswerRoomRequestIn({
+        rooms: props.rooms,
+        roomId: props.event.room.id,
+        userId: usePage().props.auth.user?.id,
+        isAdmin: hasAdminRole(),
+        canBookWithoutRequest: can('create events without request'),
+    }));
+
+const answerRoomRequestTooltipBinding = computed(() => ({
+    value: $t('Room request: click to confirm or decline.'),
+    appendTo: 'body',
+    class: 'aw-tooltip'
+}));
+
+// Zusagen: der Termin ist fest gebucht. Absagen: der Termin verliert den Raum (Änderungsanfragen springen
+// auf die bestätigte Belegung zurück). Die Benachrichtigungen verschickt der Server.
+const answerRoomRequest = async ({accepted, comment = ''}) => {
+    // Termin festhalten: nach dem await kann diese (recycelte) Komponente einen anderen Termin zeigen
+    const event = props.event;
+    if (!event.id || isAnsweringRoomRequest.value) return;
+    isAnsweringRoomRequest.value = true;
+
     try {
-        const response = await axios.get(route('events.timelines', {event: props.event.id}));
-        const timelines = response.data.timelines || [];
-        if (timelines.length > 0) {
-            showCreateTimelinePresetModal.value = true;
-        }
+        const {data} = accepted
+            ? await axios.put(route('events.accept', {event: event.id}), {adminComment: comment})
+            : await axios.put(route('events.decline', {event: event.id}), {comment});
+        applyAnsweredEvent(event, data?.event);
+        showAnswerRoomRequestModal.value = false;
     } catch (error) {
-        console.error('Error checking timelines:', error);
+        // Fehlermeldung zeigt der axios-Interceptor. 409 = inzwischen von jemand anderem beantwortet
+        if (error?.response?.status === 409) {
+            showAnswerRoomRequestModal.value = false;
+        }
+    } finally {
+        isAnsweringRoomRequest.value = false;
     }
+};
+
+const applyAnsweredEvent = (event, answeredEvent) => {
+    if (!answeredEvent) return;
+    const roomList = Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms ?? {});
+    event.occupancy_option = !!answeredEvent.occupancy_option;
+    event.room = answeredEvent.room
+        ? (roomList.find(room => room.id === answeredEvent.room.id) ?? answeredEvent.room)
+        : null;
+    event.day = answeredEvent.day;
+    event.end_day = answeredEvent.end_day || answeredEvent.day;
+    event.start_time = answeredEvent.start_time || '';
+    event.end_time = answeredEvent.end_time || '';
+    markRowEdited(event.id, answeredEvent.updated_at);
+
+    // Gespeicherten Stand nachziehen, sonst hält die nächste Bearbeitung den Raum für geändert
+    if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+    window.__bulkEventSnapshots[`event-snapshot-${event.id}`] = getComparableEvent(event);
 };
 
 // Local draft state for start date to prevent immediate re-sorting while typing
@@ -839,7 +923,7 @@ const updateEventInDatabase = async () => {
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
         const {data} = await axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers });
-        markRowEdited(event.id, data?.event?.updated_at);
+        applySavedEvent(event, data?.event);
 
         // Snapshot nach erfolgreichem Patch aktualisieren
         window.__bulkEventSnapshots[snapshotKey] = getComparableEvent(event);
@@ -930,7 +1014,7 @@ const onStartDateFocusOut = async () => {
         const previousEndDay = event.end_day;
         axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers })
             .then(({data}) => {
-                markRowEdited(event.id, data?.event?.updated_at);
+                applySavedEvent(event, data?.event);
                 // Update snapshot after successful patch
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
                 const snapshotKey = `event-snapshot-${event.id}`;
@@ -1004,7 +1088,7 @@ const onRoomChange = async (newRoom) => {
 
         axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload }, { headers })
             .then(({data}) => {
-                markRowEdited(event.id, data?.event?.updated_at);
+                applySavedEvent(event, data?.event);
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
                 const snapshotKey = `event-snapshot-${event.id}`;
                 window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...event, room: newRoom });
@@ -1036,7 +1120,7 @@ const onTypeChange = (newType) => {
 
         axios.patch(route('event.update.single.bulk', { event: event.id }), { data: payload })
             .then(({data}) => {
-                markRowEdited(event.id, data?.event?.updated_at);
+                applySavedEvent(event, data?.event);
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
                 const snapshotKey = `event-snapshot-${event.id}`;
                 window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...event, type: newType });

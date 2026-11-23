@@ -34,7 +34,7 @@ export default {
 <template>
 <Menu as="div" class="relative inline-block text-left">
     <div>
-        <MenuButton>
+        <MenuButton :aria-label="$t('Day Services')" :title="$t('Day Services')">
             <PropertyIcon name="IconChevronDown" class="-mr-1 h-5 w-5 text-text-subtle" aria-hidden="true" />
         </MenuButton>
     </div>

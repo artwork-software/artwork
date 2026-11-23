@@ -8,6 +8,7 @@ use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\ExternalAccess\Services\ExternalTabReviewService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,13 +22,19 @@ class ExternalTabReviewController extends Controller
     public function __construct(
         private readonly ExternalTabReviewService $reviewService,
         private readonly ExternalAccessSettingsResolver $settingsResolver,
+        private readonly ProjectComponentVisibilityService $visibilityService,
     ) {
     }
 
+    /**
+     * Die Liste lädt die Oberfläche nur im geöffneten Tab. Wer den Tab nicht sehen darf, erfährt
+     * auch nicht, welche Externen dort eingeladen sind.
+     */
     public function index(Request $request, Project $project, ProjectTab $projectTab): JsonResponse
     {
         $user = $this->user($request);
         abort_unless($user->can('view', $project), 403);
+        abort_unless($this->visibilityService->canSeeTab($user, (int) $projectTab->id), 403);
 
         if (!$this->settingsResolver->isEnabled()) {
             return response()->json(['externals' => []]);

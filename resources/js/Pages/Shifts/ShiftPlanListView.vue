@@ -1182,7 +1182,7 @@ const hasContent = computed(() => {
 const formatDayHeader = (dateString) => {
     const date = new Date(dateString);
     const options = {weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit'};
-    return date.toLocaleDateString(locale.value === 'de' ? 'de-DE' : 'en-US', options);
+    return date.toLocaleDateString(locale.value, options);
 };
 
 const formatEventTime = (isoString) => {

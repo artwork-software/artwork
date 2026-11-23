@@ -15,8 +15,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Inertia\Response;
-use Inertia\ResponseFactory;
 
 class CommentController extends Controller
 {
@@ -25,11 +23,6 @@ class CommentController extends Controller
         private readonly ProjectService $projectService
     ) {
         $this->authorizeResource(Comment::class);
-    }
-
-    public function create(): Response|ResponseFactory
-    {
-        return inertia('Comments/Create');
     }
 
     public function store(StoreCommentRequest $request, ChangeService $changeService): void

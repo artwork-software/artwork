@@ -8,6 +8,10 @@
         <p v-if="description" class="text-sm text-text">
             {{ description }}
         </p>
+        <!-- Hinweis, wie oft der Eintrag verwendet wird -->
+        <p v-if="usage" class="mt-2 text-sm text-text-muted">
+            {{ usage }}
+        </p>
         <template #footer>
             <BaseUIButton
                 label="No, not really"
@@ -34,7 +38,8 @@ export default {
     props: {
         show: Boolean,
         title: String,
-        description: String
+        description: String,
+        usage: String,
     },
     emits: ['delete', 'closeModal'],
     components: {

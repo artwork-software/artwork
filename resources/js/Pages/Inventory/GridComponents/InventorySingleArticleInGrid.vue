@@ -1,10 +1,13 @@
 <template>
     <div
         class="w-full h-full p-6 bg-white rounded-lg border border-border-subtle hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden font-lexend"
+        role="button"
+        tabindex="0"
         @click="showArticleDetail = true"
+        @keydown.enter.self="showArticleDetail = true"
     >
         <div v-if="!hideImage" class="flex items-center justify-center">
-            <img :src="getMainImageInImage.image" @error="handleImageError" alt="" :class="imageClasses" loading="lazy" decoding="async" />
+            <img :src="getMainImageInImage.image" @error="handleImageError" :alt="item.name" :class="imageClasses" loading="lazy" decoding="async" />
         </div>
 
         <div :class="hideImage ? '' : 'mt-4'">
@@ -19,7 +22,7 @@
                 {{ (usePage().props.inventoryNumberPrefix || '') + item.inventory_number }}
             </p>
 
-            <p class="text-xs text-text-subtle line-clamp-2 break-words">
+            <p v-if="item.description" class="text-xs text-text-subtle line-clamp-2 break-words">
                 {{ item.description }}
             </p>
 
@@ -90,13 +93,13 @@
 </template>
 
 <script setup>
-import { Link, usePage } from '@inertiajs/vue3'
+import { usePage } from '@inertiajs/vue3'
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { useInventoryPropertyDisplay } from '@/Composeables/InventoryPropertyDisplay.js'
 import { formatStatusQuantity, getArticleStatusQuantity } from '@/Pages/Inventory/Composables/useInventoryStatusQuantity.js'
 import InventoryPropertyRow from '@/Pages/Inventory/GridComponents/InventoryPropertyRow.vue'
-import { IconIdBadge, IconPhoto } from '@tabler/icons-vue'
+import { IconIdBadge } from '@tabler/icons-vue'
 
 const $t = useTranslation()
 const { getDisplayProperties } = useInventoryPropertyDisplay()
@@ -172,11 +175,6 @@ const tagStyle = (tag) => {
         color: baseColor,
     }
 }
-
-const hasImage = computed(() => {
-    const images = props.item.images || []
-    return images.length > 0
-})
 
 const getMainImageInImage = computed(() => {
     const images = props.item.images || []

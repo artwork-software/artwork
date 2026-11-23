@@ -87,3 +87,12 @@ test('mayCreateEventIn mirrors EventPolicy::create: "bookable by anyone" alone i
     assert.equal(mayCreateEventIn({ ...base, canEditPlanning: true }), true);
     assert.equal(mayCreateEventIn({ ...base, canPlanFixed: true, room: null }), true);
 });
+
+test('mayAnswerRoomRequestIn: without room admins the room creator answers when the page ships user_id', () => {
+    const rooms = [{ id: 3, admins: [], user_id: 8 }];
+    const base = { rooms, roomId: 3, isAdmin: false, canBookWithoutRequest: false };
+
+    assert.equal(mayAnswerRoomRequestIn({ ...base, userId: 8 }), true);
+    assert.equal(mayAnswerRoomRequestIn({ ...base, userId: 9 }), false);
+    assert.equal(mayAnswerRoomRequestIn({ ...base, userId: 9, canBookWithoutRequest: true }), true);
+});

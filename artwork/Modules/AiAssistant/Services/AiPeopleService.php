@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 /**
  * Personen fuer die Schichtplanung nachschlagen und ihre Auslastung lesen (ai-shift-planning).
@@ -192,11 +193,39 @@ class AiPeopleService
         );
     }
 
+    /**
+     * Stunden einer Person (Plan-, Soll- und Restminuten, Vertrag, Vertragsregeln) sieht, wer
+     * „Stundenkonten einsehen" hat; die eigenen sieht jede Person. Dieselbe Grenze wie in der
+     * Oberflaeche (`WorkingHourService`).
+     */
+    public static function maySeeHoursOf(User $viewer, Model $person): bool
+    {
+        return ($person instanceof User && (int) $person->id === (int) $viewer->id)
+            || AiWorkTimeService::mayViewHours($viewer);
+    }
+
+    /**
+     * Ohne Einsicht in die Stunden der Person (`maySeeHoursOf()`) bleiben nur Person und
+     * Abwesenheiten; Vertrag, Regeln, Plan-, Soll- und Restminuten sind dann leer bzw. `null`.
+     */
     public function workload(
+        User $viewer,
         User|Freelancer|ServiceProvider $person,
         CarbonImmutable $from,
         CarbonImmutable $to
     ): AiPersonWorkloadData {
+        if (!self::maySeeHoursOf($viewer, $person)) {
+            return new AiPersonWorkloadData(
+                person: $this->personData($person),
+                contract: null,
+                rules: [],
+                planned: null,
+                target_minutes_by_week: null,
+                absences: $this->absences($person, $from, $to),
+                remaining: null,
+            );
+        }
+
         $weeks = self::weekKeysBetween($from, $to);
         $months = self::monthKeysBetween($from, $to);
         $perDay = $this->plannedMinutesPerDay($person, $from, $to);
@@ -215,7 +244,10 @@ class AiPeopleService
 
         $rules = $person instanceof User ? $this->shiftRuleService->getActiveRulesForUser($person) : collect();
         $contract = $person instanceof User ? $person->activeWorkContract() : null;
-        $targets = $person instanceof User ? $this->targetMinutesByWeek($person, $weeks) : null;
+        // Sollstunden nur mit eingeschalteter Arbeitszeitberechnung (wie WorkingHourService in der Oberfläche)
+        $targets = $person instanceof User && WorkTimeAccounting::isEnabled()
+            ? $this->targetMinutesByWeek($person, $weeks)
+            : null;
 
         return new AiPersonWorkloadData(
             person: $this->personData($person),
@@ -261,9 +293,22 @@ class AiPeopleService
             Carbon::parse($weekStart->addDays(6)->toDateString())
         ));
         $rules = $person instanceof User ? $this->shiftRuleService->getActiveRulesForUser($person) : collect();
-        $targets = $person instanceof User ? $this->targetMinutesByWeek($person, [$week]) : null;
+        $targets = $person instanceof User && WorkTimeAccounting::isEnabled()
+            ? $this->targetMinutesByWeek($person, [$week])
+            : null;
 
         return $this->remaining([$week], [$week => (int) $planned], $rules, $targets)->weeks[0];
+    }
+
+    /**
+     * Wie `weekCapacity()`, aber `null`, wenn die fragende Person die Stunden nicht sehen darf.
+     */
+    public function visibleWeekCapacity(
+        User $viewer,
+        User|Freelancer|ServiceProvider $person,
+        CarbonImmutable $day
+    ): ?AiRemainingWeekData {
+        return self::maySeeHoursOf($viewer, $person) ? $this->weekCapacity($person, $day) : null;
     }
 
     /**

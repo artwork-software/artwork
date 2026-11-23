@@ -22,7 +22,7 @@ final class RoomCategoryControllerTest extends FeatureTestCase
 
         $response = $this->post(route('room_categories.store'), ['name' => 'Music Room']);
 
-        $response->assertOk();
+        $response->assertRedirect()->assertSessionHasNoErrors();
         $this->assertDatabaseHas('room_categories', ['name' => 'Music Room']);
     }
 

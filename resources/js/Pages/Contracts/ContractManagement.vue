@@ -5,7 +5,11 @@
                 band
                 :icon="IconFileText"
                 :title="$t('Contracts')"
-                :description="filteredContracts.length ? `${filteredContracts.length} ${$t('Contracts')}` : ''"
+                :description="filteredContracts.length ? `${filteredContracts.length} ${filteredContracts.length === 1 ? $t('Contract') : $t('Contracts')}` : ''"
+                v-model="searchTerm"
+                :search-enabled="true"
+                :search-label="$t('Search contracts')"
+                :search-tooltip="$t('Search')"
             >
                 <template #actions>
                     <div class="relative inline-flex">
@@ -44,7 +48,8 @@
             </ToolbarHeader>
 
             <!-- Active filter tags -->
-            <div class="flex flex-wrap gap-2 mt-1" v-if="hasActiveFilters">
+            <div class="flex flex-wrap gap-2 mt-1" v-if="hasActiveFilters || searchTerm.trim() !== ''">
+                <BaseFilterTag v-if="searchTerm.trim() !== ''" :filter="{ name: `${$t('Search')}: ${searchTerm.trim()}`, type: 'search' }" @remove-filter="searchTerm = ''" />
                 <!-- KSK-liable tag -->
                 <BaseFilterTag v-if="filter.kskLiable" :filter="{ name: $t('KSK-liable'), type: 'kskLiable' }" @remove-filter="removeKskLiableFilter" />
                 <!-- Foreign tax tag -->
@@ -61,25 +66,124 @@
                 </div>
             </div>
 
+            <!-- Schnellfilter: Stichtage, offene Aufgaben, Status -->
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+                <label v-if="filteredContracts.length > 0" class="mr-2 inline-flex cursor-pointer items-center gap-2 text-xs text-text-muted">
+                    <input type="checkbox"
+                           class="h-4 w-4 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
+                           :checked="allFilteredSelected"
+                           :indeterminate.prop="selectedCount > 0 && !allFilteredSelected"
+                           @change="toggleSelectAll($event.target.checked)"/>
+                    {{ $t('Select all') }}
+                </label>
+                <button v-for="option in deadlineFilterOptions" :key="option.value ?? 'all'"
+                        type="button"
+                        class="rounded-full border px-3 py-1 text-xs transition"
+                        :class="deadlineFilter === option.value ? 'border-accent-600 bg-accent-50 font-semibold text-accent-700' : 'border-border-subtle text-text-muted hover:bg-surface-sunken'"
+                        :aria-pressed="deadlineFilter === option.value"
+                        @click="deadlineFilter = option.value">
+                    {{ $t(option.label) }}
+                    <span v-if="option.value" class="ml-1 tabular-nums text-text-subtle">{{ deadlineCounts[option.value] }}</span>
+                </button>
+                <span class="mx-1 h-4 w-px bg-border" aria-hidden="true"/>
+                <button type="button"
+                        class="rounded-full border px-3 py-1 text-xs transition"
+                        :class="openTasksOnly ? 'border-accent-600 bg-accent-50 font-semibold text-accent-700' : 'border-border-subtle text-text-muted hover:bg-surface-sunken'"
+                        :aria-pressed="openTasksOnly"
+                        @click="openTasksOnly = !openTasksOnly">
+                    {{ $t('With open tasks') }}
+                </button>
+                <template v-if="contractStates.length > 0">
+                    <span class="mx-1 h-4 w-px bg-border" aria-hidden="true"/>
+                    <button v-for="state in contractStates" :key="state"
+                            type="button"
+                            class="rounded-full border px-3 py-1 text-xs transition"
+                            :class="stateFilter === state ? 'border-accent-600 bg-accent-50 font-semibold text-accent-700' : 'border-border-subtle text-text-muted hover:bg-surface-sunken'"
+                            :aria-pressed="stateFilter === state"
+                            @click="stateFilter = stateFilter === state ? null : state">
+                        {{ state }}
+                    </button>
+                </template>
+            </div>
+
             <!-- Contracts Table -->
             <BaseTable
                 :rows="filteredContracts"
                 :columns="cols"
                 row-key="id"
                 v-model:page="page"
-                :empty-title="$t('No contracts available')"
-                :empty-message="$t('No contracts have been uploaded yet.')"
+                :page-size="filteredContracts.length > 25 ? 25 : null"
+                :empty-title="isNarrowed ? 'No contracts match your search or filters.' : 'No contracts available'"
+                :empty-message="isNarrowed ? '' : 'No contracts have been uploaded yet.'"
+                :show-reset-button="isNarrowed"
+                @reset="resetSearchAndFilters"
+                @sort-change="page = 1"
             >
+                <!-- Auswahl -->
+                <template #cell-select="{ row }">
+                    <input type="checkbox"
+                           class="h-4 w-4 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
+                           :checked="selectedIds[row.id] === true"
+                           :aria-label="$t('Select')"
+                           @change="toggleSelected(row.id, $event.target.checked)"/>
+                </template>
+
                 <!-- Contract Partner -->
                 <template #cell-partner="{ row }">
-                    <div class="font-medium text-text">{{ row.partner || '-' }}</div>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="font-medium text-text">{{ row.partner || '-' }}</span>
+                        <span v-if="row.ksk_liable" class="rounded border border-border-subtle px-1.5 py-0.5 text-[10px] text-text-muted">{{ $t('KSK-liable') }}</span>
+                        <span v-if="row.foreign_tax" class="rounded border border-border-subtle px-1.5 py-0.5 text-[10px] text-text-muted">{{ $t('Foreign tax') }}</span>
+                    </div>
                 </template>
 
                 <!-- Project -->
                 <template #cell-project="{ row }">
-                    <a v-if="row.project" :href="route('projects.tab', {project: row.project.id, projectTab: first_project_tab_id})" class="text-accent-600 hover:text-accent-700">
+                    <Link v-if="row.project" :href="route('projects.tab', {project: row.project.id, projectTab: first_project_tab_id})" class="text-accent-600 hover:text-accent-700">
                         {{ row.project.name }}
-                    </a>
+                    </Link>
+                    <span v-else class="text-text-subtle">-</span>
+                </template>
+
+                <!-- Contract type -->
+                <template #cell-contractType="{ row }">
+                    <span v-if="row.contract_type" class="inline-flex items-center gap-1.5 text-text-muted">
+                        <span v-if="row.contract_type.color" class="size-2 shrink-0 rounded-full" :style="{ backgroundColor: row.contract_type.color }" aria-hidden="true"/>
+                        {{ row.contract_type.name }}
+                    </span>
+                    <span v-else class="text-text-subtle">-</span>
+                </template>
+
+                <!-- Amount -->
+                <template #cell-amount="{ row }">
+                    <span v-if="row.amount !== null && row.amount !== ''" class="tabular-nums">
+                        {{ formatAmount(row.amount) }} {{ row.currency?.name ?? '' }}
+                    </span>
+                    <span v-else class="text-text-subtle">-</span>
+                </template>
+
+                <!-- Status (Freitext aus dem Vertrag) -->
+                <template #cell-status="{ row }">
+                    <span v-if="row.contract_state"
+                          class="inline-flex max-w-40 items-center truncate rounded-md border border-border-subtle bg-surface-sunken px-2 py-0.5 text-xs text-text"
+                          v-tooltip.top="row.contract_state_comment ? { value: row.contract_state_comment, appendTo: 'body', class: 'aw-tooltip' } : null">
+                        {{ row.contract_state }}
+                    </span>
+                    <span v-else class="text-text-subtle">-</span>
+                </template>
+
+                <!-- Offene Aufgaben -->
+                <template #cell-openTasks="{ row }">
+                    <span v-if="row.open_tasks_count > 0" class="font-medium tabular-nums text-text">{{ row.open_tasks_count }}</span>
+                    <span v-else class="text-text-subtle">-</span>
+                </template>
+
+                <!-- Deadline -->
+                <template #cell-deadline="{ row }">
+                    <span v-if="row.deadline_date" class="tabular-nums" :class="isOverdue(row) ? 'font-medium text-danger' : 'text-text-muted'"
+                          :title="isOverdue(row) ? $t('Overdue') : null">
+                        {{ formatDateDisplay(row.deadline_date) }}
+                    </span>
                     <span v-else class="text-text-subtle">-</span>
                 </template>
 
@@ -129,15 +233,25 @@
 
                 <!-- File Name (Download) -->
                 <template #cell-filename="{ row }">
-                    <a :href="route('contracts.download', row.id)" class="text-accent-600 hover:text-accent-700 flex items-center">
-                        <IconDownload class="size-4 mr-2" />
-                        {{ row.name }}
-                    </a>
+                    <div class="flex items-center gap-2">
+                        <button v-if="row.is_previewable"
+                                type="button"
+                                class="rounded p-1 text-text-muted hover:bg-surface-sunken hover:text-text"
+                                :title="$t('Preview')" :aria-label="$t('Preview')"
+                                @click="previewContract = row">
+                            <IconEye class="size-4" />
+                        </button>
+                        <a :href="route('contracts.download', row.id)" class="text-accent-600 hover:text-accent-700 flex items-center">
+                            <IconDownload class="size-4 mr-2" />
+                            {{ row.name }}
+                        </a>
+                    </div>
                 </template>
 
                 <!-- Actions -->
                 <template #row-actions="{ row }">
                     <BaseMenu has-no-offset white-menu-background>
+                        <BaseMenuItem v-if="row.is_previewable" :icon="IconEye" :title="$t('Preview')" white-menu-background @click="previewContract = row" />
                         <BaseMenuItem :icon="IconEdit" :title="$t('Edit')" white-menu-background @click="openContractEditModal(row)" />
                         <BaseMenuItem :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openContractDeleteModal(row)" />
                     </BaseMenu>
@@ -178,6 +292,41 @@
             :contract="selectedContract"
         />
 
+        <!-- Vorschau -->
+        <ContractPreviewModal
+            v-if="previewContract"
+            :contract="previewContract"
+            @close="previewContract = null"
+        />
+
+        <!-- Sammel-Löschen -->
+        <ConfirmDeleteModal
+            v-if="showBulkDeleteModal"
+            :title="$t('Delete contracts')"
+            :description="selectedCount === 1 ? $t('Are you sure you want to delete this contract from the system?') : $t('Do you really want to delete the {count} selected contracts?', { count: selectedCount })"
+            @closed="showBulkDeleteModal = false"
+            @delete="bulkDelete"
+        />
+
+        <!-- Leiste für die Mehrfachauswahl -->
+        <div v-if="selectedCount > 0" class="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
+            <div class="pointer-events-auto flex items-center gap-x-3 rounded-xl bg-surface-inverse py-2.5 pl-4 pr-2 text-sm text-white shadow-lg">
+                <span class="text-white/70">{{ $t('{count} selected', { count: selectedCount }) }}</span>
+                <button type="button" class="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1 font-semibold hover:bg-white/25" @click="exportSelected">
+                    <IconFileSpreadsheet class="size-4" />
+                    {{ $t('Export') }}
+                </button>
+                <button type="button" class="inline-flex items-center gap-1.5 rounded-lg bg-danger px-3 py-1 font-semibold hover:opacity-90 disabled:opacity-50"
+                        :disabled="bulkDeleting" @click="showBulkDeleteModal = true">
+                    <IconTrash class="size-4" />
+                    {{ $t('Delete') }}
+                </button>
+                <button type="button" class="rounded-lg p-1.5 hover:bg-white/15" :title="$t('Clear selection')" :aria-label="$t('Clear selection')" @click="selectedIds = {}">
+                    <component :is="IconX" class="size-4" />
+                </button>
+            </div>
+        </div>
+
         <!-- Contract Filter Modal -->
         <ContractFilterModal
             v-if="showContractFilterModal"
@@ -200,8 +349,18 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
-import {IconFileText, IconCirclePlus, IconEdit, IconTrash, IconDownload, IconFilter, IconFileSpreadsheet} from '@tabler/icons-vue'
+import { Link, router } from '@inertiajs/vue3'
+import { createInstanceFormatter } from "@/Helper/instanceFormat.js"
+import {
+    contractSortAccessors,
+    distinctContractStates,
+    matchesContractSearch,
+    matchesDeadlineFilter,
+    todayDateString
+} from "@/Pages/Contracts/contractListTools.js"
+import ContractPreviewModal from "@/Pages/Contracts/Components/ContractPreviewModal.vue"
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue"
+import {IconFileText, IconCirclePlus, IconEdit, IconTrash, IconDownload, IconFilter, IconFileSpreadsheet, IconEye, IconX} from '@tabler/icons-vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue"
 import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav.vue"
@@ -220,12 +379,19 @@ import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue"
 import axios from 'axios'
+import { failedRequestMessage, showAppToast, toastValidationFailure } from '@/Helper/appToast'
 import { displayedAccessUsersOf } from '@/Helper/sharedAccess.js'
 
 export default {
     mixins: [Permissions],
     name: "ContractManagement",
     components: {
+        Link,
+        ContractPreviewModal,
+        ConfirmDeleteModal,
+        IconEye,
+        IconTrash,
+        IconFileSpreadsheet,
         ContractFilterModal,
         ContractExportModal,
         IconDownload,
@@ -263,11 +429,29 @@ export default {
             IconDownload,
             IconFilter,
             IconFileSpreadsheet,
+            IconEye,
+            IconX,
         }
     },
     data() {
         return {
             page: 1,
+            searchTerm: '',
+            // Schnellfilter (nur für die aktuelle Sitzung, nicht im Profil gespeichert)
+            deadlineFilter: null,
+            openTasksOnly: false,
+            stateFilter: null,
+            deadlineFilterOptions: [
+                { value: null, label: 'All' },
+                { value: 'overdue', label: 'Overdue' },
+                { value: 'week', label: 'This week' },
+                { value: 'month', label: 'This month' },
+            ],
+            selectedIds: {},
+            showBulkDeleteModal: false,
+            bulkDeleting: false,
+            previewContract: null,
+            loadingContractId: null,
             showContractUploadModal: false,
             showContractDeleteModal: null,
             showContractEditModal: null,
@@ -283,10 +467,16 @@ export default {
                 contractTypes: []
             },
             cols: [
-                { key: 'partner', label: 'Contract partner', sortable: false },
-                { key: 'project', label: 'Project', sortable: false },
+                { key: 'select', label: '', sortable: false, width: '36px' },
+                { key: 'partner', label: 'Contract partner', sortable: true, accessor: contractSortAccessors.partner },
+                { key: 'project', label: 'Project', sortable: true, accessor: contractSortAccessors.project },
+                { key: 'contractType', label: 'Contract type', sortable: true, accessor: contractSortAccessors.contractType },
+                { key: 'amount', label: 'Amount', sortable: true, type: 'number', accessor: contractSortAccessors.amount },
+                { key: 'deadline', label: 'Deadline', sortable: true, accessor: contractSortAccessors.deadline },
+                { key: 'status', label: 'Status', sortable: true, accessor: contractSortAccessors.status },
+                { key: 'openTasks', label: 'Open tasks', sortable: true, type: 'number', accessor: contractSortAccessors.openTasks },
                 { key: 'accessUsers', label: 'Access users', sortable: false },
-                { key: 'filename', label: 'File name', sortable: false },
+                { key: 'filename', label: 'File name', sortable: true, accessor: contractSortAccessors.filename },
             ],
         }
     },
@@ -321,7 +511,67 @@ export default {
             this.filter.dateTo = this.saved_filter.dateTo || null;
         }
     },
+    watch: {
+        // Nach Suche oder Filterwechsel wieder auf Seite 1, sonst steht man auf einer leeren Seite
+        searchTerm() {
+            this.page = 1;
+        },
+        deadlineFilter() {
+            this.page = 1;
+        },
+        openTasksOnly() {
+            this.page = 1;
+        },
+        stateFilter() {
+            this.page = 1;
+        },
+        // Nach dem Neuladen (Löschen, Bearbeiten) keine Auswahl auf verschwundene Verträge behalten
+        contracts(contracts) {
+            const existing = new Set(contracts.map(contract => contract.id));
+            this.selectedIds = Object.fromEntries(Object.keys(this.selectedIds).filter(id => existing.has(Number(id))).map(id => [id, true]));
+            if (this.stateFilter && !this.contractStates.includes(this.stateFilter)) {
+                this.stateFilter = null;
+            }
+        },
+        filter: {
+            handler() {
+                this.page = 1;
+            },
+            deep: true,
+        },
+    },
     computed: {
+        isNarrowed() {
+            return Boolean(this.hasActiveFilters) || this.searchTerm.trim() !== ''
+                || this.deadlineFilter !== null || this.openTasksOnly || this.stateFilter !== null;
+        },
+        contractStates() {
+            return distinctContractStates(this.contracts);
+        },
+        // Zähler der Stichtags-Knöpfe über alle Verträge, die sonst zu Suche und Filtern passen
+        deadlineCounts() {
+            const counts = { overdue: 0, week: 0, month: 0 };
+            for (const contract of this.contractsBeforeDeadlineFilter) {
+                for (const key of Object.keys(counts)) {
+                    if (matchesDeadlineFilter(contract, key)) {
+                        counts[key]++;
+                    }
+                }
+            }
+            return counts;
+        },
+        filteredContracts() {
+            return this.deadlineFilter
+                ? this.contractsBeforeDeadlineFilter.filter(contract => matchesDeadlineFilter(contract, this.deadlineFilter))
+                : this.contractsBeforeDeadlineFilter;
+        },
+        selectedCount() {
+            return Object.keys(this.selectedIds).length;
+        },
+        allFilteredSelected() {
+            return this.filteredContracts.length > 0
+                && this.filteredContracts.every(contract => this.selectedIds[contract.id]);
+        },
         hasActiveFilters() {
             return this.filter.kskLiable ||
                    this.filter.foreignTax ||
@@ -339,7 +589,7 @@ export default {
             count += this.filter.contractTypes.filter(f => f.checked).length;
             return count;
         },
-        filteredContracts() {
+        contractsBeforeDeadlineFilter() {
             let filteredContracts = this.contracts;
 
             // Filter by KSK-liable
@@ -352,7 +602,8 @@ export default {
             // Filter by foreign tax
             if (this.filter.foreignTax) {
                 filteredContracts = filteredContracts.filter((contract) => {
-                    return contract.has_foreign_tax;
+                    // ContractResource liefert foreign_tax (has_foreign_tax gibt es nur im Projekt-Payload)
+                    return contract.foreign_tax;
                 });
             }
 
@@ -383,6 +634,21 @@ export default {
                 filteredContracts = filteredContracts.filter((contract) => {
                     return selectedContractTypes.some(ct => contract?.contract_type?.id === ct.id);
                 });
+            }
+
+            if (this.searchTerm.trim() !== '') {
+                filteredContracts = filteredContracts.filter(contract => matchesContractSearch(contract, this.searchTerm));
+            }
+
+            if (this.openTasksOnly) {
+                filteredContracts = filteredContracts.filter(contract => contract.open_tasks_count > 0);
+            }
+
+            if (this.stateFilter !== null) {
+                const wanted = this.stateFilter.toLowerCase();
+                filteredContracts = filteredContracts.filter(
+                    contract => String(contract.contract_state ?? '').trim().toLowerCase() === wanted
+                );
             }
 
             return filteredContracts;
@@ -457,14 +723,81 @@ export default {
             filterItem.checked = false;
             this.saveFilter();
         },
+        formatAmount(amount) {
+            return createInstanceFormatter(this.$page.props.instanceFormat).formatNumber(amount);
+        },
+        isOverdue(contract) {
+            return Boolean(contract.deadline_date) && contract.deadline_date.substring(0, 10) < todayDateString();
+        },
+        toggleSelected(id, checked) {
+            if (checked) {
+                this.selectedIds[id] = true;
+            } else {
+                delete this.selectedIds[id];
+            }
+        },
+        toggleSelectAll(checked) {
+            this.selectedIds = checked
+                ? Object.fromEntries(this.filteredContracts.map(contract => [contract.id, true]))
+                : {};
+        },
+        exportSelected() {
+            window.open(route('contracts.export', { ids: Object.keys(this.selectedIds) }), '_blank', 'noopener');
+        },
+        bulkDelete() {
+            if (this.bulkDeleting) {
+                return;
+            }
+            this.bulkDeleting = true;
+            this.showBulkDeleteModal = false;
+            axios.post(route('contracts.bulk-delete'), { ids: Object.keys(this.selectedIds).map(Number) })
+                .then(() => {
+                    this.selectedIds = {};
+                    router.reload({ only: ['contracts'] });
+                })
+                .catch(toastValidationFailure)
+                .finally(() => {
+                    this.bulkDeleting = false;
+                });
+        },
+        resetSearchAndFilters() {
+            this.searchTerm = '';
+            this.deadlineFilter = null;
+            this.openTasksOnly = false;
+            this.stateFilter = null;
+            this.filter.kskLiable = false;
+            this.filter.foreignTax = false;
+            this.filter.dateFrom = null;
+            this.filter.dateTo = null;
+            this.filter.legalForms.forEach(legalForm => { legalForm.checked = false; });
+            this.filter.contractTypes.forEach(contractType => { contractType.checked = false; });
+            this.saveFilter();
+        },
         formatDateDisplay(dateString) {
             if (!dateString) return null;
-            const [year, month, day] = dateString.split('-');
+            const [year, month, day] = dateString.substring(0, 10).split('-');
             return `${day}.${month}.${year}`;
         },
+        // Die Liste trägt nur schlanke Zeilen; den vollständigen Vertrag (Aufgaben, Kommentare,
+        // Freigaben) lädt das Bearbeiten-Fenster hier nach.
         openContractEditModal(contract) {
-            this.selectedContract = contract;
-            this.showContractEditModal = contract.id;
+            if (this.loadingContractId !== null) {
+                return;
+            }
+            this.loadingContractId = contract.id;
+            axios.get(route('contracts.details', contract.id))
+                .then(({ data }) => {
+                    this.selectedContract = data.contract;
+                    this.showContractEditModal = contract.id;
+                })
+                // Lesezugriffe meldet der globale Hinweis nicht: ohne das hier tat der Klick sichtbar nichts
+                .catch((error) => showAppToast(
+                    'error',
+                    failedRequestMessage(error, 'The action could not be completed. Please try again.')
+                ))
+                .finally(() => {
+                    this.loadingContractId = null;
+                });
         },
         closeContractEditModal() {
             this.showContractEditModal = null;

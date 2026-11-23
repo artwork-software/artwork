@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\AiAssistant\Http\Controllers;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\AiAssistant\Http\Requests\UpdateAiAssistantSettingsRequest;
 use Artwork\Modules\AiAssistant\Settings\AiAssistantSettings;
@@ -24,6 +25,9 @@ class AiAssistantSettingsController extends Controller
 
     public function edit(): Response
     {
+        // Wie alle Tool-Einstellungen nur mit dem Recht dazu (Admins über Gate::before)
+        abort_unless(auth()->user()?->can(PermissionEnum::SETTINGS_UPDATE->value), 403);
+
         return Inertia::render('ToolSettings/AiAssistant/Index', [
             'aiAssistantSettings' => [
                 'enabled' => $this->settings->enabled,

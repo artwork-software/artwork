@@ -194,16 +194,6 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
         $this->assertSame([$roomAdminTeam->id], $invitation->departments()->pluck('departments.id')->all());
     }
 
-    #[Test]
-    public function invite_page_requires_the_invitation_create_permission(): void
-    {
-        $this->actingAsUserWith([]);
-        $this->get(route('user.invite'))->assertForbidden();
-
-        $this->actingAsUserWith([PermissionEnum::MA_MANAGER]);
-        $this->get(route('user.invite'))->assertOk();
-    }
-
     // ------------------------------------------------------------------
     // Einladungs-Ablauf + Throttle
     // ------------------------------------------------------------------

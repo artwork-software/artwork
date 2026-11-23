@@ -4,25 +4,12 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
 use Artwork\Modules\Shift\Repositories\ShiftPresetTimelineRepository;
-use Artwork\Modules\Timeline\Models\Timeline;
+use Illuminate\Support\Facades\DB;
 
 readonly class ShiftPresetTimelineService
 {
     public function __construct(private ShiftPresetTimelineRepository $shiftPresetTimelineRepository)
     {
-    }
-
-    public function createFromExistingTimeline(int $shiftPresetId, Timeline $timeline): ShiftPresetTimeline
-    {
-        $shiftPresetTimeline = new ShiftPresetTimeline([
-            'shift_preset_id' => $shiftPresetId,
-            'start' => $timeline->start,
-            'end' => $timeline->end,
-            'description' => $timeline->description,
-        ]);
-        $this->shiftPresetTimelineRepository->save($shiftPresetTimeline);
-
-        return $shiftPresetTimeline;
     }
 
     public function createFromExistingPresetTimeline(
@@ -64,15 +51,18 @@ readonly class ShiftPresetTimelineService
      */
     public function updateTimelinePreset(ShiftPresetTimeline $shiftPresetTimeline, array $data): ShiftPresetTimeline
     {
-        $shiftPresetTimeline->update([
-            'name' => $data['name'],
-        ]);
+        // Atomar: scheitert das Anlegen der neuen Zeiten, bleiben die alten erhalten
+        DB::transaction(function () use ($shiftPresetTimeline, $data): void {
+            $shiftPresetTimeline->update([
+                'name' => $data['name'],
+            ]);
 
-        $shiftPresetTimeline->times()->each(function ($time): void {
-            $time->delete();
+            $shiftPresetTimeline->times()->each(function ($time): void {
+                $time->delete();
+            });
+
+            $this->attachTimes($shiftPresetTimeline, $data['dataset']);
         });
-
-        $this->attachTimes($shiftPresetTimeline, $data['dataset']);
 
         return $shiftPresetTimeline;
     }
@@ -104,10 +94,11 @@ readonly class ShiftPresetTimelineService
     private function attachTimes(ShiftPresetTimeline $timelinePreset, array $times): void
     {
         foreach ($times as $time) {
+            // Schlüssel sind optional (z. B. "ab 18:00" ohne Ende oder ohne Beschreibung)
             $timelinePreset->times()->create([
-                'start' => $time['start'],
-                'end' => $time['end'],
-                'description' => $time['description'],
+                'start' => $time['start'] ?? null,
+                'end' => $time['end'] ?? null,
+                'description' => $time['description'] ?? null,
             ]);
         }
     }

@@ -107,7 +107,7 @@
                 <!-- Pagination (optional) -->
                 <div v-if="showPagination" class="flex items-center justify-between gap-3 pt-4">
                     <div class="text-[13px] text-text-muted tabular-nums">
-                        {{ pageFrom }}–{{ pageTo }} {{ $t(ofLabel) }} {{ total }}
+                        {{ pageFrom }}–{{ pageTo }} {{ $t(ofLabel) }} {{ totalItems }}
                     </div>
                     <div class="flex items-center gap-2">
                         <BaseUIButton

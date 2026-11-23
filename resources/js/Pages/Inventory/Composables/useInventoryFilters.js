@@ -85,6 +85,8 @@ export function useInventoryFilters() {
                 filters: JSON.stringify(filters),
                 tag_ids: tagIds,
                 filter_preset_id: presetId,
+                // geänderte Filter beginnen auf Seite 1 (die alte Seite gibt es danach oft nicht mehr)
+                page: 1,
                 ...extra,
             },
             preserveScroll: true,
@@ -127,7 +129,7 @@ export function useInventoryFilters() {
 
     const clearStatus = () => {
         router.reload({
-            data: { status_id: null },
+            data: { status_id: null, page: 1 },
             preserveScroll: true,
             only: INVENTORY_FILTER_RELOAD_PROPS,
         })

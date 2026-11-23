@@ -29,6 +29,9 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftService;
+use Artwork\Modules\Trash\Models\TrashRecord;
+use Artwork\Modules\Trash\Services\TrashInfoService;
+use Artwork\Modules\Trash\Services\TrashRecorder;
 use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
@@ -84,6 +87,10 @@ class PurgeTrashCommand extends Command
             if ($count > 0) {
                 $this->line(sprintf('%s: %d %s', $label, $count, $dryRun ? 'würden gelöscht' : 'gelöscht'));
             }
+        }
+
+        if (!$dryRun) {
+            $this->pruneTrashRecords();
         }
 
         if ($this->failures > 0) {
@@ -220,6 +227,38 @@ class PurgeTrashCommand extends Command
             ],
             'Verwertungsgesellschaften' => [$trashedBefore(CollectingSociety::class), $forceDelete],
         ];
+    }
+
+    /**
+     * Alte "Gelöscht von"-Vermerke, deren Eintrag nicht mehr im Papierkorb liegt (z. B. nach
+     * "Alle löschen", das ohne Modell-Events löscht). Einträge, die der Papierkorb dauerhaft behält
+     * (etwa ein Raum mit Terminen), behalten ihren Vermerk.
+     */
+    private function pruneTrashRecords(): void
+    {
+        $before = now()->subDays(TrashInfoService::RETENTION_DAYS * 3);
+        $knownTypes = [];
+
+        foreach (TrashRecorder::TRACKED_MODELS as $modelClass) {
+            $model = new $modelClass();
+            $knownTypes[] = $model->getMorphClass();
+
+            TrashRecord::query()
+                ->where('subject_type', $model->getMorphClass())
+                ->where('updated_at', '<', $before)
+                ->whereNotIn(
+                    'subject_id',
+                    DB::table($model->getTable())
+                        ->whereNotNull($model->getDeletedAtColumn())
+                        ->select($model->getKeyName())
+                )
+                ->delete();
+        }
+
+        TrashRecord::query()
+            ->whereNotIn('subject_type', array_unique($knownTypes))
+            ->where('updated_at', '<', $before)
+            ->delete();
     }
 
     /**

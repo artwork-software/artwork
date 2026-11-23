@@ -1,243 +1,61 @@
 <template>
-    <TrashSearchAndActions
-        property-name="trashed_projects"
-        :total="trashed_projects.total"
-        @delete-all="showConfirmDeleteAll = true"
-    />
-    <div v-for="project in trashed_projects.data" :key="project.id"
-         class="mt-5 border-b-2 border-border-subtle w-full">
-        <div class="py-5 flex justify-between">
-            <div class="flex">
-                <div class="w-full mr-6">
-                    <div class="flex my-auto">
-                        <p class="text-2xl subpixel-antialiased text-text">{{ project.name }}</p>
-                        {{ project.access_budget }}
+    <div class="w-full">
+        <TrashTab
+            :paginator="trashed_projects"
+            property-name="trashed_projects"
+            :force-all-href="route('projects.force.all')"
+            :restore-href="(project) => route('projects.restore', { id: project.id })"
+            :force-href="(project) => route('projects.force', { id: project.id })"
+            :name-of="(project) => project.name"
+            :open-href="(project) => first_project_tab_id ? route('projects.tab', { project: project.id, projectTab: first_project_tab_id }) : null"
+            force-is-queued
+        >
+            <template #default="{ item: project }">
+                <div class="truncate font-medium text-text">{{ project.name }}</div>
+                <div v-if="project.project_history?.length" class="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-text-muted">
+                    <span>{{ $t('last modified') }}: {{ project.project_history[0]?.created_at }}</span>
+                    <button type="button" class="text-accent-600 hover:text-accent-700" @click="historyProjectId = project.id">
+                        {{ $t('View history') }}
+                    </button>
+                </div>
+            </template>
+            <template #trailing="{ item: project }">
+                <div v-if="project.users?.length" class="hidden items-center sm:flex">
+                    <div v-for="user in project.users.slice(0, 3)" :key="user.id" class="-mr-2">
+                        <UserPopoverTooltip :user="user" :id="user.id" height="7" width="7" />
                     </div>
+                    <span v-if="project.users.length > 3" class="ml-3 text-xs text-text-subtle tabular-nums">+{{ project.users.length - 3 }}</span>
                 </div>
-            </div>
-            <div class="flex ml-20">
-                <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
-                    <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
-                                        :iconName="department.svg_name"
-                                        alt=""/>
+            </template>
+        </TrashTab>
 
-                </div>
-                <div v-if="project.departments.length >= 4" class="my-auto">
-                    <Menu as="div" class="relative">
-                        <div>
-                            <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                <IconChevronDown
-                                    class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></IconChevronDown>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition-enter-active"
-                                    enter-from-class="transition-enter-from"
-                                    enter-to-class="transition-enter-to"
-                                    leave-active-class="transition-leave-active"
-                                    leave-from-class="transition-leave-from"
-                                    leave-to-class="transition-leave-to">
-                            <MenuItems
-                                class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                <MenuItem v-for="department in project.departments" v-slot="{ active }">
-                                    <div
-                                        :class="[active ? 'bg-text-inverse/10 ' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <TeamIconCollection
-                                            class="h-9 w-9 rounded-full ring-2 ring-white"
-                                            :iconName="department.svg_name"
-                                            alt=""/>
-                                        <span class="ml-4">
-                                                                {{ department.name }}
-                                                            </span>
-                                    </div>
-                                </MenuItem>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
-                </div>
-            </div>
-            <div class="flex">
-                <div class="flex mr-8">
-                    <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
-                        <UserPopoverTooltip :user="user" :id="user.id" height="9" width="9"/>
-                    </div>
-                    <div v-if="project.users.length >= 4" class="my-auto">
-                        <Menu as="div" class="relative">
-                            <div>
-                                <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                    <IconChevronDown
-                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></IconChevronDown>
-                                </MenuButton>
-                            </div>
-                            <transition enter-active-class="transition-enter-active"
-                                        enter-from-class="transition-enter-from"
-                                        enter-to-class="transition-enter-to"
-                                        leave-active-class="transition-leave-active"
-                                        leave-from-class="transition-leave-from"
-                                        leave-to-class="transition-leave-to">
-                                <MenuItems
-                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                    <MenuItem v-for="user in project.users" v-slot="{ active }">
-                                        <div
-                                            :class="[active ? 'bg-text-inverse/10 ' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <img class="h-9 w-9 rounded-full"
-                                                 :src="user.profile_photo_url"
-                                                 alt=""/>
-                                            <span class="ml-4">
-                                                                {{ user.first_name }} {{ user.last_name }}
-                                                            </span>
-                                        </div>
-                                    </MenuItem>
-                                </MenuItems>
-                            </transition>
-                        </Menu>
-                    </div>
-                </div>
-
-                <BaseMenu>
-                    <MenuItem v-slot="{ active }">
-                        <Link as="button" method="patch"
-                              :href="route('projects.restore', { id: project.id })"
-                              :class="[active ? 'bg-text-inverse/10 text-accent-700' :
-                                          'text-text-subtle',
-                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                            <IconRefresh
-                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                aria-hidden="true"/>
-                            {{  $t('Restore') }}
-                        </Link>
-                    </MenuItem>
-                    <MenuItem v-slot="{ active }">
-                        <Link as="button" method="delete"
-                              :href="route('projects.force', { id: project.id })"
-                              :class="[active ? 'bg-text-inverse/10 text-accent-700' :
-                                          'text-text-subtle',
-                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                            <IconTrash
-                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                aria-hidden="true"/>
-                            {{ $t('Delete permanently')}}
-                        </Link>
-                    </MenuItem>
-                </BaseMenu>
-            </div>
-
-        </div>
-        <div class="mb-4 subpixel-antialiased text-text-subtle text-xs flex items-center"
-             v-if="project.project_history.length">
-            <div>
-                {{ $t('last modified') }}:
-            </div>
-            <UserPopoverTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
-                                :user="project.project_history[0].changes[0].changed_by"
-                                :id="project.project_history[0].changes[0].changed_by.id"
-                                height="4"
-                                width="4" class="ml-2"/>
-            <span class="ml-2 subpixel-antialiased">
-                        {{ project.project_history[0]?.created_at }}
-                    </span>
-            <button class="ml-4 subpixel-antialiased text-accent-600 flex items-center cursor-pointer"
-                    @click="openProjectHistoryModal(project)">
-                <IconChevronRight
-                    class="-mr-0.5 h-4 w-4  group-hover:text-accent-700"
-                    aria-hidden="true"/>
-                {{ $t('View history') }}
-            </button>
-        </div>
-
-        <!-- Project History Modal -->
-        <!-- TODO: EINFÜGEN WENN PROJECT HISTORY VON GELÖSCHTEN PROJEKTEN ÜBERARBEITET -->
-        <project-history-component
-            @closed="closeProjectHistoryModal"
-            v-if="showProjectHistory"
-            :project_id="selectedProjectId"
-        ></project-history-component>
-
-
+        <ProjectHistoryComponent
+            v-if="historyProjectId"
+            :project_id="historyProjectId"
+            @closed="historyProjectId = null"
+        />
     </div>
-
-    <BasePaginator
-        v-if="trashed_projects.total > 0"
-        :entities="trashed_projects"
-        property-name="trashed_projects"
-        class="mt-6"
-    />
-
-    <ConfirmDeleteModal
-        v-if="showConfirmDeleteAll"
-        :title="$t('Delete all')"
-        :description="$t('Are you sure you want to permanently delete all items in the recycle bin for this category?')"
-        @closed="showConfirmDeleteAll = false"
-        @delete="forceDeleteAll"
-    />
 </template>
 
 <script>
-import {IconChevronDown, IconChevronRight, IconDotsVertical, IconRefresh, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
-import TrashLayout from "@/Layouts/TrashLayout.vue";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {MenuButton, Menu, MenuItems, MenuItem} from "@headlessui/vue";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {Link} from "@inertiajs/vue3";
-import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import TrashSearchAndActions from "@/Pages/Trash/Components/TrashSearchAndActions.vue";
-import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
+import AppLayout from '@/Layouts/AppLayout.vue'
+import TrashLayout from '@/Layouts/TrashLayout.vue'
 
 export default {
-    props: ['trashed_projects'],
-    name: "Projects",
     layout: [AppLayout, TrashLayout],
-    data() {
-        return {
-            showProjectHistory: false,
-            selectedProjectId: null,
-            showConfirmDeleteAll: false,
-        }
-    },
-    methods: {
-        openProjectHistoryModal(project) {
-            this.selectedProjectId = project?.id ?? null;
-            this.showProjectHistory = !!this.selectedProjectId;
-        },
-        closeProjectHistoryModal() {
-            this.showProjectHistory = false;
-            this.selectedProjectId = null;
-        },
-        forceDeleteAll() {
-            this.$inertia.delete(route('projects.force.all'), {
-                onSuccess: () => {
-                    this.showConfirmDeleteAll = false;
-                }
-            });
-        },
-    },
-    components: {
-        BaseMenu,
-        BasePaginator,
-        TrashSearchAndActions,
-        ConfirmDeleteModal,
-        UserPopoverTooltip,
-        Input, IconSearch,
-        ProjectHistoryComponent,
-        IconTrash,
-        TeamIconCollection,
-        MenuButton,
-        IconChevronDown,
-        Menu, MenuItems, MenuItem, IconDotsVertical,
-        SvgCollection, IconChevronRight,
-        IconX,
-        IconRefresh,
-        Link,
-        UserTooltip
-    }
 }
 </script>
 
-<style scoped>
+<script setup>
+import TrashTab from '@/Pages/Trash/Components/TrashTab.vue'
+import { ref } from 'vue'
+import ProjectHistoryComponent from '@/Layouts/Components/ProjectHistoryComponent.vue'
+import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
 
-</style>
+defineProps({
+    trashed_projects: { type: Object, required: true },
+    first_project_tab_id: { type: Number, default: null },
+})
+
+const historyProjectId = ref(null)
+</script>

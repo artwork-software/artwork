@@ -17,6 +17,8 @@ class CollectingSocietyController extends Controller
 
     public function store(Request $request): void
     {
+        \Artwork\Core\Validation\MasterDataName::validate($request);
+
         CollectingSociety::create([
             'name' => $request->name,
             'color' => $request->color

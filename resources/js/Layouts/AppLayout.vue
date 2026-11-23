@@ -55,7 +55,14 @@
                     :stroke-width="1.5"
                     aria-hidden="true"
                 />
-                <p class="min-w-0 flex-1 text-sm text-text break-words">{{ toast.message }}</p>
+                <p class="min-w-0 flex-1 text-sm text-text break-words">
+                    {{ toast.message }}
+                    <Link v-if="toast.action?.href" :href="toast.action.href"
+                          class="ml-1 font-semibold text-accent-600 hover:text-accent-700"
+                          @click="dismissFlashToast(toast.id)">
+                        {{ toast.action.label }}
+                    </Link>
+                </p>
                 <button
                     type="button"
                     class="shrink-0 rounded-md text-text-subtle hover:text-text"
@@ -95,7 +102,7 @@ const flashDedupe = {key: null, at: 0}
 <script setup>
 import { createsNotificationEntry, markNotificationArrived } from "@/Helper/notificationIndicator.js";
 import {onAppToast} from '@/Helper/appToast'
-import {Head, router, usePage} from "@inertiajs/vue3"
+import {Head, Link, router, usePage} from "@inertiajs/vue3"
 import {defineAsyncComponent, getCurrentInstance, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
@@ -148,10 +155,11 @@ const dismissFlashToast = (id) => {
     flashToasts.value = flashToasts.value.filter((t) => t.id !== id)
 }
 
-const pushFlashToast = (type, message) => {
+const pushFlashToast = (type, message, action = null) => {
     const id = `flash-toast-${++flashToastSeq}`
-    const timeoutId = setTimeout(() => dismissFlashToast(id), type === 'error' ? 8000 : 5000)
-    flashToasts.value = [...flashToasts.value, {id, type, message, timeoutId}]
+    // Meldungen mit Link bleiben länger stehen, damit er sich anklicken lässt
+    const timeoutId = setTimeout(() => dismissFlashToast(id), type === 'error' || action ? 8000 : 5000)
+    flashToasts.value = [...flashToasts.value, {id, type, message, action, timeoutId}]
 }
 
 /** Flash-Strings der übergebenen Inertia-Page als Toast anzeigen (nur Strings, nur nicht-selbstrendernde Seiten). */
@@ -175,7 +183,7 @@ const showFlashFromPage = (pageData) => {
 // Nach jeder erfolgreichen Inertia-Navigation (inkl. redirect()->back() nach Formularen)
 const removeFlashListener = router.on('success', (event) => showFlashFromPage(event.detail.page))
 // Meldungen außerhalb von Redirects (fehlgeschlagene Requests, $toast) über denselben Toast
-const removeAppToastListener = onAppToast((type, message) => pushFlashToast(type, message))
+const removeAppToastListener = onAppToast((type, message, action) => pushFlashToast(type, message, action))
 
 onUnmounted(() => {
     removeFlashListener()

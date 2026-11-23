@@ -32,7 +32,13 @@
                 @foreach($properties as $property)
                     @if(in_array('prop_' . $property->id, $columns))
                         {{-- Mehrfachauswahl kommagetrennt statt als JSON-Liste --}}
-                        <td>{{ \Artwork\Modules\Crm\Support\CrmPropertyValueFormat::exportText($property, $contact->propertyValues->firstWhere('crm_property_id', $property->id)?->value) }}</td>
+                        @php($propertyValue = $contact->propertyValues->firstWhere('crm_property_id', $property->id))
+                        @if($property->type === \Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum::UPLOAD)
+                            {{-- Datei: Anzeigename statt des internen Speicherpfads --}}
+                            <td>{{ $propertyValue?->value ? ($propertyValue->file_name ?? basename((string) $propertyValue->value)) : '' }}</td>
+                        @else
+                            <td>{{ \Artwork\Modules\Crm\Support\CrmPropertyValueFormat::exportText($property, $propertyValue?->value) }}</td>
+                        @endif
                     @endif
                 @endforeach
             </tr>

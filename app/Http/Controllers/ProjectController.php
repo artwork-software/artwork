@@ -1915,7 +1915,7 @@ class ProjectController extends Controller
         CellCalculationService $cellCalculationService,
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         $table = $column->table;
 
         // Eine Tabelle braucht immer mindestens eine Wertspalte: die letzte wird
@@ -1925,8 +1925,7 @@ class ProjectController extends Controller
             $columnRelevanceService->assignExclusive($column);
             SafeBroadcast::send(new UpdateBudget($table->project_id));
 
-            return Redirect::back()->with(
-                'success',
+            return $this->budgetDeleteResponse(
                 __('The last value column cannot be deleted and was emptied instead.')
             );
         }
@@ -1953,7 +1952,24 @@ class ProjectController extends Controller
             $columnRelevanceService->ensureSingleRelevantColumn($table);
         }
 
-        return Redirect::back();
+        return $this->budgetDeleteResponse();
+    }
+
+    /**
+     * Antwort der Budget-Löschrouten: Inertia-Aufrufe werden zurückgeleitet, axios-Aufrufe (verzögertes
+     * Löschen mit „Rückgängig“ in der Budgettabelle) bekommen eine schlanke JSON-Antwort statt der
+     * kompletten Projektseite.
+     */
+    private function budgetDeleteResponse(?string $message = null): RedirectResponse|JsonResponse
+    {
+        $request = request();
+        if ($request->wantsJson() && !$request->header('X-Inertia')) {
+            return response()->json(['message' => $message]);
+        }
+
+        $redirect = Redirect::back();
+
+        return $message !== null ? $redirect->with('success', $message) : $redirect;
     }
 
     public function getTrashedColumns(Table $table): JsonResponse
@@ -2382,6 +2398,71 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * Sortiert die Wertspalten einer Budgettabelle um. KTO, KST und Position bleiben vorne, die
+     * Sage-Spalte und die Unterprojekte-Spalte behalten ihren festen Platz am Ende.
+     */
+    public function reorderColumns(
+        Request $request,
+        BudgetCacheService $budgetCacheService,
+        ColumnService $columnService
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'table_id' => ['required', 'integer', 'exists:tables,id'],
+            'column_ids' => ['required', 'array', 'min:1'],
+            'column_ids.*' => ['required', 'integer', 'distinct'],
+        ]);
+
+        $columns = Column::query()
+            ->where('table_id', $validated['table_id'])
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
+        $isMovable = static fn (Column $column, int $index): bool => $index > 2
+            && $column->type !== 'sage'
+            && $column->type !== 'subprojects_column_for_group';
+        $movableColumns = $columns->filter($isMovable);
+        $requestedIds = array_map(intval(...), $validated['column_ids']);
+
+        // Die Liste muss genau die verschiebbaren Spalten dieser Tabelle enthalten: die Middleware
+        // prüft nur table_id.
+        abort_unless(
+            $movableColumns->pluck('id')->sort()->values()->all() === collect($requestedIds)->sort()->values()->all(),
+            422
+        );
+
+        $reservedPositions = $columns->reject($isMovable)->pluck('position')->map(intval(...))->all();
+        $nextPosition = (int) $movableColumns->min('position');
+
+        DB::transaction(function () use ($requestedIds, $movableColumns, $reservedPositions, $nextPosition): void {
+            $columnsById = $movableColumns->keyBy('id');
+            foreach ($requestedIds as $columnId) {
+                while (in_array($nextPosition, $reservedPositions, true)) {
+                    $nextPosition++;
+                }
+                $column = $columnsById->get($columnId);
+                if ((int) $column->position !== $nextPosition) {
+                    $column->update(['position' => $nextPosition]);
+                }
+                $nextPosition++;
+            }
+        });
+
+        // Die Buchstaben (A, B, C ...) folgen der neuen Reihenfolge
+        $columnService->setColumnSubName((int) $validated['table_id']);
+
+        $table = Table::find($validated['table_id']);
+        if ($table && $table->project_id) {
+            $project = Project::find($table->project_id);
+            if ($project) {
+                $budgetCacheService->forgetForProjectGroup($project);
+            }
+            SafeBroadcast::send(new UpdateBudget($table->project_id));
+        }
+
+        return Redirect::back();
+    }
+
     public function reorderSubPositions(Request $request, BudgetCacheService $budgetCacheService): RedirectResponse
     {
         $validated = $request->validate([
@@ -2541,10 +2622,16 @@ class ProjectController extends Controller
         SafeBroadcast::send(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
+    /**
+     * Speichert die Kalkulationen einer Zelle. Die cell_id muss eine einzelne Ganzzahl sein und auf eine
+     * vorhandene Zelle zeigen; die Budget-Middleware hat deren Projekt bereits geprüft.
+     */
     public function updateCellCalculation(Request $request)
     {
-        // Hole cell_id aus Request (wird jetzt immer mitgesendet)
-        $cellId = $request->input('cell_id');
+        $request->validate(['cell_id' => ['nullable', 'integer']]);
+        $cellId = $request->filled('cell_id') ? $request->integer('cell_id') : null;
+        $cell = $cellId !== null ? ColumnCell::find($cellId) : null;
+        abort_if($cellId !== null && $cell === null, 404);
         $calculations = $request->input('calculations', []);
         $sentCalculationIds = []; // Sammle IDs der gesendeten Kalkulationen
 
@@ -2593,10 +2680,7 @@ class ProjectController extends Controller
             }
 
             // Aktualisiere den Cell-Value auf die Summe aller Kalkulationen
-            $cell = ColumnCell::find($cellId);
-            if ($cell) {
-                $cell->update(['value' => $cell->calculations()->sum('value')]);
-            }
+            $cell->update(['value' => $cell->calculations()->sum('value')]);
         }
 
         // Wenn AJAX-Request: JSON-Response — auch ohne cell_id, sonst folgt der Browser dem 302 mit PATCH (405)
@@ -2604,7 +2688,7 @@ class ProjectController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Calculations saved successfully',
-                'cell_value' => isset($cell) && $cell ? $cell->value : null
+                'cell_value' => $cell?->value
             ]);
         }
 
@@ -2966,7 +3050,8 @@ class ProjectController extends Controller
         $headerObject->projectGenres     = $project->genres;
         $headerObject->projectSectors    = $project->sectors;
 
-        $headerObject->rooms = Room::listWithEffectiveAdminIds(['id', 'name', 'everyone_can_book']);
+        // user_id: ohne Raumadmins beantwortet die anlegende Person Raumanfragen (EventPolicy::answerRoomRequest)
+        $headerObject->rooms = Room::listWithEffectiveAdminIds(['id', 'name', 'everyone_can_book', 'user_id']);
 
         $headerObject->projectState = $project->state;
 
@@ -3146,6 +3231,7 @@ class ProjectController extends Controller
                 admins: $room->effectiveAdminIds(),
                 everyone_can_book: $room->everyone_can_book,
                 requestable_by: $room->effectiveRequestableByIds(),
+                user_id: $room->user_id,
             ));
 
             $dateValue = [
@@ -4394,14 +4480,26 @@ class ProjectController extends Controller
 
     public function getTrashedSettings(): Response|ResponseFactory
     {
+        $trashInfoService = app(\Artwork\Modules\Trash\Services\TrashInfoService::class);
+        $withTrashInfo = static function (string $modelClass) use ($trashInfoService): array {
+            $models = $modelClass::onlyTrashed()->orderByDesc('deleted_at')->get();
+            $trashInfo = $trashInfoService->forModels($models);
+
+            return $models->map(static fn ($model): array => [
+                'id' => $model->id,
+                'name' => $model->name,
+                'trash' => $trashInfo[$model->id] ?? null,
+            ])->all();
+        };
+
         return inertia('Trash/ProjectSettings', [
-            'trashed_genres' => Genre::onlyTrashed()->get(),
-            'trashed_categories' => Category::onlyTrashed()->get(),
-            'trashed_sectors' => Sector::onlyTrashed()->get(),
-            'trashed_project_states' => ProjectState::onlyTrashed()->get(),
-            'trashed_contract_types' => ContractType::onlyTrashed()->get(),
-            'trashed_company_types' => CompanyType::onlyTrashed()->get(),
-            'trashed_currencies' => Currency::onlyTrashed()->get(),
+            'trashed_genres' => $withTrashInfo(Genre::class),
+            'trashed_categories' => $withTrashInfo(Category::class),
+            'trashed_sectors' => $withTrashInfo(Sector::class),
+            'trashed_project_states' => $withTrashInfo(ProjectState::class),
+            'trashed_contract_types' => $withTrashInfo(ContractType::class),
+            'trashed_company_types' => $withTrashInfo(CompanyType::class),
+            'trashed_currencies' => $withTrashInfo(Currency::class),
         ]);
     }
 
@@ -4415,11 +4513,17 @@ class ProjectController extends Controller
             ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
             ->orderByDesc('deleted_at')
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn (Project $project) => (new ProjectIndexResource($project))->resolve());
+            ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedProjects->getCollection());
+        $trashedProjects->through(fn (Project $project) => [
+            ...(new ProjectIndexResource($project))->resolve(),
+            'trash' => $trashInfo[$project->id] ?? null,
+        ]);
 
         return inertia('Trash/Projects', [
-            'trashed_projects' => $trashedProjects
+            'trashed_projects' => $trashedProjects,
+            // für den Link zum wiederhergestellten Projekt
+            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTabId(),
         ]);
     }
 
@@ -4432,7 +4536,7 @@ class ProjectController extends Controller
         CellCalculationService $cellCalculationService,
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         $subPositionRowService->forceDelete(
             $subPositionRow,
             $rowCommentService,
@@ -4443,7 +4547,7 @@ class ProjectController extends Controller
             $sageAssignedDataService
         );
 
-        return Redirect::back();
+        return $this->budgetDeleteResponse();
     }
 
     public function deleteTable(
@@ -4595,7 +4699,7 @@ class ProjectController extends Controller
         CellCalculationService $cellCalculationService,
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         $mainPositionService->forceDelete(
             $mainPosition,
             $sumCommentService,
@@ -4616,7 +4720,7 @@ class ProjectController extends Controller
 
         SafeBroadcast::send(new UpdateBudget($mainPosition->table->project_id));
 
-        return Redirect::back();
+        return $this->budgetDeleteResponse();
     }
 
     public function deleteSubPosition(
@@ -4633,7 +4737,7 @@ class ProjectController extends Controller
         CellCalculationService $cellCalculationService,
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
 
         $projectId = $subPosition->mainPosition->table->project_id;
 
@@ -4654,7 +4758,7 @@ class ProjectController extends Controller
 
         SafeBroadcast::send(new UpdateBudget($projectId));
 
-        return Redirect::back();
+        return $this->budgetDeleteResponse();
     }
 
     public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): void

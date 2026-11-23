@@ -45,6 +45,9 @@ final class AiEventWriteApiTest extends TestCase
         $client = app(ClientRepository::class)
             ->createPersonalAccessGrantClient('PAT client', config('auth.guards.api.provider'));
 
+        // Betreiber-Schalter: die KI-Routen pruefen ihn bei jeder Anfrage (EnsureAiHouseSwitches).
+        config(['ai.enabled' => true]);
+
         // Der Herkunfts-Listener erkennt KI-Tokens an der Client-ID aus dem JWT — fuer den Test
         // gilt der Personal-Access-Client als KI-Client (core-via-activity-log).
         AiAssistantSettings::fake([
@@ -255,6 +258,63 @@ final class AiEventWriteApiTest extends TestCase
         $this->assertSame($collision->id, $first['conflicts'][0]['event']['id']);
         $this->assertSame(1, $payload['summary']['with_conflicts']);
         $this->assertSame(0, $payload['summary']['blocked']);
+    }
+
+    #[Test]
+    public function the_preview_names_no_planning_event_the_user_may_not_see(): void
+    {
+        // Sicherheits-Audit 18.11.2026, M8: belegt ja, aber ohne ID und Name des Planungstermins
+        $planning = $this->existingEvent('2026-09-14 19:30:00', '2026-09-14 21:30:00');
+        $planning->forceFill(['is_planning' => true, 'eventName' => 'Geheime Planung'])->save();
+        $this->actingAsToken($this->planner(), [AiScopes::READ]);
+
+        $response = $this->postJson('/api/v1/ai/events/batch', $this->seriesPayload())->assertOk();
+
+        $conflict = $response->json('items.0.conflicts.0');
+        $this->assertSame(AiWriteConflictData::ROOM_COLLISION, $conflict['type']);
+        $this->assertNull($conflict['event']);
+        $this->assertSame(1, $response->json('summary.with_conflicts'));
+        $this->assertStringNotContainsString('Geheime Planung', $response->getContent());
+    }
+
+    #[Test]
+    public function the_preview_names_a_planning_collision_for_users_with_the_planning_calendar(): void
+    {
+        $planning = $this->existingEvent('2026-09-14 19:30:00', '2026-09-14 21:30:00');
+        $planning->forceFill(['is_planning' => true, 'eventName' => 'Geheime Planung'])->save();
+        $this->actingAsToken($this->userWith([
+            PermissionEnum::PROJECT_VIEW->value,
+            PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value,
+            PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value,
+        ]));
+
+        $response = $this->postJson('/api/v1/ai/events/batch', $this->seriesPayload())->assertOk();
+
+        $this->assertSame($planning->id, $response->json('items.0.conflicts.0.event.id'));
+        $this->assertSame('Geheime Planung', $response->json('items.0.conflicts.0.event.name'));
+    }
+
+    #[Test]
+    public function moving_an_event_onto_a_hidden_planning_event_names_nothing(): void
+    {
+        $planning = $this->existingEvent('2026-09-15 10:00:00', '2026-09-15 12:00:00');
+        $planning->forceFill(['is_planning' => true, 'eventName' => 'Geheime Planung'])->save();
+        $own = $this->existingEvent('2026-09-14 10:00:00', '2026-09-14 12:00:00');
+        $this->actingAsToken($this->planner(), [AiScopes::READ]);
+
+        $response = $this->patchJson('/api/v1/ai/events/' . $own->id, [
+            'day' => '2026-09-15',
+            'start_time' => '10:30',
+            'end_time' => '11:30',
+        ])->assertOk();
+
+        $collisions = array_values(array_filter(
+            $response->json('items.0.conflicts'),
+            static fn (array $conflict): bool => $conflict['type'] === AiWriteConflictData::ROOM_COLLISION
+        ));
+        $this->assertCount(1, $collisions);
+        $this->assertNull($collisions[0]['event']);
+        $this->assertStringNotContainsString('Geheime Planung', $response->getContent());
     }
 
     #[Test]

@@ -32,7 +32,10 @@ class ProjectTabService implements ServiceWithArrayCache
         }
     }
 
-    public function findFirstProjectTab(): ProjectTab
+    /**
+     * Null, wenn die Person keinen Tab sehen darf und keiner für alle sichtbar ist.
+     */
+    public function findFirstProjectTab(): ?ProjectTab
     {
         $user = $this->authUser();
         $tab = $this->projectTabRepository->findFirstProjectTab($user);
@@ -43,7 +46,10 @@ class ProjectTabService implements ServiceWithArrayCache
         return $tab;
     }
 
-    public function getDefaultOrFirstProjectTab(): ProjectTab
+    /**
+     * Null, wenn die Person keinen Tab sehen darf und keiner für alle sichtbar ist.
+     */
+    public function getDefaultOrFirstProjectTab(): ?ProjectTab
     {
         $user = $this->authUser();
 
@@ -56,14 +62,14 @@ class ProjectTabService implements ServiceWithArrayCache
         return $tab;
     }
 
-    public function getDefaultOrFirstProjectTabId(): int
+    public function getDefaultOrFirstProjectTabId(): ?int
     {
-        return $this->getDefaultOrFirstProjectTab()->getAttribute('id');
+        return $this->getDefaultOrFirstProjectTab()?->getAttribute('id');
     }
 
-    public function getFirstProjectTabId(): int
+    public function getFirstProjectTabId(): ?int
     {
-        return $this->findFirstProjectTab()->getAttribute('id');
+        return $this->findFirstProjectTab()?->getAttribute('id');
     }
 
     public function findFirstProjectTabWithShiftsComponent(): ProjectTab|null

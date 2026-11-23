@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Crm\Models\CrmPropertyGroup;
+use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\Artist;
@@ -506,5 +508,141 @@ final class SecurityAuditCrmResidencyRegressionTest extends FeatureTestCase
             ->assertSessionHasErrors('host');
 
         $this->assertDatabaseCount('sage_api_settings', 0);
+    }
+
+    // ------------------------------- CRM-Rückschreiben aus dem Aufenthalt
+
+    /**
+     * @return array{0: CrmContact, 1: CrmProperty}
+     */
+    private function contactWithEmailProperty(string $typeSlug, ?User $entity = null): array
+    {
+        $type = CrmContactType::withTrashed()->firstOrCreate(
+            ['slug' => $typeSlug],
+            ['name' => ucfirst($typeSlug), 'is_system' => true, 'is_active' => true]
+        );
+        $group = CrmPropertyGroup::query()->create([
+            'name' => 'Audit Gruppe ' . uniqid(),
+            'is_confidential' => false,
+            'sort_order' => 0,
+            'is_system' => false,
+        ]);
+        $property = CrmProperty::query()->where('name', 'Email')->first() ?? CrmProperty::query()->create([
+            'crm_property_group_id' => $group->id,
+            'name' => 'Email',
+            'type' => 'text',
+            'is_system' => false,
+            'sort_order' => 0,
+        ]);
+        $contact = CrmContact::query()->create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => 'Kontakt ' . uniqid(),
+            'is_active' => true,
+            'entity_type' => $entity?->getMorphClass(),
+            'entity_id' => $entity?->id,
+        ]);
+
+        return [$contact, $property];
+    }
+
+    #[Test]
+    public function residency_cannot_write_crm_values_into_a_mirrored_user_contact(): void
+    {
+        $victim = User::factory()->create(['email' => 'opfer-' . uniqid() . '@haus.example']);
+        $originalEmail = $victim->email;
+        [$contact, $property] = $this->contactWithEmailProperty('user', $victim);
+        $project = Project::factory()->create();
+        $this->actingAsAdmin();
+
+        $this->postJson(route('artist-residencies.store', $project), $this->residencyPayload($project, [
+            'do_not_save_artist' => false,
+            'artist_crm_contact_id' => $contact->id,
+            'sync_crm_changes' => true,
+            'crm_property_values' => [$property->id => 'angreifer@example.org'],
+        ]));
+
+        $this->assertSame($originalEmail, $victim->fresh()->email);
+        $this->assertDatabaseMissing('crm_property_values', [
+            'crm_contact_id' => $contact->id,
+            'value' => 'angreifer@example.org',
+        ]);
+    }
+
+    #[Test]
+    public function residency_still_syncs_values_into_an_artist_contact(): void
+    {
+        [$contact, $property] = $this->contactWithEmailProperty('artist');
+        $project = Project::factory()->create();
+        $this->actingAsAdmin();
+
+        $this->postJson(route('artist-residencies.store', $project), $this->residencyPayload($project, [
+            'do_not_save_artist' => false,
+            'artist_crm_contact_id' => $contact->id,
+            'sync_crm_changes' => true,
+            'crm_property_values' => [$property->id => 'kuenstlerin@example.org'],
+        ]))->assertOk();
+
+        $this->assertDatabaseHas('crm_property_values', [
+            'crm_contact_id' => $contact->id,
+            'crm_property_id' => $property->id,
+            'value' => 'kuenstlerin@example.org',
+        ]);
+    }
+
+    /**
+     * Das Fenster schickt alle Werte des Kontakts mit: ein unveränderter Altwert, der die heutige
+     * Prüfung nicht besteht, darf die Übernahme der tatsächlichen Änderung nicht verhindern.
+     */
+    #[Test]
+    public function residency_sync_ignores_unchanged_legacy_values_that_would_fail_validation(): void
+    {
+        [$contact, $email] = $this->contactWithEmailProperty('artist');
+        $select = CrmProperty::query()->create([
+            'crm_property_group_id' => $email->crm_property_group_id,
+            'name' => 'Sparte ' . uniqid(),
+            'type' => 'select',
+            'select_values' => ['Tanz', 'Musik'],
+            'is_system' => false,
+            'sort_order' => 1,
+        ]);
+        $required = CrmProperty::query()->create([
+            'crm_property_group_id' => $email->crm_property_group_id,
+            'name' => 'Pflicht ' . uniqid(),
+            'type' => 'text',
+            'is_system' => false,
+            'sort_order' => 2,
+        ]);
+        $contact->contactType->properties()->syncWithoutDetaching([
+            $select->id => ['is_required' => false],
+            $required->id => ['is_required' => true],
+        ]);
+        $contact->propertyValues()->create(['crm_property_id' => $select->id, 'value' => 'Entfernte Option']);
+        $project = Project::factory()->create();
+        $this->actingAsAdmin();
+
+        $this->postJson(route('artist-residencies.store', $project), $this->residencyPayload($project, [
+            'do_not_save_artist' => false,
+            'artist_crm_contact_id' => $contact->id,
+            'sync_crm_changes' => true,
+            'crm_property_values' => [
+                $email->id => 'neu@example.org',
+                $select->id => 'Entfernte Option',
+                $required->id => '',
+            ],
+        ]))->assertOk();
+
+        $this->assertDatabaseHas('crm_property_values', [
+            'crm_contact_id' => $contact->id,
+            'crm_property_id' => $email->id,
+            'value' => 'neu@example.org',
+        ]);
+
+        // eine wirklich geänderte, ungültige Angabe wird weiter abgelehnt
+        $this->postJson(route('artist-residencies.store', $project), $this->residencyPayload($project, [
+            'do_not_save_artist' => false,
+            'artist_crm_contact_id' => $contact->id,
+            'sync_crm_changes' => true,
+            'crm_property_values' => [$select->id => 'Unbekannt'],
+        ]))->assertJsonValidationErrors('property_values.' . $select->id);
     }
 }

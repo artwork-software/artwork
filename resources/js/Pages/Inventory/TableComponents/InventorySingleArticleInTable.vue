@@ -48,6 +48,12 @@
     </td>
     <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap text-text-subtle font-semibold" :class="hideImage ? 'left-0' : 'left-20'">
         <div class="flex items-center">
+            <input v-if="selectable" type="checkbox"
+                   class="mr-2 h-4 w-4 shrink-0 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
+                   :checked="selected"
+                   :aria-label="$t('Select')"
+                   @click.stop
+                   @change="$emit('toggle-select', $event.target.checked)"/>
             <span class="truncate">{{ item?.name }}</span>
             <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-text-subtle font-semibold ml-2 shrink-0" />
             <span
@@ -150,8 +156,20 @@ const props = defineProps({
         type: Object,
         required: false,
         default: null
+    },
+    selectable: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    selected: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
+
+defineEmits(['toggle-select'])
 
 const activeStatusQuantity = computed(() => getArticleStatusQuantity(props.item, props.activeStatus?.id))
 

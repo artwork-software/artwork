@@ -189,7 +189,7 @@ class ContractService
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setProjectId($project->id);
+            $this->notificationService->setProjectId($project?->id);
             $this->notificationService
                 ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
@@ -328,6 +328,11 @@ class ContractService
              && count($filters['contractTypeIds']) > 0
         ) {
             $query->whereIn('contract_type_id', $filters['contractTypeIds']);
+        }
+
+        // Auswahl aus der Übersicht: nur die markierten (und sichtbaren) Verträge
+        if (!empty($filters['ids']) && is_array($filters['ids'])) {
+            $query->whereIn('id', $filters['ids']);
         }
 
         return $query->get();

@@ -115,6 +115,46 @@ final class RoomRequestChangeApprovalTest extends FeatureTestCase
         $this->assertSame(1, $this->openRequestsOf($this->roomAdmin, $event)->count());
     }
 
+    /**
+     * Wer eine Änderung, die zur Raumanfrage wurde, wieder auf die bestätigte Belegung zurücknimmt, hat
+     * wieder einen fest gebuchten Termin: es gibt nichts mehr zu beantworten.
+     */
+    #[Test]
+    public function taking_a_change_request_back_to_the_confirmed_booking_books_the_event_again(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST], $this->requester);
+        $event = $this->changeRequest($this->requester);
+
+        $this->putJson(route('events.update', $event), $this->updatePayload($event, [
+            'start' => '2026-11-20 00:00',
+            'end' => '2026-11-20 23:59',
+        ]))->assertSuccessful()->assertJsonPath('room_request', 'none');
+
+        $event->refresh();
+        $this->assertFalse($event->occupancy_option);
+        $this->assertNull($event->approved_room_id);
+        $this->assertSame($this->requester->id, $event->requested_by_id);
+    }
+
+    /**
+     * Eine Änderungsanfrage, die weiter von der bestätigten Belegung abweicht, bleibt offen.
+     */
+    #[Test]
+    public function changing_a_change_request_to_another_deviating_slot_keeps_it_open(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST], $this->requester);
+        $event = $this->changeRequest($this->requester);
+
+        $this->putJson(route('events.update', $event), $this->updatePayload($event, [
+            'start' => '2026-11-23 00:00',
+            'end' => '2026-11-23 23:59',
+        ]))->assertSuccessful()->assertJsonPath('room_request', 'pending');
+
+        $event->refresh();
+        $this->assertTrue($event->occupancy_option);
+        $this->assertSame('2026-11-20 00:00:00', $event->approved_start_time->format('Y-m-d H:i:s'));
+    }
+
     #[Test]
     public function extending_beyond_the_confirmed_booking_turns_the_change_into_a_room_request(): void
     {
@@ -534,6 +574,103 @@ final class RoomRequestChangeApprovalTest extends FeatureTestCase
     }
 
     // ------------------------------------------------------------------ Helfer
+
+    // ------------------------------------------------------------------ Antwort aus der Terminliste im Projekt
+
+    #[Test]
+    public function room_admin_confirms_a_request_from_the_event_list_and_gets_the_row_back(): void
+    {
+        $event = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', ['occupancy_option' => true]);
+
+        $this->actingAs($this->roomAdmin);
+        $this->putJson(route('events.accept', $event), ['adminComment' => 'Passt'])
+            ->assertOk()
+            ->assertJsonPath('event.id', $event->id)
+            ->assertJsonPath('event.occupancy_option', false)
+            ->assertJsonPath('event.room.id', $this->room->id);
+
+        $event->refresh();
+        $this->assertFalse($event->occupancy_option);
+        $this->assertSame($this->room->id, $event->room_id);
+        $this->assertSame(
+            [__('notification.event.room_request_accept', [], $this->requester->fresh()->language)],
+            $this->answersOf($this->requester, $event)->pluck('data.title')->all()
+        );
+    }
+
+    #[Test]
+    public function room_admin_declines_a_request_from_the_event_list_and_the_row_loses_its_room(): void
+    {
+        $event = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', ['occupancy_option' => true]);
+
+        $this->actingAs($this->roomAdmin);
+        $this->putJson(route('events.decline', $event), ['comment' => ''])
+            ->assertOk()
+            ->assertJsonPath('event.id', $event->id)
+            ->assertJsonPath('event.occupancy_option', false)
+            ->assertJsonPath('event.room', null);
+
+        $event->refresh();
+        $this->assertNull($event->room_id);
+        $this->assertSame($this->room->id, $event->declined_room_id);
+        $this->assertSame(
+            [__('notification.event.room_request_declined', [], $this->requester->fresh()->language)],
+            $this->answersOf($this->requester, $event)->pluck('data.title')->all()
+        );
+    }
+
+    #[Test]
+    public function direct_booking_permission_answers_requests_from_the_event_list(): void
+    {
+        $event = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', ['occupancy_option' => true]);
+
+        $this->actingAsUserWith([PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST], $this->recipient());
+        $this->putJson(route('events.accept', $event))->assertOk()->assertJsonPath('event.occupancy_option', false);
+    }
+
+    #[Test]
+    public function declining_a_change_request_from_the_event_list_returns_the_confirmed_booking(): void
+    {
+        $event = $this->changeRequest($this->recipient());
+
+        $this->actingAs($this->roomAdmin);
+        $this->putJson(route('events.decline', $event))
+            ->assertOk()
+            ->assertJsonPath('event.occupancy_option', false)
+            ->assertJsonPath('event.room.id', $this->room->id)
+            ->assertJsonPath('event.day', '2026-11-20');
+    }
+
+    #[Test]
+    public function a_request_already_answered_cannot_be_answered_again_from_the_event_list(): void
+    {
+        $event = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', ['occupancy_option' => true]);
+
+        $this->actingAs($this->roomAdmin);
+        $this->putJson(route('events.accept', $event))->assertOk();
+        $this->putJson(route('events.accept', $event))->assertStatus(409);
+    }
+
+    #[Test]
+    public function people_without_the_right_cannot_answer_from_the_event_list(): void
+    {
+        $event = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', ['occupancy_option' => true]);
+
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST], $this->recipient());
+        $this->putJson(route('events.accept', $event))->assertForbidden();
+        $this->putJson(route('events.decline', $event))->assertForbidden();
+        $this->assertTrue($event->fresh()->occupancy_option);
+    }
+
+    #[Test]
+    public function inertia_callers_are_still_redirected_after_answering(): void
+    {
+        $event = $this->confirmedEvent('2026-11-20 10:00:00', '2026-11-20 12:00:00', ['occupancy_option' => true]);
+
+        $this->actingAs($this->roomAdmin);
+        $this->put(route('events.accept', $event), [], ['X-Inertia' => 'true', 'Accept' => 'application/json'])
+            ->assertRedirect();
+    }
 
     private function recipient(): User
     {

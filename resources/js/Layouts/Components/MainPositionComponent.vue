@@ -1,26 +1,35 @@
 <template>
-    <th class="p-0" :class="[mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-accent-600' : 'bg-surface-inverse', mainPosition.closed ? 'rounded-lg' : 'rounded-t-lg']">
+    <th class="p-0 w-full rounded-t-lg"
+        :id="'budget-main-' + mainPosition.id"
+        :class="[mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-accent-600' : 'bg-surface-inverse', pendingDeleteKeys['main:' + mainPosition.id] ? 'opacity-40 pointer-events-none' : '']">
         <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id" @mouseout="showMenu = null">
-            <div class="pl-2 text-sm/5 font-bold text-white flex w-full items-center h-10" v-if="!mainPosition.clicked">
-                <div @click="mainPosition.clicked = !mainPosition.clicked">
+            <div class="w-full flex">
+            <div class="pl-2 text-sm/5 font-bold text-white flex items-center h-10 sticky left-0 lg:left-20">
+                <input v-if="isEditingName"
+                       ref="nameInput"
+                       class="w-72 max-w-full text-sm/5 font-semibold text-text bg-white rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600 focus:outline-none"
+                       type="text" v-model="editedName"
+                       @keydown.enter.prevent="$event.target.blur()"
+                       @keydown.esc.prevent="cancelNameEdit"
+                       @blur="saveName">
+                <div v-else-if="canEditStructure"
+                     class="cursor-text rounded px-1 -ml-1 hover:bg-white/15"
+                     :class="[mainPosition.name ? '' : 'italic font-normal opacity-70', searchHighlightClass]"
+                     :title="$t('Rename')"
+                     @click="startNameEdit">
+                    {{ mainPosition.name || $t('No name') }}
+                </div>
+                <div v-else class="rounded px-1 -ml-1" :class="searchHighlightClass">
                     {{ mainPosition.name }}
                 </div>
-                <button class="my-auto w-6 ml-3" @click="openCloseMainPosition">
-                    <PropertyIcon name="IconChevronUp" v-if="!mainPosition.closed" class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
+                <button type="button" class="my-auto w-6 ml-3"
+                        :title="isClosed ? $t('Expand') : $t('Collapse')"
+                        :aria-expanded="!isClosed"
+                        @click="openCloseMainPosition">
+                    <PropertyIcon name="IconChevronUp" v-if="!isClosed" class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
                     <PropertyIcon name="IconChevronDown" v-else class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
                 </button>
             </div>
-            <div v-else class="flex items-center w-full">
-                <input class="my-2 ml-1 text-sm/5 font-semibold text-text bg-white rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600 focus:outline-none"
-                       type="text" v-model="mainPosition.name"
-                       @keyup.enter="$event.target.blur()"
-                       @keyup.esc="mainPosition.name = editedNameOriginalValue ?? mainPosition.name; mainPosition.clicked = false"
-                       @focus="editedNameOriginalValue = mainPosition.name"
-                       @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
-                <button class="my-auto w-6 ml-3" @click="mainPosition.closed = !mainPosition.closed">
-                    <PropertyIcon name="IconChevronUp" v-if="!mainPosition.closed" class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
-                    <PropertyIcon name="IconChevronDown" v-else class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
-                </button>
             </div>
             <div class="flex items-center justify-end">
                 <div class="text-white items-center text-sm/5 font-bold text-white flex w-44 justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.auth.user.id">
@@ -120,14 +129,15 @@
                 </div>
             </div>
         </div>
-        <div @click="addSubPosition(mainPosition.id)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
-            <div class="group-hover:block hidden uppercase  text-sm -mt-8">
+        <div @click="addSubPosition(mainPosition.id)" v-if="!isClosed && canEditStructure" class="group relative  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600 before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']">
+            <div class="group-hover:flex hidden items-center gap-x-1 -mt-3 h-6 pl-3 pr-1 rounded-full bg-accent-600 text-white text-xs font-semibold uppercase shadow-md relative z-20 whitespace-nowrap">
                 {{ $t('Sub position') }}
-                <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-accent-600 rounded-full" />
+                <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-4 w-4"/>
             </div>
         </div>
-        <div v-if="!mainPosition.closed" class="w-full">
+        <div class="w-full">
             <draggable
+                v-if="!isClosed"
                 v-model="localSubPositions"
                 item-key="id"
                 handle=".sub-position-drag-handle"
@@ -170,7 +180,7 @@
             <tr class=" text-sm/5 font-bold text-white flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-accent-600' : 'bg-surface-inverse'">
                 <td class="w-48"></td>
                 <td class="w-48"></td>
-                <td class="w-72">{{ $t('SUM') }}</td>
+                <td class="w-72 py-2 bg-inherit sticky left-0 lg:left-20 z-10">{{ $t('SUM') }}</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in valueColumns" :key="column.id" v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="[
                         mainPosition.columnSums?.[column.id]?.sum < 0 ? 'text-danger' : '',
@@ -196,10 +206,10 @@
             </tr>
             </thead>
             </table>
-            <div @click="addMainPosition(mainPosition)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
-                <div class="group-hover:block hidden uppercase  text-sm -mt-8">
+            <div @click="addMainPosition(mainPosition)" v-if="canEditStructure" class="group relative  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600 before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']">
+                <div class="group-hover:flex hidden items-center gap-x-1 -mt-3 h-6 pl-3 pr-1 rounded-full bg-accent-600 text-white text-xs font-semibold uppercase shadow-md relative z-20 whitespace-nowrap">
                     {{ $t('Main position') }}
-                    <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-accent-600 rounded-full" />
+                    <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-4 w-4"/>
                 </div>
             </div>
         </div>
@@ -213,7 +223,6 @@
 </template>
 
 <script>
-import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
 import SubPositionComponent from "@/Layouts/Components/SubPositionComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -225,6 +234,8 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import draggable from 'vuedraggable';
 import {nextTick} from 'vue';
+import {isBudgetEntryClosed, toggleBudgetEntryClosed} from "@/Layouts/Components/Budget/budgetCollapseState.js";
+import {budgetPendingDeletes, budgetSearchState} from "@/Layouts/Components/Budget/budgetTableState.js";
 
 
 export default {
@@ -298,7 +309,8 @@ export default {
               lightGreenColumn: 'lightGreenColumn'
             },
             localSubPositions: [],
-            editedNameOriginalValue: null,
+            isEditingName: false,
+            editedName: '',
         }
     },
     watch: {
@@ -313,16 +325,25 @@ export default {
             immediate: true,
         },
     },
-    mounted() {
-        this.checkIfMainPositionClosed()
-    },
     computed: {
         valueColumns() {
             return (this.table?.columns ?? []).slice(3);
         },
-        closedMainPositionsStorageKey() {
-            // pro Tabelle getrennt, sonst kollidieren die Zustaende zwischen Projekten
-            return `closedMainPositions:${this.table?.id}`;
+        isClosed() {
+            return isBudgetEntryClosed('main', this.table?.id, this.mainPosition.id);
+        },
+        canEditStructure() {
+            return this.hasBudgetAccess || this.$can('edit budget templates');
+        },
+        pendingDeleteKeys() {
+            return budgetPendingDeletes.keys;
+        },
+        searchHighlightClass() {
+            const key = 'main:' + this.mainPosition.id;
+            if (budgetSearchState.activeKey === key) {
+                return 'bg-warning text-text';
+            }
+            return budgetSearchState.matchedKeys[key] ? 'bg-warning/40' : '';
         },
         calculateSageColumnWithCellSageDataValue() {
             // Returniert die Summe aller buchungsbetrag in den sage_assigned_data Arrays.
@@ -391,34 +412,29 @@ export default {
             }, 0);
             return this.toCurrencyString(sum);
         },
-        readClosedMainPositions() {
-            try {
-                const stored = JSON.parse(safeGetItem(this.closedMainPositionsStorageKey));
-                return Array.isArray(stored) ? stored : [];
-            } catch (e) {
-                return [];
-            }
-        },
-        checkIfMainPositionClosed(){
-            const closedMainPositions = this.readClosedMainPositions();
-            const entry = closedMainPositions.find((mainPosition) => mainPosition.id === this.mainPosition.id);
-            if (entry) {
-                this.mainPosition.closed = entry.closed;
-            }
-        },
         openCloseMainPosition(){
-            this.mainPosition.closed = !this.mainPosition.closed;
-            const closedMainPositions = this.readClosedMainPositions();
-            const entry = closedMainPositions.find((mainPosition) => mainPosition.id === this.mainPosition.id);
-            if (entry) {
-                entry.closed = this.mainPosition.closed;
-            } else {
-                closedMainPositions.push({
-                    id: this.mainPosition.id,
-                    closed: this.mainPosition.closed
-                });
+            toggleBudgetEntryClosed('main', this.table?.id, this.mainPosition.id);
+        },
+        startNameEdit() {
+            this.editedName = this.mainPosition.name ?? '';
+            this.isEditingName = true;
+            nextTick(() => this.$refs.nameInput?.select());
+        },
+        cancelNameEdit() {
+            this.isEditingName = false;
+        },
+        saveName() {
+            if (!this.isEditingName) {
+                return;
             }
-            safeSetItem(this.closedMainPositionsStorageKey, JSON.stringify(closedMainPositions));
+            this.isEditingName = false;
+            const name = this.editedName.trim();
+            // Leerer oder unveraenderter Name: nichts speichern (spart Request + Neuladen)
+            if (name === '' || name === this.mainPosition.name) {
+                return;
+            }
+            this.mainPosition.name = name;
+            this.updateMainPositionName(this.mainPosition);
         },
         duplicateMainPosition(mainPositionId){
             this.$inertia.post(this.route('project.budget.main-position.duplicate', mainPositionId), { }, {
@@ -517,7 +533,7 @@ export default {
                 positionBefore: subPositionBefore.position
             }, {
                 preserveScroll: true,
-                preserveState: false,
+                preserveState: true,
                 onSuccess: () => this.$emit('budget-updated')
             });
         },
@@ -528,7 +544,7 @@ export default {
                 positionBefore: mainPosition.position
             }, {
                 preserveScroll: true,
-                preserveState: false,
+                preserveState: true,
                 onSuccess: () => this.$emit('budget-updated')
             });
         },

@@ -5,6 +5,7 @@ namespace Artwork\Modules\ExternalIssue\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Core\FileHandling\Download\PrivateFileResponse;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
+use Artwork\Modules\ExternalIssue\Exports\ExternalIssueListExport;
 use Artwork\Modules\ExternalIssue\Http\Requests\StoreExternalIssueRequest;
 use Artwork\Modules\ExternalIssue\Http\Requests\UpdateExternalIssueRequest;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
@@ -15,13 +16,17 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -31,6 +36,7 @@ class ExternalIssueController extends Controller
         protected ExternalIssueService $externalIssueService,
         protected AuthManager $auth,
         protected InventoryUserFilterShareService $inventoryUserFilterShareService,
+        protected ProjectTabService $projectTabService,
     ) {
     }
 
@@ -42,7 +48,7 @@ class ExternalIssueController extends Controller
     {
         $this->authorize('viewAny', ExternalIssue::class);
 
-        $q = trim((string) request()->input('q', ''));
+        $q = trim($this->stringParameter('q') ?? '');
         $excludeId = (int) request()->input('exclude_id', 0);
 
         $issues = ExternalIssue::query()
@@ -66,25 +72,10 @@ class ExternalIssueController extends Controller
     {
         $this->authorize('viewAny', ExternalIssue::class);
 
-        $entitiesPerPage = request()?->integer('entitiesPerPage', 10);
+        $entitiesPerPage = min(max(request()->integer('entitiesPerPage', 10), 1), 100);
+        $articleIds = $this->requestedIds('article_ids');
 
-        // IDs aus CSV/Array robust einlesen
-        $articleIdsParam = request()?->input('article_ids', []);
-        $articleIds = is_string($articleIdsParam)
-            ? array_filter(array_map('intval', explode(',', $articleIdsParam)))
-            : (is_array($articleIdsParam) ? array_map('intval', $articleIdsParam) : []);
-
-        // neue Filter
-        $dateFrom = request()?->input('date_from');
-        $dateTo   = request()?->input('date_to');
-        $issuedBy    = request()?->filled('issued_by_id')    ? (int) request()->input('issued_by_id')    : null;
-        $receivedBy  = request()?->filled('received_by_id')  ? (int) request()->input('received_by_id')  : null;
-        $projectId   = request()?->filled('project_id')      ? (int) request()->input('project_id')      : null;
-        $overdueOnly = request()?->boolean('overdue_only');
-
-        $q        = trim((string) request()?->input('q', ''));
-
-        $issuesQuery = ExternalIssue::with([
+        $issuesQuery = $this->filteredIssuesQuery()->with([
             'files',
             'articles', 'articles.images',
             // $appends room/manufacturer/category/subCategory – sonst drei Abfragen je Artikel
@@ -94,38 +85,6 @@ class ExternalIssueController extends Controller
             'receivedBy',
             'project',
         ]);
-
-        if (!empty($articleIds)) {
-            $issuesQuery->whereHas('articles', function ($query) use ($articleIds): void {
-                $query->whereIn('inventory_articles.id', $articleIds);
-            });
-        }
-
-        // Zeitfilter: entweder im Ausgabedatum ODER im Rückgabedatum innerhalb Range
-        $issuesQuery->overlapping($dateFrom, $dateTo);
-
-        // User-Filter
-        $issuesQuery
-            ->when($issuedBy !== null, fn($q) => $q->where('issued_by_id', $issuedBy))
-            ->when($receivedBy !== null, fn($q) => $q->where('received_by_id', $receivedBy))
-            ->when($projectId !== null, fn($q) => $q->where('project_id', $projectId))
-            // gleiche Regel wie Verfügbarkeit/Badge (Status, „Erhalten von“, Altbestand)
-            ->when($overdueOnly, fn($q) => $q
-                ->notReturned()
-                ->whereDate('return_date', '<', now()->toDateString()));
-
-        // Name/Extern/Remarks Suche
-        if ($q !== '') {
-            $issuesQuery->where(function ($sub) use ($q): void {
-                $sub->where('name', 'like', "%{$q}%")
-                    ->orWhere('external_name', 'like', "%{$q}%")
-                    ->orWhere('return_remarks', 'like', "%{$q}%");
-            });
-        }
-
-        $issuesQuery
-            ->orderBy('issue_date')
-            ->orderBy('return_date');
 
         // Deep-Link aus der Rückgabe-Erinnerung (?issue=): auf die Seite
         // springen, auf der die Ausgabe liegt — sonst läuft der Link auf
@@ -140,6 +99,10 @@ class ExternalIssueController extends Controller
         }
 
         $issues = $issuesQuery->paginate($entitiesPerPage, ['*'], 'page', $page);
+        // Seite hinter dem Ende (etwa nach dem Löschen der letzten Einträge): letzte vorhandene Seite zeigen
+        if ($issues->isEmpty() && $issues->total() > 0 && $issues->currentPage() > $issues->lastPage()) {
+            $issues = $issuesQuery->paginate($entitiesPerPage, ['*'], 'page', $issues->lastPage());
+        }
 
         $this->inventoryUserFilterShareService->getFilterDataForUser($this->auth->user());
 
@@ -164,11 +127,137 @@ class ExternalIssueController extends Controller
                 'detailedArticleQuantities.status',
             ])->find(request()?->get('articleId'))),
             // optional, falls du urlParameters nutzt:
+            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'urlParameters' => request()->only([
                 'article_ids', 'date_from', 'date_to', 'issued_by_id', 'received_by_id',
-                'project_id', 'overdue_only', 'q', 'issue',
+                'project_id', 'overdue_only', 'q', 'issue', 'return_state', 'special_open', 'sort', 'direction',
             ]),
         ]);
+    }
+
+    /**
+     * Spalten, nach denen die Liste sortiert werden darf (Parameter `sort`).
+     */
+    private const SORTABLE_COLUMNS = ['name', 'issue_date', 'return_date', 'material_value', 'external_name'];
+
+    /**
+     * Werte des Rückgabe-Filters (Parameter `return_state`).
+     */
+    private const RETURN_STATES = ['open', 'overdue', 'returned'];
+
+    /**
+     * IDs aus einem Parameter, der als Liste oder kommagetrennt ankommt.
+     *
+     * @return array<int, int>
+     */
+    private function requestedIds(string $key): array
+    {
+        $input = request()->input($key, '');
+        $values = is_array($input) ? $input : (is_string($input) && $input !== '' ? explode(',', $input) : []);
+
+        return array_values(array_unique(array_filter(array_map('intval', $values))));
+    }
+
+    /**
+     * Gefilterte und sortierte Ausgaben – gemeinsame Grundlage für Liste und Excel-Export, damit
+     * beide dieselben Filter anwenden.
+     *
+     * @return Builder<ExternalIssue>
+     */
+    private function filteredIssuesQuery(): Builder
+    {
+        $articleIds = $this->requestedIds('article_ids');
+        $selectedIds = $this->requestedIds('ids');
+        $dateFrom = $this->stringParameter('date_from');
+        $dateTo   = $this->stringParameter('date_to');
+        $issuedBy    = request()->filled('issued_by_id')    ? (int) request()->input('issued_by_id')    : null;
+        $receivedBy  = request()->filled('received_by_id')  ? (int) request()->input('received_by_id')  : null;
+        $projectId   = request()->filled('project_id')      ? (int) request()->input('project_id')      : null;
+        // "Nur überfällige" (alter Parameter, auch im Deep-Link der Erinnerung) = Rückgabe-Filter "overdue"
+        $returnState = request()->boolean('overdue_only') ? 'overdue' : request()->input('return_state');
+        $returnState = in_array($returnState, self::RETURN_STATES, true) ? $returnState : null;
+        $q = trim($this->stringParameter('q') ?? '');
+        $sort = in_array(request()->input('sort'), self::SORTABLE_COLUMNS, true) ? request()->input('sort') : null;
+        $direction = request()->input('direction') === 'desc' ? 'desc' : 'asc';
+        $today = now()->toDateString();
+
+        return ExternalIssue::query()
+            ->when($selectedIds !== [], fn ($query) => $query->whereIn('external_issues.id', $selectedIds))
+            ->when($articleIds !== [], function ($query) use ($articleIds): void {
+                $query->whereHas('articles', function ($sub) use ($articleIds): void {
+                    $sub->whereIn('inventory_articles.id', $articleIds);
+                });
+            })
+            // Zeitfilter: entweder im Ausgabedatum ODER im Rückgabedatum innerhalb Range
+            ->overlapping($dateFrom, $dateTo)
+            ->when($issuedBy !== null, fn ($query) => $query->where('issued_by_id', $issuedBy))
+            ->when($receivedBy !== null, fn ($query) => $query->where('received_by_id', $receivedBy))
+            ->when($projectId !== null, fn ($query) => $query->where('project_id', $projectId))
+            // Rückgabe: gleiche Regel wie Verfügbarkeit/Abzeichen (Status, „Erhalten von“, Altbestand)
+            ->when($returnState === 'overdue', fn ($query) => $query
+                ->notReturned()
+                ->whereDate('return_date', '<', $today))
+            ->when($returnState === 'open', fn ($query) => $query
+                ->notReturned()
+                ->where(function ($open) use ($today): void {
+                    $open->whereNull('return_date')->orWhereDate('return_date', '>=', $today);
+                }))
+            ->when($returnState === 'returned', fn ($query) => $query
+                ->whereNotIn('external_issues.id', ExternalIssue::query()->notReturned()->select('external_issues.id')))
+            // Nur Ausgaben mit noch offenen Sonderartikeln
+            ->when(request()->boolean('special_open'), fn ($query) => $query
+                ->where('special_items_done', false)
+                ->whereHas('specialItems'))
+            ->when($q !== '', function ($query) use ($q): void {
+                $query->where(function ($sub) use ($q): void {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhere('external_name', 'like', "%{$q}%")
+                        ->orWhere('return_remarks', 'like', "%{$q}%");
+                });
+            })
+            ->when(
+                $sort !== null,
+                fn ($query) => $query->orderBy($sort, $direction)->orderBy('id'),
+                fn ($query) => $query->orderBy('issue_date')->orderBy('return_date')
+            );
+    }
+
+    /**
+     * Excel-Export der Liste mit denselben Filtern wie die Übersicht (mit `ids` nur die Auswahl).
+     */
+    public function export(): BinaryFileResponse
+    {
+        $this->authorize('viewAny', ExternalIssue::class);
+
+        $issues = $this->filteredIssuesQuery()
+            ->with(['issuedBy', 'receivedBy', 'project', 'articles', 'specialItems', 'files'])
+            ->get();
+
+        return (new ExternalIssueListExport($issues))
+            ->download('externe-materialausgaben-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    /**
+     * Löscht mehrere Ausgaben auf einmal. Fehlt für eine davon das Recht, wird keine gelöscht.
+     */
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        // Sammelaktionen gehören zur Liste: erst das Recht für die Liste, dann die Eingabe prüfen
+        $this->authorize('viewAny', ExternalIssue::class);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:200'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $issues = ExternalIssue::query()->whereIn('id', $validated['ids'])->get();
+        abort_unless($issues->count() === count($validated['ids']), 404);
+        $issues->each(fn (ExternalIssue $issue) => $this->authorize('delete', $issue));
+
+        // alles oder nichts: scheitert eine Ausgabe, bleibt keine gelöscht
+        DB::transaction(fn () => $issues->each(fn (ExternalIssue $issue) => $this->externalIssueService->delete($issue)));
+
+        return response()->json(['deleted' => $issues->count()]);
     }
 
 
@@ -177,7 +266,8 @@ class ExternalIssueController extends Controller
         $this->authorize('create', [ExternalIssue::class, $request->integer('project_id') ?: null]);
 
         $issue = $this->externalIssueService->store($request->validated(), $request->file('files', []));
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     public function update(
@@ -192,7 +282,8 @@ class ExternalIssueController extends Controller
             $request->file('files', [])
         );
 
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     public function destroy(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
@@ -201,7 +292,8 @@ class ExternalIssueController extends Controller
 
         $this->externalIssueService->delete($externalIssue);
 
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     /**
@@ -257,7 +349,49 @@ class ExternalIssueController extends Controller
 
         $externalIssue->update(['special_items_done' => true]);
 
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
+    }
+
+    /**
+     * Druckansicht mehrerer Ausgaben in einer PDF-Datei. Reine Ansicht: anders als der Einzeldruck
+     * wird nichts gespeichert oder an die Ausgaben gehängt.
+     */
+    public function printMany(): \Illuminate\Http\Response
+    {
+        $this->authorize('viewAny', ExternalIssue::class);
+
+        $ids = $this->requestedIds('ids');
+        abort_if($ids === [] || count($ids) > 50, 422);
+
+        $issues = ExternalIssue::query()
+            ->whereIn('id', $ids)
+            ->with([
+                'articles.category', 'articles.subCategory', 'specialItems.category', 'specialItems.subCategory',
+                'files', 'issuedBy', 'receivedBy',
+            ])
+            ->orderBy('issue_date')
+            ->orderBy('return_date')
+            ->get();
+        abort_unless($issues->count() === count($ids), 404);
+        $issues->each(fn (ExternalIssue $issue) => $this->authorize('view', $issue));
+
+        $createdAt = now()->format('d.m.Y');
+        $createdBy = $this->auth->user()->full_name;
+        // Je Ausgabe ein eigenes Dokument: Snappy fügt mehrere Eingaben zu einer PDF zusammen
+        $documents = $issues->map(fn (ExternalIssue $issue): string => view('pdf.external_issue', [
+            'issue' => $issue,
+            'createdAt' => $createdAt,
+            'createdBy' => $createdBy,
+        ])->render())->all();
+
+        return response(SnappyPdf::loadHTML($documents)->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => HeaderUtils::makeDisposition(
+                HeaderUtils::DISPOSITION_INLINE,
+                'externe-materialausgaben-' . now()->format('Y-m-d') . '.pdf'
+            ),
+        ]);
     }
 
     public function print(ExternalIssue $externalIssue)
@@ -335,5 +469,15 @@ class ExternalIssueController extends Controller
             ->deleteFile($externalIssueFile);
 
         return response()->json(['message' => 'File deleted successfully'], 200);
+    }
+
+    /**
+     * Abfrage-Parameter nur als Text: Felder (?q[]=x) führten sonst zu einem Fehler statt zu "kein Filter".
+     */
+    private function stringParameter(string $key): ?string
+    {
+        $value = request()->input($key);
+
+        return is_string($value) ? $value : null;
     }
 }

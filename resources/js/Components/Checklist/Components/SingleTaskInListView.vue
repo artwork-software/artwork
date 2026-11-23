@@ -34,7 +34,8 @@
 
             <!-- Middle: dates / done info -->
             <div class="hidden shrink-0 md:flex md:min-w-[14rem] md:items-center md:justify-end">
-                <template v-if="!localTaskDone">
+                <!-- Ohne Frist kein leeres Datumsfeld -->
+                <template v-if="!localTaskDone && task.formatted_dates?.deadline">
                     <IconCalendar class="h-6 w-6 mr-2" :class="isOverdue ? 'text-danger' : 'text-text-subtle'" />
                     <span
                         class="text-[14px] font-semibold rounded-md px-1.5 py-0.5"
@@ -43,7 +44,7 @@
             {{ task.formatted_dates?.deadline }}
           </span>
                 </template>
-                <template v-else>
+                <template v-else-if="localTaskDone">
           <span class="flex items-center text-sm text-text-muted">
             <span class="mr-2">
               <UserPopoverTooltip

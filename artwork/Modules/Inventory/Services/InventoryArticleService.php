@@ -59,9 +59,21 @@ class InventoryArticleService
         ?array $resolvedTagIds = null,
         ?int $statusId = null,
         ?int $searchPropertyId = null,
-        ?int $perPage = null
+        ?int $perPage = null,
+        ?string $sort = null,
+        ?string $direction = null
     ): LengthAwarePaginator {
-        $query = $this->buildArticleQuery($category, $subCategory, $search, $searchPropertyId);
+        $query = $this->filteredListQuery(
+            $category,
+            $subCategory,
+            $search,
+            $resolvedFilters,
+            $resolvedTagIds,
+            $statusId,
+            $searchPropertyId,
+            $sort,
+            $direction
+        );
 
         $query->with([
             'category.properties',
@@ -78,9 +90,53 @@ class InventoryArticleService
             'tags.allowedDepartments',
         ]);
 
+        // Cap page size to avoid loading the whole inventory incl. relations at once.
+        $perPage ??= (int) Request::get('per_page', Request::integer('entitiesPerPage', 50));
+        $perPage = min(max($perPage, 1), 100);
+        $articles = $query->paginate($perPage);
+
+        // Seite hinter dem Ende (Filter geändert, Artikel gelöscht, alter Link): letzte vorhandene Seite
+        // liefern statt einer leeren Liste, die wie "keine Treffer" aussieht.
+        if ($articles->isEmpty() && $articles->total() > 0 && $articles->currentPage() > $articles->lastPage()) {
+            $articles = $query->paginate($perPage, ['*'], 'page', $articles->lastPage());
+        }
+
+        return $articles;
+    }
+
+    /**
+     * Spalten, nach denen die Artikelübersicht sortiert werden darf (Anfragewert => Tabellenspalte).
+     */
+    public const array SORTABLE_COLUMNS = [
+        'name' => 'inventory_articles.name',
+        'quantity' => 'inventory_articles.quantity',
+        'inventory_number' => 'inventory_articles.inventory_number',
+        'created_at' => 'inventory_articles.created_at',
+    ];
+
+    /**
+     * Gefilterte und sortierte Artikel: gemeinsame Grundlage für Übersicht und Excel-Export, damit
+     * beide dieselben Filter anwenden.
+     *
+     * @param array<int, mixed>|null $resolvedFilters
+     * @param array<int, int>|null $resolvedTagIds
+     * @throws \JsonException
+     */
+    protected function filteredListQuery(
+        ?InventoryCategory $category,
+        ?InventorySubCategory $subCategory,
+        ?string $search,
+        ?array $resolvedFilters,
+        ?array $resolvedTagIds,
+        ?int $statusId,
+        ?int $searchPropertyId,
+        ?string $sort = null,
+        ?string $direction = null
+    ): Builder {
+        $query = $this->buildArticleQuery($category, $subCategory, $search, $searchPropertyId);
+
         // Property-Filter
-        $filters = $resolvedFilters ?? [];
-        $query = $this->articleRepository->applyFilters($query, $filters);
+        $query = $this->articleRepository->applyFilters($query, $resolvedFilters ?? []);
 
         // Tag-Filter
         $tagIds = $resolvedTagIds ?? [];
@@ -93,11 +149,58 @@ class InventoryArticleService
         // Status-Filter: nur Artikel mit mindestens Menge 1 bei diesem Status
         $this->applyStatusFilter($query, $statusId);
 
-        // Cap page size to avoid loading the whole inventory incl. relations at once.
-        $perPage ??= (int) Request::get('per_page', Request::integer('entitiesPerPage', 50));
-        $perPage = min(max($perPage, 1), 100);
-        $this->applyStableOrdering($query, $category, $subCategory);
-        return $query->paginate($perPage);
+        if ($sort !== null && array_key_exists($sort, self::SORTABLE_COLUMNS)) {
+            // Gewählte Sortierung gilt über alle Kategorien hinweg; unbekannte Werte fallen auf die
+            // Standardreihenfolge zurück, die Spalte kommt nie ungeprüft aus der Anfrage.
+            $query->orderBy(self::SORTABLE_COLUMNS[$sort], $direction === 'desc' ? 'desc' : 'asc')
+                ->orderBy('inventory_articles.id', 'asc');
+        } else {
+            $this->applyStableOrdering($query, $category, $subCategory);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Alle Artikel der gefilterten Übersicht (ohne Seitenaufteilung) für den Excel-Export,
+     * wahlweise eingeschränkt auf eine Auswahl.
+     *
+     * @param array<int, mixed>|null $resolvedFilters
+     * @param array<int, int>|null $resolvedTagIds
+     * @param array<int, int> $ids
+     * @return Collection<int, InventoryArticle>
+     * @throws \JsonException
+     */
+    public function getArticlesForExport(
+        ?InventoryCategory $category,
+        ?InventorySubCategory $subCategory,
+        ?string $search,
+        ?array $resolvedFilters,
+        ?array $resolvedTagIds,
+        ?int $statusId,
+        ?int $searchPropertyId,
+        ?string $sort = null,
+        ?string $direction = null,
+        array $ids = []
+    ): Collection {
+        $query = $this->filteredListQuery(
+            $category,
+            $subCategory,
+            $search,
+            $resolvedFilters,
+            $resolvedTagIds,
+            $statusId,
+            $searchPropertyId,
+            $sort,
+            $direction
+        );
+
+        if ($ids !== []) {
+            $query->whereIn('inventory_articles.id', $ids);
+        }
+
+        return $query->with(['category', 'subCategory', 'properties', 'statusValues',
+            'detailedArticleQuantities', 'tags'])->get();
     }
 
     /**

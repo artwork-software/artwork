@@ -169,7 +169,11 @@ class AiShiftInsightsService
         abort_if($interval === null, Response::HTTP_UNPROCESSABLE_ENTITY, 'Die Schicht hat keine Zeiten.');
 
         $limit = (int) config('ai.list_limit');
-        $people = $this->eligiblePeople($shift, $qualificationId);
+        $people = $this->eligiblePeople(
+            $shift,
+            $qualificationId,
+            AiWorkTimeService::mayViewHours($planner)
+        );
         $data = [];
         $rejected = [];
 
@@ -198,11 +202,15 @@ class AiShiftInsightsService
                 continue;
             }
 
-            $capacity = $this->people->weekCapacity($person, CarbonImmutable::parse($interval[0]->toDateString()));
+            $capacity = $this->people->visibleWeekCapacity(
+                $planner,
+                $person,
+                CarbonImmutable::parse($interval[0]->toDateString())
+            );
             $data[] = new AiShiftCandidateData(
                 $this->people->personData($person),
-                $capacity->minutes_planned,
-                $capacity->minutes_remaining,
+                $capacity?->minutes_planned,
+                $capacity?->minutes_remaining,
             );
         }
 
@@ -271,13 +279,13 @@ class AiShiftInsightsService
                 ->get();
 
             foreach ($members as $person) {
-                $capacity = $this->people->weekCapacity($person, $weekStart);
+                $capacity = $this->people->visibleWeekCapacity($planner, $person, $weekStart);
                 $entries[] = new AiCraftCapacityEntryData(
                     person: $this->people->personData($person),
-                    minutes_planned: $capacity->minutes_planned,
-                    minutes_max: $capacity->minutes_max,
-                    minutes_remaining: $capacity->minutes_remaining,
-                    limited_by: $capacity->limited_by,
+                    minutes_planned: $capacity?->minutes_planned,
+                    minutes_max: $capacity?->minutes_max,
+                    minutes_remaining: $capacity?->minutes_remaining,
+                    limited_by: $capacity?->limited_by,
                     absences: $this->people->absences($person, $weekStart, $weekEnd),
                 );
             }
@@ -342,10 +350,12 @@ class AiShiftInsightsService
      * Personen im Gewerk der Schicht (oder in einem universell einsetzbaren Gewerk) mit der Funktion,
      * nicht schon eingeteilt — Regel aus `ShiftReplacementService::candidateQuery()`, zusaetzlich
      * Dienstleister. Sortiert nach Stundenkonto (niedrigstes zuerst, unbekannt zuletzt), dann Name.
+     * Mit `$sortByBalance = false` nur nach Name: die Reihenfolge einer Liste, die jemand ohne
+     * „Stundenkonten einsehen" zu sehen bekommt, darf den Kontostand nicht verraten.
      *
      * @return Collection<int, User|Freelancer|ServiceProvider>
      */
-    public function eligiblePeople(Shift $shift, int $qualificationId): Collection
+    public function eligiblePeople(Shift $shift, int $qualificationId, bool $sortByBalance = true): Collection
     {
         $universal = Craft::query()->where('universally_applicable', true)->pluck('id')
             ->map(static fn ($id): int => (int) $id)->all();
@@ -380,7 +390,7 @@ class AiShiftInsightsService
                 ->get());
         }
 
-        $useBalance = WorkTimeAccounting::isEnabled();
+        $useBalance = $sortByBalance && WorkTimeAccounting::isEnabled();
 
         return $people->sortBy(static fn (Model $person): array => [
             $useBalance && $person instanceof User ? 0 : 1,

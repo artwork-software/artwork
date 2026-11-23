@@ -75,7 +75,7 @@
                     :user_filters="usePage().props.user_filters"
                     :personal-filters="usePage().props.personalFilters"
                     :filter-options="usePage().props.filterOptions"
-                    :filter-type="'calendar_filter'"
+                    :filter-type="'project_event_list_filter'"
                 />
 
                 <ToolTipComponent

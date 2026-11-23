@@ -104,11 +104,20 @@ final class AiShiftPlanningApiTest extends TestCase
         $this->withHeader('Authorization', 'Bearer ' . $token->accessToken);
     }
 
-    private function planner(): User
+    /**
+     * Planende Person; mit `$seesHours` zusaetzlich „Stundenkonten einsehen", ohne das die KI keine
+     * Stunden anderer Personen liefert (Sicherheits-Audit 18.11.2026, M6).
+     */
+    private function planner(bool $seesHours = true): User
     {
         $user = User::factory()->create();
+        $permissions = [PermissionEnum::SHIFT_PLANNER->value, PermissionEnum::VIEW_SHIFT_PLAN->value];
 
-        foreach ([PermissionEnum::SHIFT_PLANNER->value, PermissionEnum::VIEW_SHIFT_PLAN->value] as $name) {
+        if ($seesHours) {
+            $permissions[] = PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value;
+        }
+
+        foreach ($permissions as $name) {
             $user->givePermissionTo(Permission::findOrCreate($name, 'web'));
         }
 
@@ -337,6 +346,45 @@ final class AiShiftPlanningApiTest extends TestCase
         // Wie in der Oberfläche: ohne Arbeitszeitberechnung keine Sollstunden
         $this->assertNull($response->json('target_minutes_by_week'));
         $this->assertNotNull($response->json('planned.weeks'));
+    }
+
+    #[Test]
+    public function the_workload_of_others_hides_hours_without_the_hours_permission(): void
+    {
+        $person = $this->worker(['weeklyMaxHours' => 40.0]);
+        $this->assign($this->shift(self::MONDAY, '08:00', '16:00'), $person);
+        Vacation::query()->create([
+            'vacationer_type' => User::class, 'vacationer_id' => $person->id,
+            'date' => '2026-11-04', 'full_day' => true, 'type' => VacationEnum::OFF_WORK->value,
+        ]);
+        $this->actingAsToken($this->planner(false));
+
+        $response = $this->getJson("/api/v1/ai/people/user/{$person->id}/workload?from=" . self::MONDAY . '&to=2026-11-08')
+            ->assertOk();
+
+        $this->assertSame($person->id, $response->json('person.id'));
+        $this->assertNull($response->json('contract'));
+        $this->assertSame([], $response->json('rules'));
+        $this->assertNull($response->json('planned'));
+        $this->assertNull($response->json('target_minutes_by_week'));
+        $this->assertNull($response->json('remaining'));
+        // Abwesenheiten braucht die Planung weiterhin
+        $this->assertCount(1, $response->json('absences'));
+    }
+
+    #[Test]
+    public function the_own_workload_stays_complete_without_the_hours_permission(): void
+    {
+        $planner = $this->planner(false);
+        $planner->forceFill(['can_work_shifts' => true])->save();
+        $this->assign($this->shift(self::MONDAY, '08:00', '16:00'), $planner);
+        $this->actingAsToken($planner);
+
+        $response = $this->getJson("/api/v1/ai/people/user/{$planner->id}/workload?from=" . self::MONDAY . '&to=2026-11-08')
+            ->assertOk();
+
+        $this->assertSame([['week' => '2026-W45', 'minutes' => 480]], $response->json('planned.weeks'));
+        $this->assertSame(480, $response->json('remaining.weeks.0.minutes_planned'));
     }
 
     #[Test]
@@ -813,7 +861,63 @@ final class AiShiftPlanningApiTest extends TestCase
         $this->assertSame($before, $this->counts());
     }
 
+    #[Test]
+    public function candidates_carry_no_hours_and_no_balance_order_without_the_hours_permission(): void
+    {
+        // Mit Kontostand-Sortierung stuende „Zett" (niedrigster Stand) vorn
+        $alpha = $this->worker([], false, 'Alpha');
+        $alpha->forceFill(['work_time_balance' => 600])->save();
+        $zett = $this->worker(['weeklyMaxHours' => 40.0], true, 'Zett');
+        $zett->forceFill(['work_time_balance' => -600])->save();
+        $this->assign($this->shift('2026-11-02', '08:00', '12:00'), $zett);
+        $target = $this->shift('2026-11-03', '15:00', '19:00', 2);
+
+        $this->actingAsToken($this->planner(false));
+        $hidden = $this->getJson("/api/v1/ai/shifts/{$target->id}/candidates")->assertOk();
+
+        $this->assertSame(
+            [$alpha->id, $zett->id],
+            array_column(array_column($hidden->json('data'), 'person'), 'id')
+        );
+        foreach ($hidden->json('data') as $row) {
+            $this->assertNull($row['minutes_planned_week']);
+            $this->assertNull($row['minutes_remaining_week']);
+        }
+
+        $this->actingAsToken($this->planner());
+        $visible = $this->getJson("/api/v1/ai/shifts/{$target->id}/candidates")->assertOk();
+
+        $this->assertSame(
+            [$zett->id, $alpha->id],
+            array_column(array_column($visible->json('data'), 'person'), 'id')
+        );
+        $this->assertSame(240, $visible->json('data.0.minutes_planned_week'));
+        $this->assertSame(2160, $visible->json('data.0.minutes_remaining_week'));
+    }
+
     // --- Erweiterung 2 D: Gewerke und Kapazitaet -----------------------------------------------
+
+    #[Test]
+    public function the_craft_capacity_hides_hours_of_others_without_the_hours_permission(): void
+    {
+        $limited = $this->worker(['weeklyMaxHours' => 10.0], true, 'Begrenzt');
+        $this->assign($this->shift('2026-11-03', '08:00', '16:00'), $limited);
+        $planner = $this->planner(false);
+        $planner->forceFill(['can_work_shifts' => true])->save();
+        $planner->assignedCrafts()->attach($this->craft->id);
+        $this->assign($this->shift('2026-11-04', '08:00', '10:00'), $planner);
+        $this->actingAsToken($planner);
+
+        $response = $this->getJson("/api/v1/ai/crafts/{$this->craft->id}/capacity?week=2026-W45")->assertOk();
+
+        $rows = collect($response->json('data'))->keyBy('person.id');
+        $this->assertNull($rows[$limited->id]['minutes_planned']);
+        $this->assertNull($rows[$limited->id]['minutes_max']);
+        $this->assertNull($rows[$limited->id]['minutes_remaining']);
+        $this->assertNull($rows[$limited->id]['limited_by']);
+        // Die eigene Zeile bleibt vollstaendig
+        $this->assertSame(120, $rows[$planner->id]['minutes_planned']);
+    }
 
     #[Test]
     public function crafts_can_be_looked_up_and_report_the_capacity_of_their_people(): void

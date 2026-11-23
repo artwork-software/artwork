@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Contract\Models\ContractType;
+use Artwork\Core\Validation\MasterDataName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -27,6 +28,8 @@ class ContractTypeController extends Controller
      */
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
+        MasterDataName::validate($request);
+
         ContractType::create([
             'name' => $request->name,
             'color' => $request->color
@@ -73,6 +76,8 @@ class ContractTypeController extends Controller
 
     public function update(Request $request, ContractType $contractType): \Illuminate\Http\RedirectResponse
     {
+        MasterDataName::validate($request, updating: true);
+
         $contractType->update($request->only(['name', 'color']));
 
         return Redirect::back();

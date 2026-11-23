@@ -646,7 +646,7 @@
                     <div class="flex items-center justify-between gap-2">
                         <div>
                             <BaseUIButton
-                                v-if="event?.id && event?.canDelete"
+                                v-if="event?.id && canDelete"
                                 type="button"
                                 variant="danger"
                                 hide-icon
@@ -1421,6 +1421,7 @@ function loadFullDescription() {
             if (typeof data?.can_update === 'boolean') {
                 canEdit.value = data.can_update
             }
+            canDelete.value = data?.can_delete === true
             approvedBooking.value = data?.approved_booking ?? null
             requestedBy.value = data?.requested_by ?? null
         })
@@ -1439,6 +1440,8 @@ async function ensureDescriptionLoaded() {
     return !descriptionLoadFailed.value
 }
 const canEdit = ref(false)
+// Ergebnis der EventPolicy (can_delete): der Knopf hing an einem Feld, das nie gesetzt wurde
+const canDelete = ref(false)
 const declinedRoomId = ref(null)
 const deleteComponentVisible = ref(false)
 const adminComment = ref('')

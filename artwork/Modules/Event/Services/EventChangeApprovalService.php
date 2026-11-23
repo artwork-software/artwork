@@ -71,13 +71,21 @@ class EventChangeApprovalService
      */
     public function evaluate(?User $user, Event $event, array $before): bool
     {
-        if ($user === null || $event->getAttribute('is_planning') || $before['occupancy_option']) {
-            // Geplante Termine kennen keine Anfrage; eine offene Anfrage bleibt offen (die Raumadmins sehen
-            // die Änderung an der bestehenden Meldung)
+        if ($user === null || $event->getAttribute('is_planning')) {
+            // Geplante Termine kennen keine Anfrage
             return false;
         }
 
         $after = $this->snapshot($event);
+        if ($before['occupancy_option']) {
+            // Eine offene Anfrage bleibt offen (die Raumadmins sehen die Änderung an der bestehenden Meldung).
+            // Ausnahme: eine Änderungsanfrage, die wieder in die bestätigte Belegung zurückgenommen wird,
+            // braucht keine Antwort mehr und ist wieder fest gebucht.
+            $this->restoreConfirmedBookingIfWithdrawn($event, $before, $after);
+
+            return false;
+        }
+
         if ($after['room_id'] === null || !$this->timeOrRoomChanged($before, $after)) {
             return false;
         }
@@ -121,6 +129,32 @@ class EventChangeApprovalService
         }
 
         return $becameRequest;
+    }
+
+    /**
+     * @param array<string, mixed> $before
+     * @param array<string, mixed> $after
+     */
+    private function restoreConfirmedBookingIfWithdrawn(Event $event, array $before, array $after): void
+    {
+        $hasConfirmedBooking = $before['approved_room_id'] !== null
+            && $before['approved_start_time'] !== null
+            && $before['approved_end_time'] !== null;
+        if (!$hasConfirmedBooking || !$this->timeOrRoomChanged($before, $after)) {
+            return;
+        }
+
+        /** @var array{room_id: int, start_time: Carbon, end_time: Carbon} $approval */
+        $approval = $this->approvalBefore($before);
+        if (!$this->isWithin($after, $approval)) {
+            return;
+        }
+
+        $event->forceFill([
+            'occupancy_option' => false,
+            'declined_room_id' => null,
+        ]);
+        $this->setApproval($event, $this->isSameSlot($after, $approval) ? null : $approval);
     }
 
     private function mayBookDirectly(User $user, int $roomId): bool

@@ -6,8 +6,11 @@
                 :icon="IconLamp2"
                 title="Accommodations"
                 band
-                :description="accommodations?.length ? `${accommodations?.length} ${$t('Accommodations')}` : ''"
-                :search-enabled="false"
+                :description="filteredAccommodations.length ? `${filteredAccommodations.length} ${$t('Accommodations')}` : ''"
+                v-model="searchTerm"
+                :search-enabled="true"
+                :search-label="$t('Search accommodations')"
+                :search-tooltip="$t('Search')"
             >
                 <template #actions>
 
@@ -22,12 +25,15 @@
 
         <template #default>
             <BaseTable
-                :rows="accommodations"
+                :rows="filteredAccommodations"
                 :columns="cols"
                 row-key="id"
                 v-model:page="page"
-                empty-title="Keine Unterkünfte"
-                empty-message="No entries available"
+                :empty-title="searchTerm.trim() ? 'No accommodations match your search.' : 'Keine Unterkünfte'"
+                :empty-message="searchTerm.trim() ? '' : 'No entries available'"
+                :show-reset-button="searchTerm.trim() !== ''"
+                reset-label="Reset search"
+                @reset="searchTerm = ''"
             >
 
                 <!-- Name (Avatar + Name + Email) -->
@@ -93,7 +99,7 @@
 <script setup lang="ts">
 
 import UserHeader from "@/Pages/Users/UserHeader.vue";
-import {defineAsyncComponent, ref, nextTick} from "vue";
+import { defineAsyncComponent, ref, nextTick, computed } from 'vue'
 import {IconLamp2, IconCirclePlus, IconEdit, IconTrash} from "@tabler/icons-vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseTable, { type TableColumn } from '@/Artwork/Table/BaseTable.vue'
@@ -142,9 +148,21 @@ const SingleAccommodation = defineAsyncComponent({
     timeout: 3000,
 })
 
+// Suche über Name, E-Mail, Adresse, Telefon und Zimmertypen
+const searchTerm = ref('')
+const filteredAccommodations = computed(() => {
+    const list = Array.isArray(props.accommodations) ? props.accommodations : Object.values(props.accommodations ?? {})
+    const needle = searchTerm.value.trim().toLowerCase()
+    if (needle === '') return list
+    return list.filter((entry: any) => [
+        entry?.name, entry?.email, entry?.street, entry?.zip_code, entry?.location, entry?.phone_number,
+        ...(entry?.room_types ?? []).map((roomType: any) => roomType?.name),
+    ].some(value => String(value ?? '').toLowerCase().includes(needle)))
+})
+
 const cols = ref<TableColumn[]>([
-    { key: 'name',  label: 'Name',  sortable: false },
-    { key: 'address', label: 'Address', sortable: false },
+    { key: 'name',  label: 'Name',  sortable: true, accessor: (row: any) => String(row?.name ?? '').toLowerCase() },
+    { key: 'address', label: 'Address', sortable: true, accessor: (row: any) => String(row?.location ?? '').toLowerCase() },
     { key: 'phone_number', label: 'Phone', sortable: false },
     { key: 'room_types', label: 'Room types', sortable: false },
 ])

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Room\Http\Resources\RoomIndexResource;
-use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;
@@ -39,6 +38,8 @@ class AreaController extends Controller
                 // Nebenräume liest die Seite nur als IDs — ohne Room::$with (Admins, Ersteller)
                 'rooms.adjoining_rooms' => fn ($query) => $query->without(['admins', 'creator']),
             ])
+            ->orderBy('position')
+            ->orderBy('id')
             ->get();
 
         return inertia('Areas/AreaManagement', [
@@ -59,7 +60,11 @@ class AreaController extends Controller
     public function store(Request $request): RedirectResponse
     {
         // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
-        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+        $request->validate([
+            // ohne Namen (auch nur Leerzeichen) scheiterte das Anlegen mit einem Datenbankfehler (500)
+            'name' => ['required', 'filled', 'string', 'max:255'],
+            'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+        ]);
 
         $this->areaService->createByRequest($request);
         return Redirect::route('areas.management');
@@ -67,10 +72,27 @@ class AreaController extends Controller
 
     public function update(Request $request, Area $area): RedirectResponse
     {
-        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+        $request->validate([
+            'name' => ['sometimes', 'filled', 'string', 'max:255'],
+            'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+        ]);
 
         $this->areaService->updateByRequest($area, $request);
         return Redirect::route('areas.management');
+    }
+
+    public function updateOrder(Request $request): RedirectResponse
+    {
+        $this->authorize('update', Area::class);
+
+        $validated = $request->validate([
+            'areas' => ['required', 'array', 'min:1'],
+            'areas.*' => ['integer', 'distinct', 'exists:areas,id'],
+        ]);
+
+        $this->areaService->saveOrder($validated['areas']);
+
+        return Redirect::back();
     }
 
     public function duplicate(Area $area, RoomService $roomService): RedirectResponse
@@ -129,14 +151,17 @@ class AreaController extends Controller
 
         $trashedAreas = Area::onlyTrashed()
             ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->with(['rooms' => fn ($query) => $query->withTrashed()->select(['id', 'name', 'area_id'])])
             ->orderBy('name')
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn ($area) => [
-                'id' => $area->id,
-                'name' => $area->name,
-                'rooms' => RoomIndexWithoutEventsResource::collection($area->rooms)->resolve(),
-            ]);
+            ->withQueryString();
+        $trashInfo = app(\Artwork\Modules\Trash\Services\TrashInfoService::class)->forModels($trashedAreas->getCollection());
+        $trashedAreas->through(fn ($area) => [
+            'id' => $area->id,
+            'name' => $area->name,
+            'room_names' => $area->rooms->pluck('name')->values()->all(),
+            'trash' => $trashInfo[$area->id] ?? null,
+        ]);
 
         return inertia('Trash/Areas', [
             'trashed_areas' => $trashedAreas

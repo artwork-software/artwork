@@ -104,14 +104,17 @@
                                     :property="property"
                                     :value="form.property_values[property.id] || ''"
                                     :required="!!property.is_required"
+                                    :error="requiredErrors[property.id] || form.errors[`property_values.${property.id}`] || ''"
                                     uniform-label
-                                    @update:value="(val) => form.property_values[property.id] = val"
+                                    @update:value="(val) => onPropertyInput(property.id, val)"
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <p v-if="maskError" class="text-sm text-danger">{{ $t('The fields could not be loaded.') }}</p>
 
             <!-- Actions -->
             <div class="flex justify-end gap-3 mt-6">
@@ -148,8 +151,11 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import CrmPropertyValueInput from '@/Pages/CRM/Components/CrmPropertyValueInput.vue'
+import { useTranslation } from '@/Composeables/Translation.js'
 import { isMirroredContactType } from '@/Pages/CRM/mirroredContactTypes.js'
 import { IconChevronDown, IconCheck } from '@tabler/icons-vue'
+
+const $t = useTranslation()
 
 const props = defineProps({
     contactTypes: { type: Array, required: true },
@@ -180,12 +186,16 @@ const selectedType = computed(() => {
 })
 
 const selectedTypeLabel = computed(() => {
-    return selectedType.value?.name ?? ''
+    return selectedType.value?.name ? $t(selectedType.value.name) : ''
 })
 
 // -- Creation mask: all editable properties of the type, grouped --
 const maskGroups = ref([])
 const loadingMask = ref(false)
+const maskError = ref(false)
+const requiredErrors = ref({})
+// Nur die Antwort der zuletzt gewählten Art zählt (schneller Typwechsel)
+let maskRequestId = 0
 const expandedGroupIds = ref(new Set())
 
 const loadMask = async () => {
@@ -195,9 +205,12 @@ const loadMask = async () => {
         return
     }
 
+    const requestId = ++maskRequestId
     loadingMask.value = true
+    maskError.value = false
     try {
         const response = await axios.get(route('crm.contacts.mask'), { params: { type_slug: slug } })
+        if (requestId !== maskRequestId) return
         maskGroups.value = response.data.groups ?? []
         // Gruppen mit Pflichtfeldern starten aufgeklappt, der Rest eingeklappt
         expandedGroupIds.value = new Set(
@@ -206,9 +219,11 @@ const loadMask = async () => {
                 .map(g => g.id)
         )
     } catch {
+        if (requestId !== maskRequestId) return
         maskGroups.value = []
+        maskError.value = true
     } finally {
-        loadingMask.value = false
+        if (requestId === maskRequestId) loadingMask.value = false
     }
 }
 
@@ -231,10 +246,40 @@ onMounted(loadMask)
 // Reset property values when type changes
 watch(() => form.crm_contact_type_id, () => {
     form.property_values = {}
+    requiredErrors.value = {}
     loadMask()
 })
 
+const onPropertyInput = (propertyId, value) => {
+    form.property_values[propertyId] = value
+    if (requiredErrors.value[propertyId]) {
+        delete requiredErrors.value[propertyId]
+    }
+}
+
+// Pflichtfelder wie auf der Kontaktseite; Gruppen mit Fehlern klappen auf
+const validateRequired = () => {
+    const errors = {}
+    for (const group of maskGroups.value) {
+        for (const property of (group.properties ?? [])) {
+            if (!property.is_required) continue
+            const value = form.property_values[property.id]
+            const isEmpty = property.type === 'checkbox'
+                ? value !== '1'
+                : (value === undefined || value === null || String(value).trim() === '')
+            if (isEmpty) {
+                errors[property.id] = $t('This is a mandatory field.')
+                expandedGroupIds.value.add(group.id)
+            }
+        }
+    }
+    return errors
+}
+
 const submit = () => {
+    requiredErrors.value = validateRequired()
+    if (Object.keys(requiredErrors.value).length > 0) return
+
     form.post(route('crm.contacts.store'), {
         onSuccess: () => emit('close'),
     })

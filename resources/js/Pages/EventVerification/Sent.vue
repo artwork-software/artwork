@@ -8,8 +8,8 @@
         </template>
 
         <template #body>
-            <div class="grid grid-cols-6 gap-10">
-                <div class="col-span-4">
+            <div class="grid grid-cols-1 gap-10 lg:grid-cols-6">
+                <div class="lg:col-span-4">
                     <!-- Section 1: My room booking requests -->
                     <section v-if="myRoomRequests.length > 0" class="mb-10">
                         <h2 class="text-lg font-lexend font-bold text-text mb-3">
@@ -84,11 +84,11 @@
                             </div>
                         </div>
                         <div v-else class="mt-3">
-                            <BaseAlertComponent message="No event verification requests found" type="error" use-translation />
+                            <BaseAlertComponent message="No event verification requests found" type="info" use-translation />
                         </div>
                     </section>
                 </div>
-                <div class="col-start-5 col-span-2">
+                <div class="lg:col-span-2 lg:col-start-5">
                     <BaseCard>
                         <CardHeadline title="Planned Events" description="You can see all planned events here. You can also request a verification directly here." />
                         <div class="pb-5">
@@ -98,7 +98,7 @@
                                 </div>
                             </div>
                             <div v-else class="px-5">
-                                <BaseAlertComponent message="No planned events found" type="error" use-translation />
+                                <BaseAlertComponent message="No planned events found" type="info" use-translation />
                             </div>
                         </div>
                     </BaseCard>

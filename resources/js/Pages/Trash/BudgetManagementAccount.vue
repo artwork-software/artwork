@@ -1,154 +1,32 @@
 <template>
-    <TrashSearchAndActions
+    <TrashTab
+        :paginator="trashedAccounts"
         property-name="trashedAccounts"
-        :total="trashedAccounts.total"
-        @delete-all="showConfirmDeleteAll = true"
-    />
-    <div v-for="trashedAccount in trashedAccounts.data" :key="trashedAccount.id"
-         class="flex w-full bg-white my-2 border border-border-subtle">
-        <button class="bg-accent-600 hover:bg-accent-700 flex" @click="trashedAccount.hidden = !trashedAccount.hidden">
-            <IconChevronUp v-if="trashedAccount.hidden === true"
-                           class="h-6 w-6 text-white my-auto"
-            />
-            <IconChevronDown v-else
-                             class="h-6 w-6 text-white my-auto"
-            />
-        </button>
-        <div class="flex mt-8 w-full ml-4 flex-wrap p-4">
-            <div class="flex justify-between w-full">
-                <div class="my-auto">
-                    <span class="text-2xl leading-6 font-bold font-lexend text-text">
-                    {{ trashedAccount.account_number }}
-                    </span>
-                </div>
-                <div class="flex items-center">
-                    <Menu as="div" class="my-auto relative">
-                        <div class="flex">
-                            <MenuButton
-                                class="flex  p-0.5 rounded-full">
-                                <IconDotsVertical
-                                    class=" flex-shrink-0 h-6 w-6 text-menuartwork-buttons-create my-auto"
-                                    aria-hidden="true"/>
-                            </MenuButton>
-                        </div>
-                        <transition
-                            enter-active-class="transition ease-out duration-100"
-                            enter-from-class="transform opacity-0 scale-95"
-                            enter-to-class="transform opacity-100 scale-100"
-                            leave-active-class="transition ease-in duration-75"
-                            leave-from-class="transform opacity-100 scale-100"
-                            leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-surface-inverse ring-1 ring-black ring-opacity-5 divide-y divide-white/10">
-                                <div class="py-1">
-                                    <MenuItem v-slot="{ active }">
-                                        <Link method="patch"
-                                              :href="route(
-                                                  'budget-settings.account-management.trash-accounts.restore',
-                                                  {
-                                                      budgetManagementAccount: trashedAccount.id
-                                                  }
-                                              )"
-                                              :class="[active ? ' text-white' :
-                                                'text-text-subtle',
-                                                'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <IconRefresh
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                                aria-hidden="true"/>
-                                            {{ $t('Restore') }}
-                                        </Link>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <Link method="delete"
-                                              :href="route(
-                                                  'budget-settings.account-management.trash-accounts.forceDelete',
-                                                  {
-                                                      budgetManagementAccount: trashedAccount.id
-                                                  }
-                                              )"
-                                              :class="[active ? ' text-white' :
-                                                'text-text-subtle',
-                                                'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <IconTrash
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
-                                                aria-hidden="true"/>
-                                            {{ $t('Delete permanently') }}
-                                        </Link>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
-                </div>
-            </div>
-            <div class="w-full mt-6 mb-12" v-if="trashedAccount.hidden">
-                {{ trashedAccount.title }}
-            </div>
-        </div>
-    </div>
-
-    <BasePaginator
-        v-if="trashedAccounts.total > 0"
-        :entities="trashedAccounts"
-        property-name="trashedAccounts"
-        class="mt-6"
-    />
-
-    <ConfirmDeleteModal
-        v-if="showConfirmDeleteAll"
-        :title="$t('Delete all')"
-        :description="$t('Are you sure you want to permanently delete all items in the recycle bin for this category?')"
-        @closed="showConfirmDeleteAll = false"
-        @delete="forceDeleteAll"
-    />
+        :force-all-href="route('budget-settings.account-management.trash-accounts.forceDeleteAll')"
+        :restore-href="(account) => route('budget-settings.account-management.trash-accounts.restore', { budgetManagementAccount: account.id })"
+        :force-href="(account) => route('budget-settings.account-management.trash-accounts.forceDelete', { budgetManagementAccount: account.id })"
+        :name-of="(account) => String(account.account_number ?? '')"
+        :open-href="() => route('budget-settings.account-management')"
+    >
+        <template #default="{ item: account }">
+            <div class="truncate font-medium text-text tabular-nums">{{ account.account_number }}</div>
+            <div v-if="account.title" class="mt-0.5 truncate text-sm text-text-muted">{{ account.title }}</div>
+        </template>
+    </TrashTab>
 </template>
 
 <script>
-import {IconChevronDown, IconChevronUp, IconDotsVertical, IconRefresh, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
-import TrashLayout from "@/Layouts/TrashLayout.vue";
-import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
-import { Link } from "@inertiajs/vue3";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import TrashSearchAndActions from "@/Pages/Trash/Components/TrashSearchAndActions.vue";
-import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
+import AppLayout from '@/Layouts/AppLayout.vue'
+import TrashLayout from '@/Layouts/TrashLayout.vue'
 
 export default {
-    name: "BudgetManagementAccountsTrashed",
     layout: [AppLayout, TrashLayout],
-    props: ['trashedAccounts'],
-    components: {
-        BasePaginator,
-        TrashSearchAndActions,
-        ConfirmDeleteModal,
-        Input,
-        IconX,
-        IconSearch,
-        IconChevronDown,
-        IconChevronUp,
-        Menu,
-        MenuButton,
-        IconDotsVertical,
-        MenuItems,
-        MenuItem,
-        IconRefresh,
-        IconTrash,
-        Link
-    },
-    data() {
-        return {
-            showConfirmDeleteAll: false,
-        }
-    },
-    methods: {
-        forceDeleteAll() {
-            this.$inertia.delete(route('budget-settings.account-management.trash-accounts.forceDeleteAll'), {
-                onSuccess: () => {
-                    this.showConfirmDeleteAll = false;
-                }
-            });
-        },
-    }
 }
+</script>
+
+<script setup>
+import TrashTab from '@/Pages/Trash/Components/TrashTab.vue'
+defineProps({
+    trashedAccounts: { type: Object, required: true },
+})
 </script>

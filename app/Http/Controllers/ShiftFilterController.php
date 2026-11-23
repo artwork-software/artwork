@@ -35,6 +35,9 @@ class ShiftFilterController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // ohne Namen (auch nur Leerzeichen) scheiterte das Speichern mit einem Datenbankfehler (500)
+        $request->validate(['name' => ['required', 'filled', 'string', 'max:255']]);
+
         $filter = ShiftFilter::create([
             'name' => $request->name,
             'user_id' => Auth::id()

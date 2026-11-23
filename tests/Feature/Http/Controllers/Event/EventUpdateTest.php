@@ -346,7 +346,7 @@ final class EventUpdateTest extends FeatureTestCase
 
         $this->getJson(route('events.description', $planned))
             ->assertSuccessful()
-            ->assertJson(['description' => 'Plan', 'can_update' => true]);
+            ->assertJson(['description' => 'Plan', 'can_update' => true, 'can_delete' => true]);
         $this->getJson(route('events.description', $regular))
             ->assertSuccessful()
             ->assertJson(['description' => 'Fest', 'can_update' => false]);

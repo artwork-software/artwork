@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Core\FileHandling\Download\PrivateFileResponse;
 use Artwork\Core\FileHandling\Naming\DownloadFileName;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
+use Artwork\Modules\InternalIssue\Exports\InternalIssueListExport;
 use Artwork\Modules\InternalIssue\Http\Requests\StoreInternalIssueRequest;
 use Artwork\Modules\InternalIssue\Http\Requests\UpdateInternalIssueRequest;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
@@ -15,13 +16,17 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\Snappy\Facades\SnappyPdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Auth\AuthManager;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -31,7 +36,8 @@ class InternalIssueController extends Controller
         protected InternalIssueService $internalIssueService,
         protected InventoryUserFilterShareService $inventoryUserFilterShareService,
         protected AuthManager $authManger,
-        protected InventoryUserFilterService $inventoryUserFilterService
+        protected InventoryUserFilterService $inventoryUserFilterService,
+        protected ProjectTabService $projectTabService
     ) {
     }
 
@@ -39,34 +45,10 @@ class InternalIssueController extends Controller
     {
         $this->authorize('viewAny', InternalIssue::class);
 
-        $entitiesPerPage = (int) request()->input('entitiesPerPage', 10);
-        $q = trim((string) request()->input('q', ''));
+        $entitiesPerPage = min(max(request()->integer('entitiesPerPage', 10), 1), 100);
+        $articleIds = $this->requestedIds('article_ids');
 
-        // Artikel-IDs robust parsen
-        $articleIdsInput = request()->input('article_ids', '');
-        $articleIds = [];
-        if (is_array($articleIdsInput)) {
-            $articleIds = array_filter(array_map('intval', $articleIdsInput));
-        } elseif (is_string($articleIdsInput) && strlen($articleIdsInput)) {
-            $articleIds = array_filter(array_map('intval', explode(',', $articleIdsInput)));
-        }
-
-        // Filter
-        $dateFrom  = request()->input('date_from'); // Y-m-d
-        $dateTo    = request()->input('date_to');   // Y-m-d
-        $projectId = (int) request()->input('project_id', 0);
-        $roomId    = (int) request()->input('room_id', 0);
-
-        // Mehrfach-User
-        $respInput = request()->input('responsible_user_ids', '');
-        $responsibleUserIds = [];
-        if (is_array($respInput)) {
-            $responsibleUserIds = array_filter(array_map('intval', $respInput));
-        } elseif (is_string($respInput) && strlen($respInput)) {
-            $responsibleUserIds = array_filter(array_map('intval', explode(',', $respInput)));
-        }
-
-        $issuesQuery = InternalIssue::query()
+        $issuesQuery = $this->filteredIssuesQuery()
             ->with([
                 'files',
                 'articles.images',
@@ -80,34 +62,14 @@ class InternalIssueController extends Controller
                 'room' => fn ($query) => $query->without(['admins', 'creator']),
                 'project',
                 'responsibleUsers',
-            ])
-            ->when(!empty($articleIds), function ($q) use ($articleIds): void {
-                $q->whereHas('articles', function ($sub) use ($articleIds): void {
-                    $sub->whereIn('inventory_articles.id', $articleIds);
-                });
-            })
-            ->when($projectId > 0, fn ($q) => $q->where('project_id', $projectId))
-            ->when($roomId > 0, fn ($q) => $q->where('room_id', $roomId))
-            ->when(!empty($responsibleUserIds), function ($q) use ($responsibleUserIds): void {
-                $q->whereHas('responsibleUsers', function ($sub) use ($responsibleUserIds): void {
-                    $sub->whereIn('users.id', $responsibleUserIds);
-                });
-            })
+            ]);
 
-            // 🔁 NEU: Zeitraum-Overlap statt Startdatum-AND-Filter
-            ->overlapping($dateFrom, $dateTo)
-
-            // Suche
-            ->when($q !== '', function ($qbuilder) use ($q): void {
-                $qbuilder->where(function ($sub) use ($q): void {
-                    $sub->where('name', 'like', "%{$q}%")
-                        ->orWhere('notes', 'like', "%{$q}%");
-                });
-            })
-            ->orderBy('start_date')
-            ->orderBy('start_time');
-
-        $issues = $issuesQuery->paginate($entitiesPerPage)->withQueryString();
+        $issues = $issuesQuery->paginate($entitiesPerPage);
+        // Seite hinter dem Ende (etwa nach dem Löschen der letzten Einträge): letzte vorhandene Seite zeigen
+        if ($issues->isEmpty() && $issues->total() > 0 && $issues->currentPage() > $issues->lastPage()) {
+            $issues = $issuesQuery->paginate($entitiesPerPage, ['*'], 'page', $issues->lastPage());
+        }
+        $issues->withQueryString();
         // Verantwortliche nur als Avatar + Tooltip (Kontaktdaten lädt der Tooltip per lazy-load nach)
         $issues->getCollection()->each(
             fn (InternalIssue $issue) => $issue->responsibleUsers->each->setVisible(User::AVATAR_FIELDS)
@@ -140,9 +102,163 @@ class InternalIssueController extends Controller
                 'statusValues',
                 'detailedArticleQuantities.status',
             ])->find(request()->get('articleId'))),
+            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'urlParameters' => request()->only([
-                'article_ids','date_from','date_to','project_id','room_id','responsible_user_ids','q'
+                'article_ids','date_from','date_to','project_id','room_id','responsible_user_ids','q',
+                'special_open','sort','direction',
             ]),
+        ]);
+    }
+
+    /**
+     * Spalten, nach denen die Liste sortiert werden darf (Parameter `sort`).
+     */
+    private const SORTABLE_COLUMNS = ['name', 'start_date', 'end_date'];
+
+    /**
+     * IDs aus einem Parameter, der als Liste oder kommagetrennt ankommt.
+     *
+     * @return array<int, int>
+     */
+    private function requestedIds(string $key): array
+    {
+        $input = request()->input($key, '');
+        $values = is_array($input) ? $input : (is_string($input) && $input !== '' ? explode(',', $input) : []);
+
+        return array_values(array_unique(array_filter(array_map('intval', $values))));
+    }
+
+    /**
+     * Gefilterte und sortierte Ausgaben – gemeinsame Grundlage für Liste und Excel-Export, damit
+     * beide dieselben Filter anwenden.
+     *
+     * @return Builder<InternalIssue>
+     */
+    private function filteredIssuesQuery(): Builder
+    {
+        $q = trim($this->stringParameter('q') ?? '');
+        $articleIds = $this->requestedIds('article_ids');
+        $responsibleUserIds = $this->requestedIds('responsible_user_ids');
+        $selectedIds = $this->requestedIds('ids');
+        $dateFrom  = $this->stringParameter('date_from'); // Y-m-d
+        $dateTo    = $this->stringParameter('date_to');   // Y-m-d
+        $projectId = (int) request()->input('project_id', 0);
+        $roomId    = (int) request()->input('room_id', 0);
+        $sort = in_array(request()->input('sort'), self::SORTABLE_COLUMNS, true) ? request()->input('sort') : null;
+        $direction = request()->input('direction') === 'desc' ? 'desc' : 'asc';
+
+        return InternalIssue::query()
+            ->when($selectedIds !== [], fn ($query) => $query->whereIn('internal_issues.id', $selectedIds))
+            ->when($articleIds !== [], function ($query) use ($articleIds): void {
+                $query->whereHas('articles', function ($sub) use ($articleIds): void {
+                    $sub->whereIn('inventory_articles.id', $articleIds);
+                });
+            })
+            ->when($projectId > 0, fn ($query) => $query->where('project_id', $projectId))
+            ->when($roomId > 0, fn ($query) => $query->where('room_id', $roomId))
+            ->when($responsibleUserIds !== [], function ($query) use ($responsibleUserIds): void {
+                $query->whereHas('responsibleUsers', function ($sub) use ($responsibleUserIds): void {
+                    $sub->whereIn('users.id', $responsibleUserIds);
+                });
+            })
+            // Nur Ausgaben mit noch offenen Sonderartikeln (dieselbe Regel wie das Status-Abzeichen)
+            ->when(request()->boolean('special_open'), fn ($query) => $query
+                ->where('special_items_done', false)
+                ->whereHas('specialItems'))
+            // Zeitraum-Overlap statt Startdatum-AND-Filter
+            ->overlapping($dateFrom, $dateTo)
+            ->when($q !== '', function ($query) use ($q): void {
+                $query->where(function ($sub) use ($q): void {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhere('notes', 'like', "%{$q}%");
+                });
+            })
+            ->when(
+                $sort !== null,
+                fn ($query) => $query->orderBy($sort, $direction)->orderBy('id'),
+                fn ($query) => $query->orderBy('start_date')->orderBy('start_time')
+            );
+    }
+
+    /**
+     * Excel-Export der Liste mit denselben Filtern wie die Übersicht (mit `ids` nur die Auswahl).
+     */
+    public function export(): BinaryFileResponse
+    {
+        $this->authorize('viewAny', InternalIssue::class);
+
+        $issues = $this->filteredIssuesQuery()
+            ->with(['room' => fn ($query) => $query->without(['admins', 'creator']), 'project', 'responsibleUsers',
+                'articles', 'specialItems', 'files'])
+            ->get();
+
+        return (new InternalIssueListExport($issues))
+            ->download('materialausgaben-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    /**
+     * Löscht mehrere Ausgaben auf einmal. Fehlt für eine davon das Recht, wird keine gelöscht.
+     */
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        // Sammelaktionen gehören zur Liste: erst das Recht für die Liste, dann die Eingabe prüfen
+        $this->authorize('viewAny', InternalIssue::class);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:200'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $issues = InternalIssue::query()->whereIn('id', $validated['ids'])->get();
+        abort_unless($issues->count() === count($validated['ids']), 404);
+        $issues->each(fn (InternalIssue $issue) => $this->authorize('delete', $issue));
+
+        // alles oder nichts: scheitert eine Ausgabe, bleibt keine gelöscht
+        DB::transaction(
+            fn () => $issues->each(fn (InternalIssue $issue) => $this->internalIssueService->delete($issue))
+        );
+
+        return response()->json(['deleted' => $issues->count()]);
+    }
+
+    /**
+     * Druckansicht mehrerer Ausgaben in einer PDF-Datei. Reine Ansicht: anders als der Einzeldruck
+     * wird nichts gespeichert oder an die Ausgaben gehängt.
+     */
+    public function printMany(Request $request): \Illuminate\Http\Response
+    {
+        $this->authorize('viewAny', InternalIssue::class);
+
+        $ids = $this->requestedIds('ids');
+        abort_if($ids === [] || count($ids) > 50, 422);
+
+        $issues = InternalIssue::query()
+            ->whereIn('id', $ids)
+            ->with([
+                'articles.category', 'articles.subCategory', 'specialItems.category', 'specialItems.subCategory',
+                'files', 'project', 'room', 'responsibleUsers',
+            ])
+            ->orderBy('start_date')
+            ->orderBy('start_time')
+            ->get();
+        abort_unless($issues->count() === count($ids), 404);
+        $issues->each(fn (InternalIssue $issue) => $this->authorize('view', $issue));
+
+        $createdAt = now()->format('d.m.Y');
+        $createdBy = $this->authManger->user()->full_name;
+        // Je Ausgabe ein eigenes Dokument: Snappy fügt mehrere Eingaben zu einer PDF zusammen
+        $documents = $issues->map(fn (InternalIssue $issue): string => view('pdf.internal_issue', [
+            'issue' => $issue,
+            'createdAt' => $createdAt,
+            'createdBy' => $createdBy,
+        ])->render())->all();
+
+        return response(SnappyPdf::loadHTML($documents)->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => HeaderUtils::makeDisposition(
+                HeaderUtils::DISPOSITION_INLINE,
+                'materialausgaben-' . now()->format('Y-m-d') . '.pdf'
+            ),
         ]);
     }
 
@@ -155,7 +271,7 @@ class InternalIssueController extends Controller
     {
         $this->authorize('viewAny', InternalIssue::class);
 
-        $q = trim((string) request()->input('q', ''));
+        $q = trim($this->stringParameter('q') ?? '');
         $excludeId = (int) request()->input('exclude_id', 0);
 
         $issues = InternalIssue::query()
@@ -319,5 +435,15 @@ class InternalIssueController extends Controller
         $internalIssue->update(['special_items_done' => true]);
 
         return redirect()->back();
+    }
+
+    /**
+     * Abfrage-Parameter nur als Text: Felder (?q[]=x) führten sonst zu einem Fehler statt zu "kein Filter".
+     */
+    private function stringParameter(string $key): ?string
+    {
+        $value = request()->input($key);
+
+        return is_string($value) ? $value : null;
     }
 }

@@ -28,6 +28,7 @@
                              :templates="budget.templates"
                              :is-budget-template-management="true"
                              :isInTrash="true"
+                 @budget-updated="reloadBudget"
             />
             <div v-else>
                 <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text ">
@@ -39,6 +40,7 @@
 </template>
 
 <script>
+import {router} from "@inertiajs/vue3";
 import {IconChevronDown, IconChevronUp, IconSearch, IconX} from "@tabler/icons-vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
@@ -63,6 +65,10 @@ export default {
         }
     },
     methods:{
+        // Löschen läuft per axios ohne Seitenwechsel: die Tabelle danach frisch vom Server holen
+        reloadBudget() {
+            router.reload({only: ['budget'], preserveScroll: true});
+        },
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
             this.template_search = ''

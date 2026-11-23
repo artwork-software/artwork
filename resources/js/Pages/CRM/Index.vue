@@ -16,12 +16,6 @@
                     <span v-if="typeHint" :class="ticketingSync?.error ? 'text-danger-border' : ''">{{ typeHint }}</span>
                 </template>
                 <template #actions>
-                    <!--
-                    <button v-if="canImport" class="ui-button flex items-center gap-1.5" @click="showExportModal = true">
-                        <component :is="IconDownload" stroke-width="1" class="size-5" />
-                        {{ $t('Export') }}
-                    </button>
-                    -->
                     <button
                         v-if="canInviteExternal"
                         class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium"
@@ -67,6 +61,15 @@
                     >
                         <component :is="IconRefresh" stroke-width="1" class="size-5" />
                         {{ $t('Sync now') }}
+                    </button>
+                    <button
+                        v-if="canImport"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium"
+                        @click="showExportModal = true"
+                    >
+                        <component :is="IconDownload" stroke-width="1" class="size-5" />
+                        {{ $t('Export') }}
                     </button>
                     <template v-if="!isMirroredType">
                         <Link v-if="canImport" :href="route('crm.import')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">
@@ -144,7 +147,7 @@
 
             <!-- Contact Type Tabs -->
             <div class="mt-4 border-b border-border-subtle">
-                <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+                <nav class="-mb-px flex space-x-8 overflow-x-auto" :aria-label="$t('Contact types')">
                     <button
                         v-for="type in contactTypes"
                         :key="type.id"
@@ -307,7 +310,7 @@
 
 <script setup>
 import { crmPropertyDisplayText } from '@/Helper/CrmPropertyValue.js'
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { usePermission } from '@/Composeables/Permission.js'
@@ -426,7 +429,7 @@ const columns = computed(() => {
                     type: p.type,
                     accessor: (row) => {
                         const pv = (row.property_values ?? []).find(v => v.crm_property_id === p.id)
-                        return formatCellValue(p.type, pv?.value)
+                        return formatCellValue(p.type, pv?.value, pv?.file_name)
                     },
                 })
             })
@@ -436,14 +439,16 @@ const columns = computed(() => {
 })
 
 // Datum immer DD.MM.YYYY, Checkboxen lesbar statt "1"/"0"
-const formatCellValue = (type, raw) => {
+const formatCellValue = (type, raw, fileName = null) => {
     if (raw === null || raw === undefined || raw === '') return '-'
     if (type === 'date') {
-        const date = new Date(raw)
-        if (isNaN(date.getTime())) return raw
-        const day = String(date.getDate()).padStart(2, '0')
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        return `${day}.${month}.${date.getFullYear()}`
+        // Ohne Date-Objekt: "YYYY-MM-DD" würde als UTC gelesen und westlich davon einen Tag zurückspringen
+        const [year, month, day] = String(raw).slice(0, 10).split('-')
+        return year && month && day ? `${day}.${month}.${year}` : raw
+    }
+    if (type === 'upload') {
+        // Dateiname statt des internen Speicherpfads
+        return fileName || String(raw).split('/').pop()
     }
     if (type === 'checkbox') {
         return raw === '1' ? '✓' : '—'
@@ -460,7 +465,10 @@ const switchType = (slug) => {
     activeFilters.value = {}
     sortState.value = { key: null, direction: null }
     selectedIds.value = new Set()
-    router.get(route('crm.index'), { type: slug }, {
+    // Die Suche bleibt im Feld stehen, also gilt sie auch für die neue Art
+    const data = { type: slug }
+    if (searchInput.value) data.search = searchInput.value
+    router.get(route('crm.index'), data, {
         preserveState: true,
         preserveScroll: true,
     })

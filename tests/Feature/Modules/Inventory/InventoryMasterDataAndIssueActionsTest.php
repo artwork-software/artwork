@@ -221,8 +221,10 @@ final class InventoryMasterDataAndIssueActionsTest extends FeatureTestCase
         $external = ExternalIssue::factory()->create(['special_items_done' => false]);
         $internal = InternalIssue::factory()->create(['special_items_done' => false]);
 
-        $this->post(route('extern-issue-of-material.set-special-items-done', $external))
-            ->assertRedirect(route('extern-issue-of-material.index'));
+        // zurück zur aufrufenden Seite (Projekt-Reiter oder Liste), nicht fest auf die Listenseite
+        $this->from('/external')
+            ->post(route('extern-issue-of-material.set-special-items-done', $external))
+            ->assertRedirect('/external');
         $this->from('/internal')
             ->post(route('issue-of-material.set-special-items-done', $internal))
             ->assertRedirect('/internal');

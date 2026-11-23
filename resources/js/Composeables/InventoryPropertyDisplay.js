@@ -1,5 +1,6 @@
 import { useTranslation } from '@/Composeables/Translation.js'
 import { isCheckboxChecked } from '@/Helper/CheckboxValue.js'
+import { useInstanceFormat } from '@/Composeables/InstanceFormat.js'
 
 /**
  * Builds a normalized display descriptor for an inventory article property.
@@ -23,6 +24,8 @@ import { isCheckboxChecked } from '@/Helper/CheckboxValue.js'
  */
 export function useInventoryPropertyDisplay() {
     const $t = useTranslation()
+    // Datumsangaben im Format der Instanz (TT.MM.JJJJ) statt im Browser-Format ("17.8.2027")
+    const { formatDate, formatDateTime } = useInstanceFormat()
 
     const fileName = (path) => (typeof path === 'string' ? path.split('/').pop() : '')
 
@@ -36,11 +39,11 @@ export function useInventoryPropertyDisplay() {
                     ? owner.manufacturer.name
                     : ''
             case 'date':
-                return pivotValue ? new Date(pivotValue).toLocaleDateString() : ''
+                return pivotValue ? (formatDate(pivotValue) || String(pivotValue)) : ''
             case 'time':
                 return pivotValue || ''
             case 'datetime':
-                return pivotValue ? new Date(pivotValue).toLocaleString() : ''
+                return pivotValue ? (formatDateTime(pivotValue) || String(pivotValue)) : ''
             case 'checkbox':
                 return isCheckboxChecked(pivotValue) ? $t('Yes') : $t('No')
             case 'file':

@@ -125,6 +125,11 @@ Broadcast::channel('user-status', function () {
     return Auth::check();
 });
 
+// Hinweis ohne Inhalt für die Seite "Eingehende Anfragen"; welche Anfragen jemand sieht, entscheidet die Seite
+Broadcast::channel(\Artwork\Modules\Event\Events\RoomRequestsChanged::CHANNEL, function ($user) {
+    return $user instanceof User;
+});
+
 // Termin-DTOs. Der Kalender steht jedem angemeldeten Nutzer offen und eine raumbezogene Sichtbarkeit
 // gibt es nicht (RoomPolicy::view ist das Verwaltungsrecht): Auth::check() plus Existenz des Raums.
 // Geplante Termine gehen hier nur als Hinweis ohne Inhalt raus (SplitsPlanningBroadcast).

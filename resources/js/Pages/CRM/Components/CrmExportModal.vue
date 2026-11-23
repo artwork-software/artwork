@@ -26,7 +26,7 @@
                 <div class="flex flex-wrap gap-3 mb-3">
                     <label class="flex items-center gap-1.5 text-sm cursor-pointer">
                         <input type="checkbox" value="display_name" v-model="selectedColumns" class="rounded border-border text-accent-600 h-4 w-4" />
-                        Name
+                        {{ $t('Name') }}
                     </label>
                     <label class="flex items-center gap-1.5 text-sm cursor-pointer">
                         <input type="checkbox" value="contact_type" v-model="selectedColumns" class="rounded border-border text-accent-600 h-4 w-4" />
@@ -53,7 +53,7 @@
                                 v-model="selectedColumns"
                                 class="rounded border-border text-accent-600 h-4 w-4"
                             />
-                            {{ prop.name }}
+                            {{ $t(prop.name) }}
                         </label>
                     </div>
                 </div>

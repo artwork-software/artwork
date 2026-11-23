@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Crm\Http\Requests;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Crm\Models\CrmContactType;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CrmImportTypeMapRequest extends FormRequest
@@ -18,7 +19,11 @@ class CrmImportTypeMapRequest extends FormRequest
             'type_column_index' => ['required', 'integer', 'min:0'],
             'type_value_mapping' => ['required', 'array', 'min:1'],
             'type_value_mapping.*.type_value' => ['required', 'string'],
-            'type_value_mapping.*.crm_contact_type_id' => ['nullable', 'integer', 'exists:crm_contact_types,id'],
+            'type_value_mapping.*.crm_contact_type_id' => [
+                'nullable',
+                'integer',
+                CrmContactType::writableExistsRule(),
+            ],
         ];
     }
 }

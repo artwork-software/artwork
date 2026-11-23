@@ -34,7 +34,7 @@
                                     leave-to-class="opacity-0 translate-y-1"
                                 >
                                     <ListboxOptions
-                                        class="absolute z-100 mt-2 w-full rounded-lg border border-border-subtle bg-white p-1 text-sm shadow-lg focus:outline-none"
+                                        class="absolute right-0 z-100 mt-2 min-w-full w-max max-w-xs rounded-lg border border-border-subtle bg-white p-1 text-sm shadow-lg focus:outline-none"
                                     >
                                         <ListboxOption
                                             v-for="filter in moneySourceFilters"
@@ -58,19 +58,28 @@
                             </div>
                         </Listbox>
 
-                        <BaseUIButton
-                            label=""
-                            use-translation
-                            on-band
-                            :icon="IconFilter"
-                            @click="showMoneySourceFilters = !showMoneySourceFilters"
-                        />
+                        <div class="relative">
+                            <BaseUIButton
+                                label=""
+                                on-band
+                                :icon="IconFilter"
+                                :title="$t('Filter')"
+                                :aria-label="$t('Filter')"
+                                :aria-expanded="showMoneySourceFilters"
+                                @click="showMoneySourceFilters = !showMoneySourceFilters"
+                            />
+                            <span v-if="activeFilterCount > 0"
+                                  class="pointer-events-none absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-500 px-1 text-[10px] font-semibold text-white">
+                                {{ activeFilterCount }}
+                            </span>
+                        </div>
                     </div>
 
                     <Menu as="div" class="relative">
                         <MenuButton
                             class="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
                             :aria-label="$t('Sort')"
+                            :title="$t('Sort')"
                         >
                             <IconArrowsSort class="h-5 w-5 text-text-inverse" stroke-width="1.5" />
                         </MenuButton>
@@ -147,6 +156,16 @@
                     </Menu>
 
                     <BaseUIButton
+                        label=""
+                        on-band
+                        :icon="IconFileSpreadsheet"
+                        :title="$t('Excel-Export')"
+                        :aria-label="$t('Excel-Export')"
+                        :disabled="filteredMoneySources.length === 0"
+                        @click="exportMoneySources"
+                    />
+
+                    <BaseUIButton
                         label="New"
                         use-translation
                         is-add-button
@@ -168,11 +187,11 @@
                     class="z-10 w-full rounded-2xl border border-border-subtle bg-white p-4 shadow-lg"
                 >
                     <!-- Kategorien -->
-                    <Disclosure as="div" class="mb-3">
+                    <Disclosure as="div" class="mb-3" default-open>
                         <DisclosureButton
                             class="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm font-medium text-text hover:bg-surface-sunken focus:outline-none"
                         >
-                            <span>{{ $t('All categories') }}</span>
+                            <span>{{ $t('Categories') }}</span>
                             <IconChevronDown class="h-4 w-4 text-text-subtle ui-open:rotate-180 ui-open:transform" />
                         </DisclosureButton>
                         <DisclosurePanel class="mt-2 px-2">
@@ -219,17 +238,24 @@
                     <!-- Zeitraum -->
                     <button
                         type="button"
-                        class="rounded-md px-2 py-1.5 text-left text-xs"
-                        :class="timeSpanFilterActive ? 'text-text font-medium' : 'text-text-subtle hover:text-text-muted'"
+                        class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1.5 text-left text-xs hover:bg-surface-sunken"
+                        :class="timeSpanFilterActive ? 'text-text font-medium' : 'text-text-muted'"
                         @click="openTimeSpanFilterModal"
                     >
-                        {{ $t('Period') }}
+                        <IconCalendar class="h-3.5 w-3.5" stroke-width="1.5"/>
+                        {{ timeSpanFilterActive ? formatDateString(timeSpanFilterStart) + ' - ' + formatDateString(timeSpanFilterEnd) : $t('Select period') }}
                     </button>
                 </div>
             </div>
 
             <!-- Aktive Filter als Tags -->
             <div class="mb-4 flex flex-wrap gap-2">
+                <TagComponent
+                    v-if="moneySource_query.trim() !== ''"
+                    :displayed-text="$t('Search') + ': ' + moneySource_query.trim()"
+                    :method="() => (moneySource_query = '')"
+                    property=""
+                />
                 <TagComponent
                     v-if="timeSpanFilterActive"
                     :displayed-text="formatDateString(timeSpanFilterStart) + ' - ' + formatDateString(timeSpanFilterEnd)"
@@ -251,19 +277,55 @@
                 />
             </div>
 
-            <!-- Liste -->
+            <!-- Kennzahlen über die gefilterten Quellen (ohne Gruppen, sonst zählte der Verbrauch doppelt) -->
+            <dl v-if="listSummary.count > 0" class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div class="rounded-2xl border border-border-subtle bg-white px-4 py-3">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wider text-text-subtle">{{ $t('Sources of funding') }}</dt>
+                    <dd class="mt-1 text-xl font-semibold tabular-nums text-text">{{ listSummary.count }}</dd>
+                </div>
+                <div class="rounded-2xl border border-border-subtle bg-white px-4 py-3">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wider text-text-subtle">{{ $t('Volume') }}</dt>
+                    <dd class="mt-1 text-xl font-semibold tabular-nums text-text">{{ toCurrencyString(listSummary.volume) }} {{ $currencySymbol() }}</dd>
+                </div>
+                <div class="rounded-2xl border border-border-subtle bg-white px-4 py-3">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wider text-text-subtle">{{ $t('Verbraucht') }}</dt>
+                    <dd class="mt-1 text-xl font-semibold tabular-nums text-text">
+                        {{ toCurrencyString(listSummary.used) }} {{ $currencySymbol() }}
+                        <span class="ml-1 text-xs font-normal text-text-subtle">{{ listSummary.usedPercent }} %</span>
+                    </dd>
+                </div>
+                <div class="rounded-2xl border border-border-subtle bg-white px-4 py-3">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wider text-text-subtle">{{ $t('Noch verfügbar') }}</dt>
+                    <dd class="mt-1 text-xl font-semibold tabular-nums" :class="listSummary.remaining < 0 ? 'text-danger' : 'text-text'">
+                        {{ toCurrencyString(listSummary.remaining) }} {{ $currencySymbol() }}
+                    </dd>
+                </div>
+            </dl>
+
+            <!-- Liste: Gruppen mit ihren Quellen eingerückt darunter -->
             <ul role="list" class="w-full">
                 <li
-                    v-for="moneySource in filteredMoneySources"
+                    v-for="{ source: moneySource, depth, childCount, orphan } in displayedEntries"
                     :key="moneySource.id"
                     v-show="(moneySources.some(s => s.money_source_id === moneySource.id) || can('view edit add money_sources | can edit and delete money sources')) || is('artwork admin')"
                     class="mb-3 rounded-2xl border border-border-subtle bg-white p-4 shadow-xs"
+                    :class="depth === 1 ? 'ml-8 border-l-4 border-l-border' : ''"
                 >
                     <!-- Kopfzeile -->
 
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
+                                <button
+                                    v-if="moneySource.is_group && childCount > 0"
+                                    type="button"
+                                    class="-ml-1 rounded p-0.5 text-text-muted hover:bg-surface-sunken"
+                                    :title="collapsedGroups[moneySource.id] ? $t('Expand') : $t('Collapse')"
+                                    :aria-expanded="!collapsedGroups[moneySource.id]"
+                                    @click="toggleGroup(moneySource.id)"
+                                >
+                                    <IconChevronDown class="h-4 w-4 transition-transform" :class="collapsedGroups[moneySource.id] ? '-rotate-90' : ''" />
+                                </button>
                                 <PropertyIcon
                                     v-if="moneySource.is_group && moneySource.icon"
                                     :name="moneySource.icon"
@@ -284,9 +346,13 @@
                                     class="h-4 w-4 text-accent-600"
                                     stroke-width="1.5"
                                 />
+                                <span v-if="moneySource.is_group"
+                                      class="shrink-0 rounded-md border border-border-subtle px-2 py-0.5 text-[11px] text-text-muted">
+                                    {{ $t('Gruppe') }}<template v-if="childCount > 0"> · {{ childCount }} {{ childCount === 1 ? $t('Source of funding') : $t('Sources of funding') }}</template>
+                                </span>
                             </div>
 
-                            <div v-if="moneySource.group_id !== null" class="mt-1 text-xs text-text-subtle">
+                            <div v-if="orphan" class="mt-1 text-xs text-text-subtle">
                                 {{ $t('Belongs to') }}:
                                 {{ findGroupName(moneySource.group_id) }}
                             </div>
@@ -353,16 +419,48 @@
                     </div>
 
                     <!-- Meta -->
-                    <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-text-muted">
-                        <div class="pl-1">
-                            {{ toCurrencyString(moneySource.amount + moneySource.sumOfPositions) }} {{ $currencySymbol() }} /
-                            {{ toCurrencyString(moneySource.amount) }} {{ $currencySymbol() }}
+                    <div class="mt-3 flex flex-wrap items-end gap-x-8 gap-y-3 pl-1">
+                        <div class="w-full max-w-sm">
+                            <div class="flex items-baseline justify-between gap-3 text-xs">
+                                <span class="text-text-muted">
+                                    {{ $t('Noch verfügbar') }}:
+                                    <span class="font-semibold tabular-nums" :class="remainingAmount(moneySource) < 0 ? 'text-danger' : 'text-text'">
+                                        {{ toCurrencyString(remainingAmount(moneySource)) }} {{ $currencySymbol() }}
+                                    </span>
+                                </span>
+                                <span class="text-text-subtle tabular-nums">
+                                    {{ $t('of') }} {{ toCurrencyString(moneySource.amount) }} {{ $currencySymbol() }}
+                                </span>
+                            </div>
+                            <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken"
+                                 role="progressbar"
+                                 :aria-valuenow="usedPercent(moneySource)" aria-valuemin="0" aria-valuemax="100"
+                                 :aria-label="$t('Verbraucht')">
+                                <div class="h-full rounded-full"
+                                     :class="usedBarClass(moneySource)"
+                                     :style="{ width: usedPercent(moneySource) + '%' }"/>
+                            </div>
                         </div>
 
-                        <div v-if="moneySource.funding_start_date && moneySource.funding_end_date" class="pl-1">
-                            | {{ $t('Period') }}:
-                            {{ formatDateString(moneySource.funding_start_date) }} -
-                            {{ formatDateString(moneySource.funding_end_date) }}
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
+                            <span v-if="moneySource.funding_start_date && moneySource.funding_end_date">
+                                {{ $t('Funding period') }}:
+                                {{ formatDateString(moneySource.funding_start_date) }} - {{ formatDateString(moneySource.funding_end_date) }}
+                            </span>
+                            <span v-if="moneySource.start_date && moneySource.end_date">
+                                {{ $t('Term') }}:
+                                {{ formatDateString(moneySource.start_date) }} - {{ formatDateString(moneySource.end_date) }}
+                            </span>
+                            <span v-if="fundingEndState(moneySource)"
+                                  class="inline-flex items-center rounded-md border px-2 py-0.5 text-[11px]"
+                                  :class="fundingEndState(moneySource).expired ? 'border-danger-border bg-danger-surface/70 text-danger' : 'border-warning text-warning'">
+                                {{ fundingEndState(moneySource).label }}
+                            </span>
+                            <span v-if="openTaskCount(moneySource) > 0"
+                                  class="inline-flex items-center gap-1 rounded-md border border-border-subtle px-2 py-0.5 text-[11px] text-text-muted">
+                                <IconChecklist class="h-3.5 w-3.5" stroke-width="1.5"/>
+                                {{ openTaskCount(moneySource) }} {{ openTaskCount(moneySource) === 1 ? $t('open task') : $t('open tasks') }}
+                            </span>
                         </div>
                     </div>
 
@@ -400,6 +498,14 @@
                     </div>
                 </li>
             </ul>
+
+            <EmptyState
+                v-if="filteredMoneySources.length === 0"
+                icon="IconCurrencyEuro"
+                :title="hasAnyFilter ? $t('No sources of funding match your search or filters.') : $t('No sources of funding have been created yet.')"
+                :action-label="hasAnyFilter ? $t('Reset filters') : ''"
+                @action="resetAllFilters"
+            />
         </div>
 
         <!-- Create Modal -->
@@ -467,7 +573,7 @@
 </template>
 
 <script setup>
-import { ref, computed, getCurrentInstance, nextTick } from 'vue'
+import { ref, computed, getCurrentInstance, watch } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 
@@ -477,8 +583,9 @@ import {
     Menu, MenuButton, MenuItem, MenuItems
 } from '@headlessui/vue'
 import {
-    IconCirclePlus, IconChevronDown, IconCircleCheck, IconSearch, IconX, IconFilter, IconArrowsSort,
-    IconSortAscending, IconSortDescending, IconEdit, IconCopy, IconPin, IconTrash, IconPinned, IconCurrencyEuro
+    IconChevronDown, IconCircleCheck, IconFilter, IconArrowsSort,
+    IconSortAscending, IconSortDescending, IconEdit, IconCopy, IconPin, IconTrash, IconPinned, IconCurrencyEuro,
+    IconChecklist, IconCalendar, IconFileSpreadsheet
 } from '@tabler/icons-vue'
 
 import CreateMoneySourceComponent from '@/Layouts/Components/CreateMoneySourceComponent.vue'
@@ -494,6 +601,16 @@ import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+import EmptyState from "@/Artwork/Feedback/EmptyState.vue";
+import { safeGetItem, safeSetItem } from "@/Helper/safeStorage.js";
+import {
+    buildMoneySourceTree,
+    daysUntilDate,
+    matchesMoneySourceSearch,
+    summarizeMoneySources,
+    moneySourceRemainingAmount,
+    moneySourceUsedPercent
+} from "@/Pages/MoneySources/moneySourceListTools.js";
 
 const instanceFormat = useInstanceFormat();
 
@@ -508,7 +625,7 @@ const props = defineProps({
 
 /* i18n helper */
 const { proxy } = getCurrentInstance()
-const t = (s) => (proxy?.$t ? proxy.$t(s) : s)
+const t = (s, params) => (proxy?.$t ? proxy.$t(s, params) : s)
 const page = proxy?.$page
 
 /* Filters: Typ */
@@ -520,9 +637,7 @@ const moneySourceFilters = computed(() => ([
 const moneySourceFilter = ref(moneySourceFilters.value[0])
 
 /* UI State */
-const showSearchbar = ref(false)
 const moneySource_query = ref('')
-const searchBarInput = ref(null)
 
 /** Wer zuletzt geändert hat: historyForFrontend liefert die Person je Zeile (change_by) */
 const lastChanger = (moneySource) =>
@@ -546,16 +661,6 @@ const sortOrder = ref(null)               // 'ascending' | 'descending'
 
 const showMoneySourceHistory = ref(false)
 const moneySourceToShowHistoryOf = ref(null)
-
-/* Toolbar actions */
-function openSearchbar () {
-    showSearchbar.value = true
-    nextTick(() => searchBarInput.value?.focus?.())
-}
-function closeSearchbar () {
-    showSearchbar.value = false
-    moneySource_query.value = ''
-}
 
 /* Zeitspanne */
 function openTimeSpanFilterModal () { timeSpanFilterModalVisible.value = true }
@@ -582,14 +687,16 @@ function removeCategoryFilter (id) {
 function sourcesToShow () {
     const type = moneySourceFilter.value?.type
     if (type === 'single') return props.moneySources.filter(s => s.is_group === false)
-    if (type === 'group') return props.moneySourceGroups
+    // aus moneySources statt moneySourceGroups: nur dort hängt die Positionssumme dran
+    if (type === 'group') return props.moneySources.filter(s => s.is_group === true)
     return [...props.moneySources] // all
 }
 
 /* Pinned */
 function isPinned (src) {
     const uid = page?.props?.auth?.user?.id
-    return Array.isArray(src?.pinned_by_users) && uid ? src.pinned_by_users.includes(uid) : false
+    // Altbestand kann als Objekt statt Liste gespeichert sein ({"1": 7}), daher Object.values
+    return uid ? Object.values(src?.pinned_by_users ?? {}).includes(uid) : false
 }
 
 /* Rechte-Check */
@@ -606,11 +713,6 @@ function canWriteOrCompetent (src) {
     const m = getMemberInMoneySource(src)
     return uid && (m.write_access.includes(uid) || m.competent.includes(uid))
 }
-function hasAdminRole () {
-    // greift auf globale $role/$can im Template zu; hier nur Fallback
-    return false
-}
-
 /* Formatierungen */
 function formatDateString (dateStr) {
     if (!dateStr) return ''
@@ -634,13 +736,13 @@ function getEditHref (src) {
     return route('money_sources.show', { moneySource: src.id })
 }
 function duplicateMoneySource (src) {
-    router.post(`/money_sources/${src.id}/duplicate`)
+    router.post(`/money_sources/${src.id}/duplicate`, {}, { preserveScroll: true })
 }
 function pinMoneySource (src) {
-    router.post(`/money_sources/${src.id}/pin`)
+    router.post(`/money_sources/${src.id}/pin`, {}, { preserveScroll: true })
 }
 function deleteMoneySource (src) {
-    router.delete(`/money_sources/${src.id}`)
+    router.delete(`/money_sources/${src.id}`, { preserveScroll: true })
     showDeleteSourceModal.value = false
 }
 function openDeleteSourceModal (src) {
@@ -670,10 +772,9 @@ function changeSortAlgorithm (type) {
     }
 }
 function sortMoneySources (arr) {
-    const uid = page?.props?.auth?.user?.id
     const pinCompare = (a, b) => {
-        const ap = Array.isArray(a?.pinned_by_users) && uid ? a.pinned_by_users.includes(uid) : false
-        const bp = Array.isArray(b?.pinned_by_users) && uid ? b.pinned_by_users.includes(uid) : false
+        const ap = isPinned(a)
+        const bp = isPinned(b)
         if (ap && !bp) return -1
         if (!ap && bp) return 1
         return 0
@@ -712,9 +813,8 @@ const filteredMoneySources = computed(() => {
     let list = sourcesToShow()
 
     // Suche
-    const q = moneySource_query.value.toLowerCase().trim()
-    if (q) {
-        list = list.filter(ms => (ms?.name || '').toLowerCase().includes(q))
+    if (moneySource_query.value.trim()) {
+        list = list.filter(ms => matchesMoneySourceSearch(ms, moneySource_query.value, findGroupName(ms?.group_id)))
     }
 
     // Kategorien (AND-Logik)
@@ -752,6 +852,100 @@ const filteredMoneySources = computed(() => {
 
     return sortMoneySources(list)
 })
+
+/* Karten-Kennzahlen */
+const remainingAmount = (src) => moneySourceRemainingAmount(src)
+const usedPercent = (src) => moneySourceUsedPercent(src)
+function usedBarClass (src) {
+    if (remainingAmount(src) < 0 || usedPercent(src) >= 100) return 'bg-danger'
+    return usedPercent(src) >= 80 ? 'bg-warning' : 'bg-success'
+}
+const openTaskCount = (src) => (src?.money_source_tasks ?? []).filter(task => !task?.done).length
+/** Hinweis, wenn der Förderzeitraum abgelaufen ist oder in den nächsten 30 Tagen endet */
+function fundingEndState (src) {
+    const days = daysUntilDate(src?.funding_end_date)
+    if (days === null || days > 30) return null
+    if (days < 0) return { expired: true, label: t('Expired') }
+    if (days === 0) return { expired: false, label: t('Ends today') }
+    return { expired: false, label: t('Ends in {count} days', { count: days }) }
+}
+
+/* Baum, Kennzahlen, Export */
+const collapsedGroups = ref({})            // { [groupId]: true }
+function toggleGroup (groupId) {
+    if (collapsedGroups.value[groupId]) {
+        delete collapsedGroups.value[groupId]
+    } else {
+        collapsedGroups.value[groupId] = true
+    }
+}
+const displayedEntries = computed(() => buildMoneySourceTree(filteredMoneySources.value, collapsedGroups.value))
+const listSummary = computed(() => summarizeMoneySources(filteredMoneySources.value))
+function exportMoneySources () {
+    window.open(
+        route('money_sources.export', { ids: filteredMoneySources.value.map(source => source.id) }),
+        '_blank',
+        'noopener'
+    )
+}
+
+/* Filter-Übersicht */
+const activeFilterCount = computed(() =>
+    categoryFilters.value.length + (openTasksFilter.value ? 1 : 0) + (timeSpanFilterActive.value ? 1 : 0)
+)
+const hasAnyFilter = computed(() =>
+    activeFilterCount.value > 0 || moneySource_query.value.trim() !== '' || moneySourceFilter.value?.type !== 'all'
+)
+function resetAllFilters () {
+    moneySource_query.value = ''
+    categoryFilters.value = []
+    openTasksFilter.value = false
+    deactivateTimeSpanFilter()
+    moneySourceFilter.value = moneySourceFilters.value[0]
+}
+
+/* Filter und Sortierung überleben den Abstecher in eine Quelle (pro Browser-Sitzung) */
+const LIST_STATE_KEY = 'moneySourceListState'
+try {
+    const stored = JSON.parse(safeGetItem(LIST_STATE_KEY, 'session'))
+    if (stored && typeof stored === 'object') {
+        moneySource_query.value = typeof stored.query === 'string' ? stored.query : ''
+        moneySourceFilter.value = moneySourceFilters.value.find(f => f.type === stored.type) ?? moneySourceFilters.value[0]
+        const knownCategoryIds = new Set(props.moneySourceCategories.map(c => c.id))
+        categoryFilters.value = Array.isArray(stored.categories) ? stored.categories.filter(id => knownCategoryIds.has(id)) : []
+        openTasksFilter.value = stored.openTasks === true
+        if (stored.timeSpanStart && stored.timeSpanEnd) {
+            timeSpanFilterStart.value = stored.timeSpanStart
+            timeSpanFilterEnd.value = stored.timeSpanEnd
+            timeSpanFilterActive.value = true
+        }
+        sortType.value = stored.sortType ?? null
+        sortOrder.value = stored.sortOrder ?? null
+        if (stored.collapsedGroups && typeof stored.collapsedGroups === 'object') {
+            collapsedGroups.value = stored.collapsedGroups
+        }
+    }
+} catch {
+    // unlesbarer Stand: mit Standardwerten starten
+}
+watch(
+    [moneySource_query, moneySourceFilter, categoryFilters, openTasksFilter, timeSpanFilterActive, timeSpanFilterStart,
+        timeSpanFilterEnd, sortType, sortOrder, collapsedGroups],
+    () => {
+        safeSetItem(LIST_STATE_KEY, JSON.stringify({
+            query: moneySource_query.value,
+            type: moneySourceFilter.value?.type,
+            categories: categoryFilters.value,
+            openTasks: openTasksFilter.value,
+            timeSpanStart: timeSpanFilterActive.value ? timeSpanFilterStart.value : null,
+            timeSpanEnd: timeSpanFilterActive.value ? timeSpanFilterEnd.value : null,
+            sortType: sortType.value,
+            sortOrder: sortOrder.value,
+            collapsedGroups: collapsedGroups.value,
+        }), 'session')
+    },
+    { deep: true }
+)
 
 /* kleine Helfer */
 function findGroupName (groupId) {

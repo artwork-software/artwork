@@ -125,6 +125,7 @@ use Artwork\Modules\AiAssistant\Http\Controllers\AiAssistantSettingsController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiActionBatchController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiActionController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiConversationController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiExportController;
 use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiAssistantIsEnabled;
 use Artwork\Modules\AiAssistant\Http\Middleware\EnsureUserHasAiAccess;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiSessionController;
@@ -287,6 +288,11 @@ Route::group(['middleware' => ['auth']], function (): void {
         // Ruecknahme einer ausgefuehrten Aktion (core-undo; Konzept W3 §2).
         Route::post('/ai/actions/batches/{batch}/revert', [AiActionBatchController::class, 'revert'])
             ->name('ai.actions.batches.revert');
+
+        // PDF-Export aus der Bar (core-ai-event-stats-exports): relative URL, Session-Login, nur Eigentuemer.
+        Route::get('/ai/exports/{export}', [AiExportController::class, 'download'])
+            ->whereUuid('export')
+            ->name('ai.exports.download');
     });
 
     // Weiterleitung ins Wiki (core-help-redirect). Innerhalb der auth-Gruppe, damit daraus kein

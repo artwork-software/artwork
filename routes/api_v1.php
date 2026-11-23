@@ -5,6 +5,7 @@ use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiActionApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiContextApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiConversationApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiExportApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventWriteApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiInventoryApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiLookupApiController;
@@ -84,6 +85,15 @@ Route::middleware(['auth:api', EnsureAiAccessPermission::class, 'throttle:api-to
 
         Route::get('/ai/events', [AiEventApiController::class, 'index'])
             ->name('api.v1.ai.events.index');
+
+        // Terminanzahl je Projekt, Raum oder Terminart im Zeitraum (core-ai-event-stats-exports).
+        Route::get('/ai/events/stats', [AiEventApiController::class, 'stats'])
+            ->name('api.v1.ai.events.stats');
+
+        // Tabelle als PDF (core-ai-event-stats-exports). Liest keine Daten selbst — die Zeilen hat
+        // artwork-ai schon ueber die Lese-Endpunkte bekommen —, deshalb genuegt ai:read.
+        Route::post('/ai/exports', [AiExportApiController::class, 'store'])
+            ->name('api.v1.ai.exports.store');
 
         // Belegung und freie Slots rechnen bewusst mit *allen* Terminen der Raeume: ein belegter
         // Raum ist ein Faktum, der Termininhalt bleibt geschuetzt (B1 §5).

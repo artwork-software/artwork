@@ -134,6 +134,14 @@
                                             v-html="turn.answerHtml"
                                         />
 
+                                        <AiAttachment
+                                            v-for="attachment in turn.attachments ?? []"
+                                            :key="`${turn.clientTurnId}-${attachment.url}`"
+                                            :url="attachment.url"
+                                            :filename="attachment.filename"
+                                            :title="attachment.title"
+                                        />
+
                                         <p v-if="turn.status === 'cancelled'" class="text-xs text-text-subtle">
                                             {{ $t('Aborted') }}
                                         </p>
@@ -269,6 +277,7 @@ import { useI18n } from 'vue-i18n'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import AiActionConfirm from '@/Components/AiAssistant/AiActionConfirm.vue'
 import AiActionResult from '@/Components/AiAssistant/AiActionResult.vue'
+import AiAttachment from '@/Components/AiAssistant/AiAttachment.vue'
 import AiChoiceList from '@/Components/AiAssistant/AiChoiceList.vue'
 import AiConversationPanel from '@/Components/AiAssistant/AiConversationPanel.vue'
 import { MAX_MESSAGE_LENGTH, useAiAssistant } from '@/Composeables/useAiAssistant'
@@ -396,4 +405,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 .ai-answer :deep(a) { text-decoration: underline; }
 .ai-answer :deep(code) { font-family: ui-monospace, monospace; font-size: 0.85em; }
 .ai-answer :deep(pre) { overflow-x: auto; padding: 0.5rem; border-radius: 0.5rem; background: var(--color-surface-sunken); }
+/* Tabellen aus Auswertungen (core-ki-bar-attachment): ohne Regeln stuenden sie nach dem Preflight ohne Rahmen da. */
+.ai-answer :deep(table) { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin-bottom: 0.5rem; font-size: 0.85em; }
+.ai-answer :deep(th), .ai-answer :deep(td) { border: 1px solid var(--color-border-subtle); padding: 0.25rem 0.5rem; text-align: left; vertical-align: top; }
+.ai-answer :deep(th) { background: var(--color-surface-sunken); font-weight: 600; }
 </style>

@@ -364,6 +364,129 @@
                 }
             }
         },
+        "/api/v1/ai/events/stats": {
+            "get": {
+                "operationId": "v1.ai.events.stats",
+                "summary": "Terminanzahl je Projekt, Raum oder Terminart (core-ai-event-stats-exports)",
+                "tags": [
+                    "AiEventApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "group_by",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "project",
+                                "room",
+                                "type"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "room_ids[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    {
+                        "name": "project_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "min_count",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "max_count",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiEventStatsListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiEventStatsListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/api/v1/ai/rooms/occupancy": {
             "get": {
                 "operationId": "v1.ai.rooms.occupancy",
@@ -709,6 +832,43 @@
                 }
             }
         },
+        "/api/v1/ai/exports": {
+            "post": {
+                "operationId": "v1.ai.exports.store",
+                "summary": "Antwort 201 wie bei den Conversations — ausdruecklich, damit der Contract den Status traegt",
+                "tags": [
+                    "AiExportApi"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAiExportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`AiExportData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiExportData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/api/v1/ai/inventory/availability": {
             "get": {
                 "operationId": "v1.ai.inventory.availability",
@@ -802,6 +962,27 @@
                                 "null"
                             ],
                             "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
                         }
                     }
                 ],
@@ -5090,6 +5271,69 @@
                 ],
                 "title": "AiEventStaffingData"
             },
+            "AiEventStatsGroupData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "count": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "count"
+                ],
+                "title": "AiEventStatsGroupData"
+            },
+            "AiEventStatsListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiEventStatsGroupData"
+                        }
+                    },
+                    "group_by": {
+                        "type": "string"
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "total_events": {
+                        "type": "integer"
+                    },
+                    "total_groups": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "group_by",
+                    "period",
+                    "total_events",
+                    "total_groups",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiEventStatsListData"
+            },
             "AiEventTypeData": {
                 "type": "object",
                 "properties": {
@@ -5162,6 +5406,34 @@
                     "minutes"
                 ],
                 "title": "AiEventTypeMinutesData"
+            },
+            "AiExportData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "filename": {
+                        "type": "string"
+                    },
+                    "row_count": {
+                        "type": "integer"
+                    },
+                    "expires_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "url",
+                    "filename",
+                    "row_count",
+                    "expires_at"
+                ],
+                "title": "AiExportData"
             },
             "AiFreeSlotData": {
                 "type": "object",
@@ -6317,10 +6589,17 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "required": [
-                    "id"
+                    "id",
+                    "categories"
                 ],
                 "title": "AiRoomData"
             },
@@ -8624,7 +8903,7 @@
             },
             "StoreAiEventBatchRequest": {
                 "type": "object",
-                "description": "POST /api/v1/ai/events/batch (core-write-endpoints-dry-run; Konzept W1 §1).\n\nDer Serienbeschrieb ist bewusst eng: Zeitraum, Wochentage, Uhrzeit, Dauer, Raum, Typ. Alles\nandere legt der Bulk-Service der Oberflaeche fest.\n\n`all_day` (core-api-lookups) schaltet Uhrzeit und Dauer ab: ganztaegige Termine haben keine,\nund mit `required` waeren sie nur ueber eine erfundene Uhrzeit ausdrueckbar.",
+                "description": "POST /api/v1/ai/events/batch (core-write-endpoints-dry-run; Konzept W1 §1).\n\nDer Serienbeschrieb ist bewusst eng: Zeitraum, Wochentage, Uhrzeit, Dauer, Raum, Typ. Alles\nandere legt der Bulk-Service der Oberflaeche fest.\n\n`all_day` (core-api-lookups) schaltet Uhrzeit und Dauer ab: ganztaegige Termine haben keine,\nund mit `required` waeren sie nur ueber eine erfundene Uhrzeit ausdrueckbar.\n\ncore-ai-series-rooms (Feedback 17.11.): `project_id` ist optional — Termine ohne Projekt gibt es\nin der Oberflaeche auch —, und `room_ids` legt dieselbe Serie in bis zu 10 Raeumen an. `room_id`\nbleibt fuer bestehende Aufrufe gueltig.",
                 "properties": {
                     "dry_run": {
                         "type": "boolean"
@@ -8637,7 +8916,10 @@
                         "format": "uuid"
                     },
                     "project_id": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "series_spec": {
                         "type": "object",
@@ -8676,7 +8958,22 @@
                                 "maximum": 1440
                             },
                             "room_id": {
-                                "type": "integer"
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "room_ids": {
+                                "type": [
+                                    "array",
+                                    "null"
+                                ],
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 10,
+                                "uniqueItems": true
                             },
                             "type_id": {
                                 "type": "integer"
@@ -8697,16 +8994,63 @@
                         "required": [
                             "from",
                             "to",
-                            "room_id",
                             "type_id"
                         ]
                     }
                 },
                 "required": [
-                    "project_id",
                     "series_spec"
                 ],
                 "title": "StoreAiEventBatchRequest"
+            },
+            "StoreAiExportRequest": {
+                "type": "object",
+                "description": "POST /api/v1/ai/exports (core-ai-event-stats-exports): eine Tabelle als PDF.\n\nDie Zeilen kommen aus Werkzeugergebnissen, die artwork-ai bereits gelesen hat — der Endpunkt liest\nselbst keine Daten und braucht deshalb nur `ai:read`. Zellen sind Text, Zahl oder leer.",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "subtitle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 300
+                    },
+                    "note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "columns": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 80
+                        },
+                        "minItems": 1,
+                        "maxItems": 12
+                    },
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "maxItems": 2000
+                    }
+                },
+                "required": [
+                    "title",
+                    "columns",
+                    "rows"
+                ],
+                "title": "StoreAiExportRequest"
             },
             "StoreAiSessionRequest": {
                 "type": "object",

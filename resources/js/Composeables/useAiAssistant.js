@@ -12,6 +12,7 @@ import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { AiStreamError, streamChat, streamConfirm } from '@/Components/AiAssistant/sseClient'
 import { renderAiMarkdown } from '@/Components/AiAssistant/aiMarkdown'
+import { attachmentFrom } from '@/Components/AiAssistant/aiAttachment'
 import { cfg } from '@/runtimeConfig'
 
 /** 0.2 §4: unter zwei Minuten Restlaufzeit wird vor dem naechsten Turn neu geholt. */
@@ -118,6 +119,8 @@ function newTurn(message) {
         answer: '',
         answerHtml: '',
         tools: [],
+        /** Downloads aus artwork-ai (Protokoll 1.2, core-ki-bar-attachment) */
+        attachments: [],
         error: null,
         confirm: null,
         choice: null,
@@ -260,6 +263,16 @@ function handleEvent(event, turn) {
             }
 
             return null
+        case 'attachment': {
+            // Protokoll 1.2: nur relative URLs der Instanz, sonst verworfen (wie Links im Text).
+            const attachment = attachmentFrom(data)
+
+            if (attachment) {
+                turn.attachments.push(attachment)
+            }
+
+            return null
+        }
         case 'error':
             if (data.code === 'token_expired') {
                 return 'token_expired'
@@ -612,6 +625,8 @@ export function useAiAssistant() {
                     status: call.status ?? 'ok',
                 })),
                 error: turn.error_code ? { code: turn.error_code, message: '', retryable: false, retryAfterSeconds: null } : null,
+                // Aus der Historie kommt der Download als relativer Link im Antworttext.
+                attachments: [],
                 confirm: null,
                 choice: null,
                 status: turn.status,

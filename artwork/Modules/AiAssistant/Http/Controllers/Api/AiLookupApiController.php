@@ -26,7 +26,13 @@ class AiLookupApiController extends Controller
 
     public function rooms(IndexAiRoomsRequest $request): AiRoomListData
     {
-        return $this->service->rooms($request->user(), $request->search(), $request->limit());
+        return $this->service->rooms(
+            $request->user(),
+            $request->search(),
+            $request->limit(),
+            $request->category(),
+            $request->categoryId(),
+        );
     }
 
     public function eventTypes(IndexAiEventTypesRequest $request): AiEventTypeListData

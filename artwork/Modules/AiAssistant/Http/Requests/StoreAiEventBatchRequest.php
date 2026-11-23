@@ -14,6 +14,10 @@ use Illuminate\Validation\Rule;
  *
  * `all_day` (core-api-lookups) schaltet Uhrzeit und Dauer ab: ganztaegige Termine haben keine,
  * und mit `required` waeren sie nur ueber eine erfundene Uhrzeit ausdrueckbar.
+ *
+ * core-ai-series-rooms (Feedback 17.11.): `project_id` ist optional — Termine ohne Projekt gibt es
+ * in der Oberflaeche auch —, und `room_ids` legt dieselbe Serie in bis zu 10 Raeumen an. `room_id`
+ * bleibt fuer bestehende Aufrufe gueltig.
  */
 class StoreAiEventBatchRequest extends AiWriteRequest
 {
@@ -23,7 +27,7 @@ class StoreAiEventBatchRequest extends AiWriteRequest
     public function rules(): array
     {
         return array_merge($this->writeRules(), [
-            'project_id' => ['required', 'integer'],
+            'project_id' => ['nullable', 'integer'],
             'series_spec' => ['required', 'array'],
             'series_spec.from' => ['required', 'date'],
             'series_spec.to' => ['required', 'date', 'after_or_equal:series_spec.from'],
@@ -32,7 +36,9 @@ class StoreAiEventBatchRequest extends AiWriteRequest
             'series_spec.all_day' => ['nullable', 'boolean'],
             'series_spec.start_time' => [$this->unlessAllDay(), 'date_format:H:i'],
             'series_spec.duration_minutes' => [$this->unlessAllDay(), 'integer', 'min:15', 'max:1440'],
-            'series_spec.room_id' => ['required', 'integer'],
+            'series_spec.room_id' => ['required_without:series_spec.room_ids', 'nullable', 'integer'],
+            'series_spec.room_ids' => ['required_without:series_spec.room_id', 'nullable', 'array', 'min:1', 'max:10'],
+            'series_spec.room_ids.*' => ['integer', 'distinct'],
             'series_spec.type_id' => ['required', 'integer'],
             'series_spec.name' => ['nullable', 'string'],
             'series_spec.description' => ['nullable', 'string'],
@@ -62,6 +68,31 @@ class StoreAiEventBatchRequest extends AiWriteRequest
         });
     }
 
+    public function projectId(): ?int
+    {
+        $projectId = $this->validated('project_id');
+
+        return $projectId === null ? null : (int) $projectId;
+    }
+
+    /**
+     * `room_ids` und `room_id` zusammen, ohne Dubletten, in der Reihenfolge des Aufrufs.
+     *
+     * @param array<string, mixed> $spec
+     * @return list<int>
+     */
+    private function roomIdsOf(array $spec): array
+    {
+        /** @var list<int|string> $ids */
+        $ids = (array) ($spec['room_ids'] ?? []);
+
+        if (isset($spec['room_id'])) {
+            $ids[] = $spec['room_id'];
+        }
+
+        return array_values(array_unique(array_map('intval', $ids)));
+    }
+
     /**
      * Pflicht, solange der Termin nicht ganztaegig ist.
      */
@@ -73,7 +104,7 @@ class StoreAiEventBatchRequest extends AiWriteRequest
     /**
      * @return array{
      *     from: string, to: string, weekdays: list<int>, all_day: bool, start_time: string|null,
-     *     duration_minutes: int|null, room_id: int, type_id: int, name: string|null,
+     *     duration_minutes: int|null, room_ids: list<int>, type_id: int, name: string|null,
      *     description: string|null
      * }
      */
@@ -96,7 +127,7 @@ class StoreAiEventBatchRequest extends AiWriteRequest
             'duration_minutes' => $allDay || !isset($spec['duration_minutes'])
                 ? null
                 : (int) $spec['duration_minutes'],
-            'room_id' => (int) $spec['room_id'],
+            'room_ids' => $this->roomIdsOf($spec),
             'type_id' => (int) $spec['type_id'],
             'name' => isset($spec['name']) ? (string) $spec['name'] : null,
             'description' => isset($spec['description']) ? (string) $spec['description'] : null,

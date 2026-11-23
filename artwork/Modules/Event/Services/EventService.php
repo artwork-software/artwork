@@ -2215,9 +2215,13 @@ readonly class EventService
     }
 
 
+    /**
+     * `$project` darf fehlen: Termine ohne Projekt legt der KI-Assistent ueber denselben Weg an
+     * (core-ai-series-rooms), statt die Zeitlogik ein zweites Mal zu pflegen.
+     */
     public function createBulkEvent(
         array $event,
-        Project $project,
+        ?Project $project,
         int $userId,
     ): Event {
 
@@ -2255,8 +2259,7 @@ readonly class EventService
                 }
             }
         }
-        /** @var Event $createdEvent */
-        $createdEvent  = $project->events()->create([
+        $attributes = [
             'eventName' => $event['name'] ?? '',
             'name' => $event['name'] ?? '',
             'description' => $event['description'] ?? null,
@@ -2268,7 +2271,12 @@ readonly class EventService
             'event_type_id' => $event['type']['id'],
             'room_id' => $event['room']['id'],
             'is_planning' => $event['is_planning'] ?? false,
-        ]);
+        ];
+
+        /** @var Event $createdEvent */
+        $createdEvent = $project !== null
+            ? $project->events()->create($attributes)
+            : Event::query()->create($attributes);
 
         $eventStatusSetting = app(EventSettings::class);
 

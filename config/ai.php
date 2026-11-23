@@ -38,6 +38,23 @@ return [
 
     'max_range_days' => 180,
 
+    // Termine je create_events-Aufruf ueber alle Raeume (core-ai-series-rooms): 3 Raeume x 20 Werktage
+    // passen, eine Jahresserie nicht.
+    'series_limit' => 100,
+
+    // Gruppen je Antwort von /ai/events/stats (core-ai-event-stats-exports) — eine Zeile je Projekt,
+    // Raum oder Terminart, also deutlich kleiner als eine Terminliste.
+    'stats_limit' => 200,
+
+    /*
+     * KI-Exporte als PDF (core-ai-event-stats-exports): Tabelle aus Zeilen, die artwork-ai aus
+     * Werkzeugergebnissen liefert. Die Datei gehoert der Person, die sie erzeugt hat, und wird nach
+     * `export_retention_days` geloescht (ai:purge-exports).
+     */
+    'export_max_columns' => 12,
+    'export_max_rows' => 2000,
+    'export_retention_days' => (int) env('AI_EXPORT_RETENTION_DAYS', 7),
+
     /*
      * Tagesfenster fuer Raumbelegung und freie Slots (B1 §5). Ausserhalb wird weder Belegung
      * gezaehlt noch ein freier Slot angeboten — ein Raum ist um 3 Uhr morgens zwar frei, aber

@@ -110,12 +110,12 @@ class InventoryArticleListExport implements FromArray, WithHeadings, ShouldAutoS
                 ->sum('quantity');
         }
 
-        return (float) ($article->statusValues->firstWhere('id', $status->id)?->pivot?->value ?? 0);
+        return (float) ($article->statusValues->firstWhere('id', $status->id)?->getRelationValue('pivot')?->value ?? 0);
     }
 
     private function propertyValue(InventoryArticle $article, InventoryArticleProperties $property): ?string
     {
-        $value = $article->properties->firstWhere('id', $property->id)?->pivot?->value;
+        $value = $article->properties->firstWhere('id', $property->id)?->getRelationValue('pivot')?->value;
 
         if ($value === null || $value === '') {
             return null;

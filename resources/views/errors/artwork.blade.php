@@ -33,7 +33,8 @@
             @hasSection('actions')
                 @yield('actions')
             @else
-                <button type="button" class="button" onclick="history.length > 1 ? history.back() : (location.href = '{{ url('/') }}')">{{ __('Back') }}</button>
+                {{-- Link statt Inline-Skript: bei erzwungener Content-Security-Policy liefe ein onclick ins Leere --}}
+                <a class="button" href="{{ rescue(fn () => url()->previous(), url('/'), false) }}">{{ __('Back') }}</a>
                 <a class="button primary" href="{{ url('/') }}">{{ __('To the start page') }}</a>
             @endif
         </div>

@@ -186,7 +186,6 @@ class ContractController extends Controller
 
         return Storage::response($path, $contract->name, [
             'Content-Type' => $contentType,
-            'Content-Disposition' => 'inline; filename="' . addcslashes((string) $contract->name, '"\\') . '"',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }

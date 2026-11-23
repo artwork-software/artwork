@@ -275,7 +275,7 @@ const currentArticleIdsCsv = computed(() =>
 const filterIssueByArticleIds = () => {
     router.reload({
         preserveState: true, preserveScroll: true,
-        data: { article_ids: currentArticleIdsCsv.value || undefined },
+        data: { article_ids: currentArticleIdsCsv.value || undefined, page: 1 },
         only: ['issues','articlesInFilter'], replace: true
     });
 };
@@ -334,7 +334,8 @@ const applyFilters = () => {
     );
     router.reload({
         preserveState: true, preserveScroll: true,
-        data: { ...cleared, ...query },
+        // geänderte Filter oder Sortierung beginnen wieder auf Seite 1
+        data: { ...cleared, ...query, page: 1 },
         replace: true,
         only: ['issues','articlesInFilter']
     });

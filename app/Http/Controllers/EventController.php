@@ -2572,6 +2572,8 @@ class EventController extends Controller
         $events = Event::query()->whereIn('id', $validated['events'])->get();
         foreach ($events as $event) {
             try {
+                // der Dienst ist ein Singleton: Schlüssel und Bezüge der vorigen Anfrage dürfen nicht mitwandern
+                $this->notificationService->clearNotificationData();
                 // nur offene Anfragen: declineEvent würde auch bestätigte Belegungen absagen
                 abort_if(!$event->occupancy_option || $event->is_planning, 409);
                 $validated['action'] === 'accept'

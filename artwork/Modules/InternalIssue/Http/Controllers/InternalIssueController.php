@@ -64,7 +64,12 @@ class InternalIssueController extends Controller
                 'responsibleUsers',
             ]);
 
-        $issues = $issuesQuery->paginate($entitiesPerPage)->withQueryString();
+        $issues = $issuesQuery->paginate($entitiesPerPage);
+        // Seite hinter dem Ende (etwa nach dem Löschen der letzten Einträge): letzte vorhandene Seite zeigen
+        if ($issues->isEmpty() && $issues->total() > 0 && $issues->currentPage() > $issues->lastPage()) {
+            $issues = $issuesQuery->paginate($entitiesPerPage, ['*'], 'page', $issues->lastPage());
+        }
+        $issues->withQueryString();
         // Verantwortliche nur als Avatar + Tooltip (Kontaktdaten lädt der Tooltip per lazy-load nach)
         $issues->getCollection()->each(
             fn (InternalIssue $issue) => $issue->responsibleUsers->each->setVisible(User::AVATAR_FIELDS)
@@ -209,7 +214,9 @@ class InternalIssueController extends Controller
         $issues->each(fn (InternalIssue $issue) => $this->authorize('delete', $issue));
 
         // alles oder nichts: scheitert eine Ausgabe, bleibt keine gelöscht
-        DB::transaction(fn () => $issues->each(fn (InternalIssue $issue) => $this->internalIssueService->delete($issue)));
+        DB::transaction(
+            fn () => $issues->each(fn (InternalIssue $issue) => $this->internalIssueService->delete($issue))
+        );
 
         return response()->json(['deleted' => $issues->count()]);
     }

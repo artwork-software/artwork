@@ -99,6 +99,10 @@ class ExternalIssueController extends Controller
         }
 
         $issues = $issuesQuery->paginate($entitiesPerPage, ['*'], 'page', $page);
+        // Seite hinter dem Ende (etwa nach dem Löschen der letzten Einträge): letzte vorhandene Seite zeigen
+        if ($issues->isEmpty() && $issues->total() > 0 && $issues->currentPage() > $issues->lastPage()) {
+            $issues = $issuesQuery->paginate($entitiesPerPage, ['*'], 'page', $issues->lastPage());
+        }
 
         $this->inventoryUserFilterShareService->getFilterDataForUser($this->auth->user());
 

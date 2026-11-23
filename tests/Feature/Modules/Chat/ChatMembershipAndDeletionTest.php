@@ -188,6 +188,28 @@ final class ChatMembershipAndDeletionTest extends FeatureTestCase
         $this->postJson(route('chat-system.send-message', $chat), ['message' => 'noch da?'])->assertForbidden();
     }
 
+    /**
+     * Eine Gruppe, die nach einem Austritt nur noch zwei Mitglieder hat, ist kein Direktchat der beiden.
+     */
+    #[Test]
+    public function starting_a_direct_chat_does_not_return_a_group_that_shrank_to_two_members(): void
+    {
+        $creator = User::factory()->create();
+        $member = $this->actingAsUserWith([]);
+        $group = $this->groupChat($creator, [$member]);
+
+        $chatId = $this->postJson(route('chat.store'), ['users' => [$creator->id]])
+            ->assertOk()
+            ->json('chat.id');
+
+        $this->assertNotSame($group->id, $chatId);
+        $this->assertFalse(Chat::query()->findOrFail($chatId)->is_group);
+        // ein zweiter Versuch landet wieder im selben Direktchat
+        $this->postJson(route('chat.store'), ['users' => [$creator->id]])
+            ->assertOk()
+            ->assertJsonPath('chat.id', $chatId);
+    }
+
     #[Test]
     public function chat_is_deleted_when_the_last_member_leaves(): void
     {

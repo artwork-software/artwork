@@ -59,6 +59,28 @@ final class MaterialIssueListFeaturesTest extends TestCase
         return array_column($issues['data'], 'name');
     }
 
+    /**
+     * Nach dem Löschen der letzten Einträge einer Seite zeigt die Adresse hinter das Ende:
+     * die Liste fällt auf die letzte vorhandene Seite zurück statt leer zu bleiben.
+     */
+    #[Test]
+    public function lists_fall_back_to_the_last_page_when_the_requested_page_is_beyond_the_end(): void
+    {
+        $this->internalIssue('Intern A');
+        $this->internalIssue('Intern B');
+        $this->externalIssue('Extern A');
+        $this->externalIssue('Extern B');
+
+        foreach (['issue-of-material.index', 'extern-issue-of-material.index'] as $routeName) {
+            $issues = $this->get(route($routeName, ['entitiesPerPage' => 1, 'page' => 9]))
+                ->assertOk()
+                ->viewData('page')['props']['issues'];
+
+            $this->assertCount(1, $issues['data'], $routeName);
+            $this->assertSame(2, $issues['current_page'], $routeName);
+        }
+    }
+
     #[Test]
     public function internal_list_sorts_by_allowed_columns_and_ignores_unknown_ones(): void
     {

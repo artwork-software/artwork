@@ -539,6 +539,19 @@ export default {
             },
             deep: true,
         },
+        // Suche oder Filter blenden Verträge aus: Sammelaktionen dürfen nur treffen, was noch zu sehen ist.
+        // Außerdem nicht auf einer Seite hinter dem Ende stehen bleiben (etwa nach dem Löschen).
+        filteredContracts(contracts) {
+            const visible = new Set(contracts.map(contract => contract.id));
+            const kept = Object.keys(this.selectedIds).filter(id => visible.has(Number(id)));
+            if (kept.length !== Object.keys(this.selectedIds).length) {
+                this.selectedIds = Object.fromEntries(kept.map(id => [id, true]));
+            }
+            const lastPage = Math.max(1, Math.ceil(contracts.length / 25));
+            if (this.page > lastPage) {
+                this.page = lastPage;
+            }
+        },
     },
     computed: {
         isNarrowed() {

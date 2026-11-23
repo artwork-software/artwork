@@ -10149,5 +10149,8 @@
     "Used by {count} projects.": "Used by {count} projects.",
     "1 event uses this type.": "1 event uses this type.",
     "{count} events use this type.": "{count} events use this type.",
-    "No source categories yet.": "No source categories yet."
+    "No source categories yet.": "No source categories yet.",
+    "This name already exists.": "This name already exists.",
+    "No match. Change the filter or just type your answer.": "No match. Change the filter or just type your answer.",
+    "More matches — narrow your search": "More matches — narrow your search"
 }

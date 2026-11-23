@@ -145,7 +145,7 @@ const finalIconColorClass = computed(() => {
  * 'position' bleibt als Fallback gesetzt, falls du mal ohne Modifier verwendest.
  */
 // Name des Knopfs für Screenreader: der Tooltip-Text ohne Markup (reine Symbol-Knöpfe hatten keinen Namen)
-const ariaLabel = computed(() => props.tooltipText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || undefined)
+const ariaLabel = computed(() => String(props.tooltipText ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || undefined)
 
 const tooltipBinding = computed(() => ({
     value: props.tooltipText,

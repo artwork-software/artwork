@@ -932,6 +932,11 @@ const registerChatListeners = (chat) => {
     // Mitglied hat den Gruppenchat verlassen: Teilnehmerliste in Übersicht und offenem Chat nachziehen
     window.Echo.private(`chat.${chat.id}`)
         .listen('.member.left', (e) => {
+            // selbst in einem anderen Tab oder auf einem anderen Gerät ausgetreten: Chat auch hier schließen
+            if (e.user_id === currentUserId) {
+                handleChatLeft(chat.id);
+                return;
+            }
             const target = chats.value.find(c => c.id === chat.id);
             if (target?.users) {
                 target.users = target.users.filter(user => user.id !== e.user_id);

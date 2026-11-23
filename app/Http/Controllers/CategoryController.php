@@ -93,7 +93,7 @@ class CategoryController extends Controller
             ->pluck('usage_count', 'item_id');
 
         return $items->each(
-            static fn ($item) => $item->setAttribute('usage_count', (int) ($counts[$item->id] ?? 0))
+            static fn ($item) => $item->setAttribute('usage_count', (int) ($counts[$item->getKey()] ?? 0))
         );
     }
 

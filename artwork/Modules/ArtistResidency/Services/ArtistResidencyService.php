@@ -235,6 +235,22 @@ readonly class ArtistResidencyService
             ARRAY_FILTER_USE_KEY
         );
 
+        // Das Fenster schickt alle Werte des Kontakts mit. Geprüft und gespeichert wird nur, was sich
+        // geändert hat: ein unberührter Altwert (leeres Pflichtfeld, entfernte Auswahloption) darf das
+        // Speichern des Aufenthalts nicht verhindern.
+        $storedValues = $contact->propertyValues()->pluck('value', 'crm_property_id');
+        $propertyValues = array_filter(
+            $propertyValues,
+            static function (mixed $value, int|string $propertyId) use ($storedValues): bool {
+                if ($value !== null && !is_scalar($value)) {
+                    return true;
+                }
+
+                return (string) ($value ?? '') !== (string) ($storedValues->get((int) $propertyId) ?? '');
+            },
+            ARRAY_FILTER_USE_BOTH
+        );
+
         if ($propertyValues === []) {
             return;
         }

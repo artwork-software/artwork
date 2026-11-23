@@ -328,7 +328,8 @@ class ExternalAccessService
     {
         $existing->scopes()
             ->where('valid_to', '>', now())
-            ->update(['valid_to' => now()]);
+            // eine Sekunde zurück: "gültig" heißt valid_to >= jetzt
+            ->update(['valid_to' => now()->subSecond()]);
     }
 
     private function createFullSet(InviteExternalCommand $command, string $email): ExternalAccess

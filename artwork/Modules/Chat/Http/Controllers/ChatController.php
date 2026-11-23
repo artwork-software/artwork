@@ -59,6 +59,8 @@ class ChatController extends Controller
         $existingChat = Chat::whereHas('users', function ($q) use ($userIds): void {
             $q->whereIn('users.id', $userIds);
         }, '=', $userIds->count())
+            // eine auf zwei Personen geschrumpfte Gruppe ist kein Direktchat dieser beiden
+            ->where('is_group', $userIds->count() > 2)
             ->with('users') // wichtig für .users->pluck() später
             ->withCount('users')
             ->get()

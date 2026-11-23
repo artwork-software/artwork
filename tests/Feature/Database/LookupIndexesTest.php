@@ -22,6 +22,9 @@ class LookupIndexesTest extends TestCase
             'Raum-Kategorien' => ['room_room_category', ['room_id']],
             'Raum-Eigenschaften' => ['room_room_attribute', ['room_id']],
             'Datei-Freigaben' => ['project_file_user', ['project_file_id']],
+            // Migration 2026_11_23_152843: chronologische Sortierung der Projektübersicht
+            'Erster Termin je Projekt' => ['events', ['project_id', 'deleted_at', 'start_time']],
+            'Letzter Termin je Projekt' => ['events', ['project_id', 'deleted_at', 'end_time']],
         ];
     }
 

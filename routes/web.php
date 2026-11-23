@@ -2599,8 +2599,8 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->name('freelancer.change.profile-image');
     Route::post('freelancer/add', [FreelancerController::class, 'store'])->name('freelancer.add');
     Route::delete('freelancer/{freelancer}', [FreelancerController::class, 'destroy'])->name('freelancer.destroy');
+    // Recht prüft der Controller (Policy updateWorkProfile: Personal- ODER Externenverwaltung)
     Route::patch('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])
-        ->can('can manage workers')
         ->name('freelancer.update.workProfile');
     Route::patch('/freelancer/{freelancer}/terms', [FreelancerController::class, 'updateTerms'])
         ->name('freelancer.update.terms');

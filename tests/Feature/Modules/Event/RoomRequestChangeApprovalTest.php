@@ -115,6 +115,46 @@ final class RoomRequestChangeApprovalTest extends FeatureTestCase
         $this->assertSame(1, $this->openRequestsOf($this->roomAdmin, $event)->count());
     }
 
+    /**
+     * Wer eine Änderung, die zur Raumanfrage wurde, wieder auf die bestätigte Belegung zurücknimmt, hat
+     * wieder einen fest gebuchten Termin: es gibt nichts mehr zu beantworten.
+     */
+    #[Test]
+    public function taking_a_change_request_back_to_the_confirmed_booking_books_the_event_again(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST], $this->requester);
+        $event = $this->changeRequest($this->requester);
+
+        $this->putJson(route('events.update', $event), $this->updatePayload($event, [
+            'start' => '2026-11-20 00:00',
+            'end' => '2026-11-20 23:59',
+        ]))->assertSuccessful()->assertJsonPath('room_request', 'none');
+
+        $event->refresh();
+        $this->assertFalse($event->occupancy_option);
+        $this->assertNull($event->approved_room_id);
+        $this->assertSame($this->requester->id, $event->requested_by_id);
+    }
+
+    /**
+     * Eine Änderungsanfrage, die weiter von der bestätigten Belegung abweicht, bleibt offen.
+     */
+    #[Test]
+    public function changing_a_change_request_to_another_deviating_slot_keeps_it_open(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST], $this->requester);
+        $event = $this->changeRequest($this->requester);
+
+        $this->putJson(route('events.update', $event), $this->updatePayload($event, [
+            'start' => '2026-11-23 00:00',
+            'end' => '2026-11-23 23:59',
+        ]))->assertSuccessful()->assertJsonPath('room_request', 'pending');
+
+        $event->refresh();
+        $this->assertTrue($event->occupancy_option);
+        $this->assertSame('2026-11-20 00:00:00', $event->approved_start_time->format('Y-m-d H:i:s'));
+    }
+
     #[Test]
     public function extending_beyond_the_confirmed_booking_turns_the_change_into_a_room_request(): void
     {

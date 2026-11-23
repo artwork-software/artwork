@@ -266,7 +266,8 @@ class ExternalIssueController extends Controller
         $this->authorize('create', [ExternalIssue::class, $request->integer('project_id') ?: null]);
 
         $issue = $this->externalIssueService->store($request->validated(), $request->file('files', []));
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     public function update(
@@ -281,7 +282,8 @@ class ExternalIssueController extends Controller
             $request->file('files', [])
         );
 
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     public function destroy(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
@@ -290,7 +292,8 @@ class ExternalIssueController extends Controller
 
         $this->externalIssueService->delete($externalIssue);
 
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     /**
@@ -346,7 +349,8 @@ class ExternalIssueController extends Controller
 
         $externalIssue->update(['special_items_done' => true]);
 
-        return redirect()->route('extern-issue-of-material.index');
+        // zurück zur aufrufenden Seite: aus dem Projekt-Reiter heraus fehlt oft das Recht für die Listenseite
+        return redirect()->back();
     }
 
     /**

@@ -78,7 +78,8 @@
             "has_events": ".",
             "id": ".",
             "name": ".",
-            "requestable_by": "[]"
+            "requestable_by": "[]",
+            "user_id": "."
         }
     }
 }

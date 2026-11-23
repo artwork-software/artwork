@@ -17,6 +17,8 @@ class RoomDTO extends Data
         public array|null|Optional $admins = null,
         public bool $everyone_can_book = false,
         public array|null|Optional $requestable_by = null,
+        // Wer den Raum angelegt hat: ohne Raumadmins beantwortet diese Person die Raumanfragen
+        public ?int $user_id = null,
     ) {
     }
 }

@@ -389,6 +389,7 @@ class EventController extends Controller
             admins: $room->effectiveAdminIds(),
             everyone_can_book: $room->everyone_can_book,
             requestable_by: $room->effectiveRequestableByIds(),
+            user_id: $room->user_id,
         ));
 
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
@@ -677,6 +678,7 @@ class EventController extends Controller
             admins: $room->effectiveAdminIds(),
             everyone_can_book: $room->everyone_can_book,
             requestable_by: $room->effectiveRequestableByIds(),
+            user_id: $room->user_id,
         ));
 
         $dateValue = [
@@ -4739,6 +4741,8 @@ class EventController extends Controller
         return new JsonResponse([
             'description' => $event->description,
             'can_update' => $this->authManager->user()?->can('update', $event) ?? false,
+            // schaltet den Papierkorb-Knopf im Dialog nach derselben Policy wie das Löschen
+            'can_delete' => $this->authManager->user()?->can('delete', $event) ?? false,
             // Wer die laufende Anfrage gestellt hat, wenn es nicht die Person ist, die den Termin angelegt hat
             'requested_by' => $requester !== null && (int) $requester->id !== (int) $event->user_id ? [
                 'id' => $requester->id,

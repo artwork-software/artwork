@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Illuminate\Http\UploadedFile;
@@ -154,6 +155,26 @@ final class FreelancerWorkProfileRoutesTest extends FeatureTestCase
         $fresh = $this->freelancer->fresh();
         $this->assertSame('Licht', $fresh->work_name);
         $this->assertSame('Stellwerk und Verfolger', $fresh->work_description);
+    }
+
+    /**
+     * Die Externenverwaltung pflegt das Arbeitsprofil von Freelancer:innen auch ohne Personalverwaltung
+     * (wie bei Dienstleistern); ohne eines der beiden Rechte bleibt es verboten.
+     */
+    #[Test]
+    public function work_profile_can_be_saved_with_the_external_workers_permission_alone(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EXTERNAL_MANAGER->value]);
+
+        $this->patch(route('freelancer.update.workProfile', $this->freelancer), [
+            'workName' => 'Ton',
+            'workDescription' => 'FOH',
+        ])->assertRedirect();
+        $this->assertSame('Ton', $this->freelancer->fresh()->work_name);
+
+        $this->actingAsUserWith([]);
+        $this->patch(route('freelancer.update.workProfile', $this->freelancer), ['workName' => 'Nein'])
+            ->assertForbidden();
     }
 
     #[Test]

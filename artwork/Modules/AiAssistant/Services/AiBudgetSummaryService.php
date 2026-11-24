@@ -50,9 +50,15 @@ class AiBudgetSummaryService
 
     public static function hasBudgetAccess(User $user, Project $project): bool
     {
-        return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
-            || $user->checkPermissionTo(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value, 'web')
+        return self::hasGlobalBudgetAccess($user)
             || $project->access_budget()->where('users.id', $user->id)->exists();
+    }
+
+    /** Budget aller Projekte: Admin oder globales Budgetrecht (Teil von `hasBudgetAccess`). */
+    public static function hasGlobalBudgetAccess(User $user): bool
+    {
+        return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->checkPermissionTo(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value, 'web');
     }
 
     public function summary(User $user, Project $project): AiBudgetSummaryData
@@ -124,24 +130,35 @@ class AiBudgetSummaryService
 
     private function loadTable(Project $project, bool $sage): ?Table
     {
+        /** @var Table|null $table */
+        $table = Table::query()
+            ->where('project_id', $project->id)
+            ->with(self::tableRelations($sage))
+            ->first();
+
+        return $table;
+    }
+
+    /**
+     * Eager-Load-Baum einer Budgettabelle fuer die Summenrechnung — gemeinsam mit der Budget-Rangliste
+     * (`AiBudgetRankingService`), damit beide dieselben Zahlen sehen.
+     *
+     * @return array<int|string, mixed>
+     */
+    public static function tableRelations(bool $sage): array
+    {
         $cells = ['mainPositions.subPositions.subPositionRows.cells.column'];
 
         if ($sage) {
             $cells[] = 'mainPositions.subPositions.subPositionRows.cells.sageAssignedData';
         }
 
-        /** @var Table|null $table */
-        $table = Table::query()
-            ->where('project_id', $project->id)
-            ->with(array_merge([
-                'columns' => static fn ($query) => $query->orderBy('position'),
-                'mainPositions' => static fn ($query) => $query->orderBy('position'),
-                'mainPositions.subPositions' => static fn ($query) => $query->orderBy('position'),
-                'mainPositions.subPositions.subPositionRows',
-            ], $cells))
-            ->first();
-
-        return $table;
+        return array_merge([
+            'columns' => static fn ($query) => $query->orderBy('position'),
+            'mainPositions' => static fn ($query) => $query->orderBy('position'),
+            'mainPositions.subPositions' => static fn ($query) => $query->orderBy('position'),
+            'mainPositions.subPositions.subPositionRows',
+        ], $cells);
     }
 
     /**
@@ -185,9 +202,10 @@ class AiBudgetSummaryService
 
     /**
      * Ist-Werte: in Sage gebuchte Betraege (`sage_value`, von `computeAndAttachSums` gesetzt) der
-     * relevanten Spalte, ohne auskommentierte Zeilen; fehlende Buchungen zaehlen als 0.00.
+     * relevanten Spalte, ohne auskommentierte Zeilen; fehlende Buchungen zaehlen als 0.00. Auch von der
+     * Budget-Rangliste genutzt; die Tabelle muss vorher durch `computeAndAttachSums*()` gelaufen sein.
      */
-    private function actual(Table $table, Column $column): AiBudgetActualData
+    public function actual(Table $table, Column $column): AiBudgetActualData
     {
         $costs = 0.0;
         $earnings = 0.0;

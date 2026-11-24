@@ -186,13 +186,16 @@ final class FreeSlotFinderTest extends TestCase
     #[Test]
     public function theResultIsCapped(): void
     {
+        // 41 freie Tage, Grenze 20: der Aufrufer bestimmt die Kappung (core-ai-aggregates: Standard jetzt 200)
         $slots = $this->finder->find(
             $this->room(7, []),
             $this->day,
             $this->day->addDays(40),
-            1.0
+            1.0,
+            limit: 20
         );
 
-        $this->assertCount(FreeSlotFinder::MAX_SLOTS, $slots);
+        $this->assertCount(20, $slots);
+        $this->assertGreaterThanOrEqual(20, FreeSlotFinder::MAX_SLOTS);
     }
 }

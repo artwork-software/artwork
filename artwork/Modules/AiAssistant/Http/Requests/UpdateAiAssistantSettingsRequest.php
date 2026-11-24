@@ -31,6 +31,8 @@ class UpdateAiAssistantSettingsRequest extends FormRequest
             'enabled' => ['required', 'boolean'],
             'level_b_enabled' => ['required', 'boolean'],
             'level_c_enabled' => ['required', 'boolean'],
+            // ai-web-research: optional, damit aeltere Formulare den Wert nicht still zuruecksetzen
+            'web_enabled' => ['sometimes', 'boolean'],
             'transcript_retention_days' => ['required', 'integer', 'min:0', 'max:3650'],
         ];
     }
@@ -46,6 +48,14 @@ class UpdateAiAssistantSettingsRequest extends FormRequest
                 $validator->errors()->add(
                     'level_c_enabled',
                     __('Stage "actions" requires stage "data analysis".')
+                );
+            }
+
+            // Recherchen ergaenzen Auswertungen; ohne Stufe B gibt es keinen Fall, in dem sie laufen
+            if ($this->boolean('web_enabled') && !$this->boolean('level_b_enabled')) {
+                $validator->errors()->add(
+                    'web_enabled',
+                    __('Web research requires stage "data analysis".')
                 );
             }
         });

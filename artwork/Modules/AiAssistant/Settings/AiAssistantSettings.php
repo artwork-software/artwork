@@ -14,6 +14,12 @@ class AiAssistantSettings extends Settings
     /** Stufe C — Aktionen (schreibende Vorgaenge, immer mit Bestaetigung). */
     public bool $level_c_enabled;
 
+    /**
+     * Web-Recherche (ai-web-research): Suchbegriffe gehen an eine externe Suchmaschine. Setzt Stufe B
+     * voraus (erzwungen im FormRequest), Default aus.
+     */
+    public bool $web_enabled;
+
     /** 0 = unbegrenzt. */
     public int $transcript_retention_days;
 

@@ -23,6 +23,8 @@ class AiContextData extends Data
         public array $permissions_summary,
         // Nachtrag aus M3: sagt dem Modell, ob Aktionen ueberhaupt angeboten werden duerfen.
         public bool $level_c_enabled,
+        // ai-web-research: ob `web_search`/`web_fetch` angeboten werden duerfen
+        public bool $web_enabled = false,
     ) {
     }
 }

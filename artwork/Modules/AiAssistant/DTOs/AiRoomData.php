@@ -16,6 +16,8 @@ class AiRoomData extends Data
         public int $id,
         public ?string $name,
         public ?AiRefData $area,
+        /** @var list<string> Raumkategorien (core-ai-series-rooms) */
+        public array $categories,
     ) {
     }
 }

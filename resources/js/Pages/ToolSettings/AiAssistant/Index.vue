@@ -38,6 +38,17 @@
                     {{ form.errors.level_c_enabled }}
                 </div>
 
+                <ArtworkBaseToggle
+                    id="ai_web_enabled"
+                    v-model="form.web_enabled"
+                    :disabled="!form.enabled || !form.level_b_enabled"
+                    :label="$t('Allow web research')"
+                    :description="$t('Search terms are sent to external search engines.')"
+                />
+                <div v-if="form.errors.web_enabled" class="text-xs text-danger -mt-4">
+                    {{ form.errors.web_enabled }}
+                </div>
+
                 <div>
                     <BaseInput
                         id="ai_transcript_retention_days"
@@ -91,6 +102,7 @@ export default defineComponent({
                 enabled: this.aiAssistantSettings.enabled,
                 level_b_enabled: this.aiAssistantSettings.level_b_enabled,
                 level_c_enabled: this.aiAssistantSettings.level_c_enabled,
+                web_enabled: this.aiAssistantSettings.web_enabled ?? false,
                 transcript_retention_days: this.aiAssistantSettings.transcript_retention_days,
             }),
         };
@@ -102,11 +114,13 @@ export default defineComponent({
             if (!value) {
                 this.form.level_b_enabled = false;
                 this.form.level_c_enabled = false;
+                this.form.web_enabled = false;
             }
         },
         'form.level_b_enabled'(value) {
             if (!value) {
                 this.form.level_c_enabled = false;
+                this.form.web_enabled = false;
             }
         },
     },

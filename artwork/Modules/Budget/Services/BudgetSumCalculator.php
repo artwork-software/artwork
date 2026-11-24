@@ -13,23 +13,45 @@ class BudgetSumCalculator
 {
     public function computeAndAttachSums(Table $table): void
     {
-        if (!$table->relationLoaded('mainPositions')) {
-            return;
-        }
+        $this->computeAndAttachSumsForTables([$table]);
+    }
 
+    /**
+     * Wie computeAndAttachSums(), aber fuer viele Tabellen mit denselben drei Detail-Abfragen
+     * (Projektvergleiche wie die KI-Budget-Rangliste: kein N+1 ueber die Projekte).
+     *
+     * @param iterable<Table> $tables
+     */
+    public function computeAndAttachSumsForTables(iterable $tables): void
+    {
+        $loaded = [];
         $mainPositionIds = [];
         $subPositionIds = [];
-        $columnIds = $table->relationLoaded('columns')
-            ? $table->columns->pluck('id')->toArray()
-            : [];
+        $columnIds = [];
 
-        foreach ($table->mainPositions as $mainPosition) {
-            $mainPositionIds[] = $mainPosition->id;
-            if ($mainPosition->relationLoaded('subPositions')) {
-                foreach ($mainPosition->subPositions as $subPosition) {
-                    $subPositionIds[] = $subPosition->id;
+        foreach ($tables as $table) {
+            if (!$table->relationLoaded('mainPositions')) {
+                continue;
+            }
+
+            $loaded[] = $table;
+
+            if ($table->relationLoaded('columns')) {
+                array_push($columnIds, ...$table->columns->pluck('id')->toArray());
+            }
+
+            foreach ($table->mainPositions as $mainPosition) {
+                $mainPositionIds[] = $mainPosition->id;
+                if ($mainPosition->relationLoaded('subPositions')) {
+                    foreach ($mainPosition->subPositions as $subPosition) {
+                        $subPositionIds[] = $subPosition->id;
+                    }
                 }
             }
+        }
+
+        if ($loaded === []) {
+            return;
         }
 
         $allMainPositionDetails = MainPositionDetails::whereIn('main_position_id', $mainPositionIds)
@@ -47,6 +69,27 @@ class BudgetSumCalculator
             ->get()
             ->groupBy(fn ($detail) => $detail->type . ':' . $detail->column_id);
 
+        foreach ($loaded as $table) {
+            $tableColumnIds = $table->relationLoaded('columns') ? $table->columns->pluck('id')->toArray() : [];
+
+            $this->attachSums(
+                $table,
+                $allMainPositionDetails,
+                $allSubPositionSumDetails,
+                $allBudgetSumDetails->filter(
+                    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Collection-Callback (value, key) – Signatur vorgegeben
+                    fn ($details, $key) => in_array((int) explode(':', (string) $key)[1], $tableColumnIds, true)
+                )
+            );
+        }
+    }
+
+    private function attachSums(
+        Table $table,
+        $allMainPositionDetails,
+        $allSubPositionSumDetails,
+        $allBudgetSumDetails
+    ): void {
         $costSums = [];
         $earningSums = [];
         $commentedCostSums = [];

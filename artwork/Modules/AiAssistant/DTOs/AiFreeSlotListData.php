@@ -12,6 +12,9 @@ class AiFreeSlotListData extends Data
         public AiPeriodData $period,
         public AiDayWindowData $day_window,
         public float $min_hours,
+        // core-ai-aggregates: alle gefundenen Slots und ob die Liste gekuerzt ist
+        public int $total = 0,
+        public bool $truncated = false,
     ) {
     }
 }

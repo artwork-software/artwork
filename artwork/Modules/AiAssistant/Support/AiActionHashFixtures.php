@@ -34,6 +34,21 @@ final class AiActionHashFixtures
                     'name' => 'Vorstellung',
                 ],
             ],
+            // core-ai-series-rooms: ohne Projekt, mehrere Raeume, ganztaegig — fehlende Schluessel
+            // fehlen auch im Hash, `room_ids` behaelt die Reihenfolge des Aufrufs.
+            'create-events-rooms-without-project' => [
+                'series_spec' => [
+                    'from' => '2026-12-01',
+                    'to' => '2026-12-25',
+                    'weekdays' => [1, 2, 3, 4, 5],
+                    'all_day' => false,
+                    'start_time' => '10:00',
+                    'duration_minutes' => 240,
+                    'room_ids' => [12, 5, 9],
+                    'type_id' => 4,
+                    'name' => 'Hanz',
+                ],
+            ],
             // Aenderung eines Termins: event_id kommt aus dem Pfad und gehoert in den Hash.
             'update-event-times' => [
                 'event_id' => 1234,

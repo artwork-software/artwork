@@ -49,6 +49,7 @@ class AiContextApiController extends Controller
             ),
             permissions_summary: $this->relevantPermissions($user->getAllPermissions()->pluck('name')->all()),
             level_c_enabled: $access->levelCAllowed($user),
+            web_enabled: $access->webAllowed($user),
         );
     }
 

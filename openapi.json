@@ -364,6 +364,129 @@
                 }
             }
         },
+        "/api/v1/ai/events/stats": {
+            "get": {
+                "operationId": "v1.ai.events.stats",
+                "summary": "Terminanzahl je Projekt, Raum oder Terminart (core-ai-event-stats-exports)",
+                "tags": [
+                    "AiEventApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "group_by",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "project",
+                                "room",
+                                "type"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "room_ids[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    {
+                        "name": "project_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "min_count",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "max_count",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiEventStatsListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiEventStatsListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/api/v1/ai/rooms/occupancy": {
             "get": {
                 "operationId": "v1.ai.rooms.occupancy",
@@ -499,6 +622,100 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AiFreeSlotListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/rooms/available": {
+            "get": {
+                "operationId": "v1.ai.rooms.available",
+                "summary": "Alle freien Raeume zu einem Zeitfenster (core-ai-aggregates, Entgrenzen P1)",
+                "tags": [
+                    "AiEventApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "at",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "duration_minutes",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 15,
+                            "maximum": 1440
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "room_category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "area_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 500
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiAvailableRoomListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiAvailableRoomListData"
                                 }
                             }
                         }
@@ -709,6 +926,43 @@
                 }
             }
         },
+        "/api/v1/ai/exports": {
+            "post": {
+                "operationId": "v1.ai.exports.store",
+                "summary": "Antwort 201 wie bei den Conversations — ausdruecklich, damit der Contract den Status traegt",
+                "tags": [
+                    "AiExportApi"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAiExportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`AiExportData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiExportData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/api/v1/ai/inventory/availability": {
             "get": {
                 "operationId": "v1.ai.inventory.availability",
@@ -802,6 +1056,27 @@
                                 "null"
                             ],
                             "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
                         }
                     }
                 ],
@@ -1142,6 +1417,103 @@
                 }
             }
         },
+        "/api/v1/ai/people/{type}/{id}/shifts": {
+            "get": {
+                "operationId": "v1.ai.people.shifts",
+                "summary": "Schichten einer Person im Zeitraum (core-ai-aggregates). Die eigenen gehen immer, fremde nur mit\n„Schichtplan einsehen\" wie die Oberflaeche",
+                "tags": [
+                    "AiPeopleApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 2000
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiPersonShiftListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiPersonShiftListData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/api/v1/ai/projects": {
             "get": {
                 "operationId": "v1.ai.projects.index",
@@ -1264,6 +1636,110 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AiProjectListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/projects/budget-ranking": {
+            "get": {
+                "operationId": "v1.ai.projects.budget-ranking",
+                "summary": "Projekte nach Einnahmen, Kosten oder Ergebnis einer Budgetspalte (core-ai-aggregates). Projekte ohne\nBudgetrecht erscheinen nur als Zaehler",
+                "tags": [
+                    "AiProjectApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 1,
+                            "maxLength": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "earnings",
+                                "costs",
+                                "result",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "asc",
+                                "desc",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 500
+                        }
+                    },
+                    {
+                        "name": "state_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "include_groups",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiBudgetRankingData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiBudgetRankingData"
                                 }
                             }
                         }
@@ -3650,6 +4126,76 @@
                 ],
                 "title": "AiAvailabilityListData"
             },
+            "AiAvailableRoomData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "area": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "requires_request": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "id",
+                    "categories",
+                    "requires_request"
+                ],
+                "title": "AiAvailableRoomData"
+            },
+            "AiAvailableRoomListData": {
+                "type": "object",
+                "properties": {
+                    "window": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "rooms": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiAvailableRoomData"
+                        }
+                    },
+                    "total_free": {
+                        "type": "integer"
+                    },
+                    "total_rooms": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "window",
+                    "rooms",
+                    "total_free",
+                    "total_rooms",
+                    "truncated"
+                ],
+                "title": "AiAvailableRoomListData"
+            },
             "AiBudgetActualData": {
                 "type": "object",
                 "properties": {
@@ -3783,6 +4329,124 @@
                     "is_group"
                 ],
                 "title": "AiBudgetProjectData"
+            },
+            "AiBudgetRankingData": {
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sort": {
+                        "type": "string"
+                    },
+                    "direction": {
+                        "type": "string"
+                    },
+                    "projects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiBudgetRankingEntryData"
+                        }
+                    },
+                    "without_budget": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiRefData"
+                        }
+                    },
+                    "without_period_column": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiBudgetRankingMissingColumnData"
+                        }
+                    },
+                    "without_access": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "sort",
+                    "direction",
+                    "projects",
+                    "without_budget",
+                    "without_period_column",
+                    "without_access",
+                    "total",
+                    "truncated"
+                ],
+                "title": "AiBudgetRankingData"
+            },
+            "AiBudgetRankingEntryData": {
+                "type": "object",
+                "properties": {
+                    "project": {
+                        "$ref": "#/components/schemas/AiBudgetProjectData"
+                    },
+                    "column": {
+                        "$ref": "#/components/schemas/AiBudgetColumnData"
+                    },
+                    "earnings": {
+                        "type": "string"
+                    },
+                    "costs": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "string"
+                    },
+                    "actual": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiBudgetActualData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "project",
+                    "column",
+                    "earnings",
+                    "costs",
+                    "result"
+                ],
+                "title": "AiBudgetRankingEntryData"
+            },
+            "AiBudgetRankingMissingColumnData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "columns": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "columns"
+                ],
+                "title": "AiBudgetRankingMissingColumnData"
             },
             "AiBudgetSummaryData": {
                 "type": "object",
@@ -4102,6 +4766,9 @@
                     },
                     "level_c_enabled": {
                         "type": "boolean"
+                    },
+                    "web_enabled": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -4109,7 +4776,8 @@
                     "roles",
                     "house",
                     "permissions_summary",
-                    "level_c_enabled"
+                    "level_c_enabled",
+                    "web_enabled"
                 ],
                 "title": "AiContextData"
             },
@@ -5092,6 +5760,69 @@
                 ],
                 "title": "AiEventStaffingData"
             },
+            "AiEventStatsGroupData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "count": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "count"
+                ],
+                "title": "AiEventStatsGroupData"
+            },
+            "AiEventStatsListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiEventStatsGroupData"
+                        }
+                    },
+                    "group_by": {
+                        "type": "string"
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "total_events": {
+                        "type": "integer"
+                    },
+                    "total_groups": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "group_by",
+                    "period",
+                    "total_events",
+                    "total_groups",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiEventStatsListData"
+            },
             "AiEventTypeData": {
                 "type": "object",
                 "properties": {
@@ -5165,6 +5896,42 @@
                 ],
                 "title": "AiEventTypeMinutesData"
             },
+            "AiExportData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "filename": {
+                        "type": "string"
+                    },
+                    "row_count": {
+                        "type": "integer"
+                    },
+                    "expires_at": {
+                        "type": "string"
+                    },
+                    "format": {
+                        "type": "string"
+                    },
+                    "mime_type": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "url",
+                    "filename",
+                    "row_count",
+                    "expires_at",
+                    "format",
+                    "mime_type"
+                ],
+                "title": "AiExportData"
+            },
             "AiFreeSlotData": {
                 "type": "object",
                 "properties": {
@@ -5206,13 +5973,21 @@
                     },
                     "min_hours": {
                         "type": "number"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
                     "data",
                     "period",
                     "day_window",
-                    "min_hours"
+                    "min_hours",
+                    "total",
+                    "truncated"
                 ],
                 "title": "AiFreeSlotListData"
             },
@@ -5758,6 +6533,127 @@
                     "name"
                 ],
                 "title": "AiPersonRefData"
+            },
+            "AiPersonShiftData": {
+                "type": "object",
+                "properties": {
+                    "shift_id": {
+                        "type": "integer"
+                    },
+                    "start": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "minutes": {
+                        "type": "integer"
+                    },
+                    "break_minutes": {
+                        "type": "integer"
+                    },
+                    "craft": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "qualification": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "event": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "project": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "room": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "committed": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "shift_id",
+                    "minutes",
+                    "break_minutes",
+                    "committed"
+                ],
+                "title": "AiPersonShiftData"
+            },
+            "AiPersonShiftListData": {
+                "type": "object",
+                "properties": {
+                    "person": {
+                        "$ref": "#/components/schemas/AiPersonRefData"
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "shifts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiPersonShiftData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "total_minutes": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "person",
+                    "period",
+                    "shifts",
+                    "total",
+                    "total_minutes",
+                    "truncated"
+                ],
+                "title": "AiPersonShiftListData"
             },
             "AiPersonWorkloadData": {
                 "type": "object",
@@ -6331,10 +7227,17 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "required": [
-                    "id"
+                    "id",
+                    "categories"
                 ],
                 "title": "AiRoomData"
             },
@@ -8640,7 +9543,7 @@
             },
             "StoreAiEventBatchRequest": {
                 "type": "object",
-                "description": "POST /api/v1/ai/events/batch (core-write-endpoints-dry-run; Konzept W1 §1).\n\nDer Serienbeschrieb ist bewusst eng: Zeitraum, Wochentage, Uhrzeit, Dauer, Raum, Typ. Alles\nandere legt der Bulk-Service der Oberflaeche fest.\n\n`all_day` (core-api-lookups) schaltet Uhrzeit und Dauer ab: ganztaegige Termine haben keine,\nund mit `required` waeren sie nur ueber eine erfundene Uhrzeit ausdrueckbar.",
+                "description": "POST /api/v1/ai/events/batch (core-write-endpoints-dry-run; Konzept W1 §1).\n\nDer Serienbeschrieb ist bewusst eng: Zeitraum, Wochentage, Uhrzeit, Dauer, Raum, Typ. Alles\nandere legt der Bulk-Service der Oberflaeche fest.\n\n`all_day` (core-api-lookups) schaltet Uhrzeit und Dauer ab: ganztaegige Termine haben keine,\nund mit `required` waeren sie nur ueber eine erfundene Uhrzeit ausdrueckbar.\n\ncore-ai-series-rooms (Feedback 17.11.): `project_id` ist optional — Termine ohne Projekt gibt es\nin der Oberflaeche auch —, und `room_ids` legt dieselbe Serie in bis zu 10 Raeumen an. `room_id`\nbleibt fuer bestehende Aufrufe gueltig.",
                 "properties": {
                     "dry_run": {
                         "type": "boolean"
@@ -8653,7 +9556,10 @@
                         "format": "uuid"
                     },
                     "project_id": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "series_spec": {
                         "type": "object",
@@ -8692,7 +9598,22 @@
                                 "maximum": 1440
                             },
                             "room_id": {
-                                "type": "integer"
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "room_ids": {
+                                "type": [
+                                    "array",
+                                    "null"
+                                ],
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 10,
+                                "uniqueItems": true
                             },
                             "type_id": {
                                 "type": "integer"
@@ -8713,16 +9634,75 @@
                         "required": [
                             "from",
                             "to",
-                            "room_id",
                             "type_id"
                         ]
                     }
                 },
                 "required": [
-                    "project_id",
                     "series_spec"
                 ],
                 "title": "StoreAiEventBatchRequest"
+            },
+            "StoreAiExportRequest": {
+                "type": "object",
+                "description": "POST /api/v1/ai/exports (core-ai-event-stats-exports): eine Tabelle als PDF, XLSX oder CSV\n(`format`, Default `pdf`; core-ai-export-formats).\n\nDie Zeilen kommen aus Werkzeugergebnissen, die artwork-ai bereits gelesen hat — der Endpunkt liest\nselbst keine Daten und braucht deshalb nur `ai:read`. Zellen sind Text, Zahl oder leer.",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "subtitle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 300
+                    },
+                    "note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "columns": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 80
+                        },
+                        "minItems": 1,
+                        "maxItems": 12
+                    },
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "maxItems": 2000
+                    },
+                    "format": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "pdf",
+                            "xlsx",
+                            "csv",
+                            null
+                        ]
+                    }
+                },
+                "required": [
+                    "title",
+                    "columns",
+                    "rows"
+                ],
+                "title": "StoreAiExportRequest"
             },
             "StoreAiSessionRequest": {
                 "type": "object",

@@ -25,6 +25,14 @@ class LookupIndexesTest extends TestCase
             // Migration 2026_11_23_152843: chronologische Sortierung der Projektübersicht
             'Erster Termin je Projekt' => ['events', ['project_id', 'deleted_at', 'start_time']],
             'Letzter Termin je Projekt' => ['events', ['project_id', 'deleted_at', 'end_time']],
+            // Migration 2026_11_23_154938: Projektkopf, Schichtverlauf, Arbeitszeitbuchungen
+            'Erste Schicht je Projekt' => ['shifts', ['project_id', 'deleted_at', 'start_date']],
+            'Letzte Schicht je Projekt' => ['shifts', ['project_id', 'deleted_at', 'end_date']],
+            'Gelöschte Schichten im Verlauf' => [
+                'activity_log',
+                ['log_name', 'subject_type', 'event', 'subject_id'],
+            ],
+            'Buchungen je Person und Tag' => ['work_time_bookings', ['user_id', 'booking_day']],
         ];
     }
 

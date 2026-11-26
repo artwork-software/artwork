@@ -60,6 +60,94 @@
                 <p class="mt-1 text-xs text-text-muted">{{ $t('Name and address of the room appear at the top of the plan. Addresses are maintained in the room settings.') }}</p>
             </div>
 
+            <div>
+                <BaseCombobox
+                    v-model="additionalRoomPicker"
+                    :items="additionalRoomItems"
+                    :option-label="venueLabel"
+                    option-key="id"
+                    :label="$t('Further rooms')"
+                    :placeholder="$t('Add room')"
+                    :empty-text="$t('No results')"
+                    @change="addAdditionalRoom"
+                />
+                <p class="mt-1 text-xs text-text-muted">{{ $t('Optional: these rooms are listed with their address below the venue.') }}</p>
+                <ul v-if="additionalRooms.length > 0" class="mt-2 flex flex-wrap gap-2">
+                    <li
+                        v-for="room in additionalRooms"
+                        :key="room.id"
+                        class="flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface py-1 pl-3 pr-1.5 text-xs font-medium text-text"
+                    >
+                        <span>{{ venueLabel(room) }}</span>
+                        <button
+                            type="button"
+                            class="rounded-full p-0.5 text-text-muted hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                            :aria-label="$t('Remove {0}', [room.name])"
+                            @click="removeAdditionalRoom(room.id)"
+                        >
+                            <IconX class="size-3.5" aria-hidden="true" />
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <fieldset>
+                <legend class="font-lexend text-sm font-medium text-text">{{ $t('Logo') }}</legend>
+                <BaseCheckbox
+                    id="project-plan-with-logo"
+                    v-model="withLogo"
+                    class="mt-3"
+                    :label="$t('Show logo at the top of the plan')"
+                />
+                <div v-if="withLogo" class="mt-3 flex items-center gap-4 rounded-lg border border-border-subtle px-3.5 py-2.5">
+                    <img
+                        v-if="logoPreviewUrl"
+                        :src="logoPreviewUrl"
+                        alt=""
+                        class="h-12 w-28 shrink-0 object-contain"
+                    />
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-medium text-text">{{ logoSourceLabel }}</p>
+                        <p class="mt-0.5 text-xs text-text-muted">{{ logoSourceHint }}</p>
+                    </div>
+                    <div class="flex shrink-0 flex-col items-end gap-1">
+                        <button
+                            type="button"
+                            class="text-xs font-medium text-accent-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                            @click="logoInput?.click()"
+                        >
+                            {{ $t('Choose another logo') }}
+                        </button>
+                        <button
+                            v-if="customLogo"
+                            type="button"
+                            class="text-xs font-medium text-text-muted hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                            @click="resetCustomLogo"
+                        >
+                            {{ options.default_logo_url ? $t('Use logo from the tool settings') : $t('Remove') }}
+                        </button>
+                    </div>
+                    <input
+                        ref="logoInput"
+                        type="file"
+                        accept="image/png,image/jpeg,image/gif,image/webp"
+                        class="sr-only"
+                        tabindex="-1"
+                        aria-hidden="true"
+                        @change="onLogoSelected"
+                    />
+                </div>
+            </fieldset>
+
+            <BaseCheckbox
+                id="project-plan-with-admission"
+                v-model="withAdmission"
+                :label="$t('Show admission of the events')"
+                :description="options.has_admission_times
+                    ? $t('The admission time maintained at an event appears below its title.')
+                    : $t('No event of this project has an admission time yet.')"
+            />
+
             <template v-if="planType === 'artist'">
                 <div v-if="options.can_see_artist_residencies">
                     <BaseCombobox
@@ -152,7 +240,8 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref} from "vue";
+import {IconX} from "@tabler/icons-vue";
 import axios from "axios";
 import {useI18n} from "vue-i18n";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
@@ -188,23 +277,100 @@ const planTypes = [
 ]
 
 const {t: trans} = useI18n()
-const {download} = useBlobDownload()
+const {download, downloadWithFormData} = useBlobDownload()
 
 const loading = ref(true)
 const loadError = ref(false)
 const processing = ref(false)
 const exportError = ref('')
-const options = ref({rooms: [], events: [], event_types: [], artist_residencies: [], can_see_artist_residencies: false})
+const options = ref({
+    rooms: [],
+    events: [],
+    event_types: [],
+    artist_residencies: [],
+    can_see_artist_residencies: false,
+    default_logo_url: null,
+    has_admission_times: false,
+})
 
 const planType = ref('event')
 const venueRoomId = ref(NONE)
 const artistResidencyId = ref(NONE)
 const selection = ref(createPlanEventSelection())
+const additionalRoomIds = ref([])
+const additionalRoomPicker = ref(null)
+const withLogo = ref(true)
+const withAdmission = ref(true)
+const customLogo = ref(null)
+const customLogoPreviewUrl = ref(null)
+const logoInput = ref(null)
 
 const venueItems = computed(() => [{id: NONE, name: trans('Without venue'), address: null}, ...options.value.rooms])
 const residencyItems = computed(() => [{id: NONE, name: trans('Without accommodation')}, ...options.value.artist_residencies])
 
 const venueLabel = (room) => (room.address ? `${room.name} (${room.address})` : room.name)
+
+/** Weitere Räume in der gewählten Reihenfolge; die Spielstätte selbst zählt nicht dazu */
+const additionalRooms = computed(() => additionalRoomIds.value
+    .filter((roomId) => roomId !== venueRoomId.value)
+    .map((roomId) => options.value.rooms.find((room) => room.id === roomId))
+    .filter(Boolean))
+
+const additionalRoomItems = computed(() => options.value.rooms.filter(
+    (room) => room.id !== venueRoomId.value && !additionalRoomIds.value.includes(room.id)
+))
+
+const addAdditionalRoom = (roomId) => {
+    if (roomId && !additionalRoomIds.value.includes(roomId)) {
+        additionalRoomIds.value = [...additionalRoomIds.value, roomId]
+    }
+    additionalRoomPicker.value = null
+}
+
+const removeAdditionalRoom = (roomId) => {
+    additionalRoomIds.value = additionalRoomIds.value.filter((id) => id !== roomId)
+}
+
+const logoPreviewUrl = computed(() => customLogoPreviewUrl.value ?? options.value.default_logo_url)
+
+const logoSourceLabel = computed(() => {
+    if (customLogo.value) {
+        return customLogo.value.name
+    }
+    return options.value.default_logo_url ? trans('Logo from the tool settings') : trans('No logo available')
+})
+
+const logoSourceHint = computed(() => {
+    if (customLogo.value) {
+        return trans('Only used for this export.')
+    }
+    return options.value.default_logo_url
+        ? trans('The large logo from the tool settings is used by default.')
+        : trans('No large logo is stored in the tool settings. Choose a file for this export.')
+})
+
+const releaseLogoPreview = () => {
+    if (customLogoPreviewUrl.value) {
+        window.URL.revokeObjectURL(customLogoPreviewUrl.value)
+        customLogoPreviewUrl.value = null
+    }
+}
+
+const onLogoSelected = (event) => {
+    const file = event.target.files?.[0] ?? null
+    event.target.value = ''
+    if (!file) {
+        return
+    }
+    releaseLogoPreview()
+    customLogo.value = file
+    customLogoPreviewUrl.value = window.URL.createObjectURL(file)
+}
+
+const resetCustomLogo = () => {
+    releaseLogoPreview()
+    customLogo.value = null
+}
 
 const residencyLabel = (residency) => {
     if (residency.id === NONE) {
@@ -269,21 +435,31 @@ const exportPlan = async () => {
 
     const venue = venueRoomId.value || null
     const isArtistPlan = planType.value === 'artist'
+    const common = {
+        venue_room_id: venue,
+        additional_room_ids: additionalRooms.value.map((room) => room.id),
+        // 1/0 statt true/false: die boolean-Regel des Servers kennt die Texte "true"/"false" nicht
+        with_logo: withLogo.value ? 1 : 0,
+        with_admission: withAdmission.value ? 1 : 0,
+    }
     const params = isArtistPlan
         ? {
-            venue_room_id: venue,
+            ...common,
             artist_residency_id: artistResidencyId.value || null,
             event_type_ids: [...selection.value.typeIds],
             event_ids: selectedEventIds.value,
         }
-        : {venue_room_id: venue}
+        : common
+    const url = route(isArtistPlan ? 'projects.plans.artist-plan' : 'projects.plans.event-plan', {project: props.project.id})
+    const fallbackFilename = `${trans(isArtistPlan ? 'Artist plan' : 'Event plan')}.docx`
 
     try {
-        await download(
-            route(isArtistPlan ? 'projects.plans.artist-plan' : 'projects.plans.event-plan', {project: props.project.id}),
-            params,
-            `${trans(isArtistPlan ? 'Artist plan' : 'Event plan')}.docx`
-        )
+        if (withLogo.value && customLogo.value) {
+            // Eigene Logo-Datei: Formulardaten per POST statt Query-Parameter
+            await downloadWithFormData(url, planFormData(params, customLogo.value), fallbackFilename)
+        } else {
+            await download(url, params, fallbackFilename)
+        }
         emits('close')
     } catch (error) {
         exportError.value = error?.fromServer ? error.message : trans('Export could not be created. Please try again.')
@@ -292,5 +468,23 @@ const exportPlan = async () => {
     }
 }
 
+const planFormData = (params, logoFile) => {
+    const formData = new FormData()
+    for (const [key, value] of Object.entries(params)) {
+        if (value === null || value === undefined) {
+            continue
+        }
+        if (Array.isArray(value)) {
+            value.forEach((entry) => formData.append(`${key}[]`, entry))
+        } else {
+            formData.append(key, value)
+        }
+    }
+    formData.append('logo', logoFile)
+
+    return formData
+}
+
 onMounted(loadOptions)
+onBeforeUnmount(releaseLogoPreview)
 </script>

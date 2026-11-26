@@ -948,9 +948,10 @@ Route::group(['middleware' => ['auth']], function (): void {
     ], function (): void {
         Route::get('/options', [ProjectPlanExportController::class, 'options'])
             ->name('projects.plans.options');
-        Route::get('/event-plan', [ProjectPlanExportController::class, 'eventPlan'])
+        // POST, wenn für den Export eine eigene Logo-Datei mitgeschickt wird
+        Route::match(['get', 'post'], '/event-plan', [ProjectPlanExportController::class, 'eventPlan'])
             ->name('projects.plans.event-plan');
-        Route::get('/artist-plan', [ProjectPlanExportController::class, 'artistPlan'])
+        Route::match(['get', 'post'], '/artist-plan', [ProjectPlanExportController::class, 'artistPlan'])
             ->name('projects.plans.artist-plan');
     });
     Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])

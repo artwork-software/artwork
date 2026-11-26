@@ -73,6 +73,10 @@
                                 <button type="button" class="flex size-7 items-center justify-center rounded-md text-text-subtle hover:text-text hover:bg-surface-sunken" :aria-label="$t('Edit')" @click="openEdit(passType)">
                                     <IconPencil class="size-[15px]" />
                                 </button>
+                                <button type="button" class="flex size-7 items-center justify-center rounded-md text-text-subtle hover:text-text hover:bg-surface-sunken"
+                                        :aria-label="$t('Duplicate')" :disabled="busy" @click="duplicate(passType)">
+                                    <IconCopy class="size-[15px]" />
+                                </button>
                                 <button v-if="passType.issuedCount === 0" type="button" class="flex size-7 items-center justify-center rounded-md text-text-subtle hover:text-danger hover:bg-danger-surface"
                                         :aria-label="$t('Delete')" @click="deleting = passType">
                                     <IconTrash class="size-[15px]" />
@@ -94,7 +98,7 @@
 import { computed, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
-import { IconAlertTriangle, IconPencil, IconPlus, IconRepeat, IconTrash } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconCopy, IconPencil, IconPlus, IconRepeat, IconTrash } from '@tabler/icons-vue'
 import TicketsSettingsHeader from '@/Pages/Settings/Tickets/TicketsSettingsHeader.vue'
 import NotConnected from '@/Pages/Settings/Tickets/NotConnected.vue'
 import PassTypeModal from '@/Pages/Settings/Tickets/PassTypeModal.vue'
@@ -187,6 +191,19 @@ const visit = { preserveScroll: true, onStart: () => (busy.value = true), onFini
 
 function changeStatus(passType, action) {
     router.post(route(`settings.tickets.passes.${action}`, passType.id), {}, visit)
+}
+
+/** A draft copy to adjust, e.g. the same pass for another season; it opens right away for editing. */
+function duplicate(passType) {
+    /* The suffix must fit into the 120 characters a name may have. */
+    const name = passType.name.slice(0, 120 - t('{name} (copy)', { name: '' }).length)
+    router.post(route('settings.tickets.passes.duplicate', passType.id), { name: t('{name} (copy)', { name }) }, {
+        ...visit,
+        onSuccess: (page) => {
+            const copy = page.props.passTypes.find((candidate) => candidate.id === page.props.flash.createdId)
+            if (copy) openEdit(copy)
+        },
+    })
 }
 
 function destroy() {

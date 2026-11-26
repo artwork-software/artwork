@@ -281,18 +281,17 @@ class TicketingConnectionService
     }
 
     /**
+     * Die Liste ist der ganze Katalog des Hauses: was fehlt, löscht Artwork-Tickets.
+     *
      * @param list<array{
-     *     name: string, kind: string, value: int, requires_proof: bool, default_enabled: bool
+     *     id?: ?string, name: string, kind: string, value: int, requires_proof: bool, default_enabled: bool
      * }> $reductions
      */
     public function syncReductions(TicketingConnection $connection, array $reductions): void
     {
-        if ($reductions === []) {
-            return;
-        }
-
         $this->tickets->post($connection, '/reductions', [
             'reductions' => array_map(static fn (array $reduction): array => [
+                'id' => $reduction['id'] ?? null,
                 'name' => $reduction['name'],
                 'kind' => $reduction['kind'],
                 'value' => (int) $reduction['value'],

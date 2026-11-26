@@ -27,6 +27,7 @@ final class TicketingProjectTabTest extends FeatureTestCase
 
     private const TICKETS_URL = 'https://tickets.test';
     private const VENUE_ID = '0355e5ad-e8aa-405b-9550-038a557dc897';
+    private const GROUP_ID = '5d1e2f3a-4b5c-4d6e-8f7a-9b0c1d2e3f4a';
 
     protected function setUp(): void
     {
@@ -54,6 +55,9 @@ final class TicketingProjectTabTest extends FeatureTestCase
     {
         $this->connect();
         Http::fake([
+            self::TICKETS_URL . '/api/integration/v1/production-groups' => Http::response(['groups' => [
+                ['id' => self::GROUP_ID, 'name' => 'Workshops', 'eventIds' => [], 'passTypeCount' => 0, 'couponCount' => 0, 'sold' => false],
+            ], 'productions' => []]),
             self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => [], 'legalComplete' => true, 'shopLegalComplete' => true, 'payoutAccount' => 'verified', 'platformTerms' => ['accepted' => true]]),
             self::TICKETS_URL . '/api/integration/v1/reductions' => Http::response(['reductions' => [
                 ['id' => '3b9f1a2c-0d4e-4f5a-8b6c-7d8e9f0a1b2c', 'name' => 'Ermäßigt', 'kind' => 'percent', 'value' => 5000, 'requiresProof' => true, 'defaultEnabled' => true],
@@ -90,6 +94,8 @@ final class TicketingProjectTabTest extends FeatureTestCase
             ->assertJsonPath('hasSellingEventTypes', true)
             ->assertJsonPath('ticketsError', null)
             ->assertJsonPath('production.linked', false)
+            ->assertJsonPath('production.groupIds', [])
+            ->assertJsonPath('groups', [['id' => self::GROUP_ID, 'name' => 'Workshops']])
             ->assertJsonPath('production.fallback.title', $project->name)
             ->assertJsonPath('reductions.0.name', 'Ermäßigt')
             ->assertJsonCount(1, 'events')
@@ -110,12 +116,14 @@ final class TicketingProjectTabTest extends FeatureTestCase
         Http::fake([
             self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => []]),
             self::TICKETS_URL . '/api/integration/v1/venues' => Http::response(['venues' => []]),
+            self::TICKETS_URL . '/api/integration/v1/production-groups' => Http::response(['groups' => [], 'productions' => []]),
             self::TICKETS_URL . '/api/integration/v1/reductions' => Http::response(['reductions' => [
                 ['id' => $reduced, 'name' => 'Ermäßigt', 'kind' => 'percent', 'value' => 5000, 'requiresProof' => true, 'defaultEnabled' => true],
             ]]),
             self::TICKETS_URL . '/api/integration/v1/productions/*' => Http::response([
                 'status' => 'published',
                 'shopUrl' => 'https://tickets.test/theater/hamlet',
+                'groupIds' => [self::GROUP_ID],
                 'reductions' => [
                     ['reductionTypeId' => $reduced, 'name' => 'Ermäßigt', 'kind' => 'fixed', 'value' => 300, 'enabled' => true, 'categories' => ['Parkett']],
                 ],
@@ -130,7 +138,8 @@ final class TicketingProjectTabTest extends FeatureTestCase
             ->assertOk()
             ->assertJsonPath('reductions.0.kind', 'fixed')
             ->assertJsonPath('reductions.0.value', 300)
-            ->assertJsonPath('reductions.0.categories', ['Parkett']);
+            ->assertJsonPath('reductions.0.categories', ['Parkett'])
+            ->assertJsonPath('production.groupIds', [self::GROUP_ID]);
     }
 
     #[Test]

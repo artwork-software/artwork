@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { passTypeDraft, passTypePayload } from '../../resources/js/Pages/Settings/Tickets/drafts.js'
+import { passTypeDraft, passTypePayload, soldPassChanges } from '../../resources/js/Pages/Settings/Tickets/drafts.js'
 
 const card = {
     id: 'p1',
@@ -71,4 +71,13 @@ test('a type from tickets survives the round trip through the form', () => {
     assert.equal(payload.maxUsesPerEvent, null)
     assert.equal(payload.saleEnds, '2026-12-31')
     assert.deepEqual(payload.groupIds, ['g1'])
+})
+
+test('a sold card tells changes that reach the holders from those for new sales only', () => {
+    const before = passTypePayload(passTypeDraft(card))
+    const draft = passTypeDraft(card)
+    Object.assign(draft, { uses: '12', price: '95', groupIds: ['g2', 'g1'], discountKind: 'percent', discountPercent: '100' })
+
+    assert.deepEqual(soldPassChanges(before, passTypePayload(draft)), { sold: ['uses', 'discount', 'scope'], newOnly: ['price'] })
+    assert.deepEqual(soldPassChanges(before, before), { sold: [], newOnly: [] })
 })

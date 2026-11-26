@@ -7,8 +7,9 @@ use Artwork\Modules\Ticketing\Models\TicketingConnection;
 /**
  * Mehrfachkarten und Abos des Ticket-Hauses, von hier aus gepflegt. Ein Typ reist in der Form,
  * in der tickets ihn schickt und zurücknimmt: Beträge in Cent, Tage und Uhrzeiten nach der Uhr
- * des Hauses. Die Regeln bleiben die von tickets — ist etwas verkauft, bleibt fest, was die
- * Inhaber gekauft haben; löschen geht nur, solange nichts verkauft ist.
+ * des Hauses. Die Regeln bleiben die von tickets — auch verkaufte Typen bleiben änderbar, und
+ * eine Änderung erreicht die verkauften Karten mit (nur Preise und Abo-Laufzeit nicht); löschen
+ * geht nur, solange nichts verkauft ist.
  */
 class TicketingPassTypeService
 {
@@ -55,6 +56,14 @@ class TicketingPassTypeService
     public function archive(TicketingConnection $connection, string $passTypeId): void
     {
         $this->tickets->post($connection, "/pass-types/{$passTypeId}/archive");
+    }
+
+    /** Legt eine Kopie als Entwurf an und gibt ihre Id zurück. */
+    public function duplicate(TicketingConnection $connection, string $passTypeId, string $name): string
+    {
+        $copy = $this->tickets->post($connection, "/pass-types/{$passTypeId}/duplicate", ['name' => $name]);
+
+        return (string) $copy['id'];
     }
 
     public function delete(TicketingConnection $connection, string $passTypeId): void

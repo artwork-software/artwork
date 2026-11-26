@@ -2,8 +2,11 @@
     <ArtworkBaseModal :title="title" :description="subscription ? $t('Term, prices and what the subscription is worth per ticket.') : $t('Price, uses and what one use is worth.')"
                       modal-size="sm:max-w-3xl" @close="$emit('close')">
         <div class="flex flex-col gap-6 text-[13px]">
-            <p v-if="sold" class="rounded-md bg-surface-sunken px-3.5 py-3 text-[13px] leading-5 text-text-muted">
-                {{ $t('Already sold: uses, value, limits and term stay as they are. Name, description, prices and the end of sale can change; productions can only be added.') }}
+            <p v-if="sold" class="rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
+                {{ subscription
+                    ? $t('Already sold: what you change also applies to every running subscription, uses from their next period. Only prices and term apply to new subscriptions alone.')
+                    : $t('Already sold: what you change also applies to every pass sold. Only the price applies to new sales alone.') }}
+                {{ $t('Before saving you see exactly what changes.') }}
             </p>
 
             <section class="grid gap-4">
@@ -26,8 +29,8 @@
                     <div class="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-labelledby="pass-term-heading">
                         <label v-for="mode in termModes" :key="mode.value" :for="`pass-term-${mode.value}`"
                                class="flex items-start gap-3 rounded-lg border px-3.5 py-3 transition-colors"
-                               :class="[draft.termMode === mode.value ? 'border-accent-600 bg-accent-50' : 'border-border-subtle bg-surface', sold ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:bg-surface-sunken']">
-                            <input :id="`pass-term-${mode.value}`" v-model="draft.termMode" type="radio" name="pass-term" :value="mode.value" :disabled="sold" class="sr-only" @change="onTermMode" />
+                               :class="[draft.termMode === mode.value ? 'border-accent-600 bg-accent-50' : 'border-border-subtle bg-surface cursor-pointer hover:bg-surface-sunken']">
+                            <input :id="`pass-term-${mode.value}`" v-model="draft.termMode" type="radio" name="pass-term" :value="mode.value" class="sr-only" @change="onTermMode" />
                             <span class="mt-0.5 box-border size-4 shrink-0 rounded-full border bg-surface" :class="draft.termMode === mode.value ? 'border-[5px] border-accent-600' : 'border-border'"></span>
                             <span class="flex flex-col gap-0.5">
                                 <span class="font-lexend text-[13px] font-medium text-text">{{ mode.label }}</span>
@@ -37,16 +40,16 @@
                     </div>
 
                     <div v-if="draft.termMode === 'months'" class="grid gap-4 sm:grid-cols-2">
-                        <BaseInput id="pass-term-months" v-model="draft.termMonths" type="number" min="1" max="24" label="Months" required :disabled="sold" :error="form.errors.termMonths" />
+                        <BaseInput id="pass-term-months" v-model="draft.termMonths" type="number" min="1" max="24" label="Months" required :error="form.errors.termMonths" />
                         <div>
                             <span :class="labelClass">{{ $t('After the term') }}</span>
-                            <ChoiceSegments v-model="draft.afterTerm" :disabled="sold" :label="$t('After the term')"
+                            <ChoiceSegments v-model="draft.afterTerm" :label="$t('After the term')"
                                             :options="[{ value: 'ends', label: $t('Ends') }, { value: 'monthly', label: $t('Runs on monthly') }]" />
                         </div>
                     </div>
                     <div v-else-if="draft.termMode === 'season'" class="grid gap-4 sm:grid-cols-2">
                         <div>
-                            <BaseInput id="pass-season-ends" v-model="draft.seasonEnds" type="date" label="Last day" required :disabled="sold" :error="form.errors.seasonEnds" />
+                            <BaseInput id="pass-season-ends" v-model="draft.seasonEnds" type="date" label="Last day" required :error="form.errors.seasonEnds" />
                             <p class="mt-1 text-xs text-text-subtle">{{ $t('On sale while at least one whole month is left until then.') }}</p>
                         </div>
                     </div>
@@ -73,9 +76,9 @@
                 <div class="grid gap-2" role="radiogroup" :aria-label="$t('Uses')">
                     <div v-for="mode in usesModes" :key="mode.value" class="rounded-lg border transition-colors"
                          :class="[usesMode === mode.value ? 'border-accent-600 bg-accent-50' : 'border-border-subtle bg-surface', { 'opacity-60': mode.disabled }]">
-                        <label class="flex items-start gap-2.5 px-3 py-2.5" :class="sold || mode.disabled ? 'cursor-not-allowed' : 'cursor-pointer'">
+                        <label class="flex items-start gap-2.5 px-3 py-2.5" :class="mode.disabled ? 'cursor-not-allowed' : 'cursor-pointer'">
                             <input type="radio" name="pass-uses-mode" class="mt-0.5 size-3.5 text-accent-600 focus:ring-accent-500" :value="mode.value"
-                                   :checked="usesMode === mode.value" :disabled="sold || mode.disabled" @change="chooseUses(mode.value)">
+                                   :checked="usesMode === mode.value" :disabled="mode.disabled" @change="chooseUses(mode.value)">
                             <span class="grid gap-0.5">
                                 <span class="font-medium text-text">{{ mode.label }}</span>
                                 <span class="text-xs text-text-subtle">{{ mode.hint }}</span>
@@ -84,13 +87,13 @@
                         <div v-if="usesMode === mode.value && mode.unit" class="flex flex-col gap-3 pb-3 pl-9 pr-3">
                             <div class="flex items-center gap-2">
                                 <BaseInput id="pass-uses" v-model="draft.uses" type="number" min="1" max="1000" :label="mode.unit" :show-label="false"
-                                           required :disabled="sold" :error="form.errors.uses" is-small class="!w-24" />
+                                           required :error="form.errors.uses" is-small class="!w-24" />
                                 <span class="text-text-muted">{{ mode.unit }}</span>
                             </div>
                             <div v-if="mode.value === 'month'">
                                 <div class="flex items-center gap-2">
                                     <BaseInput id="pass-rollover" v-model="draft.rolloverMax" type="number" min="0" max="100" label="Carried into the next month"
-                                               :show-label="false" :disabled="sold" :error="form.errors.rolloverMax" is-small class="!w-24" />
+                                               :show-label="false" :error="form.errors.rolloverMax" is-small class="!w-24" />
                                     <span class="text-text-muted">{{ $t('unused ones carried into the next month') }}</span>
                                 </div>
                                 <p class="mt-1 text-xs text-text-subtle">{{ $t('0: whatever is not used in the month lapses.') }}</p>
@@ -102,8 +105,8 @@
                     <span :class="labelClass">{{ $t('At most') }}</span>
                     <div class="flex items-center gap-2">
                         <BaseInput id="pass-max-period" v-model="draft.maxUsesPerPeriod" type="number" min="1" max="100" label="At most" :show-label="false"
-                                   :disabled="sold" :error="form.errors.maxUsesPerPeriod" is-small class="!w-24" />
-                        <ChoiceSegments v-model="draft.limitPeriod" :disabled="sold" :label="$t('Period')" :options="limitPeriods" />
+                                   :error="form.errors.maxUsesPerPeriod" is-small class="!w-24" />
+                        <ChoiceSegments v-model="draft.limitPeriod" :label="$t('Period')" :options="limitPeriods" />
                     </div>
                     <p class="mt-1 text-xs text-text-subtle">{{ $t('Optional. Weeks run Monday to Sunday. A booking counts on the day of the performance, a stamp on the day it is given.') }}</p>
                 </div>
@@ -118,13 +121,13 @@
                 <h3 :class="headingClass">{{ $t('Discount per use') }}</h3>
                 <div>
                     <div class="flex flex-wrap items-end gap-4">
-                        <ChoiceSegments v-model="draft.discountKind" :disabled="sold" :label="$t('Discount per use')"
+                        <ChoiceSegments v-model="draft.discountKind" :label="$t('Discount per use')"
                                         :options="[{ value: 'percent', label: $t('Percent of the ticket') }, { value: 'fixed', label: $t('Fixed amount') }]" />
                         <div class="w-44">
                             <BaseInput v-if="draft.discountKind === 'percent'" id="pass-percent" v-model="draft.discountPercent" type="number" min="1" max="100"
-                                       label="Percent" required :disabled="sold" :error="form.errors.discountPercent" />
+                                       label="Percent" required :error="form.errors.discountPercent" />
                             <BaseInput v-else id="pass-amount" v-model="draft.discountAmount" type="number" min="0.01" step="0.01"
-                                       label="Amount in euros" required :disabled="sold" :error="form.errors.discountAmount" />
+                                       label="Amount in euros" required :error="form.errors.discountAmount" />
                         </div>
                     </div>
                     <p class="mt-1.5 text-xs text-text-subtle">
@@ -143,11 +146,11 @@
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
-                        <BaseInput id="pass-max-order" v-model="draft.maxUsesPerOrder" type="number" min="1" max="100" label="At most per order" :disabled="sold" :error="form.errors.maxUsesPerOrder" />
+                        <BaseInput id="pass-max-order" v-model="draft.maxUsesPerOrder" type="number" min="1" max="100" label="At most per order" :error="form.errors.maxUsesPerOrder" />
                         <p class="mt-1 text-xs text-text-subtle">{{ $t('Empty: no limit.') }}</p>
                     </div>
                     <div>
-                        <BaseInput id="pass-max-event" v-model="draft.maxUsesPerEvent" type="number" min="1" max="1000" label="At most per event" :disabled="sold" :error="form.errors.maxUsesPerEvent" />
+                        <BaseInput id="pass-max-event" v-model="draft.maxUsesPerEvent" type="number" min="1" max="1000" label="At most per event" :error="form.errors.maxUsesPerEvent" />
                         <p class="mt-1 text-xs text-text-subtle">{{ $t('Across all orders of this pass. Empty: no limit.') }}</p>
                     </div>
                 </div>
@@ -158,14 +161,14 @@
                 <div v-if="!subscription" class="flex flex-wrap items-end gap-4">
                     <div>
                         <span :class="labelClass">{{ $t('Validity') }}</span>
-                        <ChoiceSegments v-model="draft.validity" :disabled="sold" :label="$t('Validity')"
+                        <ChoiceSegments v-model="draft.validity" :label="$t('Validity')"
                                         :options="[{ value: 'unlimited', label: $t('Unlimited') }, { value: 'days', label: $t('Days from purchase') }, { value: 'until', label: $t('Until a fixed date') }]" />
                     </div>
                     <div v-if="draft.validity !== 'unlimited'" class="w-60">
                         <BaseInput v-if="draft.validity === 'days'" id="pass-validity-days" v-model="draft.validityDays" type="number" min="1" max="3650"
-                                   label="Days from purchase" required :disabled="sold" :error="form.errors.validityDays" />
+                                   label="Days from purchase" required :error="form.errors.validityDays" />
                         <BaseInput v-else id="pass-valid-until" v-model="draft.validUntil" type="datetime-local"
-                                   label="Valid until" required :disabled="sold" :error="form.errors.validUntil" />
+                                   label="Valid until" required :error="form.errors.validUntil" />
                     </div>
                 </div>
                 <div class="w-60">
@@ -174,46 +177,13 @@
                 </div>
             </section>
 
-            <section :class="sectionClass">
-                <div class="flex items-baseline justify-between gap-3">
-                    <h3 :class="headingClass">{{ $t('Valid for') }}</h3>
-                    <span v-if="!draft.allEvents && productions.length > 0" class="text-xs text-text-subtle tabular-nums">
-                        {{ $t('{count} of {total} productions', { count: coveredCount, total: productions.length }) }}
-                    </span>
-                </div>
-                <ArtworkBaseToggle id="pass-all-events" v-model="draft.allEvents" :disabled="sold && passType?.allEvents" :label="$t('Valid for all productions')"
-                                   :description="$t('Future ones too, without touching the pass.')" is-small />
-                <template v-if="!draft.allEvents">
-                    <p v-if="productions.length === 0" class="text-xs text-text-subtle">{{ $t('Artwork-Tickets has no productions yet. Release one from a project first.') }}</p>
-                    <template v-else>
-                        <div>
-                            <span :class="labelClass">{{ $t('Production groups') }}</span>
-                            <div v-if="groups.length > 0" class="grid gap-2 sm:grid-cols-2">
-                                <div v-for="group in groups" :key="group.id" class="rounded-lg border px-3 py-2.5 transition-colors"
-                                     :class="draft.groupIds.includes(group.id) ? 'border-accent-600 bg-accent-50' : 'border-border-subtle bg-surface'">
-                                    <BaseCheckbox :id="`pass-group-${group.id}`" :label="group.name"
-                                                  :description="$t('{count} productions', { count: group.eventIds.length }, group.eventIds.length)"
-                                                  :disabled="fixedGroupIds.includes(group.id)" :model-value="draft.groupIds.includes(group.id)"
-                                                  @update:model-value="(on) => pickGroup(group.id, on)" />
-                                </div>
-                            </div>
-                            <p v-if="groups.length > 0" class="mt-1 text-xs text-text-subtle">{{ $t('Also counts for whatever joins a group later.') }}</p>
-                            <p v-else class="text-xs text-text-subtle">
-                                {{ $t('No production groups yet.') }}
-                                <Link :href="route('settings.tickets.groups')" class="text-text underline underline-offset-2">{{ $t('Create one under Production groups, e.g. for all workshops.') }}</Link>
-                            </p>
-                        </div>
-                        <div>
-                            <span :class="labelClass">{{ $t('Single productions') }}</span>
-                            <ProductionPicker v-model="draft.eventIds" :productions="productions" :fixed-ids="sold ? passType.eventIds : []"
-                                              :covered-by="coveredBy" id-prefix="pass-production" />
-                        </div>
-                        <p v-if="coveredCount === 0" class="text-xs text-text-subtle">
-                            {{ $t('Without a production the pass cannot be used anywhere yet.') }}
-                        </p>
-                    </template>
-                </template>
-            </section>
+            <ScopeSection v-model:all-events="draft.allEvents" v-model:event-ids="draft.eventIds" v-model:group-ids="draft.groupIds"
+                          :productions="productions" :groups="groups" id-prefix="pass"
+                          :all-description="$t('Future ones too, without touching the pass.')"
+                          :empty-hint="$t('Without a production the pass cannot be used anywhere yet.')" />
+
+            <SoldChangesModal v-if="confirming" :pass-type="passType" :before="before" :after="passTypePayload(draft)"
+                              :productions="productions" :groups="groups" @close="confirming = false" @confirm="save" />
 
             <ul v-if="Object.keys(form.errors).length" class="rounded-md border border-danger-border bg-danger-surface p-3 text-[13px] text-danger">
                 <li v-for="(message, key) in form.errors" :key="key">{{ message }}</li>
@@ -230,21 +200,21 @@
 </template>
 
 <script setup>
-import { computed, reactive } from 'vue'
-import { Link, useForm } from '@inertiajs/vue3'
+import { computed, reactive, ref } from 'vue'
+import { useForm } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import { IconAlertTriangle } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
-import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
 import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
 import ChoiceSegments from '@/Pages/Settings/Tickets/ChoiceSegments.vue'
-import ProductionPicker from '@/Pages/Settings/Tickets/ProductionPicker.vue'
-import { passTypeDraft, passTypePayload } from '@/Pages/Settings/Tickets/drafts.js'
+import ScopeSection from '@/Pages/Settings/Tickets/ScopeSection.vue'
+import SoldChangesModal from '@/Pages/Settings/Tickets/SoldChangesModal.vue'
+import { passTypeDraft, passTypePayload, soldPassChanges } from '@/Pages/Settings/Tickets/drafts.js'
 
-/* One Mehrfachkarte or Abo, new or existing. Once something is sold, what holders bought is
-   fixed — the fields for it are disabled here, and tickets refuses the same. */
+/* One Mehrfachkarte or Abo, new or existing. Everything stays editable after a sale and reaches the
+   passes sold too; saving a sold one first shows what exactly changes. */
 const props = defineProps({
     /** The type as tickets sends it; null for a new one. */
     passType: { type: Object, default: null },
@@ -263,24 +233,8 @@ const form = useForm({})
 
 const subscription = computed(() => draft.kind === 'subscription')
 const sold = computed(() => (props.passType?.issuedCount ?? 0) > 0)
-/** Sold: the groups it already counts for stay. */
-const fixedGroupIds = computed(() => sold.value ? props.passType.groupIds : [])
-
-/** Productions counted through a picked group: id → the group names. */
-const coveredBy = computed(() => {
-    const names = {}
-    for (const group of props.groups.filter((candidate) => draft.groupIds.includes(candidate.id))) {
-        for (const id of group.eventIds) {
-            names[id] = names[id] ? `${names[id]}, ${group.name}` : group.name
-        }
-    }
-    return names
-})
-
-const coveredCount = computed(() => {
-    const listed = new Set(props.productions.map((production) => production.id))
-    return new Set([...draft.eventIds, ...Object.keys(coveredBy.value)].filter((id) => listed.has(id))).size
-})
+const confirming = ref(false)
+const before = props.passType ? passTypePayload(passTypeDraft(props.passType, props.kind)) : null
 
 const sectionClass = 'grid gap-4 border-t border-border-hairline pt-5'
 const headingClass = 'font-lexend text-[13px] font-semibold text-text'
@@ -346,12 +300,17 @@ function onTermMode() {
     }
 }
 
-function pickGroup(id, on) {
-    draft.groupIds = on ? [...draft.groupIds, id] : draft.groupIds.filter((groupId) => groupId !== id)
+function submit() {
+    const changes = sold.value ? soldPassChanges(before, passTypePayload(draft)) : null
+    if (changes && Object.values(changes).some((labels) => labels.length > 0)) {
+        confirming.value = true
+    } else {
+        save()
+    }
 }
 
-function submit() {
-    const options = { preserveScroll: true, onSuccess: () => emit('close') }
+function save() {
+    const options = { preserveScroll: true, onSuccess: () => emit('close'), onFinish: () => { confirming.value = false } }
     const request = form.transform(() => passTypePayload(draft))
 
     if (props.passType) {

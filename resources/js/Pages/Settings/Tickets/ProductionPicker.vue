@@ -8,7 +8,7 @@
         <ul v-if="shown.length > 0" class="max-h-56 overflow-y-auto divide-y divide-border-hairline">
             <li v-for="production in shown" :key="production.id" class="flex items-center justify-between gap-3 px-3 py-2">
                 <BaseCheckbox :id="`${idPrefix}-${production.id}`" :label="production.title"
-                              :disabled="fixedIds.includes(production.id) || production.id in coveredBy"
+                              :disabled="production.id in coveredBy"
                               :model-value="modelValue.includes(production.id) || production.id in coveredBy"
                               @update:model-value="(on) => pick(production.id, on)" />
                 <span v-if="production.id in coveredBy" class="shrink-0 text-xs text-text-subtle">
@@ -30,8 +30,6 @@ import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
 const props = defineProps({
     productions: { type: Array, required: true },
     modelValue: { type: Array, required: true },
-    /** Picks that can't be taken off again (something of it is sold). */
-    fixedIds: { type: Array, default: () => [] },
     /** Productions already counted through a group: id → the group names, shown ticked and locked. */
     coveredBy: { type: Object, default: () => ({}) },
     idPrefix: { type: String, required: true },

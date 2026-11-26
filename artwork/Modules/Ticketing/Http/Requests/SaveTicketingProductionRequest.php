@@ -13,6 +13,7 @@ use Illuminate\Validation\Validator;
  * Auftritt des Projekts im Ticketshop; das Titelbild kommt als Datei mit (hero) oder ist ein
  * vorhandenes weiteres Bild (cover_image_id), remove_hero nimmt das bisherige weg.
  * Weitere Bilder kommen als images[], remove_image_ids[] nimmt vorhandene heraus.
+ * group_ids und package_only kommen nur mit, wenn sie sich geändert haben; sonst bleibt der Stand in tickets.
  */
 class SaveTicketingProductionRequest extends FormRequest
 {
@@ -24,8 +25,10 @@ class SaveTicketingProductionRequest extends FormRequest
     /** Die Auswahl kommt als JSON-String im Formular mit, damit auch "keine" ankommt. */
     protected function prepareForValidation(): void
     {
-        if (is_string($this->input('reduction_type_ids'))) {
-            $this->merge(['reduction_type_ids' => json_decode($this->input('reduction_type_ids'), true)]);
+        foreach (['reduction_type_ids', 'group_ids'] as $key) {
+            if (is_string($this->input($key))) {
+                $this->merge([$key => json_decode($this->input($key), true)]);
+            }
         }
     }
 
@@ -39,6 +42,9 @@ class SaveTicketingProductionRequest extends FormRequest
             'description' => 'nullable|string|max:4000',
             'reduction_type_ids' => 'nullable|array|max:50',
             'reduction_type_ids.*' => 'required|uuid',
+            'group_ids' => 'sometimes|array|max:100',
+            'group_ids.*' => 'required|uuid',
+            'package_only' => 'sometimes|boolean',
             'hero' => 'nullable|image|max:8192',
             'remove_hero' => 'sometimes|boolean',
             'cover_image_id' => 'nullable|integer|prohibits:hero',

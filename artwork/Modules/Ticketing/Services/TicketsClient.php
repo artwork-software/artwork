@@ -167,10 +167,8 @@ class TicketsClient
                 . 'nothing can be released for sale.'
             ),
             'HOUSE_IN_REVIEW' => __('Artwork-Tickets is still reviewing the house. Until it is approved, nothing can be released for sale.'),
-            'PASS_TYPE_SOLD' => __('Passes of this kind have been sold already: uses, value, limits and term stay as they are, productions can only be added.'),
             'PASS_IN_USE' => __('Passes of this kind have been sold already, so it cannot be deleted. Archive it to end the sale.'),
             'NAME_TAKEN' => __('Artwork-Tickets already has a pass or group with this name.'),
-            'GROUP_IN_USE' => __('Sold passes or redeemed codes count on this group: it can only grow.'),
             'ITEM_UNAVAILABLE' => __('No place is left in this price class tonight.'),
             'SEAT_SELECTION_REQUIRED' => __('This date has a seating plan; sell the seat in Artwork-Tickets.'),
             'ROOM_CHANGE_AFTER_SALE' => self::roomStaysMessage(),

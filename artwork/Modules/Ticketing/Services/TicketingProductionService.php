@@ -47,7 +47,13 @@ class TicketingProductionService
     }
 
     /**
-     * @param array{title: string|null, description: string|null, reduction_type_ids: list<string>|null} $data
+     * @param array{
+     *     title: string|null,
+     *     description: string|null,
+     *     reduction_type_ids: list<string>|null,
+     *     group_ids?: list<string>,
+     *     package_only?: bool,
+     * } $data
      * Ein neues Titelbild ($hero oder das weitere Bild $coverImageId) schiebt das bisherige zu den
      * weiteren Bildern, außer $removeHero nimmt es weg.
      *
@@ -141,6 +147,8 @@ class TicketingProductionService
         $response = $this->tickets->put($connection, '/productions', $this->payload($production, $venueId));
 
         $production->production_id = $response['id'];
+        $production->group_ids = null;
+        $production->package_only = null;
         $production->save();
         $this->pushHero($production, $connection, false);
         $this->pushImages($production, $connection, []);
@@ -172,6 +180,7 @@ class TicketingProductionService
         array $removedRemoteIds,
     ): void {
         $this->tickets->put($connection, '/productions', $this->payload($production, null));
+        $production->update(['group_ids' => null, 'package_only' => null]);
         $this->pushHero($production, $connection, $removeHero);
         $this->pushImages($production, $connection, $removedRemoteIds);
     }
@@ -245,6 +254,8 @@ class TicketingProductionService
             'description' => $production->description ?? $project->description ?? '',
             'venueId' => $venueId,
             'reductionTypeIds' => $production->reduction_type_ids,
+            'groupIds' => $production->group_ids,
+            'packageOnly' => $production->package_only,
         ];
     }
 }

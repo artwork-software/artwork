@@ -1,8 +1,8 @@
 <template>
-    <TicketsSettingsHeader :description="$t('Groups of productions that passes, subscriptions and discount codes count for as a whole.')">
+    <TicketsSettingsHeader :description="$t('Productions that passes, subscriptions and discounts count for together.')">
         <template v-if="connection.connected" #actions>
             <button type="button" class="ui-button-add" @click="editing = { group: null }">
-                <IconPlus class="size-4" />{{ $t('New group') }}
+                <IconPlus class="size-4" />{{ $t('New production group') }}
             </button>
         </template>
 
@@ -10,7 +10,7 @@
 
         <ArtworkBaseDeleteModal v-if="deleting" :title="$t('Delete {name}?', { name: deleting.name })"
                                 :description="usedCount(deleting) > 0
-                                    ? $t('{count} passes, subscriptions and discount codes will no longer count for the productions in it.', { count: usedCount(deleting) }, usedCount(deleting))
+                                    ? $t('{count} passes, subscriptions and discounts will no longer count for the productions in it.', { count: usedCount(deleting) }, usedCount(deleting))
                                     : $t('The productions in it stay as they are.')"
                                 @close="deleting = null" @delete="destroy" />
 
@@ -23,9 +23,9 @@
             </div>
 
             <div v-if="groups.length === 0 && !ticketsError" class="py-10 text-center">
-                <p class="font-lexend text-sm font-medium text-text">{{ $t('No groups yet') }}</p>
+                <p class="font-lexend text-sm font-medium text-text">{{ $t('No production groups yet') }}</p>
                 <p class="mx-auto mt-1 max-w-md text-[13px] leading-5 text-text-muted">
-                    {{ $t('Create “Workshops”, for example, and add every workshop. New passes and discount codes then only pick the group, and a new workshop is added here once.') }}
+                    {{ $t('Create “Workshops”, for example, and add every workshop. New passes and discounts then only pick the group, and a new workshop is added here once.') }}
                 </p>
             </div>
 
@@ -57,14 +57,10 @@
                                 <button type="button" class="flex size-7 items-center justify-center rounded-md text-text-subtle hover:text-text hover:bg-surface-sunken" :aria-label="$t('Edit')" @click="editing = { group }">
                                     <IconPencil class="size-[15px]" />
                                 </button>
-                                <button v-if="group.deletable" type="button" class="flex size-7 items-center justify-center rounded-md text-text-subtle hover:text-danger hover:bg-danger-surface"
+                                <button type="button" class="flex size-7 items-center justify-center rounded-md text-text-subtle hover:text-danger hover:bg-danger-surface"
                                         :aria-label="$t('Delete')" @click="deleting = group">
                                     <IconTrash class="size-[15px]" />
                                 </button>
-                                <span v-else class="flex size-7 items-center justify-center text-text-subtle"
-                                      :title="$t('A sold pass or a redeemed discount code counts on this group, so it stays.')">
-                                    <IconLock class="size-[15px]" />
-                                </span>
                             </div>
                         </td>
                     </tr>
@@ -78,14 +74,14 @@
 import { computed, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
-import { IconAlertTriangle, IconLock, IconPencil, IconPlus, IconTrash } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconPencil, IconPlus, IconTrash } from '@tabler/icons-vue'
 import TicketsSettingsHeader from '@/Pages/Settings/Tickets/TicketsSettingsHeader.vue'
 import NotConnected from '@/Pages/Settings/Tickets/NotConnected.vue'
 import GroupModal from '@/Pages/Settings/Tickets/GroupModal.vue'
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue'
 
-/* Produktionsgruppen: tickets holds them and reads their members live, so a production added here
-   counts at once for every pass, subscription and discount code that names the group. */
+/* Ticketprojekt-Gruppen: tickets holds them and reads their members live, so a production added here
+   counts at once for every pass, subscription and discount that names the group. */
 const props = defineProps({
     connection: { type: Object, required: true },
     groups: { type: Array, default: () => [] },
@@ -112,7 +108,7 @@ function usedCount(group) {
 function usedBy(group) {
     return [
         group.passTypeCount > 0 ? t('{count} passes and subscriptions', { count: group.passTypeCount }, group.passTypeCount) : null,
-        group.couponCount > 0 ? t('{count} discount codes', { count: group.couponCount }, group.couponCount) : null,
+        group.couponCount > 0 ? t('{count} discounts', { count: group.couponCount }, group.couponCount) : null,
     ].filter(Boolean).join(', ')
 }
 

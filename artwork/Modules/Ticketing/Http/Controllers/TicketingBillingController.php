@@ -11,6 +11,7 @@ use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -97,6 +98,24 @@ class TicketingBillingController extends Controller
         }
 
         return back()->with('success', __('Terms accepted for the house.'));
+    }
+
+    public function setFeeBearer(Request $request): RedirectResponse
+    {
+        $bearer = $request->validate(['bearer' => ['required', Rule::in(TicketingBillingService::FEE_BEARERS)]])['bearer'];
+        $connection = $this->connections->current();
+
+        if (!$connection) {
+            return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
+        }
+
+        try {
+            $this->billing->setFeeBearer($connection, $bearer);
+        } catch (TicketingConnectionException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back()->with('success', __('Fee setting saved in Artwork-Tickets.'));
     }
 
     /** Für Stripes eingebettetes Formular, das sich das Geheimnis selbst holt — auch erneut, wenn es abläuft. */

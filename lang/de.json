@@ -10314,5 +10314,12 @@
     "Package": "Paket",
     "Package price in euros": "Paketpreis in Euro",
     "Several dates together at one price, or a discount from a number of dates, are set under Discounts & packages.": "Mehrere Termine zu einem Preis oder Rabatte ab einer Anzahl Termine legst du unter „Rabatte & Pakete“ an.",
-    "Sell the dates online only in packages": "Termine online nur im Paket verkaufen"
+    "Sell the dates online only in packages": "Termine online nur im Paket verkaufen",
+    "Ticket fee": "Ticketgebühr",
+    "Artwork-Tickets charges {rate} per paid ticket, VAT included. Free tickets and box office sales carry no fee.": "Artwork-Tickets berechnet {rate} pro bezahltem Ticket, inkl. MwSt. Freikarten und Verkäufe an der Abendkasse sind gebührenfrei.",
+    "Included in the price": "Im Preis enthalten (inkl. Gebühren)",
+    "Buyers pay exactly the price of the price class; the fee comes off the house's share.": "Käufer:innen zahlen genau den Preis der Preisklasse; die Gebühr geht vom Anteil des Hauses ab.",
+    "On top of the price": "Zusätzlich zum Preis (zzgl. Gebühren)",
+    "The shop shows every price with the fee added; the house receives the full price of the price class.": "Der Shop zeigt jeden Preis mit aufgeschlagener Gebühr; das Haus erhält den vollen Preis der Preisklasse.",
+    "Fee setting saved in Artwork-Tickets.": "Gebühreneinstellung in Artwork-Tickets gespeichert."
 }

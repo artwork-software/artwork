@@ -1283,6 +1283,7 @@
     "PUT projects/{project}/tabs/ticketing/events": "forbidden",
     "PUT rooms/order": "forbidden",
     "PUT settings/inventory-tags/tag-groups/{inventoryTagGroup}/update": "forbidden",
+    "PUT settings/tickets/billing/fee-bearer": "forbidden",
     "PUT settings/tickets/discounts/{discount}": "not_found",
     "PUT settings/tickets/groups/{group}": "not_found",
     "PUT settings/tickets/passes/{passType}": "not_found",

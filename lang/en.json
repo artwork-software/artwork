@@ -10314,5 +10314,12 @@
     "Package": "Package",
     "Package price in euros": "Package price in euros",
     "Several dates together at one price, or a discount from a number of dates, are set under Discounts & packages.": "Several dates together at one price, or a discount from a number of dates, are set under Discounts & packages.",
-    "Sell the dates online only in packages": "Sell the dates online only in packages"
+    "Sell the dates online only in packages": "Sell the dates online only in packages",
+    "Ticket fee": "Ticket fee",
+    "Artwork-Tickets charges {rate} per paid ticket, VAT included. Free tickets and box office sales carry no fee.": "Artwork-Tickets charges {rate} per paid ticket, VAT included. Free tickets and box office sales carry no fee.",
+    "Included in the price": "Included in the price",
+    "Buyers pay exactly the price of the price class; the fee comes off the house's share.": "Buyers pay exactly the price of the price class; the fee comes off the house's share.",
+    "On top of the price": "On top of the price",
+    "The shop shows every price with the fee added; the house receives the full price of the price class.": "The shop shows every price with the fee added; the house receives the full price of the price class.",
+    "Fee setting saved in Artwork-Tickets.": "Fee setting saved in Artwork-Tickets."
 }

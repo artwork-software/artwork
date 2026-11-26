@@ -490,6 +490,8 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->name('settings.tickets.billing.stripe-session');
         Route::post('/billing/platform-terms', [TicketingBillingController::class, 'acceptPlatformTerms'])
             ->name('settings.tickets.billing.platform-terms');
+        Route::put('/billing/fee-bearer', [TicketingBillingController::class, 'setFeeBearer'])
+            ->name('settings.tickets.billing.fee-bearer');
         Route::get('/rooms', [TicketingConnectionController::class, 'rooms'])->name('settings.tickets.rooms');
         Route::post('/rooms', [TicketingConnectionController::class, 'syncRooms'])->name('settings.tickets.rooms.sync');
         Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');

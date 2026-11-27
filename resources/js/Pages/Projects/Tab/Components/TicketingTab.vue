@@ -55,7 +55,7 @@
                     <span>{{ $t('Artwork-Tickets could not be reached: {message} Venue defaults are missing until it is back.', { message: payload.ticketsError }) }}</span>
                 </div>
 
-                <!-- Warum ein Termin erst nach der Freigabe eine Teilnehmerliste hat -->
+                <!-- Why a date has a guest list only once it is released -->
                 <p v-if="hasUnreleased" class="mb-4 flex items-start gap-2.5 rounded-md border border-border-subtle bg-surface-sunken px-3.5 py-3 text-[13px] leading-5 text-text-muted">
                     <IconUsers class="mt-0.5 size-4 shrink-0 text-text-subtle" />
                     {{ $t('Guest list, admission and booking with a pass or subscription are available for a date once it is released. Releasing does not mean selling online: bookings on site cost no service fee.') }}

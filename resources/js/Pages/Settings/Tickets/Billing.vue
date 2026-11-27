@@ -95,7 +95,7 @@ import PendingChangesBar from '@/Pages/Settings/Tickets/PendingChangesBar.vue'
 import PayoutAccount from '@/Pages/Settings/Tickets/PayoutAccount.vue'
 import PlatformTermsConsent from '@/Pages/Settings/Tickets/PlatformTermsConsent.vue'
 import { missingDetails, noLegalFiles } from '@/Pages/Settings/Tickets/drafts.js'
-import { formatEuro } from '@/Helper/ticketingFormat.js'
+import { formatEuro, formatPercent } from '@/Helper/ticketingFormat.js'
 
 const props = defineProps({
     connection: { type: Object, required: true },
@@ -133,7 +133,7 @@ function submit() {
     })
 }
 
-const feeRate = computed(() => `${(props.billing.fee.percent_bp / 100).toLocaleString()} % + ${formatEuro(props.billing.fee.fixed_cents)}`)
+const feeRate = computed(() => `${formatPercent(props.billing.fee.percent_bp)} + ${formatEuro(props.billing.fee.fixed_cents)}`)
 const feeBearers = computed(() => [
     { bearer: 'house', label: t('Included in the price'), hint: t("Buyers pay exactly the price of the price class; the fee comes off the house's share.") },
     { bearer: 'buyer', label: t('On top of the price'), hint: t('The shop shows every price with the fee added; the house receives the full price of the price class.') },

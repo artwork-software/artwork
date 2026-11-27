@@ -77,7 +77,7 @@ const source = props.discount
 const draft = reactive({
     name: source?.name ?? '',
     kind: source?.kind ?? (props.packageFor ? 'package' : 'percent'),
-    value: source ? (source.kind === 'percent' ? String(source.value / 100) : fromCents(source.value)) : '',
+    value: fromCents(source?.value),
     minDates: source?.minDates ? String(source.minDates) : '',
     validFrom: source?.validFrom ?? '',
     validUntil: source?.validUntil ?? '',
@@ -94,7 +94,7 @@ function submit() {
         name: draft.name.trim(),
         kind: draft.kind,
         // Percent in basis points (15 % → 1500), an amount or a package price in cents.
-        value: toCents(draft.value) ?? 0,
+        value: toCents(draft.value),
         minDates: draft.minDates === '' ? null : Number(draft.minDates),
         allEvents: draft.allEvents,
         eventIds: draft.allEvents ? [] : draft.eventIds,

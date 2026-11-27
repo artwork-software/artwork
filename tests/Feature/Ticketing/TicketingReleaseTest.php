@@ -476,7 +476,9 @@ final class TicketingReleaseTest extends FeatureTestCase
 
         Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/productions'));
 
-        TicketingProduction::query()->where('project_id', $this->project->id)->update(['production_id' => self::PRODUCTION_ID]);
+        // Wie die Freigabe: angelegt, der Entwurf von Gruppen und Paket-Schalter ist in tickets.
+        TicketingProduction::query()->where('project_id', $this->project->id)
+            ->update(['production_id' => self::PRODUCTION_ID, 'group_ids' => null, 'package_only' => null]);
 
         $this->post(route('projects.tabs.ticketing.production', $this->project), [
             'title' => 'Hamlet',
@@ -495,7 +497,7 @@ final class TicketingReleaseTest extends FeatureTestCase
             && $request['groupIds'] === [$group]
             && $request['packageOnly'] === true
             && $request['venueId'] === null);
-        // Angekommen: ab jetzt führt tickets Gruppen und Paket-Schalter.
+        // Verknüpft wartet hier nichts mehr, sonst überschriebe ein gescheiterter Abgleich später tickets.
         $production = TicketingProduction::query()->where('project_id', $this->project->id)->sole();
         $this->assertNull($production->group_ids);
         $this->assertNull($production->package_only);

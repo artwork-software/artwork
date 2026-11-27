@@ -22,13 +22,21 @@ class SaveTicketingProductionRequest extends FormRequest
         return true;
     }
 
-    /** Die Auswahl kommt als JSON-String im Formular mit, damit auch "keine" ankommt. */
+    /**
+     * Die Auswahl kommt als JSON-String im Formular mit, damit auch "keine" ankommt; package_only als
+     * "1"/"0", hier zum bool, den tickets erwartet.
+     */
     protected function prepareForValidation(): void
     {
         foreach (['reduction_type_ids', 'group_ids'] as $key) {
             if (is_string($this->input($key))) {
                 $this->merge([$key => json_decode($this->input($key), true)]);
             }
+        }
+
+        if ($this->has('package_only')) {
+            $packageOnly = filter_var($this->input('package_only'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $this->merge(['package_only' => $packageOnly]);
         }
     }
 

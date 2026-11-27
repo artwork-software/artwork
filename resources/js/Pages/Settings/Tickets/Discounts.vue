@@ -46,7 +46,7 @@
                             </button>
                         </td>
                         <td class="py-2.5 pr-3 tabular-nums">{{ discountWorth(discount, t) }}</td>
-                        <td class="py-2.5 pr-3 max-w-[320px] truncate text-text-muted" :title="validFor(discount)">{{ validFor(discount) }}</td>
+                        <td class="py-2.5 pr-3 max-w-[320px] truncate text-text-muted" :title="scope(discount)">{{ scope(discount) }}</td>
                         <td class="py-2.5 pr-3 tabular-nums text-text-muted">{{ discountPeriod(discount, t) }}</td>
                         <td class="py-2.5 pl-3">
                             <div class="flex items-center justify-end gap-1.5">
@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import { IconAlertTriangle, IconPencil, IconPlus, IconTrash } from '@tabler/icons-vue'
@@ -75,7 +75,7 @@ import TicketsSettingsHeader from '@/Pages/Settings/Tickets/TicketsSettingsHeade
 import NotConnected from '@/Pages/Settings/Tickets/NotConnected.vue'
 import DiscountModal from '@/Pages/Settings/Tickets/DiscountModal.vue'
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue'
-import { discountPeriod, discountWorth } from '@/Pages/Settings/Tickets/discounts.js'
+import { discountPeriod, discountWorth, validFor } from '@/Pages/Settings/Tickets/discounts.js'
 
 /* Automatic discounts: Rabattcodes without a code that tickets applies by itself inside their
    period — per ticket (Frühbucher), from a number of dates in one booking (Staffel), or as the price
@@ -104,17 +104,7 @@ function openingDialog() {
     return discount ? { discount } : null
 }
 
-const productionTitles = computed(() => new Map(props.productions.map((production) => [production.id, production.title])))
-const groupNames = computed(() => new Map(props.groups.map((group) => [group.id, group.name])))
-
-function validFor(discount) {
-    if (discount.allEvents) {
-        return t('All productions')
-    }
-    return [...discount.groupIds.map((id) => groupNames.value.get(id)), ...discount.eventIds.map((id) => productionTitles.value.get(id))]
-        .filter(Boolean)
-        .join(', ')
-}
+const scope = (discount) => validFor(discount, props.productions, props.groups, t)
 
 function destroy() {
     router.delete(route('settings.tickets.discounts.destroy', deleting.value.id), { preserveScroll: true, onSuccess: () => (deleting.value = null) })

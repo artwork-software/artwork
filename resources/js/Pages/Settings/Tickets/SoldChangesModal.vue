@@ -35,6 +35,7 @@ import { IconArrowRight } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import { formatDate, formatDateTime, formatEuro } from '@/Helper/ticketingFormat.js'
 import { soldPassChanges } from '@/Pages/Settings/Tickets/drafts.js'
+import { validFor } from '@/Pages/Settings/Tickets/discounts.js'
 
 /* Before a sold pass type is saved: what changes, from what to what, and whether it reaches the
    passes already sold or only new buyers. */
@@ -55,7 +56,6 @@ const changes = computed(() => soldPassChanges(props.before, props.after))
 const yesNo = (on) => (on ? t('Yes') : t('No'))
 const atMost = (count) => count ?? t('Unlimited')
 const until = (date, format) => (date ? t('until {date}', { date: format(date) }) : t('Unlimited'))
-const picked = (items, ids, name) => items.filter((item) => ids.includes(item.id)).map(name)
 const periods = { day: 'per day', week: 'per week', month: 'per month' }
 
 /** Each label's name and how a payload shows it. */
@@ -75,9 +75,7 @@ const fields = {
     perPeriod: ['At most', (p) => (p.maxUsesPerPeriod ? `${p.maxUsesPerPeriod} ${t(periods[p.limitPeriod])}` : t('Unlimited'))],
     redeemable: ['Redeemable in the checkout', (p) => yesNo(p.redeemableInCheckout)],
     stampable: ['Stampable', (p) => yesNo(p.stampable)],
-    scope: ['Valid for', (p) => (p.allEvents
-        ? t('All productions')
-        : [...picked(props.groups, p.groupIds, (group) => group.name), ...picked(props.productions, p.eventIds, (production) => production.title)].join(', ') || t('None'))],
+    scope: ['Valid for', (p) => validFor(p, props.productions, props.groups, t) || t('None')],
     price: ['Price', (p) => (subscription.value
         ? [p.monthlyPrice && `${formatEuro(p.monthlyPrice)} ${t('per month')}`, p.upfrontPrice && `${t('One-off')} ${formatEuro(p.upfrontPrice)}`]
             .filter(Boolean).join(' · ')

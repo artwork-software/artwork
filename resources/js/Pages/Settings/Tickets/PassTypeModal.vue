@@ -4,7 +4,7 @@
         <div class="flex flex-col gap-6 text-[13px]">
             <p v-if="sold" class="rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
                 {{ subscription
-                    ? $t('Already sold: what you change also applies to every running subscription, uses from their next period. Only prices and term apply to new subscriptions alone.')
+                    ? $t('Already sold: what you change also applies to every running subscription, uses from their next period. Only prices, term and whether uses count per month or per term apply to new subscriptions alone.')
                     : $t('Already sold: what you change also applies to every pass sold. Only the price applies to new sales alone.') }}
                 {{ $t('Before saving you see exactly what changes.') }}
             </p>

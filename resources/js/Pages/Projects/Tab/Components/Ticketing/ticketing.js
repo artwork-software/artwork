@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { formatDay, formatEuro, formatTime } from '@/Helper/ticketingFormat.js'
+import { formatDay, formatEuro, formatPercent, formatTime } from '@/Helper/ticketingFormat.js'
 
 /* Shared helpers of the ticketing component: what a date currently sells for
    and holds (its own draft first, the venue's defaults otherwise), and the
@@ -57,7 +57,7 @@ export function hasOwnReductions(event, production, reductions) {
 }
 
 export function reductionValue(reduction) {
-    return reduction.kind === 'percent' ? `−${reduction.value / 100} %` : `−${formatEuro(reduction.value)}`
+    return reduction.kind === 'percent' ? `−${formatPercent(reduction.value)}` : `−${formatEuro(reduction.value)}`
 }
 
 export function isReleased(event) {

@@ -19,7 +19,7 @@ class TicketingDiscountService
      * @return array{
      *     discounts: list<array<string, mixed>>,
      *     productions: list<array{id: string, title: string}>,
-     *     groups: list<array<string, mixed>>,
+     *     groups: list<array{id: string, name: string, eventIds: list<string>, sold: bool}>,
      * }
      */
     public function overview(TicketingConnection $connection): array

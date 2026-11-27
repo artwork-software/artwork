@@ -81,3 +81,14 @@ test('a sold card tells changes that reach the holders from those for new sales 
     assert.deepEqual(soldPassChanges(before, passTypePayload(draft)), { sold: ['uses', 'discount', 'scope'], newOnly: ['price'] })
     assert.deepEqual(soldPassChanges(before, before), { sold: [], newOnly: [] })
 })
+
+test('a running Abo keeps its uses when the window they count in changes', () => {
+    const abo = { ...card, kind: 'subscription', price: null, monthlyPrice: 3000, termMonths: 12, validityDays: null }
+    const before = passTypePayload(passTypeDraft(abo))
+    const draft = passTypeDraft(abo)
+    Object.assign(draft, { uses: '4' })
+    assert.deepEqual(soldPassChanges(before, passTypePayload(draft)), { sold: ['uses'], newOnly: [] })
+
+    Object.assign(draft, { usesWindow: 'term' })
+    assert.deepEqual(soldPassChanges(before, passTypePayload(draft)), { sold: [], newOnly: ['uses'] })
+})

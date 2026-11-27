@@ -9,7 +9,7 @@
             <ChoiceSegments v-model="filter" :label="$t('Show')" :options="filterOptions" />
         </div>
 
-        <!-- Je Preisklasse: wie viele, und was sie eingebracht haben -->
+        <!-- Per price class: how many, and what they brought in -->
         <ul v-if="byCategory.length > 0" class="flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
             <li v-for="category in byCategory" :key="category.name">
                 <span class="font-medium text-text">{{ category.name }}</span>

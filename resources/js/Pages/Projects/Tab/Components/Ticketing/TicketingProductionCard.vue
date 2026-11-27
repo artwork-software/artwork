@@ -102,7 +102,9 @@
                             <Link v-if="production.productionId" :href="route('settings.tickets.discounts', { package: production.productionId })"
                                   class="text-text underline underline-offset-2">{{ $t('Create a package for this project') }}</Link>
                         </p>
-                        <ArtworkBaseToggle id="ticketing-production-package-only" v-model="form.packageOnly"
+                        <!-- Without a package the dates could not be sold online at all. -->
+                        <ArtworkBaseToggle v-if="production.packageOnly || production.discounts.some((discount) => discount.kind === 'package')"
+                                           id="ticketing-production-package-only" v-model="form.packageOnly"
                                            :label="$t('Sell the dates online only in packages')" is-small />
                     </div>
                 </div>
@@ -138,7 +140,7 @@ const props = defineProps({
     production: { type: Object, required: true },
     reductions: { type: Array, required: true },
     /** The house's Ticketprojekt-Gruppen to pick from. */
-    groups: { type: Array, default: () => [] },
+    groups: { type: Array, required: true },
     canEdit: { type: Boolean, default: true },
 })
 
@@ -156,7 +158,7 @@ function reach(discount) {
     return names.length ? t('via {groups}', { groups: names.join(', ') }) : null
 }
 
-/** Days are calendar days on the house's clock, the last one included. */
+/** Past its last day, which still counts. */
 function expired(discount) {
     return discount.validUntil !== null && discount.validUntil < dayjs().format('YYYY-MM-DD')
 }

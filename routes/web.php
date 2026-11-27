@@ -516,7 +516,8 @@ Route::group(['middleware' => ['auth']], function (): void {
         Route::delete('/groups/{group}', [TicketingProductionGroupController::class, 'destroy'])
             ->whereUuid('group')->name('settings.tickets.groups.destroy');
         Route::get('/discounts', [TicketingDiscountController::class, 'index'])->name('settings.tickets.discounts');
-        Route::post('/discounts', [TicketingDiscountController::class, 'store'])->name('settings.tickets.discounts.store');
+        Route::post('/discounts', [TicketingDiscountController::class, 'store'])
+            ->name('settings.tickets.discounts.store');
         Route::put('/discounts/{discount}', [TicketingDiscountController::class, 'update'])
             ->whereUuid('discount')->name('settings.tickets.discounts.update');
         Route::delete('/discounts/{discount}', [TicketingDiscountController::class, 'destroy'])

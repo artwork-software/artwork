@@ -113,7 +113,7 @@
 
             <section v-if="reductions.length" class="border-t border-border-hairline pt-4">
                 <span class="font-lexend mb-1.5 block text-xs font-medium text-[#3F424A]">{{ $t('Reductions') }}</span>
-                <TicketingReductionChips v-model="offeredIds" :reductions="reductions" :label="$t('Reductions')" />
+                <TicketingChipToggles v-model="offeredIds" :items="reductions" :label="$t('Reductions')" />
                 <p class="mt-2 text-xs leading-[18px] text-text-subtle">
                     <template v-if="ownReductions">
                         {{ $t('Differs from the production.') }}
@@ -156,7 +156,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseRichTextEditor from '@/Artwork/Inputs/BaseRichTextEditor.vue'
 import ChoiceSegments from '@/Pages/Settings/Tickets/ChoiceSegments.vue'
 import SeriesScopeChoice from '@/Layouts/Components/SeriesScopeChoice.vue'
-import TicketingReductionChips from '@/Pages/Projects/Tab/Components/Ticketing/TicketingReductionChips.vue'
+import TicketingChipToggles from '@/Pages/Projects/Tab/Components/Ticketing/TicketingChipToggles.vue'
 import { formatEuro } from '@/Helper/ticketingFormat.js'
 import { fromCents, toCents } from '@/Pages/Settings/Tickets/drafts.js'
 import { ticketingMoveHeaders } from '@/Composeables/useTicketingMove.js'

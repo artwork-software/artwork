@@ -6,9 +6,8 @@ use Artwork\Modules\Ticketing\Models\TicketingConnection;
 
 /**
  * Gruppen von Produktionen ("Workshops"), für die Mehrfachkarten, Abos und Rabattcodes als Ganzes
- * gelten. Die Mitgliedschaft liest tickets live: Was neu in eine Gruppe kommt, gilt sofort für alles
- * mit der Gruppe. Gilt eine schon verkaufte Karte für die Gruppe, lässt tickets nur noch Hinzufügen
- * zu; löschen geht nicht, solange eine verkaufte Karte oder ein eingelöster Code sie nutzt.
+ * gelten. Die Mitgliedschaft liest tickets live: Was in eine Gruppe kommt oder sie verlässt, gilt
+ * sofort für alles mit der Gruppe, auch für schon verkaufte Karten.
  */
 class TicketingProductionGroupService
 {
@@ -25,7 +24,6 @@ class TicketingProductionGroupService
      *         passTypeCount: int,
      *         couponCount: int,
      *         sold: bool,
-     *         deletable: bool,
      *     }>,
      *     productions: list<array{id: string, title: string}>,
      * }

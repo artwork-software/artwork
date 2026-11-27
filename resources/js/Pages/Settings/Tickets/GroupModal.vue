@@ -1,10 +1,10 @@
 <template>
-    <ArtworkBaseModal :title="group ? group.name : $t('New group')"
-                      :description="$t('Passes, subscriptions and discount codes with this group count for every production in it.')"
+    <ArtworkBaseModal :title="group ? group.name : $t('New production group')"
+                      :description="$t('Passes, subscriptions and discounts with this group count for every production in it.')"
                       modal-size="sm:max-w-2xl" @close="$emit('close')">
         <div class="flex flex-col gap-5 text-[13px]">
-            <p v-if="group?.sold" class="rounded-md bg-surface-sunken px-3.5 py-3 text-[13px] leading-5 text-text-muted">
-                {{ $t('Sold passes count for this group: productions can be added, but not taken out.') }}
+            <p v-if="group?.sold" class="rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
+                {{ $t('Sold passes count for this group: what you change here reaches them at once.') }}
             </p>
 
             <BaseInput id="group-name" v-model="draft.name" label="Name" required :error="form.errors.name" maxlength="60"
@@ -18,8 +18,7 @@
                     </span>
                 </div>
                 <p v-if="productions.length === 0" class="text-xs text-text-subtle">{{ $t('Artwork-Tickets has no productions yet. Release one from a project first.') }}</p>
-                <ProductionPicker v-else v-model="draft.eventIds" :productions="productions" :fixed-ids="group?.sold ? group.eventIds : []"
-                                  id-prefix="group-production" />
+                <ProductionPicker v-else v-model="draft.eventIds" :productions="productions" id-prefix="group-production" />
                 <p class="mt-1.5 text-xs text-text-subtle">{{ $t('Add new productions here: everything with the group counts for them right away.') }}</p>
             </div>
 
@@ -44,8 +43,8 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ProductionPicker from '@/Pages/Settings/Tickets/ProductionPicker.vue'
 
-/* One group of productions, new or existing. While a sold pass counts on it, its productions
-   stay — tickets refuses the same. */
+/* One group of productions, new or existing. A change reaches every pass, subscription and
+   discount that names the group at once, sold ones included. */
 const props = defineProps({
     /** The group as tickets sends it; null for a new one. */
     group: { type: Object, default: null },

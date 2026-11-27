@@ -33,6 +33,7 @@ final class TicketingConnectionTest extends FeatureTestCase
     use ActsAsRole;
 
     private const TICKETS_URL = 'https://tickets.test';
+    private const REDUCTION_ID = '0b9c1d8e-5f4a-4c3b-9a2e-7d6f5e4c3b2a';
 
     /** @return array<string, mixed> */
     private function draft(array $rooms = [], array $reductions = [], array $billing = []): array
@@ -746,7 +747,8 @@ final class TicketingConnectionTest extends FeatureTestCase
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
 
         $this->post(route('settings.tickets.rooms.sync'), ['rooms' => []])->assertStatus(409);
-        $this->post(route('settings.tickets.reductions.sync'), ['reductions' => []])->assertStatus(409);
+        $this->post(route('settings.tickets.reductions.sync'), ['reductions' => [], 'removed_ids' => []])
+            ->assertStatus(409);
         Http::assertNothingSent();
     }
 
@@ -755,7 +757,7 @@ final class TicketingConnectionTest extends FeatureTestCase
     {
         $this->fakeHappyTickets([
             self::TICKETS_URL . '/api/integration/v1/reductions' => Http::response(['reductions' => [
-                ['id' => 'r1', 'name' => 'Ermäßigt', 'kind' => 'percent', 'value' => 5000, 'requiresProof' => true, 'defaultEnabled' => true],
+                ['id' => self::REDUCTION_ID, 'name' => 'Ermäßigt', 'kind' => 'percent', 'value' => 5000, 'requiresProof' => true, 'defaultEnabled' => true],
             ]]),
         ]);
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
@@ -769,14 +771,48 @@ final class TicketingConnectionTest extends FeatureTestCase
 
         $this->from(route('settings.tickets.reductions'))
             ->post(route('settings.tickets.reductions.sync'), ['reductions' => [
-                ['name' => 'Ermäßigt', 'kind' => 'fixed', 'value' => 500, 'requires_proof' => false, 'default_enabled' => true],
-            ]])
+                ['id' => self::REDUCTION_ID, 'name' => 'Ermäßigt', 'kind' => 'fixed', 'value' => 500, 'requires_proof' => false, 'default_enabled' => true],
+            ], 'removed_ids' => []])
             ->assertRedirect(route('settings.tickets.reductions'))
             ->assertSessionHas('success');
 
         Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
             && str_ends_with($request->url(), '/api/integration/v1/reductions')
-            && $request['reductions'][0]['kind'] === 'fixed'
-            && $request['reductions'][0]['value'] === 500);
+            && ($request['reductions'][0] ?? null) === [
+                'id' => self::REDUCTION_ID, 'name' => 'Ermäßigt', 'kind' => 'fixed', 'value' => 500,
+                'requiresProof' => false, 'defaultEnabled' => true,
+            ]);
+    }
+
+    #[Test]
+    public function only_the_reductions_taken_out_are_named_for_deletion(): void
+    {
+        $this->fakeHappyTickets();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), $this->draft());
+
+        $this->from(route('settings.tickets.reductions'))
+            ->post(route('settings.tickets.reductions.sync'), ['reductions' => [], 'removed_ids' => [self::REDUCTION_ID]])
+            ->assertSessionHas('success');
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+            && str_ends_with($request->url(), '/api/integration/v1/reductions')
+            && $request['reductions'] === []
+            && $request['removedIds'] === [self::REDUCTION_ID]);
+    }
+
+    #[Test]
+    public function a_reduction_sync_without_the_removed_list_is_refused(): void
+    {
+        $this->fakeHappyTickets();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), $this->draft());
+
+        $this->from(route('settings.tickets.reductions'))
+            ->post(route('settings.tickets.reductions.sync'), ['reductions' => []])
+            ->assertSessionHasErrors('removed_ids');
+        // Nur der Abgleich beim Verbinden ist hinausgegangen.
+        $this->assertCount(1, Http::recorded(fn (Request $request): bool => $request->method() === 'POST'
+            && str_ends_with($request->url(), '/api/integration/v1/reductions')));
     }
 }

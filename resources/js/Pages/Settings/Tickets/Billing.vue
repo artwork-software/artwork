@@ -10,6 +10,18 @@
         <PendingChangesBar :visible="connection.connected && form.isDirty" :message="$t('Changes not yet in Artwork-Tickets')" :submit-label="$t('Save in Artwork-Tickets')"
                            :icon="IconDeviceFloppy" :processing-label="$t('Saving…')" :can-submit="canSave" :processing="form.processing" @discard="form.reset()" @submit="submit" />
 
+        <ArtworkBaseModal v-if="confirmingBearer" :title="$t('Change the ticket fee?')"
+                          :description="$t('Every price in the shop changes right away, also for dates already on sale. Tickets already sold keep their price.')"
+                          modal-size="sm:max-w-lg" @close="confirmingBearer = null">
+            <p class="text-[13px] leading-5 text-text">{{ feeBearers.find((option) => option.bearer === confirmingBearer).hint }}</p>
+            <template #footer>
+                <button type="button" class="ui-button" :disabled="feeForm.processing" @click="confirmingBearer = null">{{ $t('Cancel') }}</button>
+                <button type="button" class="ui-button-add" :disabled="feeForm.processing" @click="setFeeBearer">
+                    {{ feeForm.processing ? $t('Saving…') : $t('Change fee') }}
+                </button>
+            </template>
+        </ArtworkBaseModal>
+
         <NotConnected v-if="!connection.connected" :message="$t('The details can be filled in once this installation is connected to Artwork-Tickets.')" />
 
         <div v-else class="rounded-lg border border-border-subtle/70 bg-surface shadow-raised px-3 py-4 sm:px-5 sm:py-5">
@@ -56,6 +68,23 @@
                 <p class="mt-5 text-xs text-text-subtle">{{ $t('Fields can stay empty for now.') }}</p>
 
                 <div class="mt-8 max-w-[900px] border-t border-border-hairline pt-6">
+                    <h3 class="font-lexend text-[13px] font-semibold text-text mb-1">{{ $t('Ticket fee') }}</h3>
+                    <p class="text-[13px] leading-5 text-text-subtle mb-4">{{ $t('Artwork-Tickets charges {rate} per paid ticket, VAT included. Free tickets and box office sales carry no fee.', { rate: feeRate }) }}</p>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        <label v-for="option in feeBearers" :key="option.bearer"
+                               class="flex cursor-pointer items-start gap-3 rounded-lg border px-3.5 py-3 transition-colors"
+                               :class="billing.fee.bearer === option.bearer ? 'border-accent-600 bg-accent-50' : 'border-border-subtle bg-surface hover:bg-surface-sunken'">
+                            <input type="radio" name="fee-bearer" :value="option.bearer" :checked="billing.fee.bearer === option.bearer" :disabled="feeForm.processing" class="sr-only" @click.prevent="askFeeBearer(option.bearer)" />
+                            <span class="mt-0.5 box-border size-4 shrink-0 rounded-full border bg-surface" :class="billing.fee.bearer === option.bearer ? 'border-[5px] border-accent-600' : 'border-border'"></span>
+                            <span class="flex flex-col gap-0.5">
+                                <span class="font-lexend text-[13px] font-medium text-text">{{ option.label }}</span>
+                                <span class="text-[12.5px] leading-[18px] text-text-muted">{{ option.hint }}</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-8 max-w-[900px] border-t border-border-hairline pt-6">
                     <h3 class="font-lexend text-[13px] font-semibold text-text mb-1">{{ $t('Payout account') }}</h3>
                     <p class="text-[13px] leading-5 text-text-subtle mb-4">{{ $t('So that the house can sell tickets, the payment provider confirms who stands behind it and takes the bank account. No account of its own with the payment provider is needed.') }}</p>
                     <PayoutAccount :state="billing.payout_account" :stripe-key="billing.stripe_key" />
@@ -74,10 +103,12 @@ import TicketsSettingsHeader from '@/Pages/Settings/Tickets/TicketsSettingsHeade
 import NotConnected from '@/Pages/Settings/Tickets/NotConnected.vue'
 import BillingFieldsEditor from '@/Pages/Settings/Tickets/BillingFieldsEditor.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import PendingChangesBar from '@/Pages/Settings/Tickets/PendingChangesBar.vue'
 import PayoutAccount from '@/Pages/Settings/Tickets/PayoutAccount.vue'
 import PlatformTermsConsent from '@/Pages/Settings/Tickets/PlatformTermsConsent.vue'
 import { missingDetails, noLegalFiles } from '@/Pages/Settings/Tickets/drafts.js'
+import { formatEuro, formatPercent } from '@/Helper/ticketingFormat.js'
 
 const props = defineProps({
     connection: { type: Object, required: true },
@@ -113,6 +144,24 @@ function submit() {
             form.defaults(form.data())
         },
     })
+}
+
+const feeRate = computed(() => `${formatPercent(props.billing.fee.percent_bp)} + ${formatEuro(props.billing.fee.fixed_cents)}`)
+const feeBearers = computed(() => [
+    { bearer: 'house', label: t('Included in the price'), hint: t("Buyers pay exactly the price of the price class; the fee comes off the house's share.") },
+    { bearer: 'buyer', label: t('On top of the price'), hint: t('The shop shows every price with the fee added; the house receives the full price of the price class.') },
+])
+const feeForm = useForm({ bearer: null })
+/* The other choice, while the dialog asks: it changes every price on sale at once. */
+const confirmingBearer = ref(null)
+
+function askFeeBearer(bearer) {
+    if (bearer !== props.billing.fee.bearer) confirmingBearer.value = bearer
+}
+
+function setFeeBearer() {
+    feeForm.bearer = confirmingBearer.value
+    feeForm.put(route('settings.tickets.billing.fee-bearer'), { preserveScroll: true, onFinish: () => (confirmingBearer.value = null) })
 }
 
 function removeFile(document) {

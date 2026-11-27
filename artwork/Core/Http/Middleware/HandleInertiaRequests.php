@@ -319,6 +319,8 @@ class HandleInertiaRequests extends Middleware
                     'webhookSecret' => fn() => $request->session()->get('webhookSecret'),
                     // Neu angelegte Schichten (MultiShiftCreateInShiftPlan-Payload) für die anlegende Ansicht
                     'shiftPlanUpdate' => fn() => $request->session()->get('shiftPlanUpdate'),
+                    // Id eines gerade kopierten Datensatzes, den die Seite direkt zum Bearbeiten öffnet
+                    'createdId' => fn() => $request->session()->get('createdId'),
                 ],
                 'event_status_module' => $eventSettings->enable_status,
                 'event_admission_module' => $eventSettings->enable_admission,

@@ -67,6 +67,7 @@ final class TicketingBillingTest extends FeatureTestCase
                 'termsUrl' => 'https://artwork-tickets.de/agb',
                 'dpaUrl' => 'https://artwork-tickets.de/avv',
             ],
+            'fee' => ['percentBp' => 450, 'fixedCents' => 29, 'bearer' => 'house'],
         ];
     }
 
@@ -93,6 +94,7 @@ final class TicketingBillingTest extends FeatureTestCase
                 ->where('billing.shop_legal_files.privacy', null)
                 ->where('billing.platform_terms.accepted', true)
                 ->where('billing.platform_terms.dpa_url', 'https://artwork-tickets.de/avv')
+                ->where('billing.fee', ['percent_bp' => 450, 'fixed_cents' => 29, 'bearer' => 'house'])
                 ->where('ticketsError', null));
 
         Http::assertSent(static fn (Request $request): bool => $request->method() === 'GET'
@@ -130,6 +132,24 @@ final class TicketingBillingTest extends FeatureTestCase
         Http::assertSent(static fn (Request $request): bool => $request->method() === 'POST'
             && $request->header('x-api-key') === ['tk_plain']
             && $request['acceptedBy'] === ['email' => $user->email, 'name' => $user->full_name]);
+    }
+
+    #[Test]
+    public function who_carries_the_fee_is_set_in_tickets(): void
+    {
+        $this->connect();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        Http::fake([self::TICKETS_URL . '/api/integration/v1/house/fee-bearer' => Http::response(self::ticketsAnswer(true, 'verified'))]);
+
+        $this->from(route('settings.tickets.billing'))
+            ->put(route('settings.tickets.billing.fee-bearer'), ['bearer' => 'house'])
+            ->assertRedirect(route('settings.tickets.billing'))
+            ->assertSessionHas('success');
+        $this->put(route('settings.tickets.billing.fee-bearer'), ['bearer' => 'nobody'])
+            ->assertSessionHasErrors('bearer');
+
+        Http::assertSentCount(1);
+        Http::assertSent(static fn (Request $request): bool => $request->method() === 'PUT' && $request['bearer'] === 'house');
     }
 
     #[Test]

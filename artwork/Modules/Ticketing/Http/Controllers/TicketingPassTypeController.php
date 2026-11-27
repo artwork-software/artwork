@@ -3,12 +3,14 @@
 namespace Artwork\Modules\Ticketing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
 use Artwork\Modules\Ticketing\Http\Controllers\Concerns\CallsTickets;
 use Artwork\Modules\Ticketing\Http\Requests\SaveTicketingPassTypeRequest;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Artwork\Modules\Ticketing\Services\TicketingPassTypeService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -76,6 +78,25 @@ class TicketingPassTypeController extends Controller
             fn (TicketingConnection $connection) => $this->passTypes->archive($connection, $passType),
             __('Archived. Issued passes and running subscriptions stay valid.'),
         );
+    }
+
+    public function duplicate(Request $request, string $passType): RedirectResponse
+    {
+        $name = $request->validate(['name' => 'required|string|min:2|max:120'])['name'];
+        $connection = $this->connections->current();
+
+        if (!$connection) {
+            return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
+        }
+
+        try {
+            $copyId = $this->passTypes->duplicate($connection, $passType, $name);
+        } catch (TicketingConnectionException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        // Die Liste öffnet die Kopie gleich zum Bearbeiten.
+        return back()->with(['success' => __('Copied as a draft.'), 'createdId' => $copyId]);
     }
 
     public function destroy(string $passType): RedirectResponse

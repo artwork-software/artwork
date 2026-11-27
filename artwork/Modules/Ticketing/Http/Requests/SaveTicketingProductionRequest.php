@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Ticketing\Http\Requests;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
@@ -13,6 +14,9 @@ use Illuminate\Validation\Validator;
  * Auftritt des Projekts im Ticketshop; das Titelbild kommt als Datei mit (hero) oder ist ein
  * vorhandenes weiteres Bild (cover_image_id), remove_hero nimmt das bisherige weg.
  * Weitere Bilder kommen als images[], remove_image_ids[] nimmt vorhandene heraus.
+ * group_ids und package_only kommen nur mit, wenn sie sich geändert haben; sonst bleibt der Stand in tickets.
+ * Beide reichen über das Projekt hinaus (wo verkaufte Karten gelten, ob der Shop einzeln verkauft) und
+ * brauchen deshalb das Recht, Artwork-Tickets zu verwalten.
  */
 class SaveTicketingProductionRequest extends FormRequest
 {
@@ -21,11 +25,21 @@ class SaveTicketingProductionRequest extends FormRequest
         return true;
     }
 
-    /** Die Auswahl kommt als JSON-String im Formular mit, damit auch "keine" ankommt. */
+    /**
+     * Die Auswahl kommt als JSON-String im Formular mit, damit auch "keine" ankommt; package_only als
+     * "1"/"0", hier zum bool, den tickets erwartet.
+     */
     protected function prepareForValidation(): void
     {
-        if (is_string($this->input('reduction_type_ids'))) {
-            $this->merge(['reduction_type_ids' => json_decode($this->input('reduction_type_ids'), true)]);
+        foreach (['reduction_type_ids', 'group_ids'] as $key) {
+            if (is_string($this->input($key))) {
+                $this->merge([$key => json_decode($this->input($key), true)]);
+            }
+        }
+
+        if ($this->has('package_only')) {
+            $packageOnly = filter_var($this->input('package_only'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $this->merge(['package_only' => $packageOnly]);
         }
     }
 
@@ -34,11 +48,16 @@ class SaveTicketingProductionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $membership = $this->user()->can(PermissionEnum::TICKETING_MANAGE->value) ? 'sometimes' : 'missing';
+
         return [
             'title' => 'nullable|string|max:160',
             'description' => 'nullable|string|max:4000',
             'reduction_type_ids' => 'nullable|array|max:50',
             'reduction_type_ids.*' => 'required|uuid',
+            'group_ids' => $membership . '|array|max:100',
+            'group_ids.*' => 'required|uuid',
+            'package_only' => $membership . '|boolean',
             'hero' => 'nullable|image|max:8192',
             'remove_hero' => 'sometimes|boolean',
             'cover_image_id' => 'nullable|integer|prohibits:hero',
@@ -47,6 +66,14 @@ class SaveTicketingProductionRequest extends FormRequest
             'remove_image_ids' => 'nullable|array',
             'remove_image_ids.*' => 'required|integer',
         ];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        $message = __('Only people who manage Artwork-Tickets can change production groups and package sales.');
+
+        return ['group_ids.missing' => $message, 'package_only.missing' => $message];
     }
 
     /**

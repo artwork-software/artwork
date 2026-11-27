@@ -4,19 +4,24 @@ namespace Artwork\Modules\Ticketing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Ticketing\Exceptions\TicketingConnectionException;
+use Artwork\Modules\Ticketing\Http\Controllers\Concerns\CallsTickets;
 use Artwork\Modules\Ticketing\Http\Requests\SaveTicketingBillingRequest;
 use Artwork\Modules\Ticketing\Http\Requests\TicketingDraftRules;
+use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Services\TicketingBillingService;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /** Einstellungen → Artwork-Tickets → Angaben & Auszahlung: was der Assistent offen lassen durfte, und Stripes Formular. */
 class TicketingBillingController extends Controller
 {
+    use CallsTickets;
+
     public function __construct(
         private readonly TicketingConnectionService $connections,
         private readonly TicketingBillingService $billing,
@@ -26,16 +31,7 @@ class TicketingBillingController extends Controller
     public function index(): Response
     {
         $connection = $this->connections->current();
-        $billing = null;
-        $ticketsError = null;
-
-        if ($connection) {
-            try {
-                $billing = $this->billing->status($connection);
-            } catch (TicketingConnectionException $exception) {
-                $ticketsError = $exception->getMessage();
-            }
-        }
+        [$billing, $ticketsError] = $this->readFromTickets($connection, $this->billing->status(...), null);
 
         return Inertia::render('Settings/Tickets/Billing', [
             'connection' => [
@@ -50,53 +46,42 @@ class TicketingBillingController extends Controller
 
     public function update(SaveTicketingBillingRequest $request): RedirectResponse
     {
-        $connection = $this->connections->current();
-
-        if (!$connection) {
-            return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
-        }
-
-        try {
-            $this->billing->save($connection, $request->validated());
-        } catch (TicketingConnectionException $exception) {
-            return back()->with('error', $exception->getMessage());
-        }
-
-        return back()->with('success', __('Details saved in Artwork-Tickets.'));
+        return $this->sendToTickets(
+            $this->connections->current(),
+            fn (TicketingConnection $connection) => $this->billing->save($connection, $request->validated()),
+            __('Details saved in Artwork-Tickets.'),
+        );
     }
 
     public function removeLegalDocument(string $document): RedirectResponse
     {
-        $connection = $this->connections->current();
-
-        if (!$connection) {
-            return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
-        }
-
-        try {
-            $this->billing->removeLegalDocument($connection, $document);
-        } catch (TicketingConnectionException $exception) {
-            return back()->with('error', $exception->getMessage());
-        }
-
-        return back()->with('success', __('PDF removed in Artwork-Tickets.'));
+        return $this->sendToTickets(
+            $this->connections->current(),
+            fn (TicketingConnection $connection) => $this->billing->removeLegalDocument($connection, $document),
+            __('PDF removed in Artwork-Tickets.'),
+        );
     }
 
     public function acceptPlatformTerms(Request $request): RedirectResponse
     {
-        $connection = $this->connections->current();
+        return $this->sendToTickets(
+            $this->connections->current(),
+            fn (TicketingConnection $connection) => $this->billing->acceptPlatformTerms($connection, $request->user()),
+            __('Terms accepted for the house.'),
+        );
+    }
 
-        if (!$connection) {
-            return back()->with('error', __('This installation is not connected to Artwork-Tickets.'));
-        }
+    public function setFeeBearer(Request $request): RedirectResponse
+    {
+        $bearer = $request->validate([
+            'bearer' => ['required', Rule::in(TicketingBillingService::FEE_BEARERS)],
+        ])['bearer'];
 
-        try {
-            $this->billing->acceptPlatformTerms($connection, $request->user());
-        } catch (TicketingConnectionException $exception) {
-            return back()->with('error', $exception->getMessage());
-        }
-
-        return back()->with('success', __('Terms accepted for the house.'));
+        return $this->sendToTickets(
+            $this->connections->current(),
+            fn (TicketingConnection $connection) => $this->billing->setFeeBearer($connection, $bearer),
+            __('Fee setting saved in Artwork-Tickets.'),
+        );
     }
 
     /** Für Stripes eingebettetes Formular, das sich das Geheimnis selbst holt — auch erneut, wenn es abläuft. */

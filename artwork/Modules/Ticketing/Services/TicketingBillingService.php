@@ -22,12 +22,16 @@ use Illuminate\Http\UploadedFile;
  *     payout_account: 'open'|'review'|'verified',
  *     stripe_key: string|null,
  *     platform_terms: array{accepted: bool, terms_url: string, dpa_url: string},
+ *     fee: array{percent_bp: int, fixed_cents: int, bearer: 'buyer'|'house'},
  * }
  */
 class TicketingBillingService
 {
     /** Die Rechtstexte des Shops; je einer kommt als `{name}_url` oder `{name}_file`. */
     public const LEGAL_DOCUMENTS = ['terms', 'privacy', 'imprint'];
+
+    /** Wer die Gebühr von tickets trägt: die Käufer:innen zusätzlich zum Preis oder das Haus aus seinem Anteil. */
+    public const FEE_BEARERS = ['buyer', 'house'];
 
     public function __construct(private readonly TicketsClient $tickets)
     {
@@ -119,6 +123,16 @@ class TicketingBillingService
         return self::fromTickets($this->tickets->post($connection, '/house/platform-terms', [
             'acceptedBy' => ['email' => $user->email, 'name' => $user->full_name],
         ]));
+    }
+
+    /**
+     * "Inkl." oder "zzgl. Gebühren" für alle Preisklassen des Hauses.
+     *
+     * @return BillingStatus
+     */
+    public function setFeeBearer(TicketingConnection $connection, string $bearer): array
+    {
+        return self::fromTickets($this->tickets->put($connection, '/house/fee-bearer', ['bearer' => $bearer]));
     }
 
     /**
@@ -216,6 +230,11 @@ class TicketingBillingService
                 'accepted' => (bool) ($response['platformTerms']['accepted'] ?? false),
                 'terms_url' => (string) ($response['platformTerms']['termsUrl'] ?? ''),
                 'dpa_url' => (string) ($response['platformTerms']['dpaUrl'] ?? ''),
+            ],
+            'fee' => [
+                'percent_bp' => (int) ($response['fee']['percentBp'] ?? 0),
+                'fixed_cents' => (int) ($response['fee']['fixedCents'] ?? 0),
+                'bearer' => ($response['fee']['bearer'] ?? null) === 'house' ? 'house' : 'buyer',
             ],
         ];
     }

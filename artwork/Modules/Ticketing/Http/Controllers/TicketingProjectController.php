@@ -48,6 +48,7 @@ class TicketingProjectController extends Controller
                     'title' => $request->validated('title'),
                     'description' => $request->validated('description'),
                     'reduction_type_ids' => $request->validated('reduction_type_ids'),
+                    ...$request->safe()->only(['group_ids', 'package_only']),
                 ],
                 $request->file('hero'),
                 $request->boolean('remove_hero'),

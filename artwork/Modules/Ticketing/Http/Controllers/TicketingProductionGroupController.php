@@ -13,7 +13,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Einstellungen → Artwork-Tickets → Produktionsgruppen: Gruppen von Produktionen ("Workshops"), für
+ * Einstellungen → Artwork-Tickets → Ticketprojekt-Gruppen: Gruppen von Produktionen ("Workshops"), für
  * die Karten, Abos und Rabattcodes in Artwork-Tickets als Ganzes gelten.
  */
 class TicketingProductionGroupController extends Controller

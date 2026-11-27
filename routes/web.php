@@ -133,6 +133,7 @@ use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCustomerController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingDiscountController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingDoorController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingPassTypeController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingProductionGroupController;
@@ -489,6 +490,8 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->name('settings.tickets.billing.stripe-session');
         Route::post('/billing/platform-terms', [TicketingBillingController::class, 'acceptPlatformTerms'])
             ->name('settings.tickets.billing.platform-terms');
+        Route::put('/billing/fee-bearer', [TicketingBillingController::class, 'setFeeBearer'])
+            ->name('settings.tickets.billing.fee-bearer');
         Route::get('/rooms', [TicketingConnectionController::class, 'rooms'])->name('settings.tickets.rooms');
         Route::post('/rooms', [TicketingConnectionController::class, 'syncRooms'])->name('settings.tickets.rooms.sync');
         Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');
@@ -504,12 +507,21 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->whereUuid('passType')->name('settings.tickets.passes.publish');
         Route::post('/passes/{passType}/archive', [TicketingPassTypeController::class, 'archive'])
             ->whereUuid('passType')->name('settings.tickets.passes.archive');
+        Route::post('/passes/{passType}/duplicate', [TicketingPassTypeController::class, 'duplicate'])
+            ->whereUuid('passType')->name('settings.tickets.passes.duplicate');
         Route::get('/groups', [TicketingProductionGroupController::class, 'index'])->name('settings.tickets.groups');
         Route::post('/groups', [TicketingProductionGroupController::class, 'store'])->name('settings.tickets.groups.store');
         Route::put('/groups/{group}', [TicketingProductionGroupController::class, 'update'])
             ->whereUuid('group')->name('settings.tickets.groups.update');
         Route::delete('/groups/{group}', [TicketingProductionGroupController::class, 'destroy'])
             ->whereUuid('group')->name('settings.tickets.groups.destroy');
+        Route::get('/discounts', [TicketingDiscountController::class, 'index'])->name('settings.tickets.discounts');
+        Route::post('/discounts', [TicketingDiscountController::class, 'store'])
+            ->name('settings.tickets.discounts.store');
+        Route::put('/discounts/{discount}', [TicketingDiscountController::class, 'update'])
+            ->whereUuid('discount')->name('settings.tickets.discounts.update');
+        Route::delete('/discounts/{discount}', [TicketingDiscountController::class, 'destroy'])
+            ->whereUuid('discount')->name('settings.tickets.discounts.destroy');
         Route::get('/team', [TicketingTeamController::class, 'index'])->name('settings.tickets.team');
         Route::post('/team/invitations', [TicketingTeamController::class, 'invite'])
             ->name('settings.tickets.team.invite');

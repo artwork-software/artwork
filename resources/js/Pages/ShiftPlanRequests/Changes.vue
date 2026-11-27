@@ -423,6 +423,19 @@
                                 <p class="mt-0.5 text-xs text-text-subtle">
                                     {{ describeChange(change) }}
                                 </p>
+                                <button
+                                    v-if="shortNotice.enabled && change.is_short_notice"
+                                    type="button"
+                                    class="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full border border-warning-border bg-white px-2 py-0.5 text-left text-[11px] font-medium text-warning hover:underline"
+                                    :title="change.short_notice_note || t('Record a reason')"
+                                    @click="openShortNoticeReason(change)"
+                                >
+                                    <span class="whitespace-nowrap">{{ t('Short notice') }}</span>
+                                    <span v-if="change.short_notice_reason" class="font-normal">
+                                        · {{ t(shortNoticeReasonLabel(change.short_notice_reason)) }}
+                                    </span>
+                                    <span v-else class="font-normal">· {{ t('Record a reason') }}</span>
+                                </button>
                             </div>
                         </div>
 

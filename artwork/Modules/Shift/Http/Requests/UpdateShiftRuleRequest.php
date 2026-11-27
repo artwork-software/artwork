@@ -37,7 +37,8 @@ class UpdateShiftRuleRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if (!$this->ruleTypeNeedsValue()) {
+        // Nur Typen ganz ohne Wert verwerfen ihn. Typen mit optionalem Wert behalten einen gesetzten Wert.
+        if (in_array($this->triggerType(), ShiftRuleService::ruleTypesWithoutValue(), true)) {
             $this->merge(['individual_number_value' => null]);
         }
         // Optionaler Wert: leer/0 bedeutet "Zielwert aus dem Vertrag"

@@ -587,4 +587,29 @@ final class ShiftRuleControllerTest extends FeatureTestCase
             'warning_color' => '#ff6b6b',
         ])->assertSessionHasErrors('individual_number_value');
     }
+
+    #[Test]
+    public function updating_a_rule_with_optional_value_keeps_a_given_number(): void
+    {
+        $this->actingAsAdmin();
+
+        $rule = ShiftRule::factory()->create([
+            'trigger_type' => 'minFreeDaysPerWeek',
+            'individual_number_value' => 1,
+        ]);
+        $payload = [
+            'name' => 'Freier Werktag je Woche',
+            'description' => 'ein freier Tag',
+            'warning_color' => '#ff6b6b',
+        ];
+
+        $this->put(route('shift-rules.update', $rule), $payload + ['individual_number_value' => 2])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertEqualsWithDelta(2.0, $rule->fresh()->individual_number_value, 0.001);
+
+        // Leer bleibt erlaubt und bedeutet "Wert aus dem Vertrag"
+        $this->put(route('shift-rules.update', $rule), $payload + ['individual_number_value' => null])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertEqualsWithDelta(0.0, $rule->fresh()->individual_number_value, 0.001);
+    }
 }

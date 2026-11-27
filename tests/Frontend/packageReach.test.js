@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isRunningPackage, strandedProductions } from '../../resources/js/Pages/Settings/Tickets/packageReach.js'
+import { isRunningPackage, packageOnlyWarning, strandedProductions } from '../../resources/js/Pages/Settings/Tickets/packageReach.js'
 
 const pkg = {
     id: 'd1', kind: 'package', status: 'active', period: 'running',
@@ -35,4 +35,10 @@ test('nothing is stranded while another package still reaches the production', (
 test('a production without a running package before the change is not reported', () => {
     const paused = { ...pkg, status: 'paused' }
     assert.deepEqual(strandedProductions([paused], productions, groups, paused, null), [])
+})
+
+test('the warning names one project in the singular and several in the plural', () => {
+    const t = (key, values) => `${key}|${JSON.stringify(values)}`
+    assert.match(packageOnlyWarning([{ title: 'Jazz' }], t), /^\{project\} is sold.*"project":"Jazz"/)
+    assert.match(packageOnlyWarning([{ title: 'Jazz' }, { title: 'Minna' }], t), /^\{projects\} are sold.*"projects":"Jazz, Minna"/)
 })

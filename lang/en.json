@@ -10326,5 +10326,6 @@
     "No package for this project is on sale right now, so its dates cannot be booked online.": "No package for this project is on sale right now, so its dates cannot be booked online.",
     "Change the ticket fee?": "Change the ticket fee?",
     "Every price in the shop changes right away, also for dates already on sale. Tickets already sold keep their price.": "Every price in the shop changes right away, also for dates already on sale. Tickets already sold keep their price.",
-    "Change fee": "Change fee"
+    "Change fee": "Change fee",
+    "{project} is sold online only in packages: without a package on sale, its dates cannot be booked online.": "{project} is sold online only in packages: without a package on sale, its dates cannot be booked online."
 }

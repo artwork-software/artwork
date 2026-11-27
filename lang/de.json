@@ -10326,5 +10326,6 @@
     "No package for this project is on sale right now, so its dates cannot be booked online.": "Für dieses Projekt ist gerade kein Paket im Verkauf, daher lassen sich seine Termine online nicht buchen.",
     "Change the ticket fee?": "Ticketgebühr ändern?",
     "Every price in the shop changes right away, also for dates already on sale. Tickets already sold keep their price.": "Alle Preise im Shop ändern sich sofort, auch für Termine, die schon im Verkauf sind. Schon verkaufte Tickets behalten ihren Preis.",
-    "Change fee": "Gebühr ändern"
+    "Change fee": "Gebühr ändern",
+    "{project} is sold online only in packages: without a package on sale, its dates cannot be booked online.": "{project} wird online nur im Paket verkauft: Ohne ein Paket im Verkauf lassen sich seine Termine online nicht buchen."
 }

@@ -26,6 +26,9 @@ export function strandedProductions(discounts, productions, groups, discount, ne
 
 /** The warning for productions that would lose their last package on sale. */
 export function packageOnlyWarning(stranded, t) {
+    if (stranded.length === 1) {
+        return t('{project} is sold online only in packages: without a package on sale, its dates cannot be booked online.', { project: stranded[0].title })
+    }
     return t('{projects} are sold online only in packages: without a package on sale, their dates cannot be booked online.', {
         projects: stranded.map((production) => production.title).join(', '),
     })

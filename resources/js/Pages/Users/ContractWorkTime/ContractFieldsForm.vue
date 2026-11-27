@@ -111,14 +111,20 @@
                     :label="$t('Overtime rule active')"
                     :description="$t('If activated, overtime must be compensated within the given number of days; otherwise it is shown in the \'Overtime\' tab as \'overtime to be paid out\' and must be booked out manually.')"
                 />
-                <div v-if="form.overtime_rule_active" class="mt-3 pl-7 max-w-sm">
-                    <BaseInput
-                        v-model="form.overtime_compensation_period"
-                        :label="$t('Period within which overtime must be reduced (days)')"
-                        type="number"
-                        :min="1"
-                        :id="`${idPrefix}_overtime_compensation_period`" />
+                <div v-if="form.overtime_rule_active" class="mt-3 pl-7 max-w-xl">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <BaseInput
+                            v-model="form.overtime_compensation_period"
+                            :label="$t('Period within which overtime must be reduced')"
+                            type="number"
+                            :min="1"
+                            :id="`${idPrefix}_overtime_compensation_period`" />
+                        <OvertimePeriodUnitSelect v-model="form.overtime_compensation_period_unit" />
+                    </div>
                     <p v-if="errors.overtime_compensation_period" class="text-danger mt-0.5 text-xs">{{ errors.overtime_compensation_period }}</p>
+                    <p v-if="form.overtime_compensation_period_unit === 'calendar_weeks'" class="mt-1 text-xs text-text-subtle">
+                        {{ $t('Calendar weeks: the deadline ends on the Sunday of the nth calendar week after the week in which the overtime accrued.') }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -132,6 +138,7 @@ import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
 import {IconCalendarOff, IconClockPlus, IconInfoSquareRounded} from "@tabler/icons-vue";
 import {contractValuesFrom, seasonInfoParams} from "@/Pages/Users/ContractWorkTime/contractWorkTimeFields.js";
+import OvertimePeriodUnitSelect from "@/Pages/Users/ContractWorkTime/OvertimePeriodUnitSelect.vue";
 
 const props = defineProps({
     /** Reaktives Formularobjekt mit den Vertragsfeldern (useForm oder reactive) – wird direkt beschrieben */

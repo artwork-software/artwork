@@ -1,12 +1,39 @@
 <template>
     <ArtworkBaseModal
         :title="$t('Export shift plan')"
-        :description="$t('Create a monthly overview of the shift plan as a PDF. One month is exported per page.')"
+        :description="exportKind.id === 'weekly'
+            ? $t('Create the weekly plan as a PDF: one calendar week with shifts, days off and absences, plus a non-binding preview of the following week.')
+            : $t('Create a monthly overview of the shift plan as a PDF. One month is exported per page.')"
         @close="$emit('close')"
     >
         <div class="p-4 space-y-5">
+            <!-- Art des Exports: Monatsübersicht oder Wochenplan -->
+            <ArtworkBaseListbox
+                :model-value="exportKind"
+                @update:model-value="exportKind = $event"
+                :items="exportKinds"
+                by="id"
+                option-label="name"
+                use-translations
+                :label="$t('Kind of export')"
+                :enable-search="false"
+            />
+
+            <!-- Wochenplan: ein Tag der gewünschten Kalenderwoche -->
+            <div v-if="exportKind.id === 'weekly'">
+                <BaseInput
+                    id="usp-export-week"
+                    type="date"
+                    v-model="weekDate"
+                    :label="$t('Day in the desired calendar week')"
+                />
+                <p class="mt-1 text-xs text-text-subtle">
+                    {{ $t('The plan covers Monday to Sunday of this week.') }}
+                </p>
+            </div>
+
             <!-- Monatsbereich -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <BaseInput
                     id="usp-export-start-month"
                     type="month"
@@ -32,7 +59,7 @@
                 :enable-search="false"
             />
 
-            <p class="text-xs text-text-subtle">
+            <p v-if="exportKind.id !== 'weekly'" class="text-xs text-text-subtle">
                 {{ $t('The export is always created in landscape format (Outlook-style month calendar).') }}
             </p>
 
@@ -49,7 +76,7 @@
                     @click="createPdf"
                     :label="$t('Export PDF')"
                     icon="IconFileExport"
-                    :disabled="processing"
+                    :disabled="processing || (exportKind.id === 'weekly' && !weekDate)"
                     is-add-button
                 />
             </div>
@@ -125,6 +152,33 @@ const paperSizes = [
 ]
 const selectedPaperSize = ref(paperSizes[0])
 
+// Monatsübersicht (bisher) oder Wochenplan (eine Kalenderwoche plus Vorschau auf die Folgewoche)
+const exportKinds = [
+    { id: 'monthly', name: 'Monthly overview' },
+    { id: 'weekly', name: 'Weekly plan' }
+]
+const exportKind = ref(exportKinds[0])
+
+// Vorausgewählte Woche = Start des im Einsatzplan angezeigten Zeitraums, sonst heute
+const weekDate = ref((() => {
+    const start = Array.isArray(props.dateValue) && props.dateValue[0] ? String(props.dateValue[0]) : null
+    if (start && /^\d{4}-\d{2}-\d{2}/.test(start)) return start.substring(0, 10)
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+})())
+
+// "2026-03-11" -> "KW 11" (ISO-Woche)
+const isoWeekLabel = (ymd) => {
+    const [y, m, d] = String(ymd).split('-').map(Number)
+    if (!y || !m || !d) return ''
+    const date = new Date(Date.UTC(y, m - 1, d))
+    const day = date.getUTCDay() || 7
+    date.setUTCDate(date.getUTCDate() + 4 - day)
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+    const week = Math.ceil(((date - yearStart) / 86400000 + 1) / 7)
+    return `KW ${week} ${date.getUTCFullYear()}`
+}
+
 const startMonth = ref(initialMonth)
 const endMonth = ref(initialMonth)
 const processing = ref(false)
@@ -142,20 +196,34 @@ const createPdf = async () => {
         [start, end] = [end, start]
     }
 
+    const weekly = exportKind.value.id === 'weekly'
+
     processing.value = true
     try {
-        const response = await axios.post(
-            route('user.shiftplan.export.monthly-pdf', props.userToEditId),
-            {
-                type: props.type,
-                model_id: props.userToEditId,
-                startMonth: start,
-                endMonth: end,
-                paperSize: selectedPaperSize.value.id,
-                paperOrientation: 'landscape'
-            },
-            { responseType: 'blob' }
-        )
+        const response = weekly
+            ? await axios.post(
+                route('user.shiftplan.export.weekly-pdf', props.userToEditId),
+                {
+                    type: props.type,
+                    model_id: props.userToEditId,
+                    week: weekDate.value,
+                    paperSize: selectedPaperSize.value.id,
+                    paperOrientation: 'landscape'
+                },
+                { responseType: 'blob' }
+            )
+            : await axios.post(
+                route('user.shiftplan.export.monthly-pdf', props.userToEditId),
+                {
+                    type: props.type,
+                    model_id: props.userToEditId,
+                    startMonth: start,
+                    endMonth: end,
+                    paperSize: selectedPaperSize.value.id,
+                    paperOrientation: 'landscape'
+                },
+                { responseType: 'blob' }
+            )
 
         // Dateiname z.B. "Einsatzplan Mai 26 Max Schmidt vom 08.06.pdf"
         const now = new Date()
@@ -163,7 +231,9 @@ const createPdf = async () => {
         const mm = String(now.getMonth() + 1).padStart(2, '0')
         const monthPart = start === end ? monthLabel(start) : `${monthLabel(start)} - ${monthLabel(end)}`
         const namePart = userName ? ` ${userName}` : ''
-        const filename = sanitizeFilename(`Einsatzplan ${monthPart}${namePart} vom ${dd}.${mm}`) + '.pdf'
+        const filename = sanitizeFilename(weekly
+            ? `Wochenplan ${isoWeekLabel(weekDate.value)}${namePart} vom ${dd}.${mm}`
+            : `Einsatzplan ${monthPart}${namePart} vom ${dd}.${mm}`) + '.pdf'
 
         const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
         const link = document.createElement('a')

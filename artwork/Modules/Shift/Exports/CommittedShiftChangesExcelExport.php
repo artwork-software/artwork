@@ -35,6 +35,7 @@ class CommittedShiftChangesExcelExport implements
     public function __construct(
         private readonly Builder $query,
         private readonly ?string $locale = null,
+        private readonly bool $withShortNotice = false,
     ) {
     }
 
@@ -83,6 +84,7 @@ class CommittedShiftChangesExcelExport implements
             $this->tr('Status'),
             $this->tr('Confirmed by'),
             $this->tr('Confirmed on'),
+            ...($this->withShortNotice ? [$this->tr('Short notice'), $this->tr('Reason')] : []),
         ];
     }
 
@@ -134,7 +136,26 @@ class CommittedShiftChangesExcelExport implements
                 ? trim($change->acknowledgedBy->first_name . ' ' . $change->acknowledgedBy->last_name)
                 : '',
             $change->acknowledged_at?->format('d.m.Y H:i') ?? '',
+            ...($this->withShortNotice ? [
+                $change->is_short_notice ? $this->tr('Yes') : '',
+                $this->shortNoticeReason($change),
+            ] : []),
         ];
+    }
+
+    /**
+     * Grund der kurzfristigen Änderung: Bezeichnung, dazu der Freitext in Klammern.
+     */
+    private function shortNoticeReason(CommittedShiftChange $change): string
+    {
+        $reason = $change->short_notice_reason ? $this->tr($change->short_notice_reason->label()) : '';
+        $note = trim((string) $change->short_notice_note);
+
+        if ($reason !== '' && $note !== '') {
+            return sprintf('%s (%s)', $reason, $note);
+        }
+
+        return $reason !== '' ? $reason : $note;
     }
 
     public function styles(Worksheet $sheet): array

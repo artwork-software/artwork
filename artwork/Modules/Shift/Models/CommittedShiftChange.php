@@ -4,7 +4,9 @@ namespace Artwork\Modules\Shift\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Shift\Enums\ShortNoticeReason;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShortNoticeChangeMarker;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -21,6 +23,9 @@ class CommittedShiftChange extends Model
         'affected_user_id',
         'changed_by_user_id',
         'changed_at',
+        'is_short_notice',
+        'short_notice_reason',
+        'short_notice_note',
         'acknowledged_at',
         'acknowledged_by_user_id',
     ];
@@ -29,7 +34,25 @@ class CommittedShiftChange extends Model
         'field_changes'    => 'array',
         'changed_at'       => 'datetime',
         'acknowledged_at'  => 'datetime',
+        'is_short_notice'  => 'boolean',
+        'short_notice_reason' => ShortNoticeReason::class,
     ];
+
+    /**
+     * Kurzfrist-Markierung beim Entstehen: gilt für alle Stellen, die Einträge anlegen
+     * (ShiftChangeRecorder, ShiftService, ShiftWorkerService). Bestandseinträge bleiben unmarkiert,
+     * ein ausdrücklich gesetzter Wert wird nicht überschrieben.
+     */
+    protected static function booted(): void
+    {
+        static::creating(static function (CommittedShiftChange $change): void {
+            if ($change->isDirty('is_short_notice')) {
+                return;
+            }
+
+            $change->is_short_notice = app(ShortNoticeChangeMarker::class)->isShortNotice($change);
+        });
+    }
 
     /**
      * @return BelongsTo<Craft, $this>

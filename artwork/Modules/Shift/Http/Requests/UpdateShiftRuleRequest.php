@@ -5,6 +5,7 @@ namespace Artwork\Modules\Shift\Http\Requests;
 use Artwork\Core\Validation\Rules\HexColorRule;
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
+use Artwork\Modules\Shift\Support\ShiftRuleConfig;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateShiftRuleRequest extends FormRequest
@@ -12,6 +13,8 @@ class UpdateShiftRuleRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Zusatzparameter je Regeltyp. Nur validiert, wenn der Aufruf "config" mitschickt.
+            ...$this->configRules(),
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:65535',
             // Der Regeltyp ist beim Bearbeiten fix (Route-Model); Zahlenwert nur, wenn der Typ ihn braucht.
@@ -44,6 +47,18 @@ class UpdateShiftRuleRequest extends FormRequest
         if (!$this->ruleTypeHasPeriodWeeks()) {
             $this->merge(['period_weeks' => null]);
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function configRules(): array
+    {
+        if (!$this->has('config')) {
+            return [];
+        }
+
+        return ShiftRuleConfig::validationRules($this->triggerType());
     }
 
     private function triggerType(): ?string

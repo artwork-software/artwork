@@ -136,6 +136,7 @@ class UserContractAssign extends Model
         'compensation_period',
         'overtime_rule_active',
         'overtime_compensation_period',
+        'overtime_compensation_period_unit',
         'free_sundays_per_season',
         'days_off_first_26_weeks',
         // Arbeitszeitmuster-Felder (work_time_pattern_id, monday..sunday) gehören zu user_work_times

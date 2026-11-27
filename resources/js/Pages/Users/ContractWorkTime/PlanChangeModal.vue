@@ -162,6 +162,7 @@ import {
     addDays,
     contractValuesFrom,
     formatMinutesAsHours,
+    formatOvertimePeriod,
     seasonInfoParams,
     weeklyMinutes,
     workTimeValuesFrom
@@ -230,7 +231,7 @@ const templateBadges = computed(() => {
         .filter(param => contract[param.activeKey])
         .forEach(param => badges.push(`${$t(param.label)}: ${contract[param.key] ?? 0}`));
     if (contract.overtime_rule_active) {
-        badges.push(`${$t('Overtime rule active')}: ${contract.overtime_compensation_period ?? '-'} ${$t('days')}`);
+        badges.push(`${$t('Overtime rule active')}: ${formatOvertimePeriod(contract.overtime_compensation_period, contract.overtime_compensation_period_unit, $t)}`);
     }
     return badges;
 });

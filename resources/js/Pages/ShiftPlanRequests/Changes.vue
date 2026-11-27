@@ -152,6 +152,20 @@
                                         {{ t(wt.label) }}
                                     </button>
                                 </div>
+
+                                <!-- Nur kurzfristige Änderungen (nur bei aktivierter Kennzeichnung) -->
+                                <div v-if="shortNotice.enabled" class="flex flex-wrap gap-2 border-l border-border-subtle pl-2">
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition"
+                                        :class="shortNotice.only ? 'bg-accent-600 text-white shadow-sm'
+                                            : 'bg-surface-sunken text-text-muted hover:bg-border-subtle'"
+                                        :title="t('Changes after {0} on the day before the shift', [shortNotice.cutoff_time])"
+                                        @click="toggleShortNoticeOnly"
+                                    >
+                                        {{ t('Short notice only') }}
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Suche nach betroffener Einheit (serverseitig, über alle Seiten) -->
@@ -266,6 +280,19 @@
                                             <span class="text-xs text-text-subtle">
                                                 {{ describeChange(change) }}
                                             </span>
+                                            <button
+                                                v-if="shortNotice.enabled && change.is_short_notice"
+                                                type="button"
+                                                class="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-warning-surface px-2 py-0.5 text-left text-[11px] font-medium text-warning hover:underline"
+                                                :title="change.short_notice_note || t('Record a reason')"
+                                                @click="openShortNoticeReason(change)"
+                                            >
+                                                <span class="whitespace-nowrap">{{ t('Short notice') }}</span>
+                                                <span v-if="change.short_notice_reason" class="font-normal">
+                                                    · {{ t(shortNoticeReasonLabel(change.short_notice_reason)) }}
+                                                </span>
+                                                <span v-else class="font-normal">· {{ t('Record a reason') }}</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </td>
@@ -516,6 +543,49 @@
             </div>
         </ArtworkBaseModal>
 
+        <!-- Grund einer kurzfristigen Änderung festhalten -->
+        <ArtworkBaseModal
+            v-if="shortNoticeChange"
+            :title="t('Reason for the short-notice change')"
+            :description="t('This change was made after {0} on the day before the shift.', [shortNotice.cutoff_time])"
+            @close="shortNoticeChange = null"
+        >
+            <form class="mt-4 grid grid-cols-1 gap-4" @submit.prevent="saveShortNoticeReason">
+                <ArtworkBaseListbox
+                    v-model="shortNoticeForm.reason"
+                    :items="shortNoticeReasonItems"
+                    by="id"
+                    option-label="name"
+                    use-translations
+                    :label="t('Reason')"
+                />
+                <BaseTextarea
+                    v-model="shortNoticeForm.note"
+                    id="short_notice_note"
+                    label="Note (optional)"
+                    :maxlength="500"
+                />
+                <div class="mt-2 flex justify-between">
+                    <BaseUIButton
+                        type="submit"
+                        is-add-button
+                        label="Save"
+                        use-translation
+                        icon="IconCheck"
+                        :processing="savingShortNoticeReason"
+                        :disabled="savingShortNoticeReason"
+                    />
+                    <BaseUIButton
+                        type="button"
+                        label="Cancel"
+                        use-translation
+                        icon="IconCancel"
+                        @click="shortNoticeChange = null"
+                    />
+                </div>
+            </form>
+        </ArtworkBaseModal>
+
         <ExportModal
             v-if="showExportModal"
             :enums="[exportTabEnums.EXCEL_COMMITTED_SHIFT_CHANGES_EXPORT]"
@@ -533,6 +603,8 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import CraftSelectorModal from "@/Pages/ShiftPlanRequests/components/CraftSelectorModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
 import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
@@ -577,6 +649,12 @@ const props = defineProps({
         type: Number,
         default: 0,
     },
+    // Kennzeichnung kurzfristiger Änderungen: { enabled, only, cutoff_time, reasons: [{ value, label }] }.
+    // enabled = false: die Übersicht zeigt nichts davon.
+    shortNotice: {
+        type: Object,
+        default: () => ({ enabled: false, only: false, cutoff_time: '14:00', reasons: [] }),
+    },
 });
 
 const { t } = useI18n();
@@ -610,6 +688,59 @@ const changeWorkerType = (value) => {
         data: { worker_type: value, page: 1 },
         preserveScroll: true,
     });
+};
+
+// Filter "nur kurzfristige" (serverseitig)
+const toggleShortNoticeOnly = () => {
+    router.reload({
+        data: { short_notice: props.shortNotice.only ? 0 : 1, page: 1 },
+        preserveScroll: true,
+    });
+};
+
+// Grund einer kurzfristigen Änderung: "kein Grund" + die serverseitig gelieferten Gründe
+const shortNoticeReasonItems = computed(() => [
+    { id: null, name: 'No reason recorded' },
+    ...(props.shortNotice.reasons ?? []).map((reason) => ({ id: reason.value, name: reason.label })),
+]);
+const shortNoticeReasonLabel = (value) =>
+    (props.shortNotice.reasons ?? []).find((reason) => reason.value === value)?.label ?? value;
+
+const shortNoticeChange = ref(null);
+const shortNoticeForm = ref({ reason: null, note: '' });
+const savingShortNoticeReason = ref(false);
+
+const openShortNoticeReason = (change) => {
+    shortNoticeForm.value = {
+        reason: shortNoticeReasonItems.value.find((item) => item.id === change.short_notice_reason)
+            ?? shortNoticeReasonItems.value[0],
+        note: change.short_notice_note ?? '',
+    };
+    shortNoticeChange.value = change;
+};
+
+const saveShortNoticeReason = () => {
+    if (savingShortNoticeReason.value || !shortNoticeChange.value) {
+        return;
+    }
+    savingShortNoticeReason.value = true;
+    router.patch(
+        route('committed-shift-changes.short-notice-reason', shortNoticeChange.value.id),
+        {
+            reason: shortNoticeForm.value.reason?.id ?? null,
+            note: shortNoticeForm.value.note?.trim() || null,
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                shortNoticeChange.value = null;
+            },
+            onFinish: () => {
+                savingShortNoticeReason.value = false;
+            },
+        }
+    );
 };
 
 // Zähler kommen serverseitig (über alle Seiten), nicht mehr aus dem geladenen Array.
@@ -771,6 +902,7 @@ const currentExportFilters = computed(() => ({
     filter: props.filter,
     search: search.value.trim(),
     worker_type: props.workerType,
+    short_notice: props.shortNotice.only ? 1 : null,
 }));
 const exportUrl = computed(() => {
     const params = {};
@@ -813,6 +945,7 @@ const acknowledgeAll = () => {
             craft_id: props.craft?.id,
             search: search.value.trim(),
             worker_type: props.workerType,
+            short_notice: props.shortNotice.only ? 1 : 0,
         },
         {
             preserveScroll: true,

@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\RuleChecks;
 
 use Artwork\Modules\Shift\Models\ShiftRule;
+use Artwork\Modules\Shift\Support\ShiftRuleConfig;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Carbon\Carbon;
@@ -18,6 +19,11 @@ use Illuminate\Support\Collection;
  * Freier Tag = Kalendertag ohne Schicht (effektive Pivot-Zeiten, Über-Mitternacht-Schichten belegen
  * beide Tage) UND ohne individuelle Zeit. Verstoß je Kalenderwoche (Mo–So) OHNE Schichtbezug auf den
  * Sonntag der Woche, wenn die Woche weniger als X freie Tage hat (Warnung; abgeschlossene Woche: Fehler).
+ *
+ * Zusatzparameter (ShiftRuleConfig):
+ *  - workdays_only: nur freie Werktage zählen. Ein freier Sonntag oder Sondertag zählt nicht mit.
+ *  - excluded_dates: jährlich wiederkehrende Kalendertage ("MM-DD"), die nie als freier Tag zählen
+ *    (NV Bühne: 1. Mai und 24. Dezember).
  */
 class MinFreeDaysPerWeekCheck extends AbstractRuleCheck
 {
@@ -29,6 +35,8 @@ class MinFreeDaysPerWeekCheck extends AbstractRuleCheck
         $lastSunday = $endDate->copy()->endOfWeek(Carbon::SUNDAY)->startOfDay();
         $occupied = $this->getOccupiedDayKeys($user, $firstMonday, $lastSunday);
         $today = now()->startOfDay();
+        $workdaysOnly = (bool) ShiftRuleConfig::get($rule, 'workdays_only');
+        $excludedDates = array_flip((array) ShiftRuleConfig::get($rule, 'excluded_dates'));
 
         for ($monday = $firstMonday->copy(); $monday->lte($lastSunday); $monday->addWeek()) {
             $sunday = $monday->copy()->addDays(6);
@@ -40,9 +48,16 @@ class MinFreeDaysPerWeekCheck extends AbstractRuleCheck
 
             $freeDays = 0;
             for ($day = $monday->copy(); $day->lte($sunday); $day->addDay()) {
-                if (!isset($occupied[$day->toDateString()])) {
-                    $freeDays++;
+                if (isset($occupied[$day->toDateString()])) {
+                    continue;
                 }
+                if (isset($excludedDates[$day->format('m-d')])) {
+                    continue;
+                }
+                if ($workdaysOnly && !$this->isWorkday($day)) {
+                    continue;
+                }
+                $freeDays++;
             }
 
             if ($freeDays >= $target) {
@@ -59,6 +74,7 @@ class MinFreeDaysPerWeekCheck extends AbstractRuleCheck
                 'week_start' => $monday->toDateString(),
                 'week_end' => $sunday->toDateString(),
                 'completed' => $completed,
+                'workdays_only' => $workdaysOnly,
             ], $completed ? 'error' : 'warning', $ruleDate));
         }
 

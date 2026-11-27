@@ -738,6 +738,60 @@
                     </SwitchLabel>
                 </SwitchGroup>
             </div>
+
+            <div class="flex flex-col gap-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mb-10">
+                <BasePageTitle
+                    :title="$t('Mark short-notice changes')"
+                    :description="$t('If activated, changes to binding shifts made after the cut-off time on the day before the shift are marked as short notice in the change overview, and a reason can be recorded. Useful for houses with announcement deadlines, for example under NV Bühne. If deactivated, nothing is marked and the change overview stays as it is.')"
+                />
+                <form class="mt-4 flex flex-wrap items-end gap-4" @submit.prevent="saveShortNoticeMarking">
+                    <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer pb-2">
+                        <SwitchLabel as="span" class="text-sm">
+                            <span :class="[!shortNoticeForm.short_notice_marking_enabled ? 'font-bold' : 'font-medium', 'text-text']">
+                                {{ $t('Deactivated') }}
+                            </span>
+                        </SwitchLabel>
+                        <Switch v-model="shortNoticeForm.short_notice_marking_enabled"
+                                @update:model-value="saveShortNoticeMarking"
+                                :disabled="!canEditGeneralSettings"
+                                :title="canEditGeneralSettings ? undefined : $t('You have read access only')"
+                                :class="[
+                                    canEditGeneralSettings ? '' : 'opacity-50',
+                                    shortNoticeForm.short_notice_marking_enabled ?
+                                        'bg-accent-600' :
+                                        'bg-border-subtle',
+                                    'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
+                                ]">
+                            <span aria-hidden="true" :class="[shortNoticeForm.short_notice_marking_enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                        </Switch>
+                        <SwitchLabel as="span" class="text-sm">
+                            <span :class="[shortNoticeForm.short_notice_marking_enabled ? 'font-bold' : 'font-medium', 'text-text']">
+                                {{ $t('Activated') }}
+                            </span>
+                        </SwitchLabel>
+                    </SwitchGroup>
+                    <template v-if="shortNoticeForm.short_notice_marking_enabled">
+                        <div class="w-56">
+                            <BaseInput
+                                id="short_notice_cutoff_time"
+                                v-model="shortNoticeForm.short_notice_cutoff_time"
+                                type="time"
+                                label="Cut-off time on the day before"
+                                :disabled="!canEditGeneralSettings"
+                                :error="shortNoticeForm.errors.short_notice_cutoff_time"
+                                required
+                            />
+                        </div>
+                        <BaseUIButton
+                            v-if="canEditGeneralSettings"
+                            type="submit"
+                            label="Save"
+                            use-translation
+                            :disabled="shortNoticeForm.processing || !shortNoticeForm.short_notice_cutoff_time"
+                        />
+                    </template>
+                </form>
+            </div>
         <ShiftQualificationModal
             v-if="this.showShiftQualificationModal"
             :show="this.showShiftQualificationModal"
@@ -891,6 +945,10 @@ export default defineComponent({
                 end_night_time: this.nightTimes?.end_night_time ?? '06:00'
             }),
             nightTimesToast: { visible: false, title: '', description: '', type: 'success' },
+            shortNoticeForm: useForm({
+                short_notice_marking_enabled: !!this.shiftSettings?.short_notice_marking_enabled,
+                short_notice_cutoff_time: (this.shiftSettings?.short_notice_cutoff_time ?? '14:00').substring(0, 5)
+            }),
             selectedEventType: null,
             openAddCraftsModal: false,
             craftToEdit: null,
@@ -1202,6 +1260,14 @@ export default defineComponent({
             router.patch(route('shift.settings.update.project-assignments-enabled'), {
                 project_assignments_enabled: projectAssignmentsEnabled
             }, { preserveScroll: true })
+        },
+        saveShortNoticeMarking() {
+            if (!this.shortNoticeForm.short_notice_cutoff_time) {
+                this.shortNoticeForm.short_notice_cutoff_time = '14:00';
+            }
+            this.shortNoticeForm.patch(route('shift.settings.update.short-notice-marking'), {
+                preserveScroll: true
+            })
         },
         updateWorkTimeAccountingEnabled(workTimeAccountingEnabled) {
             router.patch(route('shift.settings.update.work-time-accounting-enabled'), {

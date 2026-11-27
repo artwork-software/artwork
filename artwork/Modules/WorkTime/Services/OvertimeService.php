@@ -23,6 +23,10 @@ use Illuminate\Validation\ValidationException;
  */
 class OvertimeService
 {
+    public const PERIOD_UNIT_DAYS = 'days';
+
+    public const PERIOD_UNIT_CALENDAR_WEEKS = 'calendar_weeks';
+
     public function __construct(private readonly ContractSettingsResolver $contractSettings)
     {
     }
@@ -149,7 +153,7 @@ class OvertimeService
     /**
      * Überstundenregel und Frist heute (Anzeige/Auszahlung).
      *
-     * @return array{rule_active: bool, compensation_period: int|null}
+     * @return array{rule_active: bool, compensation_period: int|null, compensation_period_unit: string}
      */
     public function ruleSettingsToday(User $user): array
     {
@@ -157,7 +161,11 @@ class OvertimeService
         $active = $this->ruleActiveToday($user);
         $period = $active ? $this->contractSettings->int($user, 'overtime_compensation_period', 0, Carbon::today()) : 0;
 
-        return ['rule_active' => $active, 'compensation_period' => $period > 0 ? $period : null];
+        return [
+            'rule_active' => $active,
+            'compensation_period' => $period > 0 ? $period : null,
+            'compensation_period_unit' => $this->compensationPeriodUnitOn($user, Carbon::today()),
+        ];
     }
 
     private function ruleActiveToday(User $user): bool
@@ -169,6 +177,11 @@ class OvertimeService
     /**
      * Abbaufrist in Tagen für einen Buchungstag: null, wenn an diesem Tag keine Überstundenregel aktiv
      * ist oder keine Frist (> 0) hinterlegt ist – dann laufen die Überstunden ohne Frist.
+     *
+     * Ist die Frist in Kalenderwochen hinterlegt (overtime_compensation_period_unit = calendar_weeks),
+     * endet sie am Sonntag der N-ten Kalenderwoche nach der Woche des Buchungstags (NV Bühne § 64
+     * Abs. 5: bis zum Ende der sechsten folgenden Kalenderwoche). Zurückgegeben wird der Abstand in
+     * Tagen bis dorthin, damit das Überstundenkonto unverändert mit Tagen rechnet.
      */
     private function compensationPeriodOn(User $user, Carbon $day): ?int
     {
@@ -177,8 +190,35 @@ class OvertimeService
         }
 
         $period = $this->contractSettings->int($user, 'overtime_compensation_period', 0, $day);
+        if ($period <= 0) {
+            return null;
+        }
 
-        return $period > 0 ? $period : null;
+        if ($this->compensationPeriodUnitOn($user, $day) !== self::PERIOD_UNIT_CALENDAR_WEEKS) {
+            return $period;
+        }
+
+        $bookingDay = $day->copy()->startOfDay();
+        $deadline = $bookingDay->copy()->endOfWeek(Carbon::SUNDAY)->startOfDay()->addWeeks($period);
+
+        return (int) $bookingDay->diffInDays($deadline);
+    }
+
+    /**
+     * Einheit der Abbaufrist am Stichtag. Sie kommt aus derselben Quelle wie die Frist selbst: Trägt
+     * die Zuweisung eine eigene Frist, gilt ihre Einheit, sonst die der Vertragsvorlage. Ohne Angabe
+     * sind es Tage.
+     */
+    public function compensationPeriodUnitOn(User $user, Carbon $day): string
+    {
+        $assign = $this->contractSettings->assignFor($user, $day);
+        $source = $assign !== null && $assign->overtime_compensation_period !== null
+            ? $assign
+            : $this->contractSettings->templateFor($user, $day);
+
+        return $source?->overtime_compensation_period_unit === self::PERIOD_UNIT_CALENDAR_WEEKS
+            ? self::PERIOD_UNIT_CALENDAR_WEEKS
+            : self::PERIOD_UNIT_DAYS;
     }
 
     /**

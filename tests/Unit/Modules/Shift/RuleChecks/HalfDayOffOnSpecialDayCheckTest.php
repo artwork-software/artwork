@@ -91,4 +91,71 @@ final class HalfDayOffOnSpecialDayCheckTest extends TestCase
 
         $this->assertCount(0, $violations);
     }
+
+    private function ruleWith(array $config): ShiftRule
+    {
+        return ShiftRule::factory()->create([
+            'trigger_type' => 'halfDayOffOnSpecialDay',
+            'individual_number_value' => 0,
+            'config' => $config,
+            'is_active' => true,
+        ]);
+    }
+
+    private function grantedHalfOn(User $user, Carbon $date, string $period): void
+    {
+        CompensationDayOff::create([
+            'user_id' => $user->id,
+            'value' => 0.5,
+            'half_day_period' => $period,
+            'granted_date' => $date->toDateString(),
+            'granted_at' => Carbon::now(),
+            'deadline' => $date->copy()->addDays(30)->toDateString(),
+        ]);
+    }
+
+    #[Test]
+    public function ordinary_sunday_only_counts_with_include_sundays(): void
+    {
+        $user = User::factory()->create();
+        $sunday = Carbon::now()->startOfDay()->addWeeks(2)->next(Carbon::SUNDAY);
+        $this->grantedHalfOn($user, $sunday, 'morning');
+
+        // Ohne config: bisheriges Verhalten, ein gewöhnlicher Sonntag ist kein Sondertag
+        $this->assertCount(0, $this->check->check($this->rule(), $user, $sunday->copy(), $sunday->copy()));
+
+        $violations = $this->check->check(
+            $this->ruleWith(['include_sundays' => true]),
+            $user,
+            $sunday->copy(),
+            $sunday->copy()
+        );
+        $this->assertCount(1, $violations);
+        $this->assertTrue($violations->first()->violation_data['on_sunday']);
+    }
+
+    #[Test]
+    public function morning_only_ignores_a_free_afternoon(): void
+    {
+        $user = User::factory()->create();
+        $this->specialDay();
+        $this->grantedHalfOn($user, $this->date, 'afternoon');
+
+        // Ohne config zählt jeder halbe freie Tag am Sondertag
+        $this->assertCount(1, $this->check->check($this->rule(), $user, $this->date->copy(), $this->date->copy()));
+        $this->assertCount(0, $this->check->check(
+            $this->ruleWith(['morning_only' => true]),
+            $user,
+            $this->date->copy(),
+            $this->date->copy()
+        ));
+
+        $this->grantedHalfOn($user, $this->date, 'morning');
+        $this->assertCount(1, $this->check->check(
+            $this->ruleWith(['morning_only' => true]),
+            $user,
+            $this->date->copy(),
+            $this->date->copy()
+        ));
+    }
 }

@@ -2812,6 +2812,12 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->name('shift.settings.update.work-time-accounting-enabled');
 
         Route::patch(
+            'shift-settings/updateShortNoticeMarking',
+            [ShiftSettingsController::class, 'updateShortNoticeMarking']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.short-notice-marking');
+
+        Route::patch(
             'shift-settings/updateNightTimes',
             [ShiftSettingsController::class, 'updateNightTimes']
         )->middleware('shift-settings-area:general,edit')
@@ -2941,6 +2947,17 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->can('can view shift plan');
     Route::post('/users/{user}/shiftplan/export/monthly-pdf', [ExportPDFController::class, 'createUserShiftPlanPDF'])
         ->name('user.shiftplan.export.monthly-pdf');
+    // Wochenplan je Person (eine Kalenderwoche plus unverbindliche Vorschau auf die Folgewoche):
+    // einzeln aus dem Einsatzplan, als Sammel-PDF aus dem Schichtplan
+    Route::post(
+        '/users/{user}/shiftplan/export/weekly-pdf',
+        [\App\Http\Controllers\WeeklyPlanPdfExportController::class, 'single']
+    )->name('user.shiftplan.export.weekly-pdf');
+    Route::post(
+        '/shift-plan/export/weekly-plan-pdf',
+        [\App\Http\Controllers\WeeklyPlanPdfExportController::class, 'bulk']
+    )->name('shift.plan.export.weekly-plan.pdf')
+        ->can('can view shift plan');
     // The constraint mirrors StoredFileName::PATTERN so the parameter cannot
     // escape the pdf/ directory.
     Route::get(
@@ -4425,6 +4442,13 @@ Route::group(['middleware' => ['auth']], function (): void {
         '/committed-shift-changes/acknowledge-all',
         [ShiftPlanRequestController::class, 'acknowledgeAll']
     )->name('committed-shift-changes.acknowledge-all')
+        ->can('approve-shift-plan-requests');
+
+    // Grund einer kurzfristigen Änderung (nach der Stichzeit am Vortag) festhalten
+    Route::patch(
+        '/committed-shift-changes/{change}/short-notice-reason',
+        [ShiftPlanRequestController::class, 'updateShortNoticeReason']
+    )->name('committed-shift-changes.short-notice-reason')
         ->can('approve-shift-plan-requests');
 
     // Excel-Export der Änderungsübersicht (Filter wie die Liste, optional Zeitraum)

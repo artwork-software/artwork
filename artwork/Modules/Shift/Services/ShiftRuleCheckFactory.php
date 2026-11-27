@@ -4,7 +4,10 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Shift\Contracts\ShiftRuleCheckInterface;
 use Artwork\Modules\Shift\RuleChecks\AverageWeeklyHoursCheck;
+use Artwork\Modules\Shift\RuleChecks\FreeDayAfterWorkOnDateCheck;
+use Artwork\Modules\Shift\RuleChecks\FreeDayAnnouncementLeadTimeCheck;
 use Artwork\Modules\Shift\RuleChecks\HalfDayOffConflictCheck;
+use Artwork\Modules\Shift\RuleChecks\HalfDayOffMaxHoursCheck;
 use Artwork\Modules\Shift\RuleChecks\HalfDayOffOnSpecialDayCheck;
 use Artwork\Modules\Shift\RuleChecks\MaxConsecutiveWorkingDaysCheck;
 use Artwork\Modules\Shift\RuleChecks\MaxWorkingHoursOnDayCheck;
@@ -17,7 +20,9 @@ use Artwork\Modules\Shift\RuleChecks\OvertimeDeadlineCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeHolidayCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeWorkdayCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBetweenShiftGroupsCheck;
+use Artwork\Modules\Shift\RuleChecks\RestTimeBetweenShiftsOnDayCheck;
 use Artwork\Modules\Shift\RuleChecks\WeeklyMaxHoursCheck;
+use Artwork\Modules\Shift\RuleChecks\WeeklyPlanCommitDeadlineCheck;
 use Artwork\Modules\Shift\RuleChecks\WorkOnHolidayCheck;
 use Artwork\Modules\Shift\RuleChecks\WorkOnSundayCheck;
 use InvalidArgumentException;
@@ -52,6 +57,11 @@ class ShiftRuleCheckFactory
         $this->register(new AverageWeeklyHoursCheck());
         $this->register(new NightWorkMaxHoursCheck());
         $this->register(new MinFreeDaysPerWeekCheck());
+        $this->register(new WeeklyPlanCommitDeadlineCheck());
+        $this->register(new HalfDayOffMaxHoursCheck());
+        $this->register(new RestTimeBetweenShiftsOnDayCheck());
+        $this->register(new FreeDayAfterWorkOnDateCheck());
+        $this->register(new FreeDayAnnouncementLeadTimeCheck());
     }
 
     public function has(string $triggerType): bool

@@ -95,6 +95,10 @@ final class CommittedShiftChangePresenter
             'acknowledged_at'        => optional($change->acknowledged_at)?->toIso8601String(),
             'acknowledged'           => ! is_null($change->acknowledged_at),
 
+            'is_short_notice'        => (bool) $change->is_short_notice,
+            'short_notice_reason'    => $change->short_notice_reason?->value,
+            'short_notice_note'      => $change->short_notice_note,
+
             'field_changes'          => $fieldChanges,
         ];
     }

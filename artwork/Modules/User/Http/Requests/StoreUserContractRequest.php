@@ -54,6 +54,8 @@ class StoreUserContractRequest extends FormRequest
             // Überstunden-Regel (Vorgabe für die Zuweisung am User)
             'overtime_rule_active' => 'boolean',
             'overtime_compensation_period' => 'nullable|integer|min:1',
+            // Einheit der Frist: Tage (Standard) oder Kalenderwochen nach der Entstehungswoche
+            'overtime_compensation_period_unit' => 'nullable|string|in:days,calendar_weeks',
         ];
     }
 }

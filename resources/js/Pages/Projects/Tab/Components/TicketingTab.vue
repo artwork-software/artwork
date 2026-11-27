@@ -55,7 +55,13 @@
                     <span>{{ $t('Artwork-Tickets could not be reached: {message} Venue defaults are missing until it is back.', { message: payload.ticketsError }) }}</span>
                 </div>
 
-                <TicketingProductionCard v-if="canEditComponent || payload.production.linked" class="mb-5" :project-id="project.id" :production="payload.production" :reductions="payload.reductions" :can-edit="canEditComponent" @saved="applyPayload" />
+                <!-- Why a date has a guest list only once it is released -->
+                <p v-if="hasUnreleased" class="mb-4 flex items-start gap-2.5 rounded-md border border-border-subtle bg-surface-sunken px-3.5 py-3 text-[13px] leading-5 text-text-muted">
+                    <IconUsers class="mt-0.5 size-4 shrink-0 text-text-subtle" />
+                    {{ $t('Guest list, admission and booking with a pass or subscription are available for a date once it is released. Releasing does not mean selling online: bookings on site cost no service fee.') }}
+                </p>
+
+                <TicketingProductionCard v-if="canEditComponent || payload.production.linked" class="mb-5" :project-id="project.id" :production="payload.production" :reductions="payload.reductions" :groups="payload.groups" :can-edit="canEditComponent" :can-manage-ticketing="canManageTicketing" @saved="applyPayload" />
 
                 <div class="rounded-lg border border-border-subtle/70 bg-surface shadow-raised">
                     <!-- One toolbar: filters by default, the actions for the picked dates once there is a
@@ -406,6 +412,7 @@ const totalPlaces = computed(() => visible.value.reduce((sum, event) => sum + (c
 
 /* ---- Selection ---------------------------------------------------------- */
 
+const hasUnreleased = computed(() => events.value.some((event) => !isReleased(event)))
 const unreleased = computed(() => visible.value.filter((event) => !isReleased(event) && isReleasable(event)))
 const selectedEvents = computed(() => events.value.filter((event) => selected.value.has(event.id)))
 const selectedReleased = computed(() => selectedEvents.value.filter(isReleased))

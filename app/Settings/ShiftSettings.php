@@ -14,6 +14,8 @@ use Spatie\LaravelSettings\Settings;
  * @property bool $shift_confirmation_in_history
  * @property bool $project_assignments_enabled
  * @property bool $work_time_accounting_enabled
+ * @property bool $short_notice_marking_enabled
+ * @property string $short_notice_cutoff_time
  */
 class ShiftSettings extends Settings
 {
@@ -51,6 +53,14 @@ class ShiftSettings extends Settings
     // Default: Spatie füllt fehlende Werte damit auf – läuft der Code vor der
     // Settings-Migration, gibt es kein MissingSettings (500)
     public bool $work_time_accounting_enabled = true;
+
+    // Kurzfristige Änderungen an verbindlichen Diensten kennzeichnen (NV Bühne § 6: Änderungen bis
+    // 14 Uhr des Vortags). Aus = keine Markierung, die Änderungsübersicht zeigt nichts Zusätzliches.
+    // Defaults wie oben: kein MissingSettings, falls der Code vor der Settings-Migration läuft
+    public bool $short_notice_marking_enabled = false;
+
+    // Stichzeit am Vortag des Dienstbeginns (H:i), nach der eine Änderung als kurzfristig gilt
+    public string $short_notice_cutoff_time = '14:00';
 
     public static function group(): string
     {

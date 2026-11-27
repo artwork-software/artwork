@@ -148,6 +148,8 @@ const initializeDownload = async () => {
             search: search.value.trim() || undefined,
             date_from: dateFrom.value || undefined,
             date_to: dateTo.value || undefined,
+            // Filter "nur kurzfristige" aus der Änderungsübersicht übernehmen
+            short_notice: props.preselectedFilters?.short_notice ? 1 : undefined,
         }, 'aenderungen.xlsx');
         emit("close");
     } catch (error) {

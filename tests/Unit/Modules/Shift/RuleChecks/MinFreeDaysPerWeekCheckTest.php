@@ -178,4 +178,81 @@ final class MinFreeDaysPerWeekCheckTest extends TestCase
         $this->assertSame($monday->toDateString(), $from->toDateString());
         $this->assertSame($monday->copy()->addDays(13)->toDateString(), $to->toDateString());
     }
+
+    private function ruleWith(float $target, array $config): ShiftRule
+    {
+        return ShiftRule::factory()->create([
+            'trigger_type' => 'minFreeDaysPerWeek',
+            'individual_number_value' => $target,
+            'config' => $config,
+            'is_active' => true,
+        ]);
+    }
+
+    #[Test]
+    public function workdays_only_does_not_count_a_free_sunday(): void
+    {
+        $user = User::factory()->create();
+        $monday = $this->futureWeekday(Carbon::MONDAY);
+        // Mo–Sa Schicht: nur der Sonntag ist frei
+        for ($i = 0; $i < 6; $i++) {
+            $this->shiftFor($user, $monday->copy()->addDays($i));
+        }
+
+        // Ohne config zählt der freie Sonntag (1 >= 1)
+        $this->assertCount(0, $this->check->check($this->rule(1.0), $user, $monday->copy(), $monday->copy()));
+
+        $violations = $this->check->check(
+            $this->ruleWith(1.0, ['workdays_only' => true]),
+            $user,
+            $monday->copy(),
+            $monday->copy()
+        );
+        $this->assertCount(1, $violations);
+        $this->assertSame(0, $violations->first()->violation_data['free_days']);
+        $this->assertTrue($violations->first()->violation_data['workdays_only']);
+    }
+
+    #[Test]
+    public function workdays_only_does_not_count_a_free_special_day_but_a_free_working_day(): void
+    {
+        $user = User::factory()->create();
+        $monday = $this->futureWeekday(Carbon::MONDAY);
+        $wednesday = $monday->copy()->addDays(2);
+        $this->holiday($wednesday);
+        // Alle Tage außer Mittwoch (Sondertag) belegt
+        foreach ([0, 1, 3, 4, 5, 6] as $offset) {
+            $this->shiftFor($user, $monday->copy()->addDays($offset));
+        }
+        $rule = $this->ruleWith(1.0, ['workdays_only' => true]);
+
+        $this->assertCount(1, $this->check->check($rule, $user, $monday->copy(), $monday->copy()));
+
+        // Ein freier Donnerstag (Werktag) erfüllt die Regel
+        $otherUser = User::factory()->create();
+        foreach ([0, 1, 2, 4, 5, 6] as $offset) {
+            $this->shiftFor($otherUser, $monday->copy()->addDays($offset));
+        }
+        $this->assertCount(0, $this->check->check($rule, $otherUser, $monday->copy(), $monday->copy()));
+    }
+
+    #[Test]
+    public function excluded_dates_never_count_as_a_free_day(): void
+    {
+        $user = User::factory()->create();
+        $monday = $this->futureWeekday(Carbon::MONDAY);
+        $freeDay = $monday->copy()->addDays(1);
+        // Alle Tage außer Dienstag belegt
+        foreach ([0, 2, 3, 4, 5, 6] as $offset) {
+            $this->shiftFor($user, $monday->copy()->addDays($offset));
+        }
+
+        $this->assertCount(0, $this->check->check($this->rule(1.0), $user, $monday->copy(), $monday->copy()));
+        $this->assertCount(1, $this->check->check(
+            $this->ruleWith(1.0, ['excluded_dates' => [$freeDay->format('m-d')]]),
+            $user,
+            $monday->copy(),
+            $monday->copy()
+        ));
+    }
 }

@@ -33,6 +33,8 @@ class StoreUserContractAssignRequest extends FormRequest
             'compensation_period' => 'nullable|integer|min:0',
             'overtime_rule_active' => 'boolean',
             'overtime_compensation_period' => 'nullable|integer|min:1',
+            // Einheit der Frist: Tage (Standard) oder Kalenderwochen nach der Entstehungswoche
+            'overtime_compensation_period_unit' => 'nullable|string|in:days,calendar_weeks',
             'free_sundays_per_season' => 'nullable|integer|min:0',
             'days_off_first_26_weeks' => 'nullable|numeric|min:0',
             // Spielzeitbezogene Infodaten (DP-18)

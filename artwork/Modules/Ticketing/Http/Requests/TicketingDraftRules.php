@@ -83,6 +83,7 @@ final class TicketingDraftRules
     {
         return [
             'reductions' => 'present|array|max:50',
+            'reductions.*.id' => 'nullable|uuid',
             'reductions.*.name' => 'required|string|max:60',
             'reductions.*.kind' => ['required', Rule::in(['percent', 'fixed'])],
             'reductions.*.value' => 'required|integer|min:1',

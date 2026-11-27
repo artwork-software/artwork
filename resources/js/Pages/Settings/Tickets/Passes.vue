@@ -57,7 +57,7 @@
                             <span class="block">{{ usesLabel(passType) }}</span>
                             <span v-if="passType.maxUsesPerPeriod !== null" class="block text-xs text-text-subtle">{{ paceLabel(passType) }}</span>
                         </td>
-                        <td class="py-2.5 pr-3 max-w-[220px] truncate text-text-muted" :title="validFor(passType)">{{ validFor(passType) }}</td>
+                        <td class="py-2.5 pr-3 max-w-[220px] truncate text-text-muted" :title="scope(passType)">{{ scope(passType) }}</td>
                         <td class="py-2.5 text-right tabular-nums">{{ passType.issuedCount }}</td>
                         <td class="py-2.5 pl-4">
                             <BaseChip :variant="statusVariant[passType.status]">{{ statusLabel[passType.status] }}</BaseChip>
@@ -72,6 +72,10 @@
                                 </button>
                                 <button type="button" class="flex size-7 items-center justify-center rounded-md text-text-subtle hover:text-text hover:bg-surface-sunken" :aria-label="$t('Edit')" @click="openEdit(passType)">
                                     <IconPencil class="size-[15px]" />
+                                </button>
+                                <button type="button" class="flex size-7 items-center justify-center rounded-md text-text-subtle hover:text-text hover:bg-surface-sunken"
+                                        :aria-label="$t('Duplicate')" :disabled="busy" @click="duplicate(passType)">
+                                    <IconCopy class="size-[15px]" />
                                 </button>
                                 <button v-if="passType.issuedCount === 0" type="button" class="flex size-7 items-center justify-center rounded-md text-text-subtle hover:text-danger hover:bg-danger-surface"
                                         :aria-label="$t('Delete')" @click="deleting = passType">
@@ -91,16 +95,17 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
-import { IconAlertTriangle, IconPencil, IconPlus, IconRepeat, IconTrash } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconCopy, IconPencil, IconPlus, IconRepeat, IconTrash } from '@tabler/icons-vue'
 import TicketsSettingsHeader from '@/Pages/Settings/Tickets/TicketsSettingsHeader.vue'
 import NotConnected from '@/Pages/Settings/Tickets/NotConnected.vue'
 import PassTypeModal from '@/Pages/Settings/Tickets/PassTypeModal.vue'
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
 import { formatDate, formatEuro } from '@/Helper/ticketingFormat.js'
+import { validFor } from '@/Pages/Settings/Tickets/discounts.js'
 
 const props = defineProps({
     connection: { type: Object, required: true },
@@ -115,9 +120,6 @@ const { t } = useI18n()
 /* The same words as the passes page of Artwork-Tickets. */
 const statusLabel = { draft: t('Draft'), published: t('On sale'), archived: t('Archived') }
 const statusVariant = { draft: 'neutral', published: 'success', archived: 'warning' }
-
-const productionTitles = computed(() => new Map(props.productions.map((production) => [production.id, production.title])))
-const groupNames = computed(() => new Map(props.groups.map((group) => [group.id, group.name])))
 
 /** { passType, kind } while the dialog is open. */
 const editing = ref(null)
@@ -170,23 +172,25 @@ function paceLabel(passType) {
     }[passType.limitPeriod]
 }
 
-function titlesOf(eventIds) {
-    return eventIds.map((id) => productionTitles.value.get(id)).filter(Boolean)
-}
-
-/** Groups first, then the productions picked one by one. */
-function validFor(passType) {
-    if (passType.allEvents) {
-        return t('All productions')
-    }
-    const names = [...passType.groupIds.map((id) => groupNames.value.get(id)).filter(Boolean), ...titlesOf(passType.eventIds)]
-    return names.length > 0 ? names.join(', ') : t('No production yet')
-}
+const scope = (passType) => validFor(passType, props.productions, props.groups, t) || t('No production yet')
 
 const visit = { preserveScroll: true, onStart: () => (busy.value = true), onFinish: () => (busy.value = false) }
 
 function changeStatus(passType, action) {
     router.post(route(`settings.tickets.passes.${action}`, passType.id), {}, visit)
+}
+
+/** A draft copy to adjust, e.g. the same pass for another season; it opens right away for editing. */
+function duplicate(passType) {
+    /* The suffix must fit into the 120 characters a name may have. */
+    const name = passType.name.slice(0, 120 - t('{name} (copy)', { name: '' }).length)
+    router.post(route('settings.tickets.passes.duplicate', passType.id), { name: t('{name} (copy)', { name }) }, {
+        ...visit,
+        onSuccess: (page) => {
+            const copy = page.props.passTypes.find((candidate) => candidate.id === page.props.flash.createdId)
+            if (copy) openEdit(copy)
+        },
+    })
 }
 
 function destroy() {

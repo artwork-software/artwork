@@ -133,6 +133,7 @@ use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCalendarController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingCustomerController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingDiscountController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingDoorController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingPassTypeController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingProductionGroupController;
@@ -489,6 +490,8 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->name('settings.tickets.billing.stripe-session');
         Route::post('/billing/platform-terms', [TicketingBillingController::class, 'acceptPlatformTerms'])
             ->name('settings.tickets.billing.platform-terms');
+        Route::put('/billing/fee-bearer', [TicketingBillingController::class, 'setFeeBearer'])
+            ->name('settings.tickets.billing.fee-bearer');
         Route::get('/rooms', [TicketingConnectionController::class, 'rooms'])->name('settings.tickets.rooms');
         Route::post('/rooms', [TicketingConnectionController::class, 'syncRooms'])->name('settings.tickets.rooms.sync');
         Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');
@@ -504,12 +507,21 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->whereUuid('passType')->name('settings.tickets.passes.publish');
         Route::post('/passes/{passType}/archive', [TicketingPassTypeController::class, 'archive'])
             ->whereUuid('passType')->name('settings.tickets.passes.archive');
+        Route::post('/passes/{passType}/duplicate', [TicketingPassTypeController::class, 'duplicate'])
+            ->whereUuid('passType')->name('settings.tickets.passes.duplicate');
         Route::get('/groups', [TicketingProductionGroupController::class, 'index'])->name('settings.tickets.groups');
         Route::post('/groups', [TicketingProductionGroupController::class, 'store'])->name('settings.tickets.groups.store');
         Route::put('/groups/{group}', [TicketingProductionGroupController::class, 'update'])
             ->whereUuid('group')->name('settings.tickets.groups.update');
         Route::delete('/groups/{group}', [TicketingProductionGroupController::class, 'destroy'])
             ->whereUuid('group')->name('settings.tickets.groups.destroy');
+        Route::get('/discounts', [TicketingDiscountController::class, 'index'])->name('settings.tickets.discounts');
+        Route::post('/discounts', [TicketingDiscountController::class, 'store'])
+            ->name('settings.tickets.discounts.store');
+        Route::put('/discounts/{discount}', [TicketingDiscountController::class, 'update'])
+            ->whereUuid('discount')->name('settings.tickets.discounts.update');
+        Route::delete('/discounts/{discount}', [TicketingDiscountController::class, 'destroy'])
+            ->whereUuid('discount')->name('settings.tickets.discounts.destroy');
         Route::get('/team', [TicketingTeamController::class, 'index'])->name('settings.tickets.team');
         Route::post('/team/invitations', [TicketingTeamController::class, 'invite'])
             ->name('settings.tickets.team.invite');
@@ -948,9 +960,10 @@ Route::group(['middleware' => ['auth']], function (): void {
     ], function (): void {
         Route::get('/options', [ProjectPlanExportController::class, 'options'])
             ->name('projects.plans.options');
-        Route::get('/event-plan', [ProjectPlanExportController::class, 'eventPlan'])
+        // POST, wenn für den Export eine eigene Logo-Datei mitgeschickt wird
+        Route::match(['get', 'post'], '/event-plan', [ProjectPlanExportController::class, 'eventPlan'])
             ->name('projects.plans.event-plan');
-        Route::get('/artist-plan', [ProjectPlanExportController::class, 'artistPlan'])
+        Route::match(['get', 'post'], '/artist-plan', [ProjectPlanExportController::class, 'artistPlan'])
             ->name('projects.plans.artist-plan');
     });
     Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
@@ -2811,6 +2824,12 @@ Route::group(['middleware' => ['auth']], function (): void {
             ->name('shift.settings.update.work-time-accounting-enabled');
 
         Route::patch(
+            'shift-settings/updateShortNoticeMarking',
+            [ShiftSettingsController::class, 'updateShortNoticeMarking']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.short-notice-marking');
+
+        Route::patch(
             'shift-settings/updateNightTimes',
             [ShiftSettingsController::class, 'updateNightTimes']
         )->middleware('shift-settings-area:general,edit')
@@ -2940,6 +2959,17 @@ Route::group(['middleware' => ['auth']], function (): void {
         ->can('can view shift plan');
     Route::post('/users/{user}/shiftplan/export/monthly-pdf', [ExportPDFController::class, 'createUserShiftPlanPDF'])
         ->name('user.shiftplan.export.monthly-pdf');
+    // Wochenplan je Person (eine Kalenderwoche plus unverbindliche Vorschau auf die Folgewoche):
+    // einzeln aus dem Einsatzplan, als Sammel-PDF aus dem Schichtplan
+    Route::post(
+        '/users/{user}/shiftplan/export/weekly-pdf',
+        [\App\Http\Controllers\WeeklyPlanPdfExportController::class, 'single']
+    )->name('user.shiftplan.export.weekly-pdf');
+    Route::post(
+        '/shift-plan/export/weekly-plan-pdf',
+        [\App\Http\Controllers\WeeklyPlanPdfExportController::class, 'bulk']
+    )->name('shift.plan.export.weekly-plan.pdf')
+        ->can('can view shift plan');
     // The constraint mirrors StoredFileName::PATTERN so the parameter cannot
     // escape the pdf/ directory.
     Route::get(
@@ -4424,6 +4454,13 @@ Route::group(['middleware' => ['auth']], function (): void {
         '/committed-shift-changes/acknowledge-all',
         [ShiftPlanRequestController::class, 'acknowledgeAll']
     )->name('committed-shift-changes.acknowledge-all')
+        ->can('approve-shift-plan-requests');
+
+    // Grund einer kurzfristigen Änderung (nach der Stichzeit am Vortag) festhalten
+    Route::patch(
+        '/committed-shift-changes/{change}/short-notice-reason',
+        [ShiftPlanRequestController::class, 'updateShortNoticeReason']
+    )->name('committed-shift-changes.short-notice-reason')
         ->can('approve-shift-plan-requests');
 
     // Excel-Export der Änderungsübersicht (Filter wie die Liste, optional Zeitraum)

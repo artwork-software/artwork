@@ -717,6 +717,11 @@ class ShiftRuleService
             'averageWeeklyHours',
             'nightWorkMaxHours',
             'minFreeDaysPerWeek',
+            'weeklyPlanCommitDeadline',
+            'halfDayOffMaxHours',
+            'restTimeBetweenShiftsOnDay',
+            'freeDayAfterWorkOnDate',
+            'freeDayAnnouncementLeadTime',
         ];
     }
 
@@ -737,7 +742,13 @@ class ShiftRuleService
      */
     public static function ruleTypesWithoutValue(): array
     {
-        return ['halfDayOffOnSpecialDay', 'workOnSunday', 'workOnHoliday'];
+        return [
+            'halfDayOffOnSpecialDay',
+            'workOnSunday',
+            'workOnHoliday',
+            'weeklyPlanCommitDeadline',
+            'freeDayAfterWorkOnDate',
+        ];
     }
 
     /**
@@ -805,6 +816,7 @@ class ShiftRuleService
             'shift_rule' => $violation->shiftRule ? [
                 'name' => $violation->shiftRule->name,
                 'trigger_type' => $violation->shiftRule->trigger_type,
+                'config' => $violation->shiftRule->config,
                 'description' => $violation->shiftRule->description,
                 'warning_color' => $violation->shiftRule->warning_color,
                 'default_compensation_days' => $violation->shiftRule->default_compensation_days,

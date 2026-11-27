@@ -207,3 +207,66 @@ test('formatViolationMeasure falls back to the rule trigger type', () => {
         ''
     );
 });
+
+test('config fields: defaults, month-day conversion and rule value of config-only types', async () => {
+    const {
+        defaultRuleConfig,
+        displayToMonthDay,
+        monthDayToDisplay,
+        ruleTypeConfigFields,
+    } = await import('../../resources/js/Pages/ShiftWarnings/ruleTypes.js');
+
+    assert.equal(defaultRuleConfig('maxWorkingHoursOnDay'), null);
+    assert.deepEqual(defaultRuleConfig('weeklyPlanCommitDeadline'), { weekday: 4, time: '14:00', weeks_ahead: 1 });
+    assert.deepEqual(defaultRuleConfig('minFreeDaysPerWeek'), { workdays_only: false, excluded_dates: [] });
+    assert.deepEqual(ruleTypeConfigFields('unknownType'), []);
+    // Listen-Standardwerte werden kopiert, nicht geteilt
+    assert.notEqual(defaultRuleConfig('minFreeDaysPerWeek').excluded_dates, defaultRuleConfig('minFreeDaysPerWeek').excluded_dates);
+
+    assert.equal(monthDayToDisplay('05-01'), '01.05.');
+    assert.equal(monthDayToDisplay(null), '');
+    assert.equal(displayToMonthDay('1.5.'), '05-01');
+    assert.equal(displayToMonthDay('24.12'), '12-24');
+    assert.equal(displayToMonthDay(' 01.05. '), '05-01');
+    // Nicht lesbare Eingabe bleibt stehen, damit der Server sie meldet
+    assert.equal(displayToMonthDay('1. Mai'), '1. Mai');
+
+    assert.equal(formatRuleValue({ trigger_type: 'weeklyPlanCommitDeadline', config: null }, t), 'Thursday 14:00');
+    assert.equal(
+        formatRuleValue({ trigger_type: 'weeklyPlanCommitDeadline', config: { weekday: 2, time: '10:30' } }, t),
+        'Tuesday 10:30'
+    );
+    assert.equal(
+        formatRuleValue({ trigger_type: 'freeDayAfterWorkOnDate', config: { worked: '12-24', free: '05-01' } }, t),
+        '24.12. → 01.05.'
+    );
+    assert.equal(formatRuleValue({ trigger_type: 'restTimeBetweenShiftsOnDay', individual_number_value: 4 }, t), '4 h');
+});
+
+test('violation measure of the new rule types', () => {
+    assert.equal(
+        formatViolationMeasure({ violation_data: { type: 'weekly_plan_commit_deadline', week: 49, open_shifts: 3, deadline: '2026-11-26 14:00' } }, t),
+        'CW 49: 3 shifts not binding, deadline 26.11.2026 14:00'
+    );
+    assert.equal(
+        formatViolationMeasure({ violation_data: { type: 'free_day_after_work_on_date', worked_date: '2026-12-24', free_date: '2027-05-01' } }, t),
+        'Scheduled on 01.05.2027 after working on 24.12.2026'
+    );
+    assert.equal(
+        formatViolationMeasure({ violation_data: { type: 'free_day_announcement', lead_days: 5, min_required: 14 } }, t),
+        'Granted 5 days in advance, min. 14 days'
+    );
+    // Arbeitszeit am halben freien Tag und geteilter Dienst nutzen die allgemeinen Formate
+    assert.equal(
+        formatViolationMeasure({ violation_data: { type: 'half_day_off_max_hours', planned_hours: 5, max_allowed: 4 } }, t),
+        '5 h of max. 4 h'
+    );
+    assert.equal(
+        formatViolationMeasure({ violation_data: { type: 'rest_time_between_shifts_on_day', rest_hours: 2, min_required: 4 } }, t),
+        '2 h of min. 4 h'
+    );
+    assert.equal(
+        formatViolationMeasure({ shift_rule: { trigger_type: 'halfDayOffOnSpecialDay' }, violation_data: { reason: 'half_day_off_on_special_day', on_sunday: true } }, t),
+        'Half day off on a Sunday'
+    );
+});

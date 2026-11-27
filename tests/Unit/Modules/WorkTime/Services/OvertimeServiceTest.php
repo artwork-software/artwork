@@ -3,6 +3,7 @@
 namespace Tests\Unit\Modules\WorkTime\Services;
 
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\WorkTime\Models\OvertimePayout;
 use Artwork\Modules\WorkTime\Models\UserOvertime;
@@ -359,5 +360,80 @@ final class OvertimeServiceTest extends TestCase
                 $user->id
             )->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
         );
+    }
+
+    #[Test]
+    public function period_in_calendar_weeks_ends_on_the_sunday_of_the_nth_following_week(): void
+    {
+        // NV Bühne § 64 Abs. 5: Ausgleich bis zum Ende der sechsten folgenden Kalenderwoche
+        $user = User::factory()->create();
+        UserContractAssign::factory()->create([
+            'user_id' => $user->id,
+            'overtime_rule_active' => true,
+            'overtime_compensation_period' => 6,
+            'overtime_compensation_period_unit' => OvertimeService::PERIOD_UNIT_CALENDAR_WEEKS,
+        ]);
+        $user = $user->fresh();
+        // Mittwoch und Sonntag derselben Kalenderwoche: gleiche Frist
+        $wednesday = Carbon::now()->startOfDay()->subWeek()->startOfWeek(Carbon::MONDAY)->addDays(2);
+        $sunday = $wednesday->copy()->addDays(4);
+        $this->booking($user, $wednesday, 60);
+        $this->booking($user, $sunday, 30);
+
+        $this->service->recomputeForUser($user);
+
+        $expected = $sunday->copy()->addWeeks(6)->toDateString();
+        $entries = UserOvertime::where('user_id', $user->id)->orderBy('date')->get();
+        $this->assertCount(2, $entries);
+        $this->assertSame($expected, $entries[0]->deadline->toDateString());
+        $this->assertSame($expected, $entries[1]->deadline->toDateString());
+        $this->assertTrue($entries[0]->deadline->isSunday());
+
+        $settings = $this->service->ruleSettingsToday($user);
+        $this->assertSame(6, $settings['compensation_period']);
+        $this->assertSame(OvertimeService::PERIOD_UNIT_CALENDAR_WEEKS, $settings['compensation_period_unit']);
+    }
+
+    #[Test]
+    public function period_without_unit_stays_in_days(): void
+    {
+        $user = $this->userWithContract(period: 6);
+        $day = Carbon::now()->startOfDay();
+        $this->booking($user, $day, 60);
+
+        $this->service->recomputeForUser($user);
+
+        $entry = UserOvertime::where('user_id', $user->id)->sole();
+        $this->assertSame($day->copy()->addDays(6)->toDateString(), $entry->deadline->toDateString());
+        $this->assertSame(
+            OvertimeService::PERIOD_UNIT_DAYS,
+            $this->service->ruleSettingsToday($user)['compensation_period_unit']
+        );
+    }
+
+    #[Test]
+    public function unit_comes_from_the_template_when_the_assignment_has_no_own_period(): void
+    {
+        $template = UserContract::factory()->create([
+            'overtime_rule_active' => true,
+            'overtime_compensation_period' => 2,
+            'overtime_compensation_period_unit' => OvertimeService::PERIOD_UNIT_CALENDAR_WEEKS,
+        ]);
+        $user = User::factory()->create();
+        UserContractAssign::factory()->create([
+            'user_id' => $user->id,
+            'user_contract_id' => $template->id,
+            'overtime_rule_active' => true,
+            'overtime_compensation_period' => null,
+            'overtime_compensation_period_unit' => null,
+        ]);
+        $user = $user->fresh();
+        $monday = Carbon::now()->startOfDay()->subWeek()->startOfWeek(Carbon::MONDAY);
+        $this->booking($user, $monday, 60);
+
+        $this->service->recomputeForUser($user);
+
+        $entry = UserOvertime::where('user_id', $user->id)->sole();
+        $this->assertSame($monday->copy()->addDays(6)->addWeeks(2)->toDateString(), $entry->deadline->toDateString());
     }
 }

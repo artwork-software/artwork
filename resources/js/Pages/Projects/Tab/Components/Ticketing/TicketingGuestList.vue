@@ -9,19 +9,29 @@
             <ChoiceSegments v-model="filter" :label="$t('Show')" :options="filterOptions" />
         </div>
 
+        <!-- Per price class: how many, and what they brought in -->
+        <ul v-if="byCategory.length > 0" class="flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
+            <li v-for="category in byCategory" :key="category.name">
+                <span class="font-medium text-text">{{ category.name }}</span>
+                · {{ $t('{count} tickets', { count: category.count }, category.count) }}
+                · <span class="tabular-nums">{{ formatEuro(category.paidCents) }}</span>
+            </li>
+        </ul>
+
         <div class="min-h-0 flex-1 overflow-y-auto rounded-lg border border-border-subtle bg-surface">
             <table class="w-full border-collapse text-[13px]">
                 <thead class="sticky top-0 z-10 bg-surface shadow-[0_1px_0_var(--color-border-hairline)]">
                     <tr class="font-lexend text-xs text-text-subtle">
                         <th class="px-4 py-2.5 text-left font-medium">{{ $t('Guest') }}</th>
                         <th class="px-4 py-2.5 text-left font-medium">{{ $t('Price class') }}</th>
+                        <th class="px-4 py-2.5 text-right font-medium">{{ $t('Paid') }}</th>
                         <th class="px-4 py-2.5 text-left font-medium">{{ $t('Code') }}</th>
                         <th class="px-4 py-2.5 text-right font-medium"><span class="sr-only">{{ $t('Status') }}</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-if="shown.length === 0">
-                        <td colspan="4" class="px-4 py-8 text-center text-text-subtle">
+                        <td colspan="5" class="px-4 py-8 text-center text-text-subtle">
                             {{ tickets.length === 0 ? $t('No tickets sold yet.') : $t('No results') }}
                         </td>
                     </tr>
@@ -34,8 +44,17 @@
                         <td class="px-4 py-2.5">
                             {{ ticket.categoryName }}
                             <span v-if="ticket.reductionName" class="text-text-subtle">· {{ ticket.reductionName }}</span>
-                            <BaseChip v-if="ticket.requiresProof" variant="warning" class="ml-1.5">{{ $t('Check proof') }}</BaseChip>
+                            <span v-if="hasBasis(ticket)" class="mt-1 flex flex-wrap gap-1">
+                                <BaseChip v-if="ticket.pass" variant="accent">{{ ticket.pass.name }}</BaseChip>
+                                <BaseChip v-if="ticket.packageName">{{ ticket.packageName }}</BaseChip>
+                                <BaseChip v-if="ticket.promotionName" variant="success">{{ ticket.promotionName }}</BaseChip>
+                                <BaseChip v-if="ticket.couponCode">{{ $t('Code {code}', { code: ticket.couponCode }) }}</BaseChip>
+                                <BaseChip v-if="ticket.requiresProof" variant="warning">{{ $t('Check proof') }}</BaseChip>
+                            </span>
                             <span v-if="seatOf(ticket)" class="block text-xs text-text-subtle">{{ seatOf(ticket) }}</span>
+                        </td>
+                        <td class="whitespace-nowrap px-4 py-2.5 text-right tabular-nums" :class="ticket.status !== 'valid' && 'text-text-subtle line-through'">
+                            {{ formatEuro(ticket.paidCents) }}
                         </td>
                         <td class="whitespace-nowrap px-4 py-2.5 font-mono text-xs tabular-nums text-text-muted">{{ ticket.code }}</td>
                         <td class="whitespace-nowrap px-4 py-2.5 text-right">
@@ -70,7 +89,7 @@ import { IconCheck, IconLoader2, IconSearch } from '@tabler/icons-vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
 import ChoiceSegments from '@/Pages/Settings/Tickets/ChoiceSegments.vue'
 import { showAppToast } from '@/Helper/appToast'
-import { formatTime } from '@/Helper/ticketingFormat.js'
+import { formatEuro, formatTime } from '@/Helper/ticketingFormat.js'
 
 /* The guest list of one date: searchable, and — with the admission permission — the door itself.
    Check-ins go to Artwork-Tickets at once; the row changes when tickets confirms. */
@@ -95,6 +114,23 @@ const filterOptions = computed(() => [
     { value: 'in', label: t('Checked in ({count})', { count: valid.value.filter((ticket) => ticket.checkedInAt).length }) },
 ])
 
+/** Valid tickets per price class, the most booked first; refunds count for nothing. */
+const byCategory = computed(() => {
+    const totals = new Map()
+    for (const ticket of valid.value) {
+        const entry = totals.get(ticket.categoryName) ?? { name: ticket.categoryName, count: 0, paidCents: 0 }
+        entry.count += 1
+        entry.paidCents += ticket.paidCents
+        totals.set(ticket.categoryName, entry)
+    }
+    return [...totals.values()].sort((a, b) => b.count - a.count)
+})
+
+/** What the price rests on beyond the class: a card, a package, a discount, a proof. */
+function hasBasis(ticket) {
+    return Boolean(ticket.pass || ticket.packageName || ticket.promotionName || ticket.couponCode || ticket.requiresProof)
+}
+
 const shown = computed(() => {
     const needle = search.value.trim().toLocaleLowerCase()
     const compactNeedle = needle.replace(/\s+/g, '')
@@ -104,7 +140,7 @@ const shown = computed(() => {
         if (filter.value === 'in' && !ticket.checkedInAt) return false
         if (needle === '') return true
 
-        return [ticket.holderName, ticket.email].some((value) => value?.toLocaleLowerCase().includes(needle))
+        return [ticket.holderName, ticket.email, ticket.pass?.name, ticket.couponCode].some((value) => value?.toLocaleLowerCase().includes(needle))
             || ticket.code.toLocaleLowerCase().includes(compactNeedle)
     })
 })

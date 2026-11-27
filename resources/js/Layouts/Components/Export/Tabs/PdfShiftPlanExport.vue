@@ -15,7 +15,7 @@
             <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
                 <BaseInput id="shiftPlanTitle" v-model="pdf.title" :label="$t('Heading')" />
 
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <button
                         v-for="mode in exportModes"
                         :key="mode.id"
@@ -104,6 +104,10 @@
                         {{ $t('Period') }}: {{ formatDate(pdf.start) }} – {{ formatDate(pdf.end) }}
                     </p>
                 </div>
+
+                <p v-if="pdf.exportMode === 'weekly_plan'" class="text-xs text-text-subtle">
+                    {{ $t('The weekly plan covers the calendar week of the start date (Monday to Sunday), followed by a non-binding preview of the week after.') }}
+                </p>
 
                 <p v-if="workerMatrixRangeTooLong" class="text-xs text-danger">
                     {{ $t('Days are shown as columns and workers as rows. The maximum export period is 31 days.') }}
@@ -198,14 +202,18 @@
 
             <!-- Craft filter (personnel export) -->
             <section
-                v-if="pdf.exportMode === 'worker_matrix' && crafts.length > 0"
+                v-if="isPersonMode && crafts.length > 0"
                 class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4"
             >
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-sm font-semibold text-text">{{ $t('Which shifts should be included?') }}</h2>
+                        <h2 class="text-sm font-semibold text-text">
+                            {{ pdf.exportMode === 'weekly_plan' ? $t('Which crafts should be included?') : $t('Which shifts should be included?') }}
+                        </h2>
                         <p class="mt-1 text-xs text-text-subtle">
-                            {{ $t('This filters the shifts printed for each person. Individual times and day services remain visible when enabled below.') }}
+                            {{ pdf.exportMode === 'weekly_plan'
+                                ? $t('A weekly plan is created for the people assigned to the selected crafts. Their plan always shows all of their shifts.')
+                                : $t('This filters the shifts printed for each person. Individual times and day services remain visible when enabled below.') }}
                         </p>
                     </div>
                     <button
@@ -286,12 +294,41 @@
                 </div>
             </section>
 
+            <!-- Wochenplan je Person: Personengruppen und leere Pläne -->
+            <section
+                v-if="pdf.exportMode === 'weekly_plan'"
+                class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-5"
+            >
+                <div>
+                    <h3 class="text-sm font-semibold text-text">{{ $t('Weekly plan per person') }}</h3>
+                    <p v-if="pdf.errors.workers" class="mt-1 text-xs text-danger">{{ pdf.errors.workers }}</p>
+                    <p class="mt-1 text-xs text-text-subtle">
+                        {{ $t('One page per person with shifts, individual times, days off and absences of the week. Absences are shown without their kind.') }}
+                    </p>
+                </div>
+                <div>
+                    <div class="mb-2 text-sm font-medium text-text-muted">{{ $t('Worker types') }}</div>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        <label v-for="workerType in workerTypes" :key="workerType.id" class="flex items-center gap-2 text-sm text-text-muted">
+                            <input v-model="pdf.worker_types" :value="workerType.id" type="checkbox" class="input-checklist" />
+                            {{ workerType.label }}
+                        </label>
+                    </div>
+                </div>
+                <label class="flex items-center gap-2 text-sm text-text-muted">
+                    <input v-model="pdf.include_empty_workers" type="checkbox" class="input-checklist" />
+                    {{ $t('Show workers without entries') }}
+                </label>
+            </section>
+
             <div class="rounded-xl border border-accent-200 bg-accent-50/70 p-4">
                 <div class="flex items-start gap-x-3">
                     <PropertyIcon name="IconExclamationCircle" class="size-5 min-h-5 min-w-5 text-accent-600"/>
                     <p class="text-sm text-accent-600">
                         {{ pdf.exportMode === 'rooms'
                             ? $t('The export is prefilled with your current shift plan view. Time period and filters can be adjusted below before exporting. Each calendar week is placed on its own page.')
+                            : pdf.exportMode === 'weekly_plan'
+                            ? $t('The weekly plan creates one page per person. Shifts that are not yet binding are marked as such, and the following week is a non-binding preview.')
                             : $t('Personnel export creates one row per selected person. Craft filters affect shifts, worker types affect people, and the content options affect the entries shown in the cells.') }}
                     </p>
                 </div>
@@ -434,6 +471,11 @@ const exportModes = [
         title: $t('Personnel overview'),
         description: $t('Workers are shown as rows with rooms, individual times and day services.'),
     },
+    {
+        id: 'weekly_plan',
+        title: $t('Weekly plan per person'),
+        description: $t('One page per person for one calendar week, with a preview of the following week.'),
+    },
 ]
 const periodModes = [
     { id: 'date', title: $t('By date') },
@@ -564,6 +606,8 @@ const rangeDays = computed(() => {
     const end = new Date(`${pdf.end}T00:00:00`)
     return Math.round((end.getTime() - start.getTime()) / (24 * 3600 * 1000)) + 1
 })
+// Personalübersicht und Wochenplan wählen Personen (Gewerke, Personengruppen), nicht Räume
+const isPersonMode = computed(() => pdf.exportMode === 'worker_matrix' || pdf.exportMode === 'weekly_plan')
 const workerMatrixRangeTooLong = computed(
     () => pdf.exportMode === 'worker_matrix' && rangeDays.value > 31
 )
@@ -630,6 +674,11 @@ const previewRows = computed(() => pdf.exportMode === 'rooms'
         { label: $t('Main hall'), cells: [$t('Event + shifts'), '—', $t('Event + shifts')] },
         { label: $t('Studio'), cells: ['—', $t('Event + shifts'), $t('Shifts')] },
     ]
+    : pdf.exportMode === 'weekly_plan'
+    ? [
+        { label: $t('Selected week'), cells: [$t('Shift · room'), $t('Day off'), $t('Shift · room')] },
+        { label: $t('Preview of the following week'), cells: [$t('Shift · room'), '—', $t('Absent')] },
+    ]
     : [
         { label: $t('Person A'), cells: [$t('Shift · room'), $t('Day service'), '—'] },
         { label: $t('Person B'), cells: [$t('Individual time'), $t('Shift · room'), $t('Shift · room')] },
@@ -640,6 +689,12 @@ const exportSummary = computed(() => pdf.exportMode === 'rooms'
         rows: $t('Rooms and areas from the current shift plan view'),
         columns: $t('Days in the selected period'),
         contents: $t('Events and shifts; the craft selection filters shifts only'),
+    }
+    : pdf.exportMode === 'weekly_plan'
+    ? {
+        rows: $t('One page per person: the selected week and a preview of the following week'),
+        columns: $t('Monday to Sunday'),
+        contents: $t('Shifts, individual times, day services, days off and absences'),
     }
     : {
         rows: $t('People from the selected worker types'),
@@ -652,13 +707,13 @@ const exportDisabled = computed(() =>
     !!dateRangeError.value ||
     (periodMode.value === 'calendar_week' && kwSelectionInvalid.value) ||
     workerMatrixRangeTooLong.value ||
-    (pdf.exportMode === 'worker_matrix' && crafts.length > 0 && selectedCraftIds.value.length === 0) ||
-    (pdf.exportMode === 'worker_matrix' && pdf.worker_types.length === 0) ||
+    (isPersonMode.value && crafts.length > 0 && selectedCraftIds.value.length === 0) ||
+    (isPersonMode.value && pdf.worker_types.length === 0) ||
     pdf.processing
 )
 
 // Die Personalübersicht gibt es nur in A3 und A4 (WorkerShiftPlanPdfExportRequest).
-const availablePaperSizes = computed(() => pdf.exportMode === 'worker_matrix'
+const availablePaperSizes = computed(() => isPersonMode.value
     ? paperSizes.filter((paperSize) => paperSize.id !== 'a5')
     : paperSizes
 )
@@ -673,6 +728,10 @@ const selectExportMode = (mode: string) => {
     pdf.exportMode = mode
     if (mode === 'worker_matrix') {
         selectedPaperSize.value = paperSizes[0]
+    }
+    // Den Wochenplan gibt es wie die Personalübersicht nur in A3 und A4
+    if (mode === 'weekly_plan' && selectedPaperSize.value.id === 'a5') {
+        selectedPaperSize.value = paperSizes[1]
     }
 }
 
@@ -693,7 +752,7 @@ const createPdf = () => {
     pdf.paperSize = selectedPaperSize.value.id
     pdf.paperOrientation = selectedPaperOrientation.value.id
 
-    if (pdf.exportMode === 'worker_matrix') {
+    if (isPersonMode.value) {
         // Empty array = no craft restriction (all crafts selected).
         pdf.craft_ids = allCraftsSelected.value ? [] : [...selectedCraftIds.value]
     } else {
@@ -705,6 +764,8 @@ const createPdf = () => {
 
     const routeName = pdf.exportMode === 'worker_matrix'
         ? 'shift.plan.export.worker-matrix.pdf'
+        : pdf.exportMode === 'weekly_plan'
+        ? 'shift.plan.export.weekly-plan.pdf'
         : 'shift.plan.export.pdf'
 
     pdf.transform((data: Record<string, unknown>) => {
@@ -712,12 +773,26 @@ const createPdf = () => {
         // dann gar nicht mitsenden — der Controller interpretiert vorhandene
         // leere Arrays als "Dimension löschen" und würde den gespeicherten
         // Daily-Filter des Users für den Export nullen.
-        if (data.exportMode !== 'worker_matrix' && !config.filterOptions) {
+        if (data.exportMode === 'rooms' && !config.filterOptions) {
             const { room_ids, area_ids, event_type_ids, ...rest } = data
             return rest
         }
         return data
     })
+
+    if (pdf.exportMode === 'weekly_plan') {
+        // Der Wochenplan hat eine Obergrenze an Personen: Bei einem Fehler bleibt der Dialog offen und
+        // zeigt die Meldung, statt sich ohne Download zu schließen.
+        pdf.post(route(routeName), {
+            preserveScroll: true,
+            onFinish: () => {
+                if (!pdf.hasErrors) {
+                    emits('close')
+                }
+            },
+        })
+        return
+    }
 
     pdf.post(route(routeName), { preserveScroll: true })
     emits('close')

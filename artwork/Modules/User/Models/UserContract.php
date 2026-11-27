@@ -34,6 +34,7 @@ class UserContract extends Model
         'use_three_month_average_for_target_reduction',
         'overtime_rule_active',
         'overtime_compensation_period',
+        'overtime_compensation_period_unit',
         'description',
         'free_sundays_per_season',
         'days_off_first_26_weeks',

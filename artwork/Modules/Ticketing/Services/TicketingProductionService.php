@@ -9,6 +9,7 @@ use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingProduction;
 use Artwork\Modules\Ticketing\Models\TicketingProductionImage;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -47,10 +48,17 @@ class TicketingProductionService
     }
 
     /**
-     * @param array{title: string|null, description: string|null, reduction_type_ids: list<string>|null} $data
+     * Gruppen und "nur im Paket" führt tickets; hier bleiben sie nur, bis die Produktion dort ist.
      * Ein neues Titelbild ($hero oder das weitere Bild $coverImageId) schiebt das bisherige zu den
      * weiteren Bildern, außer $removeHero nimmt es weg.
      *
+     * @param array{
+     *     title: string|null,
+     *     description: string|null,
+     *     reduction_type_ids: list<string>|null,
+     *     group_ids?: list<string>,
+     *     package_only?: bool,
+     * } $data
      * @param list<UploadedFile> $images weitere Bilder, hinten angefügt
      * @param list<int> $removeImageIds weitere Bilder, die herausfallen
      */
@@ -64,7 +72,8 @@ class TicketingProductionService
         ?int $coverImageId = null,
     ): TicketingProduction {
         $production = $this->for($project);
-        $production->fill($data);
+        $membership = Arr::only($data, ['group_ids', 'package_only']);
+        $production->fill($production->production_id ? Arr::except($data, array_keys($membership)) : $data);
         $previousHero = $production->hero_path;
         $cover = $coverImageId === null ? null : $production->images()->findOrFail($coverImageId);
 
@@ -106,7 +115,7 @@ class TicketingProductionService
         }
 
         if ($production->production_id && ($connection = $this->connections->current())) {
-            $this->push($production, $connection, $removeHero, $removedRemoteIds);
+            $this->push($production, $connection, $removeHero, $removedRemoteIds, $membership);
         }
 
         return $production;
@@ -141,6 +150,8 @@ class TicketingProductionService
         $response = $this->tickets->put($connection, '/productions', $this->payload($production, $venueId));
 
         $production->production_id = $response['id'];
+        $production->group_ids = null;
+        $production->package_only = null;
         $production->save();
         $this->pushHero($production, $connection, false);
         $this->pushImages($production, $connection, []);
@@ -164,14 +175,22 @@ class TicketingProductionService
         return $this->tickets->get($connection, "/productions/{$production->production_id}");
     }
 
-    /** @param list<string> $removedRemoteIds */
+    /**
+     * @param list<string> $removedRemoteIds
+     * @param array{group_ids?: list<string>, package_only?: bool} $membership
+     */
     private function push(
         TicketingProduction $production,
         TicketingConnection $connection,
         bool $removeHero,
         array $removedRemoteIds,
+        array $membership,
     ): void {
-        $this->tickets->put($connection, '/productions', $this->payload($production, null));
+        $this->tickets->put($connection, '/productions', [
+            ...$this->payload($production, null),
+            'groupIds' => $membership['group_ids'] ?? null,
+            'packageOnly' => $membership['package_only'] ?? null,
+        ]);
         $this->pushHero($production, $connection, $removeHero);
         $this->pushImages($production, $connection, $removedRemoteIds);
     }
@@ -245,6 +264,8 @@ class TicketingProductionService
             'description' => $production->description ?? $project->description ?? '',
             'venueId' => $venueId,
             'reductionTypeIds' => $production->reduction_type_ids,
+            'groupIds' => $production->group_ids,
+            'packageOnly' => $production->package_only,
         ];
     }
 }

@@ -1090,6 +1090,7 @@ class UserController extends Controller
         return [
             'rule_active' => $rule['rule_active'],
             'compensation_period' => $rule['compensation_period'],
+            'compensation_period_unit' => $rule['compensation_period_unit'],
             'rule_without_period' => $rule['rule_active'] && $rule['compensation_period'] === null,
             'balance_minutes' => $balance,
             'balance_formatted' => $signed($balance),

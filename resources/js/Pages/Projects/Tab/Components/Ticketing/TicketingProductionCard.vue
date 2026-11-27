@@ -72,8 +72,45 @@
 
                     <div v-if="reductions.length">
                         <span class="font-lexend mb-1.5 block text-xs font-medium text-[#3F424A]">{{ $t('Reductions granted') }}</span>
-                        <TicketingReductionChips v-model="grantedIds" :reductions="reductions" :label="$t('Reductions granted')" />
+                        <TicketingChipToggles v-model="grantedIds" :items="reductions" :label="$t('Reductions granted')" />
                         <p class="mt-2 text-xs leading-[18px] text-text-subtle">{{ $t('Reductions are defined house-wide in the ticketing settings; here you choose which ones this production grants.') }}</p>
+                    </div>
+
+                    <div v-if="groups.length">
+                        <span class="font-lexend mb-1.5 block text-xs font-medium text-[#3F424A]">{{ $t('Production groups') }}</span>
+                        <TicketingChipToggles v-model="groupIds" :items="groups" :label="$t('Production groups')" :disabled="!canManageTicketing" />
+                        <p class="mt-2 text-xs leading-[18px] text-text-subtle">{{ $t('Passes, subscriptions and discounts of a group count for this project right away.') }}</p>
+                        <p v-if="!canManageTicketing" class="mt-1 text-xs leading-[18px] text-text-subtle">{{ $t('Only people who manage Artwork-Tickets can change production groups and package sales.') }}</p>
+                    </div>
+
+                    <div class="grid gap-2">
+                        <span class="font-lexend block text-xs font-medium text-[#3F424A]">{{ $t('Discounts & packages') }}</span>
+                        <ul v-if="production.discounts.length" class="divide-y divide-border-hairline rounded-md border border-border-subtle">
+                            <li v-for="discount in production.discounts" :key="discount.id">
+                                <Link :href="route('settings.tickets.discounts', { discount: discount.id })"
+                                      class="group flex items-center gap-3 px-3 py-2 hover:bg-surface-sunken/60">
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block truncate text-[13px] font-medium text-text group-hover:underline">{{ discount.name }}</span>
+                                        <span class="block truncate text-xs text-text-subtle">{{ [discountWorth(discount, t), discountPeriod(discount, t), reach(discount)].filter(Boolean).join(' · ') }}</span>
+                                    </span>
+                                    <BaseChip v-if="discount.status === 'paused'" variant="neutral">{{ $t('Paused') }}</BaseChip>
+                                    <BaseChip v-else-if="discount.period === 'ended'" variant="neutral">{{ $t('Expired') }}</BaseChip>
+                                </Link>
+                            </li>
+                        </ul>
+                        <p class="text-xs leading-[18px] text-text-subtle">
+                            {{ $t('Several dates together at one price, or a discount from a number of dates, are set under Discounts & packages.') }}
+                            <Link v-if="production.productionId" :href="route('settings.tickets.discounts', { package: production.productionId })"
+                                  class="text-text underline underline-offset-2">{{ $t('Create a package for this project') }}</Link>
+                        </p>
+                        <!-- Without a package the dates could not be sold online at all. -->
+                        <ArtworkBaseToggle v-if="production.packageOnly || production.discounts.some((discount) => discount.kind === 'package')"
+                                           id="ticketing-production-package-only" v-model="form.packageOnly" :disabled="!canManageTicketing"
+                                           :label="$t('Sell the dates online only in packages')" is-small />
+                        <div v-if="packageMissing" class="flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
+                            <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
+                            <span>{{ $t('No package for this project is on sale right now, so its dates cannot be booked online.') }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -92,23 +129,44 @@
 import { computed, ref, watch } from 'vue'
 import axios from 'axios'
 import { useI18n } from 'vue-i18n'
-import { IconChevronRight, IconExternalLink, IconPhoto, IconPlus, IconStar, IconX } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconChevronRight, IconExternalLink, IconPhoto, IconPlus, IconStar, IconX } from '@tabler/icons-vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseRichTextEditor from '@/Artwork/Inputs/BaseRichTextEditor.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
-import TicketingReductionChips from '@/Pages/Projects/Tab/Components/Ticketing/TicketingReductionChips.vue'
+import TicketingChipToggles from '@/Pages/Projects/Tab/Components/Ticketing/TicketingChipToggles.vue'
+import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
 import { grantedIdsOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
+import { discountPeriod, discountWorth } from '@/Pages/Settings/Tickets/discounts.js'
+import { isRunningPackage } from '@/Pages/Settings/Tickets/packageReach.js'
+import { Link } from '@inertiajs/vue3'
 
 const props = defineProps({
     projectId: { type: Number, required: true },
     production: { type: Object, required: true },
     reductions: { type: Array, required: true },
+    /** The house's Ticketprojekt-Gruppen to pick from. */
+    groups: { type: Array, required: true },
     canEdit: { type: Boolean, default: true },
+    /** Groups and package-only reach beyond the project, so they need the ticketing permission. */
+    canManageTicketing: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['saved'])
 
 const { t } = useI18n()
+
+const groupNames = computed(() => new Map(props.groups.map((group) => [group.id, group.name])))
+
+/** Why a discount counts here when the project is not named in it: all productions, or a group. */
+function reach(discount) {
+    if (discount.allEvents) return t('All productions')
+    if (discount.eventIds.includes(props.production.productionId)) return null
+    const names = discount.groupIds.map((id) => groupNames.value.get(id)).filter(Boolean)
+    return names.length ? t('via {groups}', { groups: names.join(', ') }) : null
+}
+
+/* Sold only in packages, as saved: without a package on sale, tickets refuses every online booking. */
+const packageMissing = computed(() => props.production.packageOnly && !props.production.discounts.some(isRunningPackage))
 
 const open = ref(!props.production.linked)
 const saving = ref(false)
@@ -116,8 +174,15 @@ const error = ref('')
 
 /* null reduction ids mean "the house defaults"; the form shows those as granted. */
 const grantedIds = ref(grantedIdsOf(props.production, props.reductions))
+const groupIds = ref([...props.production.groupIds])
 
-const form = ref({ title: props.production.title ?? '', description: props.production.description ?? '' })
+/* The fields as the inputs hold them. */
+const formOf = (production) => ({
+    title: production.title ?? '',
+    description: production.description ?? '',
+    packageOnly: production.packageOnly,
+})
+const form = ref(formOf(props.production))
 
 const heroKept = ref(true)
 const removedImageIds = ref([])
@@ -143,17 +208,23 @@ const room = computed(() => props.production.maxImages + 1 - (cover.value ? 1 : 
 
 const overlayButton = 'flex size-6 items-center justify-center rounded-md bg-surface/90 text-text-muted opacity-0 transition-opacity hover:text-text group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-accent-600 [@media(hover:none)]:opacity-100'
 
-const dirty = computed(() => form.value.title !== (props.production.title ?? '')
-    || form.value.description !== (props.production.description ?? '')
-    || JSON.stringify([...grantedIds.value].sort()) !== JSON.stringify([...grantedIdsOf(props.production, props.reductions)].sort())
+const sameIds = (left, right) => JSON.stringify([...left].sort()) === JSON.stringify([...right].sort())
+/* Membership and package-only are kept in tickets and can change there; only a change made here is sent. */
+const groupsChanged = computed(() => !sameIds(groupIds.value, props.production.groupIds))
+const packageOnlyChanged = computed(() => form.value.packageOnly !== props.production.packageOnly)
+
+const dirty = computed(() => JSON.stringify(form.value) !== JSON.stringify(formOf(props.production))
+    || !sameIds(grantedIds.value, grantedIdsOf(props.production, props.reductions))
+    || groupsChanged.value
     || !heroKept.value
     || (cover.value !== null && cover.value.kind !== 'hero')
     || newImages.value.length > 0
     || removedImageIds.value.length > 0)
 
 watch(() => props.production, (production) => {
-    form.value = { title: production.title ?? '', description: production.description ?? '' }
+    form.value = formOf(production)
     grantedIds.value = grantedIdsOf(production, props.reductions)
+    groupIds.value = [...production.groupIds]
     heroKept.value = true
     removedImageIds.value = []
     newImages.value.forEach((image) => URL.revokeObjectURL(image.url))
@@ -203,6 +274,8 @@ async function save() {
     body.append('title', form.value.title)
     body.append('description', form.value.description)
     body.append('reduction_type_ids', JSON.stringify(grantedIds.value))
+    if (groupsChanged.value) body.append('group_ids', JSON.stringify(groupIds.value))
+    if (packageOnlyChanged.value) body.append('package_only', form.value.packageOnly ? '1' : '0')
     /* A new cover moves the saved one into the further pictures unless it was removed. */
     if (props.production.heroUrl && !heroKept.value) body.append('remove_hero', '1')
     if (cover.value?.kind === 'saved') body.append('cover_image_id', cover.value.id)

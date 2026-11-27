@@ -32,6 +32,11 @@ final class ViolationMeasureFormatter
         'averageWeeklyHours' => 'Average weekly hours over a compensation period',
         'nightWorkMaxHours' => 'Daily maximum on days with night work',
         'minFreeDaysPerWeek' => 'Minimum whole free days per week',
+        'weeklyPlanCommitDeadline' => 'Weekly plan deadline',
+        'halfDayOffMaxHours' => 'Working time on a half day off',
+        'restTimeBetweenShiftsOnDay' => 'Rest time between two duties on the same day',
+        'freeDayAfterWorkOnDate' => 'Day off after work on a fixed date',
+        'freeDayAnnouncementLeadTime' => 'Announcement period for days off',
     ];
 
     public function __construct(private readonly ?string $locale = null)
@@ -132,6 +137,28 @@ final class ViolationMeasureFormatter
             );
         }
 
+        if (($data['type'] ?? null) === 'weekly_plan_commit_deadline') {
+            return $this->tr('CW {week}: {count} shifts not binding, deadline {date}', [
+                'week' => $data['week'] ?? '',
+                'count' => $data['open_shifts'] ?? 0,
+                'date' => self::dateTimeDe($data['deadline'] ?? null),
+            ]);
+        }
+
+        if (($data['type'] ?? null) === 'free_day_after_work_on_date') {
+            return $this->tr('Scheduled on {free} after working on {worked}', [
+                'free' => self::dateDe($data['free_date'] ?? null),
+                'worked' => self::dateDe($data['worked_date'] ?? null),
+            ]);
+        }
+
+        if (($data['type'] ?? null) === 'free_day_announcement') {
+            return $this->tr('Granted {days} days in advance, min. {min} days', [
+                'days' => $data['lead_days'] ?? 0,
+                'min' => $data['min_required'] ?? '',
+            ]);
+        }
+
         if (isset($data['planned_hours'], $data['max_allowed'])) {
             return $ofMax(self::number($data['planned_hours']) . ' h', self::number($data['max_allowed']) . ' h');
         }
@@ -175,7 +202,9 @@ final class ViolationMeasureFormatter
         }
 
         if ($type === 'halfDayOffOnSpecialDay' || ($data['reason'] ?? null) === 'half_day_off_on_special_day') {
-            return $this->tr('Half day off on a special day');
+            return !empty($data['on_sunday'])
+                ? $this->tr('Half day off on a Sunday')
+                : $this->tr('Half day off on a special day');
         }
 
         if ($type === 'workOnHoliday' || !empty($data['holiday_name'])) {
@@ -236,6 +265,19 @@ final class ViolationMeasureFormatter
         $minutes = (int) round(((float) $value - $hours) * 60);
 
         return sprintf('%02d:%02d', min($hours, 23), min($minutes, 59));
+    }
+
+    /** "YYYY-MM-DD HH:MM" -> "DD.MM.YYYY HH:MM" */
+    public static function dateTimeDe(mixed $value): string
+    {
+        if (!$value) {
+            return '';
+        }
+        try {
+            return Carbon::parse((string) $value)->format('d.m.Y H:i');
+        } catch (\Throwable) {
+            return (string) $value;
+        }
     }
 
     /** "YYYY-MM-DD" -> "DD.MM.YYYY" */

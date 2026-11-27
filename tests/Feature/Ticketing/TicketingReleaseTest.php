@@ -82,6 +82,7 @@ final class TicketingReleaseTest extends FeatureTestCase
                 'zones' => [['key' => 'parkett', 'name' => 'Parkett', 'capacity' => 300, 'defaultPriceCents' => 2900]],
             ]]]),
             self::TICKETS_URL . '/api/integration/v1/reductions' => Http::response(['reductions' => []]),
+            self::TICKETS_URL . '/api/integration/v1/production-groups' => Http::response(['groups' => [], 'productions' => []]),
             self::TICKETS_URL . '/api/integration/v1/productions' => Http::response(['id' => self::PRODUCTION_ID, 'status' => 'draft']),
             self::TICKETS_URL . '/api/integration/v1/productions/' . self::PRODUCTION_ID => Http::response([
                 'id' => self::PRODUCTION_ID, 'status' => 'published', 'title' => 'Hamlet', 'description' => null,
@@ -452,29 +453,89 @@ final class TicketingReleaseTest extends FeatureTestCase
     #[Test]
     public function the_production_draft_is_saved_and_pushed_once_linked(): void
     {
-        $this->fakeTickets();
         $reduction = '3b9f1a2c-0d4e-4f5a-8b6c-7d8e9f0a1b2c';
+        $group = '5d1e2f3a-4b5c-4d6e-8f7a-9b0c1d2e3f4a';
+        // Was tickets nach dem Speichern führt.
+        $this->fakeTickets([
+            self::TICKETS_URL . '/api/integration/v1/productions/' . self::PRODUCTION_ID => Http::response([
+                'id' => self::PRODUCTION_ID, 'status' => 'draft', 'shopUrl' => null, 'reductions' => [],
+                'groupIds' => [$group], 'packageOnly' => true,
+            ]),
+        ]);
 
         $this->postJson(route('projects.tabs.ticketing.production', $this->project), [
             'title' => 'Hamlet – Premiere',
             'description' => 'Shakespeare',
             'reduction_type_ids' => [$reduction],
-        ])->assertOk()->assertJsonPath('production.title', 'Hamlet – Premiere');
+            'group_ids' => [$group],
+            'package_only' => true,
+        ])->assertOk()
+            ->assertJsonPath('production.title', 'Hamlet – Premiere')
+            ->assertJsonPath('production.groupIds', [$group])
+            ->assertJsonPath('production.packageOnly', true);
 
         Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/productions'));
 
-        TicketingProduction::query()->where('project_id', $this->project->id)->update(['production_id' => self::PRODUCTION_ID]);
+        // Wie die Freigabe: angelegt, der Entwurf von Gruppen und Paket-Schalter ist in tickets.
+        TicketingProduction::query()->where('project_id', $this->project->id)
+            ->update(['production_id' => self::PRODUCTION_ID, 'group_ids' => null, 'package_only' => null]);
 
         $this->post(route('projects.tabs.ticketing.production', $this->project), [
             'title' => 'Hamlet',
             'reduction_type_ids' => '[]',
-        ], ['Accept' => 'application/json'])->assertOk()->assertJsonPath('production.reductionTypeIds', []);
+            'group_ids' => json_encode([$group]),
+            'package_only' => '1',
+        ], ['Accept' => 'application/json'])->assertOk()
+            ->assertJsonPath('production.reductionTypeIds', [])
+            ->assertJsonPath('production.groupIds', [$group])
+            ->assertJsonPath('production.packageOnly', true);
 
         Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
             && str_ends_with($request->url(), '/productions')
             && $request['title'] === 'Hamlet'
             && $request['reductionTypeIds'] === []
+            && $request['groupIds'] === [$group]
+            && $request['packageOnly'] === true
             && $request['venueId'] === null);
+        // Verknüpft wartet hier nichts mehr, sonst überschriebe ein gescheiterter Abgleich später tickets.
+        $production = TicketingProduction::query()->where('project_id', $this->project->id)->sole();
+        $this->assertNull($production->group_ids);
+        $this->assertNull($production->package_only);
+    }
+
+    #[Test]
+    public function saving_without_groups_or_package_only_leaves_them_as_tickets_has_them(): void
+    {
+        $this->fakeTickets();
+        TicketingProduction::query()->create(['project_id' => $this->project->id, 'production_id' => self::PRODUCTION_ID]);
+
+        $this->postJson(route('projects.tabs.ticketing.production', $this->project), ['title' => 'Hamlet'])->assertOk();
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
+            && str_ends_with($request->url(), '/productions')
+            && $request['title'] === 'Hamlet'
+            && $request['groupIds'] === null
+            && $request['packageOnly'] === null);
+    }
+
+    #[Test]
+    public function groups_and_package_only_need_the_permission_to_manage_ticketing(): void
+    {
+        $this->fakeTickets();
+        TicketingProduction::query()->create(['project_id' => $this->project->id, 'production_id' => self::PRODUCTION_ID]);
+        $writer = $this->actingAsUserWith([]);
+        $this->project->users()->attach($writer->id, ['can_write' => true]);
+
+        $this->postJson(route('projects.tabs.ticketing.production', $this->project), [
+            'title' => 'Hamlet',
+            'group_ids' => [],
+            'package_only' => false,
+        ])->assertUnprocessable()->assertJsonValidationErrors(['group_ids', 'package_only']);
+        Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/productions'));
+
+        // Der Rest des Auftritts bleibt für sie bearbeitbar.
+        $this->postJson(route('projects.tabs.ticketing.production', $this->project), ['title' => 'Hamlet'])
+            ->assertOk();
     }
 
     #[Test]

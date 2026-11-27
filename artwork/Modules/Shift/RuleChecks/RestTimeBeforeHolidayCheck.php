@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\RuleChecks;
 
 use Artwork\Modules\Shift\Models\ShiftRule;
+use Artwork\Modules\Shift\Support\ShiftRuleConfig;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -13,6 +14,9 @@ class RestTimeBeforeHolidayCheck extends AbstractRuleCheck
     public function check(ShiftRule $rule, User $user, Carbon $startDate, Carbon $endDate): Collection
     {
         $violations = collect();
+        // Mit skip_same_day prüft die Regel nur die Ruhe zum Vortag. Abstände zwischen zwei Diensten am
+        // selben Tag (geteilter Dienst) übernimmt dann die Regel restTimeBetweenShiftsOnDay.
+        $skipSameDay = (bool) ShiftRuleConfig::get($rule, 'skip_same_day');
 
         // Extend date range by one day back to check previous day
         $extendedStartDate = $startDate->copy()->subDay();
@@ -38,8 +42,10 @@ class RestTimeBeforeHolidayCheck extends AbstractRuleCheck
                 }
 
                 // Check rest time between multiple shifts on the same holiday
-                $todayViolations = $this->checkRestTimeBetweenShiftsOnSameDay($rule, $user, $date);
-                $violations = $violations->concat($todayViolations);
+                if (!$skipSameDay) {
+                    $todayViolations = $this->checkRestTimeBetweenShiftsOnSameDay($rule, $user, $date);
+                    $violations = $violations->concat($todayViolations);
+                }
             }
 
             // Always update latestShiftEndLastDay for next iteration

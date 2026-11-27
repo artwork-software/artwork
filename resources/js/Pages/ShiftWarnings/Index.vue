@@ -4,15 +4,16 @@
         :description="$t('Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies.')"
     >
         <template #actions>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex flex-wrap items-center justify-end gap-2">
                 <!-- Gleiche Rechte wie „Regel anlegen" (Route-Middleware rules,edit) -->
                 <BaseUIButton
-                    v-if="legalDefaultRules && legalDefaultRules.length"
-                    @click="openDefaultsModal"
-                    label="Create legal default rules"
+                    v-for="ruleSet in ruleSets"
+                    :key="ruleSet.key"
+                    @click="openDefaultsModal(ruleSet)"
+                    :label="ruleSet.name"
                     use-translation
                     variant="secondary"
-                    icon="IconScale"
+                    :icon="ruleSet.icon"
                     class="whitespace-nowrap"
                 />
                 <BaseUIButton @click="openCreateModal" label="Create new rule" use-translation is-add-button class="whitespace-nowrap" />
@@ -239,6 +240,71 @@
                             </p>
                         </div>
 
+                        <!-- Zusatzparameter je Regeltyp (shift_rules.config), Definition in ruleTypes.js -->
+                        <div v-if="configFields.length" class="rounded-md border border-border-subtle p-3 space-y-3">
+                            <p class="text-sm font-medium text-text">{{ $t('Additional settings of this rule') }}</p>
+                            <div v-for="field in configFields" :key="field.key">
+                                <BaseCheckbox
+                                    v-if="field.kind === 'bool'"
+                                    :id="`config_${field.key}`"
+                                    :model-value="!!form.config[field.key]"
+                                    :label="$t(field.label)"
+                                    :description="field.hint ? $t(field.hint) : undefined"
+                                    @update:modelValue="(checked) => { form.config[field.key] = checked }"
+                                />
+                                <ArtworkBaseListbox
+                                    v-else-if="field.kind === 'weekday'"
+                                    :model-value="weekdayItems.find((item) => item.id === Number(form.config[field.key])) ?? null"
+                                    :items="weekdayItems"
+                                    by="id"
+                                    option-label="name"
+                                    :label="$t(field.label)"
+                                    @update:modelValue="(item) => { form.config[field.key] = item?.id ?? field.default }"
+                                />
+                                <ArtworkBaseListbox
+                                    v-else-if="field.kind === 'shiftGroups'"
+                                    :model-value="shiftGroupsFromIds(form.config[field.key])"
+                                    :items="shiftGroups ?? []"
+                                    multiple
+                                    by="id"
+                                    option-label="name"
+                                    :label="$t(field.label)"
+                                    :placeholder="$t('No shift groups selected')"
+                                    :empty-text="$t('No shift groups available. Create them in the tab \'shift groups\'.')"
+                                    @update:modelValue="(items) => { form.config[field.key] = (items ?? []).map((item) => item.id) }"
+                                />
+                                <BaseInput
+                                    v-else-if="field.kind === 'time'"
+                                    v-model="form.config[field.key]"
+                                    :label="$t(field.label)"
+                                    type="time"
+                                    :id="`config_${field.key}`"
+                                />
+                                <BaseInput
+                                    v-else-if="field.kind === 'int' || field.kind === 'hours'"
+                                    v-model="form.config[field.key]"
+                                    :label="$t(field.label)"
+                                    type="number"
+                                    :min="field.min ?? (field.kind === 'hours' ? 0.5 : 1)"
+                                    :max="field.max"
+                                    :step="field.kind === 'hours' ? 0.5 : 1"
+                                    :placeholder="field.placeholder ?? ''"
+                                    :id="`config_${field.key}`"
+                                />
+                                <BaseInput
+                                    v-else
+                                    v-model="configText[field.key]"
+                                    :label="$t(field.label)"
+                                    :required="!!field.required"
+                                    type="text"
+                                    :placeholder="field.placeholder ?? ''"
+                                    :id="`config_${field.key}`"
+                                />
+                                <p v-if="field.hint && field.kind !== 'bool'" class="mt-1 text-xs text-text-subtle">{{ $t(field.hint) }}</p>
+                                <p v-if="configError(field.key)" class="mt-1 text-xs text-danger">{{ configError(field.key) }}</p>
+                            </div>
+                        </div>
+
                         <div>
                             <BaseInput
                                 v-model.number="form.default_compensation_days"
@@ -389,12 +455,12 @@
             </div>
         </ArtworkBaseModal>
 
-        <!-- Gesetzliche Standardregeln (ArbZG) anlegen -->
+        <!-- Regelsatz anlegen (gesetzliche Standardregeln nach ArbZG, NV Bühne …) -->
         <ArtworkBaseModal
-            v-if="showDefaultsModal"
+            v-if="showDefaultsModal && activeRuleSet"
             @close="closeDefaultsModal"
-            title="Create legal default rules"
-            description="Legal defaults according to the German Working Hours Act (ArbZG)."
+            :title="activeRuleSet.name"
+            :description="activeRuleSet.description"
         >
             <div class="p-5">
                 <form @submit.prevent="saveDefaults">
@@ -402,8 +468,8 @@
                         variant="static"
                         title="What happens here?"
                         :paragraphs="[
-                            'The rules below are created with the legal default values of the German Working Hours Act (ArbZG). Afterwards they are ordinary rules: you can rename, adjust or delete them at any time.',
-                            'A rule that already exists with the same type and value is not created again — it is only assigned to the selected contract templates that are still missing.'
+                            'The rules below are created with the standard values of this rule set. Afterwards they are ordinary rules: you can rename, adjust or delete them at any time.',
+                            'A rule that already exists with the same type, value and settings is not created again. It is only assigned to the selected contract templates that are still missing.'
                         ]"
                     />
 
@@ -414,7 +480,7 @@
                         </button>
                     </div>
                     <ul class="mt-2 divide-y divide-border-subtle rounded-lg border border-border-subtle">
-                        <li v-for="definition in legalDefaultRules" :key="definition.key" class="px-3 py-2">
+                        <li v-for="definition in activeRuleSetRules" :key="definition.key" class="px-3 py-2">
                             <BaseCheckbox
                                 :id="`legal-default-${definition.key}`"
                                 :model-value="defaultsForm.rules.includes(definition.key)"
@@ -491,7 +557,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
@@ -514,7 +580,12 @@ import {
     SELECTABLE_RULE_TYPES,
     decimalHourToTime,
     formatNumber,
+    WEEKDAY_KEYS,
+    defaultRuleConfig,
+    displayToMonthDay,
     formatRuleValue,
+    monthDayToDisplay,
+    ruleTypeConfigFields,
     ruleTypeHasPeriodWeeks,
     ruleTypeLabelKey,
     ruleTypeValueKind,
@@ -529,6 +600,10 @@ const props = defineProps({
     users: { type: Array, default: () => [] },
     // Gesetzliche Standardregeln (Definitionen aus LegalDefaultShiftRules, keine Kopie hier)
     legalDefaultRules: { type: Array, default: () => [] },
+    // Regelsätze (ShiftRuleSets): je Satz key, name, description, icon und rules
+    ruleSets: { type: Array, default: () => [] },
+    // Schichtgruppen für Zusatzparameter, die Schichtgruppen referenzieren
+    shiftGroups: { type: Array, default: () => [] },
 })
 
 const { t: $t } = useI18n()
@@ -550,11 +625,72 @@ const form = useForm({
     trigger_type: '',
     individual_number_value: null,
     period_weeks: null,
+    // Zusatzparameter je Regeltyp (shift_rules.config), null wenn der Typ keine kennt
+    config: null,
     warning_color: '#ff6b6b',
     default_compensation_days: null,
     default_compensation_deadline_days: null,
     contract_ids: [],
     user_ids: []
+})
+
+// --- Zusatzparameter je Regeltyp ------------------------------------------------------------
+
+const configFields = computed(() => ruleTypeConfigFields(form.trigger_type))
+
+// Kalendertage werden als "TT.MM." eingegeben und als "MM-DD" gespeichert: Texte getrennt halten
+const configText = reactive({})
+
+const weekdayItems = computed(() => WEEKDAY_KEYS.map((key, index) => ({ id: index + 1, name: $t(key) })))
+
+const shiftGroupsById = computed(() => new Map((props.shiftGroups ?? []).map((group) => [group.id, group])))
+const shiftGroupsFromIds = (ids) => (ids ?? []).map((id) => shiftGroupsById.value.get(id)).filter(Boolean)
+
+/** Konfiguration des Formulars setzen: Standardwerte des Typs, überschrieben mit den gespeicherten Werten */
+function applyConfig(type, stored = null) {
+    const defaults = defaultRuleConfig(type)
+    form.config = defaults ? { ...defaults, ...(stored ?? {}) } : null
+    Object.keys(configText).forEach((key) => delete configText[key])
+    ruleTypeConfigFields(type).forEach((field) => {
+        if (field.kind === 'monthDay') {
+            configText[field.key] = monthDayToDisplay(form.config[field.key])
+        } else if (field.kind === 'monthDayList') {
+            configText[field.key] = (form.config[field.key] ?? []).map(monthDayToDisplay).join(', ')
+        }
+    })
+}
+
+/** Konfiguration zum Speichern: Kalendertag-Texte in "MM-DD" übersetzen, leere Zahlen als null */
+function configForSubmit() {
+    if (!form.config) return null
+    const config = { ...form.config }
+    ruleTypeConfigFields(form.trigger_type).forEach((field) => {
+        if (field.kind === 'monthDay') {
+            config[field.key] = displayToMonthDay(configText[field.key]) || null
+        } else if (field.kind === 'monthDayList') {
+            config[field.key] = String(configText[field.key] ?? '')
+                .split(',')
+                .map((part) => displayToMonthDay(part))
+                .filter((part) => part !== '')
+        } else if ((field.kind === 'int' || field.kind === 'hours') && config[field.key] === '') {
+            config[field.key] = null
+        }
+    })
+    return config
+}
+
+/** Validierungsfehler eines Zusatzparameters (auch von Listeneinträgen wie config.excluded_dates.0) */
+function configError(key) {
+    const prefix = `config.${key}`
+    const match = Object.keys(form.errors).find((errorKey) => errorKey === prefix || errorKey.startsWith(`${prefix}.`))
+    return match ? form.errors[match] : null
+}
+
+// Beim Anlegen: Regeltyp gewählt → Standardwerte seiner Zusatzparameter
+watch(() => form.trigger_type, (type) => {
+    if (!editingRule.value) {
+        applyConfig(type)
+    }
 })
 
 // Nur Typen anbieten, die das Backend kennt (availableRuleTypes) — in der Reihenfolge aus ruleTypes.js
@@ -664,6 +800,7 @@ function editRule(rule) {
     form.trigger_type = rule.trigger_type
     form.individual_number_value = ruleTypeValueKind(rule.trigger_type) === 'none' ? null : rule.individual_number_value
     form.period_weeks = ruleTypeHasPeriodWeeks(rule.trigger_type) ? (rule.period_weeks ?? null) : null
+    applyConfig(rule.trigger_type, rule.config)
     form.warning_color = rule.warning_color
     form.default_compensation_days = rule.default_compensation_days ?? null
     form.default_compensation_deadline_days = rule.default_compensation_deadline_days ?? null
@@ -691,6 +828,7 @@ function resetForm() {
     form.trigger_type = ''
     form.individual_number_value = null
     form.period_weeks = null
+    applyConfig('')
     form.warning_color = '#ff6b6b'
     form.default_compensation_days = null
     form.default_compensation_deadline_days = null
@@ -716,6 +854,7 @@ function saveRule() {
         ...data,
         individual_number_value: valueKind.value === 'none' ? null : data.individual_number_value,
         period_weeks: hasPeriodWeeks.value ? data.period_weeks : null,
+        config: configForSubmit(),
     }))
 
     if (editingRule.value) {
@@ -725,11 +864,15 @@ function saveRule() {
     }
 }
 
-// --- Gesetzliche Standardregeln -------------------------------------------------------------
+// --- Regelsätze (gesetzliche Standardregeln, NV Bühne …) ------------------------------------
 
 const showDefaultsModal = ref(false)
+// Der Regelsatz, dessen Dialog gerade offen ist
+const activeRuleSet = ref(null)
+const activeRuleSetRules = computed(() => activeRuleSet.value?.rules ?? [])
 
 const defaultsForm = useForm({
+    set: null,
     rules: [],
     contract_ids: [],
 })
@@ -744,13 +887,18 @@ const selectedDefaultContracts = computed({
 })
 
 const allDefaultRulesSelected = computed(() =>
-    props.legalDefaultRules.length > 0 && defaultsForm.rules.length === props.legalDefaultRules.length
+    activeRuleSetRules.value.length > 0 && defaultsForm.rules.length === activeRuleSetRules.value.length
 )
 
-function openDefaultsModal() {
-    // Alle Regeln und alle Vorlagen vorbelegt
-    defaultsForm.rules = props.legalDefaultRules.map((definition) => definition.key)
-    defaultsForm.contract_ids = (props.contracts ?? []).map((contract) => contract.id)
+function openDefaultsModal(ruleSet) {
+    activeRuleSet.value = ruleSet
+    defaultsForm.set = ruleSet.key
+    // Alle Regeln vorbelegt. Vorlagen nur bei den gesetzlichen Standardregeln: Sie gelten für alle,
+    // ein Tarif-Regelsatz dagegen nur für die Verträge, die diesem Tarif unterliegen.
+    defaultsForm.rules = ruleSet.rules.map((definition) => definition.key)
+    defaultsForm.contract_ids = ruleSet.key === 'legal'
+        ? (props.contracts ?? []).map((contract) => contract.id)
+        : []
     defaultsForm.clearErrors()
     showDefaultsModal.value = true
 }
@@ -770,7 +918,7 @@ function toggleDefaultRule(key, checked) {
 function toggleAllDefaultRules() {
     defaultsForm.rules = allDefaultRulesSelected.value
         ? []
-        : props.legalDefaultRules.map((definition) => definition.key)
+        : activeRuleSetRules.value.map((definition) => definition.key)
 }
 
 /** Wert + ggf. Ersatzruhetag-Voreinstellung einer Standardregel, z. B. "48 h Ø über 24 Wochen" */

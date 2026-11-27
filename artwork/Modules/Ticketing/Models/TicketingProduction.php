@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Wie ein Projekt im Ticketshop auftritt. Leere Felder fallen auf das Projekt zurück
  * (Name, Beschreibung); reduction_type_ids null heißt: die Standard-Ermäßigungen des Hauses.
+ * group_ids und package_only halten eine Wahl, bis tickets sie hat; danach null, denn ab dann
+ * führt tickets beides.
  *
  * @property int $id
  * @property int $project_id
@@ -18,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $title
  * @property string|null $description
  * @property list<string>|null $reduction_type_ids
+ * @property list<string>|null $group_ids
+ * @property bool|null $package_only online nur im Paket (die Pakete sind automatische Rabatte)
  * @property string|null $hero_path
  * @property \Carbon\Carbon|null $hero_synced_at
  * @property-read Collection<int, TicketingProductionImage> $images
@@ -35,12 +39,16 @@ class TicketingProduction extends Model
         'title',
         'description',
         'reduction_type_ids',
+        'group_ids',
+        'package_only',
         'hero_path',
         'hero_synced_at',
     ];
 
     protected $casts = [
         'reduction_type_ids' => 'array',
+        'group_ids' => 'array',
+        'package_only' => 'boolean',
         'hero_synced_at' => 'datetime',
     ];
 

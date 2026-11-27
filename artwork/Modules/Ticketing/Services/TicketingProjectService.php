@@ -24,6 +24,7 @@ class TicketingProjectService
         private readonly TicketingConnectionService $connections,
         private readonly TicketingProductionService $productions,
         private readonly TicketingBillingService $billing,
+        private readonly TicketingProductionGroupService $groups,
     ) {
     }
 
@@ -34,6 +35,7 @@ class TicketingProjectService
         $production = $this->productions->for($project);
         $venues = [];
         $reductions = [];
+        $groups = [];
         $detail = null;
         $billingComplete = null;
         $ticketsError = null;
@@ -42,6 +44,7 @@ class TicketingProjectService
             try {
                 $venues = $this->connections->venues($connection);
                 $reductions = $this->connections->reductions($connection);
+                $groups = $this->groups->overview($connection)['groups'];
                 $detail = $this->productions->detail($production);
             } catch (TicketingConnectionException $exception) {
                 $ticketsError = $exception->getMessage();
@@ -64,6 +67,11 @@ class TicketingProjectService
                 'title' => $production->title,
                 'description' => $production->description,
                 'reductionTypeIds' => $production->reduction_type_ids,
+                // Was hier gewählt, aber noch nicht in tickets ist, sonst der Stand dort.
+                'groupIds' => $production->group_ids ?? $detail['groupIds'] ?? [],
+                'packageOnly' => $production->package_only ?? $detail['packageOnly'] ?? false,
+                // Frühbucher, Staffeln und Pakete, die für die Produktion gelten — auch über eine Gruppe.
+                'discounts' => $detail['discounts'] ?? [],
                 'heroUrl' => $production->heroUrl(),
                 'images' => $production->images->map(static fn (TicketingProductionImage $image): array => [
                     'id' => $image->id,
@@ -71,6 +79,7 @@ class TicketingProjectService
                 ])->all(),
                 'maxImages' => TicketingProduction::MAX_IMAGES,
                 'linked' => $production->production_id !== null,
+                'productionId' => $production->production_id,
                 'status' => $detail['status'] ?? null,
                 'shopUrl' => $detail['shopUrl'] ?? null,
                 'fallback' => [
@@ -82,6 +91,10 @@ class TicketingProjectService
                 ],
             ],
             'reductions' => $this->reductionsPayload($reductions, $detail['reductions'] ?? []),
+            'groups' => array_map(
+                static fn (array $group): array => ['id' => $group['id'], 'name' => $group['name']],
+                $groups,
+            ),
             'events' => $this->events($project)
                 ->map(fn (Event $event): array => $this->eventPayload($event, $links, $venues))
                 ->values(),

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Shift\Enums\ShortNoticeReason;
+use Artwork\Modules\Shift\Http\Requests\UpdateShortNoticeReasonRequest;
+use Artwork\Modules\Shift\Services\ShortNoticeChangeMarker;
 use App\Http\Requests\StoreShiftPlanRequestRequest;
 use App\Http\Requests\UpdateShiftPlanRequestRequest;
 use Artwork\Core\Services\HelperService;
@@ -1392,8 +1395,14 @@ class ShiftPlanRequestController extends Controller
             $workerType = 'all';
         }
 
+        // Nur kurzfristige Änderungen (nach der Stichzeit am Vortag). Greift nur bei aktivierter
+        // Kennzeichnung; sonst kennt die Übersicht die Markierung nicht.
+        $shortNoticeEnabled = app(ShortNoticeChangeMarker::class)->isEnabled();
+        $shortNoticeOnly = $shortNoticeEnabled && $request->boolean('short_notice');
+
         // Basis-Query (Craft-Filter + Suche + Intern/Extern) als Grundlage für Zähler und Liste.
-        $baseQuery = $this->committedShiftChangesBaseQuery($craft, $search, $workerType);
+        $baseQuery = $this->committedShiftChangesBaseQuery($craft, $search, $workerType)
+            ->when($shortNoticeOnly, fn ($q) => $q->where('is_short_notice', true));
 
         // Zähler unabhängig vom aktiven Filter (für die Badges in den Tabs).
         $totalCount   = (clone $baseQuery)->count();
@@ -1434,6 +1443,12 @@ class ShiftPlanRequestController extends Controller
             'workerType'   => $workerType,
             'totalCount'   => $totalCount,
             'pendingCount' => $pendingCount,
+            'shortNotice'  => [
+                'enabled' => $shortNoticeEnabled,
+                'only' => $shortNoticeOnly,
+                'cutoff_time' => app(ShortNoticeChangeMarker::class)->cutoffTime(),
+                'reasons' => $shortNoticeEnabled ? ShortNoticeReason::options() : [],
+            ],
         ]);
     }
 
@@ -1526,13 +1541,18 @@ class ShiftPlanRequestController extends Controller
             'craft_id' => ['required', 'integer', 'exists:crafts,id'],
             'search' => ['nullable', 'string'],
             'worker_type' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'internal', 'external'])],
+            'short_notice' => ['nullable', 'boolean'],
         ]);
+
+        // Filter "nur kurzfristige": die Sammelbestätigung darf nicht mehr genehmigen als angezeigt
+        $shortNoticeOnly = app(ShortNoticeChangeMarker::class)->isEnabled() && $request->boolean('short_notice');
 
         $craft = Craft::find($payload['craft_id']);
         $search = trim((string) ($payload['search'] ?? ''));
         $workerType = $payload['worker_type'] ?? 'all';
 
         $updated = $this->committedShiftChangesBaseQuery($craft, $search, $workerType)
+            ->when($shortNoticeOnly, fn ($q) => $q->where('is_short_notice', true))
             ->whereNull('acknowledged_at')
             ->update([
                 'acknowledged_at' => now(),
@@ -1560,7 +1580,11 @@ class ShiftPlanRequestController extends Controller
             'worker_type' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'internal', 'external'])],
             'date_from' => ['nullable', 'date_format:Y-m-d'],
             'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
+            'short_notice' => ['nullable', 'boolean'],
         ]);
+
+        $shortNoticeEnabled = app(ShortNoticeChangeMarker::class)->isEnabled();
+        $shortNoticeOnly = $shortNoticeEnabled && $request->boolean('short_notice');
 
         $craft = !empty($validated['craft_id']) ? Craft::find($validated['craft_id']) : null;
         $filter = $validated['filter'] ?? 'all';
@@ -1582,12 +1606,14 @@ class ShiftPlanRequestController extends Controller
         )
             ->when($filter === 'open', fn ($q) => $q->whereNull('acknowledged_at'))
             ->when($filter === 'ack', fn ($q) => $q->whereNotNull('acknowledged_at'))
+            ->when($shortNoticeOnly, fn ($q) => $q->where('is_short_notice', true))
             ->whereDate('changed_at', '>=', $dateFrom)
             ->whereDate('changed_at', '<=', $dateTo);
 
         $export = new \Artwork\Modules\Shift\Exports\CommittedShiftChangesExcelExport(
             $query,
-            $request->user()?->language ?? app()->getLocale()
+            $request->user()?->language ?? app()->getLocale(),
+            $shortNoticeEnabled
         );
 
         return $export->download(sprintf('aenderungen_%s_bis_%s.xlsx', $dateFrom, $dateTo));
@@ -1596,6 +1622,23 @@ class ShiftPlanRequestController extends Controller
     /**
      * Nachträgliche Zustimmung zu einer Änderung.
      */
+    /**
+     * Grund einer kurzfristigen Änderung festhalten (Absage, Betriebsstörung, Einvernehmen ...).
+     * Nur für als kurzfristig markierte Einträge und nur bei aktivierter Kennzeichnung.
+     */
+    public function updateShortNoticeReason(
+        UpdateShortNoticeReasonRequest $request,
+        CommittedShiftChange $change
+    ): \Illuminate\Http\RedirectResponse {
+        abort_unless(app(ShortNoticeChangeMarker::class)->isEnabled() && $change->is_short_notice, 404);
+
+        $change->short_notice_reason = $request->validated('reason');
+        $change->short_notice_note = $request->validated('note');
+        $change->save();
+
+        return back();
+    }
+
     public function acknowledge(CommittedShiftChange $change): \Illuminate\Http\RedirectResponse
     {
         if (is_null($change->acknowledged_at)) {

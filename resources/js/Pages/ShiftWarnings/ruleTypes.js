@@ -10,7 +10,26 @@
  *   - count: Anzahl (z. B. Sonntage); mit optional: true darf der Wert leer bleiben (Ziel aus dem Vertrag)
  *   - time:  Uhrzeit-Picker (HH:MM), intern Dezimalstunde (14.5 = 14:30)
  *   - none:  kein Zahlenwert (Feld ausblenden)
+ *
+ * configFields: Zusatzparameter des Regeltyps (shift_rules.config). Schlüssel, Typen und Standardwerte
+ * müssen zu ShiftRuleConfig (PHP) passen. kind:
+ *   - bool:          Checkbox
+ *   - weekday:       Wochentag (ISO 1 = Montag … 7 = Sonntag)
+ *   - time:          Uhrzeit "HH:MM"
+ *   - int / hours:   Zahl (hours: halbe Stunden erlaubt, leer = nicht gesetzt)
+ *   - monthDay:      jährlicher Kalendertag, Eingabe "TT.MM.", gespeichert "MM-DD"
+ *   - monthDayList:  mehrere Kalendertage, durch Komma getrennt
+ *   - shiftGroups:   Mehrfachauswahl von Schichtgruppen (IDs)
  */
+
+const SKIP_SAME_DAY_FIELD = {
+    key: 'skip_same_day',
+    kind: 'bool',
+    default: false,
+    label: 'Only check the rest time to the previous day',
+    hint: 'Gaps between two duties on the same day are not checked by this rule. Use the rule "Rest time between two duties on the same day" for split duties.',
+}
+
 export const RULE_TYPES = {
     maxWorkingHoursOnDay: {
         label: 'Daily maximum of hours',
@@ -43,12 +62,14 @@ export const RULE_TYPES = {
         valueKind: 'hours',
         placeholder: '11',
         hint: 'Checks the rest time between the end of a shift and the start of the next shift before a regular working day. Value = minimum rest time in hours.',
+        configFields: [SKIP_SAME_DAY_FIELD],
     },
     restTimeBeforeHoliday: {
         label: 'Rest time before a Sunday or special day',
         valueKind: 'hours',
         placeholder: '11',
         hint: 'Checks the rest time before a Sunday or special day. Value = minimum rest time in hours.',
+        configFields: [SKIP_SAME_DAY_FIELD],
     },
     restTimeBetweenShiftGroups: {
         label: 'Rest time between shift groups',
@@ -66,6 +87,29 @@ export const RULE_TYPES = {
         label: 'No half day off on special days',
         valueKind: 'none',
         hint: 'Checks that no half day off is planned on a special day (holiday marked as special day). Applies regardless of the special-day rule in the person\'s contract.',
+        configFields: [
+            {
+                key: 'include_sundays',
+                kind: 'bool',
+                default: false,
+                label: 'Also applies on Sundays',
+                hint: 'Without this option the rule only covers special days from the holiday calendar.',
+            },
+            {
+                key: 'morning_only',
+                kind: 'bool',
+                default: false,
+                label: 'Only the morning counts',
+                hint: 'Only a half day off in the morning is a violation; a free afternoon stays allowed.',
+            },
+            {
+                key: 'include_planned',
+                kind: 'bool',
+                default: false,
+                label: 'Also check planned half days off',
+                hint: 'Besides granted substitute half days, half days off entered as day status "Free" (morning or afternoon) are checked as well.',
+            },
+        ],
     },
     minDaysBeforeCommit: {
         label: 'Minimum days before binding commitment',
@@ -123,6 +167,99 @@ export const RULE_TYPES = {
         optional: true,
         placeholder: '2',
         hint: 'Checks per calendar week (Mon–Sun) whether the person has the minimum number of whole free days (day without shift and without individual time; shifts past midnight occupy both days). Value = minimum number; leave empty to use "free whole days per week" from the contract (0 = rule does not apply). The violation has no shift — it appears on the Sunday of the week.',
+        configFields: [
+            {
+                key: 'workdays_only',
+                kind: 'bool',
+                default: false,
+                label: 'Only free working days count',
+                hint: 'A free Sunday or special day does not count as a free day.',
+            },
+            {
+                key: 'excluded_dates',
+                kind: 'monthDayList',
+                default: [],
+                label: 'Calendar days that never count as a free day',
+                placeholder: '01.05., 24.12.',
+                hint: 'Recurring every year, format DD.MM., separated by commas.',
+            },
+        ],
+    },
+    weeklyPlanCommitDeadline: {
+        label: 'Weekly plan deadline',
+        valueKind: 'none',
+        hint: 'Checks whether the shifts of a calendar week are binding by a fixed weekday and time of the week before (e.g. Thursday 2 pm). After the deadline, every person who still has non-binding shifts in that week gets one violation on the Monday of the week. If the deadline day is a Sunday or special day, the working day before applies.',
+        configFields: [
+            { key: 'weekday', kind: 'weekday', default: 4, label: 'Deadline weekday' },
+            { key: 'time', kind: 'time', default: '14:00', label: 'Deadline time' },
+            {
+                key: 'weeks_ahead',
+                kind: 'int',
+                default: 1,
+                min: 1,
+                max: 4,
+                label: 'Weeks before the planned week',
+                hint: '1 = the deadline lies in the week directly before the planned week.',
+            },
+        ],
+    },
+    halfDayOffMaxHours: {
+        label: 'Working time on a half day off',
+        valueKind: 'hours',
+        placeholder: '4',
+        hint: 'Checks days with exactly one granted half day off: the working time in the other half of the day may not exceed the value. Value = maximum number of hours. Whether a shift reaches into the free half is checked by the rule "Conflict: half day off / shift".',
+        configFields: [
+            {
+                key: 'boundary',
+                kind: 'time',
+                default: '14:00',
+                label: 'Boundary between morning and afternoon',
+            },
+            {
+                key: 'extended_hours',
+                kind: 'hours',
+                default: null,
+                placeholder: '5',
+                label: 'Extended maximum (hours)',
+                hint: 'Applies when a shift of one of the shift groups below lies in the working half, e.g. final rehearsals and performances. Leave empty for no extension.',
+            },
+            {
+                key: 'extended_shift_group_ids',
+                kind: 'shiftGroups',
+                default: [],
+                label: 'Shift groups with the extended maximum',
+            },
+        ],
+    },
+    restTimeBetweenShiftsOnDay: {
+        label: 'Rest time between two duties on the same day',
+        valueKind: 'hours',
+        placeholder: '4',
+        hint: 'Checks split duties: if a person has two duties on the same day with a gap in between, the gap must be at least the value. Duties that follow each other directly are not a split duty. Value = minimum gap in hours. Works without shift groups.',
+        configFields: [
+            {
+                key: 'excluded_shift_group_ids',
+                kind: 'shiftGroups',
+                default: [],
+                label: 'Excluded shift groups',
+                hint: 'If one of the two duties belongs to one of these shift groups (e.g. final rehearsals), the gap is not checked.',
+            },
+        ],
+    },
+    freeDayAfterWorkOnDate: {
+        label: 'Day off after work on a fixed date',
+        valueKind: 'none',
+        hint: 'Checks a pair of calendar days: whoever worked on the first day may not be scheduled on the following second day (e.g. worked on 24 December, off on 1 May).',
+        configFields: [
+            { key: 'worked', kind: 'monthDay', default: null, required: true, placeholder: '24.12.', label: 'Worked on (DD.MM.)' },
+            { key: 'free', kind: 'monthDay', default: null, required: true, placeholder: '01.05.', label: 'Then off on (DD.MM.)' },
+        ],
+    },
+    freeDayAnnouncementLeadTime: {
+        label: 'Announcement period for days off',
+        valueKind: 'days',
+        placeholder: '14',
+        hint: 'Checks planned days off (day status "Free", whole or half) and granted substitute days off: the day off must have been entered at least the given number of days in advance. Value = minimum lead time in days. Days that are free only because no shift was planned are not checked.',
     },
 }
 
@@ -144,6 +281,39 @@ export function ruleTypeNeedsValue(type) {
 /** Wert darf leer bleiben (Ziel aus dem Vertrag) */
 export function ruleTypeValueOptional(type) {
     return !!RULE_TYPES[type]?.optional
+}
+
+/** Zusatzparameter des Typs (shift_rules.config), leer wenn der Typ keine kennt */
+export function ruleTypeConfigFields(type) {
+    return RULE_TYPES[type]?.configFields ?? []
+}
+
+/** Standard-Konfiguration eines Typs, null wenn der Typ keine Zusatzparameter kennt */
+export function defaultRuleConfig(type) {
+    const fields = ruleTypeConfigFields(type)
+    if (!fields.length) return null
+    return Object.fromEntries(fields.map((field) => [
+        field.key,
+        Array.isArray(field.default) ? [...field.default] : field.default,
+    ]))
+}
+
+/** Übersetzungsschlüssel der Wochentage, Index = ISO-Wochentag − 1 */
+export const WEEKDAY_KEYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+/** "MM-DD" -> "TT.MM." */
+export function monthDayToDisplay(value) {
+    if (typeof value !== 'string' || !/^\d{2}-\d{2}$/.test(value)) return ''
+    const [month, day] = value.split('-')
+    return `${day}.${month}.`
+}
+
+/** "TT.MM." (auch "T.M" oder "TT.MM") -> "MM-DD"; nicht lesbare Eingaben bleiben unverändert (Server meldet sie) */
+export function displayToMonthDay(value) {
+    const text = String(value ?? '').trim()
+    const match = text.match(/^(\d{1,2})\.\s*(\d{1,2})\.?$/)
+    if (!match) return text
+    return `${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`
 }
 
 /** Typ hat zusätzlich einen Ausgleichszeitraum in Wochen (period_weeks) */
@@ -183,6 +353,17 @@ export function formatNumber(value) {
 export function formatRuleValue(rule, t) {
     const kind = ruleTypeValueKind(rule?.trigger_type)
     const value = rule?.individual_number_value
+    const config = { ...(defaultRuleConfig(rule?.trigger_type) ?? {}), ...(rule?.config ?? {}) }
+
+    // Typen ohne Zahlenwert, deren Aussage in den Zusatzparametern steckt
+    if (rule?.trigger_type === 'weeklyPlanCommitDeadline') {
+        // "Donnerstag 14:00"
+        return `${t(WEEKDAY_KEYS[(Number(config.weekday) || 4) - 1] ?? 'Thursday')} ${config.time ?? ''}`.trim()
+    }
+    if (rule?.trigger_type === 'freeDayAfterWorkOnDate') {
+        // "24.12. → 01.05."
+        return `${monthDayToDisplay(config.worked)} → ${monthDayToDisplay(config.free)}`
+    }
     switch (kind) {
         case 'hours':
             // Wochendurchschnitt: "48 h Ø über 24 Wochen"
@@ -281,6 +462,28 @@ export function formatViolationMeasure(violation, t) {
         return `${week}${ofMin(String(data.free_days ?? 0), `${data.target ?? ''} ${t('free days')}`)}`
     }
 
+    if (data.type === 'weekly_plan_commit_deadline') {
+        // "KW 49: 3 Schichten nicht verbindlich, Frist 26.11.2026 14:00"
+        const [date, time] = String(data.deadline ?? '').split(' ')
+        return t('CW {week}: {count} shifts not binding, deadline {date}', {
+            week: data.week ?? '',
+            count: data.open_shifts ?? 0,
+            date: `${formatDateDe(date)} ${time ?? ''}`.trim(),
+        })
+    }
+    if (data.type === 'free_day_after_work_on_date') {
+        return t('Scheduled on {free} after working on {worked}', {
+            free: formatDateDe(data.free_date),
+            worked: formatDateDe(data.worked_date),
+        })
+    }
+    if (data.type === 'free_day_announcement') {
+        return t('Granted {days} days in advance, min. {min} days', {
+            days: data.lead_days ?? 0,
+            min: data.min_required ?? '',
+        })
+    }
+
     const type = violation?.shift_rule?.trigger_type ?? violation?.trigger_type
 
     if (data.planned_hours !== undefined && data.max_allowed !== undefined) {
@@ -309,7 +512,7 @@ export function formatViolationMeasure(violation, t) {
         return parts.join(', ')
     }
     if (type === 'halfDayOffOnSpecialDay' || data.reason === 'half_day_off_on_special_day') {
-        return t('Half day off on a special day')
+        return data.on_sunday ? t('Half day off on a Sunday') : t('Half day off on a special day')
     }
     if (type === 'workOnHoliday' || data.holiday_name) {
         return data.holiday_name

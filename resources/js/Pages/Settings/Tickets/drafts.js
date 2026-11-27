@@ -66,6 +66,7 @@ export function emptyReduction() {
 /** A reduction as tickets holds it: basis points or cents → "50" / "2,50". */
 export function reductionDraft(reduction) {
     return {
+        id: reduction.id,
         name: reduction.name,
         kind: reduction.kind,
         value: fromCents(reduction.value),
@@ -76,6 +77,7 @@ export function reductionDraft(reduction) {
 
 export function reductionPayload(reduction) {
     return {
+        id: reduction.id ?? null,
         name: reduction.name.trim(),
         kind: reduction.kind,
         // Percent is stored in basis points (50 % → 5000), a fixed amount in cents.
@@ -228,4 +230,47 @@ export function passTypePayload(draft) {
         eventIds: draft.allEvents ? [] : draft.eventIds,
         groupIds: draft.allEvents ? [] : draft.groupIds,
     }
+}
+
+/* Which payload fields make up each label of the sold-changes check, and whether a change reaches
+   the passes already sold (on a running Abo: uses from its next period, unless their window
+   changes) or only new buyers. Mirrors updatePassType in Artwork-Tickets. */
+const soldFields = {
+    card: {
+        sold: { name: ['name'], uses: ['uses'], validity: ['validityDays', 'validUntil'] },
+        newOnly: { price: ['price'], sale: ['saleEnds'], description: ['description'] },
+    },
+    subscription: {
+        sold: { name: ['name'], uses: ['uses', 'rolloverMax', 'usesWindow'] },
+        newOnly: {
+            price: ['monthlyPrice', 'upfrontPrice'],
+            term: ['termMode', 'termMonths', 'seasonEnds', 'afterTerm'],
+            sale: ['saleEnds'],
+            description: ['description'],
+        },
+    },
+    live: {
+        discount: ['discountKind', 'discountPercent', 'discountAmount'],
+        perOrder: ['maxUsesPerOrder'],
+        perEvent: ['maxUsesPerEvent'],
+        perPeriod: ['maxUsesPerPeriod', 'limitPeriod'],
+        redeemable: ['redeemableInCheckout'],
+        stampable: ['stampable'],
+        scope: ['allEvents', 'eventIds', 'groupIds'],
+    },
+}
+
+/** The labels of what changed between two passTypePayloads: reaching sold passes, or only new sales. */
+export function soldPassChanges(before, after) {
+    const same = (field) => JSON.stringify([before[field]].flat().sort()) === JSON.stringify([after[field]].flat().sort())
+    const changed = (groups) => Object.keys(groups).filter((label) => !groups[label].every(same))
+    const subscription = after.kind === 'subscription'
+    const kind = soldFields[subscription ? 'subscription' : 'card']
+    const changes = { sold: changed({ ...kind.sold, ...soldFields.live }), newOnly: changed(kind.newOnly) }
+    // Uses per month or per term is part of what a running Abo bought.
+    if (subscription && !same('usesWindow')) {
+        changes.sold = changes.sold.filter((label) => label !== 'uses')
+        changes.newOnly.unshift('uses')
+    }
+    return changes
 }

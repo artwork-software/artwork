@@ -23,7 +23,10 @@ use Artwork\Modules\Shift\Services\ShiftRuleRevalidationService;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\Shift\Support\ExportPeriodLimit;
 use Artwork\Modules\Shift\Models\ShiftRule;
+use Artwork\Modules\Shift\Models\ShiftGroup;
 use Artwork\Modules\Shift\Support\LegalDefaultShiftRules;
+use Artwork\Modules\Shift\Support\ShiftRuleConfig;
+use Artwork\Modules\Shift\Support\ShiftRuleSets;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
 use Carbon\Carbon;
@@ -206,6 +209,10 @@ class ShiftRuleController extends Controller
             'availableRuleTypes' => $this->shiftRuleService->getAvailableRuleTypes(),
             // Gesetzliche Standardregeln (ArbZG) — einzige Definitionsquelle, keine Kopie im Frontend
             'legalDefaultRules' => LegalDefaultShiftRules::all(),
+            // Alle Regelsätze (gesetzliche Standardregeln, NV Bühne …) in der Reihenfolge der Schaltflächen
+            'ruleSets' => array_values(ShiftRuleSets::all()),
+            // Auswahl für Zusatzparameter, die Schichtgruppen referenzieren (z. B. Endproben ausnehmen)
+            'shiftGroups' => ShiftGroup::query()->orderBy('name')->get(['id', 'name']),
             'contracts' => UserContract::all(),
             // Auswahl "Benachrichtigen" (usersToNotify) — nur Name und ID, nur Personen mit
             // Dienstplan-Sicht-/Planungsrecht oder Admin (gleicher Filter wie beim Versand)
@@ -230,6 +237,7 @@ class ShiftRuleController extends Controller
                 // Regeltypen ohne Zahlenwert (Sonntag/Sondertag/HFT an Sondertag): Spalte ist NOT NULL -> 0
                 'individual_number_value' => $this->numberValueFor($validated['trigger_type'], $validated),
                 'period_weeks' => $this->periodWeeksFor($validated['trigger_type'], $validated),
+                'config' => ShiftRuleConfig::normalize($validated['trigger_type'], $validated['config'] ?? null),
                 'warning_color' => $validated['warning_color'],
                 'default_compensation_days' => $validated['default_compensation_days'] ?? null,
                 'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
@@ -271,16 +279,19 @@ class ShiftRuleController extends Controller
     }
 
     /**
-     * "Gesetzliche Standardregeln anlegen" (ArbZG): legt die gewählten Standardregeln als ganz normale
-     * Regeln an und ordnet sie den gewählten Vertragsvorlagen zu. Idempotent: existiert bereits eine
-     * (nicht gelöschte) Regel mit gleichem Typ und Wert (beim Wochendurchschnitt auch gleichem Zeitraum),
-     * wird sie nicht erneut angelegt, sondern nur den noch fehlenden Vorlagen zugeordnet.
+     * Regelsatz anlegen ("Gesetzliche Standardregeln" nach ArbZG, "NV Bühne (Bühnentechnik)", siehe
+     * ShiftRuleSets): legt die gewählten Regeln des Satzes als ganz normale Regeln an und ordnet sie den
+     * gewählten Vertragsvorlagen zu. Ohne Angabe gilt der Satz der gesetzlichen Standardregeln.
+     * Idempotent: existiert bereits eine (nicht gelöschte) Regel mit gleichem Typ, Wert und gleichen
+     * Zusatzparametern (beim Wochendurchschnitt auch gleichem Zeitraum), wird sie nicht erneut angelegt,
+     * sondern nur den noch fehlenden Vorlagen zugeordnet.
      * Neuprüfung einmal für alle betroffenen Vorlagen (wie beim normalen Anlegen).
      */
     public function storeDefaults(StoreLegalDefaultShiftRulesRequest $request): RedirectResponse
     {
         $validated = $request->validated();
         $contractIds = array_values(array_unique(array_map('intval', $validated['contract_ids'] ?? [])));
+        $set = $validated['set'] ?? ShiftRuleSets::LEGAL;
 
         $existingRules = ShiftRule::query()->get();
 
@@ -289,7 +300,7 @@ class ShiftRuleController extends Controller
         $newlyAssignedContractIds = [];
 
         foreach ($validated['rules'] as $key) {
-            $definition = LegalDefaultShiftRules::find($key);
+            $definition = ShiftRuleSets::find($set, $key);
             if ($definition === null) {
                 continue;
             }
@@ -297,9 +308,9 @@ class ShiftRuleController extends Controller
             // Aktive gleichartige Regel vor inaktiver: eine deaktivierte Regel wird reaktiviert
             // (zählt als "bereits vorhanden"), statt daneben eine Dublette anzulegen.
             $rule = $existingRules->first(
-                static fn (ShiftRule $candidate): bool => LegalDefaultShiftRules::matches($candidate, $definition)
+                static fn (ShiftRule $candidate): bool => ShiftRuleSets::matches($candidate, $definition)
             ) ?? $existingRules->first(
-                static fn (ShiftRule $candidate): bool => LegalDefaultShiftRules::matches(
+                static fn (ShiftRule $candidate): bool => ShiftRuleSets::matches(
                     $candidate,
                     $definition,
                     false
@@ -308,7 +319,7 @@ class ShiftRuleController extends Controller
 
             if ($rule === null) {
                 // Ohne Vorlagen anlegen (keine Neuprüfung je Regel) — Zuordnung und EINE Neuprüfung unten
-                $rule = $this->shiftRuleService->createRule(LegalDefaultShiftRules::attributesFor($definition));
+                $rule = $this->shiftRuleService->createRule(ShiftRuleSets::attributesFor($definition));
                 $existingRules->push($rule);
                 $created++;
                 $missingContractIds = $contractIds;
@@ -351,17 +362,23 @@ class ShiftRuleController extends Controller
     {
         $validated = $request->validated();
 
+        $attributes = [
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? '',
+            'individual_number_value' => $this->numberValueFor($shiftRule->trigger_type, $validated),
+            'period_weeks' => $this->periodWeeksFor($shiftRule->trigger_type, $validated),
+            'warning_color' => $validated['warning_color'],
+            'default_compensation_days' => $validated['default_compensation_days'] ?? null,
+            'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
+        ];
+        // Zusatzparameter nur anfassen, wenn der Aufruf sie mitschickt (ältere Clients lassen sie unberührt)
+        if (array_key_exists('config', $validated)) {
+            $attributes['config'] = ShiftRuleConfig::normalize($shiftRule->trigger_type, $validated['config']);
+        }
+
         $this->shiftRuleService->updateRule(
             $shiftRule,
-            [
-                'name' => $validated['name'],
-                'description' => $validated['description'] ?? '',
-                'individual_number_value' => $this->numberValueFor($shiftRule->trigger_type, $validated),
-                'period_weeks' => $this->periodWeeksFor($shiftRule->trigger_type, $validated),
-                'warning_color' => $validated['warning_color'],
-                'default_compensation_days' => $validated['default_compensation_days'] ?? null,
-                'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
-            ],
+            $attributes,
             $validated['contract_ids'] ?? null,
             $this->eligibleNotificationUserIds($validated['user_ids'] ?? null)
         );

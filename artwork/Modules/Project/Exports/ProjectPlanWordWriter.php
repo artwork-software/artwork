@@ -8,6 +8,7 @@ use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Settings;
+use PhpOffice\PhpWord\SimpleType\Jc;
 use PhpOffice\PhpWord\SimpleType\TblWidth;
 use PhpOffice\PhpWord\Style\Language;
 use PhpOffice\PhpWord\Style\Table;
@@ -33,17 +34,23 @@ class ProjectPlanWordWriter
     private const LINE_COLOR = 'A6A6A6';
     private const MUTED_COLOR = '595959';
 
+    /** Breite der Logo-Spalte im Kopf (Twips) sowie größte Bildmaße (Punkt) */
+    private const LOGO_COLUMN_WIDTH = 3400;
+    private const LOGO_MAX_WIDTH = 150;
+    private const LOGO_MAX_HEIGHT = 70;
+
     /**
-     * @param array{project_name: string, venue: PlanVenue|null, artists: list<string>,
-     *     team: list<PlanTeamMember>, days: list<PlanDay>} $plan
+     * @param array{project_name: string, venue: PlanVenue|null, additional_venues?: list<PlanVenue>,
+     *     artists: list<string>, team: list<PlanTeamMember>, days: list<PlanDay>} $plan
+     * @param string|null $logoPath Bilddatei (JPG, PNG oder GIF) für den Kopf des Dokuments
      * @return string Pfad der erzeugten Datei
      */
-    public function writeEventPlan(array $plan): string
+    public function writeEventPlan(array $plan, ?string $logoPath = null): string
     {
         [$phpWord, $section] = $this->newDocument('Veranstaltungsplan ' . $plan['project_name']);
 
-        $this->writeTitle($section, 'VERANSTALTUNGSPLAN', $plan['project_name'], null);
-        $this->writeVenue($section, $plan['venue']);
+        $this->writeTitle($section, 'VERANSTALTUNGSPLAN', $plan['project_name'], null, $logoPath);
+        $this->writeVenue($section, $plan['venue'], $plan['additional_venues'] ?? []);
 
         if ($plan['artists'] !== []) {
             $this->writeHeading($section, 'Künstler*innen');
@@ -64,10 +71,12 @@ class ProjectPlanWordWriter
 
     /**
      * @param array{project_name: string, artist_name: string|null, venue: PlanVenue|null,
-     *     team: list<PlanTeamMember>, days: list<PlanDay>, hotel: PlanHotel|null} $plan
+     *     additional_venues?: list<PlanVenue>, team: list<PlanTeamMember>, days: list<PlanDay>,
+     *     hotel: PlanHotel|null} $plan
+     * @param string|null $logoPath Bilddatei (JPG, PNG oder GIF) für den Kopf des Dokuments
      * @return string Pfad der erzeugten Datei
      */
-    public function writeArtistPlan(array $plan): string
+    public function writeArtistPlan(array $plan, ?string $logoPath = null): string
     {
         [$phpWord, $section] = $this->newDocument('Künstlerplan ' . $plan['project_name']);
 
@@ -75,9 +84,10 @@ class ProjectPlanWordWriter
             $section,
             'KÜNSTLERPLAN',
             $plan['project_name'],
-            $plan['artist_name'] !== null ? 'für ' . $plan['artist_name'] : null
+            $plan['artist_name'] !== null ? 'für ' . $plan['artist_name'] : null,
+            $logoPath
         );
-        $this->writeVenue($section, $plan['venue']);
+        $this->writeVenue($section, $plan['venue'], $plan['additional_venues'] ?? []);
 
         foreach ($plan['days'] as $day) {
             $this->writeHeading($section, $day['label'], uppercase: false);
@@ -114,26 +124,92 @@ class ProjectPlanWordWriter
         return [$phpWord, $section];
     }
 
-    private function writeTitle(Section $section, string $planTitle, string $projectName, ?string $subtitle): void
-    {
-        $section->addText($this->escape($planTitle), ['bold' => true, 'size' => 18]);
-        $section->addText($this->escape('»' . $projectName . '«'), ['bold' => true, 'size' => 15]);
+    /**
+     * Titelzeilen; mit Logo stehen sie links neben dem rechtsbündigen Bild.
+     */
+    private function writeTitle(
+        Section $section,
+        string $planTitle,
+        string $projectName,
+        ?string $subtitle,
+        ?string $logoPath
+    ): void {
+        $logoSize = $logoPath !== null ? $this->logoSize($logoPath) : null;
+        $container = $section;
+        $logoCell = null;
+
+        if ($logoSize !== null) {
+            $table = $section->addTable($this->tableStyle());
+            $table->addRow();
+            $container = $table->addCell(self::CONTENT_WIDTH - self::LOGO_COLUMN_WIDTH, $this->cellStyle());
+            $logoCell = $table->addCell(self::LOGO_COLUMN_WIDTH, $this->cellStyle());
+        }
+
+        $container->addText($this->escape($planTitle), ['bold' => true, 'size' => 18]);
+        $container->addText($this->escape('»' . $projectName . '«'), ['bold' => true, 'size' => 15]);
         if ($subtitle !== null) {
-            $section->addText($this->escape($subtitle), ['size' => 12], ['spaceBefore' => 60]);
+            $container->addText($this->escape($subtitle), ['size' => 12], ['spaceBefore' => 60]);
+        }
+
+        $logoCell?->addImage($logoPath, [
+            'width' => $logoSize['width'],
+            'height' => $logoSize['height'],
+            'alignment' => Jc::END,
+        ]);
+    }
+
+    /**
+     * Bildmaße in Punkt, proportional auf die Höchstmaße verkleinert; null bei unlesbarer Datei.
+     *
+     * @return array{width: float, height: float}|null
+     */
+    private function logoSize(string $logoPath): ?array
+    {
+        $size = is_file($logoPath) ? @getimagesize($logoPath) : false;
+        if ($size === false || $size[0] < 1 || $size[1] < 1) {
+            return null;
+        }
+
+        $scale = min(self::LOGO_MAX_WIDTH / $size[0], self::LOGO_MAX_HEIGHT / $size[1]);
+
+        return ['width' => round($size[0] * $scale, 1), 'height' => round($size[1] * $scale, 1)];
+    }
+
+    /**
+     * Spielstätte und weitere Räume, jeweils Name und Adresse.
+     *
+     * @param PlanVenue|null $venue
+     * @param list<PlanVenue> $additionalVenues
+     */
+    private function writeVenue(Section $section, ?array $venue, array $additionalVenues = []): void
+    {
+        if ($venue === null && $additionalVenues === []) {
+            return;
+        }
+
+        $this->writeHeading($section, $venue !== null ? 'Spielstätte' : 'Weitere Orte');
+        if ($venue !== null) {
+            $this->writeVenueLines($section, $venue, 0);
+        }
+
+        if ($venue !== null && $additionalVenues !== []) {
+            $section->addText(
+                $this->escape('Weitere Orte'),
+                ['bold' => true, 'color' => self::MUTED_COLOR],
+                ['spaceBefore' => 160, 'keepNext' => true]
+            );
+        }
+        foreach ($additionalVenues as $index => $additionalVenue) {
+            $this->writeVenueLines($section, $additionalVenue, $index > 0 || $venue !== null ? 60 : 0);
         }
     }
 
     /**
-     * @param PlanVenue|null $venue
+     * @param PlanVenue $venue
      */
-    private function writeVenue(Section $section, ?array $venue): void
+    private function writeVenueLines(Section $section, array $venue, int $spaceBefore): void
     {
-        if ($venue === null) {
-            return;
-        }
-
-        $this->writeHeading($section, 'Spielstätte');
-        $section->addText($this->escape($venue['name']), ['bold' => true]);
+        $section->addText($this->escape($venue['name']), ['bold' => true], ['spaceBefore' => $spaceBefore]);
         if ($venue['address'] !== null) {
             $section->addText($this->escape($venue['address']));
         }
@@ -203,13 +279,16 @@ class ProjectPlanWordWriter
     }
 
     /**
-     * @param array{time: string, title: string, description: string|null, place: string|null,
-     *     address: string|null} $entry
+     * @param array{time: string, title: string, admission?: string|null, description: string|null,
+     *     place: string|null, address: string|null} $entry
      */
     private function writeEntry(Cell $cell, array $entry): void
     {
         if ($entry['title'] !== '') {
             $cell->addText($this->escape($entry['title']), ['bold' => true]);
+        }
+        if (($entry['admission'] ?? null) !== null) {
+            $cell->addText($this->escape('Einlass: ' . $entry['admission'] . ' Uhr'));
         }
         $this->addLines($cell, $entry['description']);
 

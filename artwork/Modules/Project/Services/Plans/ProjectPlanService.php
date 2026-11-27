@@ -32,8 +32,8 @@ use Illuminate\Support\Collection;
  *
  * @phpstan-type PlanVenue array{name: string, address: string|null}
  * @phpstan-type PlanTeamMember array{name: string, function: string|null, phone: string|null, email: string|null}
- * @phpstan-type PlanEntry array{time: string, title: string, description: string|null, place: string|null,
- *     address: string|null}
+ * @phpstan-type PlanEntry array{time: string, title: string, admission: string|null,
+ *     description: string|null, place: string|null, address: string|null}
  * @phpstan-type PlanDay array{label: string, entries: list<PlanEntry>}
  * @phpstan-type PlanHotel array{name: string|null, address: string|null, phone: string|null,
  *     arrival: string|null, departure: string|null, nights: int|null, room_type: string|null}
@@ -49,6 +49,7 @@ class ProjectPlanService
     public function __construct(
         private readonly ProjectComponentVisibilityService $componentVisibilityService,
         private readonly CrmPropertyGroupService $crmPropertyGroupService,
+        private readonly ProjectPlanLogoService $logoService,
     ) {
     }
 
@@ -106,6 +107,10 @@ class ProjectPlanService
         return [
             'rooms' => $rooms,
             'suggested_venue_room_id' => $roomEventCounts->sortDesc()->keys()->first(),
+            'default_logo_url' => $this->logoService->defaultLogoUrl(),
+            'has_admission_times' => $events->contains(
+                fn (Event $event): bool => $this->admissionLabel($event) !== null
+            ),
             'event_types' => $eventTypes->map(fn (EventType $type): array => [
                 'id' => $type->id,
                 'name' => $type->name,
@@ -127,31 +132,46 @@ class ProjectPlanService
     }
 
     /**
-     * @return array{project_name: string, venue: PlanVenue|null, artists: list<string>,
-     *     team: list<PlanTeamMember>, days: list<PlanDay>}
+     * @param array<int, int> $additionalRoomIds weitere Räume, die mit Adresse unter der Spielstätte stehen
+     * @return array{project_name: string, venue: PlanVenue|null, additional_venues: list<PlanVenue>,
+     *     artists: list<string>, team: list<PlanTeamMember>, days: list<PlanDay>}
      */
-    public function eventPlan(Project $project, User $user, ?Room $venue): array
-    {
+    public function eventPlan(
+        Project $project,
+        User $user,
+        ?Room $venue,
+        array $additionalRoomIds = [],
+        bool $withAdmission = true
+    ): array {
         return [
             'project_name' => (string) $project->name,
             'venue' => $this->venue($venue),
+            'additional_venues' => $this->additionalVenues($additionalRoomIds, $venue),
             'artists' => $this->artists($project),
             'team' => $this->canSeeTeam($user) ? $this->team($project, $user) : [],
-            'days' => $this->days($this->projectEvents($project, $user), withAddress: false),
+            'days' => $this->days(
+                $this->projectEvents($project, $user),
+                withAddress: false,
+                withAdmission: $withAdmission
+            ),
         ];
     }
 
     /**
      * @param array<int, int> $eventIds
+     * @param array<int, int> $additionalRoomIds weitere Räume, die mit Adresse unter der Spielstätte stehen
      * @return array{project_name: string, artist_name: string|null, venue: PlanVenue|null,
-     *     team: list<PlanTeamMember>, days: list<PlanDay>, hotel: PlanHotel|null}
+     *     additional_venues: list<PlanVenue>, team: list<PlanTeamMember>, days: list<PlanDay>,
+     *     hotel: PlanHotel|null}
      */
     public function artistPlan(
         Project $project,
         User $user,
         ?Room $venue,
         ?ArtistResidency $residency,
-        array $eventIds
+        array $eventIds,
+        array $additionalRoomIds = [],
+        bool $withAdmission = true
     ): array {
         $events = $this->projectEvents($project, $user)->whereIn('id', $eventIds)->values();
 
@@ -159,8 +179,9 @@ class ProjectPlanService
             'project_name' => (string) $project->name,
             'artist_name' => $this->filled($residency?->display_name),
             'venue' => $this->venue($venue),
+            'additional_venues' => $this->additionalVenues($additionalRoomIds, $venue),
             'team' => $this->canSeeTeam($user) ? $this->team($project, $user) : [],
-            'days' => $this->days($events, withAddress: true),
+            'days' => $this->days($events, withAddress: true, withAdmission: $withAdmission),
             'hotel' => $residency !== null ? $this->hotel($residency, $user) : null,
         ];
     }
@@ -195,7 +216,7 @@ class ProjectPlanService
             ->orderBy('start_time')
             ->orderBy('id')
             ->get(['id', 'project_id', 'event_type_id', 'room_id', 'eventName', 'description', 'start_time',
-                'end_time', 'allDay']);
+                'end_time', 'admission_time', 'allDay']);
     }
 
     /**
@@ -231,6 +252,35 @@ class ProjectPlanService
         }
 
         return ['name' => (string) $room->name, 'address' => $room->formattedAddress()];
+    }
+
+    /**
+     * Weitere Räume in der gewählten Reihenfolge, ohne die Spielstätte selbst und ohne Dopplungen.
+     *
+     * @param array<int, int> $roomIds
+     * @return list<PlanVenue>
+     */
+    private function additionalVenues(array $roomIds, ?Room $venue): array
+    {
+        $roomIds = array_values(array_unique(array_filter(
+            array_map('intval', $roomIds),
+            static fn (int $roomId): bool => $roomId > 0 && $roomId !== $venue?->id
+        )));
+        if ($roomIds === []) {
+            return [];
+        }
+
+        $rooms = Room::query()
+            ->without(['admins', 'creator'])
+            ->whereIn('id', $roomIds)
+            ->get(['id', 'name', 'street', 'zip_code', 'city'])
+            ->keyBy('id');
+
+        return collect($roomIds)
+            ->map(fn (int $roomId): ?array => $this->venue($rooms->get($roomId)))
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**
@@ -310,7 +360,7 @@ class ProjectPlanService
      * @param Collection<int, Event> $events
      * @return list<PlanDay>
      */
-    private function days(Collection $events, bool $withAddress): array
+    private function days(Collection $events, bool $withAddress, bool $withAdmission): array
     {
         return $events
             ->groupBy(fn (Event $event): string => $event->start_time->toDateString())
@@ -319,6 +369,7 @@ class ProjectPlanService
                 'entries' => $dayEvents->map(fn (Event $event): array => [
                     'time' => $this->timeLabel($event),
                     'title' => $this->eventTitle($event),
+                    'admission' => $withAdmission ? $this->admissionLabel($event) : null,
                     'description' => $this->filled($event->description),
                     'place' => $this->filled($event->room?->name),
                     'address' => $withAddress ? $event->room?->formattedAddress() : null,
@@ -386,6 +437,16 @@ class ProjectPlanService
     private function eventTitle(Event $event): string
     {
         return $this->filled($event->eventName) ?? $this->filled($event->event_type?->name) ?? '';
+    }
+
+    /**
+     * Einlass des Termins als Uhrzeit (HH:MM); null, wenn keiner gepflegt ist.
+     */
+    private function admissionLabel(Event $event): ?string
+    {
+        $admission = $this->filled($event->admission_time);
+
+        return $admission !== null ? substr($admission, 0, 5) : null;
     }
 
     private function dayLabel(CarbonInterface $date): string

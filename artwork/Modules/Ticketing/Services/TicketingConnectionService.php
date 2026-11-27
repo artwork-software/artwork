@@ -62,7 +62,10 @@ class TicketingConnectionService
      * allen anderen die Anmeldung mit ihrer Adresse. Ist tickets nicht erreichbar, bleibt der
      * gewöhnliche Link zum Dashboard.
      *
-     * @param array{type: 'dashboard'}|array{type: 'date', dateId: string}|array{type: 'houseSettings', tab?: string}|array{type: 'customer', customerId: string} $destination
+     * @param array{type: 'dashboard'}
+     *     |array{type: 'date', dateId: string}
+     *     |array{type: 'houseSettings', tab?: string}
+     *     |array{type: 'customer', customerId: string} $destination
      */
     public function loginUrl(TicketingConnection $connection, User $user, array $destination): string
     {
@@ -203,7 +206,7 @@ class TicketingConnectionService
         // Ab hier besteht die Verbindung; scheitert der Abgleich, bleibt sie und die Meldung nennt den Rest.
         try {
             $this->syncRooms($connection, $draft['rooms']);
-            $this->syncReductions($connection, $draft['reductions']);
+            $this->syncReductions($connection, $draft['reductions'], []);
             $this->billing->uploadLegalDocuments($connection, $draft['billing'] ?? []);
         } catch (TicketingConnectionException $exception) {
             throw new TicketingConnectionException(__(
@@ -281,24 +284,26 @@ class TicketingConnectionService
     }
 
     /**
+     * Legt die Liste an oder ändert sie; gelöscht wird nur, was $removedIds nennt. Eine Ermäßigung, die
+     * jemand anderes inzwischen angelegt hat, bleibt so stehen.
+     *
      * @param list<array{
-     *     name: string, kind: string, value: int, requires_proof: bool, default_enabled: bool
+     *     id?: ?string, name: string, kind: string, value: int, requires_proof: bool, default_enabled: bool
      * }> $reductions
+     * @param list<string> $removedIds
      */
-    public function syncReductions(TicketingConnection $connection, array $reductions): void
+    public function syncReductions(TicketingConnection $connection, array $reductions, array $removedIds): void
     {
-        if ($reductions === []) {
-            return;
-        }
-
         $this->tickets->post($connection, '/reductions', [
             'reductions' => array_map(static fn (array $reduction): array => [
+                'id' => $reduction['id'] ?? null,
                 'name' => $reduction['name'],
                 'kind' => $reduction['kind'],
                 'value' => (int) $reduction['value'],
                 'requiresProof' => (bool) $reduction['requires_proof'],
                 'defaultEnabled' => (bool) $reduction['default_enabled'],
             ], $reductions),
+            'removedIds' => $removedIds,
         ]);
     }
 
@@ -325,7 +330,9 @@ class TicketingConnectionService
         $onSale = $this->datesOnSale();
         if ($onSale > 0) {
             throw new TicketingConnectionException(trans_choice(
-                '{1} One date is still on sale. Withdraw it in the ticketing component of its project before disconnecting.|[2,*] :count dates are still on sale. Withdraw them in the ticketing component of their projects before disconnecting.',
+                '{1} One date is still on sale. Withdraw it in the ticketing component of its project before '
+                . 'disconnecting.|[2,*] :count dates are still on sale. Withdraw them in the ticketing component of '
+                . 'their projects before disconnecting.',
                 $onSale,
                 ['count' => $onSale],
             ));

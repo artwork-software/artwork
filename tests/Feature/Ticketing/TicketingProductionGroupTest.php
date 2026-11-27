@@ -12,7 +12,7 @@ use Tests\Concerns\ActsAsRole;
 use Tests\Feature\FeatureTestCase;
 
 /**
- * Tab "Produktionsgruppen": Gruppen von Produktionen, für die Karten, Abos und Rabattcodes in
+ * Tab "Ticketprojekt-Gruppen": Gruppen von Produktionen, für die Karten, Abos und Rabatte in
  * Artwork-Tickets als Ganzes gelten — tickets hält sie, hier wird gepflegt.
  */
 final class TicketingProductionGroupTest extends FeatureTestCase
@@ -63,7 +63,6 @@ final class TicketingProductionGroupTest extends FeatureTestCase
                     'passTypeCount' => 2,
                     'couponCount' => 1,
                     'sold' => true,
-                    'deletable' => false,
                 ]],
                 'productions' => [['id' => self::PRODUCTION_ID, 'title' => 'Faust']],
             ]),
@@ -76,7 +75,7 @@ final class TicketingProductionGroupTest extends FeatureTestCase
                 ->where('connection.connected', true)
                 ->where('groups.0.name', 'Workshops')
                 ->where('groups.0.couponCount', 1)
-                ->where('groups.0.deletable', false)
+                ->where('groups.0.sold', true)
                 ->where('productions.0.title', 'Faust')
                 ->where('ticketsError', null));
 
@@ -124,14 +123,14 @@ final class TicketingProductionGroupTest extends FeatureTestCase
     }
 
     #[Test]
-    public function a_group_in_use_refused_by_tickets_comes_back_on_the_form(): void
+    public function a_refusal_from_tickets_comes_back_on_the_form(): void
     {
         $this->connect();
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
         $url = self::BASE . '/' . self::GROUP_ID;
 
         Http::fake([
-            $url => Http::response(['error' => ['code' => 'GROUP_IN_USE', 'message' => 'GROUP_IN_USE']], 409),
+            $url => Http::response(['error' => ['code' => 'NAME_TAKEN', 'message' => 'NAME_TAKEN']], 409),
         ]);
 
         $this->put(route('settings.tickets.groups.update', self::GROUP_ID), ['name' => 'Workshops', 'eventIds' => []])

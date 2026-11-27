@@ -3,9 +3,12 @@
 namespace Artwork\Modules\AiAssistant\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\AiAssistant\DTOs\AiBudgetRankingData;
 use Artwork\Modules\AiAssistant\DTOs\AiProjectListData;
 use Artwork\Modules\AiAssistant\DTOs\AiProjectDetailData;
+use Artwork\Modules\AiAssistant\Http\Requests\IndexAiBudgetRankingRequest;
 use Artwork\Modules\AiAssistant\Http\Requests\IndexAiProjectsRequest;
+use Artwork\Modules\AiAssistant\Services\AiBudgetRankingService;
 use Artwork\Modules\AiAssistant\Services\AiProjectReadService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
@@ -25,6 +28,7 @@ class AiProjectApiController extends Controller
     public function __construct(
         private readonly AiProjectReadService $service,
         private readonly ProjectPolicy $policy,
+        private readonly AiBudgetRankingService $ranking,
     ) {
     }
 
@@ -34,6 +38,22 @@ class AiProjectApiController extends Controller
         $filters = $request->validated();
 
         return $this->service->search($request->user(), $filters);
+    }
+
+    /**
+     * Projekte nach Einnahmen, Kosten oder Ergebnis einer Budgetspalte (core-ai-aggregates). Projekte ohne
+     * Budgetrecht erscheinen nur als Zaehler.
+     */
+    public function budgetRanking(IndexAiBudgetRankingRequest $request): AiBudgetRankingData
+    {
+        return $this->ranking->ranking($request->user(), [
+            'period' => $request->period(),
+            'sort' => $request->sort(),
+            'direction' => $request->direction(),
+            'limit' => $request->limit(),
+            'state_id' => $request->stateId(),
+            'include_groups' => $request->includeGroups(),
+        ]);
     }
 
     public function show(Request $request, int $project): AiProjectDetailData

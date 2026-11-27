@@ -91,9 +91,25 @@ export function useBlobDownload() {
      * @throws {BlobDownloadError} mit der Server-Meldung (fromServer = true), sonst mit der Axios-Meldung
      */
     const download = async (url, params, fallbackFilename) => {
+        await request(() => axios.get(url, {params, responseType: "blob"}), fallbackFilename);
+    };
+
+    /**
+     * Wie download(), aber per POST mit Formulardaten (z. B. wenn eine Datei mitgeschickt wird).
+     *
+     * @param {string} url absolute Route
+     * @param {FormData} formData
+     * @param {string} fallbackFilename
+     * @throws {BlobDownloadError}
+     */
+    const downloadWithFormData = async (url, formData, fallbackFilename) => {
+        await request(() => axios.post(url, formData, {responseType: "blob"}), fallbackFilename);
+    };
+
+    const request = async (send, fallbackFilename) => {
         let response;
         try {
-            response = await axios.get(url, {params, responseType: "blob"});
+            response = await send();
         } catch (error) {
             const serverMessage = await readServerMessage(error);
             throw new BlobDownloadError(serverMessage ?? (error?.message || "Download failed"), {
@@ -105,7 +121,7 @@ export function useBlobDownload() {
         saveResponse(response, fallbackFilename);
     };
 
-    return {download};
+    return {download, downloadWithFormData};
 }
 
 /** Erster/letzter Tag des aktuellen Monats als YYYY-MM-DD (lokale Zeit, ohne UTC-Verschiebung). */

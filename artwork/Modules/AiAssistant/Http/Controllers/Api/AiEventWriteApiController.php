@@ -28,7 +28,7 @@ class AiEventWriteApiController extends Controller
     {
         return $this->service->createBatch(
             $request->user(),
-            (int) $request->validated('project_id'),
+            $request->projectId(),
             $request->seriesSpec(),
             AiWriteIntent::fromRequest($request),
         );

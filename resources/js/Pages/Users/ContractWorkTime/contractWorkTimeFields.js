@@ -22,7 +22,8 @@ export const contractFieldLabels = {
     special_day_rule_active: 'Special Day Rule Active',
     compensation_period: 'Compensation Period (in days)',
     overtime_rule_active: 'Overtime rule active',
-    overtime_compensation_period: 'Period within which overtime must be reduced (days)',
+    overtime_compensation_period: 'Period within which overtime must be reduced',
+    overtime_compensation_period_unit: 'Unit of the period',
     annual_vacation_days: 'Annual vacation days (per calendar year)',
     ...Object.fromEntries(seasonInfoParams.flatMap(param => [
         [param.key, param.label],
@@ -49,6 +50,7 @@ export const emptyContractValues = () => ({
     compensation_period: 0,
     overtime_rule_active: false,
     overtime_compensation_period: null,
+    overtime_compensation_period_unit: null,
     free_sundays_per_season: 0,
     days_off_first_26_weeks: 0,
     free_sundays_per_season_active: false,
@@ -156,3 +158,11 @@ export const entryValidOn = (entries, date) => {
 };
 
 export const addDays = (date, days) => dayjs(date).add(days, 'day').format('YYYY-MM-DD');
+
+/** Überstunden-Abbaufrist mit Einheit, z. B. "42 Tage" oder "6 Kalenderwochen" */
+export const formatOvertimePeriod = (period, unit, t) => {
+    if (period === null || period === undefined || period === '') {
+        return '-';
+    }
+    return `${period} ${t(unit === 'calendar_weeks' ? 'calendar weeks' : 'days')}`;
+};

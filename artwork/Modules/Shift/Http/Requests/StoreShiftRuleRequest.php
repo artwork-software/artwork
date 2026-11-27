@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Http\Requests;
 
 use Artwork\Core\Validation\Rules\HexColorRule;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
+use Artwork\Modules\Shift\Support\ShiftRuleConfig;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreShiftRuleRequest extends FormRequest
@@ -17,7 +18,11 @@ class StoreShiftRuleRequest extends FormRequest
         ));
         $typesWithPeriodWeeks = implode(',', ShiftRuleService::ruleTypesWithPeriodWeeks());
 
+        $triggerType = $this->input('trigger_type');
+
         return [
+            // Zusatzparameter je Regeltyp (z. B. Wochentag und Uhrzeit der Wochenplan-Frist)
+            ...ShiftRuleConfig::validationRules(is_string($triggerType) ? $triggerType : null),
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:65535',
             'trigger_type' => 'required|string|max:255',

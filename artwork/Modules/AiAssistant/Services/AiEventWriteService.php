@@ -65,36 +65,47 @@ class AiEventWriteService
     }
 
     /**
+     * Dieselbe Serie in jedem Raum aus `room_ids` (core-ai-series-rooms). Ohne Projekt entstehen
+     * Termine ohne Projekt, wie in der Oberflaeche. Obergrenze `ai.series_limit` ueber alle Raeume.
+     *
      * @param array{
      *     from: string, to: string, weekdays: list<int>, all_day: bool, start_time: string|null,
-     *     duration_minutes: int|null, room_id: int, type_id: int, name: string|null,
+     *     duration_minutes: int|null, room_ids: list<int>, type_id: int, name: string|null,
      *     description: string|null
      * } $spec
      */
     public function createBatch(
         User $user,
-        int $projectId,
+        ?int $projectId,
         array $spec,
         AiWriteIntent $intent
     ): AiWritePreviewData|AiWriteResultData {
-        $project = Project::query()->visibleFor($user)->whereKey($projectId)->first();
-        abort_if($project === null, Response::HTTP_NOT_FOUND);
+        $project = null;
+        if ($projectId !== null) {
+            $project = Project::query()->visibleFor($user)->whereKey($projectId)->first();
+            abort_if($project === null, Response::HTTP_NOT_FOUND);
+        }
 
-        $room = Room::query()->whereKey($spec['room_id'])->first();
-        abort_if($room === null, Response::HTTP_NOT_FOUND);
+        /** @var array<int, Room> $rooms */
+        $rooms = Room::query()->whereKey($spec['room_ids'])->get()->keyBy('id')->all();
+        abort_if(count($rooms) !== count($spec['room_ids']), Response::HTTP_NOT_FOUND);
 
         $occurrences = $this->occurrences($spec);
         abort_if($occurrences === [], Response::HTTP_UNPROCESSABLE_ENTITY, 'Der Serienbeschrieb ergibt keinen Termin.');
 
-        $limit = (int) config('ai.list_limit');
+        $limit = (int) config('ai.series_limit', 100);
         abort_if(
-            count($occurrences) > $limit,
+            count($occurrences) * count($rooms) > $limit,
             Response::HTTP_UNPROCESSABLE_ENTITY,
             "Der Serienbeschrieb ergibt mehr als {$limit} Termine."
         );
 
-        $conflicts = $this->creationPermissionConflicts($user, $project, $room);
-        $this->assertExecutable($user, $intent, self::TOOL_CREATE, $conflicts);
+        /** @var array<int, list<AiWriteConflictData>> $conflictsByRoom */
+        $conflictsByRoom = [];
+        foreach ($spec['room_ids'] as $roomId) {
+            $conflictsByRoom[$roomId] = $this->creationPermissionConflicts($user, $project, $rooms[$roomId]);
+        }
+        $this->assertExecutable($user, $intent, self::TOOL_CREATE, array_merge(...array_values($conflictsByRoom)));
 
         return $this->perform(
             $user,
@@ -103,18 +114,25 @@ class AiEventWriteService
             function () use ($occurrences, $project, $user, $spec): array {
                 $events = [];
 
-                foreach ($occurrences as $occurrence) {
-                    $events[] = $this->eventService->createBulkEvent(
-                        $this->creationPayload($occurrence, $spec),
-                        $project,
-                        $user->id
-                    );
+                foreach ($spec['room_ids'] as $roomId) {
+                    foreach ($occurrences as $occurrence) {
+                        $events[] = $this->eventService->createBulkEvent(
+                            $this->creationPayload($occurrence, $spec, $roomId),
+                            $project,
+                            $user->id
+                        );
+                    }
                 }
 
                 return $events;
             },
             fn (array $events): array => array_map(
-                fn (Event $event): AiWriteItemData => $this->itemFor($event, 'create', $conflicts, $user),
+                fn (Event $event): AiWriteItemData => $this->itemFor(
+                    $event,
+                    'create',
+                    $conflictsByRoom[(int) $event->room_id] ?? [],
+                    $user
+                ),
                 $events
             ),
             static fn (array $events): array => array_map(
@@ -661,7 +679,7 @@ class AiEventWriteService
     /**
      * @param array{
      *     from: string, to: string, weekdays: list<int>, all_day: bool, start_time: string|null,
-     *     duration_minutes: int|null, room_id: int, type_id: int, name: string|null,
+     *     duration_minutes: int|null, room_ids: list<int>, type_id: int, name: string|null,
      *     description: string|null
      * } $spec
      * @return list<CarbonImmutable>
@@ -690,13 +708,13 @@ class AiEventWriteService
      * Selbst zu rechnen hiesse, dieselbe Regel ein zweites Mal zu pflegen.
      *
      * @param array{
-     *     all_day: bool, start_time: string|null, duration_minutes: int|null, room_id: int,
+     *     all_day: bool, start_time: string|null, duration_minutes: int|null, room_ids: list<int>,
      *     type_id: int, name: string|null, description: string|null, from: string, to: string,
      *     weekdays: list<int>
      * } $spec
      * @return array<string, mixed>
      */
-    private function creationPayload(CarbonImmutable $day, array $spec): array
+    private function creationPayload(CarbonImmutable $day, array $spec, int $roomId): array
     {
         $start = $spec['all_day'] || $spec['start_time'] === null
             ? null
@@ -710,7 +728,7 @@ class AiEventWriteService
             'name' => $spec['name'] ?? '',
             'description' => $spec['description'],
             'type' => ['id' => $spec['type_id']],
-            'room' => ['id' => $spec['room_id']],
+            'room' => ['id' => $roomId],
             'is_planning' => false,
         ];
     }
@@ -834,12 +852,12 @@ class AiEventWriteService
      *
      * @return list<AiWriteConflictData>
      */
-    private function creationPermissionConflicts(User $user, Project $project, Room $room): array
+    private function creationPermissionConflicts(User $user, ?Project $project, Room $room): array
     {
         $allowed = WebGuardScope::run(static function () use ($user, $project, $room): bool {
             $gate = Gate::forUser($user);
 
-            if (!$gate->allows('create', Event::class) || !$gate->allows('view', $project)) {
+            if (!$gate->allows('create', Event::class) || ($project !== null && !$gate->allows('view', $project))) {
                 return false;
             }
 
@@ -850,7 +868,7 @@ class AiEventWriteService
 
         return $allowed ? [] : [new AiWriteConflictData(
             AiWriteConflictData::MISSING_PERMISSION,
-            'Diese Person darf in diesem Raum keine Termine anlegen.',
+            "Diese Person darf im Raum \"{$room->name}\" keine Termine anlegen.",
             null
         )];
     }

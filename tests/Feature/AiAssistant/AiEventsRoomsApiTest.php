@@ -271,6 +271,25 @@ final class AiEventsRoomsApiTest extends TestCase
     }
 
     /**
+     * core-ai-aggregates: 25 freie Raeume an einem Tag sind 25 Slots — frueher kappte die Liste bei 20
+     * ohne Hinweis, und der Assistent nannte nur einen Teil der freien Raeume (Konversation 5).
+     */
+    #[Test]
+    public function free_slots_are_not_capped_at_twenty(): void
+    {
+        $rooms = Room::factory()->count(25)->create();
+        $this->actingAsToken(User::factory()->create());
+
+        $roomIds = $rooms->map(fn (Room $room) => 'room_ids[]=' . $room->id)->implode('&');
+        $query = $this->range() . '&min_hours=1&' . $roomIds;
+        $payload = $this->getJson('/api/v1/ai/rooms/free-slots?' . $query)->assertOk()->json();
+
+        $this->assertCount(25, $payload['data']);
+        $this->assertSame(25, $payload['total']);
+        $this->assertFalse($payload['truncated']);
+    }
+
+    /**
      * Pflichtfall des Briefs: Ein Termin, dessen Inhalt die Person nicht sehen darf, blockiert
      * den Raum trotzdem. Belegung und Slots lesen deshalb **ohne** `visibleFor` — nach der
      * heutigen UI-Regel sieht die Person den Termin zwar ohnehin, aber die Rechnung darf sich

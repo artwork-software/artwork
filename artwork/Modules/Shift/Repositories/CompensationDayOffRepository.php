@@ -211,6 +211,21 @@ class CompensationDayOffRepository extends BaseRepository
             ->get();
     }
 
+    /**
+     * Gewährte ganze und halbe Ersatzfreitage der Person, deren freier Tag im Zeitraum liegt.
+     *
+     * @return Collection<int, CompensationDayOff>
+     */
+    public function getGrantedForUserInRange(int $userId, string $start, string $end): Collection
+    {
+        return CompensationDayOff::where('user_id', $userId)
+            ->granted()
+            ->whereDate('granted_date', '>=', $start)
+            ->whereDate('granted_date', '<=', $end)
+            ->orderBy('granted_date')
+            ->get();
+    }
+
     public function findOpenHalfForUserExcept(int $userId, int $exceptId): ?CompensationDayOff
     {
         return CompensationDayOff::where('user_id', $userId)

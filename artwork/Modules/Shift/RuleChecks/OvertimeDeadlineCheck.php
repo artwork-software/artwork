@@ -54,6 +54,11 @@ class OvertimeDeadlineCheck extends AbstractRuleCheck
             ->orderBy('deadline')
             ->get();
 
+        // Mehrere Einträge können dieselbe Frist haben (Frist in Kalenderwochen: alle Buchungstage einer
+        // Woche enden am selben Sonntag). Der Verstoß je Fristtag trägt dann die Summe der offenen Minuten.
+        /** @var array<string, array{minutes: int, first_booking_day: string, entries: int}> $totals */
+        $totals = [];
+
         foreach ($entries as $entry) {
             $bookingDay = Carbon::parse($entry->date)->startOfDay();
             if (!$this->overtimeRuleActiveOn($user, $bookingDay)) {
@@ -64,25 +69,45 @@ class OvertimeDeadlineCheck extends AbstractRuleCheck
             $daysLeft = (int) $today->diffInDays($deadline, false);
             $expired = $deadline->lt($today);
 
-            $violations->push($this->createViolationWithoutShift(
+            $key = $deadline->toDateString();
+            $previous = $totals[$key] ?? null;
+            $totals[$key] = [
+                'minutes' => ($previous['minutes'] ?? 0) + (int) $entry->remaining_minutes,
+                'first_booking_day' => min($previous['first_booking_day'] ?? $bookingDay->toDateString(), $bookingDay->toDateString()),
+                'entries' => ($previous['entries'] ?? 0) + 1,
+            ];
+
+            $violation = $this->createViolationWithoutShift(
                 $rule,
                 $user,
                 $deadline,
                 [
                     'type' => 'overtime_deadline',
-                    'remaining_minutes' => (int) $entry->remaining_minutes,
-                    'deadline' => $deadline->toDateString(),
+                    'remaining_minutes' => $totals[$key]['minutes'],
+                    'deadline' => $key,
                     'days_left' => $daysLeft,
-                    'booking_day' => Carbon::parse($entry->date)->toDateString(),
+                    'booking_day' => $totals[$key]['first_booking_day'],
+                    'entries' => $totals[$key]['entries'],
                     'warn_days' => $warnDays,
                     'expired' => $expired,
                 ],
                 $expired ? 'error' : 'warning',
                 $bookingDay
-            ));
+            );
+
+            if ($violation === null) {
+                // Die Regel gilt für diesen Eintrag nicht (Vertrag am Buchungstag): nicht mitzählen.
+                if ($previous === null) {
+                    unset($totals[$key]);
+                } else {
+                    $totals[$key] = $previous;
+                }
+                continue;
+            }
+            $violations->put($key, $violation);
         }
 
-        return $violations;
+        return $violations->values();
     }
 
     /**

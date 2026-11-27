@@ -1,0 +1,26 @@
+{
+    "args": {
+        "series_spec": {
+            "from": "2026-12-01",
+            "to": "2026-12-25",
+            "weekdays": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "all_day": false,
+            "start_time": "10:00",
+            "duration_minutes": 240,
+            "room_ids": [
+                12,
+                5,
+                9
+            ],
+            "type_id": 4,
+            "name": "Hanz"
+        }
+    },
+    "hash": "e56291280e076e40d0a73c2fe0c9ff41795e41bbc90a6e034db18e9fab706e2f"
+}

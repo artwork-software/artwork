@@ -154,7 +154,7 @@ class TicketingConnectionController extends Controller
         return $this->sendToTickets(
             $this->requireConnection(),
             fn (TicketingConnection $connection) => $this->connections
-                ->syncReductions($connection, $request->validated('reductions')),
+                ->syncReductions($connection, $request->validated('reductions'), $request->validated('removed_ids')),
             __('Reductions synced with Artwork-Tickets.'),
         );
     }

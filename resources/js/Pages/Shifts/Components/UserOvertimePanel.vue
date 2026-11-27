@@ -38,7 +38,12 @@
             {{ $t('The overtime rule is active, but no compensation period is stored in the contract – overtime has no deadline and cannot become payable.') }}
         </p>
         <p v-else-if="local.rule_active" class="text-xs text-text-muted">
-            {{ $t('Overtime rule active: overtime not compensated within {n} days can be paid out.', { n: local.compensation_period }) }}
+            <template v-if="local.compensation_period_unit === 'calendar_weeks'">
+                {{ $t('Overtime rule active: overtime not compensated by the end of the {n}th following calendar week can be paid out.', { n: local.compensation_period }) }}
+            </template>
+            <template v-else>
+                {{ $t('Overtime rule active: overtime not compensated within {n} days can be paid out.', { n: local.compensation_period }) }}
+            </template>
         </p>
         <p v-else class="text-xs text-text-muted">
             {{ $t('No overtime rule in the contract: overview of how overtime and minus hours accrued and were compensated – without deadlines or payout.') }}

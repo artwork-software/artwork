@@ -197,11 +197,17 @@
                             </div>
                         </div>
                         <div v-if="userContractForm.overtime_rule_active" class="mt-2 pl-7">
-                            <BaseInput
-                                v-model="userContractForm.overtime_compensation_period"
-                                :label="$t('Period within which overtime must be reduced (days)')"
-                                type="number"
-                                id="overtime_compensation_period" />
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <BaseInput
+                                    v-model="userContractForm.overtime_compensation_period"
+                                    :label="$t('Period within which overtime must be reduced')"
+                                    type="number"
+                                    id="overtime_compensation_period" />
+                                <OvertimePeriodUnitSelect v-model="userContractForm.overtime_compensation_period_unit" />
+                            </div>
+                            <p v-if="userContractForm.overtime_compensation_period_unit === 'calendar_weeks'" class="mt-1 text-xs text-text-subtle">
+                                {{ $t('Calendar weeks: the deadline ends on the Sunday of the nth calendar week after the week in which the overtime accrued.') }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -238,6 +244,7 @@ import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import OvertimePeriodUnitSelect from "@/Pages/Users/ContractWorkTime/OvertimePeriodUnitSelect.vue";
 
 const props = defineProps({
     userContract: {
@@ -266,6 +273,7 @@ const props = defineProps({
             annual_vacation_days: 0,
             overtime_rule_active: false,
             overtime_compensation_period: null,
+            overtime_compensation_period_unit: null,
         })
     },
 })
@@ -299,6 +307,7 @@ const userContractForm = useForm({
     // Überstunden (DP-18 Stufe 2)
     overtime_rule_active: props.userContract.overtime_rule_active ?? false,
     overtime_compensation_period: props.userContract.overtime_compensation_period ?? null,
+    overtime_compensation_period_unit: props.userContract.overtime_compensation_period_unit ?? null,
 })
 
 const seasonInfoParams = [

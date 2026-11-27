@@ -162,6 +162,7 @@ import {
 import {useTranslation} from "@/Composeables/Translation.js";
 import {
     contractFieldLabels,
+    formatOvertimePeriod,
     contractValuesFrom,
     formatPeriod,
     seasonInfoParams
@@ -237,7 +238,7 @@ const summaryItems = computed(() => {
         {
             label: 'Overtime rule active',
             value: props.assign.overtime_rule_active
-                ? `${$t('Yes')} (${props.assign.overtime_compensation_period ?? '-'} ${$t('days')})`
+                ? `${$t('Yes')} (${formatOvertimePeriod(props.assign.overtime_compensation_period, props.assign.overtime_compensation_period_unit, $t)})`
                 : $t('No'),
         },
     ];

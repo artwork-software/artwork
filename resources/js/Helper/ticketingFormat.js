@@ -13,6 +13,12 @@ export function formatEuro(cents) {
     return formatter().formatCurrency(cents / 100)
 }
 
+/** Basis points with only the decimals they need: 1500 → "15 %", 450 → "4,5 %". */
+export function formatPercent(basisPoints) {
+    const decimals = [100, 10, 1].findIndex((step) => basisPoints % step === 0)
+    return `${formatter().formatNumber(basisPoints / 100, decimals)} %`
+}
+
 export function formatDate(value) {
     return formatter().formatDate(value)
 }

@@ -213,7 +213,7 @@ final class TicketingPassTypeTest extends FeatureTestCase
 
         Http::fake([
             self::TICKETS_URL . '/api/integration/v1/pass-types/' . self::PASS_TYPE_ID => Http::response(
-                ['error' => ['code' => 'PASS_TYPE_SOLD', 'message' => 'PASS_TYPE_SOLD']],
+                ['error' => ['code' => 'NAME_TAKEN', 'message' => 'NAME_TAKEN']],
                 409,
             ),
         ]);
@@ -222,6 +222,21 @@ final class TicketingPassTypeTest extends FeatureTestCase
             ->assertSessionHasErrors('tickets');
 
         Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT' && $request['uses'] === 12);
+    }
+
+    #[Test]
+    public function duplicating_sends_the_name_of_the_copy(): void
+    {
+        $this->connect();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $url = self::TICKETS_URL . '/api/integration/v1/pass-types/' . self::PASS_TYPE_ID . '/duplicate';
+        Http::fake([$url => Http::response(['id' => 'copy'])]);
+
+        $this->post(route('settings.tickets.passes.duplicate', self::PASS_TYPE_ID), ['name' => '10er-Karte (Kopie)'])
+            ->assertSessionHas('success')
+            ->assertSessionHas('createdId', 'copy');
+
+        Http::assertSent(fn (Request $request): bool => $request->url() === $url && $request['name'] === '10er-Karte (Kopie)');
     }
 
     #[Test]

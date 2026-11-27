@@ -205,6 +205,24 @@ class ShiftSettingsController extends Controller
     }
 
     /**
+     * Kennzeichnung kurzfristiger Änderungen an verbindlichen Diensten: Schalter und Stichzeit am
+     * Vortag des Dienstbeginns.
+     */
+    public function updateShortNoticeMarking(Request $request, ShiftSettings $shiftSettings): RedirectResponse
+    {
+        $validated = $request->validate([
+            'short_notice_marking_enabled' => ['required', 'boolean'],
+            'short_notice_cutoff_time' => ['required', 'date_format:H:i'],
+        ]);
+
+        $shiftSettings->short_notice_marking_enabled = (bool) $validated['short_notice_marking_enabled'];
+        $shiftSettings->short_notice_cutoff_time = $validated['short_notice_cutoff_time'];
+        $shiftSettings->save();
+
+        return $this->redirector->back();
+    }
+
+    /**
      * Nachtarbeitszeitraum (GeneralSettings start_night_time/end_night_time):
      * Stunden in diesem Fenster bucht der WorkTimeBookingService als Nachtstunden.
      */

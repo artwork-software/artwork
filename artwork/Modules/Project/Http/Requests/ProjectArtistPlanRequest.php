@@ -3,20 +3,14 @@
 namespace Artwork\Modules\Project\Http\Requests;
 
 use Artwork\Modules\Project\Models\Project;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
  * Künstlerplan: Spielstätte, Künstleraufenthalt (Hotelangaben) und die ausgewählten Termine des Projekts.
  * Die Terminarten werden als Vorauswahl für den nächsten Export gespeichert.
  */
-class ProjectArtistPlanRequest extends FormRequest
+class ProjectArtistPlanRequest extends ProjectEventPlanRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * @return array<string, array<int, mixed>>
      */
@@ -26,7 +20,7 @@ class ProjectArtistPlanRequest extends FormRequest
         $projectId = $project instanceof Project ? $project->id : 0;
 
         return [
-            'venue_room_id' => ['nullable', 'integer', 'exists:rooms,id,deleted_at,NULL'],
+            ...parent::rules(),
             'artist_residency_id' => [
                 'nullable',
                 'integer',

@@ -99,6 +99,8 @@ class Kernel extends ConsoleKernel
         // Bestaetigungsfrist einer KI-Aktion sind 10 Minuten (config ai.action_ttl_minutes);
         // stuendlich reicht, weil abgelaufene Aktionen ohnehin bei jeder Pruefung durchfallen.
         $schedule->command('ai:expire-actions')->hourly()->runInBackground();
+        // core-ai-event-stats-exports: abgelaufene PDF-Exporte der KI-Bar
+        $schedule->command('ai:purge-exports')->dailyAt('03:10')->runInBackground();
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();

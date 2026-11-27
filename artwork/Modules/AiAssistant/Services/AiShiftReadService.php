@@ -325,7 +325,7 @@ class AiShiftReadService
      * Die Methode selbst ist unter `auth:api` nicht benutzbar: sie liest den Web-Guard und
      * `can()`, das ohne den Guard `web` fuer jedes Hausrecht still `false` liefert.
      */
-    private function hidesUncommittedShifts(User $user): bool
+    public function hidesUncommittedShifts(User $user): bool
     {
         if (!$this->shiftSettings->hide_uncommitted_shifts_from_own_roster) {
             return false;

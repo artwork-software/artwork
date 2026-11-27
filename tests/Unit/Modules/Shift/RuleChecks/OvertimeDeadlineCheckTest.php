@@ -151,4 +151,24 @@ final class OvertimeDeadlineCheckTest extends TestCase
         );
         $this->assertSame(90, $violations->first()->violation_data['remaining_minutes']);
     }
+
+    #[Test]
+    public function entries_with_the_same_deadline_are_summed_in_one_violation(): void
+    {
+        [$user] = $this->userWithOvertimeRule();
+        $today = Carbon::today();
+        $deadline = $today->copy()->addDays(5);
+        // Frist in Kalenderwochen: alle Buchungstage einer Woche enden am selben Tag
+        $this->overtimeEntryFor($user, $today->copy()->subDays(40), 120, $deadline);
+        $this->overtimeEntryFor($user, $today->copy()->subDays(38), 90, $deadline);
+        $this->overtimeEntryFor($user, $today->copy()->subDays(36), 30, $deadline);
+
+        $violations = $this->check->check($this->rule(14), $user, $today->copy(), $today->copy()->addDays(14));
+
+        $this->assertCount(1, $violations);
+        $data = $violations->first()->fresh()->violation_data;
+        $this->assertSame(240, $data['remaining_minutes']);
+        $this->assertSame(3, $data['entries']);
+        $this->assertSame($today->copy()->subDays(40)->toDateString(), $data['booking_day']);
+    }
 }

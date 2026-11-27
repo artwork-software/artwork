@@ -7,6 +7,7 @@ use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
@@ -19,6 +20,8 @@ use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -27,7 +30,8 @@ use ZipArchive;
 
 /**
  * Veranstaltungsplan und Künstlerplan als Word: Projektzugriff, Sichtbarkeit von Team und
- * Künstleraufenthalten, Inhalte, ausgelassene leere Abschnitte und gespeicherte Terminarten.
+ * Künstleraufenthalten, Inhalte, ausgelassene leere Abschnitte und gespeicherte Terminarten,
+ * dazu Logo (Tool-Einstellungen oder eigene Datei), weitere Räume und Einlass der Termine.
  */
 final class ProjectPlanExportTest extends FeatureTestCase
 {
@@ -58,6 +62,9 @@ final class ProjectPlanExportTest extends FeatureTestCase
         SidebarTabComponent::query()->delete();
         ComponentInTab::query()->delete();
 
+        Storage::fake('public');
+        $this->useDefaultLogo('');
+
         $this->church = Room::factory()->create([
             'name' => 'Pfarrkirche St. Peter und Paul',
             'street' => 'Bei der Peterskirche 9',
@@ -84,6 +91,7 @@ final class ProjectPlanExportTest extends FeatureTestCase
         $this->concertEvent = $this->event($this->concert, $this->church, '2026-08-25 19:30', '2026-08-25 21:30', [
             'eventName' => 'Festival-Konzert',
             'description' => "Grußworte\r\nKonzert & Preisübergabe",
+            'admission_time' => '18:45',
         ]);
         $this->rehearsalEvent = $this->event($rehearsal, $this->church, '2026-08-24 10:00', '2026-08-24 13:00');
         $this->transferEvent = $this->event($this->transfer, $this->restaurant, '2026-08-26 09:00', '2026-08-26 10:20', [
@@ -170,7 +178,8 @@ final class ProjectPlanExportTest extends FeatureTestCase
         );
         $text = $this->documentText($response);
 
-        foreach ([
+        foreach (
+            [
             'VERANSTALTUNGSPLAN',
             '»Festival-Eröffnung«',
             'SPIELSTÄTTE',
@@ -193,7 +202,8 @@ final class ProjectPlanExportTest extends FeatureTestCase
             'KBB & Disposition',
             'Tel. +49 151 26996867',
             'gesa@example.test',
-        ] as $expected) {
+            ] as $expected
+        ) {
             $this->assertStringContainsString($expected, $text, $expected);
         }
         // Linked artist already in the free text is listed once only
@@ -234,7 +244,8 @@ final class ProjectPlanExportTest extends FeatureTestCase
         );
         $text = $this->documentText($response);
 
-        foreach ([
+        foreach (
+            [
             'KÜNSTLERPLAN',
             'für Petr Štědroň',
             'Bei der Peterskirche 9, 02826 Görlitz',
@@ -251,7 +262,8 @@ final class ProjectPlanExportTest extends FeatureTestCase
             'Do., 27.08.2026',
             '2 Nächte',
             'Einzelzimmer',
-        ] as $expected) {
+            ] as $expected
+        ) {
             $this->assertStringContainsString($expected, $text, $expected);
         }
         $this->assertStringNotContainsString('Festival-Konzert', $text);
@@ -260,6 +272,186 @@ final class ProjectPlanExportTest extends FeatureTestCase
         $this->assertStringNotContainsString('43.21', $text);
 
         $this->assertSame([$this->transfer->id], $user->fresh()->artist_plan_event_type_ids);
+    }
+
+    #[Test]
+    public function admission_is_printed_below_the_event_unless_switched_off(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson(route('projects.plans.options', $this->project))
+            ->assertOk()
+            ->assertJsonPath('has_admission_times', true);
+
+        $eventPlan = $this->documentText($this->get(route('projects.plans.event-plan', $this->project))->assertOk());
+        $this->assertStringContainsString('Einlass: 18:45 Uhr', $eventPlan);
+        $this->assertSame(1, substr_count($eventPlan, 'Einlass:'));
+
+        $artistPlan = $this->documentText($this->get(route('projects.plans.artist-plan', [
+            'project' => $this->project,
+            'event_ids' => [$this->concertEvent->id, $this->transferEvent->id],
+        ]))->assertOk());
+        $this->assertStringContainsString('Einlass: 18:45 Uhr', $artistPlan);
+
+        foreach (['projects.plans.event-plan', 'projects.plans.artist-plan'] as $routeName) {
+            $text = $this->documentText($this->get(route($routeName, [
+                'project' => $this->project,
+                'event_ids' => [$this->concertEvent->id],
+                'with_admission' => 0,
+            ]))->assertOk());
+            $this->assertStringContainsString('Festival-Konzert', $text);
+            $this->assertStringNotContainsString('Einlass', $text, $routeName);
+        }
+    }
+
+    #[Test]
+    public function options_report_projects_without_admission_times(): void
+    {
+        $this->actingAsAdmin();
+        $this->concertEvent->update(['admission_time' => null]);
+
+        $this->getJson(route('projects.plans.options', $this->project))
+            ->assertOk()
+            ->assertJsonPath('has_admission_times', false);
+    }
+
+    #[Test]
+    public function further_rooms_are_listed_with_their_address_below_the_venue(): void
+    {
+        $this->actingAsAdmin();
+        $foyer = Room::factory()->create(['name' => 'Foyer ohne Adresse', 'street' => null, 'zip_code' => null, 'city' => null]);
+
+        foreach (['projects.plans.event-plan', 'projects.plans.artist-plan'] as $routeName) {
+            $text = $this->documentText($this->get(route($routeName, [
+                'project' => $this->project,
+                'venue_room_id' => $this->church->id,
+                // Spielstätte selbst und Dopplungen fallen weg, die Reihenfolge bleibt
+                'additional_room_ids' => [$foyer->id, $this->church->id, $this->restaurant->id, $foyer->id],
+            ]))->assertOk());
+
+            $this->assertStringContainsString('SPIELSTÄTTE', $text, $routeName);
+            $this->assertStringContainsString('Weitere Orte', $text, $routeName);
+            $this->assertStringContainsString("Restaurant Bürgerstübl\nNeißstraße 27, 02826 Görlitz", $text, $routeName);
+            $this->assertSame(1, substr_count($text, 'Foyer ohne Adresse'), $routeName);
+            $this->assertSame(1, substr_count($text, 'Bei der Peterskirche 9, 02826 Görlitz'), $routeName);
+            $this->assertLessThan(
+                mb_strpos($text, 'Restaurant Bürgerstübl'),
+                mb_strpos($text, 'Foyer ohne Adresse'),
+                $routeName
+            );
+        }
+    }
+
+    #[Test]
+    public function further_rooms_without_venue_get_their_own_heading(): void
+    {
+        $this->actingAsAdmin();
+
+        $text = $this->documentText($this->get(route('projects.plans.event-plan', [
+            'project' => $this->project,
+            'additional_room_ids' => [$this->restaurant->id],
+        ]))->assertOk());
+
+        $this->assertStringNotContainsString('SPIELSTÄTTE', $text);
+        $this->assertStringContainsString('WEITERE ORTE', $text);
+        $this->assertStringContainsString('Neißstraße 27, 02826 Görlitz', $text);
+    }
+
+    #[Test]
+    public function further_rooms_must_exist(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson(route('projects.plans.event-plan', [
+            'project' => $this->project,
+            'additional_room_ids' => [999999999],
+        ]))->assertJsonValidationErrors('additional_room_ids.0');
+    }
+
+    #[Test]
+    public function plans_carry_the_logo_from_the_tool_settings_by_default(): void
+    {
+        $this->actingAsAdmin();
+
+        // Ohne hinterlegtes Logo: kein Bild, keine Vorschau
+        $this->getJson(route('projects.plans.options', $this->project))->assertJsonPath('default_logo_url', null);
+        $this->assertSame([], $this->documentImages($this->get(route('projects.plans.event-plan', $this->project))));
+
+        $this->useDefaultLogo('branding/logo.png', UploadedFile::fake()->image('logo.png', 400, 100));
+
+        $this->assertStringContainsString(
+            'branding/logo.png',
+            (string) $this->getJson(route('projects.plans.options', $this->project))->json('default_logo_url')
+        );
+        foreach (['projects.plans.event-plan', 'projects.plans.artist-plan'] as $routeName) {
+            $this->assertCount(1, $this->documentImages($this->get(route($routeName, $this->project))), $routeName);
+            $this->assertSame([], $this->documentImages($this->get(route($routeName, [
+                'project' => $this->project,
+                'with_logo' => 0,
+            ]))), $routeName);
+        }
+
+        // Titel bleibt neben dem Logo erhalten
+        $text = $this->documentText($this->get(route('projects.plans.event-plan', $this->project))->assertOk());
+        $this->assertStringContainsString('VERANSTALTUNGSPLAN', $text);
+        $this->assertStringContainsString('»Festival-Eröffnung«', $text);
+    }
+
+    #[Test]
+    public function webp_logo_from_the_tool_settings_is_converted_for_word(): void
+    {
+        if (!function_exists('imagewebp')) {
+            $this->markTestSkipped('GD ohne WebP');
+        }
+        $this->actingAsAdmin();
+        $image = imagecreatetruecolor(120, 40);
+        ob_start();
+        imagewebp($image);
+        $webp = (string) ob_get_clean();
+        Storage::disk('public')->put('branding/logo.webp', $webp);
+        $this->useDefaultLogo('branding/logo.webp');
+
+        $images = $this->documentImages($this->get(route('projects.plans.event-plan', $this->project)));
+
+        $this->assertCount(1, $images);
+        $this->assertStringEndsWith('.png', $images[0]);
+        $this->assertSame([], glob(sys_get_temp_dir() . '/plan-logo-*.png'));
+    }
+
+    #[Test]
+    public function an_uploaded_logo_replaces_the_default_for_one_export(): void
+    {
+        $this->actingAsAdmin();
+        $this->useDefaultLogo('branding/logo.png', UploadedFile::fake()->image('logo.png', 400, 100));
+
+        foreach (['projects.plans.event-plan', 'projects.plans.artist-plan'] as $routeName) {
+            $images = $this->documentImages($this->post(route($routeName, $this->project), [
+                'venue_room_id' => $this->church->id,
+                'with_logo' => 1,
+                'logo' => UploadedFile::fake()->image('eigenes.jpg', 300, 300),
+            ]));
+            $this->assertCount(1, $images, $routeName);
+            $this->assertStringEndsWith('.jpg', $images[0], $routeName);
+        }
+
+        // Abgewählt: auch eine mitgeschickte Datei wird nicht ausgegeben
+        $this->assertSame([], $this->documentImages($this->post(route('projects.plans.event-plan', $this->project), [
+            'with_logo' => 0,
+            'logo' => UploadedFile::fake()->image('eigenes.jpg', 300, 300),
+        ])));
+    }
+
+    #[Test]
+    public function uploaded_logo_must_be_an_image(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson(route('projects.plans.event-plan', $this->project), [
+            'logo' => UploadedFile::fake()->create('logo.pdf', 20, 'application/pdf'),
+        ])->assertJsonValidationErrors('logo');
+        $this->postJson(route('projects.plans.event-plan', $this->project), [
+            'logo' => UploadedFile::fake()->createWithContent('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>'),
+        ])->assertJsonValidationErrors('logo');
     }
 
     #[Test]
@@ -380,6 +572,46 @@ final class ProjectPlanExportTest extends FeatureTestCase
             'allDay' => false,
             ...$attributes,
         ]);
+    }
+
+    /**
+     * Großes Logo der Tool-Einstellungen für diesen Test setzen (leer = keines hinterlegt).
+     */
+    private function useDefaultLogo(string $path, ?UploadedFile $file = null): void
+    {
+        if ($file !== null) {
+            Storage::disk('public')->put($path, (string) file_get_contents($file->getRealPath()));
+        }
+
+        $settings = app(GeneralSettings::class);
+        $settings->big_logo_path = $path;
+        $settings->save();
+    }
+
+    /**
+     * Im Word-Dokument eingebettete Bilddateien.
+     *
+     * @return list<string>
+     */
+    private function documentImages(TestResponse $response): array
+    {
+        $response->assertOk();
+        $this->assertInstanceOf(BinaryFileResponse::class, $response->baseResponse);
+        $path = $response->baseResponse->getFile()->getPathname();
+
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path));
+        $images = [];
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $name = (string) $zip->getNameIndex($index);
+            if (str_starts_with($name, 'word/media/')) {
+                $images[] = $name;
+            }
+        }
+        $zip->close();
+        @unlink($path);
+
+        return $images;
     }
 
     /**

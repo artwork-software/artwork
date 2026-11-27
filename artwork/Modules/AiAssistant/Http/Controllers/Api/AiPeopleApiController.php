@@ -4,10 +4,14 @@ namespace Artwork\Modules\AiAssistant\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\AiAssistant\DTOs\AiPersonListData;
+use Artwork\Modules\AiAssistant\DTOs\AiPersonShiftListData;
 use Artwork\Modules\AiAssistant\DTOs\AiPersonWorkloadData;
 use Artwork\Modules\AiAssistant\Http\Requests\IndexAiPeopleRequest;
+use Artwork\Modules\AiAssistant\Http\Requests\ShowAiPersonShiftsRequest;
 use Artwork\Modules\AiAssistant\Http\Requests\ShowAiPersonWorkloadRequest;
 use Artwork\Modules\AiAssistant\Services\AiPeopleService;
+use Artwork\Modules\AiAssistant\Services\AiPersonShiftsService;
+use Artwork\Modules\AiAssistant\Support\AiErrors;
 use Artwork\Modules\AiAssistant\Support\AiShiftPlanningAccess;
 use Artwork\Modules\User\Models\User;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,8 +24,10 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class AiPeopleApiController extends Controller
 {
-    public function __construct(private readonly AiPeopleService $service)
-    {
+    public function __construct(
+        private readonly AiPeopleService $service,
+        private readonly AiPersonShiftsService $shifts,
+    ) {
     }
 
     public function index(IndexAiPeopleRequest $request): AiPersonListData
@@ -40,6 +46,29 @@ class AiPeopleApiController extends Controller
             $this->service->find($type, $id),
             $request->from(),
             $request->to()
+        );
+    }
+
+    /**
+     * Schichten einer Person im Zeitraum (core-ai-aggregates). Die eigenen gehen immer, fremde nur mit
+     * „Schichtplan einsehen" wie die Oberflaeche.
+     */
+    public function shifts(ShowAiPersonShiftsRequest $request, string $type, int $id): AiPersonShiftListData
+    {
+        $viewer = $request->user();
+        abort_if($viewer === null, Response::HTTP_FORBIDDEN);
+
+        $own = $type === AiPeopleService::TYPE_USER && $id === $viewer->id;
+        if (!$own && !AiShiftPlanningAccess::mayViewShiftPlan($viewer)) {
+            AiErrors::abort(AiErrors::NO_SHIFT_PLAN_ACCESS);
+        }
+
+        return $this->shifts->shifts(
+            $viewer,
+            $this->service->find($type, $id),
+            $request->from(),
+            $request->to(),
+            $request->limit()
         );
     }
 

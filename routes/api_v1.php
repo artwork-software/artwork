@@ -6,6 +6,7 @@ use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiActionApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiContextApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiConversationApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiExportApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventWriteApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiInventoryApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiLookupApiController;
@@ -79,12 +80,25 @@ Route::middleware(['auth:api', EnsureAiAccessPermission::class, EnsureAiHouseSwi
         Route::get('/ai/projects', [AiProjectApiController::class, 'index'])
             ->name('api.v1.ai.projects.index');
 
+        // Vor /ai/projects/{project}, sonst faengt die Platzhalter-Route den Pfad (core-ai-aggregates).
+        Route::get('/ai/projects/budget-ranking', [AiProjectApiController::class, 'budgetRanking'])
+            ->name('api.v1.ai.projects.budget-ranking');
+
         Route::get('/ai/projects/{project}', [AiProjectApiController::class, 'show'])
             ->whereNumber('project')
             ->name('api.v1.ai.projects.show');
 
         Route::get('/ai/events', [AiEventApiController::class, 'index'])
             ->name('api.v1.ai.events.index');
+
+        // Terminanzahl je Projekt, Raum oder Terminart im Zeitraum (core-ai-event-stats-exports).
+        Route::get('/ai/events/stats', [AiEventApiController::class, 'stats'])
+            ->name('api.v1.ai.events.stats');
+
+        // Tabelle als PDF (core-ai-event-stats-exports). Liest keine Daten selbst — die Zeilen hat
+        // artwork-ai schon ueber die Lese-Endpunkte bekommen —, deshalb genuegt ai:read.
+        Route::post('/ai/exports', [AiExportApiController::class, 'store'])
+            ->name('api.v1.ai.exports.store');
 
         // Belegung und freie Slots rechnen bewusst mit *allen* Terminen der Raeume: ein belegter
         // Raum ist ein Faktum, der Termininhalt bleibt geschuetzt (B1 §5).
@@ -93,6 +107,10 @@ Route::middleware(['auth:api', EnsureAiAccessPermission::class, EnsureAiHouseSwi
 
         Route::get('/ai/rooms/free-slots', [AiEventApiController::class, 'freeSlots'])
             ->name('api.v1.ai.rooms.free-slots');
+
+        // Alle freien Raeume zu einem Zeitpunkt (core-ai-aggregates); blockiert wie oben durch alle Termine.
+        Route::get('/ai/rooms/available', [AiEventApiController::class, 'availableRooms'])
+            ->name('api.v1.ai.rooms.available');
 
         // Eigener Einsatzplan: kein Parameter fuer fremde Personen (B1 §6). Der Dienstplan-
         // Ausschnitt verlangt zusaetzlich das Recht "Schichtplan einsehen" wie die Oberflaeche.
@@ -125,6 +143,12 @@ Route::middleware(['auth:api', EnsureAiAccessPermission::class, EnsureAiHouseSwi
             ->whereIn('type', AiPeopleService::TYPES)
             ->whereNumber('id')
             ->name('api.v1.ai.people.workload');
+
+        // Schichten einer Person (core-ai-aggregates): eigene immer, fremde mit „Schichtplan einsehen".
+        Route::get('/ai/people/{type}/{id}/shifts', [AiPeopleApiController::class, 'shifts'])
+            ->whereIn('type', AiPeopleService::TYPES)
+            ->whereNumber('id')
+            ->name('api.v1.ai.people.shifts');
 
         Route::post('/ai/shift-plan/suggest', [AiShiftPlanningApiController::class, 'suggest'])
             ->name('api.v1.ai.shift-plan.suggest');

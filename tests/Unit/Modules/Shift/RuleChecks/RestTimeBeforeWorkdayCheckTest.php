@@ -131,4 +131,29 @@ final class RestTimeBeforeWorkdayCheckTest extends TestCase
         $this->assertCount(1, $violations);
         $this->assertEqualsWithDelta(7.0, $violations->first()->violation_data['rest_hours'], 0.01);
     }
+
+    #[Test]
+    public function skip_same_day_leaves_split_duties_to_the_split_duty_rule(): void
+    {
+        $user = User::factory()->create();
+        $tuesday = $this->futureWeekday(Carbon::TUESDAY);
+        // Geteilter Dienst am Dienstag: 4 h Lücke, deutlich weniger als die Nachtruhe von 11 h
+        $this->shiftFor($user, $tuesday, '08:00:00', '12:00:00');
+        $this->shiftFor($user, $tuesday, '16:00:00', '20:00:00');
+
+        // Ohne config: bisheriges Verhalten, die Lücke am selben Tag wird gegen 11 h geprüft
+        $this->assertCount(1, $this->check->check($this->rule(11.0), $user, $tuesday->copy(), $tuesday->copy()));
+
+        $rule = ShiftRule::factory()->create([
+            'trigger_type' => 'restTimeBeforeWorkday',
+            'individual_number_value' => 11.0,
+            'config' => ['skip_same_day' => true],
+            'is_active' => true,
+        ]);
+        $this->assertCount(0, $this->check->check($rule, $user, $tuesday->copy(), $tuesday->copy()));
+
+        // Die Ruhe zum Vortag prüft die Regel weiterhin
+        $this->shiftFor($user, $tuesday->copy()->subDay(), '14:00:00', '23:00:00');
+        $this->assertCount(1, $this->check->check($rule, $user, $tuesday->copy(), $tuesday->copy()));
+    }
 }

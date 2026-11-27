@@ -36,8 +36,13 @@ use Illuminate\Support\Facades\Gate;
  */
 class AiLookupReadService
 {
-    public function rooms(User $user, ?string $search, ?int $limit): AiRoomListData
-    {
+    public function rooms(
+        User $user,
+        ?string $search,
+        ?int $limit,
+        ?string $category = null,
+        ?int $categoryId = null
+    ): AiRoomListData {
         $limit = $this->limit($limit);
 
         $query = Room::query()
@@ -45,12 +50,27 @@ class AiLookupReadService
             ->when(
                 $search !== null,
                 fn (Builder $builder) => $builder->where('name', 'like', $this->contains((string) $search))
+            )
+            // core-ai-series-rooms: Raumkategorie ueber Namen (Teilstring) oder ID
+            ->when(
+                $category !== null,
+                fn (Builder $builder) => $builder->whereHas(
+                    'categories',
+                    fn (Builder $categories) => $categories->where('name', 'like', $this->contains((string) $category))
+                )
+            )
+            ->when(
+                $categoryId !== null,
+                fn (Builder $builder) => $builder->whereHas(
+                    'categories',
+                    fn (Builder $categories) => $categories->whereKey($categoryId)
+                )
             );
 
         $total = (clone $query)->count();
 
         $rooms = $query
-            ->with('area')
+            ->with(['area', 'categories'])
             ->orderBy('name')
             ->limit($limit)
             ->get();
@@ -60,6 +80,7 @@ class AiLookupReadService
                 id: $room->id,
                 name: AiText::truncate($room->name),
                 area: AiRefData::make($room->area_id, $room->area?->name),
+                categories: $room->categories->pluck('name')->filter()->values()->all(),
             ))->all(),
             total: $total,
             limit: $limit,

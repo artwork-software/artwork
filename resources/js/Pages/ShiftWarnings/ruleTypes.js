@@ -102,6 +102,13 @@ export const RULE_TYPES = {
                 label: 'Only the morning counts',
                 hint: 'Only a half day off in the morning is a violation; a free afternoon stays allowed.',
             },
+            {
+                key: 'include_planned',
+                kind: 'bool',
+                default: false,
+                label: 'Also check planned half days off',
+                hint: 'Besides granted substitute half days, half days off entered as day status "Free" (morning or afternoon) are checked as well.',
+            },
         ],
     },
     minDaysBeforeCommit: {

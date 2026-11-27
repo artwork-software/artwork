@@ -115,4 +115,50 @@ final class ShiftRuleConfigTest extends TestCase
         $this->assertFalse(Validator::make(['config' => ['excluded_dates' => ['1.5.']]], $rules)->passes());
         $this->assertTrue(Validator::make(['config' => ['excluded_dates' => ['05-01']]], $rules)->passes());
     }
+
+    #[Test]
+    public function calendar_days_must_exist_and_differ(): void
+    {
+        $validate = static fn (array $config): bool => Validator::make(
+            ['config' => $config],
+            ShiftRuleConfig::validationRules('freeDayAfterWorkOnDate')
+        )->passes();
+
+        $this->assertTrue($validate(['worked' => '12-24', 'free' => '05-01']));
+        $this->assertTrue($validate(['worked' => '02-29', 'free' => '05-01']));
+        $this->assertFalse($validate(['worked' => '02-30', 'free' => '05-01']));
+        $this->assertFalse($validate(['worked' => '04-31', 'free' => '05-01']));
+        $this->assertFalse($validate(['worked' => '05-01', 'free' => '05-01']));
+    }
+
+    #[Test]
+    public function ids_of_deleted_shift_groups_do_not_block_saving(): void
+    {
+        $validator = Validator::make(
+            ['config' => ['excluded_shift_group_ids' => [999999]]],
+            ShiftRuleConfig::validationRules('restTimeBetweenShiftsOnDay')
+        );
+
+        $this->assertTrue($validator->passes());
+    }
+
+    #[Test]
+    public function id_lists_are_ignored_when_comparing_rules_of_a_rule_set(): void
+    {
+        $this->assertFalse(ShiftRuleConfig::equals(
+            'restTimeBetweenShiftsOnDay',
+            ['excluded_shift_group_ids' => [3]],
+            ['excluded_shift_group_ids' => []]
+        ));
+        $this->assertTrue(ShiftRuleConfig::equalsIgnoringIdLists(
+            'restTimeBetweenShiftsOnDay',
+            ['excluded_shift_group_ids' => [3]],
+            ['excluded_shift_group_ids' => []]
+        ));
+        $this->assertFalse(ShiftRuleConfig::equalsIgnoringIdLists(
+            'halfDayOffMaxHours',
+            ['boundary' => '13:00'],
+            ['boundary' => '14:00']
+        ));
+    }
 }

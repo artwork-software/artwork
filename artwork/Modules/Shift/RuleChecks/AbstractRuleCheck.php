@@ -10,6 +10,8 @@ use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -353,6 +355,41 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         return app(CompensationDayOffRepository::class)
             ->getGrantedHalvesForUserInRange($user->id, $fromKey, $toKey)
             ->groupBy(fn ($half): string => Carbon::parse($half->granted_date)->format('Y-m-d'));
+    }
+
+    /**
+     * Halbe freie Tage je Datum aus beiden Quellen: gewährte halbe Ersatzfreitage und, mit
+     * $includePlanned, geplante halbe freie Tage aus dem Tagesstatus "Frei" (Vormittag/Nachmittag).
+     * Jeder Eintrag trägt half_day_period ('morning' | 'afternoon') und value.
+     *
+     * @return Collection<string, Collection<int, object>>
+     */
+    protected function getHalfDaysOffByDate(User $user, Carbon $from, Carbon $to, bool $includePlanned): Collection
+    {
+        $halvesByDate = $this->getGrantedHalvesByDate($user, $from, $to)
+            ->map(fn ($halves): Collection => collect($halves)->values());
+        if (!$includePlanned) {
+            return $halvesByDate;
+        }
+
+        $planned = Vacation::query()
+            ->without(['series', 'conflicts'])
+            ->where('vacationer_type', User::class)
+            ->where('vacationer_id', $user->id)
+            ->where('type', VacationType::FREE_WORK->value)
+            ->where('full_day', false)
+            ->whereIn('day_part', ['morning', 'afternoon'])
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->get(['id', 'date', 'day_part']);
+
+        foreach ($planned as $vacation) {
+            $key = Carbon::parse($vacation->date)->format('Y-m-d');
+            $entries = $halvesByDate->get($key) ?? collect();
+            $entries->push((object) ['half_day_period' => (string) $vacation->day_part, 'value' => 0.5]);
+            $halvesByDate->put($key, $entries);
+        }
+
+        return $halvesByDate;
     }
 
     /**

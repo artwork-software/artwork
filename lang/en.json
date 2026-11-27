@@ -10261,5 +10261,7 @@
     "Selected week": "Selected week",
     "One page per person: the selected week and a preview of the following week": "One page per person: the selected week and a preview of the following week",
     "Monday to Sunday": "Monday to Sunday",
-    "Shifts, individual times, day services, days off and absences": "Shifts, individual times, day services, days off and absences"
+    "Shifts, individual times, day services, days off and absences": "Shifts, individual times, day services, days off and absences",
+    "Also check planned half days off": "Also check planned half days off",
+    "Besides granted substitute half days, half days off entered as day status \"Free\" (morning or afternoon) are checked as well.": "Besides granted substitute half days, half days off entered as day status \"Free\" (morning or afternoon) are checked as well."
 }

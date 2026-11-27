@@ -10107,5 +10107,7 @@
     "Selected week": "Geselecteerde week",
     "One page per person: the selected week and a preview of the following week": "Eén pagina per persoon: de geselecteerde week en een vooruitblik op de volgende week",
     "Monday to Sunday": "Maandag tot en met zondag",
-    "Shifts, individual times, day services, days off and absences": "Diensten, individuele tijden, dagdiensten, vrije dagen en afwezigheden"
+    "Shifts, individual times, day services, days off and absences": "Diensten, individuele tijden, dagdiensten, vrije dagen en afwezigheden",
+    "Also check planned half days off": "Ook geplande halve vrije dagen controleren",
+    "Besides granted substitute half days, half days off entered as day status \"Free\" (morning or afternoon) are checked as well.": "Naast toegekende vervangende halve vrije dagen worden ook halve vrije dagen gecontroleerd die als dagstatus „Vrij“ (ochtend of middag) zijn ingevoerd."
 }

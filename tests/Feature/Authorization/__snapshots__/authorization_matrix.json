@@ -207,6 +207,7 @@
     "GET accommodation/show/{accommodation}": "forbidden",
     "GET ai/actions/{action}": "forbidden",
     "GET ai/conversations": "forbidden",
+    "GET ai/exports/{export}": "not_found",
     "GET areas": "forbidden",
     "GET articles/available-stock/{inventoryArticle}/{startDate}/{endDate}": "allowed",
     "GET artist": "forbidden",

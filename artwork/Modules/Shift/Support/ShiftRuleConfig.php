@@ -53,6 +53,7 @@ final class ShiftRuleConfig
             'halfDayOffOnSpecialDay' => [
                 'include_sundays' => ['type' => 'bool', 'default' => false],
                 'morning_only' => ['type' => 'bool', 'default' => false],
+                'include_planned' => ['type' => 'bool', 'default' => false],
             ],
             'restTimeBetweenShiftsOnDay' => [
                 'excluded_shift_group_ids' => ['type' => 'id_list', 'default' => [], 'exists' => 'shift_groups'],
@@ -65,7 +66,12 @@ final class ShiftRuleConfig
             ],
             'freeDayAfterWorkOnDate' => [
                 'worked' => ['type' => 'month_day', 'default' => null, 'required' => true],
-                'free' => ['type' => 'month_day', 'default' => null, 'required' => true],
+                'free' => [
+                    'type' => 'month_day',
+                    'default' => null,
+                    'required' => true,
+                    'different' => 'worked',
+                ],
             ],
         ];
     }
@@ -119,15 +125,30 @@ final class ShiftRuleConfig
                     $rules[$path] = [$presence, 'string', 'regex:' . self::TIME_PATTERN];
                     break;
                 case 'month_day':
-                    $rules[$path] = [$presence, 'string', 'regex:' . self::MONTH_DAY_PATTERN];
+                    $rules[$path] = [
+                        $presence,
+                        'string',
+                        'regex:' . self::MONTH_DAY_PATTERN,
+                        self::existingCalendarDay(),
+                    ];
+                    if (isset($field['different'])) {
+                        $rules[$path][] = 'different:config.' . $field['different'];
+                    }
                     break;
                 case 'month_day_list':
                     $rules[$path] = [$presence, 'array', 'max:20'];
-                    $rules[$path . '.*'] = ['string', 'distinct', 'regex:' . self::MONTH_DAY_PATTERN];
+                    $rules[$path . '.*'] = [
+                        'string',
+                        'distinct',
+                        'regex:' . self::MONTH_DAY_PATTERN,
+                        self::existingCalendarDay(),
+                    ];
                     break;
                 case 'id_list':
+                    // Bewusst ohne exists-Prüfung: Eine inzwischen gelöschte Schichtgruppe darf das
+                    // Speichern der Regel nicht blockieren, in den Prüfungen ist eine verwaiste ID wirkungslos.
                     $rules[$path] = [$presence, 'array', 'max:100'];
-                    $rules[$path . '.*'] = ['integer', 'distinct', 'exists:' . $field['exists'] . ',id'];
+                    $rules[$path . '.*'] = ['integer', 'distinct', 'min:1'];
                     break;
             }
         }
@@ -178,6 +199,47 @@ final class ShiftRuleConfig
     public static function equals(?string $triggerType, ?array $left, ?array $right): bool
     {
         return self::normalize($triggerType, $left) == self::normalize($triggerType, $right);
+    }
+
+    /**
+     * Wie equals(), ohne die Listen von IDs (z. B. Schichtgruppen). Diese Listen trägt ein Haus nach dem
+     * Anlegen eines Regelsatzes selbst ein; eine so angepasste Regel bleibt dieselbe Regel des Satzes.
+     *
+     * @param array<string, mixed>|null $left
+     * @param array<string, mixed>|null $right
+     */
+    public static function equalsIgnoringIdLists(?string $triggerType, ?array $left, ?array $right): bool
+    {
+        $leftConfig = self::normalize($triggerType, $left);
+        $rightConfig = self::normalize($triggerType, $right);
+        if ($leftConfig === null || $rightConfig === null) {
+            return $leftConfig == $rightConfig;
+        }
+
+        foreach (self::schemas()[$triggerType] as $key => $field) {
+            if ($field['type'] === 'id_list') {
+                unset($leftConfig[$key], $rightConfig[$key]);
+            }
+        }
+
+        return $leftConfig == $rightConfig;
+    }
+
+    /**
+     * Validierungsregel: "MM-DD" muss ein Kalendertag sein, den es gibt (der 29.02. zählt, der 30.02. nicht).
+     */
+    private static function existingCalendarDay(): \Closure
+    {
+        return static function (string $attribute, mixed $value, \Closure $fail): void {
+            if (!is_string($value) || preg_match(self::MONTH_DAY_PATTERN, $value) !== 1) {
+                return;
+            }
+            [$month, $day] = array_map('intval', explode('-', $value));
+            // 2024 ist ein Schaltjahr, damit gilt der 29.02. als gültig
+            if (!checkdate($month, $day, 2024)) {
+                $fail(__('validation.date', ['attribute' => $attribute]));
+            }
+        };
     }
 
     /**

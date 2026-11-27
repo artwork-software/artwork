@@ -110,7 +110,9 @@ final class ShiftRuleSets
             return false;
         }
 
-        return ShiftRuleConfig::equals(
+        // Listen von Schichtgruppen trägt das Haus nach dem Anlegen selbst ein: Sie zählen nicht mit,
+        // sonst entstünde beim erneuten Anlegen für einen weiteren Vertrag eine Dublette ohne Gruppen.
+        return ShiftRuleConfig::equalsIgnoringIdLists(
             $definition['trigger_type'],
             is_array($rule->config) ? $rule->config : null,
             $definition['config'] ?? null

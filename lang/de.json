@@ -10261,5 +10261,7 @@
     "Selected week": "Gewählte Woche",
     "One page per person: the selected week and a preview of the following week": "Je Person eine Seite: die gewählte Woche und eine Vorschau auf die Folgewoche",
     "Monday to Sunday": "Montag bis Sonntag",
-    "Shifts, individual times, day services, days off and absences": "Dienste, individuelle Zeiten, Tagesdienste, freie Tage und Abwesenheiten"
+    "Shifts, individual times, day services, days off and absences": "Dienste, individuelle Zeiten, Tagesdienste, freie Tage und Abwesenheiten",
+    "Also check planned half days off": "Auch geplante halbe freie Tage prüfen",
+    "Besides granted substitute half days, half days off entered as day status \"Free\" (morning or afternoon) are checked as well.": "Neben gewährten halben Ersatzfreitagen werden auch halbe freie Tage geprüft, die als Tagesstatus „Frei“ (Vormittag oder Nachmittag) eingetragen sind."
 }

@@ -165,4 +165,27 @@ final class FreeDayAnnouncementLeadTimeCheckTest extends TestCase
 
         $this->assertCount(1, $this->violationsFor($this->rule(14.0), $user));
     }
+
+    #[Test]
+    public function an_older_day_status_switched_to_free_counts_from_the_switch(): void
+    {
+        $user = User::factory()->create();
+        $today = Carbon::now()->startOfDay();
+        $vacation = new Vacation([
+            'date' => $today->copy()->addDays(5)->toDateString(),
+            'full_day' => true,
+            'type' => 'NOT_AVAILABLE',
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+        ]);
+        $vacation->created_at = $today->copy()->subDays(60);
+        $vacation->updated_at = $today->copy()->subDays(60);
+        $vacation->save();
+
+        // Zwei Monate später stellt die Planung den Tag auf "Frei" um
+        $vacation->update(['type' => 'FREE_WORK']);
+
+        $this->assertNotNull($vacation->fresh()->status_changed_at);
+        $this->assertCount(1, $this->violationsFor($this->rule(14.0), $user));
+    }
 }

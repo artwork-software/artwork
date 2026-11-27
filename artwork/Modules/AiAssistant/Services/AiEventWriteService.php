@@ -130,7 +130,8 @@ class AiEventWriteService
                 fn (Event $event): AiWriteItemData => $this->itemFor(
                     $event,
                     'create',
-                    $conflictsByRoom[(int) $event->room_id] ?? []
+                    $conflictsByRoom[(int) $event->room_id] ?? [],
+                    $user
                 ),
                 $events
             ),

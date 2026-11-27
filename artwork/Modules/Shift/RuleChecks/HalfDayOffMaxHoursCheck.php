@@ -32,7 +32,8 @@ class HalfDayOffMaxHoursCheck extends AbstractRuleCheck
     {
         $violations = collect();
 
-        $halvesByDate = $this->getGrantedHalvesByDate($user, $startDate, $endDate);
+        // Gewährte halbe Ersatzfreitage und geplante halbe freie Tage aus dem Tagesstatus "Frei"
+        $halvesByDate = $this->getHalfDaysOffByDate($user, $startDate, $endDate, true);
         if ($halvesByDate->isEmpty()) {
             return $violations;
         }

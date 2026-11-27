@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Modules\Shift\RuleChecks;
 
+use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\ShiftGroup;
 use Artwork\Modules\Shift\Models\ShiftRule;
@@ -180,5 +181,25 @@ final class HalfDayOffMaxHoursCheckTest extends TestCase
         $this->grantedHalf($user, 'afternoon');
 
         $this->assertCount(0, $this->violationsFor($this->rule(), $user));
+    }
+
+    #[Test]
+    public function planned_half_day_off_from_the_day_status_is_checked_as_well(): void
+    {
+        $user = User::factory()->create();
+        Vacation::create([
+            'date' => $this->date->toDateString(),
+            'full_day' => false,
+            'day_part' => 'morning',
+            'type' => 'FREE_WORK',
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+        ]);
+        $this->shiftFor($user, $this->date, '14:00:00', '19:30:00');
+
+        $violations = $this->violationsFor($this->rule(), $user);
+
+        $this->assertCount(1, $violations);
+        $this->assertEquals(5.5, $violations->first()->violation_data['planned_hours']);
     }
 }

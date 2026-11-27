@@ -26,7 +26,15 @@ class ProjectEventPlanRequest extends FormRequest
             'additional_room_ids.*' => ['integer', 'exists:rooms,id,deleted_at,NULL'],
             'with_logo' => ['nullable', 'boolean'],
             'with_admission' => ['nullable', 'boolean'],
-            'logo' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:10240'],
+            // Maßgrenze: Ein kleines WebP mit riesiger Fläche würde beim Umwandeln den Speicher sprengen.
+            'logo' => [
+                'nullable',
+                'file',
+                'image',
+                'mimes:jpg,jpeg,png,gif,webp',
+                'max:10240',
+                'dimensions:max_width=8000,max_height=8000',
+            ],
         ];
     }
 

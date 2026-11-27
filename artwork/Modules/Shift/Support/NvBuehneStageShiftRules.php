@@ -128,7 +128,7 @@ final class NvBuehneStageShiftRules
                     . 'gelegt werden.',
                 'Ein halber freier Tag liegt am Vormittag eines Sonntags oder Sondertags '
                     . '(NV Bühne § 66 Abs. 4).',
-                ['include_sundays' => true, 'morning_only' => true]
+                ['include_sundays' => true, 'morning_only' => true, 'include_planned' => true]
             ),
             self::definition(
                 'christmasEveMayDay',

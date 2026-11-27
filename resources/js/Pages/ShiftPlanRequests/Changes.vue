@@ -578,6 +578,7 @@
                     label="Note (optional)"
                     :maxlength="500"
                 />
+                <p v-if="shortNoticeError" class="text-xs text-danger">{{ shortNoticeError }}</p>
                 <div class="mt-2 flex justify-between">
                     <BaseUIButton
                         type="submit"
@@ -720,6 +721,7 @@ const shortNoticeReasonLabel = (value) =>
     (props.shortNotice.reasons ?? []).find((reason) => reason.value === value)?.label ?? value;
 
 const shortNoticeChange = ref(null);
+const shortNoticeError = ref('');
 const shortNoticeForm = ref({ reason: null, note: '' });
 const savingShortNoticeReason = ref(false);
 
@@ -737,6 +739,7 @@ const saveShortNoticeReason = () => {
         return;
     }
     savingShortNoticeReason.value = true;
+    shortNoticeError.value = '';
     router.patch(
         route('committed-shift-changes.short-notice-reason', shortNoticeChange.value.id),
         {
@@ -748,6 +751,9 @@ const saveShortNoticeReason = () => {
             preserveState: true,
             onSuccess: () => {
                 shortNoticeChange.value = null;
+            },
+            onError: () => {
+                shortNoticeError.value = t('Saving failed');
             },
             onFinish: () => {
                 savingShortNoticeReason.value = false;

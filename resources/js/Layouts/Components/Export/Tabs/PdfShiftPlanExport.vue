@@ -301,6 +301,7 @@
             >
                 <div>
                     <h3 class="text-sm font-semibold text-text">{{ $t('Weekly plan per person') }}</h3>
+                    <p v-if="pdf.errors.workers" class="mt-1 text-xs text-danger">{{ pdf.errors.workers }}</p>
                     <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('One page per person with shifts, individual times, days off and absences of the week. Absences are shown without their kind.') }}
                     </p>
@@ -778,6 +779,20 @@ const createPdf = () => {
         }
         return data
     })
+
+    if (pdf.exportMode === 'weekly_plan') {
+        // Der Wochenplan hat eine Obergrenze an Personen: Bei einem Fehler bleibt der Dialog offen und
+        // zeigt die Meldung, statt sich ohne Download zu schließen.
+        pdf.post(route(routeName), {
+            preserveScroll: true,
+            onFinish: () => {
+                if (!pdf.hasErrors) {
+                    emits('close')
+                }
+            },
+        })
+        return
+    }
 
     pdf.post(route(routeName), { preserveScroll: true })
     emits('close')

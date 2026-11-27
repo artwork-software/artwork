@@ -16,7 +16,8 @@ use Illuminate\Support\Collection;
  *
  * $rule->individual_number_value = Mindestvorlauf in Tagen. Geprüft werden zwei Quellen:
  *  - geplante freie Tage aus dem Tagesstatus "Frei" (Vacation mit Typ FREE_WORK, ganz oder halb):
- *    Tag der Anlage (created_at) gegen den freien Tag
+ *    Tag der Anlage gegen den freien Tag. Wurde ein bestehender Eintrag erst später auf "Frei"
+ *    umgestellt, zählt der Tag der Umstellung (status_changed_at)
  *  - gewährte ganze oder halbe Ersatzfreitage: Tag der Gewährung (granted_at) gegen den freien Tag
  * Je freiem Tag zählt der späteste Eintrag, es entsteht höchstens ein Verstoß ohne Schicht am freien Tag.
  *
@@ -51,14 +52,16 @@ class FreeDayAnnouncementLeadTimeCheck extends AbstractRuleCheck
             ->where('vacationer_id', $user->id)
             ->where('type', VacationType::FREE_WORK->value)
             ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
-            ->get(['id', 'date', 'full_day', 'created_at']);
+            ->without(['series', 'conflicts'])
+            ->get(['id', 'date', 'full_day', 'created_at', 'status_changed_at']);
         foreach ($plannedFreeDays as $plannedFreeDay) {
-            if ($plannedFreeDay->created_at === null) {
+            $announcedAt = $plannedFreeDay->status_changed_at ?? $plannedFreeDay->created_at;
+            if ($announcedAt === null) {
                 continue;
             }
             $remember(
                 Carbon::parse($plannedFreeDay->date)->startOfDay(),
-                $plannedFreeDay->created_at->copy()->startOfDay(),
+                $announcedAt->copy()->startOfDay(),
                 $plannedFreeDay->full_day ? 1.0 : 0.5
             );
         }

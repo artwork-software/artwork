@@ -78,6 +78,7 @@ class Vacation extends Model
     protected $casts = [
         'full_day' => 'boolean',
         'is_series' => 'boolean',
+        'status_changed_at' => 'datetime',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
     ];
@@ -89,6 +90,19 @@ class Vacation extends Model
     protected $with = [
         'series', 'conflicts'
     ];
+
+    /**
+     * Wechselt ein bestehender Eintrag seine Art oder Tageshälfte (z. B. "Nicht verfügbar" wird "Frei"),
+     * merkt er sich den Zeitpunkt. Die Regel "Ankündigungsfrist freier Tage" rechnet ab diesem Zeitpunkt.
+     */
+    protected static function booted(): void
+    {
+        static::updating(static function (Vacation $vacation): void {
+            if ($vacation->isDirty(['type', 'full_day', 'day_part'])) {
+                $vacation->status_changed_at = now();
+            }
+        });
+    }
 
     public function vacations(): MorphTo
     {

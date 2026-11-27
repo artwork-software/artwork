@@ -309,4 +309,41 @@ final class ShiftRuleSetsControllerTest extends FeatureTestCase
             'config' => ['excluded_dates' => ['1. Mai']],
         ])->assertSessionHasErrors('config.excluded_dates.0');
     }
+
+    #[Test]
+    public function adjusted_shift_groups_do_not_cause_duplicates_when_the_set_is_created_again(): void
+    {
+        $this->actingAsAdmin();
+        [, $first] = $this->userWithContract();
+        [, $second] = $this->userWithContract();
+        $this->clearRulesOfNvSet();
+        $keys = ShiftRuleSets::ruleKeys(ShiftRuleSets::NV_BUEHNE_STAGE);
+        Bus::fake();
+
+        $this->post(route('shift-rules.defaults.store'), [
+            'set' => ShiftRuleSets::NV_BUEHNE_STAGE,
+            'rules' => $keys,
+            'contract_ids' => [$first->id],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        // Das Haus trägt die Endproben-Schichtgruppe an der Regel "Geteilter Dienst" ein
+        $group = ShiftGroup::create(['name' => 'Endprobe']);
+        $splitDuty = ShiftRule::query()->where('trigger_type', 'restTimeBetweenShiftsOnDay')->sole();
+        $splitDuty->update(['config' => ['excluded_shift_group_ids' => [$group->id]]]);
+        $count = ShiftRule::query()->count();
+
+        $this->post(route('shift-rules.defaults.store'), [
+            'set' => ShiftRuleSets::NV_BUEHNE_STAGE,
+            'rules' => $keys,
+            'contract_ids' => [$second->id],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame($count, ShiftRule::query()->count());
+        $splitDuty->refresh();
+        $this->assertSame([$group->id], $splitDuty->config['excluded_shift_group_ids']);
+        $this->assertEqualsCanonicalizing(
+            [$first->id, $second->id],
+            $splitDuty->contracts()->pluck('user_contracts.id')->map(fn ($id) => (int) $id)->all()
+        );
+    }
 }

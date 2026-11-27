@@ -151,7 +151,9 @@ final class WeeklyPlanCommitDeadlineCheckTest extends TestCase
         $range = $this->check->getCoveredRange($this->rule(), Carbon::now(), Carbon::now());
 
         $this->assertNotNull($range);
-        $this->assertSame($this->monday->toDateString(), $range[0]->toDateString());
+        // Beginn zwölf Wochen zurück: vergangene Wochen gehören dazu, damit stehen gebliebene
+        // Verstöße abgeräumt werden
+        $this->assertSame($this->monday->copy()->subWeeks(12)->toDateString(), $range[0]->toDateString());
         $this->assertSame($this->monday->copy()->addDays(13)->toDateString(), $range[1]->toDateString());
     }
 }

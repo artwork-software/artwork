@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Modules\Shift\RuleChecks;
 
+use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\ShiftRule;
@@ -157,5 +158,43 @@ final class HalfDayOffOnSpecialDayCheckTest extends TestCase
             $this->date->copy(),
             $this->date->copy()
         ));
+    }
+
+    #[Test]
+    public function planned_half_days_off_only_count_with_the_option(): void
+    {
+        $user = User::factory()->create();
+        $sunday = Carbon::now()->startOfDay()->addWeeks(3)->next(Carbon::SUNDAY);
+        Vacation::create([
+            'date' => $sunday->toDateString(),
+            'full_day' => false,
+            'day_part' => 'morning',
+            'type' => 'FREE_WORK',
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+        ]);
+        $ruleFor = static fn (array $config): ShiftRule => ShiftRule::factory()->create([
+            'trigger_type' => 'halfDayOffOnSpecialDay',
+            'individual_number_value' => 0,
+            'config' => $config,
+            'is_active' => true,
+        ]);
+        $check = new HalfDayOffOnSpecialDayCheck();
+
+        $without = $check->check(
+            $ruleFor(['include_sundays' => true, 'morning_only' => true]),
+            $user,
+            $sunday->copy(),
+            $sunday->copy()
+        );
+        $with = $check->check(
+            $ruleFor(['include_sundays' => true, 'morning_only' => true, 'include_planned' => true]),
+            $user,
+            $sunday->copy(),
+            $sunday->copy()
+        );
+
+        $this->assertCount(0, $without);
+        $this->assertCount(1, $with);
     }
 }

@@ -28,6 +28,9 @@ class WeeklyPlanCommitDeadlineCheck extends AbstractRuleCheck
     /** Obergrenze der betrachteten Zielwochen ab der laufenden Woche (weeks_ahead ist höchstens 4). */
     private const MAX_TARGET_WEEKS = 6;
 
+    /** Wie viele vergangene Wochen bei jedem Lauf von nicht mehr gültigen Verstößen befreit werden. */
+    private const CLEANUP_WEEKS = 12;
+
     public function check(ShiftRule $rule, User $user, Carbon $startDate, Carbon $endDate): Collection
     {
         $violations = collect();
@@ -108,17 +111,21 @@ class WeeklyPlanCommitDeadlineCheck extends AbstractRuleCheck
     }
 
     /**
-     * Beurteilt werden die Zielwochen mit abgelaufener Frist, unabhängig vom Prüfzeitraum. Nur dort
-     * darf der Service nicht mehr bestätigte Verstöße löschen.
+     * Beurteilt werden die Zielwochen mit abgelaufener Frist, unabhängig vom Prüfzeitraum. Die Regel
+     * zeigt den aktuellen Stand: Ein Verstoß besteht nur, solange in der Woche noch nicht verbindliche
+     * Dienste ab heute liegen. Deshalb gehören auch die vergangenen Wochen zum beurteilten Bereich, in
+     * denen kein Verstoß mehr entstehen kann. Ihre nicht bearbeiteten Verstöße räumt der Service ab,
+     * sonst blieben sie je nach Wochentag des letzten offenen Dienstes dauerhaft stehen.
      */
     public function getCoveredRange(ShiftRule $rule, Carbon $startDate, Carbon $endDate): ?array
     {
+        $currentMonday = now()->startOfWeek(Carbon::MONDAY)->startOfDay();
         $weeks = $this->overdueTargetWeeks($rule, now());
-        if ($weeks === []) {
-            return null;
-        }
+        $lastDay = $weeks === []
+            ? $currentMonday->copy()->subDay()
+            : $weeks[count($weeks) - 1][1]->copy();
 
-        return [$weeks[0][0]->copy(), $weeks[count($weeks) - 1][1]->copy()];
+        return [$currentMonday->copy()->subWeeks(self::CLEANUP_WEEKS), $lastDay];
     }
 
     /**

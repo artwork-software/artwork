@@ -50,7 +50,14 @@ class CommittedShiftChange extends Model
                 return;
             }
 
-            $change->is_short_notice = app(ShortNoticeChangeMarker::class)->isShortNotice($change);
+            // Die Markierung ist eine Zusatzinformation: Scheitert ihre Ermittlung, entsteht der
+            // Protokolleintrag trotzdem, nur eben unmarkiert.
+            try {
+                $change->is_short_notice = app(ShortNoticeChangeMarker::class)->isShortNotice($change);
+            } catch (\Throwable $exception) {
+                report($exception);
+                $change->is_short_notice = false;
+            }
         });
     }
 

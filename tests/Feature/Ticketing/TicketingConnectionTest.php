@@ -747,7 +747,8 @@ final class TicketingConnectionTest extends FeatureTestCase
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
 
         $this->post(route('settings.tickets.rooms.sync'), ['rooms' => []])->assertStatus(409);
-        $this->post(route('settings.tickets.reductions.sync'), ['reductions' => []])->assertStatus(409);
+        $this->post(route('settings.tickets.reductions.sync'), ['reductions' => [], 'removed_ids' => []])
+            ->assertStatus(409);
         Http::assertNothingSent();
     }
 
@@ -771,7 +772,7 @@ final class TicketingConnectionTest extends FeatureTestCase
         $this->from(route('settings.tickets.reductions'))
             ->post(route('settings.tickets.reductions.sync'), ['reductions' => [
                 ['id' => self::REDUCTION_ID, 'name' => 'Ermäßigt', 'kind' => 'fixed', 'value' => 500, 'requires_proof' => false, 'default_enabled' => true],
-            ]])
+            ], 'removed_ids' => []])
             ->assertRedirect(route('settings.tickets.reductions'))
             ->assertSessionHas('success');
 
@@ -784,7 +785,24 @@ final class TicketingConnectionTest extends FeatureTestCase
     }
 
     #[Test]
-    public function removing_every_reduction_sends_the_empty_catalogue(): void
+    public function only_the_reductions_taken_out_are_named_for_deletion(): void
+    {
+        $this->fakeHappyTickets();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $this->post(route('settings.tickets.connect'), $this->draft());
+
+        $this->from(route('settings.tickets.reductions'))
+            ->post(route('settings.tickets.reductions.sync'), ['reductions' => [], 'removed_ids' => [self::REDUCTION_ID]])
+            ->assertSessionHas('success');
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+            && str_ends_with($request->url(), '/api/integration/v1/reductions')
+            && $request['reductions'] === []
+            && $request['removedIds'] === [self::REDUCTION_ID]);
+    }
+
+    #[Test]
+    public function a_reduction_sync_without_the_removed_list_is_refused(): void
     {
         $this->fakeHappyTickets();
         $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
@@ -792,10 +810,9 @@ final class TicketingConnectionTest extends FeatureTestCase
 
         $this->from(route('settings.tickets.reductions'))
             ->post(route('settings.tickets.reductions.sync'), ['reductions' => []])
-            ->assertSessionHas('success');
-
-        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
-            && str_ends_with($request->url(), '/api/integration/v1/reductions')
-            && $request['reductions'] === []);
+            ->assertSessionHasErrors('removed_ids');
+        // Nur der Abgleich beim Verbinden ist hinausgegangen.
+        $this->assertCount(1, Http::recorded(fn (Request $request): bool => $request->method() === 'POST'
+            && str_ends_with($request->url(), '/api/integration/v1/reductions')));
     }
 }

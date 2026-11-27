@@ -10,6 +10,18 @@
         <PendingChangesBar :visible="connection.connected && form.isDirty" :message="$t('Changes not yet in Artwork-Tickets')" :submit-label="$t('Save in Artwork-Tickets')"
                            :icon="IconDeviceFloppy" :processing-label="$t('Saving…')" :can-submit="canSave" :processing="form.processing" @discard="form.reset()" @submit="submit" />
 
+        <ArtworkBaseModal v-if="confirmingBearer" :title="$t('Change the ticket fee?')"
+                          :description="$t('Every price in the shop changes right away, also for dates already on sale. Tickets already sold keep their price.')"
+                          modal-size="sm:max-w-lg" @close="confirmingBearer = null">
+            <p class="text-[13px] leading-5 text-text">{{ feeBearers.find((option) => option.bearer === confirmingBearer).hint }}</p>
+            <template #footer>
+                <button type="button" class="ui-button" :disabled="feeForm.processing" @click="confirmingBearer = null">{{ $t('Cancel') }}</button>
+                <button type="button" class="ui-button-add" :disabled="feeForm.processing" @click="setFeeBearer">
+                    {{ feeForm.processing ? $t('Saving…') : $t('Change fee') }}
+                </button>
+            </template>
+        </ArtworkBaseModal>
+
         <NotConnected v-if="!connection.connected" :message="$t('The details can be filled in once this installation is connected to Artwork-Tickets.')" />
 
         <div v-else class="rounded-lg border border-border-subtle/70 bg-surface shadow-raised px-3 py-4 sm:px-5 sm:py-5">
@@ -62,7 +74,7 @@
                         <label v-for="option in feeBearers" :key="option.bearer"
                                class="flex cursor-pointer items-start gap-3 rounded-lg border px-3.5 py-3 transition-colors"
                                :class="billing.fee.bearer === option.bearer ? 'border-accent-600 bg-accent-50' : 'border-border-subtle bg-surface hover:bg-surface-sunken'">
-                            <input type="radio" name="fee-bearer" :value="option.bearer" :checked="billing.fee.bearer === option.bearer" :disabled="feeForm.processing" class="sr-only" @change="setFeeBearer(option.bearer)" />
+                            <input type="radio" name="fee-bearer" :value="option.bearer" :checked="billing.fee.bearer === option.bearer" :disabled="feeForm.processing" class="sr-only" @click.prevent="askFeeBearer(option.bearer)" />
                             <span class="mt-0.5 box-border size-4 shrink-0 rounded-full border bg-surface" :class="billing.fee.bearer === option.bearer ? 'border-[5px] border-accent-600' : 'border-border'"></span>
                             <span class="flex flex-col gap-0.5">
                                 <span class="font-lexend text-[13px] font-medium text-text">{{ option.label }}</span>
@@ -91,6 +103,7 @@ import TicketsSettingsHeader from '@/Pages/Settings/Tickets/TicketsSettingsHeade
 import NotConnected from '@/Pages/Settings/Tickets/NotConnected.vue'
 import BillingFieldsEditor from '@/Pages/Settings/Tickets/BillingFieldsEditor.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import PendingChangesBar from '@/Pages/Settings/Tickets/PendingChangesBar.vue'
 import PayoutAccount from '@/Pages/Settings/Tickets/PayoutAccount.vue'
 import PlatformTermsConsent from '@/Pages/Settings/Tickets/PlatformTermsConsent.vue'
@@ -139,10 +152,16 @@ const feeBearers = computed(() => [
     { bearer: 'buyer', label: t('On top of the price'), hint: t('The shop shows every price with the fee added; the house receives the full price of the price class.') },
 ])
 const feeForm = useForm({ bearer: null })
+/* The other choice, while the dialog asks: it changes every price on sale at once. */
+const confirmingBearer = ref(null)
 
-function setFeeBearer(bearer) {
-    feeForm.bearer = bearer
-    feeForm.put(route('settings.tickets.billing.fee-bearer'), { preserveScroll: true })
+function askFeeBearer(bearer) {
+    if (bearer !== props.billing.fee.bearer) confirmingBearer.value = bearer
+}
+
+function setFeeBearer() {
+    feeForm.bearer = confirmingBearer.value
+    feeForm.put(route('settings.tickets.billing.fee-bearer'), { preserveScroll: true, onFinish: () => (confirmingBearer.value = null) })
 }
 
 function removeFile(document) {

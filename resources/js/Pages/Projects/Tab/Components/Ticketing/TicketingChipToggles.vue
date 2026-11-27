@@ -1,7 +1,8 @@
 <template>
     <div class="flex flex-wrap gap-2" role="group" :aria-label="label">
         <button v-for="item in items" :key="item.id" type="button" role="checkbox" :aria-checked="modelValue.includes(item.id)"
-                class="inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] transition-colors"
+                class="inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                :disabled="disabled"
                 :class="modelValue.includes(item.id) ? 'border-accent-600 bg-accent-50 text-accent-700' : 'border-border bg-surface text-text-muted hover:bg-surface-sunken hover:text-text'"
                 @click="toggle(item.id)">
             <IconCheck v-if="modelValue.includes(item.id)" class="size-3.5" stroke-width="2.5" />
@@ -20,6 +21,7 @@ const props = defineProps({
     items: { type: Array, required: true },
     modelValue: { type: Array, required: true },
     label: { type: String, required: true },
+    disabled: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])

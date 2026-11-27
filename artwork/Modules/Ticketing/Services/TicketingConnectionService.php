@@ -206,7 +206,7 @@ class TicketingConnectionService
         // Ab hier besteht die Verbindung; scheitert der Abgleich, bleibt sie und die Meldung nennt den Rest.
         try {
             $this->syncRooms($connection, $draft['rooms']);
-            $this->syncReductions($connection, $draft['reductions']);
+            $this->syncReductions($connection, $draft['reductions'], []);
             $this->billing->uploadLegalDocuments($connection, $draft['billing'] ?? []);
         } catch (TicketingConnectionException $exception) {
             throw new TicketingConnectionException(__(
@@ -284,13 +284,15 @@ class TicketingConnectionService
     }
 
     /**
-     * Die Liste ist der ganze Katalog des Hauses: was fehlt, löscht Artwork-Tickets.
+     * Legt die Liste an oder ändert sie; gelöscht wird nur, was $removedIds nennt. Eine Ermäßigung, die
+     * jemand anderes inzwischen angelegt hat, bleibt so stehen.
      *
      * @param list<array{
      *     id?: ?string, name: string, kind: string, value: int, requires_proof: bool, default_enabled: bool
      * }> $reductions
+     * @param list<string> $removedIds
      */
-    public function syncReductions(TicketingConnection $connection, array $reductions): void
+    public function syncReductions(TicketingConnection $connection, array $reductions, array $removedIds): void
     {
         $this->tickets->post($connection, '/reductions', [
             'reductions' => array_map(static fn (array $reduction): array => [
@@ -301,6 +303,7 @@ class TicketingConnectionService
                 'requiresProof' => (bool) $reduction['requires_proof'],
                 'defaultEnabled' => (bool) $reduction['default_enabled'],
             ], $reductions),
+            'removedIds' => $removedIds,
         ]);
     }
 

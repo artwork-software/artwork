@@ -8914,7 +8914,6 @@
     "Reductions are synced once this installation is connected to Artwork-Tickets.": "Reductions are synced once this installation is connected to Artwork-Tickets.",
     "Each selected room is a venue in Artwork-Tickets. The address is printed on the tickets and starts out as the house address from the general settings. Rooms already in Artwork-Tickets show their current state; a deselected room stays there untouched.": "Each selected room is a venue in Artwork-Tickets. The address is printed on the tickets and starts out as the house address from the general settings. Rooms already in Artwork-Tickets show their current state; a deselected room stays there untouched.",
     "The current state could not be loaded from Artwork-Tickets: {message} Syncing overwrites what is there with what you enter here.": "The current state could not be loaded from Artwork-Tickets: {message} Syncing overwrites what is there with what you enter here.",
-    "The reductions could not be loaded from Artwork-Tickets: {message} Saving is possible again once they load, so that none are deleted by mistake.": "The reductions could not be loaded from Artwork-Tickets: {message} Saving is possible again once they load, so that none are deleted by mistake.",
     "Removing a reduction deletes it in Artwork-Tickets too. One that was already sold disappears everywhere but stays on its orders.": "Removing a reduction deletes it in Artwork-Tickets too. One that was already sold disappears everywhere but stays on its orders.",
     "In Artwork-Tickets": "In Artwork-Tickets",
     "Not synced now": "Not synced now",
@@ -10320,5 +10319,12 @@
     "Buyers pay exactly the price of the price class; the fee comes off the house's share.": "Buyers pay exactly the price of the price class; the fee comes off the house's share.",
     "On top of the price": "On top of the price",
     "The shop shows every price with the fee added; the house receives the full price of the price class.": "The shop shows every price with the fee added; the house receives the full price of the price class.",
-    "Fee setting saved in Artwork-Tickets.": "Fee setting saved in Artwork-Tickets."
+    "Fee setting saved in Artwork-Tickets.": "Fee setting saved in Artwork-Tickets.",
+    "The reductions could not be loaded from Artwork-Tickets: {message} Saving is possible again once they load.": "The reductions could not be loaded from Artwork-Tickets: {message} Saving is possible again once they load.",
+    "Only people who manage Artwork-Tickets can change production groups and package sales.": "Only people who manage Artwork-Tickets can change production groups and package sales.",
+    "{projects} are sold online only in packages: without a package on sale, their dates cannot be booked online.": "{projects} are sold online only in packages: without a package on sale, their dates cannot be booked online.",
+    "No package for this project is on sale right now, so its dates cannot be booked online.": "No package for this project is on sale right now, so its dates cannot be booked online.",
+    "Change the ticket fee?": "Change the ticket fee?",
+    "Every price in the shop changes right away, also for dates already on sale. Tickets already sold keep their price.": "Every price in the shop changes right away, also for dates already on sale. Tickets already sold keep their price.",
+    "Change fee": "Change fee"
 }

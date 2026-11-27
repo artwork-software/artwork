@@ -78,8 +78,9 @@
 
                     <div v-if="groups.length">
                         <span class="font-lexend mb-1.5 block text-xs font-medium text-[#3F424A]">{{ $t('Production groups') }}</span>
-                        <TicketingChipToggles v-model="groupIds" :items="groups" :label="$t('Production groups')" />
+                        <TicketingChipToggles v-model="groupIds" :items="groups" :label="$t('Production groups')" :disabled="!canManageTicketing" />
                         <p class="mt-2 text-xs leading-[18px] text-text-subtle">{{ $t('Passes, subscriptions and discounts of a group count for this project right away.') }}</p>
+                        <p v-if="!canManageTicketing" class="mt-1 text-xs leading-[18px] text-text-subtle">{{ $t('Only people who manage Artwork-Tickets can change production groups and package sales.') }}</p>
                     </div>
 
                     <div class="grid gap-2">
@@ -93,7 +94,7 @@
                                         <span class="block truncate text-xs text-text-subtle">{{ [discountWorth(discount, t), discountPeriod(discount, t), reach(discount)].filter(Boolean).join(' · ') }}</span>
                                     </span>
                                     <BaseChip v-if="discount.status === 'paused'" variant="neutral">{{ $t('Paused') }}</BaseChip>
-                                    <BaseChip v-else-if="expired(discount)" variant="neutral">{{ $t('Expired') }}</BaseChip>
+                                    <BaseChip v-else-if="discount.period === 'ended'" variant="neutral">{{ $t('Expired') }}</BaseChip>
                                 </Link>
                             </li>
                         </ul>
@@ -104,8 +105,12 @@
                         </p>
                         <!-- Without a package the dates could not be sold online at all. -->
                         <ArtworkBaseToggle v-if="production.packageOnly || production.discounts.some((discount) => discount.kind === 'package')"
-                                           id="ticketing-production-package-only" v-model="form.packageOnly"
+                                           id="ticketing-production-package-only" v-model="form.packageOnly" :disabled="!canManageTicketing"
                                            :label="$t('Sell the dates online only in packages')" is-small />
+                        <div v-if="packageMissing" class="flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
+                            <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
+                            <span>{{ $t('No package for this project is on sale right now, so its dates cannot be booked online.') }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,9 +128,8 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import axios from 'axios'
-import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
-import { IconChevronRight, IconExternalLink, IconPhoto, IconPlus, IconStar, IconX } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconChevronRight, IconExternalLink, IconPhoto, IconPlus, IconStar, IconX } from '@tabler/icons-vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseRichTextEditor from '@/Artwork/Inputs/BaseRichTextEditor.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
@@ -133,6 +137,7 @@ import TicketingChipToggles from '@/Pages/Projects/Tab/Components/Ticketing/Tick
 import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
 import { grantedIdsOf } from '@/Pages/Projects/Tab/Components/Ticketing/ticketing.js'
 import { discountPeriod, discountWorth } from '@/Pages/Settings/Tickets/discounts.js'
+import { isRunningPackage } from '@/Pages/Settings/Tickets/packageReach.js'
 import { Link } from '@inertiajs/vue3'
 
 const props = defineProps({
@@ -142,6 +147,8 @@ const props = defineProps({
     /** The house's Ticketprojekt-Gruppen to pick from. */
     groups: { type: Array, required: true },
     canEdit: { type: Boolean, default: true },
+    /** Groups and package-only reach beyond the project, so they need the ticketing permission. */
+    canManageTicketing: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['saved'])
@@ -158,10 +165,8 @@ function reach(discount) {
     return names.length ? t('via {groups}', { groups: names.join(', ') }) : null
 }
 
-/** Past its last day, which still counts. */
-function expired(discount) {
-    return discount.validUntil !== null && discount.validUntil < dayjs().format('YYYY-MM-DD')
-}
+/* Sold only in packages, as saved: without a package on sale, tickets refuses every online booking. */
+const packageMissing = computed(() => props.production.packageOnly && !props.production.discounts.some(isRunningPackage))
 
 const open = ref(!props.production.linked)
 const saving = ref(false)

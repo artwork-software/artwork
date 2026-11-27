@@ -61,7 +61,7 @@
                     {{ $t('Guest list, admission and booking with a pass or subscription are available for a date once it is released. Releasing does not mean selling online: bookings on site cost no service fee.') }}
                 </p>
 
-                <TicketingProductionCard v-if="canEditComponent || payload.production.linked" class="mb-5" :project-id="project.id" :production="payload.production" :reductions="payload.reductions" :groups="payload.groups" :can-edit="canEditComponent" @saved="applyPayload" />
+                <TicketingProductionCard v-if="canEditComponent || payload.production.linked" class="mb-5" :project-id="project.id" :production="payload.production" :reductions="payload.reductions" :groups="payload.groups" :can-edit="canEditComponent" :can-manage-ticketing="canManageTicketing" @saved="applyPayload" />
 
                 <div class="rounded-lg border border-border-subtle/70 bg-surface shadow-raised">
                     <!-- One toolbar: filters by default, the actions for the picked dates once there is a

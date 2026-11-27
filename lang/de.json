@@ -8925,7 +8925,6 @@
     "Reductions are synced once this installation is connected to Artwork-Tickets.": "Ermäßigungen werden abgeglichen, sobald diese Installation mit Artwork-Tickets verbunden ist.",
     "Each selected room is a venue in Artwork-Tickets. The address is printed on the tickets and starts out as the house address from the general settings. Rooms already in Artwork-Tickets show their current state; a deselected room stays there untouched.": "Jeder ausgewählte Raum ist eine Spielstätte in Artwork-Tickets. Die Adresse steht auf den Tickets und ist mit der Hausadresse aus den Allgemeinen Einstellungen vorbelegt. Räume, die es in Artwork-Tickets schon gibt, zeigen ihren aktuellen Stand; ein abgewählter Raum bleibt dort unverändert.",
     "The current state could not be loaded from Artwork-Tickets: {message} Syncing overwrites what is there with what you enter here.": "Der aktuelle Stand konnte nicht aus Artwork-Tickets geladen werden: {message} Ein Abgleich überschreibt, was dort ist, mit dem, was du hier einträgst.",
-    "The reductions could not be loaded from Artwork-Tickets: {message} Saving is possible again once they load, so that none are deleted by mistake.": "Die Ermäßigungen konnten nicht aus Artwork-Tickets geladen werden: {message} Speichern geht wieder, sobald sie geladen sind, damit keine versehentlich gelöscht wird.",
     "Removing a reduction deletes it in Artwork-Tickets too. One that was already sold disappears everywhere but stays on its orders.": "Eine hier entfernte Ermäßigung wird auch in Artwork-Tickets gelöscht. Wurde sie schon verkauft, verschwindet sie überall, bleibt aber auf den bisherigen Bestellungen stehen.",
     "In Artwork-Tickets": "In Artwork-Tickets",
     "Not synced now": "Jetzt nicht abgeglichen",
@@ -10320,5 +10319,12 @@
     "Buyers pay exactly the price of the price class; the fee comes off the house's share.": "Käufer:innen zahlen genau den Preis der Preisklasse; die Gebühr geht vom Anteil des Hauses ab.",
     "On top of the price": "Zusätzlich zum Preis (zzgl. Gebühren)",
     "The shop shows every price with the fee added; the house receives the full price of the price class.": "Der Shop zeigt jeden Preis mit aufgeschlagener Gebühr; das Haus erhält den vollen Preis der Preisklasse.",
-    "Fee setting saved in Artwork-Tickets.": "Gebühreneinstellung in Artwork-Tickets gespeichert."
+    "Fee setting saved in Artwork-Tickets.": "Gebühreneinstellung in Artwork-Tickets gespeichert.",
+    "The reductions could not be loaded from Artwork-Tickets: {message} Saving is possible again once they load.": "Die Ermäßigungen konnten nicht aus Artwork-Tickets geladen werden: {message} Speichern geht wieder, sobald sie geladen sind.",
+    "Only people who manage Artwork-Tickets can change production groups and package sales.": "Nur wer Artwork-Tickets verwaltet, kann Ticketprojekt-Gruppen und den Paketverkauf ändern.",
+    "{projects} are sold online only in packages: without a package on sale, their dates cannot be booked online.": "{projects} werden online nur im Paket verkauft: Ohne ein Paket im Verkauf lassen sich ihre Termine online nicht buchen.",
+    "No package for this project is on sale right now, so its dates cannot be booked online.": "Für dieses Projekt ist gerade kein Paket im Verkauf, daher lassen sich seine Termine online nicht buchen.",
+    "Change the ticket fee?": "Ticketgebühr ändern?",
+    "Every price in the shop changes right away, also for dates already on sale. Tickets already sold keep their price.": "Alle Preise im Shop ändern sich sofort, auch für Termine, die schon im Verkauf sind. Schon verkaufte Tickets behalten ihren Preis.",
+    "Change fee": "Gebühr ändern"
 }

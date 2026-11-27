@@ -6,11 +6,11 @@
             </button>
         </template>
 
-        <DiscountModal v-if="editing" :discount="editing.discount" :package-for="editing.packageFor" :productions="productions" :groups="groups"
-                       @close="editing = null" />
+        <DiscountModal v-if="editing" :discount="editing.discount" :package-for="editing.packageFor" :discounts="discounts" :productions="productions"
+                       :groups="groups" @close="editing = null" />
 
         <ArtworkBaseDeleteModal v-if="deleting" :title="$t('Delete {name}?', { name: deleting.name })"
-                                :description="$t('Tickets already sold keep their price.')" @close="deleting = null" @delete="destroy" />
+                                :description="deleteDescription" @close="deleting = null" @delete="destroy" />
 
         <NotConnected v-if="!connection.connected" :message="$t('Discounts can be managed once this installation is connected to Artwork-Tickets.')" />
 
@@ -43,6 +43,7 @@
                             <button type="button" class="text-left" @click="editing = { discount }">
                                 <span class="block font-medium text-text hover:underline">{{ discount.name }}</span>
                                 <span v-if="discount.status === 'paused'" class="block text-xs text-text-subtle">{{ $t('Paused') }}</span>
+                                <span v-else-if="discount.period === 'ended'" class="block text-xs text-text-subtle">{{ $t('Expired') }}</span>
                             </button>
                         </td>
                         <td class="py-2.5 pr-3 tabular-nums">{{ discountWorth(discount, t) }}</td>
@@ -67,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import { IconAlertTriangle, IconPencil, IconPlus, IconTrash } from '@tabler/icons-vue'
@@ -76,6 +77,7 @@ import NotConnected from '@/Pages/Settings/Tickets/NotConnected.vue'
 import DiscountModal from '@/Pages/Settings/Tickets/DiscountModal.vue'
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue'
 import { discountPeriod, discountWorth, validFor } from '@/Pages/Settings/Tickets/discounts.js'
+import { packageOnlyWarning, strandedProductions } from '@/Pages/Settings/Tickets/packageReach.js'
 
 /* Automatic discounts: Rabattcodes without a code that tickets applies by itself inside their
    period — per ticket (Frühbucher), from a number of dates in one booking (Staffel), or as the price
@@ -105,6 +107,13 @@ function openingDialog() {
 }
 
 const scope = (discount) => validFor(discount, props.productions, props.groups, t)
+
+/* Deleting the last package of a production sold only in packages takes its dates out of online sale. */
+const deleteDescription = computed(() => {
+    const stranded = strandedProductions(props.discounts, props.productions, props.groups, deleting.value, null)
+    const kept = t('Tickets already sold keep their price.')
+    return stranded.length === 0 ? kept : `${packageOnlyWarning(stranded, t)} ${kept}`
+})
 
 function destroy() {
     router.delete(route('settings.tickets.discounts.destroy', deleting.value.id), { preserveScroll: true, onSuccess: () => (deleting.value = null) })

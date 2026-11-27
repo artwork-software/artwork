@@ -519,6 +519,26 @@ final class TicketingReleaseTest extends FeatureTestCase
     }
 
     #[Test]
+    public function groups_and_package_only_need_the_permission_to_manage_ticketing(): void
+    {
+        $this->fakeTickets();
+        TicketingProduction::query()->create(['project_id' => $this->project->id, 'production_id' => self::PRODUCTION_ID]);
+        $writer = $this->actingAsUserWith([]);
+        $this->project->users()->attach($writer->id, ['can_write' => true]);
+
+        $this->postJson(route('projects.tabs.ticketing.production', $this->project), [
+            'title' => 'Hamlet',
+            'group_ids' => [],
+            'package_only' => false,
+        ])->assertUnprocessable()->assertJsonValidationErrors(['group_ids', 'package_only']);
+        Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/productions'));
+
+        // Der Rest des Auftritts bleibt für sie bearbeitbar.
+        $this->postJson(route('projects.tabs.ticketing.production', $this->project), ['title' => 'Hamlet'])
+            ->assertOk();
+    }
+
+    #[Test]
     public function further_pictures_are_pushed_once_and_removed_in_tickets_too(): void
     {
         Storage::fake();

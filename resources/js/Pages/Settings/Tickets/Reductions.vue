@@ -15,7 +15,7 @@
         <div v-else class="rounded-lg border border-border-subtle/70 bg-surface shadow-raised px-3 py-4 sm:px-5 sm:py-5">
             <div v-if="ticketsError" class="mb-4 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
                 <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
-                <span>{{ $t('The reductions could not be loaded from Artwork-Tickets: {message} Saving is possible again once they load, so that none are deleted by mistake.', { message: ticketsError }) }}</span>
+                <span>{{ $t('The reductions could not be loaded from Artwork-Tickets: {message} Saving is possible again once they load.', { message: ticketsError }) }}</span>
             </div>
 
             <ReductionsEditor :reductions="reductionDrafts">
@@ -50,9 +50,9 @@ const buildDrafts = () => props.reductions.map(reductionDraft)
 const reductionDrafts = ref(buildDrafts())
 const { dirty, markClean } = usePendingChanges(reductionDrafts)
 
-const form = useForm({ reductions: [] })
+const form = useForm({ reductions: [], removed_ids: [] })
 
-/* Saving deletes what the list leaves out, so not on top of a list that failed to load. */
+/* Not on top of a list that failed to load: every row would be added a second time. */
 const canSync = computed(() => !form.processing && !props.ticketsError && dirty.value && reductionsValid(reductionDrafts.value))
 
 function discard() {
@@ -62,6 +62,9 @@ function discard() {
 
 function submit() {
     form.reductions = reductionDrafts.value.map(reductionPayload)
+    /* Only rows loaded here and taken out are deleted; one added meanwhile elsewhere stays. */
+    const kept = new Set(reductionDrafts.value.map((reduction) => reduction.id))
+    form.removed_ids = props.reductions.map((reduction) => reduction.id).filter((id) => !kept.has(id))
     form.post(route('settings.tickets.reductions.sync'), { preserveScroll: true, onSuccess: discard })
 }
 </script>

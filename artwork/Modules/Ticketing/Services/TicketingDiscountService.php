@@ -18,7 +18,7 @@ class TicketingDiscountService
     /**
      * @return array{
      *     discounts: list<array<string, mixed>>,
-     *     productions: list<array{id: string, title: string}>,
+     *     productions: list<array{id: string, title: string, packageOnly: bool}>,
      *     groups: list<array{id: string, name: string, eventIds: list<string>, sold: bool}>,
      * }
      */

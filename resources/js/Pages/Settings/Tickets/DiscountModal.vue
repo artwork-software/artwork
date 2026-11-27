@@ -35,6 +35,11 @@
 
             <ArtworkBaseToggle id="discount-paused" v-model="draft.paused" :label="$t('Paused')" :description="$t('Paused, the shop sells at the regular prices.')" is-small />
 
+            <p v-if="stranded.length" class="flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
+                <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
+                <span>{{ packageOnlyWarning(stranded, t) }}</span>
+            </p>
+
             <ul v-if="form.errors.tickets" class="rounded-md border border-danger-border bg-danger-surface p-3 text-[13px] text-danger">
                 <li>{{ form.errors.tickets }}</li>
             </ul>
@@ -50,14 +55,17 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import { useForm } from '@inertiajs/vue3'
+import { useI18n } from 'vue-i18n'
+import { IconAlertTriangle } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ChoiceSegments from '@/Pages/Settings/Tickets/ChoiceSegments.vue'
 import ScopeSection from '@/Pages/Settings/Tickets/ScopeSection.vue'
 import { fromCents, toCents } from '@/Pages/Settings/Tickets/drafts.js'
+import { packageOnlyWarning, strandedProductions } from '@/Pages/Settings/Tickets/packageReach.js'
 
 /* One automatic discount, new or existing: a Frühbucher, a Staffel (from a number of dates) or a
    package (that many dates at one price). Percent travels as basis points, an amount or a package
@@ -67,11 +75,15 @@ const props = defineProps({
     discount: { type: Object, default: null },
     /** A new package for this production, from its project's ticketing tab. */
     packageFor: { type: String, default: null },
+    /** All of the house's discounts, to tell whether a package-only production keeps a package. */
+    discounts: { type: Array, required: true },
     productions: { type: Array, required: true },
     groups: { type: Array, required: true },
 })
 
 const emit = defineEmits(['close'])
+
+const { t } = useI18n()
 
 const source = props.discount
 const draft = reactive({
@@ -87,6 +99,18 @@ const draft = reactive({
     paused: source?.status === 'paused',
 })
 const form = useForm({})
+
+/* Pausing a package or narrowing it can leave a package-only production without one on sale. */
+const stranded = computed(() => (props.discount
+    ? strandedProductions(props.discounts, props.productions, props.groups, props.discount, {
+        ...props.discount,
+        kind: draft.kind,
+        status: draft.paused ? 'paused' : 'active',
+        allEvents: draft.allEvents,
+        eventIds: draft.allEvents ? [] : draft.eventIds,
+        groupIds: draft.allEvents ? [] : draft.groupIds,
+    })
+    : []))
 
 function submit() {
     const options = { preserveScroll: true, onSuccess: () => emit('close') }
